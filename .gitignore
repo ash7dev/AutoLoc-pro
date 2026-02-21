@@ -1,0 +1,61 @@
+# OS
+.DS_Store
+
+# Node
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Build outputs
+/dist/
+/build/
+/.next/
+/out/
+/coverage/
+**/dist/
+**/build/
+**/.next/
+**/out/
+**/coverage/
+
+# Prisma
+prisma/.env
+
+# Logs
+logs/
+*.log
+
+# Misc
+*.swp
+*.swo
+
+# Turborepo / Next
+.turbo/
+**/.turbo/
+
+# NestJS
+.nest/
+
+# TypeScript
+*.tsbuildinfo
+
+# Vite / Parcel (if ever)
+.vite/
+.parcel-cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary
+.tmp/
+.tmp*
