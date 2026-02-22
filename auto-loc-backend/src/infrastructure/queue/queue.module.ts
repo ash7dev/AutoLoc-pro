@@ -5,10 +5,8 @@ import { QueueService } from './queue.service';
 import {
   getBullModuleOptions,
   RESERVATION_QUEUE_NAME,
-  NOTIFICATION_QUEUE_NAME,
 } from './queue.config';
-import { ReservationExpiryProcessor } from './jobs/reservation-expiry.processor';
-import { NotificationProcessor } from './jobs/notification.processor';
+import { ReservationExpiryProcessor } from './jobs/reservation-expiry.job';
 
 @Module({
   imports: [
@@ -19,12 +17,9 @@ import { NotificationProcessor } from './jobs/notification.processor';
       },
       inject: [ConfigService],
     }),
-    BullModule.registerQueue(
-      { name: RESERVATION_QUEUE_NAME },
-      { name: NOTIFICATION_QUEUE_NAME },
-    ),
+    BullModule.registerQueue({ name: RESERVATION_QUEUE_NAME }),
   ],
-  providers: [QueueService, ReservationExpiryProcessor, NotificationProcessor],
+  providers: [QueueService, ReservationExpiryProcessor],
   exports: [QueueService],
 })
 export class QueueModule {}

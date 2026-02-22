@@ -3,73 +3,104 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import {
   RESERVATION_QUEUE_NAME,
-  NOTIFICATION_QUEUE_NAME,
-  RESERVATION_EXPIRY_JOB_NAME,
-  NOTIFICATION_JOB_NAME,
+  RESERVATION_PAYMENT_EXPIRY_JOB,
+  RESERVATION_SIGNATURE_EXPIRY_JOB,
+  RESERVATION_SIGNATURE_REMINDER_JOB,
+  RESERVATION_CHECKIN_REMINDER_JOB,
+  RESERVATION_AUTOCLOSE_JOB,
 } from './queue.config';
 
-export interface NotificationPayload {
-  type: string;
-  userId?: string;
-  email?: string;
-  phone?: string;
-  subject?: string;
-  body?: string;
-  [key: string]: unknown;
-}
-
-const DEFAULT_RESERVATION_EXPIRY_DELAY_MS = 15 * 60 * 1000;
+const DEFAULT_PAYMENT_EXPIRY_MS = 15 * 60 * 1000;
+const DEFAULT_SIGNATURE_EXPIRY_MS = 48 * 60 * 60 * 1000;
+const DEFAULT_SIGNATURE_REMINDER_MS = 24 * 60 * 60 * 1000;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 @Injectable()
 export class QueueService implements OnModuleInit, OnModuleDestroy {
   constructor(
-    @InjectQueue(RESERVATION_QUEUE_NAME) private readonly reservationQueue: Queue,
-    @InjectQueue(NOTIFICATION_QUEUE_NAME) private readonly notificationQueue: Queue,
+    @InjectQueue(RESERVATION_QUEUE_NAME)
+    private readonly reservationQueue: Queue,
   ) {}
 
   async onModuleInit(): Promise<void> {
-    Promise.all([
-      this.reservationQueue.isReady(),
-      this.notificationQueue.isReady(),
-    ])
+    this.reservationQueue
+      .isReady()
       .then(() => {
-        process.stdout.write(
-          `✅ Bull queues ready (${RESERVATION_QUEUE_NAME}, ${NOTIFICATION_QUEUE_NAME})\n`,
-        );
+        process.stdout.write(`✅ Bull queue ready (${RESERVATION_QUEUE_NAME})\n`);
       })
       .catch((err: Error) => {
-        process.stdout.write(`[Bull] queues connection error: ${err.message}\n`);
+        process.stdout.write(`[Bull] queue connection error: ${err.message}\n`);
       });
   }
 
-  /**
-   * Planifie l'expiration d'une réservation (annulation si paiement non reçu).
-   * @returns Job id à passer à cancelJob si le paiement arrive avant.
-   */
-  async scheduleReservationExpiry(
+  // Annule si paiement non reçu après 15 minutes.
+  async schedulePaymentExpiry(
     reservationId: string,
-    delayMs: number = DEFAULT_RESERVATION_EXPIRY_DELAY_MS,
+    delayMs: number = DEFAULT_PAYMENT_EXPIRY_MS,
   ): Promise<string> {
     const job = await this.reservationQueue.add(
-      RESERVATION_EXPIRY_JOB_NAME,
+      RESERVATION_PAYMENT_EXPIRY_JOB,
       { reservationId },
       { delay: delayMs },
     );
     return String(job.id);
   }
 
-  /**
-   * Envoie une notification (email/SMS/push) via la queue.
-   */
-  async sendNotification(payload: NotificationPayload): Promise<string> {
-    const job = await this.notificationQueue.add(NOTIFICATION_JOB_NAME, payload);
+  // Annule si contrat non signé après 48h.
+  async scheduleSignatureExpiry(
+    reservationId: string,
+    delayMs: number = DEFAULT_SIGNATURE_EXPIRY_MS,
+  ): Promise<string> {
+    const job = await this.reservationQueue.add(
+      RESERVATION_SIGNATURE_EXPIRY_JOB,
+      { reservationId },
+      { delay: delayMs },
+    );
     return String(job.id);
   }
 
-  /**
-   * Annule un job planifié (ex: annuler l'expiration si paiement reçu).
-   * Cible la queue reservation-jobs.
-   */
+  // Rappel signature à T+24h si non signée.
+  async scheduleSignatureReminder(
+    reservationId: string,
+    delayMs: number = DEFAULT_SIGNATURE_REMINDER_MS,
+  ): Promise<string> {
+    const job = await this.reservationQueue.add(
+      RESERVATION_SIGNATURE_REMINDER_JOB,
+      { reservationId },
+      { delay: delayMs },
+    );
+    return String(job.id);
+  }
+
+  // Rappel check-in la veille de la date de début.
+  async scheduleCheckinReminder(
+    reservationId: string,
+    dateDebut: Date,
+  ): Promise<string | null> {
+    const delayMs = dateDebut.getTime() - Date.now() - ONE_DAY_MS;
+    if (delayMs <= 0) return null;
+    const job = await this.reservationQueue.add(
+      RESERVATION_CHECKIN_REMINDER_JOB,
+      { reservationId },
+      { delay: delayMs },
+    );
+    return String(job.id);
+  }
+
+  // Auto-clôture 24h après la date de fin si pas de check-out.
+  async scheduleAutoClose(
+    reservationId: string,
+    dateFin: Date,
+  ): Promise<string> {
+    const delayMs = dateFin.getTime() - Date.now() + ONE_DAY_MS;
+    const job = await this.reservationQueue.add(
+      RESERVATION_AUTOCLOSE_JOB,
+      { reservationId },
+      { delay: Math.max(delayMs, 0) },
+    );
+    return String(job.id);
+  }
+
   async cancelJob(jobId: string): Promise<void> {
     const job = await this.reservationQueue.getJob(jobId);
     if (job) {
@@ -77,18 +108,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async areQueuesReady(): Promise<boolean> {
-    await Promise.all([
-      this.reservationQueue.isReady(),
-      this.notificationQueue.isReady(),
-    ]);
-    return true;
-  }
-
   async onModuleDestroy(): Promise<void> {
-    await Promise.all([
-      this.reservationQueue.close(),
-      this.notificationQueue.close(),
-    ]);
+    await this.reservationQueue.close();
   }
 }

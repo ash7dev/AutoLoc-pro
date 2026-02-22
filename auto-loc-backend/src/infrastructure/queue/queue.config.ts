@@ -1,5 +1,4 @@
 import { BullModuleOptions } from '@nestjs/bull';
-import { redisRetryStrategy } from '../redis/redis.config';
 
 const DEFAULT_JOB_OPTIONS = {
   attempts: 5,
@@ -8,43 +7,30 @@ const DEFAULT_JOB_OPTIONS = {
   removeOnFail: 1000,
 };
 
-/**
- * Parse REDIS_URL into host, port, password for Bull (ioredis).
- * Supports rediss:// for TLS (Upstash).
- */
-export function getBullRedisOptions(redisUrl: string): {
-  host: string;
-  port: number;
-  password?: string;
-  tls?: Record<string, unknown>;
-  maxRetriesPerRequest: null;
-  retryStrategy: (times: number) => number | null;
-} {
+export const RESERVATION_QUEUE_NAME = 'reservation-jobs';
+export const RESERVATION_PAYMENT_EXPIRY_JOB = 'reservation-payment-expiry';
+export const RESERVATION_SIGNATURE_EXPIRY_JOB = 'reservation-signature-expiry';
+export const RESERVATION_SIGNATURE_REMINDER_JOB = 'reservation-signature-reminder';
+export const RESERVATION_CHECKIN_REMINDER_JOB = 'reservation-checkin-reminder';
+export const RESERVATION_AUTOCLOSE_JOB = 'reservation-autoclose';
+
+export function getBullModuleOptions(redisUrl: string): BullModuleOptions {
   const url = redisUrl.trim();
+  if (!url) {
+    throw new Error('REDIS_URL is required for Bull queues');
+  }
   const parsed = new URL(url);
   const port = parsed.port ? parseInt(parsed.port, 10) : 6379;
   const password = parsed.password ? decodeURIComponent(parsed.password) : undefined;
-  return {
-    host: parsed.hostname,
-    port,
-    ...(password ? { password } : {}),
-    ...(parsed.protocol === 'rediss:'
-      ? { tls: {} }
-      : {}),
-    maxRetriesPerRequest: null,
-    retryStrategy: (times: number) => redisRetryStrategy(times),
-  };
-}
 
-export function getBullModuleOptions(redisUrl: string): BullModuleOptions {
   return {
-    redis: getBullRedisOptions(redisUrl),
+    redis: {
+      host: parsed.hostname,
+      port,
+      ...(password ? { password } : {}),
+      ...(parsed.protocol === 'rediss:' ? { tls: {} } : {}),
+      maxRetriesPerRequest: null,
+    },
     defaultJobOptions: DEFAULT_JOB_OPTIONS,
   };
 }
-
-export const RESERVATION_QUEUE_NAME = 'reservation-jobs';
-export const NOTIFICATION_QUEUE_NAME = 'notification-jobs';
-
-export const RESERVATION_EXPIRY_JOB_NAME = 'reservation-expiry';
-export const NOTIFICATION_JOB_NAME = 'notification';

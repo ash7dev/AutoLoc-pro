@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
-import { RedisModule } from './infrastructure/redis/redis.module';
+import { JwtModule } from './infrastructure/jwt/jwt.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { SharedModule } from './shared/shared.module';
 import { QueueModule } from './infrastructure/queue/queue.module';
-import { CloudinaryModule } from './infrastructure/cloudinary/cloudinary.module';
-import { HealthModule } from './modules/health/health.module';
-import { UploadModule } from './modules/upload/upload.module';
+import { NotificationModule } from './infrastructure/notifications/notification.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -14,11 +15,12 @@ import { UploadModule } from './modules/upload/upload.module';
       envFilePath: '.env',
     }),
     PrismaModule,
-    RedisModule,
+    JwtModule,
+    SharedModule,
+    AuthModule,
     QueueModule,
-    CloudinaryModule,
-    HealthModule,
-    UploadModule,
+    NotificationModule,
+    UsersModule,
   ],
 })
 export class AppModule {}
