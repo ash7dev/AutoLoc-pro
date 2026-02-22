@@ -18,6 +18,7 @@ export default function LoginAutoLoc() {
   const [isMounted, setIsMounted]       = useState(false);
   const [isPending, startTransition]    = useTransition();
   const [error, setError]               = useState<{ erreur: string; details?: string } | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   const router       = useRouter();
   const searchParams = useSearchParams();
@@ -30,6 +31,14 @@ export default function LoginAutoLoc() {
   const isLoading = emailLoading || phoneLoading || oauthLoading;
 
   useEffect(() => { setIsMounted(true); }, []);
+
+  // Session expirée (?expired=1) — affiche le bandeau amber.
+  useEffect(() => {
+    if (searchParams.get('expired') === '1') {
+      setSessionExpired(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Après retour OAuth Google (?from=oauth), déclenche la redirection automatique.
   useEffect(() => {
@@ -200,6 +209,26 @@ export default function LoginAutoLoc() {
                 Connectez-vous à votre espace
               </p>
             </div>
+
+            {/* Session expirée */}
+            {sessionExpired && (
+              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl" style={{ animation: 'fadeInUp .3s ease both' }}>
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <p className="autoloc-body text-sm font-semibold text-amber-800">Session expirée</p>
+                    <p className="autoloc-body text-sm text-amber-700 mt-0.5">Votre session a expiré. Veuillez vous reconnecter.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSessionExpired(false)}
+                    className="ml-auto text-amber-400 hover:text-amber-600 text-lg leading-none"
+                  >×</button>
+                </div>
+              </div>
+            )}
 
             {/* Error */}
             {error && (

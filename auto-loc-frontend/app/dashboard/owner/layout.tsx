@@ -2,6 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { fetchMe } from '../../../lib/nestjs/auth';
+import { ApiError } from '../../../lib/nestjs/api-client';
 import { createSupabaseServerClient } from '../../../lib/supabase/server';
 import { OwnerSidebar } from '../../../features/owner/components/owner-sidebar';
 
@@ -28,7 +29,15 @@ export default async function OwnerLayout({
     redirect('/login');
   }
 
-  const profile = await fetchMe(token);
+  let profile;
+  try {
+    profile = await fetchMe(token);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 401) {
+      redirect('/login?expired=1');
+    }
+    throw err;
+  }
 
   if (profile.role === 'ADMIN') {
     redirect('/dashboard/admin');

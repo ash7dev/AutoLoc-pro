@@ -2,6 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { fetchMe } from '../../lib/nestjs/auth';
+import { ApiError } from '../../lib/nestjs/api-client';
 import { createSupabaseServerClient } from '../../lib/supabase/server';
 
 export default async function DashboardLayout({
@@ -24,7 +25,15 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
-  const profile = await fetchMe(token);
+  let profile;
+  try {
+    profile = await fetchMe(token);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 401) {
+      redirect('/login?expired=1');
+    }
+    throw err;
+  }
 
   // LOCATAIRE n'a pas de dashboard — il utilise le marketplace directement.
   if (profile.role === 'LOCATAIRE') {

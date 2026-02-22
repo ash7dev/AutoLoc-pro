@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { apiFetch } from '../../../lib/nestjs/api-client';
+import { apiFetch, ApiError } from '../../../lib/nestjs/api-client';
 
 interface AuthFetchOptions<TBody> {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
@@ -28,7 +28,14 @@ export function useAuthFetch() {
       path: string,
       options: AuthFetchOptions<TBody> = {},
     ): Promise<TResponse> => {
-      return apiFetch<TResponse, TBody>(path, options);
+      try {
+        return await apiFetch<TResponse, TBody>(path, options);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) {
+          window.location.href = '/login?expired=1';
+        }
+        throw err;
+      }
     },
     [],
   );
