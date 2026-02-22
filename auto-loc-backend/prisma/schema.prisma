@@ -9,20 +9,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Profils auth (Supabase = Identity only, rôles côté backend)
+model Profile {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  email     String?
+  phone     String?
+  role      RoleProfile @default(LOCATAIRE)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Liaison vers le profil métier (Utilisateur).
+  utilisateur Utilisateur?
+
+  @@index([userId])
+  @@map("profiles")
+}
+
+enum RoleProfile {
+  LOCATAIRE
+  PROPRIETAIRE
+  ADMIN
+  SUPPORT
+}
+
 // 1️⃣ UTILISATEURS
 
 model Utilisateur {
   id              String   @id @default(uuid())
+  // Lien obligatoire vers l'identité Supabase (sub JWT).
+  userId          String   @unique
+  profile         Profile  @relation(fields: [userId], references: [userId])
+
   email           String   @unique
   telephone       String   @unique
-  motDePasse      String?
-
-  role            RoleUtilisateur @default(LOCATAIRE)
 
   prenom          String
   nom             String
   avatarUrl       String?
   dateNaissance   DateTime?
+
+  phoneVerified   Boolean  @default(false)
+  profileCompleted Boolean @default(false)
 
   statutKyc       StatutKyc @default(NON_VERIFIE)
   actif           Boolean   @default(true)
@@ -43,14 +70,7 @@ model Utilisateur {
   avisEnvoyes     Avis[] @relation("auteur")
   avisRecus       Avis[] @relation("cible")
 
-  @@index([role])
-}
-
-enum RoleUtilisateur {
-  LOCATAIRE
-  PROPRIETAIRE
-  ADMIN
-  SUPPORT
+  @@index([userId])
 }
 
 enum StatutKyc {
