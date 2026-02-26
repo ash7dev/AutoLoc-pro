@@ -8,6 +8,9 @@ import {
   RESERVATION_SIGNATURE_REMINDER_JOB,
   RESERVATION_CHECKIN_REMINDER_JOB,
   RESERVATION_AUTOCLOSE_JOB,
+  RESERVATION_POST_CHECKOUT_JOB,
+  NOTIFICATION_QUEUE_NAME,
+  NOTIFICATION_JOB_NAME,
 } from './queue.config';
 
 const DEFAULT_PAYMENT_EXPIRY_MS = 15 * 60 * 1000;
@@ -15,12 +18,19 @@ const DEFAULT_SIGNATURE_EXPIRY_MS = 48 * 60 * 60 * 1000;
 const DEFAULT_SIGNATURE_REMINDER_MS = 24 * 60 * 60 * 1000;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
+export interface NotificationPayload {
+  type: string;
+  data?: Record<string, unknown>;
+}
+
 @Injectable()
 export class QueueService implements OnModuleInit, OnModuleDestroy {
   constructor(
     @InjectQueue(RESERVATION_QUEUE_NAME)
     private readonly reservationQueue: Queue,
-  ) {}
+    @InjectQueue(NOTIFICATION_QUEUE_NAME)
+    private readonly notificationQueue: Queue,
+  ) { }
 
   async onModuleInit(): Promise<void> {
     this.reservationQueue
@@ -31,6 +41,11 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       .catch((err: Error) => {
         process.stdout.write(`[Bull] queue connection error: ${err.message}\n`);
       });
+  }
+
+  async areQueuesReady(): Promise<void> {
+    await this.reservationQueue.isReady();
+    await this.notificationQueue.isReady();
   }
 
   // Annule si paiement non reçu après 15 minutes.
@@ -97,6 +112,26 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       RESERVATION_AUTOCLOSE_JOB,
       { reservationId },
       { delay: Math.max(delayMs, 0) },
+    );
+    return String(job.id);
+  }
+
+  async scheduleNotification(
+    payload: NotificationPayload,
+  ): Promise<string> {
+    const job = await this.notificationQueue.add(
+      NOTIFICATION_JOB_NAME,
+      payload,
+    );
+    return String(job.id);
+  }
+
+  async schedulePostCheckout(
+    reservationId: string,
+  ): Promise<string> {
+    const job = await this.reservationQueue.add(
+      RESERVATION_POST_CHECKOUT_JOB,
+      { reservationId },
     );
     return String(job.id);
   }

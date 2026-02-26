@@ -65,7 +65,7 @@ export function useAuthFlow() {
     }
 
     if (profile.role === 'PROPRIETAIRE') {
-      router.push('/dashboard/owner/vehicles');
+      router.push('/dashboard/owner');
       inFlight.current = false;
       return;
     }

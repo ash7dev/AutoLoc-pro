@@ -1,30 +1,46 @@
-import Link from 'next/link';
+import type { Metadata } from 'next';
+import { BannerSection } from '@/features/landing/BannerSection';
+import { CategoriesSection } from '@/features/landing/CategoriesSection';
+import { VehicleGridSection } from '@/features/landing/VehicleGridSection';
+import { HowItWorksSection } from '@/features/landing/HowItWorksSection';
+import { TrustSection } from '@/features/landing/TrustSection';
+import { StatsSection } from '@/features/landing/StatsSection';
+import { ZonesSection } from '@/features/landing/ZonesSection';
+import { TestimonialsSection } from '@/features/landing/TestimonialsSection';
+import { FAQSection } from '@/features/landing/FAQSection';
+import { BecomeHostCTA } from '@/features/landing/BecomeHostCTA';
+import { Footer } from '@/features/landing/Footer';
+
+export const metadata: Metadata = {
+  title: 'AutoLoc — Location de véhicules au Sénégal',
+  description:
+    'Trouvez et réservez un véhicule vérifié au Sénégal : SUV, berlines, pick-ups, utilitaires. Disponible à Dakar, Thiès, Saint-Louis et partout au Sénégal.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    url: '/',
+    title: 'AutoLoc — Location de véhicules au Sénégal',
+    description:
+      'Trouvez et réservez un véhicule vérifié au Sénégal : SUV, berlines, pick-ups, utilitaires. Disponible à Dakar et partout au Sénégal.',
+  },
+};
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-neutral-50 flex items-center justify-center">
-      <div className="text-center space-y-8">
-        <div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">AutoLoc</h1>
-          <p className="text-gray-600">Location de véhicules entre particuliers</p>
-        </div>
-        
-        <div className="space-y-4">
-          <Link 
-            href="/login"
-            className="inline-block w-full max-w-xs mx-auto bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            Se connecter
-          </Link>
-          
-          <Link 
-            href="/register"
-            className="inline-block w-full max-w-xs mx-auto border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Créer un compte
-          </Link>
-        </div>
-      </div>
+    <main>
+      <BannerSection />
+      <CategoriesSection />
+      <VehicleGridSection />
+      <HowItWorksSection />
+      <TrustSection />
+      <StatsSection />
+      <ZonesSection />
+      <TestimonialsSection />
+      <FAQSection />
+      <BecomeHostCTA />
+      <Footer />
     </main>
   );
 }
+

@@ -35,13 +35,7 @@ export default async function DashboardLayout({
     throw err;
   }
 
-  // LOCATAIRE n'a pas de dashboard — il utilise le marketplace directement.
-  if (profile.role === 'LOCATAIRE') {
-    redirect('/');
-  }
-
-  // ADMIN et PROPRIETAIRE passent.
-  // Le hub /dashboard/page.tsx et /dashboard/admin/layout.tsx
+  // Le hub /dashboard/page.tsx et les sous-layouts (/dashboard/admin, /dashboard/owner)
   // gèrent les redirections fines par rôle.
   return <div className="min-h-screen">{children}</div>;
 }

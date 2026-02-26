@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { v2 as cloudinary, UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
 import {
   VEHICLE_PHOTO_EAGER_TRANSFORMATION,
@@ -12,7 +12,7 @@ import type { UploadResultDto } from './dto/upload-result.dto';
 export class CloudinaryService implements OnModuleInit {
   private initialized = false;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   onModuleInit(): void {
     if (this.initialized) return;
@@ -31,26 +31,56 @@ export class CloudinaryService implements OnModuleInit {
   }
 
   async uploadVehiclePhoto(buffer: Buffer): Promise<UploadResultDto> {
+    return this.uploadToFolder(buffer, VEHICLE_PHOTO_FOLDER, VEHICLE_PHOTO_EAGER_TRANSFORMATION);
+  }
+
+  async uploadKycDocument(buffer: Buffer): Promise<UploadResultDto> {
+    return this.uploadToFolder(buffer, 'kyc-documents');
+  }
+
+  async uploadContract(buffer: Buffer, reservationId: string): Promise<UploadResultDto> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: VEHICLE_PHOTO_FOLDER,
-          eager: VEHICLE_PHOTO_EAGER_TRANSFORMATION,
-          resource_type: 'image',
+          folder: 'contrats',
+          resource_type: 'raw',
+          public_id: `contrat-${reservationId}`,
+          format: 'pdf',
         },
-        (err: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          if (!result) {
-            reject(new Error('Cloudinary upload returned no result'));
-            return;
-          }
-          const eagerUrl = (result as UploadApiResponse & { eager?: Array<{ secure_url: string }> }).eager?.[0]?.secure_url;
+        (err: unknown, result: unknown) => {
+          if (err) { reject(err); return; }
+          const res = result as { secure_url: string; public_id: string } | undefined;
+          if (!res) { reject(new Error('Cloudinary upload returned no result')); return; }
+          resolve({ url: res.secure_url, publicId: res.public_id });
+        },
+      );
+      Readable.from(buffer).pipe(uploadStream);
+    });
+  }
+
+  async deleteByPublicId(publicId: string): Promise<void> {
+    await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+  }
+
+  private uploadToFolder(
+    buffer: Buffer,
+    folder: string,
+    eager?: unknown[],
+  ): Promise<UploadResultDto> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder, ...(eager ? { eager } : {}), resource_type: 'image' },
+        (err: unknown, result: unknown) => {
+          if (err) { reject(err); return; }
+          const res = result as {
+            secure_url: string;
+            public_id: string;
+            eager?: Array<{ secure_url: string }>;
+          } | undefined;
+          if (!res) { reject(new Error('Cloudinary upload returned no result')); return; }
           resolve({
-            url: eagerUrl ?? result.secure_url,
-            publicId: result.public_id,
+            url: res.eager?.[0]?.secure_url ?? res.secure_url,
+            publicId: res.public_id,
           });
         },
       );

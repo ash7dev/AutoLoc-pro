@@ -6,6 +6,7 @@ const AUTH_ENDPOINTS = {
   refresh: '/auth/refresh',
   completeProfile: '/auth/complete-profile',
   switchRole: '/auth/switch-role',
+  submitKyc: '/auth/kyc/submit',
 } as const;
 
 export interface ProfileResponse {
@@ -17,6 +18,9 @@ export interface ProfileResponse {
   createdAt: string;
   hasUtilisateur: boolean;
   utilisateurId?: string;
+  phoneVerified?: boolean;
+  kycStatus?: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
+  hasVehicles?: boolean;
 }
 
 export interface NestAuthResponse {
@@ -73,5 +77,52 @@ export async function switchRole(
     method: 'PATCH',
     body: { role },
     accessToken,
+  });
+}
+
+export async function submitKyc(formData: FormData): Promise<ProfileResponse> {
+  return apiFetch<ProfileResponse, FormData>(AUTH_ENDPOINTS.submitKyc, {
+    method: 'POST',
+    body: formData,
+  });
+}
+
+// ── User Profile ──────────────────────────────────────────────────────────────
+
+export interface UserProfile {
+  id: string;
+  userId: string;
+  email: string;
+  telephone: string;
+  prenom: string;
+  nom: string;
+  avatarUrl: string | null;
+  dateNaissance: string | null;
+  phoneVerified: boolean;
+  profileCompleted: boolean;
+  statutKyc: string;
+  role: string;
+  noteLocataire: number;
+  noteProprietaire: number;
+  totalAvis: number;
+  creeLe: string;
+}
+
+/**
+ * Fetch the authenticated user's full profile.
+ */
+export async function fetchUserProfile(accessToken: string): Promise<UserProfile> {
+  return apiFetch<UserProfile>('/users/me/profile', { accessToken });
+}
+
+/**
+ * Update the authenticated user's profile (client-side via proxy).
+ */
+export async function updateUserProfile(
+  data: Partial<Pick<UserProfile, 'prenom' | 'nom' | 'avatarUrl' | 'dateNaissance'>>,
+): Promise<unknown> {
+  return apiFetch('/users/me/profile', {
+    method: 'PATCH',
+    body: data,
   });
 }

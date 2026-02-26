@@ -2,6 +2,7 @@ import { Processor, Process } from '@nestjs/bull';
 import { Job } from 'bull';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { NotificationService } from '../../notifications/notification.service';
+import { ExpireReservationUseCase } from '../../../domain/reservation/use-cases/expire-reservation.use-case';
 import {
   RESERVATION_QUEUE_NAME,
   RESERVATION_PAYMENT_EXPIRY_JOB,
@@ -21,18 +22,14 @@ export class ReservationExpiryProcessor {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notification: NotificationService,
-  ) {}
+    private readonly expireUseCase: ExpireReservationUseCase,
+  ) { }
 
   @Process(RESERVATION_PAYMENT_EXPIRY_JOB)
   async handlePaymentExpiry(
     job: Job<{ reservationId: string }>,
   ): Promise<void> {
-    await this.cancelIfStillPending(
-      job.data.reservationId,
-      StatutReservation.EN_ATTENTE_PAIEMENT,
-      'Paiement non reçu (15 min)',
-      'SYSTEM_PAYMENT_EXPIRY',
-    );
+    await this.expireUseCase.execute(job.data.reservationId);
   }
 
   @Process(RESERVATION_SIGNATURE_EXPIRY_JOB)

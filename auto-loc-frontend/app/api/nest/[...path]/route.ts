@@ -43,8 +43,9 @@ function setCookies(response: NextResponse, session: NestSession) {
   });
 }
 
-function buildHeaders(accessToken: string | null): Record<string, string> {
-  const h: Record<string, string> = { 'Content-Type': 'application/json' };
+function buildHeaders(accessToken: string | null, contentType: string | null): Record<string, string> {
+  const h: Record<string, string> = {};
+  if (contentType) h['Content-Type'] = contentType;
   if (accessToken) h['Authorization'] = `Bearer ${accessToken}`;
   return h;
 }
@@ -80,17 +81,18 @@ async function proxy(
   const search = request.nextUrl.search;
   const url = `${NEST_API}${path}${search}`;
 
+  const contentType = request.headers.get('content-type');
   // Lire le body une seule fois (stream ne peut être consommé qu'une fois).
-  const bodyText =
+  const bodyBuffer =
     request.method !== 'GET' && request.method !== 'HEAD'
-      ? await request.text()
+      ? await request.arrayBuffer()
       : undefined;
 
   // ── Première tentative ──────────────────────────────────────────
   let res = await fetch(url, {
     method: request.method,
-    headers: buildHeaders(accessToken),
-    body: bodyText,
+    headers: buildHeaders(accessToken, contentType),
+    body: bodyBuffer ? Buffer.from(bodyBuffer) : undefined,
   });
 
   // ── Refresh silencieux sur 401 ──────────────────────────────────
@@ -111,8 +113,8 @@ async function proxy(
         // Retry avec le nouveau token
         res = await fetch(url, {
           method: request.method,
-          headers: buildHeaders(accessToken),
-          body: bodyText,
+          headers: buildHeaders(accessToken, contentType),
+          body: bodyBuffer ? Buffer.from(bodyBuffer) : undefined,
         });
 
         const nextRes = await toNextResponse(res);

@@ -13,6 +13,13 @@ export const RESERVATION_SIGNATURE_EXPIRY_JOB = 'reservation-signature-expiry';
 export const RESERVATION_SIGNATURE_REMINDER_JOB = 'reservation-signature-reminder';
 export const RESERVATION_CHECKIN_REMINDER_JOB = 'reservation-checkin-reminder';
 export const RESERVATION_AUTOCLOSE_JOB = 'reservation-autoclose';
+export const RESERVATION_POST_CHECKOUT_JOB = 'reservation-post-checkout';
+
+// Aliases pour compatibilité avec les processors existants
+export const RESERVATION_EXPIRY_JOB_NAME = RESERVATION_PAYMENT_EXPIRY_JOB;
+
+export const NOTIFICATION_QUEUE_NAME = 'notification-jobs';
+export const NOTIFICATION_JOB_NAME = 'notification-dispatch';
 
 export function getBullModuleOptions(redisUrl: string): BullModuleOptions {
   const url = redisUrl.trim();

@@ -4,6 +4,8 @@ import { cookies } from 'next/headers';
 import { fetchMe } from '../../../lib/nestjs/auth';
 import { ApiError } from '../../../lib/nestjs/api-client';
 import { createSupabaseServerClient } from '../../../lib/supabase/server';
+import { AdminSidebar } from '../../../features/admin/components/admin-sidebar';
+import { AdminAutoRefresh } from '../../../features/admin/components/admin-auto-refresh';
 
 /**
  * Guard ADMIN : seul le rôle ADMIN peut accéder à /dashboard/admin/*.
@@ -41,5 +43,13 @@ export default async function AdminLayout({
     redirect('/dashboard');
   }
 
-  return <>{children}</>;
+  return (
+    <div className="flex min-h-screen bg-slate-50">
+      <AdminSidebar />
+      <main className="flex-1 min-w-0 overflow-y-auto pt-14 pb-[72px] lg:pt-0 lg:pb-0">
+        {children}
+      </main>
+      <AdminAutoRefresh intervalMs={15000} />
+    </div>
+  );
 }

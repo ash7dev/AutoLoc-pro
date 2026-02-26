@@ -6,7 +6,7 @@ import { BecomeOwnerForm } from '../../../features/owner/become-owner/components
 /**
  * /become-owner — Accessible à tout utilisateur connecté.
  * - Non connecté → /login
- * - Déjà PROPRIETAIRE → /dashboard/owner/vehicles
+ * - Déjà PROPRIETAIRE → /dashboard/owner
  * - ADMIN → /dashboard/admin
  * - LOCATAIRE → affiche le flow de transition
  */
@@ -22,7 +22,7 @@ export default async function BecomeOwnerPage() {
   const profile = await fetchMe(token);
 
   if (profile.role === 'PROPRIETAIRE') {
-    redirect('/dashboard/owner/vehicles');
+    redirect('/dashboard/owner');
   }
 
   if (profile.role === 'ADMIN') {

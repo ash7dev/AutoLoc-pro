@@ -1,12 +1,15 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { ConfigService } from '@nestjs/config';
 import { QueueService } from './queue.service';
 import {
   getBullModuleOptions,
   RESERVATION_QUEUE_NAME,
+  NOTIFICATION_QUEUE_NAME,
 } from './queue.config';
 import { ReservationExpiryProcessor } from './jobs/reservation-expiry.job';
+import { NotificationProcessor } from './jobs/notification.processor';
+import { ReservationDomainModule } from '../../domain/reservation/reservation.domain.module';
 
 @Module({
   imports: [
@@ -17,9 +20,14 @@ import { ReservationExpiryProcessor } from './jobs/reservation-expiry.job';
       },
       inject: [ConfigService],
     }),
-    BullModule.registerQueue({ name: RESERVATION_QUEUE_NAME }),
+    BullModule.registerQueue(
+      { name: RESERVATION_QUEUE_NAME },
+      { name: NOTIFICATION_QUEUE_NAME },
+    ),
+    forwardRef(() => ReservationDomainModule),
   ],
-  providers: [QueueService, ReservationExpiryProcessor],
+  providers: [QueueService, ReservationExpiryProcessor, NotificationProcessor],
   exports: [QueueService],
 })
-export class QueueModule {}
+export class QueueModule { }
+

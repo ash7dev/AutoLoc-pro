@@ -81,4 +81,20 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     const ok = await client.set(key, value, 'EX', ttlSeconds, 'NX');
     return ok === 'OK';
   }
+
+  /**
+   * Supprime toutes les clés correspondant au pattern via SCAN + DEL (sûr en prod).
+   * Exemple : delPattern('vehicles:search:*')
+   */
+  async delPattern(pattern: string): Promise<void> {
+    const client = this.getClient();
+    let cursor = '0';
+    do {
+      const [nextCursor, keys] = await client.scan(cursor, 'MATCH', pattern, 'COUNT', '100');
+      cursor = nextCursor;
+      if (keys.length > 0) {
+        await client.del(keys);
+      }
+    } while (cursor !== '0');
+  }
 }

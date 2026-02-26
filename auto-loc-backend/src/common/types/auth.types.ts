@@ -38,4 +38,9 @@ export interface ProfileResponse {
   hasUtilisateur: boolean;
   // Renseigné après onboarding si disponible.
   utilisateurId?: string;
+  // Flags de vérification — utilisés par le frontend pour les guards progressifs.
+  phoneVerified?: boolean;
+  kycStatus?: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
+  // Indique si l'utilisateur possède au moins un véhicule (quel que soit le statut).
+  hasVehicles?: boolean;
 }

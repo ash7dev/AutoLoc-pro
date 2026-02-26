@@ -1,31 +1,355 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-.autoloc-hero { font-family: 'DM Serif Display', serif; }
-.autoloc-body { font-family: 'DM Sans', sans-serif; }
+/* ─────────────────────────────────────────────────────────────────────────────
+   DESIGN TOKENS — HSL format pour compatibilité shadcn/ui + opacité Tailwind
+   Ex : bg-primary/80 fonctionne automatiquement avec hsl(var(--primary) / 0.8)
+───────────────────────────────────────────────────────────────────────────── */
 
-@keyframes fadeInUp   { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-@keyframes spin       { to { transform: rotate(360deg); } }
+@layer base {
+  :root {
+    /* ── Fonts ── */
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
-/*
- * AUTO-LOC — Variables CSS par défaut (fallback avant injection par ColorSystemProvider).
- * Le provider écrase ces valeurs au montage selon le thème.
- */
-:root {
-  --bg-page: #fafaf8;
-  --bg-elevated: #ffffff;
-  --bg-sunken: #f5f4ef;
-  --border: #eae9e0;
-  --border-subtle: #f5f4ef;
-  --border-strong: #d4d2c7;
-  --border-focus: #f59e0b;
-  --border-brand: #fcd34d;
-  --text-primary: #27261e;
-  --text-secondary: #706e61;
-  --text-tertiary: #b3b1a3;
-  --color-brand: #d97706;
+    /* ── Radius ── */
+    --radius: 0.5rem;
+
+    /* ── shadcn/ui semantic tokens (HSL) ──────────────────────────────────── */
+    /* Fond principal : blanc pur */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+
+    /* Cards : blanc pur avec ombre */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+
+    /* Popovers */
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    /* Primary : noir pur — boutons CTA, actions principales */
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary : gris très léger */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
+
+    /* Muted : surfaces atténuées */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 25%;
+
+    /* Accent : vert pour éléments interactifs/graphes uniquement */
+    --accent: 142 72% 95%;
+    --accent-foreground: 142 76% 28%;
+
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success : vert — utilisé sur graphes, statuts positifs */
+    --success: 142 72% 40%;
+    --success-foreground: 0 0% 0%;
+
+    /* Warning : ambre discret */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
+
+    /* Borders & inputs */
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 0%;
+
+    /* ── Design-system surface tokens (non-HSL, utilisés directement) ─────── */
+    --bg-page: #fafafa;
+    --bg-elevated: #ffffff;
+    --bg-sunken: #f5f5f4;
+
+    /* ── Border variants ─────────────────────────────────────────────────── */
+    --border-subtle: #f0f0ef;
+    --border-strong: #d4d4d0;
+    --border-focus: #18181b;
+    --border-brand: #16a34a;
+    /* vert */
+
+    /* ── Text tokens ─────────────────────────────────────────────────────── */
+    --text-primary: #000000;
+    --text-secondary: #404040;
+    --text-tertiary: #808080;
+
+    /* ── Brand ───────────────────────────────────────────────────────────── */
+    --color-brand: #16a34a;
+    /* vert — graphes et indicateurs uniquement */
+  }
+
+  .dark {
+    --background: 0 0% 5%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 75%;
+
+    --accent: 142 72% 10%;
+    --accent-foreground: 142 72% 75%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 72% 35%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 0 0% 100%;
+
+    --bg-page: #0d0d0d;
+    --bg-elevated: #141414;
+    --bg-sunken: #0a0a0a;
+
+    --border-subtle: #1a1a1a;
+    --border-strong: #333333;
+    --border-focus: #fafafa;
+    --border-brand: #16a34a;
+
+    --text-primary-dark: #ffffff;
+    --text-secondary-dark: #cccccc;
+    --text-tertiary-dark: #999999;
+
+    --color-brand: #22c55e;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   BASE STYLES
+───────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Titres : DM Sans bold */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-body);
+    @apply font-bold tracking-tight;
+  }
+
+  /* Code */
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: var(--font-mono);
+  }
+
+  /* Focus visible — anneau noir/blanc selon thème */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   UTILITY CLASSES — composants fréquents
+───────────────────────────────────────────────────────────────────────────── */
+
+@layer components {
+
+  /* Card glass (backdrop-blur pour modals/popovers) */
+  .glass {
+    @apply bg-background/80 backdrop-blur-md border border-border;
+  }
+
+  /* Skeleton shimmer */
+  .skeleton {
+    background: linear-gradient(90deg,
+        hsl(var(--muted)) 25%,
+        hsl(var(--muted) / 0.5) 50%,
+        hsl(var(--muted)) 75%);
+    background-size: 200% 100%;
+    @apply animate-shimmer rounded-md;
+  }
+
+  /* Section heading */
+  .section-heading {
+    @apply text-xl font-bold tracking-tight;
+  }
+
+  /* KPI value */
+  .kpi-value {
+    @apply text-2xl font-bold tracking-tight tabular-nums;
+  }
+
+  /* Page title */
+  .page-title {
+    @apply text-3xl font-bold tracking-tight;
+  }
+
+  /* Muted label */
+  .label-muted {
+    @apply text-sm text-muted-foreground;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ANIMATIONS
+───────────────────────────────────────────────────────────────────────────── */
+
+@layer utilities {
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-16px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Classe utilitaire stagger pour listes animées */
+  .stagger-1 {
+    animation-delay: 50ms;
+  }
+
+  .stagger-2 {
+    animation-delay: 100ms;
+  }
+
+  .stagger-3 {
+    animation-delay: 150ms;
+  }
+
+  .stagger-4 {
+    animation-delay: 200ms;
+  }
+
+  .stagger-5 {
+    animation-delay: 250ms;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SCROLLBAR — discret, cohérent avec le thème
+───────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TYPOGRAPHY HELPERS — autoloc brand classes (rétrocompat)
+───────────────────────────────────────────────────────────────────────────── */
+
+.autoloc-hero {
+  font-family: var(--font-display);
+}
+
+.autoloc-body {
+  font-family: var(--font-body);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SCROLLBAR HIDE — for carousels
+───────────────────────────────────────────────────────────────────────────── */
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SLIDE-UP — mobile drawers
+───────────────────────────────────────────────────────────────────────────── */
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
 }

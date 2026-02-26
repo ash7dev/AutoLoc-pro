@@ -20,7 +20,7 @@ export function useBecomeOwner() {
       if (!token) throw new Error('Session expirée — reconnectez-vous.');
       await switchRole(token, 'PROPRIETAIRE');
       setActiveRole('PROPRIETAIRE');
-      router.push('/dashboard/owner/vehicles');
+      router.push('/dashboard/owner');
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Une erreur est survenue.';

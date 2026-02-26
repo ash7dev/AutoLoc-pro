@@ -33,7 +33,6 @@ export async function apiFetch<TResponse, TBody = undefined>(
   }
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...(options.headers ?? {}),
   };
 
@@ -51,8 +50,16 @@ export async function apiFetch<TResponse, TBody = undefined>(
 
   const res = await fetch(url, {
     method: options.method ?? 'GET',
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
+    headers:
+      options.body instanceof FormData
+        ? headers
+        : { 'Content-Type': 'application/json', ...headers },
+    body:
+      options.body instanceof FormData
+        ? options.body
+        : options.body
+          ? JSON.stringify(options.body)
+          : undefined,
   });
 
   const contentType = res.headers.get('content-type') ?? '';

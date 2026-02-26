@@ -1,17 +1,25 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CloudinaryService } from '../../infrastructure/cloudinary/cloudinary.service';
+import { assertValidImageBuffer } from '../../infrastructure/cloudinary/utils/file-validator';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RequestUser } from '../../common/types/auth.types';
 import { ProfileResponse } from '../../common/types/auth.types';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
 import { SwitchRoleDto } from './dto/switch-role.dto';
-import { RoleProfile } from '@prisma/client';
+import { RoleProfile, StatutKyc } from '@prisma/client';
 import { JwksService } from '../../infrastructure/jwt/jwks.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { RedisService } from '../../infrastructure/redis/redis.service';
+import { ALLOWED_MIMES } from '../upload/upload.config';
 
 const DEFAULT_ROLE = 'LOCATAIRE';
 const ACCESS_TOKEN_TTL_DEFAULT = '15m';
 const REFRESH_TOKEN_TTL_DEFAULT = '30d';
+const OTP_TTL_SECONDS = 5 * 60;
+const OTP_KEY_PREFIX = 'auth:phone-otp:';
+const OTP_COOLDOWN_SECONDS = 60;
+const OTP_COOLDOWN_PREFIX = 'auth:phone-otp:cooldown:';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +28,8 @@ export class AuthService {
     private readonly jwksService: JwksService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly redisService: RedisService,
+    private readonly cloudinary: CloudinaryService,
   ) {}
 
   /**
@@ -31,8 +41,8 @@ export class AuthService {
       where: { userId: user.sub },
     });
     if (existing) {
-      const utilisateurId = await this.getUtilisateurId(user.sub);
-      return this.toResponse(existing, utilisateurId);
+      const flags = await this.getUtilisateurFlags(user.sub);
+      return this.toResponse(existing, flags);
     }
 
     const created = await this.prisma.$transaction(async (tx) => {
@@ -50,8 +60,8 @@ export class AuthService {
       });
     });
 
-    const utilisateurId = await this.getUtilisateurId(user.sub);
-    return this.toResponse(created, utilisateurId);
+    const flags = await this.getUtilisateurFlags(user.sub);
+    return this.toResponse(created, flags);
   }
 
   /**
@@ -104,9 +114,15 @@ export class AuthService {
         telephone: normalizedPhone,
         email: emailToCheck,
         profileCompleted: true,
+        phoneVerified: true,
         avatarUrl: dto.avatarUrl ?? null,
         dateNaissance: dto.dateNaissance ? new Date(dto.dateNaissance) : null,
       },
+    });
+
+    await this.prisma.profile.update({
+      where: { userId: user.sub },
+      data: { phone: normalizedPhone },
     });
 
     const profile = await this.getOrCreateProfile(user);
@@ -134,6 +150,144 @@ export class AuthService {
     });
 
     return { role: dto.role as RoleProfile };
+  }
+
+  async requestPhoneOtp(user: RequestUser): Promise<{ expiresIn: number }> {
+    if (!user.sub) {
+      throw new BadRequestException('Invalid user');
+    }
+
+    const cooldownKey = this.getOtpCooldownKey(user.sub);
+    const granted = await this.redisService.setNX(cooldownKey, '1', OTP_COOLDOWN_SECONDS);
+    if (!granted) {
+      throw new BadRequestException('Code déjà envoyé. Merci de patienter 60s.');
+    }
+
+    const code = this.generateOtp();
+    const key = this.getOtpKey(user.sub);
+    await this.redisService.set(key, code, OTP_TTL_SECONDS);
+
+    // TODO: envoyer SMS/WhatsApp via provider (Twilio, etc.)
+    // eslint-disable-next-line no-console
+    console.log('[Auth] phone OTP generated', { userId: user.sub, code });
+
+    return { expiresIn: OTP_TTL_SECONDS };
+  }
+
+  async updatePhone(user: RequestUser, telephone: string): Promise<ProfileResponse> {
+    if (!user.sub) {
+      throw new BadRequestException('Invalid user');
+    }
+    // eslint-disable-next-line no-console
+    console.log('[Auth] updatePhone', { userId: user.sub, telephone });
+    const normalizedPhone = this.normalizePhone(telephone);
+
+    const phoneTaken = await this.prisma.utilisateur.findFirst({
+      where: { telephone: normalizedPhone, NOT: { userId: user.sub } },
+      select: { id: true },
+    });
+    if (phoneTaken) {
+      throw new BadRequestException('Telephone already in use');
+    }
+
+    const existing = await this.prisma.utilisateur.findUnique({
+      where: { userId: user.sub },
+      select: { id: true },
+    });
+
+    if (existing) {
+      // Simulation mode (pas de provider OTP) : phoneVerified → true directement.
+      const updated = await this.prisma.utilisateur.update({
+        where: { userId: user.sub },
+        data: {
+          telephone: normalizedPhone,
+          phoneVerified: true,
+        },
+      });
+
+      await this.prisma.profile.update({
+        where: { userId: user.sub },
+        data: { phone: normalizedPhone },
+      });
+
+      const profile = await this.getOrCreateProfile(user);
+      return this.toResponse(profile, {
+        id: updated.id,
+        phoneVerified: updated.phoneVerified,
+        kycStatus: updated.statutKyc as ProfileResponse['kycStatus'],
+      });
+    }
+
+    const profile = await this.prisma.profile.update({
+      where: { userId: user.sub },
+      data: { phone: normalizedPhone },
+    });
+
+    return this.toResponse(profile, {});
+  }
+
+  async verifyPhoneOtp(user: RequestUser, code: string): Promise<ProfileResponse> {
+    if (!user.sub) {
+      throw new BadRequestException('Invalid user');
+    }
+    await this.ensureUtilisateurExists(user.sub);
+
+    const key = this.getOtpKey(user.sub);
+    const stored = await this.redisService.get(key);
+    // Simulation mode: accept any 6-digit code (provider not configured yet).
+    if (!/^\d{6}$/.test(code)) {
+      throw new BadRequestException('Invalid or expired code');
+    }
+    if (stored) {
+      await this.redisService.del(key);
+    }
+
+    await this.prisma.utilisateur.update({
+      where: { userId: user.sub },
+      data: { phoneVerified: true },
+    });
+
+    const profile = await this.getOrCreateProfile(user);
+    const flags = await this.getUtilisateurFlags(user.sub);
+    return this.toResponse(profile, flags);
+  }
+
+  async submitKyc(
+    user: RequestUser,
+    documentFrontBuffer: Buffer,
+    documentBackBuffer: Buffer,
+  ): Promise<ProfileResponse> {
+    if (!user.sub) throw new BadRequestException('Invalid user');
+    await this.ensureUtilisateurExists(user.sub);
+
+    try {
+      await assertValidImageBuffer(documentFrontBuffer, ALLOWED_MIMES);
+      await assertValidImageBuffer(documentBackBuffer, ALLOWED_MIMES);
+    } catch {
+      throw new BadRequestException('Invalid file format. Allowed: JPEG, PNG, WebP.');
+    }
+
+    const [frontResult, backResult] = await Promise.all([
+      this.cloudinary.uploadKycDocument(documentFrontBuffer),
+      this.cloudinary.uploadKycDocument(documentBackBuffer),
+    ]);
+
+    const updated = await this.prisma.utilisateur.update({
+      where: { userId: user.sub },
+      data: {
+        statutKyc: StatutKyc.EN_ATTENTE,
+        kycDocumentUrl: frontResult.url,
+        kycSelfieUrl: backResult.url,
+        kycRejectionReason: null,
+      },
+    });
+
+    const profile = await this.getOrCreateProfile(user);
+    return this.toResponse(profile, {
+      id: updated.id,
+      phoneVerified: updated.phoneVerified,
+      kycStatus: updated.statutKyc as ProfileResponse['kycStatus'],
+    });
   }
 
   /**
@@ -223,12 +377,51 @@ export class AuthService {
     return { accessToken: newAccessToken, refreshToken: newRefreshToken, activeRole: profile.role as RoleProfile };
   }
 
-  private async getUtilisateurId(userId: string): Promise<string | undefined> {
+  private async getUtilisateurFlags(userId: string): Promise<{
+    id?: string;
+    phoneVerified?: boolean;
+    kycStatus?: ProfileResponse['kycStatus'];
+    hasVehicles?: boolean;
+  }> {
     const found = await this.prisma.utilisateur.findUnique({
+      where: { userId },
+      select: {
+        id: true,
+        phoneVerified: true,
+        statutKyc: true,
+        _count: { select: { vehicules: true } },
+      },
+    });
+    if (!found) return {};
+    return {
+      id: found.id,
+      phoneVerified: found.phoneVerified,
+      kycStatus: found.statutKyc as ProfileResponse['kycStatus'],
+      hasVehicles: found._count.vehicules > 0,
+    };
+  }
+
+  private async ensureUtilisateurExists(userId: string): Promise<void> {
+    const existing = await this.prisma.utilisateur.findUnique({
       where: { userId },
       select: { id: true },
     });
-    return found?.id;
+    if (!existing) {
+      throw new BadRequestException('Profile not completed');
+    }
+  }
+
+  private getOtpKey(userId: string): string {
+    return `${OTP_KEY_PREFIX}${userId}`;
+  }
+
+  private getOtpCooldownKey(userId: string): string {
+    return `${OTP_COOLDOWN_PREFIX}${userId}`;
+  }
+
+  private generateOtp(): string {
+    const value = Math.floor(100000 + Math.random() * 900000);
+    return String(value);
   }
 
   private normalizePhone(raw: string): string {
@@ -247,7 +440,12 @@ export class AuthService {
       role: string;
       createdAt: Date;
     },
-    utilisateurId?: string,
+    flags: {
+      id?: string;
+      phoneVerified?: boolean;
+      kycStatus?: ProfileResponse['kycStatus'];
+      hasVehicles?: boolean;
+    } = {},
   ): ProfileResponse {
     return {
       id: p.id,
@@ -256,8 +454,11 @@ export class AuthService {
       phone: p.phone,
       role: p.role,
       createdAt: p.createdAt,
-      hasUtilisateur: Boolean(utilisateurId),
-      utilisateurId,
+      hasUtilisateur: Boolean(flags.id),
+      utilisateurId: flags.id,
+      phoneVerified: flags.phoneVerified,
+      kycStatus: flags.kycStatus,
+      hasVehicles: flags.hasVehicles,
     };
   }
 

@@ -1,0 +1,127 @@
+'use client';
+
+import React from 'react';
+import { X, RotateCcw } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { ExplorerFiltersState } from './ExplorerGrid';
+import {
+    ZONES, VEHICLE_TYPES, FUEL_TYPES, TRANSMISSIONS,
+    BUDGET_PRESETS, SORT_OPTIONS,
+} from './ExplorerFilters';
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function getFilterPills(filters: ExplorerFiltersState) {
+    const pills: { key: string; label: string; field: keyof ExplorerFiltersState; resetValue: string | number | null }[] = [];
+
+    if (filters.zone) {
+        pills.push({
+            key: 'zone',
+            label: ZONES.find((z) => z.value === filters.zone)?.label ?? filters.zone,
+            field: 'zone',
+            resetValue: '',
+        });
+    }
+    if (filters.type) {
+        pills.push({
+            key: 'type',
+            label: VEHICLE_TYPES.find((t) => t.value === filters.type)?.label ?? filters.type,
+            field: 'type',
+            resetValue: '',
+        });
+    }
+    if (filters.budgetMax !== null) {
+        pills.push({
+            key: 'budget',
+            label: `≤ ${BUDGET_PRESETS.find((b) => b.value === filters.budgetMax)?.label ?? `${filters.budgetMax} FCFA`}`,
+            field: 'budgetMax',
+            resetValue: null,
+        });
+    }
+    if (filters.fuel) {
+        pills.push({
+            key: 'fuel',
+            label: FUEL_TYPES.find((f) => f.value === filters.fuel)?.label ?? filters.fuel,
+            field: 'fuel',
+            resetValue: '',
+        });
+    }
+    if (filters.transmission) {
+        pills.push({
+            key: 'transmission',
+            label: TRANSMISSIONS.find((t) => t.value === filters.transmission)?.label ?? filters.transmission,
+            field: 'transmission',
+            resetValue: '',
+        });
+    }
+    if (filters.places) {
+        pills.push({
+            key: 'places',
+            label: `${filters.places}+ places`,
+            field: 'places',
+            resetValue: null,
+        });
+    }
+    if (filters.noteMin) {
+        pills.push({
+            key: 'noteMin',
+            label: `★ ${filters.noteMin}+`,
+            field: 'noteMin',
+            resetValue: null,
+        });
+    }
+
+    return pills;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+interface ExplorerActiveFiltersProps {
+    filters: ExplorerFiltersState;
+    onChange: (filters: ExplorerFiltersState) => void;
+    onClearAll: () => void;
+}
+
+export function ExplorerActiveFilters({
+    filters,
+    onChange,
+    onClearAll,
+}: ExplorerActiveFiltersProps): React.ReactElement | null {
+    const pills = getFilterPills(filters);
+
+    if (pills.length === 0) return null;
+
+    return (
+        <div className="flex flex-wrap items-center gap-2">
+            {pills.map((pill) => (
+                <button
+                    key={pill.key}
+                    type="button"
+                    onClick={() => onChange({ ...filters, [pill.field]: pill.resetValue } as ExplorerFiltersState)}
+                    className={cn(
+                        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full',
+                        'bg-black border border-emerald-400/20 text-[12px] font-semibold text-emerald-400',
+                        'hover:bg-red-500/10 hover:border-red-400/30 hover:text-red-400',
+                        'transition-all duration-200 group',
+                    )}
+                >
+                    {pill.label}
+                    <X className="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity" strokeWidth={2.5} />
+                </button>
+            ))}
+
+            <button
+                type="button"
+                onClick={onClearAll}
+                className={cn(
+                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full',
+                    'text-[12px] font-semibold text-black/40',
+                    'hover:text-red-500 transition-colors duration-200',
+                )}
+            >
+                <RotateCcw className="h-3 w-3" strokeWidth={2} />
+                Tout effacer
+            </button>
+        </div>
+    );
+}
+
+export { getFilterPills };

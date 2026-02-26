@@ -12,6 +12,7 @@ import {
   Car,
 } from 'lucide-react';
 import { useSignOut } from '../../features/auth/hooks/use-signout';
+import { fetchMe } from '../../lib/nestjs/auth';
 
 interface UserMenuProps {
   isOwner: boolean;
@@ -19,6 +20,7 @@ interface UserMenuProps {
 
 export function UserMenu({ isOwner }: UserMenuProps) {
   const [open, setOpen] = useState(false);
+  const [hasVehicles, setHasVehicles] = useState<boolean | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const { signOut, loading: signingOut } = useSignOut();
 
@@ -32,17 +34,32 @@ export function UserMenu({ isOwner }: UserMenuProps) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  useEffect(() => {
+    fetchMe('')
+      .then((profile) => setHasVehicles(Boolean(profile.hasVehicles)))
+      .catch(() => setHasVehicles(false));
+  }, []);
+
   return (
     <div className="flex items-center gap-3">
 
       {/* CTA contextuel */}
-      {isOwner ? (
+      {(!isOwner && hasVehicles === null) ? (
+        <button
+          type="button"
+          disabled
+          className="autoloc-body text-sm font-semibold bg-gray-900 text-white px-4 py-2 rounded-xl flex items-center gap-2 opacity-80"
+        >
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          Chargement...
+        </button>
+      ) : (isOwner || hasVehicles) ? (
         <Link
-          href="/dashboard/owner/vehicles"
+          href="/dashboard/owner"
           className="autoloc-body text-sm font-semibold bg-gray-900 text-white px-4 py-2 rounded-xl hover:bg-gray-700 transition-all duration-150 flex items-center gap-1.5"
         >
           <Car className="w-3.5 h-3.5 text-emerald-400" />
-          Mon espace
+          Espace hôte
         </Link>
       ) : (
         <Link

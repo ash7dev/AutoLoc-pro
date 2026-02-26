@@ -21,6 +21,6 @@ export default async function DashboardPage() {
     redirect('/dashboard/admin');
   }
 
-  // PROPRIETAIRE → espace de gestion des véhicules
-  redirect('/dashboard/owner/vehicles');
+  // PROPRIETAIRE → home overview
+  redirect('/dashboard/owner');
 }

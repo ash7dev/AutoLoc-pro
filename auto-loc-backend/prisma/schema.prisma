@@ -51,7 +51,10 @@ model Utilisateur {
   phoneVerified   Boolean  @default(false)
   profileCompleted Boolean @default(false)
 
-  statutKyc       StatutKyc @default(NON_VERIFIE)
+  statutKyc          StatutKyc @default(NON_VERIFIE)
+  kycDocumentUrl     String?
+  kycSelfieUrl       String?
+  kycRejectionReason String?
   actif           Boolean   @default(true)
   bloqueJusqua    DateTime?
 
@@ -103,8 +106,13 @@ model Vehicule {
   latitude         Decimal? @db.Decimal(10,7)
   longitude        Decimal? @db.Decimal(10,7)
 
-  joursMinimum     Int      @default(1)
-  ageMinimum       Int      @default(18)
+  joursMinimum      Int      @default(1)
+  ageMinimum        Int      @default(18)
+
+  // Conditions de location
+  zoneConduite      String?
+  assurance         String?
+  reglesSpecifiques String?
 
   statut           StatutVehicule @default(EN_ATTENTE_VALIDATION)
   note             Decimal  @default(0) @db.Decimal(3,2)
@@ -114,15 +122,29 @@ model Vehicule {
   creeLe           DateTime @default(now())
   misAJourLe       DateTime @updatedAt
 
-  photos           PhotoVehicule[]
-  equipements      VehiculeEquipement[]
-  reservations     Reservation[]
+  photos              PhotoVehicule[]
+  equipements         VehiculeEquipement[]
+  reservations        Reservation[]
+  tarifsProgressifs   TarifTier[]
 
   @@index([proprietaireId])
   @@index([statut])
   @@index([ville])
   @@index([statut, ville, prixParJour])
   @@index([ville, type])
+}
+
+model TarifTier {
+  id         String   @id @default(uuid())
+  vehiculeId String
+  vehicule   Vehicule @relation(fields: [vehiculeId], references: [id], onDelete: Cascade)
+
+  joursMin   Int
+  joursMax   Int?
+  prix       Decimal  @db.Decimal(10,2)
+  position   Int      @default(0)
+
+  @@index([vehiculeId])
 }
 
 enum TypeVehicule {
@@ -134,6 +156,7 @@ enum TypeVehicule {
 }
 
 enum StatutVehicule {
+  BROUILLON
   EN_ATTENTE_VALIDATION
   VERIFIE
   SUSPENDU
@@ -179,6 +202,7 @@ model PhotoVehicule {
   vehicule      Vehicule @relation(fields: [vehiculeId], references: [id], onDelete: Cascade)
 
   url           String
+  publicId      String?
   position      Int      @default(0)
   estPrincipale Boolean  @default(false)
 
@@ -227,6 +251,9 @@ model Reservation {
   closeLe         DateTime?
 
   updatedBySystem Boolean @default(false)
+
+  contratUrl      String?
+  contratPublicId String?
 
   creeLe          DateTime @default(now())
   misAJourLe      DateTime @updatedAt
@@ -467,6 +494,8 @@ model IdempotencyKey {
   key           String      @unique
   reservationId String      @unique
   reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  paymentUrl    String?
+  paymentRef    String?
   expiresAt     DateTime
   creeLe        DateTime    @default(now())
 

@@ -4,7 +4,6 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
 import { Request } from 'express';
 import { RequestUser } from '../../common/types/auth.types';
 import { JwtService } from '@nestjs/jwt';
@@ -16,7 +15,6 @@ export const BEARER_PREFIX = 'Bearer ';
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly jwksService: JwksService,
   ) {}
