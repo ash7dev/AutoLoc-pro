@@ -35,7 +35,7 @@ export function OwnerHeader({
   }, []);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-black border border-white/[0.06] px-8 py-6">
+    <div className="relative overflow-hidden rounded-2xl bg-black border border-white/[0.06] px-4 py-4 sm:px-8 sm:py-6">
       {/* Ambient glows */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-20 -left-10 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
@@ -53,7 +53,7 @@ export function OwnerHeader({
         }}
       />
 
-      <div className="relative flex items-center justify-between gap-6">
+      <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
         {/* Left */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2 mb-1">
@@ -64,7 +64,7 @@ export function OwnerHeader({
             <span className="text-xs text-white/30 tabular-nums">{time}</span>
           </div>
 
-          <h1 className="font-display text-3xl font-bold tracking-tight text-white">
+          <h1 className="font-display text-xl sm:text-3xl font-bold tracking-tight text-white">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-300">
               {title}
             </span>
@@ -74,10 +74,10 @@ export function OwnerHeader({
         </div>
 
         {/* Right */}
-        <div className="flex items-center gap-4 shrink-0">
+        <div className="flex items-center gap-3 sm:gap-4 shrink-0 flex-wrap">
           {/* Stat cards */}
           {showFleetStats && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="hidden lg:flex flex-wrap items-center gap-2">
               <div className="group flex items-center gap-4 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm transition-all hover:translate-y-[-2px] hover:bg-white/15">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/15">
                   <Car className="h-4.5 w-4.5 text-emerald-300" />
@@ -133,10 +133,11 @@ export function OwnerHeader({
           {/* CTA */}
           <Button
             onClick={() => router.push("/dashboard/owner/vehicles/new")}
-            className="gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-sm px-4 h-9 transition-all shadow-[0_0_20px_rgba(52,211,153,0.25)] hover:shadow-[0_0_28px_rgba(52,211,153,0.4)]"
+            className="gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-sm px-3 sm:px-4 h-9 transition-all shadow-[0_0_20px_rgba(52,211,153,0.25)] hover:shadow-[0_0_28px_rgba(52,211,153,0.4)]"
           >
             <Plus className="h-4 w-4" />
-            Ajouter un véhicule
+            <span className="hidden sm:inline">Ajouter un véhicule</span>
+            <span className="sm:hidden">Ajouter</span>
           </Button>
         </div>
       </div>

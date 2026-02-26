@@ -30,7 +30,7 @@ export default async function OwnerReservationsPage() {
   ).length;
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-4 p-3 sm:gap-6 sm:p-6">
       <OwnerHeader
         title="Gestion réservations"
         subtitle={`${reservations.length} réservation${reservations.length !== 1 ? "s" : ""} · ${activeCount} active${activeCount !== 1 ? "s" : ""}`}

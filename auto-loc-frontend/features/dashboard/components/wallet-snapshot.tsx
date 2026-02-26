@@ -24,7 +24,7 @@ export function WalletSnapshot({
   ctaLabel?: string;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-lg bg-foreground p-6 shadow-lg h-full flex flex-col">
+    <div className="relative overflow-hidden rounded-lg bg-foreground p-4 sm:p-6 shadow-lg h-full flex flex-col">
       {/* Subtle top highlight */}
       <div className="absolute top-0 left-6 right-6 h-px bg-white/10" />
 
@@ -45,7 +45,7 @@ export function WalletSnapshot({
       {/* Main balance */}
       <div className="mb-5">
         <p className="text-xs text-white/30 font-medium mb-1.5">Solde disponible</p>
-        <p className="text-3xl font-bold tracking-tight text-white">
+        <p className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
           {loading ? "—" : data.available}
         </p>
         <div className="mt-2 flex items-center gap-1.5">

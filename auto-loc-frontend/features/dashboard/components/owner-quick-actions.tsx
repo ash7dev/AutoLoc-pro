@@ -69,11 +69,11 @@ export function OwnerQuickActions({ reservations }: QuickActionsProps) {
 
     return (
         <div className="rounded-lg border border-[hsl(var(--border))] bg-card shadow-sm flex flex-col h-full">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[hsl(var(--border))]">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[hsl(var(--border))]">
                 <h2 className="text-xl font-bold">Actions rapides</h2>
             </div>
 
-            <div className="p-4 grid grid-cols-1 gap-3 flex-1 content-start">
+            <div className="p-3 sm:p-4 grid grid-cols-1 gap-3 flex-1 content-start">
 
                 {/* 1. Confirmer réservations */}
                 <Link

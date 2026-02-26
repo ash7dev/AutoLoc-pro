@@ -36,7 +36,7 @@ export function AttendanceCalendar({
   return (
     <div className="rounded-lg border border-[hsl(var(--border))] bg-card shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[hsl(var(--border))]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 sm:px-6 sm:py-4 border-b border-[hsl(var(--border))]">
         <div>
           <h3 className="text-xl font-bold">Disponibilité</h3>
           {!loading && (
@@ -69,7 +69,7 @@ export function AttendanceCalendar({
       </div>
 
       {/* Calendar body */}
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Day labels */}
         <div className="grid grid-cols-7 mb-2">
           {daysOfWeek.map((d) => (
@@ -86,25 +86,25 @@ export function AttendanceCalendar({
         <div className="grid grid-cols-7 gap-1">
           {loading
             ? Array.from({ length: 30 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="aspect-square rounded-md bg-muted animate-pulse"
-                />
-              ))
+              <div
+                key={i}
+                className="aspect-square rounded-md bg-muted animate-pulse"
+              />
+            ))
             : days.map((item) => (
-                <button
-                  key={item.day}
-                  onClick={() => onSelectDay?.(item)}
-                  className={cn(
-                    "aspect-square rounded-md text-xs font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    item.status === "reserved"
-                      ? "bg-emerald-400 text-white hover:bg-emerald-500 shadow-sm"
-                      : "text-foreground hover:bg-muted"
-                  )}
-                >
-                  {item.day}
-                </button>
-              ))}
+              <button
+                key={item.day}
+                onClick={() => onSelectDay?.(item)}
+                className={cn(
+                  "aspect-square rounded-md text-xs font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  item.status === "reserved"
+                    ? "bg-emerald-400 text-white hover:bg-emerald-500 shadow-sm"
+                    : "text-foreground hover:bg-muted"
+                )}
+              >
+                {item.day}
+              </button>
+            ))}
         </div>
 
         {/* Legend */}

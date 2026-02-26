@@ -8,12 +8,12 @@ export default function PendingReservationPage() {
     const router = useRouter();
 
     return (
-        <div className="flex flex-col gap-6 p-6">
+        <div className="flex flex-col gap-4 p-3 sm:gap-6 sm:p-6">
             <OwnerHeader
                 title="Confirmation de réservation"
                 subtitle={`Réservation #${params.id}`}
             />
-            <div className="rounded-xl border bg-card p-8 text-center space-y-4">
+            <div className="rounded-xl border bg-card p-5 sm:p-8 text-center space-y-4">
                 <div className="mx-auto w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
                     <span className="text-2xl">⏳</span>
                 </div>

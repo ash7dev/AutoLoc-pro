@@ -216,14 +216,14 @@ export function OwnerDashboardView({
     const activeReservations = reservations.filter((r) => ["PAYEE", "CONFIRMEE", "EN_COURS"].includes(r.statut)).length;
 
     return (
-        <div className="flex flex-col gap-6 p-6">
+        <div className="flex flex-col gap-4 p-3 sm:gap-6 sm:p-6">
             <OwnerHeader
                 title="Tableau de bord"
                 subtitle={`Vue d'ensemble — ${vehicles.length} véhicule${vehicles.length !== 1 ? "s" : ""} · ${activeReservations} réservation${activeReservations !== 1 ? "s" : ""} active${activeReservations !== 1 ? "s" : ""}`}
             />
 
             {/* Row 2 — Revenue + Wallet */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div className="lg:col-span-1">
                     <RevenueChart
                         data={revenueData.points}
@@ -239,7 +239,7 @@ export function OwnerDashboardView({
             </div>
 
             {/* Row 3 — Todo + Actions */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
                 <div className="xl:col-span-2">
                     <OwnerTodoCard
                         items={todoItems.length > 0 ? todoItems : [
@@ -254,14 +254,14 @@ export function OwnerDashboardView({
             </div>
 
             {/* Row 4 — Reservations + Calendar */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
                 <div className="xl:col-span-2">
                     <RecentReservations
                         mode="pipeline"
                         reservations={recentReservations}
                     />
                 </div>
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-4 sm:gap-6">
                     <AttendanceCalendar
                         month={currentMonth}
                         days={calendarDays}

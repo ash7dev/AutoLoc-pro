@@ -45,7 +45,7 @@ export function OwnerReservationCard({ reservation: r, className }: OwnerReserva
             </div>
 
             {/* Info row */}
-            <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground mb-3">
                 <div className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5" />
                     <span>{dateDebut} → {dateFin}</span>

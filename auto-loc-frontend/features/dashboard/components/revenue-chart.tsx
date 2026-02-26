@@ -62,13 +62,13 @@ export function RevenueChart({
 
   return (
     <TooltipProvider>
-      <div className="rounded-lg border border-[hsl(var(--border))] bg-card p-6 shadow-sm h-full flex flex-col min-h-[320px]">
+      <div className="rounded-lg border border-[hsl(var(--border))] bg-card p-4 sm:p-6 shadow-sm h-full flex flex-col min-h-[260px] sm:min-h-[320px]">
         {/* Header */}
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4 sm:mb-6">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Revenus Overview</p>
             <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold tracking-tight">
+              <span className="text-xl sm:text-2xl font-bold tracking-tight">
                 {loading ? "—" : total}
                 <span className="text-sm font-medium text-muted-foreground ml-1.5">FCFA</span>
               </span>
@@ -82,7 +82,7 @@ export function RevenueChart({
           </div>
 
           <Select value={selectedMonth} onValueChange={handleMonthChange}>
-            <SelectTrigger className="w-[140px] h-8 text-sm">
+            <SelectTrigger className="w-full sm:w-[140px] h-8 text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -96,7 +96,7 @@ export function RevenueChart({
         </div>
 
         {/* Chart */}
-        <div className="relative h-56 flex-1 min-h-[224px]">
+        <div className="relative h-40 sm:h-56 flex-1 min-h-[160px] sm:min-h-[224px]">
           {/* Y-axis */}
           <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between">
             {["150K", "100K", "50K", "0"].map((label) => (
