@@ -94,14 +94,23 @@ export default async function ReservationDetailPage({
     }
 
     const r = reservation;
+    const legacy = r as typeof r & {
+        totalLocataire?: string;
+        montantCommission?: string;
+        netProprietaire?: string;
+        tauxCommission?: string;
+        checkinLe?: string;
+        checkoutLe?: string;
+        annuleLe?: string;
+    };
 
     /* ── Timeline ── */
     const timeline = [
         { label: "Réservation créée",     date: r.creeLe,       icon: Clock,        color: "emerald" },
         r.confirmeeLe && { label: "Confirmée par vous", date: r.confirmeeLe,  icon: CheckCircle2, color: "emerald" },
-        r.checkInLe   && { label: "Check-in effectué",  date: r.checkInLe,    icon: LogIn,        color: "blue" },
-        r.checkOutLe  && { label: "Check-out effectué", date: r.checkOutLe,   icon: LogOut,       color: "blue" },
-        r.annuleeLe   && { label: "Annulée",             date: r.annuleeLe,    icon: XCircle,      color: "red" },
+        (r.checkInLe ?? legacy.checkinLe)   && { label: "Check-in effectué",  date: (r.checkInLe ?? legacy.checkinLe)!,   icon: LogIn,  color: "blue" },
+        (r.checkOutLe ?? legacy.checkoutLe) && { label: "Check-out effectué", date: (r.checkOutLe ?? legacy.checkoutLe)!, icon: LogOut, color: "blue" },
+        (r.annuleeLe ?? legacy.annuleLe)    && { label: "Annulée",             date: (r.annuleeLe ?? legacy.annuleLe)!,   icon: XCircle, color: "red" },
     ].filter(Boolean) as { label: string; date: string; icon: React.ElementType; color: string }[];
 
     /* ── Duration (fallback to date diff if nbJours missing) ── */
@@ -110,10 +119,12 @@ export default async function ReservationDetailPage({
         : Math.max(1, Math.round((new Date(r.dateFin).getTime() - new Date(r.dateDebut).getTime()) / 86_400_000));
 
     /* ── Financial ── */
-    const totalLocataire = Number(r.prixTotal ?? 0) || 0;
-    const commissionAmount = Number(r.commission ?? 0) || 0;
-    const netAmount = Number(r.montantProprietaire ?? 0) || 0;
-    const commissionPct = totalLocataire > 0 ? Math.round((commissionAmount / totalLocataire) * 100) : 0;
+    const totalLocataire = Number(r.prixTotal ?? legacy.totalLocataire ?? 0) || 0;
+    const commissionAmount = Number(r.commission ?? legacy.montantCommission ?? 0) || 0;
+    const netAmount = Number(r.montantProprietaire ?? legacy.netProprietaire ?? 0) || 0;
+    const commissionPct = totalLocataire > 0
+        ? Math.round((commissionAmount / totalLocataire) * 100)
+        : (legacy.tauxCommission ? Math.round(Number(legacy.tauxCommission) * 100) : 0);
     const netShare = totalLocataire > 0 ? Math.round((netAmount / totalLocataire) * 100) : 0;
 
     return (
