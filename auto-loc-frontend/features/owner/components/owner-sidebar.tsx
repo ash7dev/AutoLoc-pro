@@ -24,7 +24,7 @@ import { useSwitchToLocataire } from '../hooks/use-switch-to-locataire';
 import { useSignOut } from '../../auth/hooks/use-signout';
 
 /* ── Navigation config ────────────────────────────────────────── */
-const NAV_ITEMS = [
+const DESKTOP_NAV_ITEMS = [
   { href: '/dashboard/owner', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/dashboard/owner/vehicles', icon: Car, label: 'Véhicules' },
   { href: '/dashboard/owner/reservations', icon: CalendarRange, label: 'Réservations' },
@@ -43,6 +43,27 @@ const NAV_ITEMS = [
   },
 ] as const;
 
+const MOBILE_NAV_ITEMS = [
+  { href: '/dashboard/owner', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/dashboard/owner/vehicles', icon: Car, label: 'Véhicules' },
+  { href: '/dashboard/owner/reservations', icon: CalendarRange, label: 'Réservations' },
+  { href: '/dashboard/owner/wallet', icon: Banknote, label: 'Portefeuille' },
+  {
+    href: '/dashboard/settings',
+    icon: SlidersHorizontal,
+    label: 'Paramètres',
+    submenu: [
+      { name: 'Informations', href: '/dashboard/settings/profile' },
+      { name: 'Notifications', href: '/dashboard/settings/notifications' },
+      { name: 'Aide & Support', href: '/dashboard/settings/support' },
+      { name: 'Avis', href: '/dashboard/owner/reviews' },
+      { name: 'Vérification', href: '/dashboard/owner/kyc' },
+      { name: 'Mode locataire', href: 'switch-locataire' },
+      { name: 'Déconnexion', href: 'sign-out' },
+    ],
+  },
+] as const;
+
 /* ── NavItem ──────────────────────────────────────────────────── */
 interface NavItemProps {
   href: string;
@@ -51,13 +72,20 @@ interface NavItemProps {
   active: boolean;
   collapsed: boolean;
   subItem?: boolean;
+  onClick?: () => void;
 }
 
-function NavItem({ href, icon, label, active, collapsed, subItem = false }: NavItemProps) {
+function NavItem({ href, icon, label, active, collapsed, subItem = false, onClick }: NavItemProps) {
+  const handleClick = onClick ? (e: React.MouseEvent) => {
+    e.preventDefault();
+    onClick();
+  } : undefined;
+
   return (
     <Link
       href={href}
       title={collapsed ? label : undefined}
+      onClick={handleClick}
       className={cn(
         'group relative flex items-center gap-3 rounded-xl font-medium transition-all duration-200',
         subItem
@@ -141,7 +169,7 @@ export function OwnerSidebar() {
         'flex-1 py-1 space-y-0.5 overflow-y-auto',
         compact ? 'px-2' : 'px-3'
       )}>
-        {NAV_ITEMS.map((item) => {
+        {DESKTOP_NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           const hasSubmenu = 'submenu' in item && item.submenu && item.submenu.length > 0;
           const isSubmenuOpen = openSubmenu === item.href;
@@ -290,7 +318,7 @@ export function OwnerSidebar() {
       {/* ══ MOBILE BOTTOM TAB BAR ══════════════════════════════════ */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex bg-white/80 backdrop-blur-xl pb-safe
         border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        {NAV_ITEMS.map((item) => {
+        {MOBILE_NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link

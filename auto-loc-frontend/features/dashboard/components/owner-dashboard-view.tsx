@@ -8,6 +8,9 @@ import { OwnerTodoCard } from "@/features/dashboard/components/owner-todo-card";
 import { WalletSnapshot } from "@/features/dashboard/components/wallet-snapshot";
 import { OwnerHeader } from "@/features/dashboard/components/owner-header";
 import { OverviewStats } from "@/features/dashboard/components/overview-stats";
+import { MobileQuickActions } from "@/features/dashboard/components/mobile-quick-actions";
+import { MobileRevenueCard } from "@/features/dashboard/components/mobile-revenue-card";
+import { MobileWalletCard } from "@/features/dashboard/components/mobile-wallet-card";
 import { useState, useMemo } from "react";
 import type { Reservation } from "@/lib/nestjs/reservations";
 import type { Vehicle } from "@/lib/nestjs/vehicles";
@@ -215,6 +218,9 @@ export function OwnerDashboardView({
         .reduce((sum, r) => sum + parseFloat(r.montantProprietaire || "0"), 0);
     const activeReservations = reservations.filter((r) => ["PAYEE", "CONFIRMEE", "EN_COURS"].includes(r.statut)).length;
 
+    // Calculate urgent reservations for mobile
+    const urgentReservations = reservations.filter((r) => ["PAYEE", "CONFIRMEE"].includes(r.statut));
+
     return (
         <div className="flex flex-col gap-4 p-3 sm:gap-6 sm:p-6">
             <OwnerHeader
@@ -222,52 +228,91 @@ export function OwnerDashboardView({
                 subtitle={`Vue d'ensemble — ${vehicles.length} véhicule${vehicles.length !== 1 ? "s" : ""} · ${activeReservations} réservation${activeReservations !== 1 ? "s" : ""} active${activeReservations !== 1 ? "s" : ""}`}
             />
 
-            {/* Row 2 — Revenue + Wallet */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                <div className="lg:col-span-1">
-                    <RevenueChart
-                        data={revenueData.points}
+            {/* Mobile Layout */}
+            <div className="lg:hidden space-y-4">
+                {/* Revenue + Wallet Cards */}
+                <div className="grid grid-cols-2 gap-3">
+                    <MobileRevenueCard
                         total={revenueData.totalRev.toLocaleString("fr-FR")}
-                        change="0%" // Could be calculated comparing to previous month
-                        selectedMonth={revenuePeriod}
-                        onMonthChange={setRevenuePeriod}
+                        change="0%"
+                        period="Ce mois"
+                    />
+                    <MobileWalletCard
+                        available={walletSnapshot.available}
+                        pending={walletSnapshot.pending}
                     />
                 </div>
-                <div className="lg:col-span-1">
-                    <WalletSnapshot data={walletSnapshot} />
-                </div>
+
+                {/* Quick Actions */}
+                <MobileQuickActions 
+                    reservations={reservations}
+                    urgentCount={urgentReservations.length}
+                />
+
+                {/* Recent Reservations - Compact */}
+                <RecentReservations
+                    mode="pipeline"
+                    reservations={recentReservations.slice(0, 3)}
+                />
+
+                {/* Mini Calendar */}
+                <AttendanceCalendar
+                    month={currentMonth}
+                    days={calendarDays}
+                    onPrev={handlePrevMonth}
+                    onNext={handleNextMonth}
+                />
             </div>
 
-            {/* Row 3 — Todo + Actions */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
-                <div className="xl:col-span-2">
-                    <OwnerTodoCard
-                        items={todoItems.length > 0 ? todoItems : [
-                            { id: 0, title: "Rien à signaler", description: "Tout est en ordre !", priority: "normal" as const, href: "/dashboard/owner" },
-                        ]}
-                        allHref="/dashboard/owner/reservations"
-                    />
+            {/* Desktop Layout */}
+            <div className="hidden lg:block">
+                {/* Row 2 — Revenue + Wallet */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="lg:col-span-1">
+                        <RevenueChart
+                            data={revenueData.points}
+                            total={revenueData.totalRev.toLocaleString("fr-FR")}
+                            change="0%" // Could be calculated comparing to previous month
+                            selectedMonth={revenuePeriod}
+                            onMonthChange={setRevenuePeriod}
+                        />
+                    </div>
+                    <div className="lg:col-span-1">
+                        <WalletSnapshot data={walletSnapshot} />
+                    </div>
                 </div>
-                <div className="xl:col-span-1">
-                    <OwnerQuickActions reservations={reservations} />
-                </div>
-            </div>
 
-            {/* Row 4 — Reservations + Calendar */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
-                <div className="xl:col-span-2">
-                    <RecentReservations
-                        mode="pipeline"
-                        reservations={recentReservations}
-                    />
+                {/* Row 3 — Todo + Actions */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="xl:col-span-2">
+                        <OwnerTodoCard
+                            items={todoItems.length > 0 ? todoItems : [
+                                { id: 0, title: "Rien à signaler", description: "Tout est en ordre !", priority: "normal" as const, href: "/dashboard/owner" },
+                            ]}
+                            allHref="/dashboard/owner/reservations"
+                        />
+                    </div>
+                    <div className="xl:col-span-1">
+                        <OwnerQuickActions reservations={reservations} />
+                    </div>
                 </div>
-                <div className="flex flex-col gap-4 sm:gap-6">
-                    <AttendanceCalendar
-                        month={currentMonth}
-                        days={calendarDays}
-                        onPrev={handlePrevMonth}
-                        onNext={handleNextMonth}
-                    />
+
+                {/* Row 4 — Reservations + Calendar */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="xl:col-span-2">
+                        <RecentReservations
+                            mode="pipeline"
+                            reservations={recentReservations}
+                        />
+                    </div>
+                    <div className="flex flex-col gap-4 sm:gap-6">
+                        <AttendanceCalendar
+                            month={currentMonth}
+                            days={calendarDays}
+                            onPrev={handlePrevMonth}
+                            onNext={handleNextMonth}
+                        />
+                    </div>
                 </div>
             </div>
         </div>

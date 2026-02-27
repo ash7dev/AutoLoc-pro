@@ -66,7 +66,7 @@ export function RevenueChart({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4 sm:mb-6">
           <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Revenus Overview</p>
+            <p className="text-sm text-muted-foreground">Aperçu des revenus</p>
             <div className="flex items-center gap-3">
               <span className="text-xl sm:text-2xl font-bold tracking-tight">
                 {loading ? "—" : total}
