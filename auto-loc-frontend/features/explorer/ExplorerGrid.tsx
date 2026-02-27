@@ -41,23 +41,29 @@ export type VehicleGridItem = VehicleSearchResult & {
 export interface ExplorerFiltersState {
   zone: string;
   type: string;
+  budgetMin: number | null;
   budgetMax: number | null;
   fuel: string;
   transmission: string;
   sort: string;
   places: number | null;
   noteMin: number | null;
+  equipements: string[];
+  nearMe: boolean;
 }
 
 export const DEFAULT_FILTERS: ExplorerFiltersState = {
   zone: '',
   type: '',
+  budgetMin: null,
   budgetMax: null,
   fuel: '',
   transmission: '',
   sort: 'popular',
   places: null,
   noteMin: null,
+  equipements: [],
+  nearMe: false,
 };
 
 /* ════════════════════════════════════════════════════════════════
@@ -75,9 +81,9 @@ interface DisplayStrategy {
 }
 
 const STRATEGIES: Record<string, DisplayStrategy> = {
-  sparse:   { name: 'sparse',   featuredCount: 1, gridCols: { sm: 1, lg: 2 }, priorityRules: [{ field: 'totalLocations', direction: 'desc', weight: 8 }, { field: 'note', direction: 'desc', weight: 7 }, { field: 'prixParJour', direction: 'asc', weight: 5 }] },
-  limited:  { name: 'limited',  featuredCount: 1, gridCols: { sm: 2, lg: 2 }, priorityRules: [{ field: 'totalLocations', direction: 'desc', weight: 8 }, { field: 'note', direction: 'desc', weight: 7 }, { field: 'prixParJour', direction: 'asc', weight: 5 }] },
-  normal:   { name: 'normal',   featuredCount: 1, gridCols: { sm: 2, lg: 3 }, priorityRules: [{ field: 'note', direction: 'desc', weight: 7 }, { field: 'totalLocations', direction: 'desc', weight: 6 }, { field: 'prixParJour', direction: 'asc', weight: 4 }] },
+  sparse: { name: 'sparse', featuredCount: 1, gridCols: { sm: 1, lg: 2 }, priorityRules: [{ field: 'totalLocations', direction: 'desc', weight: 8 }, { field: 'note', direction: 'desc', weight: 7 }, { field: 'prixParJour', direction: 'asc', weight: 5 }] },
+  limited: { name: 'limited', featuredCount: 1, gridCols: { sm: 2, lg: 2 }, priorityRules: [{ field: 'totalLocations', direction: 'desc', weight: 8 }, { field: 'note', direction: 'desc', weight: 7 }, { field: 'prixParJour', direction: 'asc', weight: 5 }] },
+  normal: { name: 'normal', featuredCount: 1, gridCols: { sm: 2, lg: 3 }, priorityRules: [{ field: 'note', direction: 'desc', weight: 7 }, { field: 'totalLocations', direction: 'desc', weight: 6 }, { field: 'prixParJour', direction: 'asc', weight: 4 }] },
   abundant: { name: 'abundant', featuredCount: 2, gridCols: { sm: 2, lg: 3 }, priorityRules: [{ field: 'note', direction: 'desc', weight: 7 }, { field: 'totalLocations', direction: 'desc', weight: 6 }, { field: 'prixParJour', direction: 'asc', weight: 4 }] },
 };
 
@@ -93,8 +99,8 @@ function calcScore(v: VehicleGridItem, rules: DisplayStrategy['priorityRules']):
     const raw = (v[r.field] as number) ?? 0;
     const norm =
       r.field === 'note' ? raw / 5
-      : r.field === 'totalLocations' ? Math.min(raw / 20, 1)
-      : Math.max(0, 1 - raw / 100_000);
+        : r.field === 'totalLocations' ? Math.min(raw / 20, 1)
+          : Math.max(0, 1 - raw / 100_000);
     return acc + (r.direction === 'desc' ? norm : 1 - norm) * r.weight;
   }, 0);
 }
@@ -363,24 +369,44 @@ export function ExplorerGrid(): React.ReactElement {
     setError(false);
     try {
       const sortMap: Record<string, { by: string; order: 'asc' | 'desc' }> = {
-        popular:    { by: 'totalLocations', order: 'desc' },
-        rating:     { by: 'note',           order: 'desc' },
-        'price-asc':  { by: 'prixParJour',  order: 'asc'  },
-        'price-desc': { by: 'prixParJour',  order: 'desc' },
-        newest:     { by: 'annee',          order: 'desc' },
+        popular: { by: 'totalLocations', order: 'desc' },
+        rating: { by: 'note', order: 'desc' },
+        'price-asc': { by: 'prixParJour', order: 'asc' },
+        'price-desc': { by: 'prixParJour', order: 'desc' },
+        newest: { by: 'annee', order: 'desc' },
       };
       const { by, order } = sortMap[filters.sort] ?? { by: 'totalLocations', order: 'desc' };
+
+      // Geolocation: auto-detect if "nearMe" is active
+      let geoParams: { latitude?: number; longitude?: number; rayon?: number } = {};
+      if (filters.nearMe && typeof navigator !== 'undefined' && navigator.geolocation) {
+        try {
+          const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 }),
+          );
+          geoParams = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            rayon: 30,
+          };
+        } catch {
+          // Geolocation refused or unavailable — search without it
+        }
+      }
 
       const result = await searchVehicles({
         type: (filters.type as VehicleType) || undefined,
         ville: filters.zone || undefined,
+        prixMin: filters.budgetMin || undefined,
         prixMax: filters.budgetMax || undefined,
         carburant: (filters.fuel as FuelType) || undefined,
         transmission: (filters.transmission as Transmission) || undefined,
         placesMin: filters.places || undefined,
         noteMin: filters.noteMin || undefined,
+        equipements: filters.equipements.length ? filters.equipements : undefined,
         sortBy: by as any,
         sortOrder: order,
+        ...geoParams,
       });
       setVehicles(result.data ?? []);
     } catch {

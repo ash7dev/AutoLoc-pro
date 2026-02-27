@@ -59,10 +59,21 @@ export class CloudinaryService implements OnModuleInit {
   }
 
   getContractDownloadUrl(publicId: string): string {
-    return cloudinary.utils.private_download_url(publicId, 'pdf', {
+    // Use cloudinary.url with fl_attachment to force download.
+    // private_download_url requires type=authenticated but we upload as type=upload.
+    return cloudinary.url(`${publicId}.pdf`, {
       resource_type: 'raw',
       type: 'upload',
+      secure: true,
+      flags: 'attachment',
     });
+  }
+
+  async uploadEtatLieuPhoto(buffer: Buffer, reservationId: string, type: string): Promise<UploadResultDto> {
+    return this.uploadToFolder(
+      buffer,
+      `etat-lieux/${reservationId}/${type.toLowerCase()}`,
+    );
   }
 
   async deleteByPublicId(publicId: string): Promise<void> {

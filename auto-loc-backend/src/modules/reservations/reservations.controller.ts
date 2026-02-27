@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -12,8 +13,12 @@ import {
   Query,
   Req,
   Res,
+  UploadedFile,
+  UseFilters,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Request, Response } from 'express';
 import { RoleProfile } from '@prisma/client';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
@@ -26,6 +31,9 @@ import { CreateReservationDto } from './dto/create-reservation.dto';
 import { CancelReservationDto } from './dto/cancel-reservation.dto';
 import { DisputesService } from '../disputes/disputes.service';
 import { CreateDisputeDto } from '../disputes/dto/create-dispute.dto';
+import { VEHICLE_PHOTO_MULTER_OPTIONS } from '../upload/upload.config';
+import { MulterExceptionFilter } from '../upload/multer-exception.filter';
+import { CheckInRole } from '../../domain/reservation/use-cases/checkin.use-case';
 
 @Controller('reservations')
 @UseGuards(JwtAuthGuard)
@@ -98,19 +106,23 @@ export class ReservationsController {
   }
 
   /**
-   * PATCH /reservations/:id/checkin
-   * Propriétaire démarre la location (CONFIRMEE → EN_COURS).
+   * PATCH /reservations/:id/checkin?role=PROPRIETAIRE|LOCATAIRE
+   * Double confirmation check-in : les DEUX parties doivent confirmer.
+   * L'argent est débloqué au wallet propriétaire quand les deux ont confirmé.
    */
   @Patch(':id/checkin')
-  @UseGuards(RolesGuard, ReservationOwnerGuard)
-  @Roles(RoleProfile.PROPRIETAIRE)
   @HttpCode(HttpStatus.OK)
   async checkin(
     @Req() req: Request & { user?: RequestUser },
     @Param('id', ParseUUIDPipe) reservationId: string,
+    @Query('role') role?: string,
   ) {
     const user = req.user!;
-    return this.reservationsService.checkin(user, reservationId);
+    const checkinRole: CheckInRole =
+      role?.toUpperCase() === 'LOCATAIRE' ? 'LOCATAIRE' : 'PROPRIETAIRE';
+    return this.reservationsService.checkin(user, reservationId, {
+      role: checkinRole,
+    });
   }
 
   /**
@@ -127,6 +139,35 @@ export class ReservationsController {
   ) {
     const user = req.user!;
     return this.reservationsService.checkout(user, reservationId);
+  }
+
+  /**
+   * POST /reservations/:id/photos-etat
+   * Upload une photo d'état des lieux (check-in ou check-out).
+   * Query param: ?type=CHECKIN|CHECKOUT&categorie=AVANT|ARRIERE|...
+   */
+  @Post(':id/photos-etat')
+  @UseFilters(MulterExceptionFilter)
+  @UseInterceptors(FileInterceptor('file', VEHICLE_PHOTO_MULTER_OPTIONS))
+  @HttpCode(HttpStatus.CREATED)
+  async uploadPhotoEtatLieu(
+    @Req() req: Request & { user?: RequestUser },
+    @Param('id', ParseUUIDPipe) reservationId: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Query('type') type?: string,
+    @Query('categorie') categorie?: string,
+  ) {
+    if (!file?.buffer) {
+      throw new BadRequestException('File is required');
+    }
+    const user = req.user!;
+    return this.reservationsService.uploadPhotoEtatLieu(
+      user,
+      reservationId,
+      file,
+      (type?.toUpperCase() ?? 'CHECKIN') as 'CHECKIN' | 'CHECKOUT',
+      categorie?.toUpperCase(),
+    );
   }
 
   /**
@@ -209,8 +250,8 @@ export class ReservationsController {
 
   /**
    * POST /reservations/:id/dispute
-   * Déclarer un litige sur une réservation EN_COURS ou TERMINEE.
-   * Accessible au locataire ET au propriétaire.
+   * Locataire : litige non-conformité pendant CONFIRMEE (check-in).
+   * Propriétaire : litige EN_COURS ou TERMINEE (dans les 24h).
    */
   @Post(':id/dispute')
   @HttpCode(HttpStatus.CREATED)

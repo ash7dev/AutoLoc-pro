@@ -31,6 +31,7 @@ import { VehiclesService } from './vehicles.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { SearchVehiclesDto } from './dto/search-vehicles.dto';
+import { CreateIndisponibiliteDto } from './dto/create-indisponibilite.dto';
 import { VEHICLE_PHOTO_MULTER_OPTIONS } from '../upload/upload.config';
 import { MulterExceptionFilter } from '../upload/multer-exception.filter';
 
@@ -131,6 +132,47 @@ export class VehiclesController {
   @Roles(RoleProfile.PROPRIETAIRE)
   archive(@Param('id', ParseUUIDPipe) id: string) {
     return this.vehiclesService.archive(id);
+  }
+
+  // ── INDISPONIBILITÉS (Calendrier de disponibilité) ───────────────────
+
+  /**
+   * POST /vehicles/:id/indisponibilites
+   * Bloquer des dates pour un véhicule.
+   */
+  @Post(':id/indisponibilites')
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  createIndisponibilite(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreateIndisponibiliteDto,
+  ) {
+    return this.vehiclesService.createIndisponibilite(id, dto);
+  }
+
+  /**
+   * GET /vehicles/:id/indisponibilites
+   * Lister les périodes bloquées d'un véhicule.
+   */
+  @Get(':id/indisponibilites')
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  findIndisponibilites(@Param('id', ParseUUIDPipe) id: string) {
+    return this.vehiclesService.findIndisponibilites(id);
+  }
+
+  /**
+   * DELETE /vehicles/:id/indisponibilites/:indispoId
+   * Supprimer une période bloquée.
+   */
+  @Delete(':id/indisponibilites/:indispoId')
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  deleteIndisponibilite(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('indispoId', ParseUUIDPipe) indispoId: string,
+  ) {
+    return this.vehiclesService.deleteIndisponibilite(id, indispoId);
   }
 
   /**

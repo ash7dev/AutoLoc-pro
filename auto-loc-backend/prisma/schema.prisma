@@ -126,6 +126,7 @@ model Vehicule {
   equipements         VehiculeEquipement[]
   reservations        Reservation[]
   tarifsProgressifs   TarifTier[]
+  indisponibilites    IndisponibiliteVehicule[]
 
   @@index([proprietaireId])
   @@index([statut])
@@ -246,6 +247,8 @@ model Reservation {
   raisonAnnulation String?
 
   confirmeeLe     DateTime?
+  checkinProprietaireLe DateTime?
+  checkinLocataireLe    DateTime?
   checkinLe       DateTime?
   checkoutLe      DateTime?
   closeLe         DateTime?
@@ -262,6 +265,7 @@ model Reservation {
   litige          Litige?
   avis            Avis[]
   historique      ReservationHistorique[]
+  photosEtatLieu  PhotoEtatLieu[]
   idempotencyKey  IdempotencyKey?
 
   @@index([vehiculeId, statut])
@@ -523,4 +527,54 @@ model WebhookLog {
   @@index([provider, creeLe])
   @@index([idTransactionFournisseur])
   @@index([reservationId])
+}
+
+// 1️⃣5️⃣ PHOTOS ÉTAT DES LIEUX (Check-in / Check-out)
+
+model PhotoEtatLieu {
+  id            String         @id @default(uuid())
+  reservationId String
+  reservation   Reservation    @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  type          TypeEtatLieu
+  url           String
+  publicId      String?
+  categorie     CategoriePhoto?
+  position      Int            @default(0)
+
+  creeLe        DateTime       @default(now())
+
+  @@index([reservationId, type])
+}
+
+enum TypeEtatLieu {
+  CHECKIN
+  CHECKOUT
+}
+
+enum CategoriePhoto {
+  AVANT
+  ARRIERE
+  COTE_GAUCHE
+  COTE_DROIT
+  INTERIEUR
+  COMPTEUR_KM
+  CARBURANT
+  AUTRE
+}
+
+// 1️⃣6️⃣ INDISPONIBILITÉS VÉHICULE (Blocage dates propriétaire)
+
+model IndisponibiliteVehicule {
+  id         String   @id @default(uuid())
+  vehiculeId String
+  vehicule   Vehicule @relation(fields: [vehiculeId], references: [id], onDelete: Cascade)
+
+  dateDebut  DateTime @db.Date
+  dateFin    DateTime @db.Date
+  motif      String?
+
+  creeLe     DateTime @default(now())
+
+  @@index([vehiculeId, dateDebut, dateFin])
 }

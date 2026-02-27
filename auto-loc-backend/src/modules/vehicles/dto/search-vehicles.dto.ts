@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsArray,
   IsIn,
   IsString,
   Min,
@@ -57,6 +58,12 @@ export class SearchVehiclesDto {
   @IsNumber()
   @Min(0)
   @Type(() => Number)
+  prixMin?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
   prixMax?: number;
 
   @IsOptional()
@@ -93,4 +100,29 @@ export class SearchVehiclesDto {
   @IsOptional()
   @IsIn(['asc', 'desc'])
   sortOrder?: 'asc' | 'desc';
+
+  // ── Geolocation (Haversine) ────────────────────────────────────
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  latitude?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  longitude?: number;
+
+  /** Rayon de recherche en km (défaut 30) */
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(200)
+  @Type(() => Number)
+  rayon?: number;
+
+  /** Liste d'équipements requis (ex: GPS,CLIMATISATION) */
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  equipements?: string[];
 }

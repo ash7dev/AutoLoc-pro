@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { X, RotateCcw, Star } from 'lucide-react';
+import { X, RotateCcw, Star, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ExplorerFiltersState } from './ExplorerGrid';
 
@@ -47,6 +47,17 @@ export const BUDGET_PRESETS = [
     { value: 30000, label: '30 000 FCFA' },
     { value: 50000, label: '50 000 FCFA' },
     { value: 100000, label: '100 000 FCFA' },
+];
+
+export const EQUIPMENTS = [
+    { value: 'GPS', label: 'GPS' },
+    { value: 'CLIMATISATION', label: 'Climatisation' },
+    { value: 'BLUETOOTH', label: 'Bluetooth' },
+    { value: 'CAMERA_RECUL', label: 'Caméra de recul' },
+    { value: 'SIEGE_ENFANT', label: 'Siège enfant' },
+    { value: 'TOIT_OUVRANT', label: 'Toit ouvrant' },
+    { value: 'RADAR_STATIONNEMENT', label: 'Radar stationnement' },
+    { value: 'REGULATEUR_VITESSE', label: 'Rég. de vitesse' },
 ];
 
 export const PLACES_OPTIONS = [2, 4, 5, 7];
@@ -136,18 +147,39 @@ function FilterContent({
                 </div>
             </div>
 
-            {/* Budget max */}
+            {/* Budget range */}
             <div>
-                <p className={SECTION_TITLE}>Budget max / jour</p>
-                <div className="grid grid-cols-2 gap-2">
+                <p className={SECTION_TITLE}>Budget / jour (FCFA)</p>
+                <div className="flex items-center gap-2">
+                    <input
+                        type="number"
+                        placeholder="Min"
+                        value={filters.budgetMin ?? ''}
+                        onChange={(e) => onChange({ budgetMin: e.target.value ? Number(e.target.value) : null })}
+                        className={cn(SELECT_CLASS, 'w-1/2 text-center')}
+                        min={0}
+                        step={5000}
+                    />
+                    <span className="text-white/30 text-xs font-bold">—</span>
+                    <input
+                        type="number"
+                        placeholder="Max"
+                        value={filters.budgetMax ?? ''}
+                        onChange={(e) => onChange({ budgetMax: e.target.value ? Number(e.target.value) : null })}
+                        className={cn(SELECT_CLASS, 'w-1/2 text-center')}
+                        min={0}
+                        step={5000}
+                    />
+                </div>
+                <div className="grid grid-cols-2 gap-2 mt-2">
                     {BUDGET_PRESETS.map((b) => (
                         <button
                             key={b.value}
                             type="button"
                             onClick={() => onChange({ budgetMax: filters.budgetMax === b.value ? null : b.value })}
-                            className={cn(PILL(filters.budgetMax === b.value), 'text-center justify-center')}
+                            className={cn(PILL(filters.budgetMax === b.value), 'text-center justify-center text-[11px]')}
                         >
-                            {b.label}
+                            ≤ {b.label}
                         </button>
                     ))}
                 </div>
@@ -222,6 +254,58 @@ function FilterContent({
                 </div>
             </div>
 
+            {/* Equipements */}
+            <div>
+                <p className={SECTION_TITLE}>Équipements</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                    {EQUIPMENTS.map((eq) => {
+                        const active = filters.equipements.includes(eq.value);
+                        return (
+                            <button
+                                key={eq.value}
+                                type="button"
+                                onClick={() => {
+                                    const next = active
+                                        ? filters.equipements.filter(e => e !== eq.value)
+                                        : [...filters.equipements, eq.value];
+                                    onChange({ equipements: next });
+                                }}
+                                className={cn(
+                                    PILL(active),
+                                    'text-[11px] text-center justify-center py-1.5',
+                                )}
+                            >
+                                {eq.label}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Autour de moi */}
+            <div>
+                <p className={SECTION_TITLE}>Géolocalisation</p>
+                <button
+                    type="button"
+                    onClick={() => onChange({ nearMe: !filters.nearMe })}
+                    className={cn(
+                        'flex items-center justify-center gap-2 w-full py-2.5 rounded-xl',
+                        'text-[13px] font-semibold transition-all duration-200 border',
+                        filters.nearMe
+                            ? 'bg-emerald-400 text-black border-emerald-400'
+                            : 'bg-white/5 text-white/50 border-white/10 hover:border-emerald-400/30 hover:text-white/80',
+                    )}
+                >
+                    <MapPin className="h-4 w-4" strokeWidth={2} />
+                    {filters.nearMe ? 'Autour de moi · Actif' : 'Autour de moi'}
+                </button>
+                {filters.nearMe && (
+                    <p className="mt-1.5 text-[10px] text-emerald-400/60 text-center">
+                        Recherche dans un rayon de 30 km
+                    </p>
+                )}
+            </div>
+
             {/* Reset */}
             {hasActiveFilters && (
                 <button
@@ -252,9 +336,10 @@ export function ExplorerFilters({
     filteredCount,
 }: ExplorerFiltersProps): React.ReactElement {
     const hasActiveFilters =
-        filters.zone !== '' || filters.type !== '' || filters.budgetMax !== null ||
+        filters.zone !== '' || filters.type !== '' || filters.budgetMin !== null || filters.budgetMax !== null ||
         filters.fuel !== '' || filters.transmission !== '' ||
-        filters.places !== null || filters.noteMin !== null;
+        filters.places !== null || filters.noteMin !== null ||
+        filters.equipements.length > 0 || filters.nearMe;
 
     function handleChange(partial: Partial<ExplorerFiltersState>) {
         onChange({ ...filters, ...partial } as ExplorerFiltersState);

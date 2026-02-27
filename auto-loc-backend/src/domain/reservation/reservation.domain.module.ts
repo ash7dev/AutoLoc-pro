@@ -16,6 +16,7 @@ import { QueueModule } from '../../infrastructure/queue/queue.module';
 import { ContractModule } from '../../infrastructure/contract/contract.module';
 import { CloudinaryModule } from '../../infrastructure/cloudinary/cloudinary.module';
 import { RevalidateModule } from '../../infrastructure/revalidate/revalidate.module';
+import { WalletDomainModule } from '../wallet/wallet.domain.module';
 
 @Module({
     imports: [
@@ -23,6 +24,7 @@ import { RevalidateModule } from '../../infrastructure/revalidate/revalidate.mod
         ContractModule,
         CloudinaryModule,
         RevalidateModule,
+        WalletDomainModule,
     ],
     providers: [
         // Domain services

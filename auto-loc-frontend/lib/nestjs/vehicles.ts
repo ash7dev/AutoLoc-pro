@@ -123,6 +123,7 @@ export interface SearchVehiclesParams {
   dateDebut?: string;
   dateFin?: string;
   type?: VehicleType;
+  prixMin?: number;
   prixMax?: number;
   page?: number;
   carburant?: FuelType;
@@ -131,6 +132,10 @@ export interface SearchVehiclesParams {
   noteMin?: number;
   sortBy?: 'totalLocations' | 'note' | 'prixParJour' | 'annee';
   sortOrder?: 'asc' | 'desc';
+  latitude?: number;
+  longitude?: number;
+  rayon?: number;
+  equipements?: string[];
 }
 
 export interface SearchVehiclesResponse {
@@ -159,6 +164,9 @@ export const VEHICLE_PATHS = {
   addPhoto: (id: string) => `/vehicles/${id}/photos`,
   deletePhoto: (vehicleId: string, photoId: string) =>
     `/vehicles/${vehicleId}/photos/${photoId}`,
+  indisponibilites: (id: string) => `/vehicles/${id}/indisponibilites`,
+  deleteIndisponibilite: (vehicleId: string, indispoId: string) =>
+    `/vehicles/${vehicleId}/indisponibilites/${indispoId}`,
 } as const;
 
 // ── Server-side functions (RSC, layouts, API routes) ─────────────────────────
@@ -192,6 +200,7 @@ export async function searchVehicles(
   if (params.dateDebut) qs.set('dateDebut', params.dateDebut);
   if (params.dateFin) qs.set('dateFin', params.dateFin);
   if (params.type) qs.set('type', params.type);
+  if (params.prixMin != null) qs.set('prixMin', String(params.prixMin));
   if (params.prixMax != null) qs.set('prixMax', String(params.prixMax));
   if (params.page != null) qs.set('page', String(params.page));
   if (params.carburant) qs.set('carburant', params.carburant);
@@ -200,6 +209,10 @@ export async function searchVehicles(
   if (params.noteMin != null) qs.set('noteMin', String(params.noteMin));
   if (params.sortBy) qs.set('sortBy', params.sortBy);
   if (params.sortOrder) qs.set('sortOrder', params.sortOrder);
+  if (params.latitude != null) qs.set('latitude', String(params.latitude));
+  if (params.longitude != null) qs.set('longitude', String(params.longitude));
+  if (params.rayon != null) qs.set('rayon', String(params.rayon));
+  if (params.equipements?.length) params.equipements.forEach(e => qs.append('equipements', e));
 
   const key = qs.toString() || 'all';
   if (typeof window !== 'undefined') {
@@ -262,4 +275,45 @@ export async function fetchVehiclePricing(
   return apiFetch<PricingResponse>(
     `/vehicles/${vehicleId}/pricing?days=${days}`,
   );
+}
+
+// ── Availability (Indisponibilités) ───────────────────────────────────
+
+export interface Indisponibilite {
+  id: string;
+  vehiculeId: string;
+  dateDebut: string;
+  dateFin: string;
+  motif: string | null;
+  creeLe: string;
+}
+
+export async function fetchIndisponibilites(
+  vehicleId: string,
+  accessToken: string,
+): Promise<{ data: Indisponibilite[]; total: number }> {
+  return apiFetch(VEHICLE_PATHS.indisponibilites(vehicleId), { accessToken });
+}
+
+export async function createIndisponibilite(
+  vehicleId: string,
+  body: { dateDebut: string; dateFin: string; motif?: string },
+  accessToken: string,
+): Promise<Indisponibilite> {
+  return apiFetch(VEHICLE_PATHS.indisponibilites(vehicleId), {
+    method: 'POST',
+    body,
+    accessToken,
+  });
+}
+
+export async function deleteIndisponibilite(
+  vehicleId: string,
+  indispoId: string,
+  accessToken: string,
+): Promise<{ deleted: boolean }> {
+  return apiFetch(VEHICLE_PATHS.deleteIndisponibilite(vehicleId, indispoId), {
+    method: 'DELETE',
+    accessToken,
+  });
 }

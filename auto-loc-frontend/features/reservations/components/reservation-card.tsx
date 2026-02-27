@@ -6,6 +6,12 @@ import { cn } from "@/lib/utils";
 import { ReservationStatusBadge } from "./reservation-status";
 import type { Reservation } from "@/lib/nestjs/reservations";
 
+type ReservationLegacyAmounts = {
+    totalLocataire?: string;
+    montantCommission?: string;
+    netProprietaire?: string;
+};
+
 /* ── Barre gauche colorée par urgence ────────────────────────── */
 const LEFT_BAR: Record<string, string> = {
     PAYEE:               "before:bg-amber-400",
@@ -27,6 +33,7 @@ interface OwnerReservationCardProps {
 export function OwnerReservationCard({ reservation: r, className }: OwnerReservationCardProps) {
     const dateDebut = new Date(r.dateDebut).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
     const dateFin   = new Date(r.dateFin).toLocaleDateString("fr-FR",   { day: "numeric", month: "short", year: "numeric" });
+    const legacy = r as Reservation & ReservationLegacyAmounts;
 
     return (
         <Link
@@ -93,7 +100,7 @@ export function OwnerReservationCard({ reservation: r, className }: OwnerReserva
                         Revenu net
                     </p>
                     <p className="text-[17px] font-black text-emerald-600 tabular-nums leading-none">
-                        {Number(r.montantProprietaire ?? 0).toLocaleString("fr-FR")}
+                        {Number(r.montantProprietaire ?? legacy.netProprietaire ?? 0).toLocaleString("fr-FR")}
                         <span className="text-[10px] font-semibold text-emerald-500/60 ml-1">FCFA</span>
                     </p>
                 </div>

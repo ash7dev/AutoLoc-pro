@@ -9,6 +9,8 @@ import {
 import { cn } from "@/lib/utils";
 import type { ReservationStatut } from "@/lib/nestjs/reservations";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
+import { CheckinModal } from "./checkin-modal";
+import { CheckoutModal } from "./checkout-modal";
 
 /* ════════════════════════════════════════════════════════════════
    TYPES
@@ -16,6 +18,7 @@ import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 interface ReservationActionsProps {
     reservationId: string;
     statut: ReservationStatut;
+    role?: "PROPRIETAIRE" | "LOCATAIRE";
     className?: string;
 }
 
@@ -59,12 +62,10 @@ function getActions(statut: ReservationStatut): ActionConfig[] {
             return [
                 {
                     key: "checkin",
-                    label: "Démarrer le check-in",
-                    description: "Marque la remise des clés au locataire",
+                    label: "Confirmer le check-in",
+                    description: "Double confirmation requise (propriétaire + locataire)",
                     icon: LogIn,
                     style: "primary",
-                    requireConfirm: true,
-                    confirmLabel: "Confirmer le check-in",
                 },
                 {
                     key: "cancel",
@@ -84,8 +85,6 @@ function getActions(statut: ReservationStatut): ActionConfig[] {
                     description: "Marque la restitution du véhicule",
                     icon: LogOut,
                     style: "primary",
-                    requireConfirm: true,
-                    confirmLabel: "Confirmer le check-out",
                 },
                 {
                     key: "dispute",
@@ -120,8 +119,8 @@ function actionBtn(style: ActionConfig["style"], disabled: boolean) {
     );
     const variants: Record<ActionConfig["style"], string> = {
         primary: "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:translate-y-0",
-        danger:  "bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 hover:border-red-500/40 text-red-400 hover:text-red-300",
-        ghost:   "bg-white/4 hover:bg-white/8 border border-white/8 hover:border-white/15 text-slate-400 hover:text-slate-200",
+        danger: "bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 hover:border-red-500/40 text-red-400 hover:text-red-300",
+        ghost: "bg-white/4 hover:bg-white/8 border border-white/8 hover:border-white/15 text-slate-400 hover:text-slate-200",
     };
     return cn(base, variants[style]);
 }
@@ -286,12 +285,14 @@ function DisputeForm({
 /* ════════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ════════════════════════════════════════════════════════════════ */
-export function ReservationActions({ reservationId, statut, className }: ReservationActionsProps) {
+export function ReservationActions({ reservationId, statut, role = "PROPRIETAIRE", className }: ReservationActionsProps) {
     const router = useRouter();
     const [loading, setLoading] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [confirmKey, setConfirmKey] = useState<string | null>(null);
     const [disputeOpen, setDisputeOpen] = useState(false);
+    const [checkinOpen, setCheckinOpen] = useState(false);
+    const [checkoutOpen, setCheckoutOpen] = useState(false);
     const { authFetch } = useAuthFetch();
 
     const actions = getActions(statut);
@@ -299,14 +300,16 @@ export function ReservationActions({ reservationId, statut, className }: Reserva
 
     /* API calls */
     const apiMap: Record<string, () => Promise<void>> = {
-        confirm:  () => authFetch(`/reservations/${reservationId}/confirm`,  { method: "PATCH" }),
-        cancel:   () => authFetch(`/reservations/${reservationId}/cancel`,   { method: "PATCH", body: { raison: "Annulé par le propriétaire" } }),
-        checkin:  () => authFetch(`/reservations/${reservationId}/checkin`,  { method: "PATCH" }),
+        confirm: () => authFetch(`/reservations/${reservationId}/confirm`, { method: "PATCH" }),
+        cancel: () => authFetch(`/reservations/${reservationId}/cancel`, { method: "PATCH", body: { raison: "Annulé par le propriétaire" } }),
+        checkin: () => authFetch(`/reservations/${reservationId}/checkin`, { method: "PATCH" }),
         checkout: () => authFetch(`/reservations/${reservationId}/checkout`, { method: "PATCH" }),
     };
 
     const handleAction = async (action: ActionConfig) => {
         if (action.key === "dispute") { setDisputeOpen(true); return; }
+        if (action.key === "checkin") { setCheckinOpen(true); return; }
+        if (action.key === "checkout") { setCheckoutOpen(true); return; }
         if (action.requireConfirm && confirmKey !== action.key) { setConfirmKey(action.key); return; }
 
         setError(null);
@@ -400,6 +403,21 @@ export function ReservationActions({ reservationId, statut, className }: Reserva
                     onCancel={() => { setDisputeOpen(false); setError(null); }}
                 />
             )}
+
+            {/* ── Check-in modal ────────────────────────────────── */}
+            <CheckinModal
+                reservationId={reservationId}
+                role={role}
+                open={checkinOpen}
+                onClose={() => setCheckinOpen(false)}
+            />
+
+            {/* ── Check-out modal ───────────────────────────────── */}
+            <CheckoutModal
+                reservationId={reservationId}
+                open={checkoutOpen}
+                onClose={() => setCheckoutOpen(false)}
+            />
 
             {/* ── Global error ─────────────────────────────────── */}
             {error && !disputeOpen && (

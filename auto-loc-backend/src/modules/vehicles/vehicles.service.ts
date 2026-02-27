@@ -17,6 +17,7 @@ import { assertValidImageBuffer } from '../../infrastructure/cloudinary/utils/fi
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { SearchVehiclesDto } from './dto/search-vehicles.dto';
+import { CreateIndisponibiliteDto } from './dto/create-indisponibilite.dto';
 import { ReservationPricingService } from '../../domain/reservation/reservation-pricing.service';
 import { RevalidateService } from '../../infrastructure/revalidate/revalidate.service';
 
@@ -371,6 +372,7 @@ export class VehiclesService {
       dateDebut: dto.dateDebut ?? null,
       dateFin: dto.dateFin ?? null,
       type: dto.type ?? null,
+      prixMin: dto.prixMin ?? null,
       prixMax: dto.prixMax ?? null,
       carburant: dto.carburant ?? null,
       transmission: dto.transmission ?? null,
@@ -378,6 +380,10 @@ export class VehiclesService {
       noteMin: dto.noteMin ?? null,
       sortBy: dto.sortBy ?? null,
       sortOrder: dto.sortOrder ?? null,
+      latitude: dto.latitude ?? null,
+      longitude: dto.longitude ?? null,
+      rayon: dto.rayon ?? null,
+      equipements: dto.equipements ?? null,
       page,
     });
     const cacheKey =
@@ -398,7 +404,11 @@ export class VehiclesService {
       ? Prisma.sql`AND v.type::text = ${dto.type}`
       : Prisma.empty;
 
-    const prixCondition = dto.prixMax != null
+    const prixMinCondition = dto.prixMin != null
+      ? Prisma.sql`AND v."prixParJour" >= ${dto.prixMin}`
+      : Prisma.empty;
+
+    const prixMaxCondition = dto.prixMax != null
       ? Prisma.sql`AND v."prixParJour" <= ${dto.prixMax}`
       : Prisma.empty;
 
@@ -427,7 +437,35 @@ export class VehiclesService {
                 AND r.statut::text = ANY(ARRAY['PAYEE', 'CONFIRMEE', 'EN_COURS'])
                 AND r."dateDebut" < ${new Date(dto.dateFin)}
                 AND r."dateFin" > ${new Date(dto.dateDebut)}
+            )
+            AND NOT EXISTS (
+              SELECT 1 FROM "IndisponibiliteVehicule" iv
+              WHERE iv."vehiculeId" = v.id
+                AND iv."dateDebut" <= ${new Date(dto.dateFin)}::date
+                AND iv."dateFin" >= ${new Date(dto.dateDebut)}::date
             )`
+        : Prisma.empty;
+
+    // Geolocation (Haversine formula)
+    const geoCondition =
+      dto.latitude != null && dto.longitude != null
+        ? Prisma.sql`AND v.latitude IS NOT NULL AND v.longitude IS NOT NULL
+            AND ( 6371 * acos(
+              cos(radians(${dto.latitude})) * cos(radians(v.latitude::float))
+              * cos(radians(v.longitude::float) - radians(${dto.longitude}))
+              + sin(radians(${dto.latitude})) * sin(radians(v.latitude::float))
+            )) <= ${dto.rayon ?? 30}`
+        : Prisma.empty;
+
+    // Equipment filter
+    const equipementCondition =
+      dto.equipements?.length
+        ? Prisma.sql`AND (
+            SELECT COUNT(*) FROM "VehiculeEquipement" ve
+            JOIN "Equipement" eq ON eq.id = ve."equipementId"
+            WHERE ve."vehiculeId" = v.id
+              AND eq.nom = ANY(ARRAY[${Prisma.join(dto.equipements)}]::text[])
+          ) >= ${dto.equipements.length}`
         : Prisma.empty;
 
     // ── Requête native ────────────────────────────────────────────────────────
@@ -463,12 +501,15 @@ export class VehiclesService {
       WHERE v.statut::text = 'VERIFIE'
         ${villeCondition}
         ${typeCondition}
-        ${prixCondition}
+        ${prixMinCondition}
+        ${prixMaxCondition}
         ${carburantCondition}
         ${transmissionCondition}
         ${placesCondition}
         ${noteCondition}
         ${dateCondition}
+        ${geoCondition}
+        ${equipementCondition}
       ORDER BY ${Prisma.raw(orderField)} ${Prisma.raw(orderDir)}
       LIMIT ${Prisma.raw(String(SEARCH_PAGE_SIZE))} OFFSET ${Prisma.raw(String(offset))}
     `;
@@ -770,5 +811,62 @@ export class VehiclesService {
       },
     });
     return { data: reservations, total: reservations.length };
+  }
+
+  // ── Indisponibilités (calendrier disponibilité) ───────────────────────
+
+  async createIndisponibilite(vehiculeId: string, dto: CreateIndisponibiliteDto) {
+    const dateDebut = new Date(dto.dateDebut);
+    const dateFin = new Date(dto.dateFin);
+
+    if (dateFin < dateDebut) {
+      throw new BadRequestException('dateFin doit être postérieure ou égale à dateDebut');
+    }
+
+    // Vérifier qu'il n'y a pas de réservation active pendant la période
+    const conflict = await this.prisma.reservation.findFirst({
+      where: {
+        vehiculeId,
+        statut: { in: ['PAYEE', 'CONFIRMEE', 'EN_COURS'] },
+        dateDebut: { lt: dateFin },
+        dateFin: { gt: dateDebut },
+      },
+      select: { id: true },
+    });
+    if (conflict) {
+      throw new ConflictException('Il y a déjà une réservation active pendant cette période');
+    }
+
+    const indisponibilite = await this.prisma.indisponibiliteVehicule.create({
+      data: {
+        vehiculeId,
+        dateDebut,
+        dateFin,
+        motif: dto.motif ?? null,
+      },
+    });
+
+    await this.invalidateSearchCache();
+    return indisponibilite;
+  }
+
+  async findIndisponibilites(vehiculeId: string) {
+    const indisponibilites = await this.prisma.indisponibiliteVehicule.findMany({
+      where: { vehiculeId },
+      orderBy: { dateDebut: 'asc' },
+    });
+    return { data: indisponibilites, total: indisponibilites.length };
+  }
+
+  async deleteIndisponibilite(vehiculeId: string, indispoId: string) {
+    const indispo = await this.prisma.indisponibiliteVehicule.findFirst({
+      where: { id: indispoId, vehiculeId },
+      select: { id: true },
+    });
+    if (!indispo) throw new NotFoundException('Indisponibilité non trouvée');
+
+    await this.prisma.indisponibiliteVehicule.delete({ where: { id: indispoId } });
+    await this.invalidateSearchCache();
+    return { deleted: true };
   }
 }

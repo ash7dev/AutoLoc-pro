@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { StatutReservation, StatutVehicule } from '@prisma/client';
+import { StatutReservation, StatutVehicule, TypeEtatLieu, CategoriePhoto } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RequestUser } from '../../common/types/auth.types';
 import { CreateReservationDto } from './dto/create-reservation.dto';
@@ -22,6 +22,7 @@ import {
 } from '../../domain/reservation/use-cases/cancel-reservation.use-case';
 import {
   CheckInUseCase,
+  CheckInInput,
   CheckInResult,
 } from '../../domain/reservation/use-cases/checkin.use-case';
 import {
@@ -50,6 +51,8 @@ function serializeReservation(r: Record<string, unknown> & {
   netProprietaire: unknown;
   creeLe: Date | string;
   confirmeeLe?: Date | string | null;
+  checkinProprietaireLe?: Date | string | null;
+  checkinLocataireLe?: Date | string | null;
   checkinLe?: Date | string | null;
   checkoutLe?: Date | string | null;
   annuleLe?: Date | string | null;
@@ -75,6 +78,8 @@ function serializeReservation(r: Record<string, unknown> & {
     montantProprietaire: String(r.netProprietaire ?? '0'),
     creeLe: r.creeLe,
     confirmeeLe: r.confirmeeLe ?? undefined,
+    checkinProprietaireLe: (r as Record<string, unknown>).checkinProprietaireLe ?? undefined,
+    checkinLocataireLe: (r as Record<string, unknown>).checkinLocataireLe ?? undefined,
     checkInLe: r.checkinLe ?? undefined,
     checkOutLe: r.checkoutLe ?? undefined,
     annuleeLe: r.annuleLe ?? undefined,
@@ -142,8 +147,9 @@ export class ReservationsService {
   async checkin(
     user: RequestUser,
     reservationId: string,
+    input: CheckInInput,
   ): Promise<CheckInResult> {
-    return this.checkinUseCase.execute(user, reservationId);
+    return this.checkinUseCase.execute(user, reservationId, input);
   }
 
   // ── PATCH /reservations/:id/checkout ─────────────────────────────────────────
@@ -206,6 +212,78 @@ export class ReservationsService {
     } catch {
       return null;
     }
+  }
+
+  // ── POST /reservations/:id/photos-etat ──────────────────────────────────────
+
+  async uploadPhotoEtatLieu(
+    user: RequestUser,
+    reservationId: string,
+    file: Express.Multer.File,
+    type: 'CHECKIN' | 'CHECKOUT',
+    categorie?: string,
+  ) {
+    const utilisateur = await this.prisma.utilisateur.findUnique({
+      where: { userId: user.sub },
+      select: { id: true },
+    });
+    if (!utilisateur) throw new ForbiddenException('Profile not completed');
+
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: reservationId },
+      select: {
+        id: true,
+        locataireId: true,
+        proprietaireId: true,
+        statut: true,
+      },
+    });
+    if (!reservation) throw new NotFoundException('Reservation not found');
+
+    const isParty =
+      reservation.locataireId === utilisateur.id ||
+      reservation.proprietaireId === utilisateur.id;
+    if (!isParty) throw new ForbiddenException('Access denied');
+
+    // Upload to Cloudinary
+    const upload = await this.cloudinaryService.uploadEtatLieuPhoto(
+      file.buffer,
+      reservationId,
+      type,
+    );
+
+    // Validate categorie enum
+    const validCategories = Object.values(CategoriePhoto);
+    const cat = categorie && validCategories.includes(categorie as CategoriePhoto)
+      ? (categorie as CategoriePhoto)
+      : null;
+
+    // Count existing photos for position
+    const count = await this.prisma.photoEtatLieu.count({
+      where: { reservationId, type: type as TypeEtatLieu },
+    });
+
+    // Create DB record
+    const photo = await this.prisma.photoEtatLieu.create({
+      data: {
+        reservationId,
+        type: type as TypeEtatLieu,
+        url: upload.url,
+        publicId: upload.publicId,
+        categorie: cat,
+        position: count,
+      },
+      select: {
+        id: true,
+        type: true,
+        url: true,
+        categorie: true,
+        position: true,
+        creeLe: true,
+      },
+    });
+
+    return photo;
   }
 
   // ── GET /reservations/owner ──────────────────────────────────────────────────

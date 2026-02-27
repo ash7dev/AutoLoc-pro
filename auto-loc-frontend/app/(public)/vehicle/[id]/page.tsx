@@ -12,6 +12,9 @@ import { VehicleOwnerCard, MobileReservationBar } from '@/features/vehicles/comp
 import { ReservationSidebar } from '@/features/vehicles/components/ReservationSidebar';
 import { Footer } from '@/features/landing/Footer';
 
+/** ISR — revalidate every 60 seconds */
+export const revalidate = 60;
+
 interface PageProps { params: { id: string } }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
