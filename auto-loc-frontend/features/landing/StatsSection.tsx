@@ -104,7 +104,7 @@ function StatItem({
             </div>
 
             {/* Value */}
-            <p className="text-[42px] lg:text-[52px] font-black leading-none tracking-tight text-emerald-400 tabular-nums">
+            <p className="text-[36px] sm:text-[42px] lg:text-[52px] font-black leading-none tracking-tight text-emerald-400 tabular-nums">
                 {displayValue}
                 <span className="text-emerald-400/60">{stat.suffix}</span>
             </p>
@@ -142,7 +142,7 @@ export function StatsSection(): React.ReactElement {
     return (
         <section ref={sectionRef} className="px-4 py-6 lg:px-8" aria-labelledby="stats-heading">
             <div className="mx-auto max-w-7xl">
-                <div className="relative overflow-hidden rounded-[2rem] bg-black border border-white/10 py-16 lg:py-20 px-8 lg:px-16">
+                <div className="relative overflow-hidden rounded-[2rem] bg-black border border-white/10 py-16 lg:py-20 px-6 md:px-8 lg:px-16">
                     {/* Background glow effects */}
                     <div
                         className="absolute top-0 left-1/4 w-96 h-96 rounded-full opacity-10 blur-[100px] pointer-events-none"

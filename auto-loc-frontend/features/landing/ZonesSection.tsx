@@ -2,67 +2,19 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { MapPin, ArrowRight, Car } from 'lucide-react';
+import { MapPin, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const ZONES = [
-    {
-        slug: 'almadies-ngor-mamelles',
-        name: 'Almadies – Ngor',
-        subtitle: 'Quartier premium',
-        count: 85,
-        highlight: true,
-    },
-    {
-        slug: 'ouakam-yoff',
-        name: 'Ouakam – Yoff',
-        subtitle: 'Proche aéroport',
-        count: 62,
-        highlight: false,
-    },
-    {
-        slug: 'mermoz-sacrecoeur-ckg',
-        name: 'Mermoz – Sacré-Cœur',
-        subtitle: 'Centre d\'affaires',
-        count: 73,
-        highlight: true,
-    },
-    {
-        slug: 'plateau-medina-gueuletapee',
-        name: 'Plateau – Médina',
-        subtitle: 'Centre historique',
-        count: 48,
-        highlight: false,
-    },
-    {
-        slug: 'liberte-sicap-granddakar',
-        name: 'Liberté – Sicap',
-        subtitle: 'Résidentiel',
-        count: 55,
-        highlight: false,
-    },
-    {
-        slug: 'parcelles-grandyoff',
-        name: 'Parcelles Assainies',
-        subtitle: 'Grand Yoff',
-        count: 40,
-        highlight: false,
-    },
-    {
-        slug: 'pikine-guediawaye',
-        name: 'Pikine – Guédiawaye',
-        subtitle: 'Banlieue nord',
-        count: 32,
-        highlight: false,
-    },
-    {
-        slug: 'keurmassar-rufisque',
-        name: 'Keur Massar – Rufisque',
-        subtitle: 'Banlieue est',
-        count: 28,
-        highlight: false,
-    },
+    { slug: 'almadies-ngor-mamelles',      name: 'Almadies – Ngor',       subtitle: 'Quartier premium',   highlight: true  },
+    { slug: 'ouakam-yoff',                 name: 'Ouakam – Yoff',         subtitle: 'Proche aéroport',    highlight: false },
+    { slug: 'mermoz-sacrecoeur-ckg',       name: 'Mermoz – Sacré-Cœur',   subtitle: 'Centre d\'affaires', highlight: true  },
+    { slug: 'plateau-medina-gueuletapee',  name: 'Plateau – Médina',      subtitle: 'Centre historique',  highlight: false },
+    { slug: 'liberte-sicap-granddakar',    name: 'Liberté – Sicap',       subtitle: 'Résidentiel',        highlight: false },
+    { slug: 'parcelles-grandyoff',         name: 'Parcelles Assainies',   subtitle: 'Grand Yoff',         highlight: false },
+    { slug: 'pikine-guediawaye',           name: 'Pikine – Guédiawaye',   subtitle: 'Banlieue nord',      highlight: false },
+    { slug: 'keurmassar-rufisque',         name: 'Keur Massar – Rufisque',subtitle: 'Banlieue est',       highlight: false },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -91,7 +43,7 @@ export function ZonesSection(): React.ReactElement {
             aria-labelledby="zones-heading"
         >
             <div className="mx-auto max-w-7xl">
-                <div className="relative overflow-hidden rounded-[2rem] bg-black border border-white/10 px-8 py-16 lg:px-16 lg:py-20">
+                <div className="relative overflow-hidden rounded-[2rem] bg-black border border-white/10 px-6 py-12 md:px-8 md:py-16 lg:px-16 lg:py-20">
                     {/* Background glow */}
                     <div
                         className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-8 blur-[120px] pointer-events-none"
@@ -150,13 +102,6 @@ export function ZonesSection(): React.ReactElement {
                                     <ArrowRight className="h-3.5 w-3.5 text-white/20 group-hover:text-emerald-400 transition-colors flex-shrink-0 mt-0.5" strokeWidth={2} />
                                 </div>
 
-                                {/* Count */}
-                                <div className="mt-3 flex items-center gap-1.5">
-                                    <Car className="h-3 w-3 text-emerald-400/50" strokeWidth={2} />
-                                    <span className="text-[11px] font-semibold text-emerald-400/70">
-                                        {zone.count}+ véhicules
-                                    </span>
-                                </div>
                             </Link>
                         ))}
                     </div>

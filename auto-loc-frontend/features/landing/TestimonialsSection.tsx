@@ -197,7 +197,7 @@ export function TestimonialsSection(): React.ReactElement {
                         <div
                             key={t.id}
                             className={cn(
-                                'flex-shrink-0 w-[340px] lg:w-[380px] snap-start',
+                                'flex-shrink-0 w-[85vw] sm:w-[340px] lg:w-[380px] snap-start',
                                 'relative rounded-2xl bg-black border border-white/10',
                                 'p-7 lg:p-8',
                                 'transition-all duration-700 ease-out',

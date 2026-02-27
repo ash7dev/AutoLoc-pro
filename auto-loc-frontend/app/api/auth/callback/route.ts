@@ -50,6 +50,14 @@ export async function GET(request: NextRequest) {
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
+    // Logs détaillés pour debug en production
+    console.error('[OAuth Callback] Error exchangeCodeForSession:', {
+      error: error.message,
+      code: code?.substring(0, 10) + '...',
+      origin,
+      timestamp: new Date().toISOString()
+    });
+    
     return NextResponse.redirect(
       new URL(
         `/callback/error?message=${encodeURIComponent('Connexion échouée')}`,
@@ -71,7 +79,14 @@ export async function GET(request: NextRequest) {
           body: JSON.stringify({ accessToken: session.access_token }),
         });
 
-        if (nestRes.ok) {
+        if (!nestRes.ok) {
+          console.error('[OAuth Callback] Backend login failed:', {
+            status: nestRes.status,
+            statusText: nestRes.statusText,
+            api: NEST_API
+          });
+          // Continue anyway - fallback to Supabase token
+        } else {
           const { accessToken, refreshToken } = await nestRes.json() as {
             accessToken: string;
             refreshToken: string;
@@ -87,7 +102,11 @@ export async function GET(request: NextRequest) {
           });
         }
       }
-    } catch {
+    } catch (error) {
+      console.error('[OAuth Callback] Backend error:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        api: NEST_API
+      });
       // Non-bloquant : le fallback Supabase token reste valide dans les layouts.
     }
   }

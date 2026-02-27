@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
     ArrowRight,
     DollarSign,
-    Shield,
+    Star,
     BarChart3,
     Headphones,
     CheckCircle2,
@@ -20,9 +20,9 @@ const BENEFITS = [
         description: 'Votre véhicule vous rapporte même quand vous ne conduisez pas.',
     },
     {
-        icon: Shield,
-        title: 'Assurance incluse',
-        description: 'Chaque location est couverte. Votre véhicule est protégé.',
+        icon: Star,
+        title: 'Locataires vérifiés',
+        description: 'Chaque locataire est identifié et évalué. Votre véhicule est entre de bonnes mains.',
     },
     {
         icon: BarChart3,
@@ -64,7 +64,7 @@ export function BecomeHostCTA(): React.ReactElement {
             <div className="mx-auto max-w-7xl">
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-0 overflow-hidden rounded-[2rem]">
                     {/* ── Left: Image side ── */}
-                    <div className="relative min-h-[400px] lg:min-h-[560px] overflow-hidden rounded-[2rem] lg:rounded-r-none bg-black">
+                    <div className="relative min-h-[300px] sm:min-h-[400px] lg:min-h-[560px] overflow-hidden rounded-[2rem] lg:rounded-r-none bg-black">
                         {/* Decorative pattern */}
                         <div className="absolute inset-0 opacity-30">
                             <div
@@ -110,7 +110,7 @@ export function BecomeHostCTA(): React.ReactElement {
                     </div>
 
                     {/* ── Right: Content side ── */}
-                    <div className="relative bg-black rounded-[2rem] lg:rounded-l-none border border-white/10 lg:border-l-0 p-10 lg:p-14 flex flex-col justify-center">
+                    <div className="relative bg-black rounded-[2rem] lg:rounded-l-none border border-white/10 lg:border-l-0 p-6 md:p-10 lg:p-14 flex flex-col justify-center">
                         {/* Glow */}
                         <div
                             className="absolute -top-32 -right-32 w-64 h-64 rounded-full opacity-15 blur-[80px] pointer-events-none"

@@ -22,9 +22,9 @@ const FAQ_ITEMS = [
             'Oui, vous pouvez annuler jusqu\'à 24h avant la prise en charge pour un remboursement complet. Entre 24h et 6h avant, un remboursement partiel de 70% est appliqué. En dessous de 6h, des frais d\'annulation s\'appliquent. Consultez nos conditions pour plus de détails.',
     },
     {
-        question: 'Comment fonctionne l\'assurance ?',
+        question: 'Comment sont vérifiés les locataires ?',
         answer:
-            'Chaque location inclut automatiquement une assurance tous risques. Vous êtes couvert en cas d\'accident, de vol ou de dommages. Aucune franchise cachée. En cas de sinistre, contactez notre support 24/7 et nous gérons tout pour vous.',
+            'Chaque locataire doit soumettre une pièce d\'identité valide et un permis de conduire avant de pouvoir effectuer une réservation. Notre équipe valide les documents et attribue un profil de confiance basé sur les avis laissés après chaque location.',
     },
     {
         question: 'Quels modes de paiement sont acceptés ?',

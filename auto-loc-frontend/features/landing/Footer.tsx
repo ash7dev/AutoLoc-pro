@@ -83,8 +83,8 @@ export function Footer(): React.ReactElement {
     <footer className="mt-8">
       <div className="bg-black rounded-t-[2rem] overflow-hidden">
 
-        {/* ── Trust badges bar ── */}
-        <div className="border-b border-white/5 px-8 py-4 lg:px-16">
+        {/* ── Trust badges bar — desktop only ── */}
+        <div className="hidden lg:block border-b border-white/5 px-5 py-4 lg:px-16">
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 lg:justify-between">
             {TRUST_BADGES.map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-center gap-2">
@@ -101,8 +101,8 @@ export function Footer(): React.ReactElement {
         </div>
 
         {/* ── Contenu principal ── */}
-        <div className="px-8 py-12 lg:px-16 lg:py-16">
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1.6fr_1fr_1fr]">
+        <div className="px-5 py-10 lg:px-16 lg:py-16">
+          <div className="grid grid-cols-1 gap-8 lg:gap-12 lg:grid-cols-[1.6fr_1fr_1fr]">
 
             {/* Col 1 — Brand + newsletter */}
             <div className="flex flex-col gap-6">
@@ -127,7 +127,7 @@ export function Footer(): React.ReactElement {
                 </p>
               </div>
 
-              <div>
+              <div className="hidden lg:block">
                 <p className="text-[10.5px] font-bold uppercase tracking-widest text-white/30 mb-1">
                   Restez informé
                 </p>
@@ -156,8 +156,8 @@ export function Footer(): React.ReactElement {
               </div>
             </div>
 
-            {/* Col 2 — Plateforme */}
-            <div>
+            {/* Col 2 — Plateforme — desktop only */}
+            <div className="hidden lg:block">
               <p className="text-[10.5px] font-bold uppercase tracking-widest text-white/25 mb-5">
                 Plateforme
               </p>
@@ -218,7 +218,7 @@ export function Footer(): React.ReactElement {
               © {new Date().getFullYear()} AutoLoc. Tous droits réservés.
             </p>
 
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <div className="grid grid-cols-2 gap-x-5 gap-y-2 lg:flex lg:flex-wrap lg:items-center">
               {FOOTER_LINKS.legal.map(({ label, href }) => (
                 <Link
                   key={href}
@@ -231,7 +231,7 @@ export function Footer(): React.ReactElement {
               ))}
             </div>
 
-            <p className="text-[11.5px] font-medium text-white/20 tracking-tight">
+            <p className="hidden lg:block text-[11.5px] font-medium text-white/20 tracking-tight">
               Conçu avec <span className="text-emerald-400/60">♥</span> au Sénégal
             </p>
           </div>

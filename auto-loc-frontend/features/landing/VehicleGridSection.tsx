@@ -138,7 +138,7 @@ function FeaturedVehicleCard({
       </div>
 
       {/* Content side */}
-      <div className="relative flex flex-col justify-center p-8 lg:p-10">
+      <div className="relative flex flex-col justify-center p-5 lg:p-10">
         {/* Glow effect */}
         <div
           className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-20 blur-3xl pointer-events-none"

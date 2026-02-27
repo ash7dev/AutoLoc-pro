@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { ShieldCheck, CreditCard, Headphones, FileCheck, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, CreditCard, Headphones, Star, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -28,11 +28,11 @@ const TRUST_ITEMS = [
         highlights: ['Disponible 24h/24', 'WhatsApp & téléphone', 'Temps de réponse < 5 min'],
     },
     {
-        icon: FileCheck,
-        title: 'Assurance incluse',
+        icon: Star,
+        title: 'Avis certifiés',
         description:
-            'Chaque location bénéficie d\'une couverture assurance. Vous roulez l\'esprit tranquille, sans frais cachés.',
-        highlights: ['Couverture tous risques', 'Sans franchise cachée', 'Prise en charge rapide'],
+            'Chaque location génère un avis authentique. Louez en confiance grâce à notre système de notation bidirectionnel.',
+        highlights: ['Notation bidirectionnelle', 'Avis 100% authentiques', 'Profils vérifiés'],
     },
 ];
 

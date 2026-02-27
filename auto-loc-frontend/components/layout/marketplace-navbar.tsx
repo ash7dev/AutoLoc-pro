@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Home,
   Car,
@@ -18,6 +18,9 @@ import {
   CalendarRange,
   Bell,
   Loader2,
+  Search,
+  Menu,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '../../lib/supabase/client';
@@ -258,14 +261,57 @@ function SliderNav({ pathname }: { pathname: string }) {
   );
 }
 
+/* ── Mobile bottom nav (standalone — doit vivre EN DEHORS du <header>) ── */
+export function MobileBottomNav() {
+  const pathname = usePathname();
+  return (
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-t border-slate-100/80 flex pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+      {NAV_LINKS.map(({ href, icon: Icon, label }) => {
+        const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
+        return (
+          <Link
+            key={href}
+            href={href}
+            className="flex-1 flex flex-col items-center justify-center py-3 gap-1 group"
+          >
+            <span className={cn(
+              'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200',
+              isActive ? 'bg-black shadow-md shadow-black/20' : 'bg-transparent group-active:bg-slate-100'
+            )}>
+              <Icon className={cn('w-4.5 h-4.5 transition-colors duration-200', isActive ? 'text-emerald-400' : 'text-black')} />
+            </span>
+            <span className={cn(
+              'text-[9.5px] font-semibold tracking-tight transition-colors duration-200',
+              isActive ? 'text-emerald-400' : 'text-black'
+            )}>
+              {label}
+            </span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 /* ── Main navbar ─────────────────────────────────────────────── */
 export function MarketplaceNavbar() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mobileSearchVisible, setMobileSearchVisible] = useState(false);
+  const [mobileSearch, setMobileSearch] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   const [hasVehicles, setHasVehicles] = useState<boolean | null>(null);
-  const { activeRole }          = useNestToken();
-  const pathname                = usePathname();
+  const { activeRole } = useNestToken();
+  const pathname       = usePathname();
+  const router         = useRouter();
+
+  function handleMobileSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (mobileSearch.trim()) params.set('q', mobileSearch.trim());
+    router.push(`/vehicle?${params.toString()}`);
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -299,7 +345,10 @@ export function MarketplaceNavbar() {
       }
     });
 
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 8);
+      setMobileSearchVisible(window.scrollY > 350);
+    };
     window.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
@@ -307,6 +356,9 @@ export function MarketplaceNavbar() {
       window.removeEventListener('scroll', onScroll);
     };
   }, []);
+
+  // Close menu on navigation
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   if (hydrated && activeRole === 'PROPRIETAIRE') return null;
   const showBecomeOwner = hydrated && loggedIn && hasVehicles === false;
@@ -320,100 +372,182 @@ export function MarketplaceNavbar() {
         ? 'bg-white/80 backdrop-blur-xl shadow-sm shadow-slate-200/60 border-b border-slate-100/60'
         : 'bg-white/95 border-b border-slate-100'
     )}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between gap-6">
+      {/* Wrapper relative — sert de référence pour l'overlay absolu */}
+      <div className="relative">
 
-        {/* ── Logo ───────────────────────────────────────────── */}
-        <Link href="/" className="group flex-shrink-0">
-          <Image
-            src="/logoAutoLoc.jpg"
-            alt="AutoLoc"
-            width={48}
-            height={48}
-            className="object-contain group-hover:opacity-80 transition-opacity duration-200"
-          />
-        </Link>
+        {/* ── Contenu principal (logo + nav + auth) ── */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between gap-6">
 
-        {/* ── Center nav with slider pill ─────────────────────── */}
-        {/* Pill container with subtle bg */}
-        <div className="hidden md:flex items-center flex-1 justify-center">
-          <div className="bg-slate-50 border border-slate-100/80 rounded-2xl p-1">
-            <SliderNav pathname={pathname} />
+          {/* Logo */}
+          <Link href="/" className="group flex-shrink-0">
+            <Image
+              src="/logoAutoLoc.jpg"
+              alt="AutoLoc"
+              width={48}
+              height={48}
+              className="object-contain group-hover:opacity-80 transition-opacity duration-200"
+            />
+          </Link>
+
+          {/* Center nav desktop */}
+          <div className="hidden md:flex items-center flex-1 justify-center">
+            <div className="bg-slate-50 border border-slate-100/80 rounded-2xl p-1">
+              <SliderNav pathname={pathname} />
+            </div>
+          </div>
+
+          {/* Right slot */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {!hydrated && (
+              <div className="w-32 h-9 bg-slate-100 rounded-2xl animate-pulse" />
+            )}
+
+            {hydrated && !loggedIn && (
+              <div className="flex items-center gap-2">
+                {/* Desktop : Connexion + Commencer */}
+                <Link
+                  href="/login"
+                  className="hidden md:inline-flex px-4 py-2 text-[13px] font-medium text-black hover:text-black
+                    rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100
+                    transition-all duration-200 tracking-tight"
+                >
+                  Connexion
+                </Link>
+                <Link
+                  href="/register"
+                  className="hidden md:relative md:inline-flex px-4 py-2 text-[13px] font-semibold text-white
+                    bg-slate-900 hover:bg-slate-800
+                    rounded-xl transition-all duration-200 tracking-tight
+                    shadow-md shadow-slate-900/20 hover:shadow-lg hover:shadow-slate-900/25
+                    hover:-translate-y-px active:translate-y-0"
+                >
+                  Commencer
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border-2 border-white" />
+                </Link>
+
+                {/* Mobile : Se connecter */}
+                <Link
+                  href="/login"
+                  className="md:hidden px-4 py-2 text-[13px] font-semibold text-white
+                    bg-slate-900 hover:bg-slate-800
+                    rounded-xl transition-all duration-200 tracking-tight
+                    shadow-md shadow-slate-900/20"
+                >
+                  Se connecter
+                </Link>
+              </div>
+            )}
+
+            {hydrated && loggedIn && (
+              <ProfileDropdown
+                isOwner={activeRole === 'PROPRIETAIRE'}
+                showBecomeOwner={showBecomeOwner}
+                showHostSpace={showHostSpace}
+                loadingHostEntry={loadingHostEntry}
+              />
+            )}
+
+            {/* Hamburger — mobile only */}
+            <button
+              type="button"
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              className={cn(
+                'md:hidden flex items-center justify-center w-9 h-9 rounded-xl border transition-all duration-200',
+                menuOpen
+                  ? 'bg-slate-900 border-slate-800 text-white'
+                  : 'bg-white border-slate-200 text-black hover:bg-slate-50',
+              )}
+            >
+              {menuOpen
+                ? <X className="h-4 w-4" strokeWidth={2.5} />
+                : <Menu className="h-4 w-4" strokeWidth={2.5} />
+              }
+            </button>
           </div>
         </div>
 
-        {/* ── Right slot ──────────────────────────────────────── */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {!hydrated && (
-            <div className="w-32 h-9 bg-slate-100 rounded-2xl animate-pulse" />
+        {/* ── Mobile : barre de recherche sticky (apparaît au scroll) ── */}
+        <form
+          onSubmit={handleMobileSearch}
+          className={cn(
+            'md:hidden absolute inset-0 flex items-center px-3',
+            'bg-white transition-all duration-300',
+            mobileSearchVisible
+              ? 'opacity-100 pointer-events-auto'
+              : 'opacity-0 pointer-events-none',
           )}
-
-          {hydrated && !loggedIn && (
-            <div className="flex items-center gap-2">
-              <Link
-                href="/login"
-                className="px-4 py-2 text-[13px] font-medium text-black hover:text-black
-                  rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100
-                  transition-all duration-200 tracking-tight"
-              >
-                Connexion
-              </Link>
-              <Link
-                href="/register"
-                className="relative px-4 py-2 text-[13px] font-semibold text-white
-                  bg-slate-900 hover:bg-slate-800
-                  rounded-xl transition-all duration-200 tracking-tight
-                  shadow-md shadow-slate-900/20 hover:shadow-lg hover:shadow-slate-900/25
-                  hover:-translate-y-px active:translate-y-0"
-              >
-                Commencer
-                {/* Subtle green dot accent */}
-                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border-2 border-white" />
-              </Link>
-            </div>
-          )}
-
-          {hydrated && loggedIn && (
-            <ProfileDropdown
-              isOwner={activeRole === 'PROPRIETAIRE'}
-              showBecomeOwner={showBecomeOwner}
-              showHostSpace={showHostSpace}
-              loadingHostEntry={loadingHostEntry}
+        >
+          <div className={cn(
+            'flex items-center w-full gap-3 h-11',
+            'bg-white rounded-2xl px-4',
+            'border border-slate-200 shadow-lg shadow-slate-300/50',
+          )}>
+            <Search className="h-[18px] w-[18px] text-slate-500 shrink-0" />
+            <input
+              type="text"
+              placeholder="Rechercher un véhicule..."
+              value={mobileSearch}
+              onChange={(e) => setMobileSearch(e.target.value)}
+              className="flex-1 bg-transparent text-[14px] font-medium text-slate-900 placeholder-slate-400 outline-none tracking-tight"
             />
-          )}
-        </div>
+          </div>
+        </form>
+
       </div>
 
-      {/* ── Mobile bottom nav ──────────────────────────────────── */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-t border-slate-100/80 flex pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        {NAV_LINKS.map(({ href, icon: Icon, label }) => {
-          const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
-          return (
-            <Link
-              key={href}
-              href={href}
-              className="flex-1 flex flex-col items-center justify-center py-3 gap-1 group"
-            >
-              <span className={cn(
-                'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200',
-                isActive
-                  ? 'bg-black shadow-md shadow-black/20'
-                  : 'bg-transparent group-active:bg-slate-100'
-              )}>
-                <Icon className={cn(
-                  'w-4.5 h-4.5 transition-colors duration-200',
-                  isActive ? 'text-emerald-400' : 'text-black'
-                )} />
-              </span>
-              <span className={cn(
-                'text-[9.5px] font-semibold tracking-tight transition-colors duration-200',
-                isActive ? 'text-emerald-400' : 'text-black'
-              )}>
+      {/* ── Mobile menu drawer ── */}
+      <div
+        className={cn(
+          'md:hidden overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+          menuOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0 pointer-events-none',
+        )}
+      >
+        <nav className="px-4 pb-4 pt-1 space-y-1 border-t border-slate-100/80">
+          {NAV_LINKS.map(({ href, icon: Icon, label }) => {
+            const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMenuOpen(false)}
+                className={cn(
+                  'flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight transition-all duration-150',
+                  isActive
+                    ? 'bg-black text-emerald-400'
+                    : 'text-black hover:bg-slate-50',
+                )}
+              >
+                <span className={cn(
+                  'w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0',
+                  isActive ? 'bg-white/10' : 'bg-slate-100',
+                )}>
+                  <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+                </span>
                 {label}
-              </span>
-            </Link>
-          );
-        })}
-      </nav>
+              </Link>
+            );
+          })}
+
+          {/* Auth links — mobile only, not logged in */}
+          {hydrated && !loggedIn && (
+            <>
+              <div className="my-2 border-t border-slate-100" />
+              <Link
+                href="/login"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight text-black hover:bg-slate-50 transition-all duration-150"
+              >
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100">
+                  <User className="h-3.5 w-3.5" strokeWidth={1.75} />
+                </span>
+                Connexion
+              </Link>
+            </>
+          )}
+        </nav>
+      </div>
+
     </header>
   );
 }

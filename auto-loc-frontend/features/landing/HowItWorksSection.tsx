@@ -56,7 +56,7 @@ export function HowItWorksSection(): React.ReactElement {
         >
             <div className="mx-auto max-w-7xl">
                 {/* ── Header ── */}
-                <div className="mb-14 text-center">
+                <div className="mb-8 lg:mb-14 text-center">
                     <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/5 px-4 py-1.5 mb-5">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">
@@ -96,7 +96,7 @@ export function HowItWorksSection(): React.ReactElement {
                                     className={cn(
                                         'flex-1 relative overflow-hidden rounded-2xl',
                                         'bg-black border border-white/10',
-                                        'p-8 lg:p-10',
+                                        'p-6 lg:p-10',
                                         'transition-all duration-700 ease-out',
                                         isVisible
                                             ? 'opacity-100 translate-y-0'
