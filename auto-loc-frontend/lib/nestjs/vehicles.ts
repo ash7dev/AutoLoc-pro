@@ -188,8 +188,9 @@ export async function fetchAllVerifiedVehicles(): Promise<VehicleSearchResult[]>
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const res = await searchVehicles({ page });
-    all.push(...res.data);
-    if (res.data.length === 0) break;
+    const data = Array.isArray(res?.data) ? res.data : [];
+    all.push(...data);
+    if (data.length === 0) break;
     page++;
   }
 

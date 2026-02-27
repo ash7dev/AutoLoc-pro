@@ -68,6 +68,11 @@ export function useAuthFlow() {
       }
     }
 
+    if (!nestToken) {
+      inFlight.current = false;
+      return;
+    }
+
     const profile = await fetchMe(nestToken);
     // eslint-disable-next-line no-console
     console.log('[AuthFlow] profile', profile);
