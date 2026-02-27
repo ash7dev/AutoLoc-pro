@@ -98,12 +98,13 @@ export async function fetchOwnerReservations(
 
 /**
  * Fetch a single reservation by ID (server-side).
+ * Cache désactivé — les données financières doivent toujours être fraîches.
  */
 export async function fetchReservation(
     token: string,
     id: string,
 ): Promise<Reservation> {
-    return apiFetch<Reservation>(`/reservations/${id}`, { accessToken: token });
+    return apiFetch<Reservation>(`/reservations/${id}`, { accessToken: token, cache: 'no-store' });
 }
 
 /**

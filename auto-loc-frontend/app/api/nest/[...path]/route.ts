@@ -56,11 +56,28 @@ async function toNextResponse(res: Response): Promise<NextResponse> {
     const json = await res.json();
     return NextResponse.json(json, { status: res.status });
   }
-  const text = await res.text();
-  return new NextResponse(text, {
+  const buffer = await res.arrayBuffer();
+  const headers = new Headers();
+  if (contentType) headers.set('Content-Type', contentType);
+  const contentDisposition = res.headers.get('content-disposition');
+  if (contentDisposition) headers.set('Content-Disposition', contentDisposition);
+  const cacheControl = res.headers.get('cache-control');
+  if (cacheControl) headers.set('Cache-Control', cacheControl);
+  return new NextResponse(Buffer.from(buffer), {
     status: res.status,
-    headers: { 'Content-Type': contentType || 'text/plain' },
+    headers,
   });
+}
+
+function isRedirectStatus(status: number) {
+  return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
+}
+
+function toRedirectResponse(res: Response): NextResponse | null {
+  if (!isRedirectStatus(res.status)) return null;
+  const location = res.headers.get('location');
+  if (!location) return null;
+  return NextResponse.redirect(location, res.status as 301 | 302 | 303 | 307 | 308);
 }
 
 async function proxy(
@@ -93,9 +110,13 @@ async function proxy(
     method: request.method,
     headers: buildHeaders(accessToken, contentType),
     body: bodyBuffer ? Buffer.from(bodyBuffer) : undefined,
+    redirect: 'manual',
   });
 
   // ── Refresh silencieux sur 401 ──────────────────────────────────
+  const redirectRes = toRedirectResponse(res);
+  if (redirectRes) return redirectRes;
+
   if (res.status === 401) {
     const refreshToken = cookieStore.get('nest_refresh')?.value ?? null;
 
@@ -115,7 +136,15 @@ async function proxy(
           method: request.method,
           headers: buildHeaders(accessToken, contentType),
           body: bodyBuffer ? Buffer.from(bodyBuffer) : undefined,
+          redirect: 'manual',
         });
+
+        const retryRedirect = toRedirectResponse(res);
+        if (retryRedirect) {
+          const nextRes = retryRedirect;
+          setCookies(nextRes, session);
+          return nextRes;
+        }
 
         const nextRes = await toNextResponse(res);
         setCookies(nextRes, session);

@@ -23,6 +23,7 @@ interface ApiFetchOptions<TBody> {
   accessToken?: string;
   headers?: Record<string, string>;
   timeoutMs?: number;
+  cache?: RequestCache;
 }
 
 export async function apiFetch<TResponse, TBody = undefined>(
@@ -67,6 +68,7 @@ export async function apiFetch<TResponse, TBody = undefined>(
             ? JSON.stringify(options.body)
             : undefined,
       signal: controller.signal,
+      ...(options.cache ? { cache: options.cache } : {}),
     });
   } catch (err) {
     if ((err as { name?: string }).name === 'AbortError') {
