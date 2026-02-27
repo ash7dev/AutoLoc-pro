@@ -60,7 +60,7 @@ export default function CallbackErrorContent() {
               Accueil
             </Button>
           </div>
-
+          
           <div className="text-xs text-gray-400 text-center border-t pt-4">
             <p>Si ce problème persiste, contactez le support technique.</p>
             <p className="mt-1">Référence: {new Date().toISOString()}</p>

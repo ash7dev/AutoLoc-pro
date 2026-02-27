@@ -231,7 +231,7 @@ export function OwnerDashboardView({
             {/* Mobile Layout */}
             <div className="lg:hidden space-y-4">
                 {/* Revenue + Wallet Cards */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-3">
                     <MobileRevenueCard
                         total={revenueData.totalRev.toLocaleString("fr-FR")}
                         change="0%"
@@ -244,7 +244,7 @@ export function OwnerDashboardView({
                 </div>
 
                 {/* Quick Actions */}
-                <MobileQuickActions 
+                <MobileQuickActions
                     reservations={reservations}
                     urgentCount={urgentReservations.length}
                 />
