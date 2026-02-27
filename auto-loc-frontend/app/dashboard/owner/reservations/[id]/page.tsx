@@ -104,10 +104,15 @@ export default async function ReservationDetailPage({
         r.annuleeLe   && { label: "Annulée",             date: r.annuleeLe,    icon: XCircle,      color: "red" },
     ].filter(Boolean) as { label: string; date: string; icon: React.ElementType; color: string }[];
 
+    /* ── Duration (fallback to date diff if nbJours missing) ── */
+    const nbJours = r.nbJours != null
+        ? r.nbJours
+        : Math.max(1, Math.round((new Date(r.dateFin).getTime() - new Date(r.dateDebut).getTime()) / 86_400_000));
+
     /* ── Financial ── */
-    const totalLocataire = Number(r.prixTotal ?? 0);
-    const commissionAmount = Number(r.commission ?? 0);
-    const netAmount = Number(r.montantProprietaire ?? 0);
+    const totalLocataire = Number(r.prixTotal ?? 0) || 0;
+    const commissionAmount = Number(r.commission ?? 0) || 0;
+    const netAmount = Number(r.montantProprietaire ?? 0) || 0;
     const commissionPct = totalLocataire > 0 ? Math.round((commissionAmount / totalLocataire) * 100) : 0;
     const netShare = totalLocataire > 0 ? Math.round((netAmount / totalLocataire) * 100) : 0;
 
@@ -161,7 +166,7 @@ export default async function ReservationDetailPage({
                                     Votre revenu net
                                 </p>
                                 <p className="text-[28px] font-black text-emerald-400 tabular-nums leading-none">
-                                    {fmtMoney(r.montantProprietaire)}
+                                    {fmtMoney(netAmount)}
                                     <span className="text-[13px] font-semibold text-emerald-400/60 ml-1">FCFA</span>
                                 </p>
                             </div>
@@ -173,7 +178,7 @@ export default async function ReservationDetailPage({
                         {[
                             { label: "Début", value: fmtDate(r.dateDebut, { day: "numeric", month: "short", year: "numeric" }) },
                             { label: "Fin", value: fmtDate(r.dateFin, { day: "numeric", month: "short", year: "numeric" }) },
-                            { label: "Durée", value: `${r.nbJours} jour${r.nbJours > 1 ? 's' : ''}` },
+                            { label: "Durée", value: `${nbJours} jour${nbJours > 1 ? 's' : ''}` },
                         ].map(item => (
                             <div key={item.label}>
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-0.5">{item.label}</p>
@@ -238,10 +243,10 @@ export default async function ReservationDetailPage({
                             {/* Main amounts */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                 {[
-                                    { label: "Total locataire",  value: fmtMoney(r.prixTotal),         accent: false },
-                                    { label: "Votre revenu net", value: fmtMoney(r.montantProprietaire), accent: true },
-                                    { label: "Commission AutoLoc", value: fmtMoney(r.commission),      accent: false },
-                                    { label: "Prix / jour",      value: fmtMoney(r.prixParJour),       accent: false },
+                                    { label: "Total locataire",    value: fmtMoney(totalLocataire),   accent: false },
+                                    { label: "Votre revenu net",   value: fmtMoney(netAmount),        accent: true  },
+                                    { label: "Commission AutoLoc", value: fmtMoney(commissionAmount), accent: false },
+                                    { label: "Prix / jour",        value: fmtMoney(r.prixParJour),    accent: false },
                                 ].map(item => (
                                     <div key={item.label} className={`rounded-xl p-3 border ${item.accent ? 'bg-emerald-400/8 border-emerald-400/20' : 'bg-white/3 border-white/6'}`}>
                                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">{item.label}</p>

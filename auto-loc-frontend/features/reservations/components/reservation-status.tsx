@@ -3,56 +3,107 @@
 import { cn } from "@/lib/utils";
 import type { ReservationStatut } from "@/lib/nestjs/reservations";
 
-// ── Status Config ──────────────────────────────────────────────────────────────
-
+/* ════════════════════════════════════════════════════════════════
+   STATUS CONFIG
+   Palette : fond teinté léger + bordure colorée + texte foncé
+   Cohérent avec le système émeraude/slate du projet
+════════════════════════════════════════════════════════════════ */
 interface StatusConfig {
     label: string;
-    color: string;
-    bg: string;
+    cls: string;
     dot: string;
+    pulse?: boolean;
 }
 
-const STATUS_MAP: Record<ReservationStatut, StatusConfig> = {
-    INITIEE: { label: "Initiée", color: "text-slate-600", bg: "bg-slate-50 border-slate-200", dot: "bg-slate-400" },
-    EN_ATTENTE_PAIEMENT: { label: "En attente paiement", color: "text-amber-700", bg: "bg-amber-50 border-amber-200", dot: "bg-amber-400" },
-    PAYEE: { label: "Payée", color: "text-blue-700", bg: "bg-blue-50 border-blue-200", dot: "bg-blue-500" },
-    CONFIRMEE: { label: "Confirmée", color: "text-indigo-700", bg: "bg-indigo-50 border-indigo-200", dot: "bg-indigo-500" },
-    EN_COURS: { label: "En cours", color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200", dot: "bg-emerald-500" },
-    TERMINEE: { label: "Terminée", color: "text-teal-700", bg: "bg-teal-50 border-teal-200", dot: "bg-teal-500" },
-    ANNULEE: { label: "Annulée", color: "text-red-700", bg: "bg-red-50 border-red-200", dot: "bg-red-500" },
-    EXPIREE: { label: "Expirée", color: "text-gray-600", bg: "bg-gray-100 border-gray-300", dot: "bg-gray-400" },
-    LITIGE: { label: "Litige", color: "text-purple-700", bg: "bg-purple-50 border-purple-200", dot: "bg-purple-500" },
+const STATUS_MAP: Record<string, StatusConfig> = {
+    INITIEE: {
+        label: "Initiée",
+        cls:   "bg-slate-100 border-slate-200 text-slate-600",
+        dot:   "bg-slate-400",
+    },
+    EN_ATTENTE_PAIEMENT: {
+        label: "Attente paiement",
+        cls:   "bg-amber-50 border-amber-200 text-amber-700",
+        dot:   "bg-amber-400",
+        pulse: true,
+    },
+    PAYEE: {
+        label: "Payée",
+        cls:   "bg-blue-50 border-blue-200 text-blue-700",
+        dot:   "bg-blue-500",
+        pulse: true,
+    },
+    CONFIRMEE: {
+        label: "Confirmée",
+        cls:   "bg-indigo-50 border-indigo-200 text-indigo-700",
+        dot:   "bg-indigo-500",
+    },
+    EN_COURS: {
+        label: "En cours",
+        cls:   "bg-emerald-50 border-emerald-200 text-emerald-700",
+        dot:   "bg-emerald-500",
+        pulse: true,
+    },
+    TERMINEE: {
+        label: "Terminée",
+        cls:   "bg-slate-100 border-slate-200 text-slate-500",
+        dot:   "bg-slate-400",
+    },
+    ANNULEE: {
+        label: "Annulée",
+        cls:   "bg-red-50 border-red-200 text-red-600",
+        dot:   "bg-red-400",
+    },
+    EXPIREE: {
+        label: "Expirée",
+        cls:   "bg-slate-100 border-slate-200 text-slate-400",
+        dot:   "bg-slate-300",
+    },
+    LITIGE: {
+        label: "Litige",
+        cls:   "bg-orange-50 border-orange-200 text-orange-700",
+        dot:   "bg-orange-400",
+        pulse: true,
+    },
 };
 
-// ── Component ──────────────────────────────────────────────────────────────────
-
+/* ════════════════════════════════════════════════════════════════
+   COMPONENT
+════════════════════════════════════════════════════════════════ */
 interface ReservationStatusBadgeProps {
     status: ReservationStatut;
     className?: string;
     size?: "sm" | "md";
 }
 
-export function ReservationStatusBadge({ status, className, size = "sm" }: ReservationStatusBadgeProps) {
-    const config = STATUS_MAP[status] ?? STATUS_MAP.INITIEE;
+export function ReservationStatusBadge({
+    status,
+    className,
+    size = "sm",
+}: ReservationStatusBadgeProps) {
+    const cfg = STATUS_MAP[status] ?? STATUS_MAP.INITIEE;
 
     return (
         <span
             className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border font-medium",
-                config.bg,
-                config.color,
-                size === "sm" ? "px-2.5 py-0.5 text-xs" : "px-3 py-1 text-sm",
+                "inline-flex items-center gap-1.5 rounded-full border font-semibold whitespace-nowrap",
+                cfg.cls,
+                size === "sm" ? "px-2.5 py-1 text-[11px]" : "px-3.5 py-1.5 text-[12px]",
                 className,
             )}
         >
-            <span className={cn("w-1.5 h-1.5 rounded-full", config.dot)} />
-            {config.label}
+            <span className={cn(
+                "w-1.5 h-1.5 rounded-full flex-shrink-0",
+                cfg.dot,
+                cfg.pulse && "animate-pulse",
+            )} />
+            {cfg.label}
         </span>
     );
 }
 
 /**
- * Returns human-readable French label for a reservation status.
+ * Retourne le label français d'un statut de réservation.
  */
 export function getStatusLabel(status: ReservationStatut): string {
     return STATUS_MAP[status]?.label ?? status;
