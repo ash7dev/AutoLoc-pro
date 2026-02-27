@@ -214,12 +214,6 @@ export class CreateReservationUseCase {
         if (locataire.bloqueJusqua && locataire.bloqueJusqua > new Date()) {
             throw new ForbiddenException('Account temporarily blocked');
         }
-        const ownedVehicles = await this.prisma.vehicule.count({
-            where: { proprietaireId: locataire.id },
-        });
-        if (ownedVehicles > 0) {
-            throw new ForbiddenException('Owners cannot create reservations');
-        }
         if (locataire.statutKyc !== 'VERIFIE') {
             throw new ForbiddenException('KYC verification required');
         }

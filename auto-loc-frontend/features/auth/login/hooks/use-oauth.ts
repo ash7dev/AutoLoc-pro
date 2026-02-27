@@ -9,8 +9,7 @@ export function useOAuth() {
   const signInWithGoogle = async () => {
     setLoading(true);
     setError(null);
-    const redirectBase =
-      process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+    const redirectBase = window.location.origin;
 
     // Debug local
     // eslint-disable-next-line no-console

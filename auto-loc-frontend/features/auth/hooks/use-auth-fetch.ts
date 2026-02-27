@@ -28,14 +28,23 @@ export function useAuthFetch() {
       path: string,
       options: AuthFetchOptions<TBody> = {},
     ): Promise<TResponse> => {
-      try {
-        return await apiFetch<TResponse, TBody>(path, options);
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 401) {
-          window.location.href = '/login?expired=1';
+      const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          return await apiFetch<TResponse, TBody>(path, options);
+        } catch (err) {
+          if (err instanceof ApiError && err.status === 401) {
+            if (attempt < 2) {
+              await wait(200);
+              continue;
+            }
+            window.location.href = '/login?expired=1';
+          }
+          throw err;
         }
-        throw err;
       }
+      // unreachable, but satisfies TS
+      throw new Error('Auth fetch failed');
     },
     [],
   );

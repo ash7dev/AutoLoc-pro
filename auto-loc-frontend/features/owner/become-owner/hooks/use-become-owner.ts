@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { switchRole } from '../../../../lib/nestjs/auth';
-import { ensureValidNestToken } from '../../../auth/hooks/use-nest-token';
+import { useAuthFetch } from '../../../auth/hooks/use-auth-fetch';
 import { useRoleStore } from '../../../auth/stores/role.store';
 
 export function useBecomeOwner() {
@@ -11,14 +10,16 @@ export function useBecomeOwner() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const setActiveRole = useRoleStore((s) => s.setActiveRole);
+  const { authFetch } = useAuthFetch();
 
   const become = async () => {
     setLoading(true);
     setError(null);
     try {
-      const token = await ensureValidNestToken();
-      if (!token) throw new Error('Session expirée — reconnectez-vous.');
-      await switchRole(token, 'PROPRIETAIRE');
+      await authFetch('/auth/switch-role', {
+        method: 'PATCH',
+        body: { role: 'PROPRIETAIRE' },
+      });
       setActiveRole('PROPRIETAIRE');
       router.push('/dashboard/owner');
     } catch (err: unknown) {

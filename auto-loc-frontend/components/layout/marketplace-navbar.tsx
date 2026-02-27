@@ -25,7 +25,8 @@ import {
 import { cn } from '@/lib/utils';
 import { supabase } from '../../lib/supabase/client';
 import { useNestToken } from '../../features/auth/hooks/use-nest-token';
-import { fetchMe } from '../../lib/nestjs/auth';
+import { apiFetch, ApiError } from '../../lib/nestjs/api-client';
+import type { ProfileResponse } from '../../lib/nestjs/auth';
 
 /* ── Nav links ───────────────────────────────────────────────── */
 const NAV_LINKS = [
@@ -314,17 +315,29 @@ export function MarketplaceNavbar() {
   }
 
   useEffect(() => {
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    async function fetchProfileWithRetry() {
+      for (let i = 0; i < 3; i += 1) {
+        try {
+          return await apiFetch<ProfileResponse>('/auth/me');
+        } catch (err) {
+          if (err instanceof ApiError && err.status === 401) {
+            await wait(200);
+            continue;
+          }
+          return null;
+        }
+      }
+      return null;
+    }
+
     supabase.auth.getSession().then(async ({ data }) => {
       const isLogged = Boolean(data.session?.access_token);
       setLoggedIn(isLogged);
       setHydrated(true);
       if (isLogged) {
-        try {
-          const profile = await fetchMe('');
-          setHasVehicles(Boolean(profile.hasVehicles));
-        } catch {
-          setHasVehicles(false);
-        }
+        const profile = await fetchProfileWithRetry();
+        setHasVehicles(Boolean(profile?.hasVehicles));
       } else {
         setHasVehicles(null);
       }
@@ -334,12 +347,8 @@ export function MarketplaceNavbar() {
       const isLogged = Boolean(session?.access_token);
       setLoggedIn(isLogged);
       if (isLogged) {
-        try {
-          const profile = await fetchMe('');
-          setHasVehicles(Boolean(profile.hasVehicles));
-        } catch {
-          setHasVehicles(false);
-        }
+        const profile = await fetchProfileWithRetry();
+        setHasVehicles(Boolean(profile?.hasVehicles));
       } else {
         setHasVehicles(null);
       }

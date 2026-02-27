@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { apiFetch } from "@/lib/nestjs/api-client";
+import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import { cn } from "@/lib/utils";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -49,6 +49,7 @@ export function KycGate({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState<string | null>(null);
   const [submitted, setSubmitted]   = useState(false);
+  const { authFetch } = useAuthFetch();
 
   const frontRef  = useRef<HTMLInputElement>(null);
   const backRef   = useRef<HTMLInputElement>(null);
@@ -67,7 +68,7 @@ export function KycGate({
       const form = new FormData();
       form.append("documentFront", frontFile);
       form.append("documentBack", backFile);
-      await apiFetch("/auth/kyc/submit", {
+      await authFetch("/auth/kyc/submit", {
         method: "POST",
         body: form,
       });

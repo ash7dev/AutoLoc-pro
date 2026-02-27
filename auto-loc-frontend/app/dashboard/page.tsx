@@ -1,26 +1,28 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { unstable_cache } from 'next/cache';
 import { fetchMe } from '../../lib/nestjs/auth';
-import { createSupabaseServerClient } from '../../lib/supabase/server';
 
 /**
  * Hub /dashboard : redirige vers le bon espace selon le rôle.
- * Le layout parent a déjà écarté les LOCATAIRES.
+ * Le middleware et le layout parent ont déjà vérifié que nest_access existe.
  */
 export default async function DashboardPage() {
-  const supabase = createSupabaseServerClient();
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token ?? null;
+  const token = cookies().get('nest_access')?.value;
 
   if (!token) {
     redirect('/login');
   }
 
-  const profile = await fetchMe(token);
+  const profile = await unstable_cache(
+    () => fetchMe(token),
+    ['profile', token],
+    { revalidate: 30 },
+  )();
 
   if (profile.role === 'ADMIN') {
     redirect('/dashboard/admin');
   }
 
-  // PROPRIETAIRE → home overview
   redirect('/dashboard/owner');
 }

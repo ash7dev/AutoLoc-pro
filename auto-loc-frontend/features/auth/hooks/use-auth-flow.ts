@@ -17,8 +17,14 @@ export function useAuthFlow() {
     inFlight.current = true;
     // eslint-disable-next-line no-console
     console.log('[AuthFlow] start');
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token ?? null;
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    let data = (await supabase.auth.getSession()).data;
+    let token = data.session?.access_token ?? null;
+    for (let i = 0; i < 5 && !token; i += 1) {
+      await wait(200);
+      data = (await supabase.auth.getSession()).data;
+      token = data.session?.access_token ?? null;
+    }
     // eslint-disable-next-line no-console
     console.log('[AuthFlow] token present', Boolean(token));
     if (!token) {
@@ -36,22 +42,30 @@ export function useAuthFlow() {
     if (!nestToken) {
       // /api/auth/sync : échange le token Supabase contre un JWT NestJS,
       // pose le cookie httpOnly (RSC) et retourne les tokens pour le Zustand store.
-      const syncRes = await fetch('/api/auth/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ supabaseToken: token }),
-      });
-      if (!syncRes.ok) {
+      let syncOk = false;
+      for (let i = 0; i < 3 && !syncOk; i += 1) {
+        const syncRes = await fetch('/api/auth/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ supabaseToken: token }),
+        });
+        if (syncRes.ok) {
+          const session = await syncRes.json() as {
+            accessToken: string;
+            refreshToken: string;
+            activeRole: ProfileResponse['role'];
+          };
+          useRoleStore.getState().setSession(session);
+          nestToken = session.accessToken;
+          syncOk = true;
+        } else {
+          await wait(200);
+        }
+      }
+      if (!syncOk) {
         inFlight.current = false;
         return;
       }
-      const session = await syncRes.json() as {
-        accessToken: string;
-        refreshToken: string;
-        activeRole: ProfileResponse['role'];
-      };
-      useRoleStore.getState().setSession(session);
-      nestToken = session.accessToken;
     }
 
     const profile = await fetchMe(nestToken);

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Smartphone, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { apiFetch, ApiError } from "@/lib/nestjs/api-client";
+import { ApiError } from "@/lib/nestjs/api-client";
+import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import type { ProfileResponse } from "@/lib/nestjs/auth";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ export function PhoneVerifyGate({
   const [nom, setNom]          = useState("");
   const [loading, setLoading]  = useState(false);
   const [error, setError]      = useState<string | null>(null);
+  const { authFetch } = useAuthFetch();
 
   const handleConfirm = async () => {
     const normalized = normalizePhone(phoneInput);
@@ -46,7 +48,7 @@ export function PhoneVerifyGate({
           setLoading(false);
           return;
         }
-        await apiFetch("/auth/complete-profile", {
+        await authFetch("/auth/complete-profile", {
           method: "POST",
           body: {
             prenom: prenom.trim(),
@@ -55,7 +57,7 @@ export function PhoneVerifyGate({
           },
         });
       } else {
-        await apiFetch("/auth/phone/update", {
+        await authFetch("/auth/phone/update", {
           method: "POST",
           body: { telephone: normalized },
         });

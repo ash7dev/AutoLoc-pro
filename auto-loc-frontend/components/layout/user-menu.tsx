@@ -12,7 +12,8 @@ import {
   Car,
 } from 'lucide-react';
 import { useSignOut } from '../../features/auth/hooks/use-signout';
-import { fetchMe } from '../../lib/nestjs/auth';
+import { apiFetch, ApiError } from '../../lib/nestjs/api-client';
+import type { ProfileResponse } from '../../lib/nestjs/auth';
 
 interface UserMenuProps {
   isOwner: boolean;
@@ -35,9 +36,29 @@ export function UserMenu({ isOwner }: UserMenuProps) {
   }, []);
 
   useEffect(() => {
-    fetchMe('')
-      .then((profile) => setHasVehicles(Boolean(profile.hasVehicles)))
-      .catch(() => setHasVehicles(false));
+    let active = true;
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+    async function loadProfile() {
+      for (let i = 0; i < 3; i += 1) {
+        try {
+          const profile = await apiFetch<ProfileResponse>('/auth/me');
+          if (!active) return;
+          setHasVehicles(Boolean(profile.hasVehicles));
+          return;
+        } catch (err) {
+          if (err instanceof ApiError && err.status === 401) {
+            await wait(200);
+            continue;
+          }
+          break;
+        }
+      }
+      if (active) setHasVehicles(false);
+    }
+
+    void loadProfile();
+    return () => { active = false; };
   }, []);
 
   return (

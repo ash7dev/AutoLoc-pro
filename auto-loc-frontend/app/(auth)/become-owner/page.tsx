@@ -10,7 +10,11 @@ import { BecomeOwnerForm } from '../../../features/owner/become-owner/components
  * - ADMIN → /dashboard/admin
  * - LOCATAIRE → affiche le flow de transition
  */
-export default async function BecomeOwnerPage() {
+export default async function BecomeOwnerPage({
+  searchParams,
+}: {
+  searchParams?: { auto?: string };
+}) {
   const supabase = createSupabaseServerClient();
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token ?? null;
@@ -29,5 +33,6 @@ export default async function BecomeOwnerPage() {
     redirect('/dashboard/admin');
   }
 
-  return <BecomeOwnerForm />;
+  const autoActivate = searchParams?.auto === '1';
+  return <BecomeOwnerForm autoActivate={autoActivate} />;
 }

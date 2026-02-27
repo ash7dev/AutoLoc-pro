@@ -1,29 +1,25 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { fetchMe, switchRole } from '../../../lib/nestjs/auth';
+import { unstable_cache } from 'next/cache';
+import { fetchMe } from '../../../lib/nestjs/auth';
 import { ApiError } from '../../../lib/nestjs/api-client';
-import { createSupabaseServerClient } from '../../../lib/supabase/server';
 import { OwnerSidebar } from '../../../features/owner/components/owner-sidebar';
 
 /**
  * Guard PROPRIETAIRE : seul le rôle PROPRIETAIRE peut accéder à /dashboard/owner/*.
  * - ADMIN → son espace dédié /dashboard/admin
  * - Autre → /become-owner pour démarrer le flow de transition
+ *
+ * fetchMe est mis en cache 30s par token pour éviter un appel NestJS
+ * à chaque navigation entre pages owner.
  */
 export default async function OwnerLayout({
   children,
 }: {
   children: React.ReactNode;
 }): Promise<React.ReactElement> {
-  const nestToken = cookies().get('nest_access')?.value ?? null;
-
-  let token: string | null = nestToken;
-  if (!token) {
-    const supabase = createSupabaseServerClient();
-    const { data } = await supabase.auth.getSession();
-    token = data.session?.access_token ?? null;
-  }
+  const token = cookies().get('nest_access')?.value;
 
   if (!token) {
     redirect('/login');
@@ -31,7 +27,11 @@ export default async function OwnerLayout({
 
   let profile;
   try {
-    profile = await fetchMe(token);
+    profile = await unstable_cache(
+      () => fetchMe(token),
+      ['profile', token],
+      { revalidate: 30 },
+    )();
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) {
       redirect('/login?expired=1');
@@ -44,15 +44,7 @@ export default async function OwnerLayout({
   }
 
   if (profile.role !== 'PROPRIETAIRE') {
-    if (profile.hasVehicles) {
-      try {
-        await switchRole(token, 'PROPRIETAIRE');
-      } catch {
-        redirect('/become-owner');
-      }
-    } else {
-      redirect('/become-owner');
-    }
+    redirect(profile.hasVehicles ? '/become-owner?auto=1' : '/become-owner');
   }
 
   return (

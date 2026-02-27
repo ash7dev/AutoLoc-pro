@@ -1,41 +1,21 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { fetchMe } from '../../lib/nestjs/auth';
-import { ApiError } from '../../lib/nestjs/api-client';
-import { createSupabaseServerClient } from '../../lib/supabase/server';
 
-export default async function DashboardLayout({
+// Layout synchrone — pas d'appel réseau.
+// Le middleware a déjà vérifié que nest_access existe.
+// La validation réelle du token (fetchMe) est faite dans les sous-layouts
+// admin/owner qui utilisent unstable_cache.
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
-}): Promise<React.ReactElement> {
-  // Priorité 1 : JWT NestJS (cookie httpOnly — DB comme source de vérité).
-  // Priorité 2 : token Supabase (fallback — guard hybride l'accepte aussi).
-  const nestToken = cookies().get('nest_access')?.value ?? null;
+}): React.ReactElement {
+  const nestToken = cookies().get('nest_access')?.value;
 
-  let token: string | null = nestToken;
-  if (!token) {
-    const supabase = createSupabaseServerClient();
-    const { data } = await supabase.auth.getSession();
-    token = data.session?.access_token ?? null;
-  }
-
-  if (!token) {
+  if (!nestToken) {
     redirect('/login');
   }
 
-  let profile;
-  try {
-    profile = await fetchMe(token);
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 401) {
-      redirect('/login?expired=1');
-    }
-    throw err;
-  }
-
-  // Le hub /dashboard/page.tsx et les sous-layouts (/dashboard/admin, /dashboard/owner)
-  // gèrent les redirections fines par rôle.
   return <div className="min-h-screen">{children}</div>;
 }

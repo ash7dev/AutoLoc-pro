@@ -4,13 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Check, X, LogIn, LogOut, Loader2 } from "lucide-react";
-import {
-    confirmReservation,
-    cancelReservation,
-    checkinReservation,
-    checkoutReservation,
-} from "@/lib/nestjs/reservations";
 import type { ReservationStatut } from "@/lib/nestjs/reservations";
+import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -30,21 +25,29 @@ interface ActionConfig {
     confirm?: string;
 }
 
-function getActions(statut: ReservationStatut): ActionConfig[] {
+function getActions(
+    statut: ReservationStatut,
+    handlers: {
+        confirm: (id: string) => Promise<void>;
+        cancel: (id: string) => Promise<void>;
+        checkin: (id: string) => Promise<void>;
+        checkout: (id: string) => Promise<void>;
+    },
+): ActionConfig[] {
     switch (statut) {
         case "PAYEE":
             return [
-                { label: "Confirmer", icon: Check, variant: "default", handler: confirmReservation, confirm: "Confirmer cette réservation ?" },
-                { label: "Annuler", icon: X, variant: "destructive", handler: (id) => cancelReservation(id), confirm: "Annuler cette réservation ?" },
+                { label: "Confirmer", icon: Check, variant: "default", handler: handlers.confirm, confirm: "Confirmer cette réservation ?" },
+                { label: "Annuler", icon: X, variant: "destructive", handler: handlers.cancel, confirm: "Annuler cette réservation ?" },
             ];
         case "CONFIRMEE":
             return [
-                { label: "Check-in", icon: LogIn, variant: "default", handler: checkinReservation },
-                { label: "Annuler", icon: X, variant: "destructive", handler: (id) => cancelReservation(id), confirm: "Annuler cette réservation ?" },
+                { label: "Check-in", icon: LogIn, variant: "default", handler: handlers.checkin },
+                { label: "Annuler", icon: X, variant: "destructive", handler: handlers.cancel, confirm: "Annuler cette réservation ?" },
             ];
         case "EN_COURS":
             return [
-                { label: "Check-out", icon: LogOut, variant: "default", handler: checkoutReservation },
+                { label: "Check-out", icon: LogOut, variant: "default", handler: handlers.checkout },
             ];
         default:
             return [];
@@ -56,8 +59,27 @@ function getActions(statut: ReservationStatut): ActionConfig[] {
 export function ReservationActions({ reservationId, statut, className }: ReservationActionsProps) {
     const router = useRouter();
     const [loading, setLoading] = useState<string | null>(null);
+    const { authFetch } = useAuthFetch();
 
-    const actions = getActions(statut);
+    const handlers = {
+        confirm: async (id: string) => {
+            await authFetch(`/reservations/${id}/confirm`, { method: "PATCH" });
+        },
+        cancel: async (id: string) => {
+            await authFetch(`/reservations/${id}/cancel`, {
+                method: "PATCH",
+                body: { raison: "Annulé par le propriétaire" },
+            });
+        },
+        checkin: async (id: string) => {
+            await authFetch(`/reservations/${id}/checkin`, { method: "PATCH" });
+        },
+        checkout: async (id: string) => {
+            await authFetch(`/reservations/${id}/checkout`, { method: "PATCH" });
+        },
+    };
+
+    const actions = getActions(statut, handlers);
     if (actions.length === 0) return null;
 
     const handleAction = async (action: ActionConfig) => {

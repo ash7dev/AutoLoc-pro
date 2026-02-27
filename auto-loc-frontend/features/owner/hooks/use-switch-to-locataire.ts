@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { switchRole } from '../../../lib/nestjs/auth';
-import { ensureValidNestToken } from '../../auth/hooks/use-nest-token';
+import { useAuthFetch } from '../../auth/hooks/use-auth-fetch';
 import { useRoleStore } from '../../auth/stores/role.store';
 
 export function useSwitchToLocataire() {
@@ -12,13 +11,15 @@ export function useSwitchToLocataire() {
   const router = useRouter();
   const setActiveRole = useRoleStore((s) => s.setActiveRole);
 
+  const { authFetch } = useAuthFetch();
   const switchToLocataire = async () => {
     setLoading(true);
     setError(null);
     try {
-      const token = await ensureValidNestToken();
-      if (!token) throw new Error('Session expirée — reconnectez-vous.');
-      await switchRole(token, 'LOCATAIRE');
+      await authFetch('/auth/switch-role', {
+        method: 'PATCH',
+        body: { role: 'LOCATAIRE' },
+      });
       setActiveRole('LOCATAIRE');
       router.push('/');
     } catch (err: unknown) {

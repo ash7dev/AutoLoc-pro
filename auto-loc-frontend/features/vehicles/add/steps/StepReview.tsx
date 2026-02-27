@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAddVehicleStore } from "../store";
-import { apiFetch } from "@/lib/nestjs/api-client";
+import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import { VEHICLE_PATHS, Vehicle } from "@/lib/nestjs/vehicles";
 
 interface Props {
@@ -21,6 +21,7 @@ export function StepReview({ previousStep }: Props) {
   const { step1, step2, step3, photos, setVehicleId, reset } = useAddVehicleStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { authFetch } = useAuthFetch();
 
   const handlePublish = async () => {
     if (!step1 || !step2) return;
@@ -29,7 +30,7 @@ export function StepReview({ previousStep }: Props) {
 
     try {
       // 1. Créer le véhicule
-      const vehicle = await apiFetch<Vehicle, Record<string, unknown>>(VEHICLE_PATHS.create, {
+      const vehicle = await authFetch<Vehicle, Record<string, unknown>>(VEHICLE_PATHS.create, {
         method: "POST",
         body: {
           marque:            step1.marque,
@@ -58,7 +59,7 @@ export function StepReview({ previousStep }: Props) {
       for (const file of photos) {
         const form = new FormData();
         form.append("file", file);
-        await apiFetch(VEHICLE_PATHS.addPhoto(vehicle.id), {
+        await authFetch(VEHICLE_PATHS.addPhoto(vehicle.id), {
           method: "POST",
           body: form as unknown as Record<string, unknown>,
         });

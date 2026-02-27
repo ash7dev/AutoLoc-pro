@@ -1,29 +1,24 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
+import { unstable_cache } from 'next/cache';
 import { fetchMe } from '../../../lib/nestjs/auth';
 import { ApiError } from '../../../lib/nestjs/api-client';
-import { createSupabaseServerClient } from '../../../lib/supabase/server';
 import { AdminSidebar } from '../../../features/admin/components/admin-sidebar';
 import { AdminAutoRefresh } from '../../../features/admin/components/admin-auto-refresh';
 
 /**
  * Guard ADMIN : seul le rôle ADMIN peut accéder à /dashboard/admin/*.
- * Ce layout s'exécute après dashboard/layout.tsx qui a déjà écarté les LOCATAIRES.
+ *
+ * fetchMe est mis en cache 30s par token pour éviter un appel NestJS
+ * à chaque navigation entre pages admin.
  */
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }): Promise<React.ReactElement> {
-  const nestToken = cookies().get('nest_access')?.value ?? null;
-
-  let token: string | null = nestToken;
-  if (!token) {
-    const supabase = createSupabaseServerClient();
-    const { data } = await supabase.auth.getSession();
-    token = data.session?.access_token ?? null;
-  }
+  const token = cookies().get('nest_access')?.value;
 
   if (!token) {
     redirect('/login');
@@ -31,7 +26,11 @@ export default async function AdminLayout({
 
   let profile;
   try {
-    profile = await fetchMe(token);
+    profile = await unstable_cache(
+      () => fetchMe(token),
+      ['profile', token],
+      { revalidate: 30 },
+    )();
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) {
       redirect('/login?expired=1');

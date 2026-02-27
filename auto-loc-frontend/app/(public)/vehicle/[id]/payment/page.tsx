@@ -11,7 +11,8 @@ import {
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { fetchVehicle, fetchVehiclePricing, type Vehicle, type PricingResponse } from '@/lib/nestjs/vehicles';
-import { createReservation, confirmPaymentSimulation } from '@/lib/nestjs/reservations';
+import { useAuthFetch } from '@/features/auth/hooks/use-auth-fetch';
+import { useRoleStore } from '@/features/auth/stores/role.store';
 import { formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
 
 type PaymentStep = 'recap' | 'processing' | 'success' | 'error';
@@ -35,6 +36,9 @@ export default function PaymentPage() {
     const [method, setMethod] = useState<PaymentMethod>('WAVE');
     const [contractAccepted, setContractAccepted] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
+    const activeRole = useRoleStore((s) => s.activeRole);
+    const setActiveRole = useRoleStore((s) => s.setActiveRole);
+    const { authFetch } = useAuthFetch();
 
     useEffect(() => {
         if (!vehicleId || !dateDebut || !dateFin || nbJours < 1) return;
@@ -54,16 +58,29 @@ export default function PaymentPage() {
         if (!contractAccepted || !vehicle || !pricing) return;
         setStep('processing');
         try {
-            const { reservationId } = await createReservation({
-                vehiculeId: vehicleId,
-                dateDebut,
-                dateFin,
-                fournisseur: method,
-                idempotencyKey: `${vehicleId}-${dateDebut}-${dateFin}-${Date.now()}`,
-            });
+            if (activeRole === 'PROPRIETAIRE') {
+                await authFetch('/auth/switch-role', {
+                    method: 'PATCH',
+                    body: { role: 'LOCATAIRE' },
+                });
+                setActiveRole('LOCATAIRE');
+            }
+            const { reservationId } = await authFetch<{ reservationId: string; paymentUrl: string }>(
+                '/reservations',
+                {
+                    method: 'POST',
+                    body: {
+                        vehiculeId: vehicleId,
+                        dateDebut,
+                        dateFin,
+                        fournisseur: method,
+                        idempotencyKey: `${vehicleId}-${dateDebut}-${dateFin}-${Date.now()}`,
+                    },
+                },
+            );
 
             // Simulate successful payment (no real API keys)
-            await confirmPaymentSimulation(reservationId);
+            await authFetch(`/reservations/${reservationId}/confirm-payment`, { method: 'PATCH' });
             setStep('success');
         } catch (err) {
             setErrorMsg(err instanceof Error ? err.message : 'Erreur lors du paiement');
