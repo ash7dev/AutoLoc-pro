@@ -22,6 +22,7 @@ interface ApiFetchOptions<TBody> {
   body?: TBody;
   accessToken?: string;
   headers?: Record<string, string>;
+  timeoutMs?: number;
 }
 
 export async function apiFetch<TResponse, TBody = undefined>(
@@ -48,19 +49,33 @@ export async function apiFetch<TResponse, TBody = undefined>(
     console.log('[API]', options.method ?? 'GET', url);
   }
 
-  const res = await fetch(url, {
-    method: options.method ?? 'GET',
-    headers:
-      options.body instanceof FormData
-        ? headers
-        : { 'Content-Type': 'application/json', ...headers },
-    body:
-      options.body instanceof FormData
-        ? options.body
-        : options.body
-          ? JSON.stringify(options.body)
-          : undefined,
-  });
+  const controller = new AbortController();
+  const timeoutMs = options.timeoutMs ?? 12_000;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: options.method ?? 'GET',
+      headers:
+        options.body instanceof FormData
+          ? headers
+          : { 'Content-Type': 'application/json', ...headers },
+      body:
+        options.body instanceof FormData
+          ? options.body
+          : options.body
+            ? JSON.stringify(options.body)
+            : undefined,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if ((err as { name?: string }).name === 'AbortError') {
+      throw new ApiError('Request timeout', 408);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   const contentType = res.headers.get('content-type') ?? '';
   const isJson = contentType.includes('application/json');

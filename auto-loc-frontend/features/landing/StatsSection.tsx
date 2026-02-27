@@ -8,21 +8,21 @@ import { cn } from '@/lib/utils';
 const STATS = [
     {
         icon: Car,
-        value: 500,
+        value: 80,
         suffix: '+',
         label: 'Véhicules disponibles',
         description: 'Sur tout le territoire',
     },
     {
         icon: MapPin,
-        value: 10000,
+        value: 500,
         suffix: '+',
         label: 'Locations réalisées',
         description: 'Et ça continue',
     },
     {
         icon: Star,
-        value: 4.9,
+        value: 4.6,
         suffix: '/5',
         label: 'Note moyenne',
         description: 'Par nos locataires',

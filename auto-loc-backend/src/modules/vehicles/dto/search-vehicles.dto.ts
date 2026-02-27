@@ -5,8 +5,10 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsIn,
   IsString,
   Min,
+  Max,
   ValidateIf,
   Validate,
   ValidatorConstraint,
@@ -14,7 +16,7 @@ import {
   ValidationArguments,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { TypeVehicule } from '@prisma/client';
+import { Carburant, Transmission, TypeVehicule } from '@prisma/client';
 
 @ValidatorConstraint({ name: 'IsAfterStartDate', async: false })
 class IsAfterStartDate implements ValidatorConstraintInterface {
@@ -62,4 +64,33 @@ export class SearchVehiclesDto {
   @Min(1)
   @Type(() => Number)
   page?: number;
+
+  @IsOptional()
+  @IsEnum(Carburant)
+  carburant?: Carburant;
+
+  @IsOptional()
+  @IsEnum(Transmission)
+  transmission?: Transmission;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  placesMin?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(5)
+  @Type(() => Number)
+  noteMin?: number;
+
+  @IsOptional()
+  @IsIn(['totalLocations', 'note', 'prixParJour', 'annee'])
+  sortBy?: 'totalLocations' | 'note' | 'prixParJour' | 'annee';
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  sortOrder?: 'asc' | 'desc';
 }

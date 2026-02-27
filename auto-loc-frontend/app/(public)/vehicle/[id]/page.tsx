@@ -1,14 +1,15 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { fetchVehicle, type Vehicle } from '@/lib/nestjs/vehicles';
 import { VehicleDetailHero } from '@/features/vehicles/components/VehicleDetailHero';
 import { VehicleDetailSpecs } from '@/features/vehicles/components/VehicleDetailSpecs';
 import { VehiclePricingTable } from '@/features/vehicles/components/VehiclePricingTable';
-import { ReservationSidebar } from '@/features/vehicles/components/ReservationSidebar';
 import { VehicleOwnerCard, MobileReservationBar } from '@/features/vehicles/components/VehicleOwnerCard';
+import { ReservationSidebar } from '@/features/vehicles/components/ReservationSidebar';
 import { Footer } from '@/features/landing/Footer';
 
 interface PageProps { params: { id: string } }
@@ -35,7 +36,7 @@ export default async function VehicleDetailPage({ params }: PageProps) {
             {/* ── Breadcrumb ──────────────────────────────────────────── */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-0">
                 <Link
-                    href="/vehicles"
+                    href="/explorer"
                     className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 hover:text-slate-700 transition-colors duration-150"
                 >
                     <ChevronLeft className="w-4 h-4" strokeWidth={2.5} />

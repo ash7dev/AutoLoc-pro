@@ -111,8 +111,11 @@ export interface VehicleSearchResult {
   prixParJour: number;
   ville: string;
   note: number;
+  totalAvis?: number;
   totalLocations: number;
   photoUrl: string | null;
+  statut?: VehicleStatus;
+  tarifsProgressifs?: TarifTier[];
 }
 
 export interface SearchVehiclesParams {
@@ -122,12 +125,27 @@ export interface SearchVehiclesParams {
   type?: VehicleType;
   prixMax?: number;
   page?: number;
+  carburant?: FuelType;
+  transmission?: Transmission;
+  placesMin?: number;
+  noteMin?: number;
+  sortBy?: 'totalLocations' | 'note' | 'prixParJour' | 'annee';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface SearchVehiclesResponse {
   data: VehicleSearchResult[];
   page: number;
 }
+
+// ── Client cache (public search) ──────────────────────────────────────────────
+
+const SEARCH_CACHE_TTL_MS = 30_000;
+const searchCache: Map<string, { ts: number; data: SearchVehiclesResponse }> =
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  (globalThis as any).__AUTOLOC_SEARCH_CACHE__ ?? new Map();
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+(globalThis as any).__AUTOLOC_SEARCH_CACHE__ = searchCache;
 
 // ── Path constants (shared between RSC functions and client hooks) ─────────────
 
@@ -176,10 +194,30 @@ export async function searchVehicles(
   if (params.type) qs.set('type', params.type);
   if (params.prixMax != null) qs.set('prixMax', String(params.prixMax));
   if (params.page != null) qs.set('page', String(params.page));
+  if (params.carburant) qs.set('carburant', params.carburant);
+  if (params.transmission) qs.set('transmission', params.transmission);
+  if (params.placesMin != null) qs.set('placesMin', String(params.placesMin));
+  if (params.noteMin != null) qs.set('noteMin', String(params.noteMin));
+  if (params.sortBy) qs.set('sortBy', params.sortBy);
+  if (params.sortOrder) qs.set('sortOrder', params.sortOrder);
 
-  return apiFetch<SearchVehiclesResponse>(
+  const key = qs.toString() || 'all';
+  if (typeof window !== 'undefined') {
+    const cached = searchCache.get(key);
+    if (cached && Date.now() - cached.ts < SEARCH_CACHE_TTL_MS) {
+      return cached.data;
+    }
+  }
+
+  const data = await apiFetch<SearchVehiclesResponse>(
     `${VEHICLE_PATHS.search}?${qs.toString()}`,
   );
+
+  if (typeof window !== 'undefined') {
+    searchCache.set(key, { ts: Date.now(), data });
+  }
+
+  return data;
 }
 
 /**

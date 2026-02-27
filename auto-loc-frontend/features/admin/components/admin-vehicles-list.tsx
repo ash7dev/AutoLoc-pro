@@ -282,7 +282,7 @@ function VehicleDetailModal({ vehicle, pendingId, onClose, onValidate, onSuspend
             <div className="grid grid-cols-3 gap-2">
               {[
                 { label: 'Locations', value: vehicle.totalLocations, color: 'text-black'       },
-                { label: 'Note / 5',  value: vehicle.note.toFixed(1), color: 'text-amber-500' },
+                { label: 'Note / 5',  value: Number(vehicle.note).toFixed(1), color: 'text-amber-500' },
                 { label: 'Avis',      value: vehicle.totalAvis,       color: 'text-black'       },
               ].map(({ label, value, color }) => (
                 <div key={label} className="rounded-xl border border-slate-100 bg-white px-3 py-3 text-center">

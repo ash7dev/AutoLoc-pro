@@ -297,7 +297,7 @@ function VehicleCard({
             {vehicle.note > 0 && (
               <span className="flex items-center gap-1 text-[12px] font-bold">
                 <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" strokeWidth={0} />
-                {vehicle.note.toFixed(1)}
+                {Number(vehicle.note).toFixed(1)}
               </span>
             )}
             {reservations > 0 && (
@@ -451,7 +451,7 @@ function VehicleRow({
         {vehicle.note > 0 && (
           <span className="flex items-center gap-1">
             <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" strokeWidth={0} />
-            <span className="font-black text-foreground tabular-nums">{vehicle.note.toFixed(1)}</span>
+            <span className="font-black text-foreground tabular-nums">{Number(vehicle.note).toFixed(1)}</span>
           </span>
         )}
         <span className="flex items-center gap-1.5">

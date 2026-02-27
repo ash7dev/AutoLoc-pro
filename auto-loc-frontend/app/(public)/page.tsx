@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { BannerSection } from '@/features/landing/BannerSection';
 import { CategoriesSection } from '@/features/landing/CategoriesSection';
 import { VehicleGridSection } from '@/features/landing/VehicleGridSection';
+import { searchVehicles, type VehicleSearchResult } from '@/lib/nestjs/vehicles';
 import { HowItWorksSection } from '@/features/landing/HowItWorksSection';
 import { TrustSection } from '@/features/landing/TrustSection';
 import { StatsSection } from '@/features/landing/StatsSection';
@@ -26,12 +27,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  let initialVehicles: VehicleSearchResult[] = [];
+  try {
+    const res = await searchVehicles({ page: 1 });
+    initialVehicles = res?.data ?? [];
+  } catch {
+    // fallback to client fetch
+  }
+
   return (
     <main>
       <BannerSection />
       <CategoriesSection />
-      <VehicleGridSection />
+      <VehicleGridSection initialVehicles={initialVehicles} />
       <HowItWorksSection />
       <TrustSection />
       <StatsSection />
@@ -43,4 +52,3 @@ export default function HomePage() {
     </main>
   );
 }
-

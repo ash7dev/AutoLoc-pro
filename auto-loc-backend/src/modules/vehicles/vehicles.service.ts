@@ -347,8 +347,17 @@ export class VehiclesService {
       prixParJour: number;
       ville: string;
       note: number;
+      totalAvis: number;
+      statut: string;
       totalLocations: number;
       photoUrl: string | null;
+      tarifsProgressifs: Array<{
+        id: string;
+        joursMin: number;
+        joursMax: number | null;
+        prix: string;
+        position: number;
+      }>;
     }[];
     page: number;
   }> {
@@ -363,6 +372,12 @@ export class VehiclesService {
       dateFin: dto.dateFin ?? null,
       type: dto.type ?? null,
       prixMax: dto.prixMax ?? null,
+      carburant: dto.carburant ?? null,
+      transmission: dto.transmission ?? null,
+      placesMin: dto.placesMin ?? null,
+      noteMin: dto.noteMin ?? null,
+      sortBy: dto.sortBy ?? null,
+      sortOrder: dto.sortOrder ?? null,
       page,
     });
     const cacheKey =
@@ -387,6 +402,22 @@ export class VehiclesService {
       ? Prisma.sql`AND v."prixParJour" <= ${dto.prixMax}`
       : Prisma.empty;
 
+    const carburantCondition = dto.carburant
+      ? Prisma.sql`AND v.carburant::text = ${dto.carburant}`
+      : Prisma.empty;
+
+    const transmissionCondition = dto.transmission
+      ? Prisma.sql`AND v.transmission::text = ${dto.transmission}`
+      : Prisma.empty;
+
+    const placesCondition = dto.placesMin != null
+      ? Prisma.sql`AND v."nombrePlaces" >= ${dto.placesMin}`
+      : Prisma.empty;
+
+    const noteCondition = dto.noteMin != null
+      ? Prisma.sql`AND v.note >= ${dto.noteMin}`
+      : Prisma.empty;
+
     const dateCondition =
       dto.dateDebut && dto.dateFin
         ? Prisma.sql`
@@ -400,6 +431,15 @@ export class VehiclesService {
         : Prisma.empty;
 
     // ── Requête native ────────────────────────────────────────────────────────
+    const orderFieldMap: Record<NonNullable<typeof dto.sortBy>, string> = {
+      totalLocations: 'v."totalLocations"',
+      note: 'v.note',
+      prixParJour: 'v."prixParJour"',
+      annee: 'v.annee',
+    };
+    const orderField = dto.sortBy ? orderFieldMap[dto.sortBy] : 'v.note';
+    const orderDir = dto.sortOrder === 'asc' ? 'ASC' : 'DESC';
+
     const rows = await this.prisma.$queryRaw<VehicleSearchRow[]>`
       SELECT
         v.id,
@@ -410,6 +450,8 @@ export class VehiclesService {
         v."prixParJour",
         v.ville,
         v.note,
+        v."totalAvis",
+        v.statut::text AS statut,
         v."totalLocations",
         (
           SELECT p.url
@@ -422,10 +464,34 @@ export class VehiclesService {
         ${villeCondition}
         ${typeCondition}
         ${prixCondition}
+        ${carburantCondition}
+        ${transmissionCondition}
+        ${placesCondition}
+        ${noteCondition}
         ${dateCondition}
-      ORDER BY v.note DESC
+      ORDER BY ${Prisma.raw(orderField)} ${Prisma.raw(orderDir)}
       LIMIT ${Prisma.raw(String(SEARCH_PAGE_SIZE))} OFFSET ${Prisma.raw(String(offset))}
     `;
+
+    const ids = rows.map((r) => r.id);
+    const tiers = await this.prisma.tarifTier.findMany({
+      where: { vehiculeId: { in: ids } },
+      orderBy: [{ vehiculeId: 'asc' }, { position: 'asc' }],
+      select: {
+        id: true,
+        vehiculeId: true,
+        joursMin: true,
+        joursMax: true,
+        prix: true,
+        position: true,
+      },
+    });
+    const tiersByVehicle = new Map<string, typeof tiers>();
+    for (const t of tiers) {
+      const arr = tiersByVehicle.get(t.vehiculeId) ?? [];
+      arr.push(t);
+      tiersByVehicle.set(t.vehiculeId, arr);
+    }
 
     const result = {
       data: rows.map((r) => ({
@@ -437,8 +503,17 @@ export class VehiclesService {
         prixParJour: Number(r.prixParJour),
         ville: r.ville,
         note: Number(r.note),
+        totalAvis: Number((r as any).totalAvis ?? 0),
+        statut: (r as any).statut ?? 'VERIFIE',
         totalLocations: Number(r.totalLocations),
         photoUrl: r.photoUrl,
+        tarifsProgressifs: (tiersByVehicle.get(r.id) ?? []).map((t) => ({
+          id: t.id,
+          joursMin: t.joursMin,
+          joursMax: t.joursMax,
+          prix: t.prix.toString(),
+          position: t.position,
+        })),
       })),
       page,
     };

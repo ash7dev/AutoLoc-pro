@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import {
-    ShieldCheck, Star, MessageCircle, ChevronUp, CreditCard, ArrowRight,
+    ShieldCheck, Star, ChevronUp, CreditCard, ArrowRight,
     Check,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -35,8 +35,7 @@ export function VehicleOwnerCard({ vehicle }: OwnerCardProps): React.ReactElemen
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-[15px] font-bold text-slate-900">
-                            {vehicle.proprietaire?.prenom ?? 'Propriétaire'}
-                            {vehicle.proprietaire?.nom ? ` ${vehicle.proprietaire.nom[0]}.` : ''}
+                            {[vehicle.proprietaire?.prenom, vehicle.proprietaire?.nom].filter(Boolean).join(' ') || 'Propriétaire'}
                         </p>
                         <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
                             <ShieldCheck className="w-3 h-3" strokeWidth={2.5} />
@@ -44,29 +43,22 @@ export function VehicleOwnerCard({ vehicle }: OwnerCardProps): React.ReactElemen
                         </span>
                     </div>
                     <div className="flex items-center gap-3 mt-1.5">
-                        <span className="flex items-center gap-1 text-[12px] text-slate-500 font-medium">
+                        <span className="flex items-center gap-1 text-[12px] text-slate-700 font-semibold">
                             <Star className="w-3 h-3 fill-amber-400 text-amber-400" strokeWidth={0} />
-                            {vehicle.note?.toFixed(1) ?? '—'}
-                            <span className="text-slate-400">({vehicle.totalAvis ?? 0} avis)</span>
+                            {vehicle.note != null ? Number(vehicle.note).toFixed(1) : '—'}
+                            <span className="text-slate-600">({vehicle.totalAvis ?? 0} avis)</span>
                         </span>
-                        <span className="text-slate-200">·</span>
-                        <span className="text-[12px] text-slate-500 font-medium">
+                        <span className="text-slate-300">·</span>
+                        <span className="text-[12px] text-slate-700 font-semibold">
                             {vehicle.totalLocations ?? 0} locations
                         </span>
                     </div>
-                    <p className="mt-2.5 text-[13px] text-slate-500 leading-relaxed line-clamp-2">
+                    <p className="mt-2.5 text-[13px] text-slate-700 leading-relaxed line-clamp-2">
                         Ce véhicule a été inspecté et validé par notre équipe. Le propriétaire dispose d&apos;un profil vérifié et d&apos;un KYC valide sur AutoLoc.
                     </p>
                 </div>
             </div>
 
-            <button
-                type="button"
-                className="flex items-center gap-2.5 px-5 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 text-[13.5px] font-semibold text-slate-700"
-            >
-                <MessageCircle className="w-4 h-4 text-slate-500" strokeWidth={1.75} />
-                Contacter le propriétaire
-            </button>
         </section>
     );
 }
@@ -163,7 +155,7 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBa
     const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
     const nbJours = dateDebut && dateFin
-        ? Math.max(1, Math.round((new Date(dateFin).getTime() - new Date(dateDebut).getTime()) / 86_400_000))
+        ? Math.max(1, Math.round((new Date(dateFin).getTime() - new Date(dateDebut).getTime()) / 86_400_000) + 1)
         : 0;
 
     const datesValid = nbJours >= joursMinimum;

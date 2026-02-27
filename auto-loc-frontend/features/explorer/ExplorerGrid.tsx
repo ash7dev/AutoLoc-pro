@@ -1,9 +1,18 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Car } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Vehicle } from '@/lib/nestjs/vehicles';
+import {
+  searchVehicles,
+  type VehicleSearchResult,
+  type VehicleType,
+  type FuelType,
+  type Transmission,
+} from '@/lib/nestjs/vehicles';
+import { apiFetch } from '@/lib/nestjs/api-client';
+import type { ProfileResponse } from '@/lib/nestjs/auth';
+import { KycNudgeModal } from '@/features/onboarding/KycNudgeModal';
 import { ExplorerHero } from './ExplorerHero';
 import { ExplorerFilters } from './ExplorerFilters';
 import { ExplorerActiveFilters, getFilterPills } from './ExplorerActiveFilters';
@@ -11,370 +20,463 @@ import { ExplorerResultsHeader } from './ExplorerResultsHeader';
 import { ExplorerVehicleCard } from './ExplorerVehicleCard';
 import { VehicleGridSkeleton } from './ExplorerSkeleton';
 
-// ─── Types (exported for other components) ────────────────────────────────────
-export interface ExplorerFiltersState {
-    zone: string;
-    type: string;
-    budgetMax: number | null;
-    fuel: string;
-    transmission: string;
-    sort: string;
-    places: number | null;
-    noteMin: number | null;
-}
-
-const DEFAULT_FILTERS: ExplorerFiltersState = {
-    zone: '',
-    type: '',
-    budgetMax: null,
-    fuel: '',
-    transmission: '',
-    sort: 'popular',
-    places: null,
-    noteMin: null,
+/* ════════════════════════════════════════════════════════════════
+   TYPES
+════════════════════════════════════════════════════════════════ */
+export type VehicleGridItem = VehicleSearchResult & {
+  carburant?: FuelType | null;
+  transmission?: Transmission | null;
+  nombrePlaces?: number | null;
+  proprietaireId?: string;
+  photos?: { id: string; url: string; estPrincipale?: boolean }[];
+  tarifsProgressifs?: { id?: string; joursMin: number; joursMax?: number | null; prix: number }[];
+  statut?: string;
+  totalAvis?: number;
+  adresse?: string;
+  immatriculation?: string;
+  joursMinimum?: number;
+  ageMinimum?: number;
 };
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const MOCK_VEHICLES: Vehicle[] = [
-    {
-        id: '1', proprietaireId: 'p1',
-        marque: 'Toyota', modele: 'Land Cruiser', annee: 2022,
-        type: 'SUV', carburant: 'DIESEL', transmission: 'AUTOMATIQUE',
-        nombrePlaces: 7, immatriculation: 'DK-1234-AA',
-        prixParJour: 45000, ville: 'Dakar', adresse: 'Almadies',
-        latitude: null, longitude: null, joursMinimum: 2, ageMinimum: 25,
-        zoneConduite: null, assurance: null, reglesSpecifiques: null,
-        statut: 'VERIFIE', note: 4.9, totalAvis: 34, totalLocations: 18,
-        creeLe: '', misAJourLe: '',
-        photos: [{ id: 'ph1', vehiculeId: '1', url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80', position: 1, estPrincipale: true, creeLe: '' }],
-        tarifsProgressifs: [], _count: { reservations: 18 },
-    },
-    {
-        id: '2', proprietaireId: 'p2',
-        marque: 'Mercedes', modele: 'Classe C', annee: 2021,
-        type: 'BERLINE', carburant: 'ESSENCE', transmission: 'AUTOMATIQUE',
-        nombrePlaces: 5, immatriculation: 'DK-5678-BB',
-        prixParJour: 55000, ville: 'Dakar', adresse: 'Mermoz',
-        latitude: null, longitude: null, joursMinimum: 1, ageMinimum: 23,
-        zoneConduite: null, assurance: null, reglesSpecifiques: null,
-        statut: 'VERIFIE', note: 4.8, totalAvis: 21, totalLocations: 12,
-        creeLe: '', misAJourLe: '',
-        photos: [{ id: 'ph2', vehiculeId: '2', url: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80', position: 1, estPrincipale: true, creeLe: '' }],
-        tarifsProgressifs: [], _count: { reservations: 12 },
-    },
-    {
-        id: '3', proprietaireId: 'p3',
-        marque: 'Hyundai', modele: 'Tucson', annee: 2023,
-        type: 'SUV', carburant: 'ESSENCE', transmission: 'AUTOMATIQUE',
-        nombrePlaces: 5, immatriculation: 'DK-9012-CC',
-        prixParJour: 28000, ville: 'Dakar', adresse: 'Ouakam',
-        latitude: null, longitude: null, joursMinimum: 1, ageMinimum: 21,
-        zoneConduite: null, assurance: null, reglesSpecifiques: null,
-        statut: 'VERIFIE', note: 4.7, totalAvis: 15, totalLocations: 8,
-        creeLe: '', misAJourLe: '',
-        photos: [{ id: 'ph3', vehiculeId: '3', url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80', position: 1, estPrincipale: true, creeLe: '' }],
-        tarifsProgressifs: [], _count: { reservations: 8 },
-    },
-    {
-        id: '4', proprietaireId: 'p4',
-        marque: 'Renault', modele: 'Duster', annee: 2022,
-        type: 'SUV', carburant: 'DIESEL', transmission: 'MANUELLE',
-        nombrePlaces: 5, immatriculation: 'DK-3456-DD',
-        prixParJour: 18000, ville: 'Thiès', adresse: 'Centre-ville',
-        latitude: null, longitude: null, joursMinimum: 2, ageMinimum: 21,
-        zoneConduite: null, assurance: null, reglesSpecifiques: null,
-        statut: 'VERIFIE', note: 4.5, totalAvis: 9, totalLocations: 5,
-        creeLe: '', misAJourLe: '',
-        photos: [{ id: 'ph4', vehiculeId: '4', url: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&q=80', position: 1, estPrincipale: true, creeLe: '' }],
-        tarifsProgressifs: [], _count: { reservations: 5 },
-    },
-    {
-        id: '5', proprietaireId: 'p5',
-        marque: 'Peugeot', modele: '308', annee: 2021,
-        type: 'BERLINE', carburant: 'ESSENCE', transmission: 'MANUELLE',
-        nombrePlaces: 5, immatriculation: 'DK-7890-EE',
-        prixParJour: 15000, ville: 'Dakar', adresse: 'Plateau',
-        latitude: null, longitude: null, joursMinimum: 1, ageMinimum: 21,
-        zoneConduite: null, assurance: null, reglesSpecifiques: null,
-        statut: 'VERIFIE', note: 4.6, totalAvis: 12, totalLocations: 7,
-        creeLe: '', misAJourLe: '',
-        photos: [{ id: 'ph5', vehiculeId: '5', url: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?w=800&q=80', position: 1, estPrincipale: true, creeLe: '' }],
-        tarifsProgressifs: [], _count: { reservations: 7 },
-    },
-    {
-        id: '6', proprietaireId: 'p6',
-        marque: 'Ford', modele: 'Ranger', annee: 2022,
-        type: 'PICKUP', carburant: 'DIESEL', transmission: 'AUTOMATIQUE',
-        nombrePlaces: 5, immatriculation: 'DK-2345-FF',
-        prixParJour: 35000, ville: 'Dakar', adresse: 'Parcelles Assainies',
-        latitude: null, longitude: null, joursMinimum: 3, ageMinimum: 25,
-        zoneConduite: null, assurance: null, reglesSpecifiques: null,
-        statut: 'VERIFIE', note: 4.8, totalAvis: 7, totalLocations: 4,
-        creeLe: '', misAJourLe: '',
-        photos: [{ id: 'ph6', vehiculeId: '6', url: 'https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&q=80', position: 1, estPrincipale: true, creeLe: '' }],
-        tarifsProgressifs: [], _count: { reservations: 4 },
-    },
-    {
-        id: '7', proprietaireId: 'p7',
-        marque: 'BMW', modele: 'X3', annee: 2023,
-        type: 'SUV', carburant: 'ESSENCE', transmission: 'AUTOMATIQUE',
-        nombrePlaces: 5, immatriculation: 'DK-6789-GG',
-        prixParJour: 65000, ville: 'Dakar', adresse: 'Almadies',
-        latitude: null, longitude: null, joursMinimum: 2, ageMinimum: 25,
-        zoneConduite: null, assurance: null, reglesSpecifiques: null,
-        statut: 'VERIFIE', note: 4.9, totalAvis: 11, totalLocations: 6,
-        creeLe: '', misAJourLe: '',
-        photos: [{ id: 'ph7', vehiculeId: '7', url: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=80', position: 1, estPrincipale: true, creeLe: '' }],
-        tarifsProgressifs: [], _count: { reservations: 6 },
-    },
-    {
-        id: '8', proprietaireId: 'p8',
-        marque: 'Kia', modele: 'Sportage', annee: 2022,
-        type: 'SUV', carburant: 'DIESEL', transmission: 'AUTOMATIQUE',
-        nombrePlaces: 5, immatriculation: 'DK-0123-HH',
-        prixParJour: 32000, ville: 'Dakar', adresse: 'Sacré-Cœur',
-        latitude: null, longitude: null, joursMinimum: 1, ageMinimum: 21,
-        zoneConduite: null, assurance: null, reglesSpecifiques: null,
-        statut: 'VERIFIE', note: 4.6, totalAvis: 18, totalLocations: 10,
-        creeLe: '', misAJourLe: '',
-        photos: [{ id: 'ph8', vehiculeId: '8', url: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80', position: 1, estPrincipale: true, creeLe: '' }],
-        tarifsProgressifs: [], _count: { reservations: 10 },
-    },
-    {
-        id: '9', proprietaireId: 'p9',
-        marque: 'Audi', modele: 'A4', annee: 2021,
-        type: 'BERLINE', carburant: 'ESSENCE', transmission: 'AUTOMATIQUE',
-        nombrePlaces: 5, immatriculation: 'DK-4567-II',
-        prixParJour: 48000, ville: 'Dakar', adresse: 'Mermoz',
-        latitude: null, longitude: null, joursMinimum: 2, ageMinimum: 23,
-        zoneConduite: null, assurance: null, reglesSpecifiques: null,
-        statut: 'VERIFIE', note: 4.7, totalAvis: 14, totalLocations: 9,
-        creeLe: '', misAJourLe: '',
-        photos: [{ id: 'ph9', vehiculeId: '9', url: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80', position: 1, estPrincipale: true, creeLe: '' }],
-        tarifsProgressifs: [], _count: { reservations: 9 },
-    },
-];
-
-// ─── Sort function ────────────────────────────────────────────────────────────
-function sortVehicles(vehicles: Vehicle[], sort: string): Vehicle[] {
-    const sorted = [...vehicles];
-    switch (sort) {
-        case 'price-asc':
-            return sorted.sort((a, b) => a.prixParJour - b.prixParJour);
-        case 'price-desc':
-            return sorted.sort((a, b) => b.prixParJour - a.prixParJour);
-        case 'rating':
-            return sorted.sort((a, b) => b.note - a.note);
-        case 'newest':
-            return sorted.sort((a, b) => b.annee - a.annee);
-        case 'popular':
-        default:
-            return sorted.sort(
-                (a, b) =>
-                    (b._count?.reservations ?? b.totalLocations ?? 0) -
-                    (a._count?.reservations ?? a.totalLocations ?? 0),
-            );
-    }
+export interface ExplorerFiltersState {
+  zone: string;
+  type: string;
+  budgetMax: number | null;
+  fuel: string;
+  transmission: string;
+  sort: string;
+  places: number | null;
+  noteMin: number | null;
 }
 
-// ─── Main orchestrator ────────────────────────────────────────────────────────
+export const DEFAULT_FILTERS: ExplorerFiltersState = {
+  zone: '',
+  type: '',
+  budgetMax: null,
+  fuel: '',
+  transmission: '',
+  sort: 'popular',
+  places: null,
+  noteMin: null,
+};
+
+/* ════════════════════════════════════════════════════════════════
+   DISPLAY STRATEGY ENGINE
+════════════════════════════════════════════════════════════════ */
+interface DisplayStrategy {
+  name: 'sparse' | 'limited' | 'normal' | 'abundant';
+  featuredCount: number;
+  gridCols: { sm: number; lg: number };
+  priorityRules: Array<{
+    field: keyof VehicleGridItem;
+    direction: 'asc' | 'desc';
+    weight: number;
+  }>;
+}
+
+const STRATEGIES: Record<string, DisplayStrategy> = {
+  sparse:   { name: 'sparse',   featuredCount: 1, gridCols: { sm: 1, lg: 2 }, priorityRules: [{ field: 'totalLocations', direction: 'desc', weight: 8 }, { field: 'note', direction: 'desc', weight: 7 }, { field: 'prixParJour', direction: 'asc', weight: 5 }] },
+  limited:  { name: 'limited',  featuredCount: 1, gridCols: { sm: 2, lg: 2 }, priorityRules: [{ field: 'totalLocations', direction: 'desc', weight: 8 }, { field: 'note', direction: 'desc', weight: 7 }, { field: 'prixParJour', direction: 'asc', weight: 5 }] },
+  normal:   { name: 'normal',   featuredCount: 1, gridCols: { sm: 2, lg: 3 }, priorityRules: [{ field: 'note', direction: 'desc', weight: 7 }, { field: 'totalLocations', direction: 'desc', weight: 6 }, { field: 'prixParJour', direction: 'asc', weight: 4 }] },
+  abundant: { name: 'abundant', featuredCount: 2, gridCols: { sm: 2, lg: 3 }, priorityRules: [{ field: 'note', direction: 'desc', weight: 7 }, { field: 'totalLocations', direction: 'desc', weight: 6 }, { field: 'prixParJour', direction: 'asc', weight: 4 }] },
+};
+
+function pickStrategy(n: number): DisplayStrategy {
+  if (n <= 3) return STRATEGIES.sparse;
+  if (n <= 6) return STRATEGIES.limited;
+  if (n <= 12) return STRATEGIES.normal;
+  return STRATEGIES.abundant;
+}
+
+function calcScore(v: VehicleGridItem, rules: DisplayStrategy['priorityRules']): number {
+  return rules.reduce((acc, r) => {
+    const raw = (v[r.field] as number) ?? 0;
+    const norm =
+      r.field === 'note' ? raw / 5
+      : r.field === 'totalLocations' ? Math.min(raw / 20, 1)
+      : Math.max(0, 1 - raw / 100_000);
+    return acc + (r.direction === 'desc' ? norm : 1 - norm) * r.weight;
+  }, 0);
+}
+
+function distribute(vehicles: VehicleGridItem[], s: DisplayStrategy, scoreSort: boolean) {
+  const ordered = scoreSort
+    ? [...vehicles].sort((a, b) => calcScore(b, s.priorityRules) - calcScore(a, s.priorityRules))
+    : vehicles;
+  return {
+    featured: ordered.slice(0, s.featuredCount),
+    grid: ordered.slice(s.featuredCount),
+    total: vehicles.length,
+  };
+}
+
+/* ════════════════════════════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════════════════════════════ */
+function EmptyState({ hasFilters, onReset }: { hasFilters: boolean; onReset: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-6 py-24 rounded-2xl border border-dashed border-slate-200 bg-slate-50/40">
+      <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
+        <Car className="h-7 w-7 text-slate-300" strokeWidth={1.5} />
+      </div>
+      <div className="text-center max-w-xs">
+        <p className="text-[15px] font-bold text-slate-700">Aucun véhicule trouvé</p>
+        <p className="mt-1.5 text-[13px] text-slate-400 leading-relaxed">
+          {hasFilters
+            ? 'Vos filtres actifs ne correspondent à aucun résultat. Essayez de les élargir.'
+            : 'Aucun véhicule disponible pour le moment.'}
+        </p>
+      </div>
+      {hasFilters && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="rounded-xl bg-slate-900 px-5 py-2.5 text-[13px] font-semibold text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all"
+        >
+          Effacer les filtres
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ERROR STATE
+════════════════════════════════════════════════════════════════ */
+function ErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-5 py-20 rounded-2xl border border-dashed border-red-100 bg-red-50/30">
+      <div className="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center">
+        <Car className="h-6 w-6 text-red-300" strokeWidth={1.5} />
+      </div>
+      <div className="text-center">
+        <p className="text-[14px] font-bold text-slate-600">Impossible de charger les véhicules</p>
+        <p className="mt-1 text-[12px] text-slate-400">Vérifiez votre connexion et réessayez.</p>
+      </div>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="rounded-xl bg-slate-900 px-5 py-2.5 text-[13px] font-semibold text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all"
+      >
+        Réessayer
+      </button>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RESULTS AREA — grid + featured + divider + counters
+════════════════════════════════════════════════════════════════ */
+function ResultsArea({
+  loading,
+  error,
+  filteredVehicles,
+  strategy,
+  dist,
+  hasActiveFilters,
+  onReset,
+  onRetry,
+}: {
+  loading: boolean;
+  error: boolean;
+  filteredVehicles: VehicleGridItem[];
+  strategy: DisplayStrategy;
+  dist: ReturnType<typeof distribute>;
+  hasActiveFilters: boolean;
+  onReset: () => void;
+  onRetry: () => void;
+}) {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  // Re-attach observer when loading finishes (sectionRef.current is null during skeleton)
+  useEffect(() => {
+    if (loading) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.03 },
+    );
+    if (sectionRef.current) obs.observe(sectionRef.current);
+    return () => obs.disconnect();
+  }, [loading]);
+
+  if (loading) return <VehicleGridSkeleton count={6} />;
+  if (error) return <ErrorState onRetry={onRetry} />;
+  if (filteredVehicles.length === 0) return <EmptyState hasFilters={hasActiveFilters} onReset={onReset} />;
+
+  const gridColsCls = cn(
+    'grid gap-4 lg:gap-5',
+    strategy.gridCols.sm === 1 && 'grid-cols-1',
+    strategy.gridCols.sm === 2 && 'sm:grid-cols-2',
+    strategy.gridCols.lg === 2 && 'lg:grid-cols-2',
+    strategy.gridCols.lg === 3 && 'lg:grid-cols-3',
+    'grid-cols-1',
+  );
+
+  return (
+    <div ref={sectionRef} className="space-y-7">
+
+      {/* ── Featured ─────────────────────────────────────────── */}
+      {dist.featured.length > 0 && (
+        <div
+          className={cn(
+            strategy.featuredCount > 1 ? 'grid gap-5 lg:grid-cols-2' : '',
+            'transition-all duration-700',
+            visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6',
+          )}
+        >
+          {dist.featured.map((vehicle) => {
+            const qualifies = Number(vehicle.note) >= 4 && (vehicle.totalAvis ?? 0) >= 3;
+            return (
+              <div key={vehicle.id} className="relative">
+                {qualifies && (
+                  <div className="absolute -top-2.5 left-4 z-10">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1.5 shadow-lg shadow-emerald-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-white">
+                        Coup de cœur
+                      </span>
+                    </span>
+                  </div>
+                )}
+                <ExplorerVehicleCard vehicle={vehicle} featured />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Divider ──────────────────────────────────────────── */}
+      {dist.featured.length > 0 && dist.grid.length > 0 && (
+        <div className="flex items-center gap-4">
+          <div className="h-px bg-slate-100 flex-1" />
+          <span className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-slate-400 whitespace-nowrap px-1">
+            {dist.grid.length} autre{dist.grid.length > 1 ? 's' : ''} disponible{dist.grid.length > 1 ? 's' : ''}
+          </span>
+          <div className="h-px bg-slate-100 flex-1" />
+        </div>
+      )}
+
+      {/* ── Grid ─────────────────────────────────────────────── */}
+      {dist.grid.length > 0 && (
+        <div className={gridColsCls}>
+          {dist.grid.map((vehicle, i) => (
+            <div
+              key={vehicle.id}
+              className={cn(
+                'transition-all duration-500',
+                visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8',
+              )}
+              style={{ transitionDelay: `${Math.min(i * 60, 400)}ms` }}
+            >
+              <ExplorerVehicleCard vehicle={vehicle} />
+            </div>
+          ))}
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RESULTS HEADER — count + title + sort
+════════════════════════════════════════════════════════════════ */
+function ResultsHeader({
+  count,
+  loading,
+  sort,
+  onSortChange,
+}: {
+  count: number;
+  loading: boolean;
+  sort: string;
+  onSortChange: (s: string) => void;
+}) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+      <div className="min-w-0">
+        <div className="flex items-center gap-3">
+          <h2 className="text-[20px] font-black tracking-tight text-slate-900">
+            {loading ? (
+              <span className="inline-block h-6 w-48 rounded-lg bg-slate-100 animate-pulse" />
+            ) : count === 0 ? 'Aucun résultat' : (
+              <>
+                <span className="text-emerald-500">{count}</span>{' '}
+                véhicule{count > 1 ? 's' : ''} disponible{count > 1 ? 's' : ''}
+              </>
+            )}
+          </h2>
+        </div>
+        {!loading && count > 0 && (
+          <p className="text-[12px] text-slate-400 font-medium mt-0.5">
+            Vérifiés et prêts à louer
+          </p>
+        )}
+      </div>
+
+      <ExplorerResultsHeader
+        totalResults={count}
+        sort={sort}
+        onSortChange={onSortChange}
+      />
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MAIN ORCHESTRATOR
+════════════════════════════════════════════════════════════════ */
 export function ExplorerGrid(): React.ReactElement {
-    const [filters, setFilters] = useState<ExplorerFiltersState>(DEFAULT_FILTERS);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-    const [visibleCount, setVisibleCount] = useState(6);
-    const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState<ExplorerFiltersState>(DEFAULT_FILTERS);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [vehicles, setVehicles] = useState<VehicleGridItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [kycStatus, setKycStatus] = useState<ProfileResponse['kycStatus']>(undefined);
 
-    // Simulate initial loading
-    useEffect(() => {
-        const timer = setTimeout(() => setIsLoading(false), 800);
-        return () => clearTimeout(timer);
-    }, []);
-
-    // Simulate loading on filter change
-    function handleFiltersChange(newFilters: ExplorerFiltersState) {
-        setFilters(newFilters);
-        setVisibleCount(6);
-        setIsLoading(true);
-        setTimeout(() => setIsLoading(false), 400);
+  useEffect(() => {
+    let signupAt: number | null = null;
+    try {
+      const raw = localStorage.getItem('autoloc_signup_at');
+      signupAt = raw ? Number(raw) : null;
+    } catch {
+      signupAt = null;
     }
+    if (!signupAt || !Number.isFinite(signupAt)) return;
 
-    function handleReset() {
-        setFilters(DEFAULT_FILTERS);
-        setSearchQuery('');
-        setVisibleCount(6);
-        setIsLoading(true);
-        setTimeout(() => setIsLoading(false), 400);
+    let active = true;
+    apiFetch<ProfileResponse>('/auth/me')
+      .then((profile) => {
+        if (active) setKycStatus(profile.kycStatus);
+      })
+      .catch(() => {
+        // not logged in or unreachable
+      });
+    return () => { active = false; };
+  }, []);
+
+  /* API fetch */
+  const fetchVehicles = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const sortMap: Record<string, { by: string; order: 'asc' | 'desc' }> = {
+        popular:    { by: 'totalLocations', order: 'desc' },
+        rating:     { by: 'note',           order: 'desc' },
+        'price-asc':  { by: 'prixParJour',  order: 'asc'  },
+        'price-desc': { by: 'prixParJour',  order: 'desc' },
+        newest:     { by: 'annee',          order: 'desc' },
+      };
+      const { by, order } = sortMap[filters.sort] ?? { by: 'totalLocations', order: 'desc' };
+
+      const result = await searchVehicles({
+        type: (filters.type as VehicleType) || undefined,
+        ville: filters.zone || undefined,
+        prixMax: filters.budgetMax || undefined,
+        carburant: (filters.fuel as FuelType) || undefined,
+        transmission: (filters.transmission as Transmission) || undefined,
+        placesMin: filters.places || undefined,
+        noteMin: filters.noteMin || undefined,
+        sortBy: by as any,
+        sortOrder: order,
+      });
+      setVehicles(result.data ?? []);
+    } catch {
+      setError(true);
+      setVehicles([]);
+    } finally {
+      setLoading(false);
     }
+  }, [filters]);
 
-    // Filter + sort
-    const filteredVehicles = useMemo(() => {
-        let result = MOCK_VEHICLES;
+  useEffect(() => { fetchVehicles(); }, [fetchVehicles]);
 
-        // Text search
-        if (searchQuery.trim()) {
-            const q = searchQuery.toLowerCase();
-            result = result.filter(
-                (v) =>
-                    v.marque.toLowerCase().includes(q) ||
-                    v.modele.toLowerCase().includes(q) ||
-                    v.ville.toLowerCase().includes(q),
-            );
-        }
+  /* Client-side text search */
+  const filteredVehicles = useMemo(() => {
+    if (!searchQuery.trim()) return vehicles;
+    const q = searchQuery.toLowerCase();
+    return vehicles.filter(
+      v => v.marque.toLowerCase().includes(q) || v.modele.toLowerCase().includes(q) || v.ville.toLowerCase().includes(q),
+    );
+  }, [vehicles, searchQuery]);
 
-        // Zone
-        if (filters.zone) {
-            result = result.filter((v) =>
-                v.adresse.toLowerCase().includes(filters.zone.split('-')[0]),
-            );
-        }
+  /* Strategy */
+  const strategy = pickStrategy(filteredVehicles.length);
+  const scoreSort = filters.sort === 'popular' || filters.sort === 'rating';
+  const dist = distribute(filteredVehicles, strategy, scoreSort);
 
-        // Type
-        if (filters.type) {
-            result = result.filter((v) => v.type === filters.type);
-        }
+  /* Handlers */
+  const handleFiltersChange = (f: ExplorerFiltersState) => setFilters(f);
+  const handleReset = () => { setFilters(DEFAULT_FILTERS); setSearchQuery(''); };
 
-        // Budget max
-        if (filters.budgetMax !== null) {
-            result = result.filter((v) => v.prixParJour <= filters.budgetMax!);
-        }
+  const activeFilterCount = getFilterPills(filters).length;
+  const hasActiveFilters = activeFilterCount > 0 || searchQuery.trim().length > 0;
 
-        // Fuel
-        if (filters.fuel) {
-            result = result.filter((v) => v.carburant === filters.fuel);
-        }
+  return (
+    <>
+      <KycNudgeModal kycStatus={kycStatus} />
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <ExplorerHero
+        totalResults={filteredVehicles.length}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        activeFilterCount={activeFilterCount}
+        onToggleMobileFilters={() => setMobileFiltersOpen(true)}
+      />
 
-        // Transmission
-        if (filters.transmission) {
-            result = result.filter((v) => v.transmission === filters.transmission);
-        }
+      {/* ── Main ─────────────────────────────────────────────── */}
+      <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-10">
 
-        // Places min
-        if (filters.places !== null) {
-            result = result.filter((v) => (v.nombrePlaces ?? 0) >= filters.places!);
-        }
+        {/* Active filter chips */}
+        {activeFilterCount > 0 && (
+          <div className="mb-5">
+            <ExplorerActiveFilters
+              filters={filters}
+              onChange={handleFiltersChange}
+              onClearAll={handleReset}
+            />
+          </div>
+        )}
 
-        // Note min
-        if (filters.noteMin !== null) {
-            result = result.filter((v) => v.note >= filters.noteMin!);
-        }
+        {/* Layout: sidebar + results */}
+        <div className="flex gap-7 lg:gap-10 items-start">
 
-        return sortVehicles(result, filters.sort);
-    }, [filters, searchQuery]);
+          {/* ── Sidebar (desktop) ─────────────────────────────── */}
+          <ExplorerFilters
+            filters={filters}
+            onChange={handleFiltersChange}
+            onReset={handleReset}
+            isMobileOpen={mobileFiltersOpen}
+            onCloseMobile={() => setMobileFiltersOpen(false)}
+            filteredCount={filteredVehicles.length}
+          />
 
-    const visibleVehicles = filteredVehicles.slice(0, visibleCount);
-    const hasMore = visibleCount < filteredVehicles.length;
+          {/* ── Results ───────────────────────────────────────── */}
+          <div className="flex-1 min-w-0">
 
-    // Active filter count (for mobile badge)
-    const activeFilterCount = getFilterPills(filters).length;
-
-    return (
-        <>
-            {/* Hero + search */}
-            <ExplorerHero
-                totalResults={filteredVehicles.length}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                activeFilterCount={activeFilterCount}
-                onToggleMobileFilters={() => setMobileFiltersOpen(true)}
+            <ResultsHeader
+              count={filteredVehicles.length}
+              loading={loading}
+              sort={filters.sort}
+              onSortChange={sort => handleFiltersChange({ ...filters, sort })}
             />
 
-            {/* Main content area */}
-            <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
-                {/* Active filter chips */}
-                <div className="mb-5">
-                    <ExplorerActiveFilters
-                        filters={filters}
-                        onChange={handleFiltersChange}
-                        onClearAll={handleReset}
-                    />
-                </div>
+            <ResultsArea
+              loading={loading}
+              error={error}
+              filteredVehicles={filteredVehicles}
+              strategy={strategy}
+              dist={dist}
+              hasActiveFilters={hasActiveFilters}
+              onReset={handleReset}
+              onRetry={fetchVehicles}
+            />
 
-                {/* Desktop: sidebar + grid | Mobile: grid only */}
-                <div className="flex gap-8">
-                    {/* Sidebar (desktop) */}
-                    <ExplorerFilters
-                        filters={filters}
-                        onChange={handleFiltersChange}
-                        onReset={handleReset}
-                        isMobileOpen={mobileFiltersOpen}
-                        onCloseMobile={() => setMobileFiltersOpen(false)}
-                        filteredCount={filteredVehicles.length}
-                    />
-
-                    {/* Results area */}
-                    <div className="flex-1 min-w-0">
-                        {/* Results header with count + sort */}
-                        <ExplorerResultsHeader
-                            totalResults={filteredVehicles.length}
-                            sort={filters.sort}
-                            onSortChange={(sort) => handleFiltersChange({ ...filters, sort })}
-                        />
-
-                        {/* Grid */}
-                        <div className="mt-6">
-                            {isLoading ? (
-                                <VehicleGridSkeleton count={6} />
-                            ) : visibleVehicles.length === 0 ? (
-                                /* Empty state */
-                                <div className="flex flex-col items-center justify-center gap-5 py-24 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
-                                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
-                                        <Car className="h-7 w-7 text-slate-300" strokeWidth={1.5} />
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-[15px] font-bold text-black/50">
-                                            Aucun véhicule trouvé
-                                        </p>
-                                        <p className="mt-1 text-[13px] font-medium text-black/30 max-w-xs">
-                                            Essayez de modifier vos filtres ou votre recherche pour voir plus de résultats.
-                                        </p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={handleReset}
-                                        className={cn(
-                                            'inline-flex items-center gap-2 rounded-xl px-5 py-2.5',
-                                            'bg-black text-emerald-400 text-[13px] font-semibold',
-                                            'hover:bg-emerald-400 hover:text-black',
-                                            'transition-all duration-200 shadow-sm',
-                                        )}
-                                    >
-                                        Modifier les filtres
-                                    </button>
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                                        {visibleVehicles.map((vehicle) => (
-                                            <ExplorerVehicleCard key={vehicle.id} vehicle={vehicle} />
-                                        ))}
-                                    </div>
-
-                                    {/* Pagination / "Voir plus" */}
-                                    {hasMore && (
-                                        <div className="mt-10 flex justify-center">
-                                            <button
-                                                type="button"
-                                                onClick={() => setVisibleCount((c) => c + 6)}
-                                                className={cn(
-                                                    'inline-flex items-center gap-2.5 rounded-xl',
-                                                    'border border-slate-200 bg-white px-6 py-3',
-                                                    'text-[13.5px] font-semibold text-black',
-                                                    'shadow-sm transition-all duration-200',
-                                                    'hover:border-slate-300 hover:bg-slate-50 hover:shadow-md',
-                                                )}
-                                            >
-                                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                                Voir plus de véhicules
-                                            </button>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </>
-    );
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }

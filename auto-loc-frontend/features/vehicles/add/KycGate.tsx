@@ -37,10 +37,12 @@ export function KycGate({
   kycStatus: initialStatus,
   onProceed,
   onSubmitted,
+  pendingMode = "continue",
 }: {
   kycStatus: KycStatus;
   onProceed: () => void;
   onSubmitted?: () => void;
+  pendingMode?: "continue" | "block";
 }) {
   const [status, setStatus]         = useState<KycStatus>(initialStatus);
   const [subStep, setSubStep]       = useState<SubStep>(() => loadSubStep());
@@ -111,18 +113,26 @@ export function KycGate({
           </p>
         </div>
 
-        <div className="flex flex-col items-center gap-3 w-full max-w-xs">
-          <Button
-            onClick={onProceed}
-            className="w-full gap-2 bg-black text-white hover:bg-black/90 h-11"
-          >
-            Continuer vers le wizard
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-          <p className="text-xs text-muted-foreground">
-            L'annonce ne sera visible qu'après validation KYC.
-          </p>
-        </div>
+        {pendingMode === "continue" ? (
+          <div className="flex flex-col items-center gap-3 w-full max-w-xs">
+            <Button
+              onClick={onProceed}
+              className="w-full gap-2 bg-black text-white hover:bg-black/90 h-11"
+            >
+              Continuer vers le wizard
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              L'annonce ne sera visible qu'après validation KYC.
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2 w-full max-w-xs">
+            <p className="text-xs text-muted-foreground">
+              Vous pourrez réserver dès que la vérification sera validée.
+            </p>
+          </div>
+        )}
       </div>
     );
   }

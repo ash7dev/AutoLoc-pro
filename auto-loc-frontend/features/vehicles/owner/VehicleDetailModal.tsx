@@ -232,7 +232,7 @@ export function VehicleDetailModal({
                     {vehicle.note > 0 && (
                       <span className="flex items-center gap-1 font-bold text-black">
                         <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" strokeWidth={0} />
-                        {vehicle.note.toFixed(1)}
+                        {Number(vehicle.note).toFixed(1)}
                       </span>
                     )}
                     <span className="flex items-center gap-1.5 font-semibold">

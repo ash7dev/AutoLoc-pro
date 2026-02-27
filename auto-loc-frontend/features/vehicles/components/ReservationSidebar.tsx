@@ -9,6 +9,9 @@ import {
 import { cn } from '@/lib/utils';
 import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles';
 import { formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
+import { apiFetch, ApiError } from '@/lib/nestjs/api-client';
+import type { ProfileResponse } from '@/lib/nestjs/auth';
+import { ReservationGateModal } from '@/features/reservations/components/ReservationGateModal';
 
 interface Props {
   vehicleId: string;
@@ -23,13 +26,18 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum }: Pro
   const [pricing, setPricing] = useState<PricingResponse | null>(null);
   const [loadingPricing, setLoadingPricing] = useState(false);
   const [contractAccepted, setContractAccepted] = useState(false);
+  const [gateOpen, setGateOpen] = useState(false);
+  const [gateProfile, setGateProfile] = useState<ProfileResponse | null>(null);
+  const [gateLoading, setGateLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
+  // Comptage calendaire inclusif : arrivée + départ = jours facturés.
+  // Ex: 27 fév → 2 mars = 4 jours (27, 28, 1, 2) et non 3 (différence brute).
   const nbJours =
     dateDebut && dateFin
       ? Math.max(1, Math.round(
           (new Date(dateFin).getTime() - new Date(dateDebut).getTime()) / 86_400_000,
-        ))
+        ) + 1)
       : 0;
 
   const datesValid = nbJours >= joursMinimum;
@@ -68,14 +76,47 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum }: Pro
   const today = new Date().toISOString().split('T')[0];
   const canReserve = datesValid && contractAccepted && pricing && !loadingPricing;
 
-  function handleReserve() {
-    if (!canReserve) return;
-    const params = new URLSearchParams({ dateDebut, dateFin, nbJours: String(nbJours) });
-    router.push(`/vehicle/${vehicleId}/payment?${params.toString()}`);
+  async function handleReserve() {
+    if (!canReserve || gateLoading) return;
+    setGateLoading(true);
+    try {
+      const profile = await apiFetch<ProfileResponse>('/auth/me');
+      const needsPhone = !profile.phoneVerified || !profile.phone;
+      const needsKyc = profile.kycStatus !== 'VERIFIE';
+
+      if (needsPhone || needsKyc) {
+        setGateProfile(profile);
+        setGateOpen(true);
+        return;
+      }
+
+      const params = new URLSearchParams({ dateDebut, dateFin, nbJours: String(nbJours) });
+      router.push(`/vehicle/${vehicleId}/payment?${params.toString()}`);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        const redirect = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+        router.push(`/login?redirect=${redirect}`);
+        return;
+      }
+      // fallback: allow navigation if gate fails
+      const params = new URLSearchParams({ dateDebut, dateFin, nbJours: String(nbJours) });
+      router.push(`/vehicle/${vehicleId}/payment?${params.toString()}`);
+    } finally {
+      setGateLoading(false);
+    }
   }
 
   return (
     <div className="sticky top-[76px] space-y-3">
+      <ReservationGateModal
+        open={gateOpen}
+        onOpenChange={setGateOpen}
+        profile={gateProfile}
+        onProceed={() => {
+          const params = new URLSearchParams({ dateDebut, dateFin, nbJours: String(nbJours) });
+          router.push(`/vehicle/${vehicleId}/payment?${params.toString()}`);
+        }}
+      />
 
       {/* ── Main card ─────────────────────────────────────────── */}
       <div className="rounded-2xl border border-slate-100 bg-white shadow-xl shadow-slate-200/50 overflow-hidden">
@@ -86,10 +127,10 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum }: Pro
             <span className="text-[30px] font-black text-slate-900 tabular-nums leading-none">
               {formatPrice(pricing?.prixParJour ?? prixParJour)}
             </span>
-            <span className="text-[13px] font-semibold text-slate-400">FCFA / jour</span>
+            <span className="text-[13px] font-semibold text-slate-600">FCFA / jour</span>
           </div>
           {joursMinimum > 1 && (
-            <p className="text-[12px] font-medium text-slate-400 mt-1.5">
+            <p className="text-[12px] font-semibold text-slate-600 mt-1.5">
               Durée minimum : {joursMinimum} jour{joursMinimum > 1 ? 's' : ''}
             </p>
           )}

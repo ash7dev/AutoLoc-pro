@@ -9,6 +9,14 @@ export function useRegister() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const markJustSignedUp = () => {
+    try {
+      localStorage.setItem('autoloc_signup_at', String(Date.now()));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
   const signUp = async (input: RegisterInput) => {
     setLoading(true);
     setError(null);
@@ -27,6 +35,10 @@ export function useRegister() {
 
     if (error) {
       setError(mapSupabaseError(error.message));
+    }
+
+    if (!error && data.session?.user) {
+      markJustSignedUp();
     }
 
     const hasFullProfileInput = Boolean(
