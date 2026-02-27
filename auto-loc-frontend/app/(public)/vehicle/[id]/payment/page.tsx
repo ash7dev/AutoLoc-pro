@@ -65,7 +65,16 @@ export default function PaymentPage() {
                 });
                 setActiveRole('LOCATAIRE');
             }
-            const { reservationId } = await authFetch<{ reservationId: string; paymentUrl: string }>(
+            const { reservationId } = await authFetch<
+                { reservationId: string; paymentUrl: string },
+                {
+                    vehiculeId: string;
+                    dateDebut: string;
+                    dateFin: string;
+                    fournisseur: PaymentMethod;
+                    idempotencyKey: string;
+                }
+            >(
                 '/reservations',
                 {
                     method: 'POST',
