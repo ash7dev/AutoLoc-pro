@@ -753,4 +753,22 @@ export class VehiclesService {
 
     return updated;
   }
+
+  // ── GET /vehicles/:id/reservations ──────────────────────────────────────────
+
+  async findReservationsForVehicle(vehiculeId: string) {
+    const reservations = await this.prisma.reservation.findMany({
+      where: { vehiculeId },
+      orderBy: { creeLe: 'desc' },
+      include: {
+        locataire: {
+          select: { id: true, prenom: true, nom: true, telephone: true },
+        },
+        paiement: {
+          select: { statut: true, fournisseur: true },
+        },
+      },
+    });
+    return { data: reservations, total: reservations.length };
+  }
 }

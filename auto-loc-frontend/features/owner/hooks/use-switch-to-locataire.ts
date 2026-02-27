@@ -20,6 +20,11 @@ export function useSwitchToLocataire() {
         method: 'PATCH',
         body: { role: 'LOCATAIRE' },
       });
+      try {
+        document.cookie = `role_switch_at=${Date.now()}; path=/; max-age=300`;
+      } catch {
+        // ignore
+      }
       setActiveRole('LOCATAIRE');
       router.push('/');
     } catch (err: unknown) {

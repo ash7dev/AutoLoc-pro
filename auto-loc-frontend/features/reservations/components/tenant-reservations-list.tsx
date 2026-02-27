@@ -184,7 +184,9 @@ function TenantReservationCard({ reservation }: { reservation: Reservation }) {
                 </div>
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
                     <p className="text-[15px] font-black text-emerald-600 tabular-nums">
-                        {formatPrice(Number(reservation.prixTotal))} FCFA
+                        {Number.isFinite(Number(reservation.prixTotal))
+                            ? `${formatPrice(Number(reservation.prixTotal))} FCFA`
+                            : '—'}
                     </p>
                     <span className="flex items-center gap-1 text-[12px] font-medium text-black/30">
                         <Clock className="w-3 h-3" />

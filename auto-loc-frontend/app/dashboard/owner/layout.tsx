@@ -26,10 +26,11 @@ export default async function OwnerLayout({
   }
 
   let profile;
+  const roleSwitchAt = cookies().get('role_switch_at')?.value ?? '';
   try {
     profile = await unstable_cache(
       () => fetchMe(token),
-      ['profile', token],
+      ['profile', token, roleSwitchAt],
       { revalidate: 30 },
     )();
   } catch (err) {

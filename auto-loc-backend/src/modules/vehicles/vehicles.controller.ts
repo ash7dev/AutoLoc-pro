@@ -71,6 +71,19 @@ export class VehiclesController {
   }
 
   /**
+   * GET /vehicles/:id/reservations — Liste des réservations d'un véhicule (propriétaire uniquement).
+   * Doit être AVANT GET :id pour éviter le conflit de routage.
+   */
+  @Get(':id/reservations')
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  findReservations(
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.vehiclesService.findReservationsForVehicle(id);
+  }
+
+  /**
    * GET /vehicles/:id — Détail (public si VERIFIE, propriétaire si le sien).
    */
   @Get(':id')

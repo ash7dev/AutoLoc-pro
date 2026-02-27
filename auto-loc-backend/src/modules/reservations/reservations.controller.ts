@@ -23,11 +23,16 @@ import { RequestUser } from '../../common/types/auth.types';
 import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { CancelReservationDto } from './dto/cancel-reservation.dto';
+import { DisputesService } from '../disputes/disputes.service';
+import { CreateDisputeDto } from '../disputes/dto/create-dispute.dto';
 
 @Controller('reservations')
 @UseGuards(JwtAuthGuard)
 export class ReservationsController {
-  constructor(private readonly reservationsService: ReservationsService) { }
+  constructor(
+    private readonly reservationsService: ReservationsService,
+    private readonly disputesService: DisputesService,
+  ) { }
 
   /**
    * POST /reservations
@@ -147,9 +152,26 @@ export class ReservationsController {
   @HttpCode(HttpStatus.OK)
   async findForOwner(
     @Req() req: Request & { user?: RequestUser },
+    @Query('vehiculeId') vehiculeId?: string,
   ) {
     const user = req.user!;
-    return this.reservationsService.findForOwner(user);
+    return this.reservationsService.findForOwner(user, vehiculeId);
+  }
+
+  /**
+   * GET /reservations/owner/stats
+   * Métriques du mois pour le tableau de bord propriétaire.
+   * Doit être AVANT GET :id pour éviter le conflit de routage.
+   */
+  @Get('owner/stats')
+  @UseGuards(RolesGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  @HttpCode(HttpStatus.OK)
+  async findOwnerStats(
+    @Req() req: Request & { user?: RequestUser },
+  ) {
+    const user = req.user!;
+    return this.reservationsService.findOwnerStats(user);
   }
 
   /**
@@ -180,5 +202,21 @@ export class ReservationsController {
   ) {
     const user = req.user!;
     return this.reservationsService.findById(user, reservationId);
+  }
+
+  /**
+   * POST /reservations/:id/dispute
+   * Déclarer un litige sur une réservation EN_COURS ou TERMINEE.
+   * Accessible au locataire ET au propriétaire.
+   */
+  @Post(':id/dispute')
+  @HttpCode(HttpStatus.CREATED)
+  async createDispute(
+    @Req() req: Request & { user?: RequestUser },
+    @Param('id', ParseUUIDPipe) reservationId: string,
+    @Body() dto: CreateDisputeDto,
+  ) {
+    const user = req.user!;
+    return this.disputesService.create(user, reservationId, dto);
   }
 }

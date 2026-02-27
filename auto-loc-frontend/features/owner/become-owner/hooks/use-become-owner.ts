@@ -20,6 +20,11 @@ export function useBecomeOwner() {
         method: 'PATCH',
         body: { role: 'PROPRIETAIRE' },
       });
+      try {
+        document.cookie = `role_switch_at=${Date.now()}; path=/; max-age=300`;
+      } catch {
+        // ignore
+      }
       setActiveRole('PROPRIETAIRE');
       router.push('/dashboard/owner');
     } catch (err: unknown) {

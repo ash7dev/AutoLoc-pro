@@ -10,7 +10,15 @@ export type ReservationStatut =
     | 'EN_COURS'
     | 'TERMINEE'
     | 'ANNULEE'
-    | 'EXPIREE';
+    | 'EXPIREE'
+    | 'LITIGE';
+
+export interface OwnerStats {
+    revenusMois: number;
+    reservationsActives: number;
+    tauxOccupation: number;
+    litigesOuverts: number;
+}
 
 export interface ReservationVehicle {
     id: string;
@@ -69,18 +77,23 @@ export interface ReservationsResponse {
  */
 export async function fetchOwnerReservations(
     token: string,
-    params?: { statut?: string; page?: number; limit?: number },
+    params?: { statut?: string; page?: number; limit?: number; vehiculeId?: string },
 ): Promise<ReservationsResponse> {
     const query = new URLSearchParams();
     if (params?.statut) query.set('statut', params.statut);
     if (params?.page) query.set('page', String(params.page));
     if (params?.limit) query.set('limit', String(params.limit));
+    if (params?.vehiculeId) query.set('vehiculeId', params.vehiculeId);
     const qs = query.toString();
 
-    return apiFetch<ReservationsResponse>(
+    const res = await apiFetch<ReservationsResponse | Reservation[]>(
         `/reservations/owner${qs ? `?${qs}` : ''}`,
         { accessToken: token },
     );
+    if (Array.isArray(res)) {
+        return { data: res, total: res.length };
+    }
+    return res;
 }
 
 /**
@@ -192,4 +205,58 @@ export async function confirmPaymentSimulation(
     await apiFetch(`/reservations/${reservationId}/confirm-payment`, {
         method: 'PATCH',
     });
+}
+
+// ── Owner stats ────────────────────────────────────────────────────────────────
+
+/**
+ * Fetch owner dashboard stats (server-side).
+ */
+export async function fetchOwnerStats(token: string): Promise<OwnerStats> {
+    return apiFetch<OwnerStats>('/reservations/owner/stats', { accessToken: token });
+}
+
+// ── Vehicle reservations ───────────────────────────────────────────────────────
+
+/**
+ * Fetch reservations for a specific vehicle (server-side, owner only).
+ */
+export async function fetchVehicleReservations(
+    token: string,
+    vehicleId: string,
+): Promise<ReservationsResponse> {
+    const res = await apiFetch<ReservationsResponse | Reservation[]>(
+        `/reservations/owner?vehiculeId=${encodeURIComponent(vehicleId)}`,
+        { accessToken: token },
+    );
+    if (Array.isArray(res)) {
+        return { data: res, total: res.length };
+    }
+    return res;
+}
+
+// ── Dispute ────────────────────────────────────────────────────────────────────
+
+export interface CreateDisputeInput {
+    description: string;
+    coutEstime?: number;
+}
+
+export interface DisputeResult {
+    disputeId: string;
+    statut: string;
+    creeLe: string;
+}
+
+/**
+ * Declare a dispute on a reservation (client-side via proxy).
+ */
+export async function declareDispute(
+    reservationId: string,
+    dto: CreateDisputeInput,
+): Promise<DisputeResult> {
+    return apiFetch<DisputeResult, CreateDisputeInput>(
+        `/reservations/${reservationId}/dispute`,
+        { method: 'POST', body: dto },
+    );
 }

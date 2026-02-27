@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { PhoneVerifyGate } from "@/features/vehicles/add/PhoneVerifyGate";
 import { KycGate } from "@/features/vehicles/add/KycGate";
 import type { ProfileResponse } from "@/lib/nestjs/auth";
 import { ModalShell } from "@/features/shared/ModalShell";
+import { apiFetch } from "@/lib/nestjs/api-client";
 
 type Gate = "phone" | "kyc" | "ready";
 
 function resolveGate(profile: ProfileResponse): Gate {
+  if (!profile.hasUtilisateur) return "phone";
   if (!profile.phoneVerified || !profile.phone) return "phone";
   const kyc = profile.kycStatus;
   if (kyc === "VERIFIE") return "ready";
@@ -26,9 +28,29 @@ export function ReservationGateModal({
   profile: ProfileResponse | null;
   onProceed: () => void;
 }) {
-  if (!open || !profile) return null;
+  const [currentProfile, setCurrentProfile] = useState<ProfileResponse | null>(profile);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const gate = resolveGate(profile);
+  useEffect(() => {
+    if (open) setCurrentProfile(profile);
+  }, [open, profile]);
+
+  const refreshProfile = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      const p = await apiFetch<ProfileResponse>("/auth/me");
+      setCurrentProfile(p);
+    } catch {
+      // ignore
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  if (!open || !currentProfile) return null;
+
+  const gate = resolveGate(currentProfile);
 
   if (gate === "ready") {
     onProceed();
@@ -48,16 +70,16 @@ export function ReservationGateModal({
     >
       {gate === "phone" && (
         <PhoneVerifyGate
-          profile={profile}
-          onVerified={() => onOpenChange(false)}
+          profile={currentProfile}
+          onVerified={refreshProfile}
         />
       )}
 
       {gate === "kyc" && (
         <KycGate
-          kycStatus={profile.kycStatus}
+          kycStatus={currentProfile.kycStatus}
           onProceed={() => onOpenChange(false)}
-          onSubmitted={() => onOpenChange(false)}
+          onSubmitted={refreshProfile}
           pendingMode="block"
         />
       )}

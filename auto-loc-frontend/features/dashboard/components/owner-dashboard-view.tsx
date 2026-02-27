@@ -11,7 +11,7 @@ import { OverviewStats } from "@/features/dashboard/components/overview-stats";
 import { MobileQuickActions } from "@/features/dashboard/components/mobile-quick-actions";
 import { MobileRevenueCard } from "@/features/dashboard/components/mobile-revenue-card";
 import { useState, useMemo } from "react";
-import type { Reservation } from "@/lib/nestjs/reservations";
+import type { Reservation, OwnerStats } from "@/lib/nestjs/reservations";
 import type { Vehicle } from "@/lib/nestjs/vehicles";
 import type { WalletData } from "@/lib/nestjs/wallet";
 
@@ -21,6 +21,7 @@ interface OwnerDashboardViewProps {
     reservations?: Reservation[];
     vehicles?: Vehicle[];
     wallet: WalletData | null;
+    stats?: OwnerStats | null;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -120,6 +121,7 @@ export function OwnerDashboardView({
     reservations = [],
     vehicles = [],
     wallet,
+    stats,
 }: OwnerDashboardViewProps) {
     const [calendarDate, setCalendarDate] = useState(() => new Date());
     const [revenuePeriod, setRevenuePeriod] = useState("current"); // "current", "last", "2months"
@@ -226,6 +228,9 @@ export function OwnerDashboardView({
                 title="Tableau de bord"
                 subtitle={`Vue d'ensemble — ${vehicles.length} véhicule${vehicles.length !== 1 ? "s" : ""} · ${activeReservations} réservation${activeReservations !== 1 ? "s" : ""} active${activeReservations !== 1 ? "s" : ""}`}
             />
+
+            {/* Stats row — visible on all breakpoints */}
+            <OverviewStats data={stats} />
 
             {/* Mobile Layout */}
             <div className="lg:hidden space-y-4">

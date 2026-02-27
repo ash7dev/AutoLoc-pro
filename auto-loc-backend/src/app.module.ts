@@ -15,6 +15,7 @@ import { PaymentModule } from './infrastructure/payment/payment.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { RevalidateModule } from './infrastructure/revalidate/revalidate.module';
+import { WalletModule } from './modules/wallet/wallet.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { RevalidateModule } from './infrastructure/revalidate/revalidate.module'
     PaymentsModule,
     ReviewsModule,
     RevalidateModule,
+    WalletModule,
   ],
 })
 export class AppModule { }

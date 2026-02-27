@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { StatutReservation, StatutVehicule } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RequestUser } from '../../common/types/auth.types';
 import { CreateReservationDto } from './dto/create-reservation.dto';
@@ -135,15 +136,18 @@ export class ReservationsService {
 
   // ── GET /reservations/owner ──────────────────────────────────────────────────
 
-  async findForOwner(user: RequestUser) {
+  async findForOwner(user: RequestUser, vehiculeId?: string) {
     const proprietaire = await this.prisma.utilisateur.findUnique({
       where: { userId: user.sub },
       select: { id: true },
     });
     if (!proprietaire) throw new ForbiddenException('Profile not completed');
 
-    return this.prisma.reservation.findMany({
-      where: { proprietaireId: proprietaire.id },
+    const where: Record<string, unknown> = { proprietaireId: proprietaire.id };
+    if (vehiculeId) where.vehiculeId = vehiculeId;
+
+    const reservations = await this.prisma.reservation.findMany({
+      where,
       orderBy: { creeLe: 'desc' },
       include: {
         vehicule: {
@@ -178,6 +182,7 @@ export class ReservationsService {
         },
       },
     });
+    return { data: reservations, total: reservations.length };
   }
 
   // ── GET /reservations/tenant ────────────────────────────────────────────────
@@ -230,6 +235,71 @@ export class ReservationsService {
     });
 
     return { data: reservations, total: reservations.length };
+  }
+
+  // ── GET /reservations/owner/stats ────────────────────────────────────────────
+
+  async findOwnerStats(user: RequestUser) {
+    const proprietaire = await this.prisma.utilisateur.findUnique({
+      where: { userId: user.sub },
+      select: { id: true },
+    });
+    if (!proprietaire) throw new ForbiddenException('Profile not completed');
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [revenuResult, reservationsActives, litigesOuverts, vehiculesActifs] =
+      await Promise.all([
+        this.prisma.reservation.aggregate({
+          _sum: { netProprietaire: true },
+          where: {
+            proprietaireId: proprietaire.id,
+            statut: {
+              in: [
+                StatutReservation.PAYEE,
+                StatutReservation.CONFIRMEE,
+                StatutReservation.EN_COURS,
+                StatutReservation.TERMINEE,
+              ],
+            },
+            creeLe: { gte: startOfMonth },
+          },
+        }),
+        this.prisma.reservation.count({
+          where: {
+            proprietaireId: proprietaire.id,
+            statut: {
+              in: [
+                StatutReservation.PAYEE,
+                StatutReservation.CONFIRMEE,
+                StatutReservation.EN_COURS,
+              ],
+            },
+          },
+        }),
+        this.prisma.reservation.count({
+          where: {
+            proprietaireId: proprietaire.id,
+            statut: StatutReservation.LITIGE,
+          },
+        }),
+        this.prisma.vehicule.count({
+          where: {
+            proprietaireId: proprietaire.id,
+            statut: {
+              in: [StatutVehicule.VERIFIE, StatutVehicule.EN_ATTENTE_VALIDATION],
+            },
+          },
+        }),
+      ]);
+
+    const revenusMois = Number(revenuResult._sum.netProprietaire ?? 0);
+    const tauxOccupation = vehiculesActifs > 0
+      ? Math.min(100, Math.round((reservationsActives / vehiculesActifs) * 100))
+      : 0;
+
+    return { revenusMois, reservationsActives, tauxOccupation, litigesOuverts };
   }
 
   // ── GET /reservations/:id ──────────────────────────────────────────────────

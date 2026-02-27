@@ -21,6 +21,7 @@ const STATUS_MAP: Record<ReservationStatut, StatusConfig> = {
     TERMINEE: { label: "Terminée", color: "text-teal-700", bg: "bg-teal-50 border-teal-200", dot: "bg-teal-500" },
     ANNULEE: { label: "Annulée", color: "text-red-700", bg: "bg-red-50 border-red-200", dot: "bg-red-500" },
     EXPIREE: { label: "Expirée", color: "text-gray-600", bg: "bg-gray-100 border-gray-300", dot: "bg-gray-400" },
+    LITIGE: { label: "Litige", color: "text-purple-700", bg: "bg-purple-50 border-purple-200", dot: "bg-purple-500" },
 };
 
 // ── Component ──────────────────────────────────────────────────────────────────

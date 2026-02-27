@@ -29,6 +29,7 @@ export function PhoneVerifyGate({
   const [phoneInput, setPhone] = useState(profile.phone ?? "");
   const [prenom, setPrenom]    = useState("");
   const [nom, setNom]          = useState("");
+  const [dateNaissance, setDateNaissance] = useState("");
   const [loading, setLoading]  = useState(false);
   const [error, setError]      = useState<string | null>(null);
   const { authFetch } = useAuthFetch();
@@ -43,8 +44,8 @@ export function PhoneVerifyGate({
     setError(null);
     try {
       if (!profile.hasUtilisateur) {
-        if (!prenom.trim() || !nom.trim()) {
-          setError("Nom et prénom requis.");
+        if (!prenom.trim() || !nom.trim() || !dateNaissance) {
+          setError("Nom, prénom et date de naissance requis.");
           setLoading(false);
           return;
         }
@@ -54,6 +55,7 @@ export function PhoneVerifyGate({
             prenom: prenom.trim(),
             nom: nom.trim(),
             telephone: normalized,
+            dateNaissance,
           },
         });
       } else {
@@ -136,6 +138,18 @@ export function PhoneVerifyGate({
             />
           </div>
         )}
+        {!profile.hasUtilisateur && (
+          <input
+            type="date"
+            value={dateNaissance}
+            onChange={(e) => { setDateNaissance(e.target.value); setError(null); }}
+            className={cn(
+              "w-full h-12 rounded-xl border bg-background px-4 text-base outline-none transition-all",
+              "focus:ring-2 focus:ring-ring focus:border-transparent",
+              error ? "border-destructive" : "border-[hsl(var(--border))]",
+            )}
+          />
+        )}
         <input
           type="tel"
           value={phoneInput}
@@ -160,7 +174,7 @@ export function PhoneVerifyGate({
       {/* CTA */}
       <Button
         onClick={handleConfirm}
-        disabled={loading || !phoneInput.trim() || (!profile.hasUtilisateur && (!prenom.trim() || !nom.trim()))}
+        disabled={loading || !phoneInput.trim() || (!profile.hasUtilisateur && (!prenom.trim() || !nom.trim() || !dateNaissance))}
         className="w-full gap-2 bg-black text-white hover:bg-black/90 h-11"
       >
         {loading
