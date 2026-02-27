@@ -2,66 +2,127 @@
 
 import React from 'react';
 import {
-    Fuel, Settings2, Users, CalendarDays, UserCheck,
-    MapPinned, ShieldCheck, FileText,
+  Fuel, Settings2, Users, CalendarDays, UserCheck,
+  MapPinned, ShieldCheck, FileText,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { Vehicle } from '@/lib/nestjs/vehicles';
 
-interface Props {
-    vehicle: Vehicle;
+interface Props { vehicle: Vehicle }
+
+/* ── Quick stats bar (horizontal strip) ──────────────────────── */
+function QuickStat({
+  icon: Icon,
+  label,
+  value,
+  accent = false,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className={cn(
+      'flex flex-col items-center justify-center gap-1.5 px-4 py-4 text-center',
+      'flex-1 min-w-[80px]',
+    )}>
+      <span className={cn(
+        'w-9 h-9 rounded-xl flex items-center justify-center',
+        accent ? 'bg-emerald-50' : 'bg-slate-100',
+      )}>
+        <Icon className={cn('w-4 h-4', accent ? 'text-emerald-600' : 'text-slate-500')} strokeWidth={1.75} />
+      </span>
+      <div>
+        <p className="text-[15px] font-bold text-slate-800 leading-tight">{value}</p>
+        <p className="text-[11px] font-medium text-slate-400 mt-0.5 uppercase tracking-wide">{label}</p>
+      </div>
+    </div>
+  );
 }
 
-function SpecItem({
-    icon: Icon,
-    label,
-    value,
+/* ── Detail spec row ─────────────────────────────────────────── */
+function SpecRow({
+  icon: Icon,
+  label,
+  value,
 }: {
-    icon: React.ElementType;
-    label: string;
-    value: string | number | null | undefined;
+  icon: React.ElementType;
+  label: string;
+  value: string;
 }) {
-    if (!value) return null;
-    return (
-        <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-50/80 border border-slate-100">
-            <span className="flex-shrink-0 w-9 h-9 rounded-lg bg-white border border-slate-100 flex items-center justify-center">
-                <Icon className="w-4 h-4 text-black/40" strokeWidth={1.75} />
-            </span>
-            <div>
-                <p className="text-[11px] font-bold uppercase tracking-widest text-black/30">{label}</p>
-                <p className="text-[14px] font-semibold text-black mt-0.5">{value}</p>
-            </div>
-        </div>
-    );
+  return (
+    <div className="flex items-center justify-between py-3.5 border-b border-slate-50 last:border-0">
+      <div className="flex items-center gap-3">
+        <span className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
+          <Icon className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.75} />
+        </span>
+        <span className="text-[13.5px] font-medium text-slate-500">{label}</span>
+      </div>
+      <span className="text-[13.5px] font-semibold text-slate-800 text-right max-w-[55%] truncate">{value}</span>
+    </div>
+  );
 }
 
 const FUEL_LABELS: Record<string, string> = {
-    ESSENCE: 'Essence',
-    DIESEL: 'Diesel',
-    HYBRIDE: 'Hybride',
-    ELECTRIQUE: 'Électrique',
+  ESSENCE: 'Essence', DIESEL: 'Diesel', HYBRIDE: 'Hybride', ELECTRIQUE: 'Électrique',
 };
-
 const TRANSMISSION_LABELS: Record<string, string> = {
-    MANUELLE: 'Manuelle',
-    AUTOMATIQUE: 'Automatique',
+  MANUELLE: 'Manuelle', AUTOMATIQUE: 'Automatique',
 };
 
 export function VehicleDetailSpecs({ vehicle }: Props): React.ReactElement {
-    return (
-        <div className="space-y-4">
-            <h2 className="text-[16px] font-black tracking-tight text-black">
-                Caractéristiques
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <SpecItem icon={Fuel} label="Carburant" value={vehicle.carburant ? FUEL_LABELS[vehicle.carburant] ?? vehicle.carburant : null} />
-                <SpecItem icon={Settings2} label="Transmission" value={vehicle.transmission ? TRANSMISSION_LABELS[vehicle.transmission] ?? vehicle.transmission : null} />
-                <SpecItem icon={Users} label="Places" value={vehicle.nombrePlaces ? `${vehicle.nombrePlaces} places` : null} />
-                <SpecItem icon={CalendarDays} label="Durée minimum" value={`${vehicle.joursMinimum} jour${vehicle.joursMinimum > 1 ? 's' : ''}`} />
-                <SpecItem icon={UserCheck} label="Âge minimum" value={`${vehicle.ageMinimum} ans`} />
-                <SpecItem icon={MapPinned} label="Zone de conduite" value={vehicle.zoneConduite} />
-                <SpecItem icon={ShieldCheck} label="Assurance" value={vehicle.assurance} />
-                <SpecItem icon={FileText} label="Règles" value={vehicle.reglesSpecifiques} />
-            </div>
+  const fuelLabel = vehicle.carburant ? (FUEL_LABELS[vehicle.carburant] ?? vehicle.carburant) : null;
+  const transLabel = vehicle.transmission ? (TRANSMISSION_LABELS[vehicle.transmission] ?? vehicle.transmission) : null;
+
+  return (
+    <div className="space-y-5">
+      <h2 className="text-[17px] font-black tracking-tight text-slate-900">Caractéristiques</h2>
+
+      {/* Quick stats horizontal bar */}
+      <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
+        <div className="flex divide-x divide-slate-100 overflow-x-auto scrollbar-none">
+          {fuelLabel && (
+            <QuickStat icon={Fuel} label="Carburant" value={fuelLabel} />
+          )}
+          {transLabel && (
+            <QuickStat icon={Settings2} label="Boîte" value={transLabel} />
+          )}
+          {vehicle.nombrePlaces && (
+            <QuickStat icon={Users} label="Places" value={`${vehicle.nombrePlaces}`} />
+          )}
+          {vehicle.joursMinimum && (
+            <QuickStat
+              icon={CalendarDays}
+              label="Min."
+              value={`${vehicle.joursMinimum}j`}
+              accent
+            />
+          )}
+          {vehicle.ageMinimum && (
+            <QuickStat
+              icon={UserCheck}
+              label="Âge min."
+              value={`${vehicle.ageMinimum} ans`}
+            />
+          )}
         </div>
-    );
+      </div>
+
+      {/* Detailed spec rows */}
+      {(vehicle.zoneConduite || vehicle.assurance || vehicle.reglesSpecifiques) && (
+        <div className="rounded-2xl border border-slate-100 bg-white px-4 pt-1 pb-1">
+          {vehicle.zoneConduite && (
+            <SpecRow icon={MapPinned} label="Zone de conduite" value={vehicle.zoneConduite} />
+          )}
+          {vehicle.assurance && (
+            <SpecRow icon={ShieldCheck} label="Assurance incluse" value={vehicle.assurance} />
+          )}
+          {vehicle.reglesSpecifiques && (
+            <SpecRow icon={FileText} label="Règles spécifiques" value={vehicle.reglesSpecifiques} />
+          )}
+        </div>
+      )}
+    </div>
+  );
 }

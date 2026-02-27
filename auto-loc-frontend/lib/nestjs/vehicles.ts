@@ -35,6 +35,11 @@ export interface TarifTier {
 export interface Vehicle {
   id: string;
   proprietaireId: string;
+  proprietaire?: {
+    prenom: string;
+    nom: string;
+    avatarUrl: string | null;
+  } | null;
   marque: string;
   modele: string;
   annee: number;

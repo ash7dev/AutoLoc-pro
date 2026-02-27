@@ -3,250 +3,256 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-    CalendarDays, Clock, CreditCard,
-    CheckCircle2, ArrowRight, Loader2,
+  CalendarDays, Clock, CreditCard, CheckCircle2,
+  ArrowRight, Loader2, Shield, Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles';
 import { formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
 
 interface Props {
-    vehicleId: string;
-    prixParJour: number;
-    joursMinimum: number;
+  vehicleId: string;
+  prixParJour: number;
+  joursMinimum: number;
 }
 
-export function ReservationSidebar({
-    vehicleId,
-    prixParJour,
-    joursMinimum,
-}: Props): React.ReactElement {
-    const router = useRouter();
-    const [dateDebut, setDateDebut] = useState('');
-    const [dateFin, setDateFin] = useState('');
-    const [pricing, setPricing] = useState<PricingResponse | null>(null);
-    const [loadingPricing, setLoadingPricing] = useState(false);
-    const [contractAccepted, setContractAccepted] = useState(false);
-    const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum }: Props): React.ReactElement {
+  const router = useRouter();
+  const [dateDebut, setDateDebut] = useState('');
+  const [dateFin, setDateFin] = useState('');
+  const [pricing, setPricing] = useState<PricingResponse | null>(null);
+  const [loadingPricing, setLoadingPricing] = useState(false);
+  const [contractAccepted, setContractAccepted] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
-    // Calculate nbJours from dates
-    const nbJours =
-        dateDebut && dateFin
-            ? Math.max(
-                1,
-                Math.round(
-                    (new Date(dateFin).getTime() - new Date(dateDebut).getTime()) /
-                    (1000 * 60 * 60 * 24),
-                ),
-            )
-            : 0;
+  const nbJours =
+    dateDebut && dateFin
+      ? Math.max(1, Math.round(
+          (new Date(dateFin).getTime() - new Date(dateDebut).getTime()) / 86_400_000,
+        ))
+      : 0;
 
-    const datesValid = nbJours >= joursMinimum;
+  const datesValid = nbJours >= joursMinimum;
 
-    // Fetch dynamic pricing when dates change
-    const fetchPricing = useCallback(
-        async (days: number) => {
-            if (days < 1) return;
-            setLoadingPricing(true);
-            try {
-                const result = await fetchVehiclePricing(vehicleId, days);
-                setPricing(result);
-            } catch {
-                // Fallback to simple calculation
-                setPricing({
-                    nbJours: days,
-                    prixParJour,
-                    totalBase: prixParJour * days,
-                    tauxCommission: 0.15,
-                    montantCommission: Math.round(prixParJour * days * 0.15),
-                    totalLocataire: Math.round(prixParJour * days * 1.15),
-                    netProprietaire: prixParJour * days,
-                });
-            } finally {
-                setLoadingPricing(false);
-            }
-        },
-        [vehicleId, prixParJour],
-    );
-
-    useEffect(() => {
-        if (nbJours >= 1) {
-            clearTimeout(debounceRef.current);
-            debounceRef.current = setTimeout(() => fetchPricing(nbJours), 300);
-        } else {
-            setPricing(null);
-        }
-        return () => clearTimeout(debounceRef.current);
-    }, [nbJours, fetchPricing]);
-
-    // Min date = today
-    const today = new Date().toISOString().split('T')[0];
-
-    const canReserve = datesValid && contractAccepted && pricing;
-
-    function handleReserve() {
-        if (!canReserve) return;
-        const params = new URLSearchParams({
-            dateDebut,
-            dateFin,
-            nbJours: String(nbJours),
-        });
-        router.push(`/vehicle/${vehicleId}/payment?${params.toString()}`);
+  const fetchPricingData = useCallback(async (days: number) => {
+    if (days < 1) return;
+    setLoadingPricing(true);
+    try {
+      const result = await fetchVehiclePricing(vehicleId, days);
+      setPricing(result);
+    } catch {
+      setPricing({
+        nbJours: days,
+        prixParJour,
+        totalBase: prixParJour * days,
+        tauxCommission: 0.15,
+        montantCommission: Math.round(prixParJour * days * 0.15),
+        totalLocataire: Math.round(prixParJour * days * 1.15),
+        netProprietaire: prixParJour * days,
+      });
+    } finally {
+      setLoadingPricing(false);
     }
+  }, [vehicleId, prixParJour]);
 
-    return (
-        <div className="sticky top-[76px]">
-            <div className="rounded-2xl border border-slate-100 bg-white shadow-xl shadow-slate-200/40 overflow-hidden">
-                {/* Header */}
-                <div className="bg-gradient-to-br from-slate-900 to-slate-800 px-5 py-4">
-                    <div className="flex items-center justify-between">
-                        <p className="text-[12px] font-bold uppercase tracking-widest text-white/50">
-                            Réservation
-                        </p>
-                        <span className="text-xl font-black text-emerald-400 tabular-nums">
-                            {formatPrice(pricing?.prixParJour ?? prixParJour)}{' '}
-                            <span className="text-sm font-semibold text-white/40">FCFA/j</span>
-                        </span>
-                    </div>
-                </div>
+  useEffect(() => {
+    clearTimeout(debounceRef.current);
+    if (nbJours >= 1) {
+      debounceRef.current = setTimeout(() => fetchPricingData(nbJours), 300);
+    } else {
+      setPricing(null);
+    }
+    return () => clearTimeout(debounceRef.current);
+  }, [nbJours, fetchPricingData]);
 
-                <div className="p-5 space-y-5">
-                    {/* Date inputs */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-black/30 mb-1.5">
-                                <CalendarDays className="w-3 h-3" /> Début
-                            </label>
-                            <input
-                                type="date"
-                                value={dateDebut}
-                                min={today}
-                                onChange={(e) => {
-                                    setDateDebut(e.target.value);
-                                    if (dateFin && e.target.value >= dateFin) {
-                                        setDateFin('');
-                                    }
-                                }}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-[13px] font-medium text-black focus:outline-none focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-400 transition-all"
-                            />
-                        </div>
-                        <div>
-                            <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-black/30 mb-1.5">
-                                <CalendarDays className="w-3 h-3" /> Fin
-                            </label>
-                            <input
-                                type="date"
-                                value={dateFin}
-                                min={dateDebut || today}
-                                onChange={(e) => setDateFin(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2.5 text-[13px] font-medium text-black focus:outline-none focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-400 transition-all"
-                            />
-                        </div>
-                    </div>
+  const today = new Date().toISOString().split('T')[0];
+  const canReserve = datesValid && contractAccepted && pricing && !loadingPricing;
 
-                    {/* Duration warning */}
-                    {dateDebut && dateFin && !datesValid && (
-                        <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-100 px-3 py-2.5">
-                            <Clock className="w-4 h-4 text-amber-500 flex-shrink-0" strokeWidth={2} />
-                            <p className="text-[12px] text-amber-700 font-medium">
-                                Durée minimum : {joursMinimum} jour{joursMinimum > 1 ? 's' : ''}
-                            </p>
-                        </div>
-                    )}
+  function handleReserve() {
+    if (!canReserve) return;
+    const params = new URLSearchParams({ dateDebut, dateFin, nbJours: String(nbJours) });
+    router.push(`/vehicle/${vehicleId}/payment?${params.toString()}`);
+  }
 
-                    {/* Price breakdown */}
-                    {pricing && datesValid && (
-                        <div className="space-y-2.5 rounded-xl bg-slate-50/60 border border-slate-100 p-4">
-                            <div className="flex justify-between text-[13px]">
-                                <span className="text-black/50 font-medium">
-                                    {formatPrice(pricing.prixParJour)} × {nbJours} jour{nbJours > 1 ? 's' : ''}
-                                </span>
-                                <span className="font-semibold text-black tabular-nums">
-                                    {formatPrice(pricing.totalBase)} FCFA
-                                </span>
-                            </div>
-                            <div className="flex justify-between text-[13px]">
-                                <span className="text-black/50 font-medium">
-                                    Frais de service (15%)
-                                </span>
-                                <span className="font-semibold text-black tabular-nums">
-                                    {formatPrice(pricing.montantCommission)} FCFA
-                                </span>
-                            </div>
-                            <div className="my-2 border-t border-slate-200" />
-                            <div className="flex justify-between text-[15px]">
-                                <span className="font-bold text-black">Total</span>
-                                <span className="font-black text-emerald-600 tabular-nums">
-                                    {formatPrice(pricing.totalLocataire)} FCFA
-                                </span>
-                            </div>
-                            {loadingPricing && (
-                                <div className="flex items-center justify-center py-1">
-                                    <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
-                                </div>
-                            )}
-                        </div>
-                    )}
+  return (
+    <div className="sticky top-[76px] space-y-3">
 
-                    {/* Contract checkbox */}
-                    <label className="flex items-start gap-3 cursor-pointer group">
-                        <div className="relative mt-0.5">
-                            <input
-                                type="checkbox"
-                                checked={contractAccepted}
-                                onChange={(e) => setContractAccepted(e.target.checked)}
-                                className="peer sr-only"
-                            />
-                            <div
-                                className={cn(
-                                    'w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200',
-                                    contractAccepted
-                                        ? 'bg-emerald-500 border-emerald-500'
-                                        : 'border-slate-300 group-hover:border-slate-400',
-                                )}
-                            >
-                                {contractAccepted && (
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-                                )}
-                            </div>
-                        </div>
-                        <span className="text-[12px] leading-relaxed font-medium text-black/50 group-hover:text-black/70 transition-colors">
-                            J&apos;accepte les{' '}
-                            <span className="text-emerald-600 underline decoration-dotted">
-                                conditions générales de location
-                            </span>{' '}
-                            et le{' '}
-                            <span className="text-emerald-600 underline decoration-dotted">
-                                contrat de réservation
-                            </span>
-                            .
-                        </span>
-                    </label>
+      {/* ── Main card ─────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-slate-100 bg-white shadow-xl shadow-slate-200/50 overflow-hidden">
 
-                    {/* Reserve button */}
-                    <button
-                        type="button"
-                        disabled={!canReserve}
-                        onClick={handleReserve}
-                        className={cn(
-                            'w-full flex items-center justify-center gap-2.5 rounded-xl px-5 py-3.5',
-                            'text-[14px] font-bold tracking-tight transition-all duration-200',
-                            canReserve
-                                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-600 hover:shadow-xl hover:shadow-emerald-500/30 hover:-translate-y-px active:translate-y-0'
-                                : 'bg-slate-100 text-black/30 cursor-not-allowed',
-                        )}
-                    >
-                        <CreditCard className="w-4.5 h-4.5" strokeWidth={2} />
-                        Réserver maintenant
-                        <ArrowRight className="w-4 h-4" strokeWidth={2} />
-                    </button>
-
-                    {/* Info */}
-                    <p className="text-[11px] text-center text-black/30 font-medium">
-                        Vous ne serez débité qu'après confirmation du propriétaire.
-                    </p>
-                </div>
-            </div>
+        {/* Price header */}
+        <div className="px-5 pt-5 pb-4 border-b border-slate-50">
+          <div className="flex items-baseline gap-2">
+            <span className="text-[30px] font-black text-slate-900 tabular-nums leading-none">
+              {formatPrice(pricing?.prixParJour ?? prixParJour)}
+            </span>
+            <span className="text-[13px] font-semibold text-slate-400">FCFA / jour</span>
+          </div>
+          {joursMinimum > 1 && (
+            <p className="text-[12px] font-medium text-slate-400 mt-1.5">
+              Durée minimum : {joursMinimum} jour{joursMinimum > 1 ? 's' : ''}
+            </p>
+          )}
         </div>
-    );
+
+        <div className="p-5 space-y-4">
+
+          {/* Date inputs — unified box style */}
+          <div className="rounded-xl border border-slate-200 overflow-hidden">
+            <div className="grid grid-cols-2 divide-x divide-slate-200">
+              <div className="p-3">
+                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">
+                  <CalendarDays className="w-3 h-3" /> Arrivée
+                </label>
+                <input
+                  type="date"
+                  value={dateDebut}
+                  min={today}
+                  onChange={(e) => {
+                    setDateDebut(e.target.value);
+                    if (dateFin && e.target.value >= dateFin) setDateFin('');
+                  }}
+                  className="w-full bg-transparent text-[13px] font-semibold text-slate-800 focus:outline-none cursor-pointer"
+                />
+              </div>
+              <div className="p-3">
+                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">
+                  <CalendarDays className="w-3 h-3" /> Retour
+                </label>
+                <input
+                  type="date"
+                  value={dateFin}
+                  min={dateDebut || today}
+                  onChange={(e) => setDateFin(e.target.value)}
+                  className="w-full bg-transparent text-[13px] font-semibold text-slate-800 focus:outline-none cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Duration indicator */}
+          {nbJours > 0 && (
+            <div className={cn(
+              'flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-[12.5px] font-semibold',
+              datesValid
+                ? 'bg-slate-50 text-slate-600'
+                : 'bg-amber-50 border border-amber-100 text-amber-700',
+            )}>
+              <Clock className={cn('w-3.5 h-3.5 flex-shrink-0', datesValid ? 'text-slate-400' : 'text-amber-500')} strokeWidth={2} />
+              {datesValid
+                ? `${nbJours} jour${nbJours > 1 ? 's' : ''} de location`
+                : `Minimum ${joursMinimum} jour${joursMinimum > 1 ? 's' : ''} requis`
+              }
+            </div>
+          )}
+
+          {/* Price breakdown */}
+          {pricing && datesValid && (
+            <div className="space-y-2 rounded-xl bg-slate-50 p-4">
+              <div className="flex justify-between items-center text-[13px]">
+                <span className="text-slate-500 font-medium">
+                  {formatPrice(pricing.prixParJour)} FCFA × {nbJours}j
+                </span>
+                <span className="font-semibold text-slate-700 tabular-nums">
+                  {formatPrice(pricing.totalBase)} FCFA
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-[13px]">
+                <span className="text-slate-500 font-medium flex items-center gap-1">
+                  Frais de service
+                  <span className="text-[11px] text-slate-400">(15%)</span>
+                </span>
+                <span className="font-semibold text-slate-700 tabular-nums">
+                  {formatPrice(pricing.montantCommission)} FCFA
+                </span>
+              </div>
+              <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
+                <span className="text-[14px] font-bold text-slate-900">Total</span>
+                <span className="text-[18px] font-black text-emerald-600 tabular-nums">
+                  {formatPrice(pricing.totalLocataire)}{' '}
+                  <span className="text-[12px] font-semibold text-emerald-400">FCFA</span>
+                </span>
+              </div>
+              {loadingPricing && (
+                <div className="flex justify-center pt-1">
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Contract checkbox */}
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <button
+              type="button"
+              onClick={() => setContractAccepted(!contractAccepted)}
+              className={cn(
+                'mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                contractAccepted
+                  ? 'bg-emerald-500 border-emerald-500'
+                  : 'border-slate-300 group-hover:border-slate-400 bg-white',
+              )}
+            >
+              {contractAccepted && <CheckCircle2 className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+            </button>
+            <span className="text-[12px] leading-relaxed font-medium text-slate-500 group-hover:text-slate-700 transition-colors">
+              J&apos;accepte les{' '}
+              <a href="#" className="text-emerald-600 underline decoration-dotted underline-offset-2 hover:text-emerald-700">
+                conditions de location
+              </a>{' '}
+              et le{' '}
+              <a href="#" className="text-emerald-600 underline decoration-dotted underline-offset-2 hover:text-emerald-700">
+                contrat de réservation
+              </a>.
+            </span>
+          </label>
+
+          {/* CTA */}
+          <button
+            type="button"
+            disabled={!canReserve}
+            onClick={handleReserve}
+            className={cn(
+              'w-full flex items-center justify-center gap-2.5 rounded-xl px-5 py-4',
+              'text-[14px] font-bold tracking-tight transition-all duration-200',
+              canReserve
+                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-600 hover:shadow-xl hover:shadow-emerald-500/35 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md'
+                : 'bg-slate-100 text-slate-400 cursor-not-allowed',
+            )}
+          >
+            {loadingPricing
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : <CreditCard className="w-4 h-4" strokeWidth={2} />
+            }
+            Réserver maintenant
+            {!loadingPricing && <ArrowRight className="w-4 h-4" strokeWidth={2.5} />}
+          </button>
+
+          {/* Trust note */}
+          <p className="flex items-center justify-center gap-1.5 text-[11.5px] text-slate-400 font-medium text-center">
+            <Shield className="w-3 h-3 text-slate-300" strokeWidth={2} />
+            Aucun débit avant confirmation du propriétaire
+          </p>
+        </div>
+      </div>
+
+      {/* ── Trust badges ──────────────────────────────────────── */}
+      <div className="rounded-2xl border border-slate-100 bg-white p-4">
+        <div className="space-y-2.5">
+          {[
+            { icon: Shield, text: 'Paiement 100% sécurisé et protégé' },
+            { icon: Info,   text: 'Annulation gratuite sous 24h' },
+            { icon: CheckCircle2, text: 'Assistance disponible 7j/7' },
+          ].map(({ icon: Icon, text }) => (
+            <div key={text} className="flex items-center gap-2.5">
+              <span className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                <Icon className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
+              </span>
+              <span className="text-[12.5px] font-medium text-slate-500">{text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }

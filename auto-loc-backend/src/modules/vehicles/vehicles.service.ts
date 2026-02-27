@@ -178,6 +178,7 @@ export class VehiclesService {
       include: {
         photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
         tarifsProgressifs: { orderBy: { position: 'asc' } },
+        proprietaire: { select: { prenom: true, nom: true, avatarUrl: true } },
         _count: { select: { reservations: true } },
       },
     });
