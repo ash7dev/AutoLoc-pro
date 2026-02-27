@@ -58,6 +58,13 @@ export class CloudinaryService implements OnModuleInit {
     });
   }
 
+  getContractDownloadUrl(publicId: string): string {
+    return cloudinary.utils.private_download_url(publicId, 'pdf', {
+      resource_type: 'raw',
+      type: 'upload',
+    });
+  }
+
   async deleteByPublicId(publicId: string): Promise<void> {
     await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
   }

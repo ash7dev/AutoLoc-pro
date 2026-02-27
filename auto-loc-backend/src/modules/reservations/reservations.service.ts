@@ -32,8 +32,59 @@ import {
   ConfirmPaymentUseCase,
   ConfirmPaymentResult,
 } from '../../domain/reservation/use-cases/confirm-payment.use-case';
+import { CloudinaryService } from '../../infrastructure/cloudinary/cloudinary.service';
 
 export { CreateReservationResult };
+
+// ── Serializer ────────────────────────────────────────────────────────────────
+// Maps Prisma field names to the frontend-facing contract.
+
+function serializeReservation(r: Record<string, unknown> & {
+  id: string;
+  statut: string;
+  dateDebut: Date | string;
+  dateFin: Date | string;
+  prixParJour: unknown;
+  totalLocataire: unknown;
+  montantCommission: unknown;
+  netProprietaire: unknown;
+  creeLe: Date | string;
+  confirmeeLe?: Date | string | null;
+  checkinLe?: Date | string | null;
+  checkoutLe?: Date | string | null;
+  annuleLe?: Date | string | null;
+  contratUrl?: string | null;
+  proprietaireId: string;
+  locataire?: unknown;
+  vehicule?: unknown;
+  paiement?: unknown;
+}) {
+  const debut = new Date(r.dateDebut as string);
+  const fin = new Date(r.dateFin as string);
+  const nbJours = Math.max(1, Math.round((fin.getTime() - debut.getTime()) / 86_400_000));
+
+  return {
+    id: r.id,
+    statut: r.statut,
+    dateDebut: r.dateDebut,
+    dateFin: r.dateFin,
+    nbJours,
+    prixParJour: String(r.prixParJour ?? '0'),
+    prixTotal: String(r.totalLocataire ?? '0'),
+    commission: String(r.montantCommission ?? '0'),
+    montantProprietaire: String(r.netProprietaire ?? '0'),
+    creeLe: r.creeLe,
+    confirmeeLe: r.confirmeeLe ?? undefined,
+    checkInLe: r.checkinLe ?? undefined,
+    checkOutLe: r.checkoutLe ?? undefined,
+    annuleeLe: r.annuleLe ?? undefined,
+    contratUrl: r.contratUrl ?? undefined,
+    proprietaireId: r.proprietaireId,
+    locataire: r.locataire,
+    vehicule: r.vehicule,
+    paiement: r.paiement,
+  };
+}
 
 @Injectable()
 export class ReservationsService {
@@ -45,6 +96,7 @@ export class ReservationsService {
     private readonly cancelUseCase: CancelReservationUseCase,
     private readonly checkinUseCase: CheckInUseCase,
     private readonly checkoutUseCase: CheckOutUseCase,
+    private readonly cloudinaryService: CloudinaryService,
   ) { }
 
   // ── POST /reservations ────────────────────────────────────────────────────────
@@ -118,6 +170,7 @@ export class ReservationsService {
         locataireId: true,
         proprietaireId: true,
         contratUrl: true,
+        contratPublicId: true,
       },
     });
     if (!reservation) throw new NotFoundException('Reservation not found');
@@ -127,11 +180,32 @@ export class ReservationsService {
       reservation.proprietaireId === utilisateur.id;
     if (!isParty) throw new ForbiddenException('Access denied');
 
-    if (!reservation.contratUrl) {
+    if (!reservation.contratUrl && !reservation.contratPublicId) {
       throw new NotFoundException('Le contrat n\'est pas encore disponible');
     }
 
-    return { contratUrl: reservation.contratUrl };
+    const publicIdFromUrl = this.extractContratPublicId(reservation.contratUrl ?? undefined);
+    const publicId = reservation.contratPublicId ?? publicIdFromUrl;
+    if (!publicId) {
+      return { contratUrl: reservation.contratUrl! };
+    }
+
+    const contratUrl = this.cloudinaryService.getContractDownloadUrl(publicId);
+
+    return { contratUrl };
+  }
+
+  private extractContratPublicId(contratUrl?: string | null): string | null {
+    if (!contratUrl) return null;
+    try {
+      const url = new URL(contratUrl);
+      const rawPath = url.pathname.replace(/^\/+/, '');
+      if (!rawPath.startsWith('contrats/')) return null;
+      const noExt = rawPath.replace(/\.pdf$/i, '');
+      return noExt;
+    } catch {
+      return null;
+    }
   }
 
   // ── GET /reservations/owner ──────────────────────────────────────────────────
@@ -182,7 +256,7 @@ export class ReservationsService {
         },
       },
     });
-    return { data: reservations, total: reservations.length };
+    return { data: reservations.map(serializeReservation), total: reservations.length };
   }
 
   // ── GET /reservations/tenant ────────────────────────────────────────────────
@@ -234,7 +308,7 @@ export class ReservationsService {
       },
     });
 
-    return { data: reservations, total: reservations.length };
+    return { data: reservations.map(serializeReservation), total: reservations.length };
   }
 
   // ── GET /reservations/owner/stats ────────────────────────────────────────────
@@ -347,6 +421,6 @@ export class ReservationsService {
       reservation.proprietaireId === utilisateur.id;
     if (!isParty) throw new ForbiddenException('Access denied');
 
-    return reservation;
+    return serializeReservation(reservation as Parameters<typeof serializeReservation>[0]);
   }
 }

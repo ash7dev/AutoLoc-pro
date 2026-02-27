@@ -11,9 +11,10 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { RoleProfile } from '@prisma/client';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/guards/roles.guard';
@@ -137,9 +138,11 @@ export class ReservationsController {
   async getContrat(
     @Req() req: Request & { user?: RequestUser },
     @Param('id', ParseUUIDPipe) reservationId: string,
+    @Res() res: Response,
   ) {
     const user = req.user!;
-    return this.reservationsService.getContrat(user, reservationId);
+    const { contratUrl } = await this.reservationsService.getContrat(user, reservationId);
+    return res.redirect(contratUrl);
   }
 
   /**
