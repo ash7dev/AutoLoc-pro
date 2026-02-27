@@ -10,7 +10,6 @@ import { OwnerHeader } from "@/features/dashboard/components/owner-header";
 import { OverviewStats } from "@/features/dashboard/components/overview-stats";
 import { MobileQuickActions } from "@/features/dashboard/components/mobile-quick-actions";
 import { MobileRevenueCard } from "@/features/dashboard/components/mobile-revenue-card";
-import { MobileWalletCard } from "@/features/dashboard/components/mobile-wallet-card";
 import { useState, useMemo } from "react";
 import type { Reservation } from "@/lib/nestjs/reservations";
 import type { Vehicle } from "@/lib/nestjs/vehicles";
@@ -231,20 +230,21 @@ export function OwnerDashboardView({
             {/* Mobile Layout */}
             <div className="lg:hidden space-y-4">
                 {/* Revenue + Wallet Cards */}
-                <div className="flex flex-col gap-3">
+                <div className="grid grid-cols-1 gap-3">
                     <MobileRevenueCard
                         total={revenueData.totalRev.toLocaleString("fr-FR")}
                         change="0%"
                         period="Ce mois"
                     />
-                    <MobileWalletCard
-                        available={walletSnapshot.available}
-                        pending={walletSnapshot.pending}
+                    <WalletSnapshot
+                        data={walletSnapshot}
+                        loading={!wallet}
+                        ctaLabel="Gérer le wallet"
                     />
                 </div>
 
                 {/* Quick Actions */}
-                <MobileQuickActions
+                <MobileQuickActions 
                     reservations={reservations}
                     urgentCount={urgentReservations.length}
                 />
