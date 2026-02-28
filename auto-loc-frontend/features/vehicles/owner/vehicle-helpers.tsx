@@ -21,13 +21,14 @@ export const STATUS_CONFIG: Record<VehicleStatus, {
 export const TYPE_LABELS: Record<string, string> = {
   BERLINE:    "Berline",
   SUV:        "SUV",
-  CITADINE:   "Citadine",
-  "4X4":      "4x4",
   PICKUP:     "Pick-up",
+  MINIVAN:    "Minivan",
+  CITADINE:   "Citadine",
   MONOSPACE:  "Monospace",
   MINIBUS:    "Minibus",
   UTILITAIRE: "Utilitaire",
   LUXE:       "Luxe",
+  FOUR_X_FOUR:"4x4",
 };
 
 export const FUEL_LABELS: Record<string, string> = {

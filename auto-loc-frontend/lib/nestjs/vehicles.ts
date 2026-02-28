@@ -2,7 +2,17 @@ import { apiFetch } from './api-client';
 
 // ── Enums / Unions ────────────────────────────────────────────────────────────
 
-export type VehicleType = 'BERLINE' | 'SUV' | 'CITADINE' | '4X4' | 'PICKUP' | 'MONOSPACE' | 'MINIBUS' | 'UTILITAIRE' | 'LUXE';
+export type VehicleType =
+  | 'BERLINE'
+  | 'SUV'
+  | 'PICKUP'
+  | 'MINIVAN'
+  | 'UTILITAIRE'
+  | 'CITADINE'
+  | 'MONOSPACE'
+  | 'MINIBUS'
+  | 'LUXE'
+  | 'FOUR_X_FOUR';
 export type VehicleStatus =
   | 'BROUILLON'
   | 'EN_ATTENTE_VALIDATION'

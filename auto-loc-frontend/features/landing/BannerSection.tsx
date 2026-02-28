@@ -37,16 +37,17 @@ const ZONES_DAKAR = [
 ];
 
 const TYPES_VEHICULES = [
-  { value: '',          label: 'Tous les types' },
-  { value: 'BERLINE',   label: 'Berline'        },
-  { value: 'SUV',       label: 'SUV'            },
-  { value: 'CITADINE',  label: 'Citadine'       },
-  { value: '4X4',       label: '4x4'            },
-  { value: 'PICKUP',    label: 'Pick-up'        },
-  { value: 'MONOSPACE', label: 'Monospace'      },
-  { value: 'MINIBUS',   label: 'Minibus'        },
-  { value: 'UTILITAIRE',label: 'Utilitaire'     },
-  { value: 'LUXE',      label: 'Luxe'           },
+  { value: '',           label: 'Tous les types' },
+  { value: 'CITADINE',   label: 'Citadine'       },
+  { value: 'BERLINE',    label: 'Berline'        },
+  { value: 'SUV',        label: 'SUV'            },
+  { value: 'PICKUP',     label: 'Pick-up'        },
+  { value: 'MINIVAN',    label: 'Minivan'        },
+  { value: 'MONOSPACE',  label: 'Monospace'      },
+  { value: 'MINIBUS',    label: 'Minibus'        },
+  { value: 'UTILITAIRE', label: 'Utilitaire'     },
+  { value: 'LUXE',       label: 'Luxe'           },
+  { value: 'FOUR_X_FOUR',label: '4x4'            },
 ];
 
 const PRIX_MAX_OPTIONS = [

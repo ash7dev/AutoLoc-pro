@@ -2,7 +2,17 @@
 
 import { create } from "zustand";
 
-export type VehicleType = "CITADINE" | "BERLINE" | "SUV" | "4X4" | "PICKUP" | "MONOSPACE" | "MINIBUS" | "UTILITAIRE" | "LUXE";
+export type VehicleType =
+  | "CITADINE"
+  | "BERLINE"
+  | "SUV"
+  | "PICKUP"
+  | "MONOSPACE"
+  | "MINIBUS"
+  | "MINIVAN"
+  | "UTILITAIRE"
+  | "LUXE"
+  | "FOUR_X_FOUR";
 export type FuelType = "ESSENCE" | "DIESEL" | "HYBRIDE" | "ELECTRIQUE";
 export type TransmissionType = "MANUELLE" | "AUTOMATIQUE";
 

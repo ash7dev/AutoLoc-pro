@@ -105,4 +105,9 @@ export class UpdateVehicleDto {
   @ValidateNested({ each: true })
   @Type(() => PriceTierDto)
   tiers?: PriceTierDto[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  equipements?: string[];
 }

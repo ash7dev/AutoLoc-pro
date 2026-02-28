@@ -17,15 +17,16 @@ import { VEHICLE_PATHS } from "@/lib/nestjs/vehicles";
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const VEHICLE_TYPES: { value: VehicleType; label: string }[] = [
-  { value: "BERLINE",    label: "Berline"    },
-  { value: "SUV",        label: "SUV"        },
-  { value: "CITADINE",   label: "Citadine"   },
-  { value: "4X4",        label: "4x4"        },
-  { value: "PICKUP",     label: "Pick-up"    },
-  { value: "MONOSPACE",  label: "Monospace"  },
-  { value: "MINIBUS",    label: "Minibus"    },
+  { value: "CITADINE", label: "Citadine" },
+  { value: "BERLINE", label: "Berline" },
+  { value: "SUV", label: "SUV" },
+  { value: "PICKUP", label: "Pick-up" },
+  { value: "MINIVAN", label: "Minivan" },
+  { value: "MONOSPACE", label: "Monospace" },
+  { value: "MINIBUS", label: "Minibus" },
   { value: "UTILITAIRE", label: "Utilitaire" },
-  { value: "LUXE",       label: "Luxe"       },
+  { value: "LUXE", label: "Luxe" },
+  { value: "FOUR_X_FOUR", label: "4x4" },
 ];
 
 const FUEL_TYPES: { value: FuelType; label: string }[] = [

@@ -79,10 +79,15 @@ function getHints(s: DisplayStrategy, n: number) {
 const FILTERS = [
   { value: '',           label: 'Tous'        },
   { value: 'BERLINE',    label: 'Berlines'    },
+  { value: 'CITADINE',   label: 'Citadines'   },
   { value: 'SUV',        label: 'SUV'         },
   { value: 'PICKUP',     label: 'Pick-up'     },
-  { value: 'UTILITAIRE', label: 'Utilitaires' },
+  { value: 'MINIVAN',    label: 'Minivan'     },
+  { value: 'MONOSPACE',  label: 'Monospaces'  },
   { value: 'MINIBUS',    label: 'Minibus'     },
+  { value: 'UTILITAIRE', label: 'Utilitaires' },
+  { value: 'LUXE',       label: 'Luxe'        },
+  { value: 'FOUR_X_FOUR',label: '4x4'         },
 ];
 
 /* ════════════════════════════════════════════════════════════════

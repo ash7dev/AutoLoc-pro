@@ -163,6 +163,11 @@ enum TypeVehicule {
   PICKUP
   MINIVAN
   UTILITAIRE
+  CITADINE
+  MONOSPACE
+  MINIBUS
+  LUXE
+  FOUR_X_FOUR
 }
 
 enum StatutVehicule {
