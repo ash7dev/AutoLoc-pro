@@ -33,23 +33,24 @@ export function StepReview({ previousStep }: Props) {
       const vehicle = await authFetch<Vehicle, Record<string, unknown>>(VEHICLE_PATHS.create, {
         method: "POST",
         body: {
-          marque:            step1.marque,
-          modele:            step1.modele,
-          annee:             step1.annee,
-          type:              step1.type,
-          carburant:         step1.carburant,
-          transmission:      step1.transmission,
-          nombrePlaces:      step1.nombrePlaces,
-          immatriculation:   step1.immatriculation,
-          ville:             step1.ville,
-          adresse:           step1.adresse,
-          prixParJour:       step2.prixParJour,
-          joursMinimum:      step2.joursMinimum,
-          tiers:             step2.tiers.length > 0 ? step2.tiers : undefined,
-          ageMinimum:        step3?.ageMinimum,
-          zoneConduite:      step3?.zoneConduite      || undefined,
-          assurance:         step3?.assurance         || undefined,
+          marque: step1.marque,
+          modele: step1.modele,
+          annee: step1.annee,
+          type: step1.type,
+          carburant: step1.carburant,
+          transmission: step1.transmission,
+          nombrePlaces: step1.nombrePlaces,
+          immatriculation: step1.immatriculation,
+          ville: step1.ville,
+          adresse: step1.adresse,
+          prixParJour: step2.prixParJour,
+          joursMinimum: step2.joursMinimum,
+          tiers: step2.tiers.length > 0 ? step2.tiers : undefined,
+          ageMinimum: step3?.ageMinimum,
+          zoneConduite: step3?.zoneConduite || undefined,
+          assurance: step3?.assurance || undefined,
           reglesSpecifiques: step3?.reglesSpecifiques || undefined,
+          equipements: step1.equipements?.length ? step1.equipements : undefined,
         },
       });
 
@@ -88,19 +89,20 @@ export function StepReview({ previousStep }: Props) {
 
       {/* Section Véhicule */}
       <ReviewSection icon={Car} title="Véhicule">
-        <ReviewRow label="Marque / Modèle"  value={`${step1?.marque} ${step1?.modele}`} />
-        <ReviewRow label="Année"             value={String(step1?.annee ?? "—")} />
-        <ReviewRow label="Immatriculation"   value={step1?.immatriculation ?? "—"} />
-        <ReviewRow label="Type"              value={step1?.type ?? "—"} />
-        <ReviewRow label="Carburant"         value={step1?.carburant ?? "—"} />
-        <ReviewRow label="Transmission"      value={step1?.transmission ?? "—"} />
-        <ReviewRow label="Ville / Adresse"   value={`${step1?.ville}, ${step1?.adresse}`} />
+        <ReviewRow label="Marque / Modèle" value={`${step1?.marque} ${step1?.modele}`} />
+        <ReviewRow label="Année" value={String(step1?.annee ?? "—")} />
+        <ReviewRow label="Immatriculation" value={step1?.immatriculation ?? "—"} />
+        <ReviewRow label="Type" value={step1?.type ?? "—"} />
+        <ReviewRow label="Carburant" value={step1?.carburant ?? "—"} />
+        <ReviewRow label="Transmission" value={step1?.transmission ?? "—"} />
+        <ReviewRow label="Ville / Adresse" value={`${step1?.ville}, ${step1?.adresse}`} />
+        <ReviewRow label="Équipements" value={step1?.equipements?.length ? step1.equipements.join(', ') : 'Aucun'} />
       </ReviewSection>
 
       {/* Section Prix */}
       <ReviewSection icon={CircleDollarSign} title="Tarification">
-        <ReviewRow label="Prix par jour"     value={step2 ? formatPrice(step2.prixParJour) : "—"} />
-        <ReviewRow label="Durée minimum"     value={step2?.joursMinimum ? `${step2.joursMinimum} jour(s)` : "1 jour"} />
+        <ReviewRow label="Prix par jour" value={step2 ? formatPrice(step2.prixParJour) : "—"} />
+        <ReviewRow label="Durée minimum" value={step2?.joursMinimum ? `${step2.joursMinimum} jour(s)` : "1 jour"} />
         {(step2?.tiers ?? []).length > 0 && (
           <div className="mt-2 space-y-1">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Paliers progressifs</p>
@@ -118,11 +120,11 @@ export function StepReview({ previousStep }: Props) {
 
       {/* Section Conditions */}
       <ReviewSection icon={FileText} title="Conditions">
-        <ReviewRow label="Âge minimum"       value={step3?.ageMinimum ? `${step3.ageMinimum} ans` : "18 ans"} />
-        <ReviewRow label="Zone conduite"     value={step3?.zoneConduite ?? "Non définie"} />
-        <ReviewRow label="Assurance"         value={step3?.assurance ?? "Non précisée"} />
+        <ReviewRow label="Âge minimum" value={step3?.ageMinimum ? `${step3.ageMinimum} ans` : "18 ans"} />
+        <ReviewRow label="Zone conduite" value={step3?.zoneConduite ?? "Non définie"} />
+        <ReviewRow label="Assurance" value={step3?.assurance ?? "Non précisée"} />
         {step3?.reglesSpecifiques && (
-          <ReviewRow label="Règles"          value={step3.reglesSpecifiques} />
+          <ReviewRow label="Règles" value={step3.reglesSpecifiques} />
         )}
       </ReviewSection>
 

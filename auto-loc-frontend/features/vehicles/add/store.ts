@@ -17,6 +17,7 @@ export interface Step1Data {
   immatriculation: string;
   ville: string;
   adresse: string;
+  equipements: string[];
 }
 
 export interface PriceTier {

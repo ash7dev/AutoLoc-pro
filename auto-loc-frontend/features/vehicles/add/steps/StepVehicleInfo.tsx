@@ -1,43 +1,56 @@
 "use client";
 
+import { useState } from "react";
+
 import { useForm } from "react-hook-form";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAddVehicleStore, Step1Data, VehicleType, FuelType, TransmissionType } from "../store";
 
 const VEHICLE_TYPES: { value: VehicleType; label: string }[] = [
-  { value: "BERLINE",    label: "Berline"    },
-  { value: "SUV",        label: "SUV"        },
-  { value: "CITADINE",   label: "Citadine"   },
-  { value: "4X4",        label: "4x4"        },
-  { value: "PICKUP",     label: "Pick-up"    },
-  { value: "MONOSPACE",  label: "Monospace"  },
-  { value: "MINIBUS",    label: "Minibus"    },
+  { value: "BERLINE", label: "Berline" },
+  { value: "SUV", label: "SUV" },
+  { value: "CITADINE", label: "Citadine" },
+  { value: "4X4", label: "4x4" },
+  { value: "PICKUP", label: "Pick-up" },
+  { value: "MONOSPACE", label: "Monospace" },
+  { value: "MINIBUS", label: "Minibus" },
   { value: "UTILITAIRE", label: "Utilitaire" },
-  { value: "LUXE",       label: "Luxe"       },
+  { value: "LUXE", label: "Luxe" },
 ];
 
 const FUEL_TYPES: { value: FuelType; label: string }[] = [
-  { value: "ESSENCE",     label: "Essence" },
-  { value: "DIESEL",      label: "Diesel" },
-  { value: "HYBRIDE",     label: "Hybride" },
-  { value: "ELECTRIQUE",  label: "Électrique" },
+  { value: "ESSENCE", label: "Essence" },
+  { value: "DIESEL", label: "Diesel" },
+  { value: "HYBRIDE", label: "Hybride" },
+  { value: "ELECTRIQUE", label: "Électrique" },
 ];
 
 const TRANSMISSIONS: { value: TransmissionType; label: string }[] = [
-  { value: "MANUELLE",    label: "Manuelle" },
+  { value: "MANUELLE", label: "Manuelle" },
   { value: "AUTOMATIQUE", label: "Automatique" },
 ];
 
+const EQUIPMENTS = [
+  { value: "GPS", label: "GPS" },
+  { value: "CLIMATISATION", label: "Climatisation" },
+  { value: "BLUETOOTH", label: "Bluetooth" },
+  { value: "CAMERA_RECUL", label: "Caméra de recul" },
+  { value: "SIEGE_ENFANT", label: "Siège enfant" },
+  { value: "TOIT_OUVRANT", label: "Toit ouvrant" },
+  { value: "RADAR_STATIONNEMENT", label: "Radar stationnement" },
+  { value: "REGULATEUR_VITESSE", label: "Rég. de vitesse" },
+];
+
 const ZONES_DAKAR = [
-  { value: "almadies-ngor-mamelles",     label: "Almadies – Ngor – Mamelles"               },
-  { value: "ouakam-yoff",                label: "Ouakam – Yoff"                            },
-  { value: "mermoz-sacrecoeur-ckg",      label: "Mermoz – Sacré-Cœur – Cité Keur Gorgui"  },
-  { value: "plateau-medina-gueuletapee", label: "Plateau – Médina – Gueule Tapée"          },
-  { value: "liberte-sicap-granddakar",   label: "Liberté – Sicap – Grand Dakar"            },
-  { value: "parcelles-grandyoff",        label: "Parcelles Assainies – Grand Yoff"         },
-  { value: "pikine-guediawaye",          label: "Pikine – Guédiawaye"                      },
-  { value: "keurmassar-rufisque",        label: "Keur Massar – Rufisque"                   },
+  { value: "almadies-ngor-mamelles", label: "Almadies – Ngor – Mamelles" },
+  { value: "ouakam-yoff", label: "Ouakam – Yoff" },
+  { value: "mermoz-sacrecoeur-ckg", label: "Mermoz – Sacré-Cœur – Cité Keur Gorgui" },
+  { value: "plateau-medina-gueuletapee", label: "Plateau – Médina – Gueule Tapée" },
+  { value: "liberte-sicap-granddakar", label: "Liberté – Sicap – Grand Dakar" },
+  { value: "parcelles-grandyoff", label: "Parcelles Assainies – Grand Yoff" },
+  { value: "pikine-guediawaye", label: "Pikine – Guédiawaye" },
+  { value: "keurmassar-rufisque", label: "Keur Massar – Rufisque" },
 ];
 
 interface Props {
@@ -46,16 +59,24 @@ interface Props {
 
 export function StepVehicleInfo({ nextStep }: Props) {
   const { step1, setStep1 } = useAddVehicleStore();
+  const [equipements, setEquipements] = useState<string[]>(step1?.equipements ?? []);
 
   const { register, handleSubmit, formState: { errors } } = useForm<Step1Data>({
     defaultValues: step1 ?? {
       annee: new Date().getFullYear(),
       type: "BERLINE",
+      equipements: [],
     },
   });
 
+  const toggleEquipment = (value: string) => {
+    setEquipements((prev) =>
+      prev.includes(value) ? prev.filter((e) => e !== value) : [...prev, value],
+    );
+  };
+
   const onSubmit = (data: Step1Data) => {
-    setStep1(data);
+    setStep1({ ...data, equipements });
     nextStep?.();
   };
 
@@ -187,6 +208,34 @@ export function StepVehicleInfo({ nextStep }: Props) {
             className="w-full h-10 rounded-lg border border-[hsl(var(--border))] bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
           />
           {errors.adresse && <p className="text-xs text-destructive">{errors.adresse.message}</p>}
+        </div>
+      </div>
+
+      {/* Équipements */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Équipements du véhicule</label>
+        <p className="text-xs text-muted-foreground -mt-0.5">Cochez les équipements disponibles dans votre véhicule.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
+          {EQUIPMENTS.map((eq) => {
+            const active = equipements.includes(eq.value);
+            return (
+              <button
+                key={eq.value}
+                type="button"
+                onClick={() => toggleEquipment(eq.value)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all ${active
+                    ? 'border-black bg-black text-white'
+                    : 'border-[hsl(var(--border))] bg-background text-muted-foreground hover:border-black/30'
+                  }`}
+              >
+                <span className={`w-4 h-4 rounded border flex items-center justify-center text-[10px] ${active ? 'bg-white text-black border-white' : 'border-current'
+                  }`}>
+                  {active ? '✓' : ''}
+                </span>
+                {eq.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
