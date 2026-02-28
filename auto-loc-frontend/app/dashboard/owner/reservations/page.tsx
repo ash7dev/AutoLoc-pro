@@ -21,7 +21,13 @@ export default async function OwnerReservationsPage() {
     const result = await fetchOwnerReservations(token);
     reservations = result?.data ?? [];
   } catch (err) {
-    if (err instanceof ApiError && err.status === 401) redirect("/login?expired=1");
+    if (err instanceof ApiError) {
+      if (err.status === 401) redirect("/login?expired=1");
+      if (err.status === 403) redirect("/become-owner");
+      console.error("[owner/reservations] API error", err.status, err.message, err.details);
+    } else {
+      console.error("[owner/reservations] Unexpected error", err);
+    }
     reservations = [];
   }
 

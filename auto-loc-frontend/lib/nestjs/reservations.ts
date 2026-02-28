@@ -88,7 +88,7 @@ export async function fetchOwnerReservations(
 
     const res = await apiFetch<ReservationsResponse | Reservation[]>(
         `/reservations/owner${qs ? `?${qs}` : ''}`,
-        { accessToken: token },
+        { accessToken: token, cache: 'no-store' },
     );
     if (Array.isArray(res)) {
         return { data: res, total: res.length };
