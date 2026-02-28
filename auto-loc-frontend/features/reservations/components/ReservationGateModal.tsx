@@ -3,18 +3,20 @@
 import React, { useEffect, useState } from "react";
 import { PhoneVerifyGate } from "@/features/vehicles/add/PhoneVerifyGate";
 import { KycGate } from "@/features/vehicles/add/KycGate";
+import { PermisGate } from "@/features/reservations/components/PermisGate";
 import type { ProfileResponse } from "@/lib/nestjs/auth";
 import { ModalShell } from "@/features/shared/ModalShell";
 import { apiFetch } from "@/lib/nestjs/api-client";
 
-type Gate = "phone" | "kyc" | "ready";
+type Gate = "phone" | "kyc" | "permis" | "ready";
 
 function resolveGate(profile: ProfileResponse): Gate {
   if (!profile.hasUtilisateur) return "phone";
   if (!profile.phoneVerified || !profile.phone) return "phone";
   const kyc = profile.kycStatus;
-  if (kyc === "VERIFIE") return "ready";
-  return "kyc";
+  if (kyc !== "VERIFIE") return "kyc";
+  if (!profile.hasPermis) return "permis";
+  return "ready";
 }
 
 export function ReservationGateModal({
@@ -60,10 +62,16 @@ export function ReservationGateModal({
 
   return (
     <ModalShell
-      title={gate === "phone" ? "Vérifiez votre téléphone" : "Vérifiez votre identité"}
-      subtitle={gate === "phone"
-        ? "Étape requise pour sécuriser votre réservation."
-        : "Votre KYC doit être validé pour réserver."}
+      title={
+        gate === "phone" ? "Vérifiez votre téléphone" :
+          gate === "kyc" ? "Vérifiez votre identité" :
+            "Permis de conduire requis"
+      }
+      subtitle={
+        gate === "phone" ? "Étape requise pour sécuriser votre réservation." :
+          gate === "kyc" ? "Votre KYC doit être validé pour réserver." :
+            "Une photo de votre permis est nécessaire."
+      }
       tag="Auto Loc · Locataire"
       onClose={() => onOpenChange(false)}
       contentClassName="px-6 pt-6 pb-6"
@@ -81,6 +89,13 @@ export function ReservationGateModal({
           onProceed={() => onOpenChange(false)}
           onSubmitted={refreshProfile}
           pendingMode="block"
+        />
+      )}
+
+      {gate === "permis" && (
+        <PermisGate
+          onProceed={() => onOpenChange(false)}
+          onSubmitted={refreshProfile}
         />
       )}
     </ModalShell>

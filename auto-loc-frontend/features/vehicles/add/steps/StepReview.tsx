@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, CheckCircle2, Car, CircleDollarSign,
-  FileText, Camera, Loader2, AlertCircle,
+  FileText, Camera, FileCheck2, Loader2, AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ interface Props {
 
 export function StepReview({ previousStep }: Props) {
   const router = useRouter();
-  const { step1, step2, step3, photos, setVehicleId, reset } = useAddVehicleStore();
+  const { step1, step2, step3, photos, carteGrise, assurance, setVehicleId, reset } = useAddVehicleStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { authFetch } = useAuthFetch();
@@ -63,6 +63,26 @@ export function StepReview({ previousStep }: Props) {
         await authFetch(VEHICLE_PATHS.addPhoto(vehicle.id), {
           method: "POST",
           body: form as unknown as Record<string, unknown>,
+        });
+      }
+
+      // 3. Uploader Carte Grise
+      if (carteGrise) {
+        const cgForm = new FormData();
+        cgForm.append("file", carteGrise);
+        await authFetch(`/vehicles/${vehicle.id}/documents/carte-grise`, {
+          method: "POST",
+          body: cgForm as unknown as Record<string, unknown>,
+        });
+      }
+
+      // 4. Uploader Assurance
+      if (assurance) {
+        const assForm = new FormData();
+        assForm.append("file", assurance);
+        await authFetch(`/vehicles/${vehicle.id}/documents/assurance`, {
+          method: "POST",
+          body: assForm as unknown as Record<string, unknown>,
         });
       }
 
@@ -138,6 +158,12 @@ export function StepReview({ previousStep }: Props) {
         </div>
       </ReviewSection>
 
+      {/* Section Documents */}
+      <ReviewSection icon={FileCheck2} title="Documents">
+        <ReviewRow label="Carte Grise" value={carteGrise?.name ?? "Manquante"} />
+        <ReviewRow label="Assurance" value={assurance?.name ?? "Manquante"} />
+      </ReviewSection>
+
       {/* Status notice */}
       <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
         <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
@@ -161,7 +187,7 @@ export function StepReview({ previousStep }: Props) {
         </Button>
         <Button
           onClick={handlePublish}
-          disabled={loading || !step1 || !step2 || photos.length === 0}
+          disabled={loading || !step1 || !step2 || photos.length === 0 || !carteGrise || !assurance}
           className="gap-2 bg-emerald-500 text-black font-semibold hover:bg-emerald-400 h-10 shadow-[0_0_20px_rgba(52,211,153,0.25)] hover:shadow-[0_0_28px_rgba(52,211,153,0.4)] transition-all"
         >
           {loading ? (

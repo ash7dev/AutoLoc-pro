@@ -21,6 +21,7 @@ export interface ProfileResponse {
   phoneVerified?: boolean;
   kycStatus?: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
   hasVehicles?: boolean;
+  hasPermis?: boolean;
 }
 
 export interface NestAuthResponse {

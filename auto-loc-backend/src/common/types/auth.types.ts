@@ -43,4 +43,5 @@ export interface ProfileResponse {
   kycStatus?: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
   // Indique si l'utilisateur possède au moins un véhicule (quel que soit le statut).
   hasVehicles?: boolean;
+  hasPermis?: boolean;
 }

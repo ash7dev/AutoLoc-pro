@@ -30,7 +30,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
     private readonly cloudinary: CloudinaryService,
-  ) {}
+  ) { }
 
   /**
    * Récupère le profil par user_id (sub JWT), ou le crée en transaction.
@@ -290,6 +290,38 @@ export class AuthService {
     });
   }
 
+  async uploadPermis(
+    user: RequestUser,
+    fileBuffer: Buffer,
+  ): Promise<{ url: string }> {
+    if (!user.sub) throw new BadRequestException('Invalid user');
+    await this.ensureUtilisateurExists(user.sub);
+
+    try {
+      await assertValidImageBuffer(fileBuffer, ALLOWED_MIMES);
+    } catch {
+      throw new BadRequestException('Invalid file format. Allowed: JPEG, PNG, WebP.');
+    }
+
+    // Delete old permis if exists
+    const existing = await this.prisma.utilisateur.findUnique({
+      where: { userId: user.sub },
+      select: { permisPublicId: true },
+    });
+    if (existing?.permisPublicId) {
+      await this.cloudinary.deleteByPublicId(existing.permisPublicId).catch(() => { });
+    }
+
+    const upload = await this.cloudinary.uploadPermisDocument(fileBuffer, user.sub);
+
+    await this.prisma.utilisateur.update({
+      where: { userId: user.sub },
+      data: { permisUrl: upload.url, permisPublicId: upload.publicId },
+    });
+
+    return { url: upload.url };
+  }
+
   /**
    * Échange un accessToken Supabase contre un JWT métier + refresh token.
    */
@@ -382,6 +414,7 @@ export class AuthService {
     phoneVerified?: boolean;
     kycStatus?: ProfileResponse['kycStatus'];
     hasVehicles?: boolean;
+    hasPermis?: boolean;
   }> {
     const found = await this.prisma.utilisateur.findUnique({
       where: { userId },
@@ -389,6 +422,7 @@ export class AuthService {
         id: true,
         phoneVerified: true,
         statutKyc: true,
+        permisUrl: true,
         _count: { select: { vehicules: true } },
       },
     });
@@ -398,6 +432,7 @@ export class AuthService {
       phoneVerified: found.phoneVerified,
       kycStatus: found.statutKyc as ProfileResponse['kycStatus'],
       hasVehicles: found._count.vehicules > 0,
+      hasPermis: !!found.permisUrl,
     };
   }
 
@@ -445,6 +480,7 @@ export class AuthService {
       phoneVerified?: boolean;
       kycStatus?: ProfileResponse['kycStatus'];
       hasVehicles?: boolean;
+      hasPermis?: boolean;
     } = {},
   ): ProfileResponse {
     return {
@@ -459,6 +495,7 @@ export class AuthService {
       phoneVerified: flags.phoneVerified,
       kycStatus: flags.kycStatus,
       hasVehicles: flags.hasVehicles,
+      hasPermis: flags.hasPermis,
     };
   }
 

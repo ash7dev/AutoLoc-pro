@@ -869,4 +869,49 @@ export class VehiclesService {
     await this.invalidateSearchCache();
     return { deleted: true };
   }
+
+  // ── DOCUMENTS VÉHICULE ──────────────────────────────────────────────────
+
+  async uploadCarteGrise(vehiculeId: string, file: Express.Multer.File) {
+    const vehicle = await this.prisma.vehicule.findUnique({
+      where: { id: vehiculeId },
+      select: { carteGrisePublicId: true },
+    });
+    if (!vehicle) throw new NotFoundException('Véhicule non trouvé');
+
+    // Delete old document if exists
+    if (vehicle.carteGrisePublicId) {
+      await this.cloudinary.deleteByPublicId(vehicle.carteGrisePublicId).catch(() => { });
+    }
+
+    const upload = await this.cloudinary.uploadVehicleDocument(file.buffer, vehiculeId, 'carte-grise');
+
+    await this.prisma.vehicule.update({
+      where: { id: vehiculeId },
+      data: { carteGriseUrl: upload.url, carteGrisePublicId: upload.publicId },
+    });
+
+    return { url: upload.url };
+  }
+
+  async uploadAssuranceDoc(vehiculeId: string, file: Express.Multer.File) {
+    const vehicle = await this.prisma.vehicule.findUnique({
+      where: { id: vehiculeId },
+      select: { assuranceDocPublicId: true },
+    });
+    if (!vehicle) throw new NotFoundException('Véhicule non trouvé');
+
+    if (vehicle.assuranceDocPublicId) {
+      await this.cloudinary.deleteByPublicId(vehicle.assuranceDocPublicId).catch(() => { });
+    }
+
+    const upload = await this.cloudinary.uploadVehicleDocument(file.buffer, vehiculeId, 'assurance');
+
+    await this.prisma.vehicule.update({
+      where: { id: vehiculeId },
+      data: { assuranceDocUrl: upload.url, assuranceDocPublicId: upload.publicId },
+    });
+
+    return { url: upload.url };
+  }
 }

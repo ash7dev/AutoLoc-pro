@@ -13,6 +13,7 @@ import { StepVehicleInfo } from "./steps/StepVehicleInfo";
 import { StepPricing } from "./steps/StepPricing";
 import { StepConditions } from "./steps/StepConditions";
 import { StepPhotos } from "./steps/StepPhotos";
+import { StepDocuments } from "./steps/StepDocuments";
 import { StepReview } from "./steps/StepReview";
 
 // Lazy-load pour éviter les erreurs SSR
@@ -47,7 +48,7 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
   const [kycStatus, setKycStatus] = useState(profile.kycStatus);
   const [phoneVerified, setPhoneVerified] = useState(Boolean(profile.phoneVerified && profile.phone));
   const [currentStep, setCurrentStep] = useState(1);
-  const [runTour, setRunTour]      = useState(false);
+  const [runTour, setRunTour] = useState(false);
   const [wizardReady, setWizardReady] = useState(false);
 
   const handleWizardInstance = useCallback(() => {
@@ -173,6 +174,7 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
                 <StepPricing />
                 <StepConditions />
                 <StepPhotos />
+                <StepDocuments />
                 <StepReview />
               </StepWizard>
             )}

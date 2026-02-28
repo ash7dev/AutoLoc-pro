@@ -214,6 +214,48 @@ export class ReservationsService {
     }
   }
 
+  // ── GET /reservations/:id/locataire-docs ─────────────────────────────────────
+
+  async getLocataireDocs(user: RequestUser, reservationId: string) {
+    const utilisateur = await this.prisma.utilisateur.findUnique({
+      where: { userId: user.sub },
+      select: { id: true },
+    });
+    if (!utilisateur) throw new ForbiddenException('Profile not completed');
+
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: reservationId },
+      select: {
+        proprietaireId: true,
+        locataire: {
+          select: {
+            prenom: true,
+            nom: true,
+            kycDocumentUrl: true,
+            kycSelfieUrl: true,
+            statutKyc: true,
+            permisUrl: true,
+          },
+        },
+      },
+    });
+    if (!reservation) throw new NotFoundException('Reservation not found');
+
+    // Only the owner can view tenant docs
+    if (reservation.proprietaireId !== utilisateur.id) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    return {
+      prenom: reservation.locataire.prenom,
+      nom: reservation.locataire.nom,
+      kycDocumentUrl: reservation.locataire.kycDocumentUrl,
+      kycSelfieUrl: reservation.locataire.kycSelfieUrl,
+      kycStatus: reservation.locataire.statutKyc,
+      permisUrl: reservation.locataire.permisUrl,
+    };
+  }
+
   // ── POST /reservations/:id/photos-etat ──────────────────────────────────────
 
   async uploadPhotoEtatLieu(

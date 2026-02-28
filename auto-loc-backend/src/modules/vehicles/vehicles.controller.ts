@@ -205,4 +205,38 @@ export class VehiclesController {
   ) {
     return this.vehiclesService.deletePhoto(id, photoId);
   }
+
+  // ── DOCUMENTS VÉHICULE ─────────────────────────────────────────────────
+
+  /**
+   * POST /vehicles/:id/documents/carte-grise — Upload carte grise (multipart).
+   */
+  @Post(':id/documents/carte-grise')
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  @UseFilters(MulterExceptionFilter)
+  @UseInterceptors(FileInterceptor('file', VEHICLE_PHOTO_MULTER_OPTIONS))
+  async uploadCarteGrise(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ) {
+    if (!file?.buffer) throw new BadRequestException('File is required');
+    return this.vehiclesService.uploadCarteGrise(id, file);
+  }
+
+  /**
+   * POST /vehicles/:id/documents/assurance — Upload assurance (multipart).
+   */
+  @Post(':id/documents/assurance')
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  @UseFilters(MulterExceptionFilter)
+  @UseInterceptors(FileInterceptor('file', VEHICLE_PHOTO_MULTER_OPTIONS))
+  async uploadAssuranceDoc(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ) {
+    if (!file?.buffer) throw new BadRequestException('File is required');
+    return this.vehiclesService.uploadAssuranceDoc(id, file);
+  }
 }

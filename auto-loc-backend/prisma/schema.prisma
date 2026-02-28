@@ -55,6 +55,9 @@ model Utilisateur {
   kycDocumentUrl     String?
   kycSelfieUrl       String?
   kycRejectionReason String?
+
+  permisUrl          String?
+  permisPublicId     String?
   actif           Boolean   @default(true)
   bloqueJusqua    DateTime?
 
@@ -113,6 +116,12 @@ model Vehicule {
   zoneConduite      String?
   assurance         String?
   reglesSpecifiques String?
+
+  // Documents obligatoires
+  carteGriseUrl      String?
+  carteGrisePublicId String?
+  assuranceDocUrl    String?
+  assuranceDocPublicId String?
 
   statut           StatutVehicule @default(EN_ATTENTE_VALIDATION)
   note             Decimal  @default(0) @db.Decimal(3,2)

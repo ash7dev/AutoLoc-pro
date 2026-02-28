@@ -1,9 +1,9 @@
 import {
   BadRequestException,
   Body, Controller, Get, Patch, Post,
-  UploadedFiles, UseFilters, UseGuards, UseInterceptors,
+  UploadedFile, UploadedFiles, UseFilters, UseGuards, UseInterceptors,
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { MulterExceptionFilter } from '../upload/multer-exception.filter';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
@@ -21,7 +21,7 @@ import { UpdatePhoneDto } from './dto/update-phone.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
@@ -114,9 +114,30 @@ export class AuthController {
     @UploadedFiles() files: { documentFront?: Express.Multer.File[]; documentBack?: Express.Multer.File[] },
   ): Promise<ProfileResponse> {
     const front = files?.documentFront?.[0];
-    const back  = files?.documentBack?.[0];
+    const back = files?.documentBack?.[0];
     if (!front?.buffer) throw new BadRequestException('Le fichier "documentFront" est requis.');
-    if (!back?.buffer)  throw new BadRequestException('Le fichier "documentBack" est requis.');
+    if (!back?.buffer) throw new BadRequestException('Le fichier "documentBack" est requis.');
     return this.authService.submitKyc(user, front.buffer, back.buffer);
+  }
+
+  /**
+   * POST /auth/permis/upload — Upload permis de conduire.
+   * Multipart : champ "file" (image du permis).
+   */
+  @Post('permis/upload')
+  @UseGuards(JwtAuthGuard)
+  @UseFilters(MulterExceptionFilter)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 8 * 1024 * 1024, files: 1 },
+    }),
+  )
+  async uploadPermis(
+    @CurrentUser() user: RequestUser,
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ) {
+    if (!file?.buffer) throw new BadRequestException('Le fichier "file" est requis.');
+    return this.authService.uploadPermis(user, file.buffer);
   }
 }

@@ -235,6 +235,20 @@ export class ReservationsController {
   }
 
   /**
+   * GET /reservations/:id/locataire-docs
+   * Le propriétaire peut consulter les documents KYC + permis du locataire.
+   */
+  @Get(':id/locataire-docs')
+  @HttpCode(HttpStatus.OK)
+  async getLocataireDocs(
+    @Req() req: Request & { user?: RequestUser },
+    @Param('id', ParseUUIDPipe) reservationId: string,
+  ) {
+    const user = req.user!;
+    return this.reservationsService.getLocataireDocs(user, reservationId);
+  }
+
+  /**
    * GET /reservations/:id
    * Détail d'une réservation (accessible au locataire ET au propriétaire).
    */

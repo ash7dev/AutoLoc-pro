@@ -59,10 +59,11 @@ export class CloudinaryService implements OnModuleInit {
   }
 
   getContractDownloadUrl(publicId: string): string {
-    // Use cloudinary.url with fl_attachment to force download.
-    // The publicId already maps to a .pdf resource (uploaded with format:'pdf'),
-    // so we do NOT append .pdf again — that would cause a .pdf.pdf 404 error.
-    return cloudinary.url(publicId, {
+    // For raw resources, cloudinary.url() does NOT auto-append a format.
+    // The stored publicId may or may not include '.pdf', so we normalize:
+    // strip any trailing .pdf, then always append exactly one .pdf.
+    const normalizedId = publicId.replace(/\.pdf$/i, '');
+    return cloudinary.url(`${normalizedId}.pdf`, {
       resource_type: 'raw',
       type: 'upload',
       secure: true,
@@ -75,6 +76,14 @@ export class CloudinaryService implements OnModuleInit {
       buffer,
       `etat-lieux/${reservationId}/${type.toLowerCase()}`,
     );
+  }
+
+  async uploadVehicleDocument(buffer: Buffer, vehicleId: string, docType: string): Promise<UploadResultDto> {
+    return this.uploadToFolder(buffer, `vehicule-docs/${vehicleId}/${docType}`);
+  }
+
+  async uploadPermisDocument(buffer: Buffer, userId: string): Promise<UploadResultDto> {
+    return this.uploadToFolder(buffer, `permis/${userId}`);
   }
 
   async deleteByPublicId(publicId: string): Promise<void> {

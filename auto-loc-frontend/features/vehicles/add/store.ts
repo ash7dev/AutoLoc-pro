@@ -51,6 +51,9 @@ interface AddVehicleStore {
   setVehicleId: (id: string) => void;
   addPhoto: (file: File) => void;
   removePhoto: (index: number) => void;
+  carteGrise: File | null;
+  assurance: File | null;
+  setDocument: (type: "carteGrise" | "assurance", file: File | null) => void;
   reset: () => void;
 }
 
@@ -60,11 +63,14 @@ export const useAddVehicleStore = create<AddVehicleStore>((set) => ({
   step2: null,
   step3: null,
   photos: [],
+  carteGrise: null,
+  assurance: null,
   setStep1: (data) => set({ step1: data }),
   setStep2: (data) => set({ step2: data }),
   setStep3: (data) => set({ step3: data }),
   setVehicleId: (id) => set({ vehicleId: id }),
   addPhoto: (file) => set((s) => ({ photos: [...s.photos, file] })),
   removePhoto: (index) => set((s) => ({ photos: s.photos.filter((_, i) => i !== index) })),
-  reset: () => set({ vehicleId: null, step1: null, step2: null, step3: null, photos: [] }),
+  setDocument: (type, file) => set({ [type]: file }),
+  reset: () => set({ vehicleId: null, step1: null, step2: null, step3: null, photos: [], carteGrise: null, assurance: null }),
 }));
