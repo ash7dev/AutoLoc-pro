@@ -142,58 +142,60 @@ function TenantReservationCard({ reservation }: { reservation: Reservation }) {
     });
 
     return (
-        <div className="group flex flex-col sm:flex-row gap-4 rounded-2xl border border-slate-100 bg-white p-4 hover:border-slate-200 hover:shadow-md transition-all duration-200">
-            {/* Photo */}
-            <div className="relative w-full sm:w-36 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100">
-                {mainPhoto ? (
-                    <Image src={mainPhoto} alt="" fill sizes="144px" className="object-cover" />
-                ) : (
-                    <div className="flex h-full items-center justify-center">
-                        <Car className="w-8 h-8 text-slate-300" strokeWidth={1.2} />
-                    </div>
-                )}
-            </div>
+        <Link href={`/dashboard/reservations/${reservation.id}`} className="block">
+            <div className="group flex flex-col sm:flex-row gap-4 rounded-2xl border border-slate-100 bg-white p-4 hover:border-slate-200 hover:shadow-md transition-all duration-200">
+                {/* Photo */}
+                <div className="relative w-full sm:w-36 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100">
+                    {mainPhoto ? (
+                        <Image src={mainPhoto} alt="" fill sizes="144px" className="object-cover" />
+                    ) : (
+                        <div className="flex h-full items-center justify-center">
+                            <Car className="w-8 h-8 text-slate-300" strokeWidth={1.2} />
+                        </div>
+                    )}
+                </div>
 
-            {/* Info */}
-            <div className="flex-1 min-w-0 flex flex-col justify-between">
-                <div>
-                    <div className="flex items-center justify-between gap-3">
-                        <p className="text-[15px] font-bold text-black truncate">
-                            {vehicule?.marque ?? '—'} {vehicule?.modele ?? ''}
+                {/* Info */}
+                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-center justify-between gap-3">
+                            <p className="text-[15px] font-bold text-black truncate">
+                                {vehicule?.marque ?? '—'} {vehicule?.modele ?? ''}
+                            </p>
+                            <span
+                                className={cn(
+                                    'inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold border flex-shrink-0',
+                                    statusCfg.bg,
+                                    statusCfg.color,
+                                )}
+                            >
+                                {statusCfg.label}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1.5">
+                            <span className="flex items-center gap-1 text-[12px] text-black/40">
+                                <MapPin className="w-3 h-3" strokeWidth={2} />
+                                {vehicule?.ville ?? '—'}
+                            </span>
+                            <span className="flex items-center gap-1 text-[12px] text-black/40">
+                                <CalendarDays className="w-3 h-3" strokeWidth={2} />
+                                {dateDebut} → {dateFin}
+                            </span>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
+                        <p className="text-[15px] font-black text-emerald-600 tabular-nums">
+                            {Number.isFinite(Number(reservation.prixTotal))
+                                ? `${formatPrice(Number(reservation.prixTotal))} FCFA`
+                                : '—'}
                         </p>
-                        <span
-                            className={cn(
-                                'inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold border flex-shrink-0',
-                                statusCfg.bg,
-                                statusCfg.color,
-                            )}
-                        >
-                            {statusCfg.label}
+                        <span className="flex items-center gap-1 text-[12px] font-medium text-black/30">
+                            <Clock className="w-3 h-3" />
+                            Réf: {reservation.id.slice(0, 8).toUpperCase()}
                         </span>
                     </div>
-                    <div className="flex items-center gap-3 mt-1.5">
-                        <span className="flex items-center gap-1 text-[12px] text-black/40">
-                            <MapPin className="w-3 h-3" strokeWidth={2} />
-                            {vehicule?.ville ?? '—'}
-                        </span>
-                        <span className="flex items-center gap-1 text-[12px] text-black/40">
-                            <CalendarDays className="w-3 h-3" strokeWidth={2} />
-                            {dateDebut} → {dateFin}
-                        </span>
-                    </div>
-                </div>
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
-                    <p className="text-[15px] font-black text-emerald-600 tabular-nums">
-                        {Number.isFinite(Number(reservation.prixTotal))
-                            ? `${formatPrice(Number(reservation.prixTotal))} FCFA`
-                            : '—'}
-                    </p>
-                    <span className="flex items-center gap-1 text-[12px] font-medium text-black/30">
-                        <Clock className="w-3 h-3" />
-                        Réf: {reservation.id.slice(0, 8).toUpperCase()}
-                    </span>
                 </div>
             </div>
-        </div>
+        </Link>
     );
 }

@@ -60,8 +60,9 @@ export class CloudinaryService implements OnModuleInit {
 
   getContractDownloadUrl(publicId: string): string {
     // Use cloudinary.url with fl_attachment to force download.
-    // private_download_url requires type=authenticated but we upload as type=upload.
-    return cloudinary.url(`${publicId}.pdf`, {
+    // The publicId already maps to a .pdf resource (uploaded with format:'pdf'),
+    // so we do NOT append .pdf again — that would cause a .pdf.pdf 404 error.
+    return cloudinary.url(publicId, {
       resource_type: 'raw',
       type: 'upload',
       secure: true,

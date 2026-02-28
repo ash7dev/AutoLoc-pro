@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { LoggerModule } from 'nestjs-pino';
 import { PrismaModule } from './prisma/prisma.module';
 import { JwtModule } from './infrastructure/jwt/jwt.module';
@@ -19,6 +20,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { RevalidateModule } from './infrastructure/revalidate/revalidate.module';
 import { WalletModule } from './modules/wallet/wallet.module';
+import { ReservationAutoCloseJob } from './jobs/reservation-auto-close.job';
 
 // Sentry (optional — active only if SENTRY_DSN is set)
 const SENTRY_DSN = process.env.SENTRY_DSN;
@@ -41,6 +43,9 @@ if (SENTRY_DSN) {
 
     // Rate Limiting — 60 requests per minute per IP
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 60 }]),
+
+    // Scheduled jobs (cron)
+    ScheduleModule.forRoot(),
 
     // Structured Logging — Pino (JSON in prod, pretty in dev)
     LoggerModule.forRootAsync({
@@ -76,6 +81,8 @@ if (SENTRY_DSN) {
   providers: [
     // Global rate limiter guard
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    // Scheduled jobs
+    ReservationAutoCloseJob,
   ],
 })
 export class AppModule { }

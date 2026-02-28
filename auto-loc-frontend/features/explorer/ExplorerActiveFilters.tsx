@@ -6,12 +6,12 @@ import { cn } from '@/lib/utils';
 import type { ExplorerFiltersState } from './ExplorerGrid';
 import {
     ZONES, VEHICLE_TYPES, FUEL_TYPES, TRANSMISSIONS,
-    BUDGET_PRESETS, SORT_OPTIONS,
+    BUDGET_PRESETS, SORT_OPTIONS, EQUIPMENTS,
 } from './ExplorerFilters';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function getFilterPills(filters: ExplorerFiltersState) {
-    const pills: { key: string; label: string; field: keyof ExplorerFiltersState; resetValue: string | number | null }[] = [];
+    const pills: { key: string; label: string; field: keyof ExplorerFiltersState; resetValue: any }[] = [];
 
     if (filters.zone) {
         pills.push({
@@ -29,10 +29,18 @@ function getFilterPills(filters: ExplorerFiltersState) {
             resetValue: '',
         });
     }
+    if (filters.budgetMin !== null) {
+        pills.push({
+            key: 'budgetMin',
+            label: `≥ ${filters.budgetMin.toLocaleString('fr-FR')} FCFA`,
+            field: 'budgetMin',
+            resetValue: null,
+        });
+    }
     if (filters.budgetMax !== null) {
         pills.push({
             key: 'budget',
-            label: `≤ ${BUDGET_PRESETS.find((b) => b.value === filters.budgetMax)?.label ?? `${filters.budgetMax} FCFA`}`,
+            label: `≤ ${BUDGET_PRESETS.find((b) => b.value === filters.budgetMax)?.label ?? `${filters.budgetMax?.toLocaleString('fr-FR')} FCFA`}`,
             field: 'budgetMax',
             resetValue: null,
         });
@@ -67,6 +75,24 @@ function getFilterPills(filters: ExplorerFiltersState) {
             label: `★ ${filters.noteMin}+`,
             field: 'noteMin',
             resetValue: null,
+        });
+    }
+    if (filters.equipements.length > 0) {
+        for (const eq of filters.equipements) {
+            pills.push({
+                key: `eq-${eq}`,
+                label: EQUIPMENTS.find((e) => e.value === eq)?.label ?? eq,
+                field: 'equipements',
+                resetValue: filters.equipements.filter((e) => e !== eq),
+            });
+        }
+    }
+    if (filters.nearMe) {
+        pills.push({
+            key: 'nearMe',
+            label: '📍 Autour de moi',
+            field: 'nearMe',
+            resetValue: false,
         });
     }
 

@@ -128,4 +128,16 @@ export class NotificationService {
       `📨 [WhatsApp:stub] to=${message.to} body="${message.body}"`,
     );
   }
+  /**
+   * Send an SMS notification (stub — ready for Twilio integration).
+   * To integrate:
+   *   npm install twilio
+   *   const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+   *   await client.messages.create({ from: process.env.TWILIO_SMS_FROM, to, body });
+   */
+  async sendSms(message: { to: string; body: string }): Promise<void> {
+    this.logger.log(
+      `📱 [SMS:stub] to=${message.to} body="${message.body}"`,
+    );
+  }
 }
