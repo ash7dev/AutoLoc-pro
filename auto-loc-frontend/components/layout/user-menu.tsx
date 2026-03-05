@@ -12,8 +12,6 @@ import {
   Car,
 } from 'lucide-react';
 import { useSignOut } from '../../features/auth/hooks/use-signout';
-import { apiFetch, ApiError } from '../../lib/nestjs/api-client';
-import type { ProfileResponse } from '../../lib/nestjs/auth';
 
 interface UserMenuProps {
   isOwner: boolean;
@@ -21,7 +19,6 @@ interface UserMenuProps {
 
 export function UserMenu({ isOwner }: UserMenuProps) {
   const [open, setOpen] = useState(false);
-  const [hasVehicles, setHasVehicles] = useState<boolean | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const { signOut, loading: signingOut } = useSignOut();
 
@@ -35,46 +32,11 @@ export function UserMenu({ isOwner }: UserMenuProps) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-    async function loadProfile() {
-      for (let i = 0; i < 3; i += 1) {
-        try {
-          const profile = await apiFetch<ProfileResponse>('/auth/me');
-          if (!active) return;
-          setHasVehicles(Boolean(profile.hasVehicles));
-          return;
-        } catch (err) {
-          if (err instanceof ApiError && err.status === 401) {
-            await wait(200);
-            continue;
-          }
-          break;
-        }
-      }
-      if (active) setHasVehicles(false);
-    }
-
-    void loadProfile();
-    return () => { active = false; };
-  }, []);
-
   return (
     <div className="flex items-center gap-3">
 
-      {/* CTA contextuel */}
-      {(!isOwner && hasVehicles === null) ? (
-        <button
-          type="button"
-          disabled
-          className="autoloc-body text-sm font-semibold bg-gray-900 text-white px-4 py-2 rounded-xl flex items-center gap-2 opacity-80"
-        >
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          Chargement...
-        </button>
-      ) : (isOwner || hasVehicles) ? (
+      {/* CTA contextuel — basé uniquement sur le rôle */}
+      {isOwner ? (
         <Link
           href="/dashboard/owner"
           className="autoloc-body text-sm font-semibold bg-gray-900 text-white px-4 py-2 rounded-xl hover:bg-gray-700 transition-all duration-150 flex items-center gap-1.5"

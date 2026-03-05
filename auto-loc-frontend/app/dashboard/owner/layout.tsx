@@ -45,7 +45,7 @@ export default async function OwnerLayout({
   }
 
   if (profile.role !== 'PROPRIETAIRE') {
-    redirect(profile.hasVehicles ? '/become-owner?auto=1' : '/become-owner');
+    redirect('/become-owner');
   }
 
   return (

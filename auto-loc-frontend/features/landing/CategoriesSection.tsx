@@ -24,7 +24,7 @@ const CARDS = [
         description:
             "Rejoignez des centaines de propriétaires qui génèrent des revenus supplémentaires. Inscription rapide, paiements sécurisés.",
         cta: 'Espace hôte',
-        href: '/login?next=/dashboard/owner',
+        href: '/become-owner',
         variant: 'emerald' as const,
     },
 ];

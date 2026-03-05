@@ -25,15 +25,13 @@ import {
 import { cn } from '@/lib/utils';
 import { supabase } from '../../lib/supabase/client';
 import { useNestToken } from '../../features/auth/hooks/use-nest-token';
-import { apiFetch, ApiError } from '../../lib/nestjs/api-client';
-import type { ProfileResponse } from '../../lib/nestjs/auth';
 
 /* ── Nav links ───────────────────────────────────────────────── */
 const NAV_LINKS = [
-  { href: '/',             icon: Home,       label: 'Accueil'           },
-  { href: '/explorer',     icon: Car,        label: 'Explorer'          },
+  { href: '/', icon: Home, label: 'Accueil' },
+  { href: '/explorer', icon: Car, label: 'Explorer' },
   { href: '/how-it-works', icon: HelpCircle, label: 'Comment ça marche' },
-  { href: '/contact',      icon: Mail,       label: 'Contact'           },
+  { href: '/contact', icon: Mail, label: 'Contact' },
 ];
 
 /* ── Dropdown menu item ──────────────────────────────────────── */
@@ -92,14 +90,8 @@ function DropdownItem({
 /* ── Profile dropdown ────────────────────────────────────────── */
 function ProfileDropdown({
   isOwner,
-  showBecomeOwner,
-  showHostSpace,
-  loadingHostEntry,
 }: {
   isOwner: boolean;
-  showBecomeOwner: boolean;
-  showHostSpace: boolean;
-  loadingHostEntry: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -180,17 +172,13 @@ function ProfileDropdown({
         <div className="p-2 space-y-0.5">
           {isOwner ? (
             <DropdownItem href="/dashboard/owner" icon={LayoutDashboard} label="Espace propriétaire" badge="Pro" />
-          ) : loadingHostEntry ? (
-            <DropdownItem icon={Loader2} label="Chargement..." disabled />
-          ) : showBecomeOwner ? (
+          ) : (
             <DropdownItem href="/become-owner" icon={Building2} label="Devenir hôte" badge="Nouveau" />
-          ) : showHostSpace ? (
-            <DropdownItem href="/dashboard/owner" icon={LayoutDashboard} label="Espace hôte" />
-          ) : null}
-          <DropdownItem href="/reservations"  icon={CalendarRange} label="Mes réservations" />
-          <DropdownItem href="/notifications" icon={Bell}          label="Notifications"    />
-          <DropdownItem href="/profile"       icon={User}          label="Mon profil"       />
-          <DropdownItem href="/settings"      icon={Settings}      label="Paramètres"       />
+          )}
+          <DropdownItem href="/reservations" icon={CalendarRange} label="Mes réservations" />
+          <DropdownItem href="/notifications" icon={Bell} label="Notifications" />
+          <DropdownItem href="/profile" icon={User} label="Mon profil" />
+          <DropdownItem href="/settings" icon={Settings} label="Paramètres" />
           <div className="my-2 border-t border-slate-50" />
           <DropdownItem
             icon={signingOut ? Loader2 : LogOut}
@@ -222,10 +210,10 @@ function SliderNav({ pathname }: { pathname: string }) {
     const nav = navRef.current;
     if (!el || !nav) return;
     const navRect = nav.getBoundingClientRect();
-    const elRect  = el.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
     setPillStyle({
-      left:    elRect.left - navRect.left,
-      width:   elRect.width,
+      left: elRect.left - navRect.left,
+      width: elRect.width,
       opacity: 1,
     });
   }, [pathname]);
@@ -236,8 +224,8 @@ function SliderNav({ pathname }: { pathname: string }) {
       <div
         className="absolute inset-y-0 rounded-xl bg-black transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
         style={{
-          left:    pillStyle.left,
-          width:   pillStyle.width,
+          left: pillStyle.left,
+          width: pillStyle.width,
           opacity: pillStyle.opacity,
         }}
       />
@@ -302,10 +290,9 @@ export function MarketplaceNavbar() {
   const [mobileSearchVisible, setMobileSearchVisible] = useState(false);
   const [mobileSearch, setMobileSearch] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [hasVehicles, setHasVehicles] = useState<boolean | null>(null);
   const { activeRole } = useNestToken();
-  const pathname       = usePathname();
-  const router         = useRouter();
+  const pathname = usePathname();
+  const router = useRouter();
 
   function handleMobileSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -315,43 +302,16 @@ export function MarketplaceNavbar() {
   }
 
   useEffect(() => {
-    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
-    async function fetchProfileWithRetry() {
-      for (let i = 0; i < 3; i += 1) {
-        try {
-          return await apiFetch<ProfileResponse>('/auth/me');
-        } catch (err) {
-          if (err instanceof ApiError && err.status === 401) {
-            await wait(200);
-            continue;
-          }
-          return null;
-        }
-      }
-      return null;
-    }
+    let active = true;
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      const isLogged = Boolean(data.session?.access_token);
-      setLoggedIn(isLogged);
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      setLoggedIn(Boolean(data.session?.access_token));
       setHydrated(true);
-      if (isLogged) {
-        const profile = await fetchProfileWithRetry();
-        setHasVehicles(Boolean(profile?.hasVehicles));
-      } else {
-        setHasVehicles(null);
-      }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_e, session) => {
-      const isLogged = Boolean(session?.access_token);
-      setLoggedIn(isLogged);
-      if (isLogged) {
-        const profile = await fetchProfileWithRetry();
-        setHasVehicles(Boolean(profile?.hasVehicles));
-      } else {
-        setHasVehicles(null);
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setLoggedIn(Boolean(session?.access_token));
     });
 
     const onScroll = () => {
@@ -361,6 +321,7 @@ export function MarketplaceNavbar() {
     window.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
+      active = false;
       subscription.unsubscribe();
       window.removeEventListener('scroll', onScroll);
     };
@@ -370,9 +331,7 @@ export function MarketplaceNavbar() {
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   if (hydrated && activeRole === 'PROPRIETAIRE') return null;
-  const showBecomeOwner = hydrated && loggedIn && hasVehicles === false;
-  const showHostSpace = hydrated && loggedIn && hasVehicles === true;
-  const loadingHostEntry = hydrated && loggedIn && hasVehicles === null;
+  const isOwner = activeRole === 'PROPRIETAIRE';
 
   return (
     <header className={cn(
@@ -449,10 +408,7 @@ export function MarketplaceNavbar() {
 
             {hydrated && loggedIn && (
               <ProfileDropdown
-                isOwner={activeRole === 'PROPRIETAIRE'}
-                showBecomeOwner={showBecomeOwner}
-                showHostSpace={showHostSpace}
-                loadingHostEntry={loadingHostEntry}
+                isOwner={isOwner}
               />
             )}
 

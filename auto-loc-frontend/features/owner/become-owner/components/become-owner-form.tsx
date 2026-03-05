@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import { Car, CheckCircle, Loader2 } from 'lucide-react';
 import { useBecomeOwner } from '../hooks/use-become-owner';
 
@@ -11,15 +10,8 @@ const BENEFITS = [
   { label: 'Accédez aux statistiques de votre flotte' },
 ];
 
-export function BecomeOwnerForm({ autoActivate = false }: { autoActivate?: boolean }) {
+export function BecomeOwnerForm() {
   const { become, loading, error } = useBecomeOwner();
-  const autoRef = useRef(false);
-
-  useEffect(() => {
-    if (!autoActivate || autoRef.current) return;
-    autoRef.current = true;
-    void become();
-  }, [autoActivate, become]);
 
   return (
     <div className="space-y-6">

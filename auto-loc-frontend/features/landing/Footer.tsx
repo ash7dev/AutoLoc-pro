@@ -14,39 +14,39 @@ import {
 const FOOTER_LINKS = {
   plateforme: [
     { label: 'Explorer les véhicules', href: '/explorer' },
-    { label: 'Comment ça marche',      href: '/how-it-works' },
-    { label: 'Devenir hôte',           href: '/become-host' },
-    { label: 'Espace propriétaire',    href: '/dashboard/owner' },
+    { label: 'Comment ça marche', href: '/how-it-works' },
+    { label: 'Devenir hôte', href: '/become-owner' },
+    { label: 'Espace propriétaire', href: '/dashboard/owner' },
   ],
   zones: [
-    { label: 'Almadies – Ngor – Mamelles',              href: '/explorer?zone=almadies-ngor-mamelles'     },
-    { label: 'Ouakam – Yoff',                           href: '/explorer?zone=ouakam-yoff'                },
-    { label: 'Mermoz – Sacré-Cœur – Cité Keur Gorgui', href: '/explorer?zone=mermoz-sacrecoeur-ckg'      },
-    { label: 'Plateau – Médina – Gueule Tapée',         href: '/explorer?zone=plateau-medina-gueuletapee' },
-    { label: 'Liberté – Sicap – Grand Dakar',           href: '/explorer?zone=liberte-sicap-granddakar'   },
-    { label: 'Parcelles Assainies – Grand Yoff',        href: '/explorer?zone=parcelles-grandyoff'        },
-    { label: 'Pikine – Guédiawaye',                     href: '/explorer?zone=pikine-guediawaye'          },
-    { label: 'Keur Massar – Rufisque',                  href: '/explorer?zone=keurmassar-rufisque'        },
+    { label: 'Almadies – Ngor – Mamelles', href: '/explorer?zone=almadies-ngor-mamelles' },
+    { label: 'Ouakam – Yoff', href: '/explorer?zone=ouakam-yoff' },
+    { label: 'Mermoz – Sacré-Cœur – Cité Keur Gorgui', href: '/explorer?zone=mermoz-sacrecoeur-ckg' },
+    { label: 'Plateau – Médina – Gueule Tapée', href: '/explorer?zone=plateau-medina-gueuletapee' },
+    { label: 'Liberté – Sicap – Grand Dakar', href: '/explorer?zone=liberte-sicap-granddakar' },
+    { label: 'Parcelles Assainies – Grand Yoff', href: '/explorer?zone=parcelles-grandyoff' },
+    { label: 'Pikine – Guédiawaye', href: '/explorer?zone=pikine-guediawaye' },
+    { label: 'Keur Massar – Rufisque', href: '/explorer?zone=keurmassar-rufisque' },
   ],
   legal: [
-    { label: "Conditions d'utilisation",     href: '/legal/terms' },
+    { label: "Conditions d'utilisation", href: '/legal/terms' },
     { label: 'Politique de confidentialité', href: '/legal/privacy' },
-    { label: 'Politique de cookies',         href: '/legal/cookies' },
-    { label: 'Mentions légales',             href: '/legal/mentions' },
+    { label: 'Politique de cookies', href: '/legal/cookies' },
+    { label: 'Mentions légales', href: '/legal/mentions' },
   ],
 };
 
 const TRUST_BADGES = [
-  { icon: Shield,       label: 'Véhicules vérifiés'      },
-  { icon: Zap,          label: 'Réservation instantanée' },
-  { icon: Star,         label: 'Noté 4.9/5'              },
-  { icon: CheckCircle2, label: 'Paiement sécurisé'       },
+  { icon: Shield, label: 'Véhicules vérifiés' },
+  { icon: Zap, label: 'Réservation instantanée' },
+  { icon: Star, label: 'Noté 4.9/5' },
+  { icon: CheckCircle2, label: 'Paiement sécurisé' },
 ];
 
 const SOCIALS = [
   { icon: Instagram, href: 'https://instagram.com/autoloc', label: 'Instagram' },
-  { icon: Facebook,  href: 'https://facebook.com/autoloc',  label: 'Facebook'  },
-  { icon: Twitter,   href: 'https://twitter.com/autoloc',   label: 'Twitter'   },
+  { icon: Facebook, href: 'https://facebook.com/autoloc', label: 'Facebook' },
+  { icon: Twitter, href: 'https://twitter.com/autoloc', label: 'Twitter' },
 ];
 
 // ─── Newsletter ───────────────────────────────────────────────────────────────
