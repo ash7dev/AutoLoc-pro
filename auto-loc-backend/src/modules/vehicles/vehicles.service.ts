@@ -92,43 +92,70 @@ export class VehiclesService {
         : StatutVehicule.BROUILLON;
 
     try {
-      return await this.prisma.vehicule.create({
-        data: {
-          proprietaireId: utilisateur.id,
-          marque: dto.marque,
-          modele: dto.modele,
-          annee: dto.annee,
-          type: dto.type,
-          carburant: dto.carburant ?? null,
-          transmission: dto.transmission ?? null,
-          nombrePlaces: dto.nombrePlaces ?? null,
-          immatriculation: dto.immatriculation.toUpperCase().replace(/\s/g, ''),
-          prixParJour: dto.prixParJour,
-          ville: dto.ville,
-          adresse: dto.adresse,
-          latitude: dto.latitude ?? null,
-          longitude: dto.longitude ?? null,
-          joursMinimum: dto.joursMinimum ?? 1,
-          ageMinimum: dto.ageMinimum ?? 18,
-          zoneConduite: dto.zoneConduite ?? null,
-          assurance: dto.assurance ?? null,
-          reglesSpecifiques: dto.reglesSpecifiques ?? null,
-          statut: statutInitial,
-          tarifsProgressifs: dto.tiers?.length
-            ? {
-              create: dto.tiers.map((t, i) => ({
-                joursMin: t.joursMin,
-                joursMax: t.joursMax ?? null,
-                prix: t.prix,
-                position: i,
-              })),
-            }
-            : undefined,
-        },
-        include: {
-          photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
-          tarifsProgressifs: { orderBy: { position: 'asc' } },
-        },
+      return await this.prisma.$transaction(async (tx) => {
+        const vehicle = await tx.vehicule.create({
+          data: {
+            proprietaireId: utilisateur.id,
+            marque: dto.marque,
+            modele: dto.modele,
+            annee: dto.annee,
+            type: dto.type,
+            carburant: dto.carburant ?? null,
+            transmission: dto.transmission ?? null,
+            nombrePlaces: dto.nombrePlaces ?? null,
+            immatriculation: dto.immatriculation.toUpperCase().replace(/\s/g, ''),
+            prixParJour: dto.prixParJour,
+            ville: dto.ville,
+            adresse: dto.adresse,
+            latitude: dto.latitude ?? null,
+            longitude: dto.longitude ?? null,
+            joursMinimum: dto.joursMinimum ?? 1,
+            ageMinimum: dto.ageMinimum ?? 18,
+            zoneConduite: dto.zoneConduite ?? null,
+            assurance: dto.assurance ?? null,
+            reglesSpecifiques: dto.reglesSpecifiques ?? null,
+            statut: statutInitial,
+            tarifsProgressifs: dto.tiers?.length
+              ? {
+                create: dto.tiers.map((t, i) => ({
+                  joursMin: t.joursMin,
+                  joursMax: t.joursMax ?? null,
+                  prix: t.prix,
+                  position: i,
+                })),
+              }
+              : undefined,
+          },
+          include: {
+            photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
+            tarifsProgressifs: { orderBy: { position: 'asc' } },
+            equipements: { include: { equipement: true } },
+          },
+        });
+
+        // Link equipements
+        if (dto.equipements?.length) {
+          for (const nom of dto.equipements) {
+            const eq = await tx.equipement.upsert({
+              where: { nom },
+              create: { nom },
+              update: {},
+            });
+            await tx.vehiculeEquipement.create({
+              data: { vehiculeId: vehicle.id, equipementId: eq.id },
+            });
+          }
+        }
+
+        // Re-fetch with equipements populated
+        return tx.vehicule.findUniqueOrThrow({
+          where: { id: vehicle.id },
+          include: {
+            photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
+            tarifsProgressifs: { orderBy: { position: 'asc' } },
+            equipements: { include: { equipement: true } },
+          },
+        });
       });
     } catch (err: unknown) {
       if ((err as { code?: string }).code === 'P2002') {
@@ -150,6 +177,7 @@ export class VehiclesService {
       include: {
         photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
         tarifsProgressifs: { orderBy: { position: 'asc' } },
+        equipements: { include: { equipement: true } },
         _count: { select: { reservations: true } },
       },
     });
@@ -180,6 +208,7 @@ export class VehiclesService {
         photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
         tarifsProgressifs: { orderBy: { position: 'asc' } },
         proprietaire: { select: { prenom: true, nom: true, avatarUrl: true } },
+        equipements: { include: { equipement: true } },
         _count: { select: { reservations: true } },
       },
     });
@@ -255,6 +284,23 @@ export class VehiclesService {
           await tx.tarifTier.deleteMany({ where: { vehiculeId: vehicleId } });
         }
 
+        // Handle equipements: delete existing + recreate
+        if (dto.equipements !== undefined) {
+          await tx.vehiculeEquipement.deleteMany({ where: { vehiculeId: vehicleId } });
+          if (dto.equipements.length > 0) {
+            for (const nom of dto.equipements) {
+              const eq = await tx.equipement.upsert({
+                where: { nom },
+                create: { nom },
+                update: {},
+              });
+              await tx.vehiculeEquipement.create({
+                data: { vehiculeId: vehicleId, equipementId: eq.id },
+              });
+            }
+          }
+        }
+
         return tx.vehicule.update({
           where: { id: vehicleId },
           data: {
@@ -292,6 +338,7 @@ export class VehiclesService {
           include: {
             photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
             tarifsProgressifs: { orderBy: { position: 'asc' } },
+            equipements: { include: { equipement: true } },
           },
         });
       });

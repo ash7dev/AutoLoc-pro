@@ -77,6 +77,9 @@ export interface Vehicle {
   misAJourLe: string;
   photos: VehiclePhoto[];
   tarifsProgressifs: TarifTier[];
+  equipements?: { equipement: { id: string; nom: string } }[] | string[];
+  carteGriseUrl?: string | null;
+  assuranceDocUrl?: string | null;
   _count?: { reservations: number };
 }
 
@@ -177,6 +180,8 @@ export const VEHICLE_PATHS = {
   indisponibilites: (id: string) => `/vehicles/${id}/indisponibilites`,
   deleteIndisponibilite: (vehicleId: string, indispoId: string) =>
     `/vehicles/${vehicleId}/indisponibilites/${indispoId}`,
+  uploadCarteGrise: (id: string) => `/vehicles/${id}/documents/carte-grise`,
+  uploadAssurance: (id: string) => `/vehicles/${id}/documents/assurance`,
 } as const;
 
 // ── Server-side functions (RSC, layouts, API routes) ─────────────────────────

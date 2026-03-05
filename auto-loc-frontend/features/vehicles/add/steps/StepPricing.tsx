@@ -30,7 +30,7 @@ export function StepPricing({ nextStep, previousStep }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <h3 className="text-lg font-bold">Tarification</h3>
         <p className="text-sm text-muted-foreground mt-1">

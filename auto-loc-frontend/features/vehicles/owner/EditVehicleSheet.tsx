@@ -7,6 +7,7 @@ import {
   Lock, AlertCircle, Loader2, Save,
   Car, CircleDollarSign, FileText, Camera,
   Plus, Trash2, Info, X, Upload,
+  Settings2, FileCheck2, ShieldCheck, FileUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -30,26 +31,26 @@ const VEHICLE_TYPES: { value: VehicleType; label: string }[] = [
 ];
 
 const FUEL_TYPES: { value: FuelType; label: string }[] = [
-  { value: "ESSENCE",    label: "Essence" },
-  { value: "DIESEL",     label: "Diesel" },
-  { value: "HYBRIDE",    label: "Hybride" },
+  { value: "ESSENCE", label: "Essence" },
+  { value: "DIESEL", label: "Diesel" },
+  { value: "HYBRIDE", label: "Hybride" },
   { value: "ELECTRIQUE", label: "Électrique" },
 ];
 
 const TRANSMISSIONS: { value: Transmission; label: string }[] = [
-  { value: "MANUELLE",    label: "Manuelle" },
+  { value: "MANUELLE", label: "Manuelle" },
   { value: "AUTOMATIQUE", label: "Automatique" },
 ];
 
 const ZONES_DAKAR = [
-  { value: "almadies-ngor-mamelles",     label: "Almadies – Ngor – Mamelles"               },
-  { value: "ouakam-yoff",                label: "Ouakam – Yoff"                            },
-  { value: "mermoz-sacrecoeur-ckg",      label: "Mermoz – Sacré-Cœur – Cité Keur Gorgui"  },
-  { value: "plateau-medina-gueuletapee", label: "Plateau – Médina – Gueule Tapée"          },
-  { value: "liberte-sicap-granddakar",   label: "Liberté – Sicap – Grand Dakar"            },
-  { value: "parcelles-grandyoff",        label: "Parcelles Assainies – Grand Yoff"         },
-  { value: "pikine-guediawaye",          label: "Pikine – Guédiawaye"                      },
-  { value: "keurmassar-rufisque",        label: "Keur Massar – Rufisque"                   },
+  { value: "almadies-ngor-mamelles", label: "Almadies – Ngor – Mamelles" },
+  { value: "ouakam-yoff", label: "Ouakam – Yoff" },
+  { value: "mermoz-sacrecoeur-ckg", label: "Mermoz – Sacré-Cœur – Cité Keur Gorgui" },
+  { value: "plateau-medina-gueuletapee", label: "Plateau – Médina – Gueule Tapée" },
+  { value: "liberte-sicap-granddakar", label: "Liberté – Sicap – Grand Dakar" },
+  { value: "parcelles-grandyoff", label: "Parcelles Assainies – Grand Yoff" },
+  { value: "pikine-guediawaye", label: "Pikine – Guédiawaye" },
+  { value: "keurmassar-rufisque", label: "Keur Massar – Rufisque" },
 ];
 
 const ZONES = [
@@ -64,6 +65,17 @@ const ASSURANCES = [
   "Incluse (tous risques)",
   "Responsabilité civile uniquement",
   "Locataire responsable",
+];
+
+const EQUIPMENTS = [
+  { value: "GPS", label: "GPS" },
+  { value: "CLIMATISATION", label: "Climatisation" },
+  { value: "BLUETOOTH", label: "Bluetooth" },
+  { value: "CAMERA_RECUL", label: "Caméra de recul" },
+  { value: "SIEGE_ENFANT", label: "Siège enfant" },
+  { value: "TOIT_OUVRANT", label: "Toit ouvrant" },
+  { value: "RADAR_STATIONNEMENT", label: "Radar stationnement" },
+  { value: "REGULATEUR_VITESSE", label: "Rég. de vitesse" },
 ];
 
 // ── Form type ──────────────────────────────────────────────────────────────────
@@ -150,6 +162,16 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Equipment state
+  const [equipements, setEquipements] = useState<string[]>([]);
+
+  // Document state
+  const [carteGriseUrl, setCarteGriseUrl] = useState<string | null>(null);
+  const [assuranceDocUrl, setAssuranceDocUrl] = useState<string | null>(null);
+  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const docInputCGRef = useRef<HTMLInputElement>(null);
+  const docInputAssRef = useRef<HTMLInputElement>(null);
+
   const locked = vehicle?.estVerrouille === true;
 
   // ── Form ────────────────────────────────────────────────────────────────────
@@ -172,33 +194,52 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
   useEffect(() => {
     if (!vehicle || !open) return;
     reset({
-      marque:            vehicle.marque,
-      modele:            vehicle.modele,
-      annee:             vehicle.annee,
-      immatriculation:   vehicle.immatriculation,
-      type:              vehicle.type,
-      nombrePlaces:      vehicle.nombrePlaces ?? undefined,
-      carburant:         vehicle.carburant ?? "",
-      transmission:      vehicle.transmission ?? "",
-      ville:             vehicle.ville,
-      adresse:           vehicle.adresse,
-      prixParJour:       vehicle.prixParJour,
-      joursMinimum:      vehicle.joursMinimum,
-      tiers:             vehicle.tarifsProgressifs.map((t) => ({
+      marque: vehicle.marque,
+      modele: vehicle.modele,
+      annee: vehicle.annee,
+      immatriculation: vehicle.immatriculation,
+      type: vehicle.type,
+      nombrePlaces: vehicle.nombrePlaces ?? undefined,
+      carburant: vehicle.carburant ?? "",
+      transmission: vehicle.transmission ?? "",
+      ville: vehicle.ville,
+      adresse: vehicle.adresse,
+      prixParJour: vehicle.prixParJour,
+      joursMinimum: vehicle.joursMinimum,
+      tiers: vehicle.tarifsProgressifs.map((t) => ({
         joursMin: t.joursMin,
         joursMax: t.joursMax ?? undefined,
-        prix:     Number(t.prix),
+        prix: Number(t.prix),
       })),
-      ageMinimum:        vehicle.ageMinimum,
-      zoneConduite:      vehicle.zoneConduite ?? "",
-      assurance:         vehicle.assurance ?? "",
+      ageMinimum: vehicle.ageMinimum,
+      zoneConduite: vehicle.zoneConduite ?? "",
+      assurance: vehicle.assurance ?? "",
       reglesSpecifiques: vehicle.reglesSpecifiques ?? "",
     });
     setExistingPhotos([...vehicle.photos]);
     setDeletedPhotoIds([]);
     setNewFiles([]);
     setError(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // Pre-fill equipements
+    const eqs = vehicle.equipements ?? [];
+    if (eqs.length > 0) {
+      if (typeof eqs[0] === 'string') {
+        setEquipements(eqs as string[]);
+      } else {
+        setEquipements(
+          (eqs as { equipement: { nom: string } }[]).map((e) => e.equipement.nom),
+        );
+      }
+    } else {
+      setEquipements([]);
+    }
+
+    // Pre-fill documents
+    setCarteGriseUrl(vehicle.carteGriseUrl ?? null);
+    setAssuranceDocUrl(vehicle.assuranceDocUrl ?? null);
+    setUploadingDoc(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicle?.id, open]);
 
   const onOpenChange = (isOpen: boolean) => {
@@ -245,6 +286,35 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
     e.target.value = "";
   };
 
+  const toggleEquipment = (value: string) => {
+    setEquipements((prev) =>
+      prev.includes(value) ? prev.filter((e) => e !== value) : [...prev, value],
+    );
+  };
+
+  const handleDocUpload = async (type: "carte-grise" | "assurance", file: File) => {
+    if (!vehicle || locked) return;
+    setUploadingDoc(type);
+    setError(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const path = type === "carte-grise"
+        ? VEHICLE_PATHS.uploadCarteGrise(vehicle.id)
+        : VEHICLE_PATHS.uploadAssurance(vehicle.id);
+      const result = await authFetch<{ url: string }>(path, {
+        method: "POST",
+        body: form as unknown as undefined,
+      });
+      if (type === "carte-grise") setCarteGriseUrl(result.url);
+      else setAssuranceDocUrl(result.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Erreur lors de l'upload du document.`);
+    } finally {
+      setUploadingDoc(null);
+    }
+  };
+
   // ── Submit ──────────────────────────────────────────────────────────────────
 
   const onSubmit = async (data: EditFormData) => {
@@ -259,27 +329,28 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
         {
           method: "PATCH",
           body: {
-            marque:            data.marque,
-            modele:            data.modele,
-            annee:             Number(data.annee),
-            immatriculation:   data.immatriculation,
-            type:              data.type,
-            nombrePlaces:      data.nombrePlaces ? Number(data.nombrePlaces) : undefined,
-            carburant:         data.carburant   || undefined,
-            transmission:      data.transmission || undefined,
-            ville:             data.ville,
-            adresse:           data.adresse,
-            prixParJour:       Number(data.prixParJour),
-            joursMinimum:      Number(data.joursMinimum),
-            tiers:             (data.tiers ?? []).map((t) => ({
+            marque: data.marque,
+            modele: data.modele,
+            annee: Number(data.annee),
+            immatriculation: data.immatriculation,
+            type: data.type,
+            nombrePlaces: data.nombrePlaces ? Number(data.nombrePlaces) : undefined,
+            carburant: data.carburant || undefined,
+            transmission: data.transmission || undefined,
+            ville: data.ville,
+            adresse: data.adresse,
+            prixParJour: Number(data.prixParJour),
+            joursMinimum: Number(data.joursMinimum),
+            tiers: (data.tiers ?? []).map((t) => ({
               joursMin: Number(t.joursMin),
               joursMax: t.joursMax ? Number(t.joursMax) : undefined,
-              prix:     Number(t.prix),
+              prix: Number(t.prix),
             })),
-            ageMinimum:        data.ageMinimum ? Number(data.ageMinimum) : undefined,
-            zoneConduite:      data.zoneConduite      || undefined,
-            assurance:         data.assurance         || undefined,
+            ageMinimum: data.ageMinimum ? Number(data.ageMinimum) : undefined,
+            zoneConduite: data.zoneConduite || undefined,
+            assurance: data.assurance || undefined,
             reglesSpecifiques: data.reglesSpecifiques || undefined,
+            equipements,
           },
         },
       );
@@ -647,6 +718,48 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
               </div>
             </div>
 
+            {/* ── Équipements ─────────────────────────────────────────── */}
+            <div className="space-y-4">
+              <SectionHeader icon={Settings2} title="Équipements" />
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {EQUIPMENTS.map((eq) => {
+                  const active = equipements.includes(eq.value);
+                  return (
+                    <button
+                      key={eq.value}
+                      type="button"
+                      disabled={locked}
+                      onClick={() => toggleEquipment(eq.value)}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all",
+                        active
+                          ? "border-emerald-500 bg-emerald-500 text-white"
+                          : "border-[hsl(var(--border))] bg-background text-muted-foreground hover:border-emerald-500/40",
+                        locked && "opacity-50 cursor-not-allowed",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "w-4 h-4 rounded border flex items-center justify-center text-[10px]",
+                          active ? "bg-white text-emerald-600 border-white" : "border-current",
+                        )}
+                      >
+                        {active ? "✓" : ""}
+                      </span>
+                      {eq.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {equipements.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-1">
+                  Aucun équipement sélectionné.
+                </p>
+              )}
+            </div>
+
             {/* ── Photos ───────────────────────────────────────────────── */}
             <div className="space-y-4">
               <SectionHeader icon={Camera} title="Photos" />
@@ -746,6 +859,141 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                   Maximum 8 photos atteint.
                 </p>
               )}
+            </div>
+
+            {/* ── Documents ───────────────────────────────────────────── */}
+            <div className="space-y-4">
+              <SectionHeader icon={FileCheck2} title="Documents" />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Carte Grise */}
+                <div className="space-y-2">
+                  <div>
+                    <h4 className="text-sm font-semibold">Carte Grise</h4>
+                    <p className="text-xs text-muted-foreground">Certificat d&apos;immatriculation</p>
+                  </div>
+                  {carteGriseUrl ? (
+                    <div className="flex items-center justify-between p-3 rounded-xl border border-emerald-200 bg-emerald-50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                          <FileCheck2 className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-emerald-800">Document envoyé</p>
+                          <p className="text-xs text-emerald-600">✓ Carte grise téléversée</p>
+                        </div>
+                      </div>
+                      {!locked && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => docInputCGRef.current?.click()}
+                          disabled={uploadingDoc === "carte-grise"}
+                          className="text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100/50"
+                        >
+                          {uploadingDoc === "carte-grise" ? <Loader2 className="w-4 h-4 animate-spin" /> : "Remplacer"}
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => !locked && docInputCGRef.current?.click()}
+                      className={cn(
+                        "flex flex-col items-center justify-center p-4 gap-2 rounded-xl border-2 border-dashed transition-colors h-28 text-center",
+                        locked
+                          ? "border-muted bg-muted/20 cursor-not-allowed"
+                          : "border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 hover:border-slate-300",
+                      )}
+                    >
+                      {uploadingDoc === "carte-grise" ? (
+                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                      ) : (
+                        <>
+                          <FileUp className="w-5 h-5 text-muted-foreground" />
+                          <span className="text-sm font-medium text-muted-foreground">Ajouter la carte grise</span>
+                          <span className="text-xs text-muted-foreground/70">Image ou PDF</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  <input
+                    ref={docInputCGRef}
+                    type="file"
+                    accept="image/*,application/pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleDocUpload("carte-grise", f);
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+
+                {/* Assurance */}
+                <div className="space-y-2">
+                  <div>
+                    <h4 className="text-sm font-semibold">Attestation d&apos;assurance</h4>
+                    <p className="text-xs text-muted-foreground">En cours de validité</p>
+                  </div>
+                  {assuranceDocUrl ? (
+                    <div className="flex items-center justify-between p-3 rounded-xl border border-emerald-200 bg-emerald-50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                          <ShieldCheck className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-emerald-800">Document envoyé</p>
+                          <p className="text-xs text-emerald-600">✓ Attestation téléversée</p>
+                        </div>
+                      </div>
+                      {!locked && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => docInputAssRef.current?.click()}
+                          disabled={uploadingDoc === "assurance"}
+                          className="text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100/50"
+                        >
+                          {uploadingDoc === "assurance" ? <Loader2 className="w-4 h-4 animate-spin" /> : "Remplacer"}
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => !locked && docInputAssRef.current?.click()}
+                      className={cn(
+                        "flex flex-col items-center justify-center p-4 gap-2 rounded-xl border-2 border-dashed transition-colors h-28 text-center",
+                        locked
+                          ? "border-muted bg-muted/20 cursor-not-allowed"
+                          : "border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 hover:border-slate-300",
+                      )}
+                    >
+                      {uploadingDoc === "assurance" ? (
+                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                      ) : (
+                        <>
+                          <FileUp className="w-5 h-5 text-muted-foreground" />
+                          <span className="text-sm font-medium text-muted-foreground">Ajouter l&apos;assurance</span>
+                          <span className="text-xs text-muted-foreground/70">Image ou PDF</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  <input
+                    ref={docInputAssRef}
+                    type="file"
+                    accept="image/*,application/pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleDocUpload("assurance", f);
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Error */}

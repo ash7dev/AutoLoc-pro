@@ -18,7 +18,7 @@ export function WizardProgress({
   currentStep: number;
 }) {
   return (
-    <div className="rounded-xl border border-[hsl(var(--border))] bg-card p-5 shadow-sm">
+    <div className="rounded-xl border border-[hsl(var(--border))] bg-card p-3 sm:p-4 shadow-sm">
       <div className="flex items-center justify-between gap-1">
         {STEPS.map((step, i) => {
           const num = i + 1;
@@ -32,17 +32,17 @@ export function WizardProgress({
               <div className="flex flex-col items-center gap-2 min-w-0">
                 <div
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-colors",
+                    "flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold transition-colors",
                     done && "bg-emerald-500 text-white",
                     active && "bg-black text-white ring-2 ring-black ring-offset-2",
                     !done && !active && "bg-muted text-muted-foreground",
                   )}
                 >
-                  {done ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+                  {done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                 </div>
                 <span
                   className={cn(
-                    "text-[12px] font-semibold hidden sm:block truncate",
+                    "text-[11px] font-semibold hidden sm:block truncate",
                     active && "text-foreground",
                     !active && "text-muted-foreground",
                   )}

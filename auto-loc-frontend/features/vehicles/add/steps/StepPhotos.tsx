@@ -34,7 +34,7 @@ export function StepPhotos({ nextStep, previousStep }: Props) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <h3 className="text-lg font-bold">Photos du véhicule</h3>
         <p className="text-sm text-muted-foreground mt-1">
@@ -56,7 +56,7 @@ export function StepPhotos({ nextStep, previousStep }: Props) {
             <img
               src={src}
               alt={`Photo ${i + 1}`}
-              className="h-48 w-full object-cover"
+              className="h-36 w-full object-cover"
             />
             {/* Main badge */}
             {i === mainIndex && (
@@ -102,7 +102,7 @@ export function StepPhotos({ nextStep, previousStep }: Props) {
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
             onClick={() => inputRef.current?.click()}
-            className="flex h-48 cursor-pointer flex-col items-center justify-center gap-2
+            className="flex h-36 cursor-pointer flex-col items-center justify-center gap-2
               rounded-xl border border-dashed border-[hsl(var(--border))] bg-muted/30
               text-muted-foreground transition-colors
               hover:border-black/40 hover:bg-muted/60"

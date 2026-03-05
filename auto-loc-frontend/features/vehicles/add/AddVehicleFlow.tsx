@@ -149,18 +149,18 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
       <ModalShell
         title="Créez votre annonce"
         subtitle="Renseignez les infos clés, vos photos et publiez en quelques minutes."
-        contentClassName="px-6 pt-6 pb-3"
+        contentClassName="px-4 pt-4 pb-2 sm:px-6 sm:pt-5 sm:pb-3"
         tag="Auto Loc · Propriétaire"
         onClose={() => router.push("/dashboard/owner/vehicles")}
       >
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3">
           <div data-tour="wizard-progress">
             <WizardProgress currentStep={currentStep} />
           </div>
 
           <div
             data-tour="step-form"
-            className="rounded-xl border border-[hsl(var(--border))] bg-card shadow-sm p-6 w-full"
+            className="rounded-xl border border-[hsl(var(--border))] bg-card shadow-sm p-4 sm:p-5 w-full"
           >
             {wizardReady && (
               <StepWizard

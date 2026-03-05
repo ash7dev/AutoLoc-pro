@@ -82,7 +82,7 @@ export function StepVehicleInfo({ nextStep }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <h3 className="text-lg font-bold">Informations du véhicule</h3>
         <p className="text-sm text-muted-foreground mt-1">Les détails de base de votre véhicule.</p>
@@ -225,8 +225,8 @@ export function StepVehicleInfo({ nextStep }: Props) {
                 type="button"
                 onClick={() => toggleEquipment(eq.value)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all ${active
-                    ? 'border-black bg-black text-white'
-                    : 'border-[hsl(var(--border))] bg-background text-muted-foreground hover:border-black/30'
+                  ? 'border-black bg-black text-white'
+                  : 'border-[hsl(var(--border))] bg-background text-muted-foreground hover:border-black/30'
                   }`}
               >
                 <span className={`w-4 h-4 rounded border flex items-center justify-center text-[10px] ${active ? 'bg-white text-black border-white' : 'border-current'

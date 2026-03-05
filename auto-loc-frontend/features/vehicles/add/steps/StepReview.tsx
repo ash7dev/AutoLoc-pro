@@ -28,6 +28,8 @@ export function StepReview({ previousStep }: Props) {
     setLoading(true);
     setError(null);
 
+    let createdVehicleId: string | null = null;
+
     try {
       // 1. Créer le véhicule
       const vehicle = await authFetch<Vehicle, Record<string, unknown>>(VEHICLE_PATHS.create, {
@@ -54,9 +56,10 @@ export function StepReview({ previousStep }: Props) {
         },
       });
 
+      createdVehicleId = vehicle.id;
       setVehicleId(vehicle.id);
 
-      // 2. Uploader les photos
+      // 2. Uploader les photos (obligatoire — échec = rollback)
       for (const file of photos) {
         const form = new FormData();
         form.append("file", file);
@@ -66,30 +69,43 @@ export function StepReview({ previousStep }: Props) {
         });
       }
 
-      // 3. Uploader Carte Grise
+      // 3. Uploader Carte Grise (obligatoire — échec = rollback)
       if (carteGrise) {
         const cgForm = new FormData();
         cgForm.append("file", carteGrise);
-        await authFetch(`/vehicles/${vehicle.id}/documents/carte-grise`, {
+        await authFetch(VEHICLE_PATHS.uploadCarteGrise(vehicle.id), {
           method: "POST",
           body: cgForm as unknown as Record<string, unknown>,
         });
       }
 
-      // 4. Uploader Assurance
+      // 4. Uploader Assurance (obligatoire — échec = rollback)
       if (assurance) {
         const assForm = new FormData();
         assForm.append("file", assurance);
-        await authFetch(`/vehicles/${vehicle.id}/documents/assurance`, {
+        await authFetch(VEHICLE_PATHS.uploadAssurance(vehicle.id), {
           method: "POST",
           body: assForm as unknown as Record<string, unknown>,
         });
       }
 
+      // ✅ Tout a réussi
       reset();
       router.push(`/dashboard/owner/vehicles/${vehicle.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur est survenue.");
+      // 🔴 Échec — rollback : supprimer le véhicule créé pour garantir l'atomicité
+      if (createdVehicleId) {
+        try {
+          await authFetch(VEHICLE_PATHS.archive(createdVehicleId), { method: "DELETE" });
+        } catch {
+          // Si la suppression échoue aussi, on ne peut rien faire de plus
+        }
+      }
+      setError(
+        err instanceof Error
+          ? `L'opération a échoué : ${err.message}. Aucune donnée n'a été enregistrée. Veuillez réessayer.`
+          : "Une erreur est survenue. Aucune donnée n'a été enregistrée. Veuillez réessayer.",
+      );
     } finally {
       setLoading(false);
     }
@@ -99,7 +115,7 @@ export function StepReview({ previousStep }: Props) {
     new Intl.NumberFormat("fr-FR").format(n) + " FCFA";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <h3 className="text-lg font-bold">Récapitulatif</h3>
         <p className="text-sm text-muted-foreground mt-1">

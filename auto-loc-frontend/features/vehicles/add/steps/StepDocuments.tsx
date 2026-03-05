@@ -24,7 +24,7 @@ export function StepDocuments({ nextStep, previousStep }: Props) {
     const isFormValid = !!carteGrise && !!assurance;
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-5">
             <div>
                 <h3 className="text-lg font-bold">Documents obligatoires</h3>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -107,7 +107,7 @@ function DocumentZone({
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={handleDrop}
                     onClick={() => inputRef.current?.click()}
-                    className="flex flex-col items-center justify-center p-6 gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 hover:border-slate-300 transition-colors h-40 text-center"
+                    className="flex flex-col items-center justify-center p-4 gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 hover:border-slate-300 transition-colors h-32 text-center"
                 >
                     <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500">
                         <FileUp className="w-5 h-5" />
@@ -125,7 +125,7 @@ function DocumentZone({
                     />
                 </div>
             ) : (
-                <div className="flex items-center justify-between p-4 rounded-xl border border-emerald-200 bg-emerald-50 h-40">
+                <div className="flex items-center justify-between p-3 rounded-xl border border-emerald-200 bg-emerald-50 h-32">
                     <div className="flex flex-col items-center justify-center w-full gap-3">
                         <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
                             {icon}
