@@ -330,7 +330,9 @@ export function MarketplaceNavbar() {
   // Close menu on navigation
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
-  if (hydrated && activeRole === 'PROPRIETAIRE') return null;
+  // Hide navbar on dashboard pages (owner/admin have their own nav)
+  if (pathname.startsWith('/dashboard')) return null;
+
   const isOwner = activeRole === 'PROPRIETAIRE';
 
   return (
