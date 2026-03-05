@@ -126,28 +126,21 @@ export class VehiclesService {
               }
               : undefined,
           },
-          include: {
-            photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
-            tarifsProgressifs: { orderBy: { position: 'asc' } },
-            equipements: { include: { equipement: true } },
-          },
         });
 
         // Link equipements
         if (dto.equipements?.length) {
-          for (const nom of dto.equipements) {
-            const eq = await tx.equipement.upsert({
-              where: { nom },
-              create: { nom },
-              update: {},
-            });
-            await tx.vehiculeEquipement.create({
-              data: { vehiculeId: vehicle.id, equipementId: eq.id },
-            });
-          }
+          const eqRecords = await Promise.all(
+            dto.equipements.map((nom) =>
+              tx.equipement.upsert({ where: { nom }, create: { nom }, update: {} }),
+            ),
+          );
+          await tx.vehiculeEquipement.createMany({
+            data: eqRecords.map((eq) => ({ vehiculeId: vehicle.id, equipementId: eq.id })),
+          });
         }
 
-        // Re-fetch with equipements populated
+        // Return with all relations populated
         return tx.vehicule.findUniqueOrThrow({
           where: { id: vehicle.id },
           include: {
@@ -156,7 +149,7 @@ export class VehiclesService {
             equipements: { include: { equipement: true } },
           },
         });
-      });
+      }, { timeout: 15000 });
     } catch (err: unknown) {
       if ((err as { code?: string }).code === 'P2002') {
         throw new ConflictException('A vehicle with this registration number already exists');
@@ -288,16 +281,14 @@ export class VehiclesService {
         if (dto.equipements !== undefined) {
           await tx.vehiculeEquipement.deleteMany({ where: { vehiculeId: vehicleId } });
           if (dto.equipements.length > 0) {
-            for (const nom of dto.equipements) {
-              const eq = await tx.equipement.upsert({
-                where: { nom },
-                create: { nom },
-                update: {},
-              });
-              await tx.vehiculeEquipement.create({
-                data: { vehiculeId: vehicleId, equipementId: eq.id },
-              });
-            }
+            const eqRecords = await Promise.all(
+              dto.equipements.map((nom) =>
+                tx.equipement.upsert({ where: { nom }, create: { nom }, update: {} }),
+              ),
+            );
+            await tx.vehiculeEquipement.createMany({
+              data: eqRecords.map((eq) => ({ vehiculeId: vehicleId, equipementId: eq.id })),
+            });
           }
         }
 
@@ -341,7 +332,7 @@ export class VehiclesService {
             equipements: { include: { equipement: true } },
           },
         });
-      });
+      }, { timeout: 15000 });
     } catch (err: unknown) {
       if ((err as { code?: string }).code === 'P2002') {
         throw new ConflictException('A vehicle with this registration number already exists');
