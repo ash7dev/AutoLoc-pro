@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchVehicle } from '@/lib/nestjs/vehicles';
 import { fetchVehicleReservations } from '@/lib/nestjs/reservations';
 import { AvailabilityCalendar } from '@/features/vehicles/components/availability-calendar';
+import { EditVehicleButton } from '@/features/vehicles/owner/EditVehicleButton';
 import {
   ArrowLeft,
   Car,
@@ -21,7 +22,6 @@ import {
   Clock,
   TrendingUp,
   Eye,
-  Edit,
 } from 'lucide-react';
 
 /* ════════════════════════════════════════════════════════════════
@@ -121,13 +121,7 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
           <ArrowLeft className="w-4 h-4" strokeWidth={2.5} />
           Mes véhicules
         </Link>
-        <Link
-          href={`/dashboard/owner/vehicles/${params.id}/edit`}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-white/60 hover:text-white hover:border-white/20 transition-all"
-        >
-          <Edit className="w-3.5 h-3.5" />
-          Modifier
-        </Link>
+        <EditVehicleButton vehicle={vehicle} />
       </div>
 
       {/* Hero */}

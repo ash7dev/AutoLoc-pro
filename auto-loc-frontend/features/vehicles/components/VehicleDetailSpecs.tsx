@@ -4,6 +4,8 @@ import React from 'react';
 import {
   Fuel, Settings2, Users, CalendarDays, UserCheck,
   MapPinned, ShieldCheck, FileText,
+  Snowflake, Navigation, Bluetooth, Camera, Baby, Disc3, Armchair, Gauge,
+  CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Vehicle } from '@/lib/nestjs/vehicles';
@@ -68,9 +70,30 @@ const TRANSMISSION_LABELS: Record<string, string> = {
   MANUELLE: 'Manuelle', AUTOMATIQUE: 'Automatique',
 };
 
+/* ── Equipment icon mapping ──────────────────────────────────── */
+const EQUIPMENT_ICONS: Record<string, React.ElementType> = {
+  'Climatisation': Snowflake,
+  'GPS': Navigation,
+  'Bluetooth': Bluetooth,
+  'Caméra de recul': Camera,
+  'Siège bébé': Baby,
+  'Roue de secours': Disc3,
+  'Sièges cuir': Armchair,
+  'Régulateur de vitesse': Gauge,
+};
+
+/* ── Helper: extract equipment names from the API response ──── */
+function getEquipmentNames(vehicle: Vehicle): string[] {
+  if (!vehicle.equipements || vehicle.equipements.length === 0) return [];
+  const first = vehicle.equipements[0];
+  if (typeof first === 'string') return vehicle.equipements as string[];
+  return (vehicle.equipements as { equipement: { id: string; nom: string } }[]).map(e => e.equipement.nom);
+}
+
 export function VehicleDetailSpecs({ vehicle }: Props): React.ReactElement {
   const fuelLabel = vehicle.carburant ? (FUEL_LABELS[vehicle.carburant] ?? vehicle.carburant) : null;
   const transLabel = vehicle.transmission ? (TRANSMISSION_LABELS[vehicle.transmission] ?? vehicle.transmission) : null;
+  const equipmentNames = getEquipmentNames(vehicle);
 
   return (
     <div className="space-y-5">
@@ -106,18 +129,44 @@ export function VehicleDetailSpecs({ vehicle }: Props): React.ReactElement {
         </div>
       </div>
 
-      {/* Detailed spec rows */}
+      {/* Equipment grid */}
+      {equipmentNames.length > 0 && (
+        <div>
+          <h3 className="text-[15px] font-bold text-slate-900 mb-3">Équipements</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {equipmentNames.map((name) => {
+              const Icon = EQUIPMENT_ICONS[name] ?? CheckCircle2;
+              return (
+                <div
+                  key={name}
+                  className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/50 px-3.5 py-3 transition-colors hover:border-emerald-200 hover:bg-emerald-50/50"
+                >
+                  <span className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-4 h-4 text-emerald-600" strokeWidth={1.75} />
+                  </span>
+                  <span className="text-[13px] font-semibold text-slate-700 leading-tight">{name}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Conditions / rules */}
       {(vehicle.zoneConduite || vehicle.assurance || vehicle.reglesSpecifiques) && (
-        <div className="rounded-2xl border border-slate-100 bg-white px-4 pt-1 pb-1">
-          {vehicle.zoneConduite && (
-            <SpecRow icon={MapPinned} label="Zone de conduite" value={vehicle.zoneConduite} />
-          )}
-          {vehicle.assurance && (
-            <SpecRow icon={ShieldCheck} label="Assurance incluse" value={vehicle.assurance} />
-          )}
-          {vehicle.reglesSpecifiques && (
-            <SpecRow icon={FileText} label="Règles spécifiques" value={vehicle.reglesSpecifiques} />
-          )}
+        <div>
+          <h3 className="text-[15px] font-bold text-slate-900 mb-3">Conditions de location</h3>
+          <div className="rounded-2xl border border-slate-100 bg-white px-4 pt-1 pb-1">
+            {vehicle.zoneConduite && (
+              <SpecRow icon={MapPinned} label="Zone de conduite" value={vehicle.zoneConduite} />
+            )}
+            {vehicle.assurance && (
+              <SpecRow icon={ShieldCheck} label="Assurance incluse" value={vehicle.assurance} />
+            )}
+            {vehicle.reglesSpecifiques && (
+              <SpecRow icon={FileText} label="Règles spécifiques" value={vehicle.reglesSpecifiques} />
+            )}
+          </div>
         </div>
       )}
     </div>
