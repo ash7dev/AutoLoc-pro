@@ -11,9 +11,9 @@ import type { Reservation, ReservationStatut } from "@/lib/nestjs/reservations";
 ════════════════════════════════════════════════════════════════ */
 const FILTERS: { label: string; value: ReservationStatut | "ALL"; dot?: string }[] = [
     { label: "Toutes", value: "ALL" },
-    { label: "À valider", value: "PAYEE", dot: "bg-amber-400" },
+    { label: "À valider", value: "PAYEE", dot: "bg-black" },
     { label: "Confirmées", value: "CONFIRMEE", dot: "bg-indigo-400" },
-    { label: "En cours", value: "EN_COURS", dot: "bg-emerald-400" },
+    { label: "En cours", value: "EN_COURS", dot: "bg-emerald-500" },
     { label: "Terminées", value: "TERMINEE", dot: "bg-slate-400" },
     { label: "Annulées", value: "ANNULEE", dot: "bg-red-400" },
     { label: "Litiges", value: "LITIGE", dot: "bg-orange-400" },
@@ -26,35 +26,40 @@ const SECTIONS = [
     {
         key: "urgent", label: "Action requise",
         statuts: ["PAYEE"] as string[],
-        bar: "bg-amber-400", dotCls: "bg-amber-400 animate-pulse",
-        countCls: "bg-amber-400/15 border-amber-400/30 text-amber-600",
+        bar: "bg-black",
+        dotCls: "bg-white animate-pulse",
+        countCls: "bg-white/20 border-white/10 text-white",
         defaultOpen: true,
     },
     {
         key: "active", label: "Actives",
         statuts: ["CONFIRMEE", "EN_COURS"] as string[],
-        bar: "bg-emerald-500", dotCls: "bg-emerald-400 animate-pulse",
+        bar: "bg-emerald-500",
+        dotCls: "bg-emerald-400 animate-pulse",
         countCls: "bg-emerald-400/15 border-emerald-400/30 text-emerald-400",
         defaultOpen: true,
     },
     {
         key: "pending", label: "En attente",
         statuts: ["INITIEE", "EN_ATTENTE_PAIEMENT"] as string[],
-        bar: "bg-slate-500", dotCls: "bg-slate-500",
+        bar: "bg-slate-400",
+        dotCls: "bg-slate-400",
         countCls: "bg-white/8 border-white/10 text-slate-400",
         defaultOpen: true,
     },
     {
         key: "litige", label: "Litiges",
         statuts: ["LITIGE"] as string[],
-        bar: "bg-orange-400", dotCls: "bg-orange-400 animate-pulse",
+        bar: "bg-orange-400",
+        dotCls: "bg-orange-400 animate-pulse",
         countCls: "bg-orange-400/15 border-orange-400/30 text-orange-400",
         defaultOpen: true,
     },
     {
         key: "closed", label: "Historique",
         statuts: ["TERMINEE", "ANNULEE"] as string[],
-        bar: "bg-white/15", dotCls: "bg-white/20",
+        bar: "bg-white/15",
+        dotCls: "bg-white/20",
         countCls: "bg-white/6 border-white/8 text-slate-500",
         defaultOpen: false,
     },
@@ -73,16 +78,12 @@ function PipelineSection({
 
     return (
         <div className="space-y-3">
-            {/* Dark section header — contraste intentionnel sur fond blanc */}
             <button
                 type="button"
                 onClick={() => setOpen(o => !o)}
                 className="w-full flex items-center gap-3 group"
             >
-                {/* Accent bar */}
                 <div className={cn("w-[3px] h-5 rounded-full flex-shrink-0", section.bar)} />
-
-                {/* Dark pill header */}
                 <div className="flex items-center gap-2.5 flex-1 bg-slate-900 rounded-xl px-3.5 py-2.5 min-w-0">
                     <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", section.dotCls)} />
                     <span className="text-[12px] font-black uppercase tracking-[0.1em] text-white/80 group-hover:text-white transition-colors flex-1 text-left">
@@ -101,7 +102,6 @@ function PipelineSection({
                 </div>
             </button>
 
-            {/* Cards grid */}
             {open && (
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 pl-4">
                     {reservations.map(r => <OwnerReservationCard key={r.id} reservation={r} />)}
@@ -120,8 +120,8 @@ function StatsStrip({ reservations }: { reservations: Reservation[] }) {
     return (
         <div className="flex items-center gap-2 flex-wrap">
             {urgent > 0 && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-[11.5px] font-bold text-amber-700">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-black text-[11.5px] font-bold text-white">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                     {urgent} à valider
                 </span>
             )}
@@ -188,7 +188,7 @@ export function OwnerReservationsList({
 
             <StatsStrip reservations={initialReservations} />
 
-            {/* ── Dark search bar — intentionnellement sombre ────── */}
+            {/* Dark search bar */}
             <div className="flex gap-2.5 bg-slate-900 rounded-2xl p-2.5">
                 <div className="relative flex-1">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" strokeWidth={2} />
@@ -206,7 +206,7 @@ export function OwnerReservationsList({
                 </div>
             </div>
 
-            {/* ── Filter tabs — light tabs on white bg ───────────── */}
+            {/* Filter tabs */}
             <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
                 {FILTERS.map(f => {
                     const count = f.value === "ALL"
