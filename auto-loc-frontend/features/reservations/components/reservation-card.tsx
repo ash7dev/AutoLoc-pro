@@ -6,87 +6,98 @@ import { cn } from "@/lib/utils";
 import { ReservationStatusBadge } from "./reservation-status";
 import type { Reservation } from "@/lib/nestjs/reservations";
 
-type ReservationLegacyAmounts = {
+type LegacyAmounts = {
     totalLocataire?: string;
     montantCommission?: string;
     netProprietaire?: string;
 };
 
-/* ── Barre gauche — noir pour urgent, couleurs pour le reste ─── */
-const LEFT_BAR: Record<string, string> = {
-    PAYEE: "before:bg-black",
+/* ── Barre accent gauche ─────────────────────────────────────── */
+const ACCENT_BAR: Record<string, string> = {
+    PAYEE: "before:bg-slate-900",
     EN_COURS: "before:bg-emerald-500",
     LITIGE: "before:bg-orange-400",
     ANNULEE: "before:bg-red-400",
     CONFIRMEE: "before:bg-indigo-400",
-    EN_ATTENTE_PAIEMENT: "before:bg-slate-400",
+    EN_ATTENTE_PAIEMENT: "before:bg-slate-300",
     TERMINEE: "before:bg-slate-200",
-    INITIEE: "before:bg-slate-200",
-    EXPIREE: "before:bg-slate-200",
+    INITIEE: "before:bg-slate-100",
+    EXPIREE: "before:bg-slate-100",
 };
 
-interface OwnerReservationCardProps {
+export function OwnerReservationCard({
+    reservation: r,
+    className,
+}: {
     reservation: Reservation;
     className?: string;
-}
+}) {
+    const legacy = r as Reservation & LegacyAmounts;
+    const revenue = Number(r.montantProprietaire ?? legacy.netProprietaire ?? 0);
+    const isPaye = r.statut === "PAYEE";
 
-export function OwnerReservationCard({ reservation: r, className }: OwnerReservationCardProps) {
     const dateDebut = new Date(r.dateDebut).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
     const dateFin = new Date(r.dateFin).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
-    const legacy = r as Reservation & ReservationLegacyAmounts;
-    const isPaye = r.statut === "PAYEE";
 
     return (
         <Link
             href={`/dashboard/owner/reservations/${r.id}`}
             className={cn(
-                "group relative flex flex-col bg-white rounded-2xl border overflow-hidden",
-                "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]",
-                LEFT_BAR[r.statut] ?? "before:bg-slate-200",
-                isPaye
-                    ? "border-slate-900/15 hover:border-slate-900/30"
-                    : "border-slate-100 hover:border-slate-200",
-                "hover:shadow-lg hover:shadow-slate-200/80 hover:-translate-y-0.5 transition-all duration-200",
+                /* Layout */
+                "group relative flex flex-col bg-white rounded-2xl overflow-hidden border",
+                /* Accent bar — 3px left */
+                "before:absolute before:left-0 before:top-4 before:bottom-4 before:w-[3px] before:rounded-full",
+                ACCENT_BAR[r.statut] ?? "before:bg-slate-100",
+                /* Border */
+                isPaye ? "border-slate-200" : "border-slate-100",
+                /* Hover */
+                "hover:shadow-xl hover:shadow-slate-200/70 hover:-translate-y-1 hover:border-slate-200",
+                "transition-all duration-300 ease-out",
                 className,
             )}
         >
-            {/* ── En-tête ───────────────────────────────────────── */}
-            <div className="flex items-start justify-between gap-3 pl-5 pr-4 pt-4 pb-3">
-                <div className="flex items-center gap-2.5 min-w-0">
+            {/* ══ HEADER ══════════════════════════════════════════════ */}
+            <div className="flex items-start justify-between gap-3 pl-6 pr-4 pt-4 pb-3">
+
+                <div className="flex items-center gap-3 min-w-0">
+                    {/* Vehicle icon */}
                     <div className={cn(
-                        "w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 border transition-colors duration-200",
+                        "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 border transition-all duration-300",
                         isPaye
-                            ? "bg-slate-900 border-slate-900 group-hover:bg-black"
+                            ? "bg-slate-900 border-slate-900 group-hover:bg-slate-800"
                             : "bg-slate-50 border-slate-100 group-hover:bg-emerald-50 group-hover:border-emerald-100",
                     )}>
                         <Car className={cn(
-                            "w-3.5 h-3.5 transition-colors",
+                            "w-4 h-4 transition-colors",
                             isPaye ? "text-emerald-400" : "text-slate-400 group-hover:text-emerald-500",
                         )} strokeWidth={1.75} />
                     </div>
+
+                    {/* Name */}
                     <div className="min-w-0">
-                        <p className="text-[13px] font-black text-slate-900 truncate leading-none">
+                        <p className="text-[13.5px] font-black text-slate-900 truncate leading-none">
                             {r.vehicule.marque}{" "}
                             <span className="text-emerald-500">{r.vehicule.modele}</span>
                         </p>
                         {r.vehicule.immatriculation && (
-                            <p className="text-[10px] font-mono text-slate-400 mt-0.5 tracking-wide">
+                            <p className="text-[10px] font-mono text-slate-400 mt-[3px] tracking-wider">
                                 {r.vehicule.immatriculation}
                             </p>
                         )}
                     </div>
                 </div>
-                <ReservationStatusBadge status={r.statut} />
+
+                <ReservationStatusBadge status={r.statut} size="sm" />
             </div>
 
-            {/* ── Méta ──────────────────────────────────────────── */}
-            <div className="flex flex-col gap-1.5 pl-5 pr-4 pb-3">
+            {/* ══ META ════════════════════════════════════════════════ */}
+            <div className="flex flex-col gap-1.5 pl-6 pr-4 pb-4">
                 <div className="flex items-center gap-1.5 text-[11.5px] font-medium text-slate-500">
                     <Calendar className="w-3 h-3 text-slate-400 flex-shrink-0" strokeWidth={1.75} />
-                    <span>{dateDebut} → {dateFin}</span>
-                    <span className="text-slate-300 mx-0.5">·</span>
+                    {dateDebut} → {dateFin}
+                    <span className="text-slate-300">·</span>
                     <Clock className="w-3 h-3 text-slate-400 flex-shrink-0" strokeWidth={1.75} />
-                    <span>{r.nbJours}j</span>
+                    {r.nbJours}j
                 </div>
                 <div className="flex items-center gap-1.5 text-[11.5px] font-medium text-slate-500">
                     <User className="w-3 h-3 text-slate-400 flex-shrink-0" strokeWidth={1.75} />
@@ -94,49 +105,54 @@ export function OwnerReservationCard({ reservation: r, className }: OwnerReserva
                 </div>
             </div>
 
-            {/* ── Pied de carte ─────────────────────────────────── */}
+            {/* ══ FOOTER ══════════════════════════════════════════════ */}
             <div className={cn(
-                "flex items-center justify-between gap-2 pl-5 pr-4 py-3 border-t mt-auto transition-colors",
+                "flex items-center justify-between gap-3 pl-6 pr-4 py-3 border-t mt-auto transition-colors duration-300",
                 isPaye
-                    ? "border-slate-900/8 bg-slate-900 group-hover:bg-black"
-                    : "border-slate-100 bg-slate-50/50",
+                    ? "bg-slate-900 border-slate-900/10 group-hover:bg-slate-800"
+                    : "bg-slate-50/60 border-slate-100",
             )}>
+
+                {/* Revenue */}
                 <div>
                     <p className={cn(
-                        "text-[9.5px] font-bold uppercase tracking-[0.12em] mb-0.5",
+                        "text-[9px] font-black uppercase tracking-[0.14em] mb-0.5",
                         isPaye ? "text-white/30" : "text-slate-400",
                     )}>
                         Revenu net
                     </p>
                     <p className={cn(
-                        "text-[17px] font-black tabular-nums leading-none",
+                        "text-[18px] font-black tabular-nums leading-none",
                         isPaye ? "text-emerald-400" : "text-emerald-600",
                     )}>
-                        {Number(r.montantProprietaire ?? legacy.netProprietaire ?? 0).toLocaleString("fr-FR")}
+                        {revenue.toLocaleString("fr-FR")}
                         <span className={cn(
                             "text-[10px] font-semibold ml-1",
-                            isPaye ? "text-emerald-400/60" : "text-emerald-500/60",
+                            isPaye ? "text-emerald-400/50" : "text-emerald-500/50",
                         )}>FCFA</span>
                     </p>
                 </div>
 
+                {/* Right side */}
                 <div className="flex items-center gap-2">
                     {r.contratUrl && (
                         <span className={cn(
-                            "flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold",
+                            "flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold border",
                             isPaye
-                                ? "bg-white/10 border border-white/15 text-white/60"
-                                : "bg-blue-50 border border-blue-100 text-blue-500",
+                                ? "bg-white/8 border-white/10 text-white/50"
+                                : "bg-blue-50 border-blue-100 text-blue-500",
                         )}>
                             <FileText className="w-3 h-3" strokeWidth={2} />
                             Contrat
                         </span>
                     )}
+
+                    {/* Arrow button */}
                     <div className={cn(
-                        "w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200",
+                        "w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200",
                         isPaye
-                            ? "bg-white/10 group-hover:bg-emerald-500"
-                            : "bg-slate-100 group-hover:bg-emerald-500",
+                            ? "bg-white/8 group-hover:bg-emerald-500"
+                            : "bg-white border border-slate-200 group-hover:bg-emerald-500 group-hover:border-emerald-500",
                     )}>
                         <ArrowRight className={cn(
                             "w-3.5 h-3.5 group-hover:text-white group-hover:translate-x-0.5 transition-all",
