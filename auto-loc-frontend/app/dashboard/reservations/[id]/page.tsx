@@ -219,7 +219,7 @@ export default async function TenantReservationDetailPage({ params }: PageProps)
                 </div>
 
                 {/* ── Actions — check-in / check-out / dispute ──── */}
-                <ReservationActions reservationId={r.id} statut={r.statut} role="LOCATAIRE" />
+                <ReservationActions reservationId={r.id} statut={r.statut} />
 
                 {/* ── Two-column layout ────────────────────────── */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

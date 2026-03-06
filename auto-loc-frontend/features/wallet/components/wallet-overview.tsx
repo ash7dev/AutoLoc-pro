@@ -1,8 +1,9 @@
 "use client";
 
-import { Banknote, ArrowUpRight, ArrowDownRight, Clock, TrendingUp, Wallet } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WalletData, WalletTransaction } from "@/lib/nestjs/wallet";
+import { WalletSnapshot } from "@/features/dashboard/components/wallet-snapshot";
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
@@ -23,29 +24,16 @@ export function WalletOverview({ data }: WalletOverviewProps) {
         );
     }
 
+    const snapshotData = {
+        available: data.balance.soldeDisponible,
+        pending: data.balance.enAttente,
+        processing: "—",
+    };
+
     return (
         <div className="space-y-6">
-            {/* ── Balance Cards ────────────────────────────────────────────── */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <BalanceCard
-                    title="Disponible"
-                    amount={data.balance.soldeDisponible}
-                    icon={Banknote}
-                    variant="primary"
-                />
-                <BalanceCard
-                    title="En attente"
-                    amount={data.balance.enAttente}
-                    icon={Clock}
-                    variant="warning"
-                />
-                <BalanceCard
-                    title="Total gagné"
-                    amount={data.balance.totalGagne}
-                    icon={TrendingUp}
-                    variant="success"
-                />
-            </div>
+            {/* ── Wallet Snapshot ───────────────────────────────────────────── */}
+            <WalletSnapshot data={snapshotData} />
 
             {/* ── Transactions ─────────────────────────────────────────────── */}
             <div className="rounded-xl border border-[hsl(var(--border))] bg-card">
@@ -68,43 +56,6 @@ export function WalletOverview({ data }: WalletOverviewProps) {
                     </div>
                 )}
             </div>
-        </div>
-    );
-}
-
-// ── Balance Card ────────────────────────────────────────────────────────────────
-
-function BalanceCard({
-    title,
-    amount,
-    icon: Icon,
-    variant,
-}: {
-    title: string;
-    amount: string;
-    icon: React.ElementType;
-    variant: "primary" | "warning" | "success";
-}) {
-    const colors = {
-        primary: "bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200",
-        warning: "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200",
-        success: "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200",
-    };
-    const iconColors = {
-        primary: "text-emerald-600 bg-emerald-100",
-        warning: "text-amber-600 bg-amber-100",
-        success: "text-blue-600 bg-blue-100",
-    };
-
-    return (
-        <div className={cn("rounded-xl border p-5", colors[variant])}>
-            <div className="flex items-center gap-3 mb-3">
-                <div className={cn("flex items-center justify-center w-9 h-9 rounded-lg", iconColors[variant])}>
-                    <Icon className="w-4 h-4" />
-                </div>
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{title}</span>
-            </div>
-            <p className="text-2xl font-bold tracking-tight">{amount} <span className="text-sm font-normal text-muted-foreground">FCFA</span></p>
         </div>
     );
 }
