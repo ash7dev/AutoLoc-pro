@@ -1,42 +1,133 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Car } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { IconBadge } from "@/components/ui/icon-badge";
+import { ArrowRight, ChevronRight, Car } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+/* ════════════════════════════════════════════════════════════════
+   TYPES
+════════════════════════════════════════════════════════════════ */
+export type ReservationStatus =
+  | "PAYEE" | "CONFIRMEE" | "EN_COURS"
+  | "TERMINEE" | "ANNULEE" | "LITIGE"
+  | "approved" | "pending";
 
 export interface ReservationItem {
   id: string | number;
   vehicle: string;
   amount: string;
-  status:
-  | "approved" | "pending"
-  | "PAYEE" | "CONFIRMEE" | "EN_COURS"
-  | "TERMINEE" | "ANNULEE" | "LITIGE";
-  image?: string;
+  status: ReservationStatus;
   meta?: string;
   href?: string;
 }
 
-const statusConfig: Record<
-  ReservationItem["status"],
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline"; dot: string }
-> = {
-  approved: { label: "Approuvée", variant: "secondary", dot: "bg-emerald-500" },
-  pending: { label: "En attente", variant: "outline", dot: "bg-amber-400" },
-  PAYEE: { label: "Payée", variant: "outline", dot: "bg-amber-400" },
-  CONFIRMEE: { label: "Confirmée", variant: "secondary", dot: "bg-emerald-500" },
-  EN_COURS: { label: "En cours", variant: "secondary", dot: "bg-blue-500 animate-pulse" },
-  TERMINEE: { label: "Terminée", variant: "secondary", dot: "bg-emerald-500" },
-  ANNULEE: { label: "Annulée", variant: "outline", dot: "bg-muted-foreground" },
-  LITIGE: { label: "Litige", variant: "destructive", dot: "bg-destructive animate-pulse" },
+/* ════════════════════════════════════════════════════════════════
+   STATUS TOKENS
+════════════════════════════════════════════════════════════════ */
+const STATUS: Record<ReservationStatus, {
+  label: string;
+  dot: string;
+  cls: string;
+}> = {
+  approved: { label: "Approuvée", dot: "bg-emerald-500", cls: "text-emerald-700 bg-emerald-50 border-emerald-200" },
+  pending: { label: "En attente", dot: "bg-amber-400", cls: "text-amber-700 bg-amber-50 border-amber-200" },
+  PAYEE: { label: "Payée", dot: "bg-blue-500", cls: "text-blue-700 bg-blue-50 border-blue-200" },
+  CONFIRMEE: { label: "Confirmée", dot: "bg-indigo-500", cls: "text-indigo-700 bg-indigo-50 border-indigo-200" },
+  EN_COURS: { label: "En cours", dot: "bg-emerald-500 animate-pulse", cls: "text-emerald-700 bg-emerald-50 border-emerald-200" },
+  TERMINEE: { label: "Terminée", dot: "bg-slate-400", cls: "text-slate-600 bg-slate-100 border-slate-200" },
+  ANNULEE: { label: "Annulée", dot: "bg-red-400", cls: "text-red-600 bg-red-50 border-red-200" },
+  LITIGE: { label: "Litige", dot: "bg-orange-400 animate-pulse", cls: "text-orange-700 bg-orange-50 border-orange-200" },
 };
 
-const pipelineOrder: ReservationItem["status"][] = [
+const PIPELINE_ORDER: ReservationStatus[] = [
   "PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE", "ANNULEE", "LITIGE",
 ];
 
+/* ════════════════════════════════════════════════════════════════
+   ROW
+════════════════════════════════════════════════════════════════ */
+function ReservationRow({ r }: { r: ReservationItem }) {
+  const s = STATUS[r.status] ?? STATUS.pending;
+
+  const inner = (
+    <div className={cn(
+      "group flex items-center gap-4 px-5 py-3.5 transition-colors duration-150",
+      r.href && "hover:bg-slate-50 cursor-pointer",
+    )}>
+
+      {/* Vehicle icon */}
+      <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-50 group-hover:border-emerald-100 transition-colors">
+        <Car className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-500 transition-colors" strokeWidth={1.75} />
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-bold text-slate-900 truncate leading-none">{r.vehicle}</p>
+        <div className="flex items-center gap-1.5 mt-1">
+          <span className="text-[12px] font-semibold text-emerald-600 tabular-nums">{r.amount}</span>
+          {r.meta && (
+            <>
+              <span className="text-slate-300">·</span>
+              <span className="text-[11.5px] font-medium text-slate-400">{r.meta}</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Status badge */}
+      <span className={cn(
+        "flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold",
+        s.cls,
+      )}>
+        <span className={cn("w-1.5 h-1.5 rounded-full", s.dot)} />
+        {s.label}
+      </span>
+
+      {/* Arrow */}
+      {r.href && (
+        <ChevronRight className="w-4 h-4 text-slate-300 flex-shrink-0 group-hover:text-slate-500 group-hover:translate-x-0.5 transition-all" strokeWidth={2} />
+      )}
+    </div>
+  );
+
+  return r.href
+    ? <Link href={r.href} className="block">{inner}</Link>
+    : <div>{inner}</div>;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   SKELETON
+════════════════════════════════════════════════════════════════ */
+function RowSkeleton() {
+  return (
+    <div className="flex items-center gap-4 px-5 py-3.5 animate-pulse">
+      <div className="w-8 h-8 rounded-xl bg-slate-100 flex-shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="h-3.5 w-2/5 rounded-lg bg-slate-100" />
+        <div className="h-3 w-1/4 rounded-lg bg-slate-100" />
+      </div>
+      <div className="h-6 w-20 rounded-full bg-slate-100 flex-shrink-0" />
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════
+   PIPELINE SECTION HEADER
+════════════════════════════════════════════════════════════════ */
+function PipelineHeader({ status, count }: { status: ReservationStatus; count: number }) {
+  const s = STATUS[status];
+  return (
+    <div className="flex items-center gap-2.5 px-5 py-2 bg-slate-50/60 border-y border-slate-100">
+      <span className={cn("w-1.5 h-1.5 rounded-full", s.dot)} />
+      <span className="text-[10.5px] font-black uppercase tracking-[0.14em] text-slate-500">{s.label}</span>
+      <span className="ml-auto text-[10.5px] font-bold text-slate-400">{count}</span>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+════════════════════════════════════════════════════════════════ */
 export function RecentReservations({
   reservations = [],
   mode = "recent",
@@ -48,111 +139,64 @@ export function RecentReservations({
   loading?: boolean;
   title?: string;
 }) {
-  const effectiveTitle =
-    title ?? (mode === "pipeline" ? "Pipeline réservations" : "Réservations reçues");
+  const effectiveTitle = title ?? (mode === "pipeline" ? "Pipeline" : "Réservations récentes");
 
-  const groups =
-    mode === "pipeline"
-      ? pipelineOrder
-        .map((st) => ({ st, items: reservations.filter((r) => r.status === st) }))
-        .filter((g) => g.items.length > 0)
-      : [];
-
-  const ReservationRow = ({ reservation }: { reservation: ReservationItem }) => {
-    const cfg = statusConfig[reservation.status] ?? statusConfig.pending;
-    return (
-      <div className="group flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4 rounded-lg border border-[hsl(var(--border))] p-3 sm:p-4 transition-all duration-200 hover:shadow-sm hover:border-foreground/20">
-        {/* Icon */}
-        <IconBadge icon={Car} size="lg" />
-
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate">{reservation.vehicle}</p>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-sm text-muted-foreground">{reservation.amount}</span>
-            {reservation.meta && (
-              <>
-                <span className="text-muted-foreground/40">·</span>
-                <span className="text-xs text-muted-foreground">{reservation.meta}</span>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Status */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className={cn("h-2 w-2 rounded-full flex-shrink-0", cfg.dot)} />
-          <Badge variant={cfg.variant} className="text-xs font-medium">
-            {cfg.label}
-          </Badge>
-        </div>
-
-        <ArrowRight className="h-4 w-4 text-muted-foreground/40 flex-shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" />
-      </div>
-    );
-  };
+  const groups = PIPELINE_ORDER
+    .map(st => ({ st, items: reservations.filter(r => r.status === st) }))
+    .filter(g => g.items.length > 0);
 
   return (
-    <div className="rounded-lg border border-[hsl(var(--border))] bg-card shadow-sm">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[hsl(var(--border))]">
-        <h3 className="text-lg sm:text-xl font-bold">{effectiveTitle}</h3>
+    <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm shadow-slate-100/60">
+
+      {/* ── Header ─────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div className="flex items-center gap-3">
+          <h3 className="text-[14px] font-black tracking-tight text-slate-900">
+            {effectiveTitle}
+          </h3>
+          {!loading && reservations.length > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-slate-900 text-[10px] font-black text-emerald-400">
+              {reservations.length}
+            </span>
+          )}
+        </div>
         <Link
           href="/dashboard/owner/reservations"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground"
+          className="inline-flex items-center gap-1 text-[12px] font-semibold text-slate-400 hover:text-slate-900 transition-colors"
         >
           Voir tout
-          <ArrowRight className="h-3.5 w-3.5" />
+          <ArrowRight className="w-3 h-3" strokeWidth={2.5} />
         </Link>
       </div>
 
-      {/* Body */}
-      <div className="p-4 sm:p-6 space-y-3">
-        {loading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-4 rounded-lg border border-[hsl(var(--border))] p-4 animate-pulse"
-            >
-              <div className="h-10 w-10 rounded-lg bg-muted flex-shrink-0" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-36 rounded bg-muted" />
-                <div className="h-3 w-24 rounded bg-muted" />
-              </div>
-              <div className="h-5 w-20 rounded-full bg-muted" />
+      {/* ── Body ───────────────────────────────────────────── */}
+      <div className="divide-y divide-slate-100">
+
+        {/* Loading */}
+        {loading && Array.from({ length: 4 }).map((_, i) => <RowSkeleton key={i} />)}
+
+        {/* Empty */}
+        {!loading && reservations.length === 0 && (
+          <div className="flex flex-col items-center gap-3 py-14">
+            <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center">
+              <Car className="w-4.5 h-4.5 text-slate-300" strokeWidth={1.5} />
             </div>
-          ))
-        ) : mode === "pipeline" ? (
-          groups.map((group) => (
-            <div key={group.st} className="space-y-2">
-              <div className="flex items-center justify-between px-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {statusConfig[group.st].label}
-                </p>
-                <span className="text-xs text-muted-foreground">{group.items.length}</span>
-              </div>
-              {group.items.map((r) =>
-                r.href ? (
-                  <Link key={r.id} href={r.href} className="block">
-                    <ReservationRow reservation={r} />
-                  </Link>
-                ) : (
-                  <ReservationRow key={r.id} reservation={r} />
-                )
-              )}
-            </div>
-          ))
-        ) : (
-          reservations.map((r) =>
-            r.href ? (
-              <Link key={r.id} href={r.href} className="block">
-                <ReservationRow reservation={r} />
-              </Link>
-            ) : (
-              <ReservationRow key={r.id} reservation={r} />
-            )
-          )
+            <p className="text-[13px] font-semibold text-slate-400">Aucune réservation</p>
+          </div>
         )}
+
+        {/* Recent mode — flat list */}
+        {!loading && mode === "recent" && reservations.map(r => (
+          <ReservationRow key={r.id} r={r} />
+        ))}
+
+        {/* Pipeline mode — grouped by status */}
+        {!loading && mode === "pipeline" && groups.map(({ st, items }) => (
+          <div key={st}>
+            <PipelineHeader status={st} count={items.length} />
+            {items.map(r => <ReservationRow key={r.id} r={r} />)}
+          </div>
+        ))}
       </div>
     </div>
   );
