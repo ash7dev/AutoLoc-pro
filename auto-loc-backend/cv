@@ -1,0 +1,41 @@
+# Database
+DATABASE_URL="postgresql://postgres:2GZAwdQNDkEYNsIS@db.tcnlndjrvfddsjblamsj.supabase.co:5432/postgres?sslmode=require"
+
+
+
+#"postgresql://postgres.tcnlndjrvfddsjblamsj:2GZAwdQNDkEYNsIS@aws-1-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true"
+# "postgresql://postgres:2GZAwdQNDkEYNsIS@db.tcnlndjrvfddsjblamsj.supabase.co:5432/postgres?sslmode=require"
+
+
+# JWT
+JWT_SECRET=42jSv9PTS1g33ZbC3MS1kv2IdQVRZZJOKYooJrH9U7f6hvdZF4u81ynuPt8RMRBFKUzpYcZ4UlLeHmMGh7_Q4Q
+JWT_EXPIRES_IN="7d"
+JWT_ACCESS_TTL=24h
+
+
+# Redis (Upstash)
+REDIS_URL="rediss://default:AYkeAAIncDE2Njg4YWY1ZDUzNzE0YjBhOGNjMzFjNTRmZDc4MzlkMnAxMzUxMDI@ample-treefrog-35102.upstash.io:6379"
+UPSTASH_REDIS_REST_URL="https://ample-treefrog-35102.upstash.io"
+UPSTASH_REDIS_REST_TOKEN="AYkeAAIncDE2Njg4YWY1ZDUzNzE0YjBhOGNjMzFjNTRmZDc4MzlkMnAxMzUxMDI"
+
+NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_SUPABASE_URL=https://tcnlndjrvfddsjblamsj.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjbmxuZGpydmZkZHNqYmxhbXNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2Mjc4OTgsImV4cCI6MjA4NzIwMzg5OH0.HTbExC4asQs0S7igAC9J600UGG4ON0QQLM93XIqxwz0
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjbmxuZGpydmZkZHNqYmxhbXNqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTYyNzg5OCwiZXhwIjoyMDg3MjAzODk4fQ.OCfq0k6EUh79x5Crdon-Kn50yq-jNEwbpRyh736VimE
+# Ajoutez ces variables à votre .env du backend
+SUPABASE_PROJECT_ID=tcnlndjrvfddsjblamsj
+SUPABASE_URL=https://tcnlndjrvfddsjblamsj.supabase.co
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME="dce0zbccp"
+CLOUDINARY_API_KEY="149137369864376"
+CLOUDINARY_API_SECRET="5CbPUFNUPXNQfJmwf-T--RYJ7IY"
+ADMIN_SUPABASE_ID=75c275ce-5a25-4b2a-8a94-6333be3a9cf2
+ADMIN_EMAIL=admin@autoloc.sn
+NicoxJean1
+
+# Application
+NODE_ENV="development"
+PORT=3000
+NEXTJS_URL=http://localhost:3000
+REVALIDATE_SECRET=super_secret_revalidate_token_123
