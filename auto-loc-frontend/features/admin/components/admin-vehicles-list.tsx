@@ -7,7 +7,7 @@ import {
   MapPin, Fuel, AlertTriangle, Loader2,
   Eye, X, ChevronLeft, ChevronRight, Star,
   Key, Calendar, Users, Shield,
-  Phone, Mail, Info, ZoomIn,
+  Phone, Mail, Info, ZoomIn, FileText, ExternalLink, Truck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminVehicle } from '../../../lib/nestjs/admin';
@@ -18,18 +18,18 @@ import { ADMIN_PATHS } from '../../../lib/nestjs/admin';
 export type TabValue = 'ALL' | 'PENDING' | 'EN_ATTENTE_VALIDATION' | 'VERIFIE' | 'SUSPENDU' | 'BROUILLON' | 'ARCHIVE';
 
 const TABS: { value: TabValue; label: string }[] = [
-  { value: 'ALL',      label: 'Tous'       },
-  { value: 'PENDING',  label: 'En attente' },
-  { value: 'VERIFIE',  label: 'Vérifié'    },
-  { value: 'SUSPENDU', label: 'Suspendu'   },
+  { value: 'ALL', label: 'Tous' },
+  { value: 'PENDING', label: 'En attente' },
+  { value: 'VERIFIE', label: 'Vérifié' },
+  { value: 'SUSPENDU', label: 'Suspendu' },
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; dot: string; border: string }> = {
-  EN_ATTENTE_VALIDATION: { label: 'En attente', bg: 'bg-amber-50',   text: 'text-amber-700',   dot: 'bg-amber-400',   border: 'border-amber-300/50'   },
-  VERIFIE:               { label: 'Vérifié',    bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-400', border: 'border-emerald-300/50' },
-  SUSPENDU:              { label: 'Suspendu',   bg: 'bg-red-50',     text: 'text-red-700',     dot: 'bg-red-400',     border: 'border-red-300/50'     },
-  BROUILLON:             { label: 'Brouillon',  bg: 'bg-slate-100',  text: 'text-slate-600',   dot: 'bg-slate-400',   border: 'border-slate-200'      },
-  ARCHIVE:               { label: 'Archivé',    bg: 'bg-slate-100',  text: 'text-slate-500',   dot: 'bg-slate-300',   border: 'border-slate-200'      },
+  EN_ATTENTE_VALIDATION: { label: 'En attente', bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-400', border: 'border-amber-300/50' },
+  VERIFIE: { label: 'Vérifié', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-400', border: 'border-emerald-300/50' },
+  SUSPENDU: { label: 'Suspendu', bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-400', border: 'border-red-300/50' },
+  BROUILLON: { label: 'Brouillon', bg: 'bg-slate-100', text: 'text-slate-600', dot: 'bg-slate-400', border: 'border-slate-200' },
+  ARCHIVE: { label: 'Archivé', bg: 'bg-slate-100', text: 'text-slate-500', dot: 'bg-slate-300', border: 'border-slate-200' },
 };
 
 function formatPrice(n: number) { return new Intl.NumberFormat('fr-FR').format(n); }
@@ -170,7 +170,7 @@ function VehicleDetailModal({ vehicle, pendingId, onClose, onValidate, onSuspend
   const status = STATUS_CONFIG[vehicle.statut];
   const ownerName = getOwnerName(vehicle);
   const canValidate = ['EN_ATTENTE_VALIDATION', 'BROUILLON', 'SUSPENDU'].includes(vehicle.statut);
-  const canReject   = ['EN_ATTENTE_VALIDATION', 'BROUILLON', 'VERIFIE'].includes(vehicle.statut);
+  const canReject = ['EN_ATTENTE_VALIDATION', 'BROUILLON', 'VERIFIE'].includes(vehicle.statut);
 
   useEffect(() => {
     const fn = (e: KeyboardEvent) => { if (e.key === 'Escape' && !lightboxUrl) onClose(); };
@@ -228,11 +228,11 @@ function VehicleDetailModal({ vehicle, pendingId, onClose, onValidate, onSuspend
             <div className="rounded-xl border border-slate-100 bg-white p-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-black/25 mb-3">Général</p>
               <div className="grid grid-cols-2 gap-3">
-                <DetailItem icon={Car}      label="Type"         value={vehicle.type} />
-                <DetailItem icon={Fuel}     label="Carburant"    value={vehicle.carburant} />
-                <DetailItem icon={Key}      label="Transmission" value={vehicle.transmission} />
-                <DetailItem icon={Users}    label="Places"       value={vehicle.nombrePlaces} />
-                <DetailItem icon={Calendar} label="Créé le"      value={new Date(vehicle.creeLe).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} />
+                <DetailItem icon={Car} label="Type" value={vehicle.type} />
+                <DetailItem icon={Fuel} label="Carburant" value={vehicle.carburant} />
+                <DetailItem icon={Key} label="Transmission" value={vehicle.transmission} />
+                <DetailItem icon={Users} label="Places" value={vehicle.nombrePlaces} />
+                <DetailItem icon={Calendar} label="Créé le" value={new Date(vehicle.creeLe).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} />
               </div>
             </div>
 
@@ -240,8 +240,8 @@ function VehicleDetailModal({ vehicle, pendingId, onClose, onValidate, onSuspend
             <div className="rounded-xl border border-slate-100 bg-white p-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-black/25 mb-3">Localisation</p>
               <div className="grid grid-cols-2 gap-3">
-                <DetailItem icon={MapPin} label="Ville"         value={vehicle.ville} />
-                <DetailItem icon={MapPin} label="Adresse"       value={vehicle.adresse} />
+                <DetailItem icon={MapPin} label="Ville" value={vehicle.ville} />
+                <DetailItem icon={MapPin} label="Adresse" value={vehicle.adresse} />
                 <DetailItem icon={MapPin} label="Zone conduite" value={vehicle.zoneConduite} />
               </div>
             </div>
@@ -251,8 +251,71 @@ function VehicleDetailModal({ vehicle, pendingId, onClose, onValidate, onSuspend
               <p className="text-[10px] font-bold uppercase tracking-widest text-black/25 mb-3">Conditions</p>
               <div className="grid grid-cols-2 gap-3">
                 <DetailItem icon={Calendar} label="Durée minimale" value={vehicle.joursMinimum ? `${vehicle.joursMinimum} j` : null} />
-                <DetailItem icon={Users}    label="Âge minimum"    value={vehicle.ageMinimum ? `${vehicle.ageMinimum} ans` : null} />
-                <DetailItem icon={Shield}   label="Assurance"      value={vehicle.assurance} />
+                <DetailItem icon={Users} label="Âge minimum" value={vehicle.ageMinimum ? `${vehicle.ageMinimum} ans` : null} />
+                <DetailItem icon={Shield} label="Assurance" value={vehicle.assurance} />
+              </div>
+            </div>
+
+            {/* Documents (Carte Grise + Assurance) */}
+            <div className="rounded-xl border border-slate-100 bg-white p-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-black/25 mb-3">Documents</p>
+              <div className="space-y-2">
+                {/* Carte Grise */}
+                <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-3.5 h-3.5 text-blue-500" strokeWidth={2} />
+                    </span>
+                    <span className="text-[12.5px] font-semibold text-black/70">Carte Grise</span>
+                  </div>
+                  {vehicle.carteGriseUrl ? (
+                    <button
+                      type="button"
+                      onClick={() => setLightboxUrl(vehicle.carteGriseUrl!)}
+                      className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+                    >
+                      <Eye className="w-3 h-3" strokeWidth={2} /> Voir
+                    </button>
+                  ) : (
+                    <span className="text-[11px] font-medium text-black/25">Non fourni</span>
+                  )}
+                </div>
+
+                {/* Assurance */}
+                <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+                      <Shield className="w-3.5 h-3.5 text-purple-500" strokeWidth={2} />
+                    </span>
+                    <span className="text-[12.5px] font-semibold text-black/70">Assurance</span>
+                  </div>
+                  {vehicle.assuranceDocUrl ? (
+                    <button
+                      type="button"
+                      onClick={() => setLightboxUrl(vehicle.assuranceDocUrl!)}
+                      className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+                    >
+                      <Eye className="w-3 h-3" strokeWidth={2} /> Voir
+                    </button>
+                  ) : (
+                    <span className="text-[11px] font-medium text-black/25">Non fourni</span>
+                  )}
+                </div>
+
+                {/* Frais de livraison */}
+                {vehicle.fraisLivraison != null && Number(vehicle.fraisLivraison) > 0 && (
+                  <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                        <Truck className="w-3.5 h-3.5 text-amber-500" strokeWidth={2} />
+                      </span>
+                      <span className="text-[12.5px] font-semibold text-black/70">Frais de livraison</span>
+                    </div>
+                    <span className="text-[12.5px] font-bold text-emerald-600 tabular-nums">
+                      {formatPrice(Number(vehicle.fraisLivraison))} FCFA
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -281,9 +344,9 @@ function VehicleDetailModal({ vehicle, pendingId, onClose, onValidate, onSuspend
             {/* Stats */}
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: 'Locations', value: vehicle.totalLocations, color: 'text-black'       },
-                { label: 'Note / 5',  value: Number(vehicle.note).toFixed(1), color: 'text-amber-500' },
-                { label: 'Avis',      value: vehicle.totalAvis,       color: 'text-black'       },
+                { label: 'Locations', value: vehicle.totalLocations, color: 'text-black' },
+                { label: 'Note / 5', value: Number(vehicle.note).toFixed(1), color: 'text-amber-500' },
+                { label: 'Avis', value: vehicle.totalAvis, color: 'text-black' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="rounded-xl border border-slate-100 bg-white px-3 py-3 text-center">
                   <p className={cn('text-[20px] font-black tabular-nums leading-none', color)}>{value}</p>
@@ -307,7 +370,7 @@ function VehicleDetailModal({ vehicle, pendingId, onClose, onValidate, onSuspend
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <DetailItem icon={Mail}  label="Email"     value={vehicle.proprietaire.email} />
+                  <DetailItem icon={Mail} label="Email" value={vehicle.proprietaire.email} />
                   <DetailItem icon={Phone} label="Téléphone" value={vehicle.proprietaire.telephone} />
                 </div>
               </div>
@@ -546,9 +609,9 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
-  const [search, setSearch]               = useState('');
-  const [pendingId, setPendingId]         = useState<string | null>(null);
-  const [toast, setToast]                 = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [search, setSearch] = useState('');
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [detailVehicle, setDetailVehicle] = useState<AdminVehicle | null>(null);
   const [suspendDialog, setSuspendDialog] = useState<{
     open: boolean; vehicleId: string; vehicleName: string; raison: string; isReject: boolean;
@@ -585,9 +648,9 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
 
   function changeTab(value: TabValue) {
     const url =
-      value === 'ALL'     ? '/dashboard/admin/vehicles' :
-      value === 'PENDING' ? '/dashboard/admin/vehicles?statut=PENDING' :
-      `/dashboard/admin/vehicles?statut=${value}`;
+      value === 'ALL' ? '/dashboard/admin/vehicles' :
+        value === 'PENDING' ? '/dashboard/admin/vehicles?statut=PENDING' :
+          `/dashboard/admin/vehicles?statut=${value}`;
     startTransition(() => router.push(url));
   }
 

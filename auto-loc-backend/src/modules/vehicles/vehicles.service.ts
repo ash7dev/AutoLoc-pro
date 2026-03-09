@@ -114,6 +114,7 @@ export class VehiclesService {
             zoneConduite: dto.zoneConduite ?? null,
             assurance: dto.assurance ?? null,
             reglesSpecifiques: dto.reglesSpecifiques ?? null,
+            fraisLivraison: dto.fraisLivraison ?? null,
             statut: statutInitial,
             tarifsProgressifs: dto.tiers?.length
               ? {
@@ -315,6 +316,7 @@ export class VehiclesService {
             zoneConduite: dto.zoneConduite,
             assurance: dto.assurance,
             reglesSpecifiques: dto.reglesSpecifiques,
+            fraisLivraison: dto.fraisLivraison,
             tarifsProgressifs: dto.tiers?.length
               ? {
                 create: dto.tiers.map((t, i) => ({
@@ -733,6 +735,9 @@ export class VehiclesService {
       creeLe: v.creeLe.toISOString(),
       photos: v.photos.map((p) => ({ id: p.id, url: p.url, estPrincipale: p.estPrincipale })),
       equipements: v.equipements.map((ve) => ve.equipement.nom),
+      carteGriseUrl: v.carteGriseUrl ?? null,
+      assuranceDocUrl: v.assuranceDocUrl ?? null,
+      fraisLivraison: v.fraisLivraison ? Number(v.fraisLivraison) : null,
       proprietaire: v.proprietaire
         ? {
           id: v.proprietaire.id,

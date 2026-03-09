@@ -32,6 +32,9 @@ export interface AdminVehicle {
   creeLe: string;
   photos: Array<{ id: string; url: string; estPrincipale: boolean }>;
   equipements: string[];
+  carteGriseUrl: string | null;
+  assuranceDocUrl: string | null;
+  fraisLivraison: number | null;
   proprietaire: {
     id: string;
     prenom: string | null;
@@ -138,17 +141,17 @@ export interface SuspendVehicleDto {
 // ── Path helpers ──────────────────────────────────────────────────────────────
 
 export const ADMIN_PATHS = {
-  stats:    '/admin/stats',
+  stats: '/admin/stats',
   activity: '/admin/activity',
   vehicles: (statut?: AdminVehicleStatus) =>
     statut ? `/admin/vehicles?statut=${statut}` : '/admin/vehicles',
   validateVehicle: (id: string) => `/admin/vehicles/${id}/validate`,
-  suspendVehicle:  (id: string) => `/admin/vehicles/${id}/suspend`,
+  suspendVehicle: (id: string) => `/admin/vehicles/${id}/suspend`,
   users: (kycStatus?: KycStatus) =>
     kycStatus ? `/admin/users?kycStatus=${kycStatus}` : '/admin/users',
-  banUser:    (id: string) => `/admin/users/${id}/status`,
+  banUser: (id: string) => `/admin/users/${id}/status`,
   approveKyc: (id: string) => `/admin/users/${id}/kyc/approve`,
-  rejectKyc:  (id: string) => `/admin/users/${id}/kyc/reject`,
+  rejectKyc: (id: string) => `/admin/users/${id}/kyc/reject`,
 } as const;
 
 // ── Server-side fetch functions (RSC / layouts) ────────────────────────────────

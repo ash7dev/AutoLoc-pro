@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm, useFieldArray } from "react-hook-form";
-import { ArrowLeft, ArrowRight, Plus, Trash2, Info } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, Trash2, Info, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAddVehicleStore, Step2Data, PriceTier } from "../store";
 
@@ -18,11 +18,14 @@ export function StepPricing({ nextStep, previousStep }: Props) {
       prixParJour: undefined,
       joursMinimum: 1,
       tiers: [],
+      fraisLivraison: undefined,
     },
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "tiers" });
   const tiers = watch("tiers");
+  const fraisLivraison = watch("fraisLivraison");
+  const livraisonActive = fraisLivraison !== undefined && fraisLivraison !== null;
 
   const onSubmit = (data: Step2Data) => {
     setStep2(data);
@@ -131,6 +134,57 @@ export function StepPricing({ nextStep, previousStep }: Props) {
             </p>
           </div>
         )}
+      </div>
+
+      {/* Frais de livraison */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Truck className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
+            <span className="text-sm font-medium">Livraison du véhicule</span>
+            <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">Optionnel</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const input = document.getElementById("fraisLivraisonInput") as HTMLInputElement | null;
+              if (livraisonActive) {
+                // Désactiver : on met undefined via setValue
+                if (input) input.value = "";
+              }
+            }}
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {livraisonActive ? "" : ""}
+          </button>
+        </div>
+
+        <div className="rounded-xl border border-[hsl(var(--border))] p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <Truck className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" strokeWidth={1.75} />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Proposer la livraison du véhicule</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Le locataire pourra choisir de se faire livrer le véhicule à l'adresse de son choix.
+                Les frais de livraison seront ajoutés automatiquement au total de sa réservation.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Frais de livraison (FCFA)</label>
+            <input
+              id="fraisLivraisonInput"
+              type="number"
+              {...register("fraisLivraison", { min: 0, valueAsNumber: true })}
+              placeholder="Ex : 5 000 — laisser vide si pas de livraison"
+              className="w-full h-10 rounded-lg border border-[hsl(var(--border))] bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            />
+            <p className="text-xs text-muted-foreground">
+              Laissez vide ou à 0 si vous ne proposez pas la livraison.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center justify-between pt-2">

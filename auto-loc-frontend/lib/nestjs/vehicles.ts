@@ -68,6 +68,7 @@ export interface Vehicle {
   zoneConduite: string | null;
   assurance: string | null;
   reglesSpecifiques: string | null;
+  fraisLivraison: number | null;
   statut: VehicleStatus;
   estVerrouille?: boolean;
   note: number;
@@ -104,6 +105,7 @@ export interface CreateVehicleInput {
   zoneConduite?: string;
   assurance?: string;
   reglesSpecifiques?: string;
+  fraisLivraison?: number;
   tiers?: Array<{
     joursMin: number;
     joursMax?: number;

@@ -129,4 +129,12 @@ export class CreateVehicleDto {
   @IsArray()
   @IsString({ each: true })
   equipements?: string[];
+
+  // ── Livraison ────────────────────────────────────────────────────────────────
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  fraisLivraison?: number;
 }

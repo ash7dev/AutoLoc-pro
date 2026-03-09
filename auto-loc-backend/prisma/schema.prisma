@@ -117,6 +117,9 @@ model Vehicule {
   assurance         String?
   reglesSpecifiques String?
 
+  // Livraison (optionnel)
+  fraisLivraison    Decimal? @db.Decimal(10,2)
+
   // Documents obligatoires
   carteGriseUrl      String?
   carteGrisePublicId String?

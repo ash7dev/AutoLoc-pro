@@ -53,6 +53,7 @@ export function StepReview({ previousStep }: Props) {
           assurance: step3?.assurance || undefined,
           reglesSpecifiques: step3?.reglesSpecifiques || undefined,
           equipements: step1.equipements?.length ? step1.equipements : undefined,
+          fraisLivraison: step2.fraisLivraison || undefined,
         },
       });
 
@@ -151,6 +152,9 @@ export function StepReview({ previousStep }: Props) {
               </div>
             ))}
           </div>
+        )}
+        {step2?.fraisLivraison && step2.fraisLivraison > 0 && (
+          <ReviewRow label="Frais de livraison" value={formatPrice(step2.fraisLivraison)} />
         )}
       </ReviewSection>
 

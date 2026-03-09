@@ -87,6 +87,7 @@ export default async function VehicleDetailPage({ params }: PageProps) {
                             vehicleId={vehicle.id}
                             prixParJour={Number(vehicle.prixParJour)}
                             joursMinimum={vehicle.joursMinimum ?? 1}
+                            fraisLivraison={vehicle.fraisLivraison != null ? Number(vehicle.fraisLivraison) : null}
                         />
                     </div>
                 </div>

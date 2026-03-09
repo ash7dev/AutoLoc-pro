@@ -40,6 +40,7 @@ export interface Step2Data {
   prixParJour: number;
   joursMinimum?: number;
   tiers: PriceTier[];
+  fraisLivraison?: number;
 }
 
 export interface Step3Data {
