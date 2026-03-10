@@ -184,7 +184,22 @@ export const VEHICLE_PATHS = {
     `/vehicles/${vehicleId}/indisponibilites/${indispoId}`,
   uploadCarteGrise: (id: string) => `/vehicles/${id}/documents/carte-grise`,
   uploadAssurance: (id: string) => `/vehicles/${id}/documents/assurance`,
+  blockedDates: (id: string) => `/vehicles/${id}/blocked-dates`,
 } as const;
+
+// ── Blocked dates (public, client-side) ──────────────────────────────────────
+
+export interface BlockedRange {
+  from: string;
+  to: string;
+  type: 'reservation' | 'indisponibilite';
+}
+
+export async function fetchBlockedDates(
+  vehicleId: string,
+): Promise<{ blockedRanges: BlockedRange[] }> {
+  return apiFetch(VEHICLE_PATHS.blockedDates(vehicleId));
+}
 
 // ── Server-side functions (RSC, layouts, API routes) ─────────────────────────
 

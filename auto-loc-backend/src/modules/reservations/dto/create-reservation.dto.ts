@@ -2,10 +2,13 @@ import {
   IsDateString,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
+  Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { FournisseurPaiement } from '@prisma/client';
 
 export class CreateReservationDto {
@@ -27,4 +30,16 @@ export class CreateReservationDto {
   @IsOptional()
   @IsString()
   idempotencyKey?: string;
+
+  // ── Livraison (optionnel) ──────────────────────────────────────────────────
+
+  @IsOptional()
+  @IsString()
+  adresseLivraison?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  fraisLivraison?: number;
 }

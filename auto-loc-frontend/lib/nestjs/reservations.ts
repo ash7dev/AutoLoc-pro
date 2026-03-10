@@ -59,6 +59,8 @@ export interface Reservation {
     vehicule: ReservationVehicle;
     locataire: ReservationUser;
     proprietaireId: string;
+    adresseLivraison?: string | null;
+    fraisLivraison?: string | null;
     paiement?: {
         statut: string;
         fournisseur: string;
@@ -178,6 +180,8 @@ export interface CreateReservationInput {
     dateFin: string;
     fournisseur: 'WAVE' | 'ORANGE_MONEY';
     idempotencyKey?: string;
+    adresseLivraison?: string;
+    fraisLivraison?: number;
 }
 
 export interface CreateReservationResult {

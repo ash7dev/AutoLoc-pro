@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, X, Star, ImagePlus } from "lucide-react";
+import { ArrowLeft, ArrowRight, X, Star, ImagePlus, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAddVehicleStore } from "../store";
 import { cn } from "@/lib/utils";
@@ -9,14 +9,15 @@ import { cn } from "@/lib/utils";
 const MAX_PHOTOS = 8;
 
 interface Props {
-  nextStep?: () => void;
-  previousStep?: () => void;
+  onNext: () => void;
+  onBack: () => void;
 }
 
-export function StepPhotos({ nextStep, previousStep }: Props) {
+export function StepPhotos({ onNext, onBack }: Props) {
   const { photos, addPhoto, removePhoto } = useAddVehicleStore();
   const [mainIndex, setMainIndex] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
 
   const previews = photos.map((f) => URL.createObjectURL(f));
 
@@ -101,17 +102,47 @@ export function StepPhotos({ nextStep, previousStep }: Props) {
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
-            onClick={() => inputRef.current?.click()}
-            className="flex h-36 cursor-pointer flex-col items-center justify-center gap-2
+            className="flex h-36 flex-col items-center justify-center gap-3
               rounded-xl border border-dashed border-[hsl(var(--border))] bg-muted/30
-              text-muted-foreground transition-colors
-              hover:border-black/40 hover:bg-muted/60"
+              text-muted-foreground transition-colors"
           >
-            <ImagePlus className="h-6 w-6" strokeWidth={1.5} />
-            <span className="text-sm font-medium">Ajouter une photo</span>
-            <span className="text-xs opacity-60">JPG, PNG, WEBP · Max 10 Mo</span>
+            <div className="flex items-center gap-2">
+              {/* Camera button */}
+              <button
+                type="button"
+                onClick={() => cameraRef.current?.click()}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg
+                  bg-black text-white text-[12px] font-semibold
+                  hover:bg-black/80 active:scale-95 transition-all shadow-sm"
+              >
+                <Camera className="h-3.5 w-3.5" strokeWidth={2} />
+                Prendre une photo
+              </button>
+              {/* Gallery button */}
+              <button
+                type="button"
+                onClick={() => galleryRef.current?.click()}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg
+                  border border-[hsl(var(--border))] bg-white text-black text-[12px] font-semibold
+                  hover:bg-muted/60 active:scale-95 transition-all"
+              >
+                <ImagePlus className="h-3.5 w-3.5" strokeWidth={2} />
+                Galerie
+              </button>
+            </div>
+            <span className="text-[11px] opacity-50">ou glisser-déposer · JPG, PNG, WEBP</span>
+            {/* Hidden camera input — capture="environment" triggers native camera on mobile */}
             <input
-              ref={inputRef}
+              ref={cameraRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => handleFiles(e.target.files)}
+            />
+            {/* Hidden gallery input — normal file picker */}
+            <input
+              ref={galleryRef}
               type="file"
               accept="image/*"
               multiple
@@ -129,13 +160,13 @@ export function StepPhotos({ nextStep, previousStep }: Props) {
       )}
 
       <div className="flex items-center justify-between pt-2">
-        <Button type="button" variant="outline" onClick={previousStep} className="gap-2 h-10">
+        <Button type="button" variant="outline" onClick={onBack} className="gap-2 h-10">
           <ArrowLeft className="h-4 w-4" />
           Retour
         </Button>
         <Button
           type="button"
-          onClick={nextStep}
+          onClick={onNext}
           disabled={photos.length === 0}
           className="gap-2 bg-black text-white hover:bg-black/90 h-10 disabled:opacity-50"
         >

@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  CalendarDays, Clock, CreditCard, CheckCircle2,
+  Clock, CreditCard, CheckCircle2,
   ArrowRight, Loader2, Shield, Info, Truck, MapPin,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -11,6 +11,7 @@ import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles
 import { formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
 import { apiFetch, ApiError } from '@/lib/nestjs/api-client';
 import type { ProfileResponse } from '@/lib/nestjs/auth';
+import { ReservationCalendar } from '@/features/vehicles/components/ReservationCalendar';
 import { ReservationGateModal } from '@/features/reservations/components/ReservationGateModal';
 
 interface Props {
@@ -79,7 +80,6 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
     return () => clearTimeout(debounceRef.current);
   }, [nbJours, fetchPricingData]);
 
-  const today = new Date().toISOString().split('T')[0];
   const canReserve = datesValid && contractAccepted && pricing && !loadingPricing
     && (!wantsDelivery || deliveryAddress.trim().length > 0);
 
@@ -157,38 +157,15 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
 
         <div className="p-5 space-y-4">
 
-          {/* Date inputs — unified box style */}
-          <div className="rounded-xl border border-slate-200 overflow-hidden">
-            <div className="grid grid-cols-2 divide-x divide-slate-200">
-              <div className="p-3">
-                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">
-                  <CalendarDays className="w-3 h-3" /> Arrivée
-                </label>
-                <input
-                  type="date"
-                  value={dateDebut}
-                  min={today}
-                  onChange={(e) => {
-                    setDateDebut(e.target.value);
-                    if (dateFin && e.target.value >= dateFin) setDateFin('');
-                  }}
-                  className="w-full bg-transparent text-[13px] font-semibold text-slate-800 focus:outline-none cursor-pointer"
-                />
-              </div>
-              <div className="p-3">
-                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">
-                  <CalendarDays className="w-3 h-3" /> Retour
-                </label>
-                <input
-                  type="date"
-                  value={dateFin}
-                  min={dateDebut || today}
-                  onChange={(e) => setDateFin(e.target.value)}
-                  className="w-full bg-transparent text-[13px] font-semibold text-slate-800 focus:outline-none cursor-pointer"
-                />
-              </div>
-            </div>
-          </div>
+          {/* ── Calendar replaces date inputs ── */}
+          <ReservationCalendar
+            vehicleId={vehicleId}
+            joursMinimum={joursMinimum}
+            dateDebut={dateDebut}
+            dateFin={dateFin}
+            onDateDebutChange={setDateDebut}
+            onDateFinChange={setDateFin}
+          />
 
           {/* Duration indicator */}
           {nbJours > 0 && (

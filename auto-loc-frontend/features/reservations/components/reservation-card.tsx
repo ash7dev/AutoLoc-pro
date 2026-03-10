@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Calendar, User, Car, FileText, ArrowRight, Clock } from "lucide-react";
+import { CalendarRange, UserRound, CarFront, FileText, ArrowRight, Clock, Truck, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ReservationStatusBadge } from "./reservation-status";
 import type { Reservation } from "@/lib/nestjs/reservations";
@@ -35,6 +35,7 @@ export function OwnerReservationCard({
     const legacy = r as Reservation & LegacyAmounts;
     const revenue = Number(r.montantProprietaire ?? legacy.netProprietaire ?? 0);
     const isPaye = r.statut === "PAYEE";
+    const hasDelivery = !!r.adresseLivraison;
 
     const dateDebut = new Date(r.dateDebut).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
     const dateFin = new Date(r.dateFin).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
@@ -60,16 +61,16 @@ export function OwnerReservationCard({
             <div className="flex items-start justify-between gap-3 pl-6 pr-4 pt-4 pb-3">
 
                 <div className="flex items-center gap-3 min-w-0">
-                    {/* Vehicle icon */}
+                    {/* Vehicle icon badge */}
                     <div className={cn(
-                        "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 border transition-all duration-300",
+                        "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border transition-all duration-300",
                         isPaye
                             ? "bg-slate-900 border-slate-900 group-hover:bg-slate-800"
-                            : "bg-slate-50 border-slate-100 group-hover:bg-emerald-50 group-hover:border-emerald-100",
+                            : "bg-gradient-to-br from-emerald-50 to-white border-emerald-100 group-hover:from-emerald-100",
                     )}>
-                        <Car className={cn(
-                            "w-4 h-4 transition-colors",
-                            isPaye ? "text-emerald-400" : "text-slate-400 group-hover:text-emerald-500",
+                        <CarFront className={cn(
+                            "w-4.5 h-4.5 transition-colors",
+                            isPaye ? "text-emerald-400" : "text-emerald-500",
                         )} strokeWidth={1.75} />
                     </div>
 
@@ -91,18 +92,40 @@ export function OwnerReservationCard({
             </div>
 
             {/* ══ META ════════════════════════════════════════════════ */}
-            <div className="flex flex-col gap-1.5 pl-6 pr-4 pb-4">
-                <div className="flex items-center gap-1.5 text-[11.5px] font-medium text-slate-500">
-                    <Calendar className="w-3 h-3 text-slate-400 flex-shrink-0" strokeWidth={1.75} />
-                    {dateDebut} → {dateFin}
+            <div className="flex flex-col gap-2 pl-6 pr-4 pb-4">
+                {/* Dates with icon badge */}
+                <div className="flex items-center gap-2.5 text-[11.5px] font-medium text-slate-500">
+                    <span className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                        <CalendarRange className="w-3 h-3 text-blue-500" strokeWidth={2} />
+                    </span>
+                    <span>{dateDebut} → {dateFin}</span>
                     <span className="text-slate-300">·</span>
-                    <Clock className="w-3 h-3 text-slate-400 flex-shrink-0" strokeWidth={1.75} />
-                    {r.nbJours}j
+                    <span className="w-6 h-6 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                        <Clock className="w-3 h-3 text-amber-500" strokeWidth={2} />
+                    </span>
+                    <span className="font-bold">{r.nbJours}j</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11.5px] font-medium text-slate-500">
-                    <User className="w-3 h-3 text-slate-400 flex-shrink-0" strokeWidth={1.75} />
+
+                {/* Tenant with icon badge */}
+                <div className="flex items-center gap-2.5 text-[11.5px] font-medium text-slate-500">
+                    <span className="w-6 h-6 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
+                        <UserRound className="w-3 h-3 text-violet-500" strokeWidth={2} />
+                    </span>
                     <span className="truncate">{r.locataire.prenom} {r.locataire.nom}</span>
                 </div>
+
+                {/* Delivery badge */}
+                {hasDelivery && (
+                    <div className="flex items-center gap-2.5 text-[11.5px] font-medium text-slate-500">
+                        <span className="w-6 h-6 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                            <Truck className="w-3 h-3 text-emerald-500" strokeWidth={2} />
+                        </span>
+                        <div className="flex items-center gap-1 min-w-0">
+                            <MapPin className="w-3 h-3 text-slate-400 flex-shrink-0" strokeWidth={2} />
+                            <span className="truncate text-emerald-600 font-semibold">{r.adresseLivraison}</span>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* ══ FOOTER ══════════════════════════════════════════════ */}
@@ -144,6 +167,18 @@ export function OwnerReservationCard({
                         )}>
                             <FileText className="w-3 h-3" strokeWidth={2} />
                             Contrat
+                        </span>
+                    )}
+
+                    {hasDelivery && (
+                        <span className={cn(
+                            "flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold border",
+                            isPaye
+                                ? "bg-emerald-500/15 border-emerald-400/20 text-emerald-400"
+                                : "bg-emerald-50 border-emerald-100 text-emerald-600",
+                        )}>
+                            <Truck className="w-3 h-3" strokeWidth={2} />
+                            Livraison
                         </span>
                     )}
 

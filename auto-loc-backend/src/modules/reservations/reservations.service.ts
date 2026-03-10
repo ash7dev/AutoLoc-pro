@@ -85,6 +85,10 @@ function serializeReservation(r: Record<string, unknown> & {
     annuleeLe: r.annuleLe ?? undefined,
     contratUrl: r.contratUrl ?? undefined,
     proprietaireId: r.proprietaireId,
+    adresseLivraison: (r as Record<string, unknown>).adresseLivraison ?? null,
+    fraisLivraison: (r as Record<string, unknown>).fraisLivraison != null
+      ? String((r as Record<string, unknown>).fraisLivraison)
+      : null,
     locataire: r.locataire,
     vehicule: r.vehicule,
     paiement: r.paiement,

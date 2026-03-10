@@ -1,16 +1,16 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, FileCheck2, FileUp, ShieldCheck, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileCheck2, FileUp, ShieldCheck, X, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAddVehicleStore } from "../store";
 
 interface Props {
-    nextStep?: () => void;
-    previousStep?: () => void;
+    onNext: () => void;
+    onBack: () => void;
 }
 
-export function StepDocuments({ nextStep, previousStep }: Props) {
+export function StepDocuments({ onNext, onBack }: Props) {
     const { carteGrise, assurance, setDocument } = useAddVehicleStore();
 
     const handleFile = (type: "carteGrise" | "assurance", files: FileList | null) => {
@@ -55,13 +55,13 @@ export function StepDocuments({ nextStep, previousStep }: Props) {
             </div>
 
             <div className="flex items-center justify-between pt-2">
-                <Button type="button" variant="outline" onClick={previousStep} className="gap-2 h-10">
+                <Button type="button" variant="outline" onClick={onBack} className="gap-2 h-10">
                     <ArrowLeft className="h-4 w-4" />
                     Retour
                 </Button>
                 <Button
                     type="button"
-                    onClick={nextStep}
+                    onClick={onNext}
                     disabled={!isFormValid}
                     className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 h-10 disabled:opacity-50"
                 >
@@ -88,7 +88,8 @@ function DocumentZone({
     onFileSelect: (files: FileList | null) => void;
     onClear: () => void;
 }) {
-    const inputRef = useRef<HTMLInputElement>(null);
+    const cameraRef = useRef<HTMLInputElement>(null);
+    const galleryRef = useRef<HTMLInputElement>(null);
 
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
@@ -106,18 +107,43 @@ function DocumentZone({
                 <div
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={handleDrop}
-                    onClick={() => inputRef.current?.click()}
-                    className="flex flex-col items-center justify-center p-4 gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 hover:border-slate-300 transition-colors h-32 text-center"
+                    className="flex flex-col items-center justify-center p-4 gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 h-32 text-center"
                 >
-                    <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500">
-                        <FileUp className="w-5 h-5" />
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => cameraRef.current?.click()}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg
+                              bg-black text-white text-[11px] font-semibold
+                              hover:bg-black/80 active:scale-95 transition-all shadow-sm"
+                        >
+                            <Camera className="h-3 w-3" strokeWidth={2} />
+                            Photo
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => galleryRef.current?.click()}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg
+                              border border-slate-200 bg-white text-black text-[11px] font-semibold
+                              hover:bg-slate-100 active:scale-95 transition-all"
+                        >
+                            <FileUp className="h-3 w-3" strokeWidth={2} />
+                            Parcourir
+                        </button>
                     </div>
-                    <div>
-                        <p className="text-sm font-medium text-slate-700">Cliquez ou glissez-déposez</p>
-                        <p className="text-xs text-slate-500 mt-0.5">Image ou PDF (max 10 Mo)</p>
-                    </div>
+                    <p className="text-[10px] text-slate-400">ou glisser-déposer · Image / PDF</p>
+                    {/* Camera input */}
                     <input
-                        ref={inputRef}
+                        ref={cameraRef}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                        onChange={(e) => onFileSelect(e.target.files)}
+                    />
+                    {/* Gallery/file input */}
+                    <input
+                        ref={galleryRef}
                         type="file"
                         accept="image/*,application/pdf"
                         className="hidden"

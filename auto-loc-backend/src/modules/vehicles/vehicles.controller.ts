@@ -98,6 +98,15 @@ export class VehiclesController {
   }
 
   /**
+   * GET /vehicles/:id/blocked-dates — Dates indisponibles (public).
+   * Utilisé par le calendrier de réservation côté locataire.
+   */
+  @Get(':id/blocked-dates')
+  getBlockedDates(@Param('id', ParseUUIDPipe) id: string) {
+    return this.vehiclesService.getBlockedDates(id);
+  }
+
+  /**
    * GET /vehicles/:id/pricing?days=N
    * Prévisualisation publique du tarif dynamique pour N jours.
    */

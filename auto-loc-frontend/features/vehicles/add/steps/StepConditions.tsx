@@ -20,11 +20,11 @@ const ASSURANCES = [
 ];
 
 interface Props {
-  nextStep?: () => void;
-  previousStep?: () => void;
+  onNext: () => void;
+  onBack: () => void;
 }
 
-export function StepConditions({ nextStep, previousStep }: Props) {
+export function StepConditions({ onNext, onBack }: Props) {
   const { step3, setStep3 } = useAddVehicleStore();
 
   const { register, handleSubmit } = useForm<Step3Data>({
@@ -33,7 +33,7 @@ export function StepConditions({ nextStep, previousStep }: Props) {
 
   const onSubmit = (data: Step3Data) => {
     setStep3(data);
-    nextStep?.();
+    onNext();
   };
 
   return (
@@ -99,7 +99,7 @@ export function StepConditions({ nextStep, previousStep }: Props) {
       </div>
 
       <div className="flex items-center justify-between pt-2">
-        <Button type="button" variant="outline" onClick={previousStep} className="gap-2 h-10">
+        <Button type="button" variant="outline" onClick={onBack} className="gap-2 h-10">
           <ArrowLeft className="h-4 w-4" />
           Retour
         </Button>

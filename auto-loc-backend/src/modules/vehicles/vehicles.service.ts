@@ -856,6 +856,51 @@ export class VehiclesService {
     return { data: reservations, total: reservations.length };
   }
 
+  // ── Dates bloquées (public) ─────────────────────────────────────────────
+
+  /**
+   * GET /vehicles/:id/blocked-dates — Récupère toutes les périodes
+   * indisponibles (réservations actives + indisponibilités manuelles).
+   * Endpoint PUBLIC pour le calendrier de réservation côté locataire.
+   */
+  async getBlockedDates(vehiculeId: string) {
+    const vehicle = await this.prisma.vehicule.findUnique({
+      where: { id: vehiculeId },
+      select: { id: true },
+    });
+    if (!vehicle) throw new NotFoundException('Vehicle not found');
+
+    // Reservations actives (PAYEE, CONFIRMEE, EN_COURS)
+    const reservations = await this.prisma.reservation.findMany({
+      where: {
+        vehiculeId,
+        statut: { in: ['PAYEE', 'CONFIRMEE', 'EN_COURS'] },
+      },
+      select: { dateDebut: true, dateFin: true },
+    });
+
+    // Indisponibilités manuelles du propriétaire
+    const indisponibilites = await this.prisma.indisponibiliteVehicule.findMany({
+      where: { vehiculeId },
+      select: { dateDebut: true, dateFin: true },
+    });
+
+    const blockedRanges = [
+      ...reservations.map((r) => ({
+        from: r.dateDebut.toISOString().split('T')[0],
+        to: r.dateFin.toISOString().split('T')[0],
+        type: 'reservation' as const,
+      })),
+      ...indisponibilites.map((i) => ({
+        from: i.dateDebut.toISOString().split('T')[0],
+        to: i.dateFin.toISOString().split('T')[0],
+        type: 'indisponibilite' as const,
+      })),
+    ];
+
+    return { blockedRanges };
+  }
+
   // ── Indisponibilités (calendrier disponibilité) ───────────────────────
 
   async createIndisponibilite(vehiculeId: string, dto: CreateIndisponibiliteDto) {

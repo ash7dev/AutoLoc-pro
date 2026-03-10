@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { useAddVehicleStore, Step2Data, PriceTier } from "../store";
 
 interface Props {
-  nextStep?: () => void;
-  previousStep?: () => void;
+  onNext: () => void;
+  onBack: () => void;
 }
 
-export function StepPricing({ nextStep, previousStep }: Props) {
+export function StepPricing({ onNext, onBack }: Props) {
   const { step2, setStep2 } = useAddVehicleStore();
 
   const { register, control, handleSubmit, watch, formState: { errors } } = useForm<Step2Data>({
@@ -29,7 +29,7 @@ export function StepPricing({ nextStep, previousStep }: Props) {
 
   const onSubmit = (data: Step2Data) => {
     setStep2(data);
-    nextStep?.();
+    onNext();
   };
 
   return (
@@ -188,7 +188,7 @@ export function StepPricing({ nextStep, previousStep }: Props) {
       </div>
 
       <div className="flex items-center justify-between pt-2">
-        <Button type="button" variant="outline" onClick={previousStep} className="gap-2 h-10">
+        <Button type="button" variant="outline" onClick={onBack} className="gap-2 h-10">
           <ArrowLeft className="h-4 w-4" />
           Retour
         </Button>

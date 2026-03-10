@@ -13,10 +13,10 @@ import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import { VEHICLE_PATHS, Vehicle } from "@/lib/nestjs/vehicles";
 
 interface Props {
-  previousStep?: () => void;
+  onBack: () => void;
 }
 
-export function StepReview({ previousStep }: Props) {
+export function StepReview({ onBack }: Props) {
   const router = useRouter();
   const { step1, step2, step3, photos, carteGrise, assurance, setVehicleId, reset } = useAddVehicleStore();
   const [loading, setLoading] = useState(false);
@@ -201,7 +201,7 @@ export function StepReview({ previousStep }: Props) {
       )}
 
       <div className="flex items-center justify-between pt-2">
-        <Button type="button" variant="outline" onClick={previousStep} disabled={loading} className="gap-2 h-10">
+        <Button type="button" variant="outline" onClick={onBack} disabled={loading} className="gap-2 h-10">
           <ArrowLeft className="h-4 w-4" />
           Retour
         </Button>

@@ -55,10 +55,10 @@ const ZONES_DAKAR = [
 ];
 
 interface Props {
-  nextStep?: () => void;
+  onNext: () => void;
 }
 
-export function StepVehicleInfo({ nextStep }: Props) {
+export function StepVehicleInfo({ onNext }: Props) {
   const { step1, setStep1 } = useAddVehicleStore();
   const [equipements, setEquipements] = useState<string[]>(step1?.equipements ?? []);
 
@@ -78,7 +78,7 @@ export function StepVehicleInfo({ nextStep }: Props) {
 
   const onSubmit = (data: Step1Data) => {
     setStep1({ ...data, equipements });
-    nextStep?.();
+    onNext();
   };
 
   return (

@@ -30,6 +30,8 @@ export interface CreateReservationInput {
     dateFin: string;
     fournisseur: FournisseurPaiement;
     idempotencyKey?: string;
+    adresseLivraison?: string;
+    fraisLivraison?: number;
 }
 
 export interface CreateReservationResult {
@@ -124,6 +126,8 @@ export class CreateReservationUseCase {
                             statut: StatutReservation.EN_ATTENTE_PAIEMENT,
                             paymentUrl,
                             delaiSignature,
+                            adresseLivraison: input.adresseLivraison ?? null,
+                            fraisLivraison: input.fraisLivraison ?? null,
                         },
                         select: { id: true, paymentUrl: true },
                     });

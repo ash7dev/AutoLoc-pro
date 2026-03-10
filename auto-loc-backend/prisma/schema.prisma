@@ -275,6 +275,10 @@ model Reservation {
   contratUrl      String?
   contratPublicId String?
 
+  // Livraison (optionnel par réservation)
+  adresseLivraison String?
+  fraisLivraison   Decimal? @db.Decimal(10,2)
+
   creeLe          DateTime @default(now())
   misAJourLe      DateTime @updatedAt
 
