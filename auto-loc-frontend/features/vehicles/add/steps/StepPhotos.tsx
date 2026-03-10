@@ -1,10 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, X, Star, ImagePlus, Camera } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAddVehicleStore } from "../store";
+import {
+  ArrowLeft, ArrowRight, X, Star, ImagePlus, Camera, Images,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAddVehicleStore } from "../store";
 
 const MAX_PHOTOS = 8;
 
@@ -35,144 +36,144 @@ export function StepPhotos({ onNext, onBack }: Props) {
   };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-bold">Photos du véhicule</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Ajoutez jusqu&apos;à {MAX_PHOTOS} photos. La première (étoile) sera l&apos;image principale.
-        </p>
-      </div>
+    <div className="space-y-7">
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {/* Photos déjà sélectionnées */}
-        {previews.map((src, i) => (
-          <div
-            key={i}
-            className={cn(
-              "relative group rounded-xl overflow-hidden border-2 transition-all bg-muted",
-              i === mainIndex ? "border-emerald-500" : "border-transparent",
-            )}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={src}
-              alt={`Photo ${i + 1}`}
-              className="h-36 w-full object-cover"
-            />
-            {/* Main badge */}
-            {i === mainIndex && (
-              <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full
-                bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
-                <Star className="h-2.5 w-2.5 fill-white" />
-                Principale
+      {/* ━━━ Section Card ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
+          <span className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
+            <Images className="w-4 h-4 text-emerald-400" strokeWidth={2} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] font-bold text-slate-900 tracking-tight">Photos du véhicule</p>
+            <p className="text-[11px] font-medium text-slate-400 mt-0.5">
+              Jusqu&apos;à {MAX_PHOTOS} photos · la première sera l&apos;image principale
+            </p>
+          </div>
+          {photos.length > 0 && (
+            <span className="text-[11px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
+              {photos.length}/{MAX_PHOTOS}
+            </span>
+          )}
+        </div>
+
+        {/* Body */}
+        <div className="p-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {/* Existing photos */}
+            {previews.map((src, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "relative group rounded-xl overflow-hidden border-2 transition-all duration-200 aspect-[4/3]",
+                  i === mainIndex
+                    ? "border-emerald-400 shadow-md shadow-emerald-500/15"
+                    : "border-transparent hover:border-slate-300",
+                )}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+
+                {/* Main badge */}
+                {i === mainIndex && (
+                  <div className="absolute top-2 left-2 flex items-center gap-1 rounded-lg bg-emerald-500 px-2 py-1 text-[9px] font-black text-white shadow-sm uppercase tracking-wider">
+                    <Star className="h-2.5 w-2.5 fill-white" strokeWidth={0} />
+                    Principale
+                  </div>
+                )}
+
+                {/* Actions overlay */}
+                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-200">
+                  {i !== mainIndex && (
+                    <button
+                      type="button"
+                      onClick={() => setMainIndex(i)}
+                      className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/90 text-slate-700 hover:bg-white hover:scale-105 transition-all shadow-md"
+                      title="Définir comme principale"
+                    >
+                      <Star className="h-4 w-4" strokeWidth={2} />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      removePhoto(i);
+                      if (mainIndex >= i && mainIndex > 0) setMainIndex(mainIndex - 1);
+                    }}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/90 text-red-500 hover:bg-white hover:scale-105 transition-all shadow-md"
+                    title="Supprimer"
+                  >
+                    <X className="h-4 w-4" strokeWidth={2.5} />
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {/* Upload slot */}
+            {photos.length < MAX_PHOTOS && (
+              <div
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+                className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 aspect-[4/3] text-center hover:border-emerald-300 hover:bg-emerald-50/30 transition-colors"
+              >
+                <div className="flex flex-col sm:flex-row items-center gap-2">
+                  {/* Camera button */}
+                  <button
+                    type="button"
+                    onClick={() => cameraRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 text-white text-[11px] font-bold hover:bg-slate-800 active:scale-95 transition-all shadow-sm"
+                  >
+                    <Camera className="h-3 w-3" strokeWidth={2.5} />
+                    Camera
+                  </button>
+                  {/* Gallery button */}
+                  <button
+                    type="button"
+                    onClick={() => galleryRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-[11px] font-bold hover:bg-slate-50 active:scale-95 transition-all"
+                  >
+                    <ImagePlus className="h-3 w-3" strokeWidth={2.5} />
+                    Galerie
+                  </button>
+                </div>
+                <span className="text-[10px] font-medium text-slate-400">ou glisser-déposer</span>
+
+                <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+                <input ref={galleryRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
               </div>
             )}
-            {/* Actions overlay */}
-            <div className="absolute inset-0 flex items-center justify-center gap-2
-              bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-              {i !== mainIndex && (
-                <button
-                  type="button"
-                  onClick={() => setMainIndex(i)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full
-                    bg-white/90 text-black hover:bg-white transition-colors shadow"
-                  title="Définir comme principale"
-                >
-                  <Star className="h-4 w-4" />
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  removePhoto(i);
-                  if (mainIndex >= i && mainIndex > 0) setMainIndex(mainIndex - 1);
-                }}
-                className="flex h-9 w-9 items-center justify-center rounded-full
-                  bg-white/90 text-destructive hover:bg-white transition-colors shadow"
-                title="Supprimer"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
           </div>
-        ))}
 
-        {/* Slot d'ajout — visible tant qu'on n'a pas atteint MAX_PHOTOS */}
-        {photos.length < MAX_PHOTOS && (
-          <div
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-            className="flex h-36 flex-col items-center justify-center gap-3
-              rounded-xl border border-dashed border-[hsl(var(--border))] bg-muted/30
-              text-muted-foreground transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              {/* Camera button */}
-              <button
-                type="button"
-                onClick={() => cameraRef.current?.click()}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg
-                  bg-black text-white text-[12px] font-semibold
-                  hover:bg-black/80 active:scale-95 transition-all shadow-sm"
-              >
-                <Camera className="h-3.5 w-3.5" strokeWidth={2} />
-                Prendre une photo
-              </button>
-              {/* Gallery button */}
-              <button
-                type="button"
-                onClick={() => galleryRef.current?.click()}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg
-                  border border-[hsl(var(--border))] bg-white text-black text-[12px] font-semibold
-                  hover:bg-muted/60 active:scale-95 transition-all"
-              >
-                <ImagePlus className="h-3.5 w-3.5" strokeWidth={2} />
-                Galerie
-              </button>
-            </div>
-            <span className="text-[11px] opacity-50">ou glisser-déposer · JPG, PNG, WEBP</span>
-            {/* Hidden camera input — capture="environment" triggers native camera on mobile */}
-            <input
-              ref={cameraRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={(e) => handleFiles(e.target.files)}
-            />
-            {/* Hidden gallery input — normal file picker */}
-            <input
-              ref={galleryRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={(e) => handleFiles(e.target.files)}
-            />
-          </div>
-        )}
+          {photos.length > 0 && (
+            <p className="text-[11px] font-medium text-slate-400 mt-3 text-center">
+              Survolez une photo pour la définir comme principale ou la supprimer
+            </p>
+          )}
+        </div>
       </div>
 
-      {photos.length > 0 && (
-        <p className="text-xs text-muted-foreground">
-          {photos.length}/{MAX_PHOTOS} photo{photos.length > 1 ? "s" : ""} — survolez une photo pour la définir comme principale ou la supprimer
-        </p>
-      )}
-
+      {/* ━━━ Navigation ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <div className="flex items-center justify-between pt-2">
-        <Button type="button" variant="outline" onClick={onBack} className="gap-2 h-10">
-          <ArrowLeft className="h-4 w-4" />
+        <button type="button" onClick={onBack}
+          className="flex items-center gap-2 text-[13px] font-bold text-slate-500 hover:text-slate-700 px-5 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all duration-200">
+          <ArrowLeft className="w-4 h-4" strokeWidth={2.5} />
           Retour
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
           onClick={onNext}
           disabled={photos.length === 0}
-          className="gap-2 bg-black text-white hover:bg-black/90 h-10 disabled:opacity-50"
+          className={cn(
+            "group flex items-center gap-2.5 text-[13px] font-bold px-7 py-3.5 rounded-xl shadow-lg transition-all duration-200",
+            photos.length > 0
+              ? "bg-slate-900 hover:bg-slate-800 text-white shadow-slate-900/20 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:shadow-md"
+              : "bg-slate-100 text-slate-300 shadow-none cursor-not-allowed",
+          )}
         >
-          Suivant — Confirmation
-          <ArrowRight className="h-4 w-4" />
-        </Button>
+          Suivant — Documents
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" strokeWidth={2.5} />
+        </button>
       </div>
     </div>
   );

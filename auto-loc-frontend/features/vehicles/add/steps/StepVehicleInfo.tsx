@@ -1,23 +1,25 @@
 "use client";
 
 import { useState } from "react";
-
 import { useForm } from "react-hook-form";
-import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  ArrowRight, Car, MapPin, Settings2, Fuel, Users, Hash,
+  CalendarDays, CheckCircle2, Sparkles,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useAddVehicleStore, Step1Data, VehicleType, FuelType, TransmissionType } from "../store";
 
-const VEHICLE_TYPES: { value: VehicleType; label: string }[] = [
-  { value: "CITADINE", label: "Citadine" },
-  { value: "BERLINE", label: "Berline" },
-  { value: "SUV", label: "SUV" },
-  { value: "PICKUP", label: "Pick-up" },
-  { value: "MINIVAN", label: "Minivan" },
-  { value: "MONOSPACE", label: "Monospace" },
-  { value: "MINIBUS", label: "Minibus" },
-  { value: "UTILITAIRE", label: "Utilitaire" },
-  { value: "LUXE", label: "Luxe" },
-  { value: "FOUR_X_FOUR", label: "4x4" },
+const VEHICLE_TYPES: { value: VehicleType; label: string; icon?: string }[] = [
+  { value: "CITADINE", label: "Citadine", icon: "🚗" },
+  { value: "BERLINE", label: "Berline", icon: "🏎️" },
+  { value: "SUV", label: "SUV", icon: "🚙" },
+  { value: "PICKUP", label: "Pick-up", icon: "🛻" },
+  { value: "MINIVAN", label: "Minivan", icon: "🚐" },
+  { value: "MONOSPACE", label: "Monospace", icon: "🚌" },
+  { value: "MINIBUS", label: "Minibus", icon: "🚎" },
+  { value: "UTILITAIRE", label: "Utilitaire", icon: "📦" },
+  { value: "LUXE", label: "Luxe", icon: "💎" },
+  { value: "FOUR_X_FOUR", label: "4x4", icon: "⛰️" },
 ];
 
 const FUEL_TYPES: { value: FuelType; label: string }[] = [
@@ -33,14 +35,14 @@ const TRANSMISSIONS: { value: TransmissionType; label: string }[] = [
 ];
 
 const EQUIPMENTS = [
-  { value: "GPS", label: "GPS" },
-  { value: "CLIMATISATION", label: "Climatisation" },
-  { value: "BLUETOOTH", label: "Bluetooth" },
-  { value: "CAMERA_RECUL", label: "Caméra de recul" },
-  { value: "SIEGE_ENFANT", label: "Siège enfant" },
-  { value: "TOIT_OUVRANT", label: "Toit ouvrant" },
-  { value: "RADAR_STATIONNEMENT", label: "Radar stationnement" },
-  { value: "REGULATEUR_VITESSE", label: "Rég. de vitesse" },
+  { value: "GPS", label: "GPS", icon: "📍" },
+  { value: "CLIMATISATION", label: "Climatisation", icon: "❄️" },
+  { value: "BLUETOOTH", label: "Bluetooth", icon: "📶" },
+  { value: "CAMERA_RECUL", label: "Caméra de recul", icon: "📷" },
+  { value: "SIEGE_ENFANT", label: "Siège enfant", icon: "🪑" },
+  { value: "TOIT_OUVRANT", label: "Toit ouvrant", icon: "☀️" },
+  { value: "RADAR_STATIONNEMENT", label: "Radar stationnement", icon: "📡" },
+  { value: "REGULATEUR_VITESSE", label: "Rég. de vitesse", icon: "⚡" },
 ];
 
 const ZONES_DAKAR = [
@@ -54,6 +56,15 @@ const ZONES_DAKAR = [
   { value: "keurmassar-rufisque", label: "Keur Massar – Rufisque" },
 ];
 
+/* ── Shared premium input class ─────────────────────────────────── */
+const INPUT_CLASS =
+  "w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-medium text-slate-900 placeholder-slate-300 outline-none transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15";
+
+const SELECT_CLASS =
+  "w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-[13px] font-medium text-slate-900 outline-none appearance-none cursor-pointer transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15";
+
+const LABEL_CLASS = "text-[12px] font-bold text-slate-700 uppercase tracking-wide";
+
 interface Props {
   onNext: () => void;
 }
@@ -62,13 +73,15 @@ export function StepVehicleInfo({ onNext }: Props) {
   const { step1, setStep1 } = useAddVehicleStore();
   const [equipements, setEquipements] = useState<string[]>(step1?.equipements ?? []);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<Step1Data>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<Step1Data>({
     defaultValues: step1 ?? {
       annee: new Date().getFullYear(),
       type: "BERLINE",
       equipements: [],
     },
   });
+
+  const selectedType = watch("type");
 
   const toggleEquipment = (value: string) => {
     setEquipements((prev) =>
@@ -82,141 +95,148 @@ export function StepVehicleInfo({ onNext }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <h3 className="text-lg font-bold">Informations du véhicule</h3>
-        <p className="text-sm text-muted-foreground mt-1">Les détails de base de votre véhicule.</p>
-      </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Marque */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Marque *</label>
-          <input
-            {...register("marque", { required: "Requis" })}
-            placeholder="Toyota, BMW…"
-            className="w-full h-10 rounded-lg border border-[hsl(var(--border))] bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-          />
-          {errors.marque && <p className="text-xs text-destructive">{errors.marque.message}</p>}
+      {/* ━━━ Section: Identité du véhicule ━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <SectionCard
+        icon={Car}
+        title="Identité du véhicule"
+        subtitle="Marque, modèle et informations principales"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <FormField label="Marque" required error={errors.marque?.message}>
+            <input
+              {...register("marque", { required: "Requis" })}
+              placeholder="Toyota, BMW, Peugeot…"
+              className={INPUT_CLASS}
+            />
+          </FormField>
+
+          <FormField label="Modèle" required error={errors.modele?.message}>
+            <input
+              {...register("modele", { required: "Requis" })}
+              placeholder="Corolla, X5, 3008…"
+              className={INPUT_CLASS}
+            />
+          </FormField>
+
+          <FormField label="Année" required error={errors.annee ? "Année invalide" : undefined}>
+            <input
+              type="number"
+              {...register("annee", { required: "Requis", min: 1990, max: new Date().getFullYear() + 1, valueAsNumber: true })}
+              className={INPUT_CLASS}
+            />
+          </FormField>
+
+          <FormField label="Immatriculation" required error={errors.immatriculation?.message}>
+            <input
+              {...register("immatriculation", { required: "Requis" })}
+              placeholder="DK 1234 AB"
+              className={cn(INPUT_CLASS, "font-mono uppercase tracking-wider")}
+            />
+          </FormField>
+
+          <FormField label="Nombre de places">
+            <input
+              type="number"
+              {...register("nombrePlaces", { min: 1, max: 50, valueAsNumber: true })}
+              placeholder="5"
+              className={INPUT_CLASS}
+            />
+          </FormField>
+        </div>
+      </SectionCard>
+
+      {/* ━━━ Section: Type de véhicule ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <SectionCard
+        icon={Settings2}
+        title="Type & motorisation"
+        subtitle="Catégorie, carburant et transmission"
+      >
+        {/* Vehicle type chips */}
+        <div>
+          <p className={cn(LABEL_CLASS, "mb-3")}>Type de véhicule *</p>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {VEHICLE_TYPES.map((t) => {
+              const active = selectedType === t.value;
+              return (
+                <label
+                  key={t.value}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-2.5 rounded-xl border cursor-pointer transition-all duration-200",
+                    active
+                      ? "border-emerald-400 bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-500/10 ring-1 ring-emerald-400/30"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50",
+                  )}
+                >
+                  <input
+                    type="radio"
+                    value={t.value}
+                    {...register("type", { required: true })}
+                    className="sr-only"
+                  />
+                  <span className="text-sm">{t.icon}</span>
+                  <span className="text-[12px] font-bold">{t.label}</span>
+                </label>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Modèle */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Modèle *</label>
-          <input
-            {...register("modele", { required: "Requis" })}
-            placeholder="Corolla, X5…"
-            className="w-full h-10 rounded-lg border border-[hsl(var(--border))] bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-          />
-          {errors.modele && <p className="text-xs text-destructive">{errors.modele.message}</p>}
-        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-5">
+          <FormField label="Carburant" icon={Fuel}>
+            <select {...register("carburant")} className={SELECT_CLASS}>
+              <option value="">— Sélectionner —</option>
+              {FUEL_TYPES.map((f) => (
+                <option key={f.value} value={f.value}>{f.label}</option>
+              ))}
+            </select>
+          </FormField>
 
-        {/* Année */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Année *</label>
-          <input
-            type="number"
-            {...register("annee", { required: "Requis", min: 1990, max: new Date().getFullYear() + 1, valueAsNumber: true })}
-            className="w-full h-10 rounded-lg border border-[hsl(var(--border))] bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-          />
-          {errors.annee && <p className="text-xs text-destructive">Année invalide</p>}
+          <FormField label="Transmission" icon={Settings2}>
+            <select {...register("transmission")} className={SELECT_CLASS}>
+              <option value="">— Sélectionner —</option>
+              {TRANSMISSIONS.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </FormField>
         </div>
+      </SectionCard>
 
-        {/* Immatriculation */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Immatriculation *</label>
-          <input
-            {...register("immatriculation", { required: "Requis" })}
-            placeholder="DK 1234 AB"
-            className="w-full h-10 rounded-lg border border-[hsl(var(--border))] bg-background px-3 text-sm font-mono uppercase outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-          />
-          {errors.immatriculation && <p className="text-xs text-destructive">{errors.immatriculation.message}</p>}
+      {/* ━━━ Section: Localisation ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <SectionCard
+        icon={MapPin}
+        title="Localisation"
+        subtitle="Où le véhicule sera récupéré"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <FormField label="Zone / Ville" required error={errors.ville?.message}>
+            <select {...register("ville", { required: "Requis" })} className={SELECT_CLASS}>
+              <option value="">Sélectionner une zone</option>
+              {ZONES_DAKAR.map(({ value, label }) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+          </FormField>
+
+          <FormField label="Adresse de récupération" required error={errors.adresse?.message}>
+            <input
+              {...register("adresse", { required: "Requis" })}
+              placeholder="Rue, quartier…"
+              className={INPUT_CLASS}
+            />
+          </FormField>
         </div>
+      </SectionCard>
 
-        {/* Type */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Type de véhicule *</label>
-          <select
-            {...register("type", { required: true })}
-            className="w-full h-10 rounded-lg border border-[hsl(var(--border))] bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-          >
-            {VEHICLE_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Nombre de places */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Nombre de places</label>
-          <input
-            type="number"
-            {...register("nombrePlaces", { min: 1, max: 50, valueAsNumber: true })}
-            placeholder="5"
-            className="w-full h-10 rounded-lg border border-[hsl(var(--border))] bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-          />
-        </div>
-
-        {/* Carburant */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Carburant</label>
-          <select
-            {...register("carburant")}
-            className="w-full h-10 rounded-lg border border-[hsl(var(--border))] bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">— Sélectionner —</option>
-            {FUEL_TYPES.map((f) => (
-              <option key={f.value} value={f.value}>{f.label}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Transmission */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Transmission</label>
-          <select
-            {...register("transmission")}
-            className="w-full h-10 rounded-lg border border-[hsl(var(--border))] bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">— Sélectionner —</option>
-            {TRANSMISSIONS.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Ville */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Zone / Ville *</label>
-          <select
-            {...register("ville", { required: "Requis" })}
-            className="w-full h-10 rounded-lg border border-[hsl(var(--border))] bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">Sélectionner une zone</option>
-            {ZONES_DAKAR.map(({ value, label }) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-          {errors.ville && <p className="text-xs text-destructive">{errors.ville.message}</p>}
-        </div>
-
-        {/* Adresse */}
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Adresse de récupération *</label>
-          <input
-            {...register("adresse", { required: "Requis" })}
-            placeholder="Rue, quartier…"
-            className="w-full h-10 rounded-lg border border-[hsl(var(--border))] bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-          />
-          {errors.adresse && <p className="text-xs text-destructive">{errors.adresse.message}</p>}
-        </div>
-      </div>
-
-      {/* Équipements */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Équipements du véhicule</label>
-        <p className="text-xs text-muted-foreground -mt-0.5">Cochez les équipements disponibles dans votre véhicule.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
+      {/* ━━━ Section: Équipements ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <SectionCard
+        icon={Sparkles}
+        title="Équipements"
+        subtitle="Cochez les options disponibles — plus vous en avez, plus votre annonce attire"
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           {EQUIPMENTS.map((eq) => {
             const active = equipements.includes(eq.value);
             return (
@@ -224,28 +244,110 @@ export function StepVehicleInfo({ onNext }: Props) {
                 key={eq.value}
                 type="button"
                 onClick={() => toggleEquipment(eq.value)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all ${active
-                  ? 'border-black bg-black text-white'
-                  : 'border-[hsl(var(--border))] bg-background text-muted-foreground hover:border-black/30'
-                  }`}
+                className={cn(
+                  "flex items-center gap-2.5 px-3.5 py-3 rounded-xl border text-left transition-all duration-200",
+                  active
+                    ? "border-emerald-400 bg-emerald-50 shadow-sm shadow-emerald-500/10 ring-1 ring-emerald-400/30"
+                    : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
+                )}
               >
-                <span className={`w-4 h-4 rounded border flex items-center justify-center text-[10px] ${active ? 'bg-white text-black border-white' : 'border-current'
-                  }`}>
-                  {active ? '✓' : ''}
+                <span className="text-base flex-shrink-0">{eq.icon}</span>
+                <span className={cn("text-[12px] font-bold leading-tight", active ? "text-emerald-700" : "text-slate-600")}>
+                  {eq.label}
                 </span>
-                {eq.label}
+                {active && (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 ml-auto flex-shrink-0" strokeWidth={2.5} />
+                )}
               </button>
             );
           })}
         </div>
-      </div>
 
+        {equipements.length > 0 && (
+          <p className="text-[11px] font-bold text-emerald-600 mt-3 text-center">
+            {equipements.length} équipement{equipements.length > 1 ? "s" : ""} sélectionné{equipements.length > 1 ? "s" : ""}
+          </p>
+        )}
+      </SectionCard>
+
+      {/* ━━━ CTA ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <div className="flex justify-end pt-2">
-        <Button type="submit" className="gap-2 bg-black text-white hover:bg-black/90 h-10">
-          Suivant — Prix
-          <ArrowRight className="h-4 w-4" />
-        </Button>
+        <button
+          type="submit"
+          className="group flex items-center gap-2.5 bg-slate-900 hover:bg-slate-800 text-white text-[13px] font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-slate-900/20 transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:shadow-md"
+        >
+          Suivant — Tarification
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" strokeWidth={2.5} />
+        </button>
       </div>
     </form>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Shared UI primitives
+═══════════════════════════════════════════════════════════════════ */
+
+function SectionCard({
+  icon: Icon,
+  title,
+  subtitle,
+  children,
+}: {
+  icon: React.ElementType;
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
+        <span className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
+          <Icon className="w-4 h-4 text-emerald-400" strokeWidth={2} />
+        </span>
+        <div>
+          <p className="text-[14px] font-bold text-slate-900 tracking-tight">{title}</p>
+          <p className="text-[11px] font-medium text-slate-400 mt-0.5">{subtitle}</p>
+        </div>
+      </div>
+      {/* Body */}
+      <div className="p-5">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function FormField({
+  label,
+  required,
+  error,
+  icon: Icon,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  error?: string;
+  icon?: React.ElementType;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-1.5">
+        {Icon && <Icon className="w-3 h-3 text-slate-400" strokeWidth={2} />}
+        <label className={LABEL_CLASS}>
+          {label}
+          {required && <span className="text-emerald-500 ml-0.5">*</span>}
+        </label>
+      </div>
+      {children}
+      {error && (
+        <p className="text-[11px] font-semibold text-red-500 flex items-center gap-1">
+          <span className="w-3 h-3 rounded-full bg-red-100 flex items-center justify-center text-[8px]">!</span>
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
