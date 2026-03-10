@@ -4,7 +4,7 @@ import React from 'react';
 import { Tag, TrendingDown, Zap, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { TarifTier } from '@/lib/nestjs/vehicles';
-import { formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
+import { useCurrency } from '@/providers/currency-provider';
 import { createFallbackTiers } from '@/lib/nestjs/vehicle-fallbacks';
 
 interface Props {
@@ -13,12 +13,13 @@ interface Props {
 }
 
 export function VehiclePricingTable({ prixParJour, tiers }: Props): React.ReactElement {
+  const { formatPrice } = useCurrency();
   // Utilise les fallbacks si aucun tarif n'est fourni
   const displayTiers = tiers.length > 0 ? tiers : createFallbackTiers(prixParJour);
-  
+
   // Si on a des fallbacks et pas de vrais tarifs, affiche un indicateur
   const usingFallbacks = tiers.length === 0;
-  
+
   if (tiers.length === 0 && !usingFallbacks) {
     return (
       <div className="space-y-4">
@@ -29,8 +30,7 @@ export function VehiclePricingTable({ prixParJour, tiers }: Props): React.ReactE
           </span>
           <div>
             <p className="text-[22px] font-black text-emerald-700 tabular-nums leading-tight">
-              {formatPrice(prixParJour)}{' '}
-              <span className="text-[14px] font-semibold text-emerald-500">FCFA</span>
+              {formatPrice(prixParJour)}
             </p>
             <p className="text-[12px] font-semibold text-emerald-600 mt-0.5">par jour · tarif fixe</p>
           </div>
@@ -40,7 +40,7 @@ export function VehiclePricingTable({ prixParJour, tiers }: Props): React.ReactE
   }
 
   const basePrice = Math.max(...displayTiers.map((t) => t.prix));
-  const minPrice  = Math.min(...displayTiers.map((t) => t.prix));
+  const minPrice = Math.min(...displayTiers.map((t) => t.prix));
   const hasDiscount = displayTiers.length > 1 && basePrice > minPrice;
   const maxSavingPct = hasDiscount
     ? Math.round(((basePrice - minPrice) / basePrice) * 100)
@@ -96,8 +96,8 @@ export function VehiclePricingTable({ prixParJour, tiers }: Props): React.ReactE
           const label = tier.joursMax
             ? `${tier.joursMin} – ${tier.joursMax} jours`
             : `${tier.joursMin}+ jours`;
-          const isLowest   = tier.prix === minPrice;
-          const savingPct  = Math.round(((basePrice - tier.prix) / basePrice) * 100);
+          const isLowest = tier.prix === minPrice;
+          const savingPct = Math.round(((basePrice - tier.prix) / basePrice) * 100);
           const savingFcfa = basePrice - tier.prix;
           // Bar fill: base tier → 15%, best tier → 100%
           const barPct = hasDiscount
@@ -143,14 +143,14 @@ export function VehiclePricingTable({ prixParJour, tiers }: Props): React.ReactE
                   )}>
                     {formatPrice(tier.prix)}
                   </span>
-                  <span className="text-[12px] font-semibold text-slate-500 ml-1">FCFA/j</span>
+                  <span className="text-[12px] font-semibold text-slate-500 ml-1">/j</span>
                 </div>
 
                 {/* Savings badges */}
                 {savingPct > 0 && (
                   <div className="ml-auto flex items-center gap-2 flex-shrink-0">
                     <span className="text-[12px] font-bold text-amber-700 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-lg tabular-nums">
-                      −{formatPrice(savingFcfa)} FCFA/j
+                      −{formatPrice(savingFcfa)}/j
                     </span>
                     <span className={cn(
                       'text-[12px] font-black px-2.5 py-1 rounded-lg',

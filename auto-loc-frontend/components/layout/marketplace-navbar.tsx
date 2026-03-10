@@ -25,7 +25,7 @@ import {
 import { cn } from '@/lib/utils';
 import { supabase } from '../../lib/supabase/client';
 import { useNestToken } from '../../features/auth/hooks/use-nest-token';
-import { CurrencyConverter } from './CurrencyConverter';
+import { CurrencySelector } from './CurrencyConverter';
 
 /* ── Nav links ───────────────────────────────────────────────── */
 const NAV_LINKS = [
@@ -370,7 +370,7 @@ export function MarketplaceNavbar() {
           {/* Right slot */}
           <div className="flex items-center gap-2 flex-shrink-0">
             {/* Currency converter */}
-            <CurrencyConverter />
+            <CurrencySelector />
 
             {!hydrated && (
               <div className="w-32 h-9 bg-slate-100 rounded-2xl animate-pulse" />

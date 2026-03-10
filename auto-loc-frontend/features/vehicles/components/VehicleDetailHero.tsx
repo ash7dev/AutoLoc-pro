@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Vehicle } from '@/lib/nestjs/vehicles';
-import { TYPE_LABELS, formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
+import { TYPE_LABELS } from '@/features/vehicles/owner/vehicle-helpers';
+import { useCurrency } from '@/providers/currency-provider';
 
 interface Props { vehicle: Vehicle }
 type Photo = { id: string; url: string };
@@ -279,6 +280,7 @@ export function VehicleDetailHero({ vehicle }: Props): React.ReactElement {
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [liked, setLiked] = useState(false);
+  const { formatPrice } = useCurrency();
 
   const prev = () => setActiveIndex(i => (i > 0 ? i - 1 : photos.length - 1));
   const next = () => setActiveIndex(i => (i < photos.length - 1 ? i + 1 : 0));
@@ -402,7 +404,7 @@ export function VehicleDetailHero({ vehicle }: Props): React.ReactElement {
               <span className="text-[30px] font-black text-emerald-500 tabular-nums leading-none">
                 {formatPrice(vehicle.prixParJour)}
               </span>
-              <span className="text-[13px] font-semibold text-slate-600">FCFA/jour</span>
+              <span className="text-[13px] font-semibold text-slate-600">/jour</span>
             </div>
           </div>
         </div>

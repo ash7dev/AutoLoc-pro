@@ -13,6 +13,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { Vehicle } from '@/lib/nestjs/vehicles';
 import { formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
+import { useCurrency } from '@/providers/currency-provider';
 
 interface OwnerCardProps { vehicle: Vehicle }
 
@@ -77,6 +78,7 @@ interface MobileBarProps {
 
 export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum }: MobileBarProps): React.ReactElement {
     const [sheetOpen, setSheetOpen] = useState(false);
+    const { formatPrice: currencyFormat } = useCurrency();
 
     return (
         <>
@@ -85,8 +87,8 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum }: M
                 <div>
                     <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Dès</p>
                     <p className="text-[20px] font-black text-slate-900 tabular-nums leading-tight">
-                        {formatPrice(prixParJour)}{' '}
-                        <span className="text-[11px] font-semibold text-slate-400">FCFA/j</span>
+                        {currencyFormat(prixParJour)}
+                        <span className="text-[11px] font-semibold text-slate-400 ml-1">/j</span>
                     </p>
                 </div>
                 <button
@@ -140,13 +142,14 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum }: M
     );
 }
 
-/* ── Minimal inline form for the bottom sheet ──────────────────── */
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef } from 'react';
 import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles';
+import { ReservationCalendar } from '@/features/vehicles/components/ReservationCalendar';
 
 function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBarProps) {
     const router = useRouter();
+    const { formatPrice: currencyFormat } = useCurrency();
     const [dateDebut, setDateDebut] = useState('');
     const [dateFin, setDateFin] = useState('');
     const [pricing, setPricing] = useState<PricingResponse | null>(null);
@@ -159,7 +162,6 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBa
         : 0;
 
     const datesValid = nbJours >= joursMinimum;
-    const today = new Date().toISOString().split('T')[0];
     const canReserve = datesValid && contractAccepted && pricing && !loadingPricing;
 
     const doFetch = useCallback(async (days: number) => {
@@ -189,46 +191,30 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBa
 
     return (
         <div className="space-y-4">
-            {/* Date range */}
-            <div className="rounded-2xl border border-slate-200 overflow-hidden divide-y divide-slate-100 focus-within:border-emerald-300 transition-colors">
-                <div className="flex items-center gap-3 px-4 py-3.5">
-                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
-                        <CreditCard className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.75} />
-                    </div>
-                    <div className="flex-1">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Date début</p>
-                        <input type="date" value={dateDebut} min={today}
-                            onChange={e => { setDateDebut(e.target.value); if (dateFin && e.target.value >= dateFin) setDateFin(''); }}
-                            className="w-full text-[13.5px] font-semibold text-slate-800 bg-transparent outline-none" />
-                    </div>
-                </div>
-                <div className="flex items-center gap-3 px-4 py-3.5">
-                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
-                        <CreditCard className="w-3.5 h-3.5 text-slate-400" strokeWidth={1.75} />
-                    </div>
-                    <div className="flex-1">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Date fin</p>
-                        <input type="date" value={dateFin} min={dateDebut || today}
-                            onChange={e => setDateFin(e.target.value)}
-                            className="w-full text-[13.5px] font-semibold text-slate-800 bg-transparent outline-none" />
-                    </div>
-                </div>
-            </div>
+            {/* Calendar */}
+            <ReservationCalendar
+                vehicleId={vehicleId}
+                joursMinimum={joursMinimum}
+                dateDebut={dateDebut}
+                dateFin={dateFin}
+                onDateDebutChange={setDateDebut}
+                onDateFinChange={setDateFin}
+            />
 
             {/* Pricing */}
             {datesValid && pricing && !loadingPricing && (
                 <div className="rounded-2xl bg-slate-50 p-4 space-y-2.5">
                     <div className="flex justify-between text-[13px]">
-                        <span className="text-slate-500">{formatPrice(pricing.prixParJour)} × {nbJours}j</span>
-                        <span className="font-semibold text-slate-700 tabular-nums">{formatPrice(pricing.totalBase)} FCFA</span>
+                        <span className="text-slate-500">{currencyFormat(pricing.prixParJour)} × {nbJours}j</span>
+                        <span className="font-semibold text-slate-700 tabular-nums">{currencyFormat(pricing.totalBase)}</span>
                     </div>
                     <div className="flex justify-between text-[13px]">
                         <span className="text-slate-500">Frais de service (15%)</span>
-                        <span className="font-semibold text-slate-700 tabular-nums">{formatPrice(pricing.montantCommission)} FCFA</span>
+                        <span className="font-semibold text-slate-700 tabular-nums">{currencyFormat(pricing.montantCommission)}</span>
                     </div>
                     <div className="pt-2 border-t border-slate-200 flex justify-between">
                         <span className="font-bold text-slate-900">Total</span>
-                        <span className="font-black text-emerald-600 text-[15px] tabular-nums">{formatPrice(pricing.totalLocataire)} FCFA</span>
+                        <span className="font-black text-emerald-600 text-[15px] tabular-nums">{currencyFormat(pricing.totalLocataire)}</span>
                     </div>
                 </div>
             )}

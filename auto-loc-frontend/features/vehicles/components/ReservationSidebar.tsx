@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles';
-import { formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
+import { useCurrency } from '@/providers/currency-provider';
 import { apiFetch, ApiError } from '@/lib/nestjs/api-client';
 import type { ProfileResponse } from '@/lib/nestjs/auth';
 import { ReservationCalendar } from '@/features/vehicles/components/ReservationCalendar';
@@ -23,6 +23,7 @@ interface Props {
 
 export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, fraisLivraison }: Props): React.ReactElement {
   const router = useRouter();
+  const { formatPrice } = useCurrency();
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
   const [pricing, setPricing] = useState<PricingResponse | null>(null);
@@ -33,6 +34,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
   const [gateLoading, setGateLoading] = useState(false);
   const [wantsDelivery, setWantsDelivery] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const deliveryAvailable = fraisLivraison != null && fraisLivraison > 0;
@@ -146,7 +148,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
             <span className="text-[30px] font-black text-slate-900 tabular-nums leading-none">
               {formatPrice(pricing ? Math.round(pricing.totalLocataire / pricing.nbJours) : Math.round(prixParJour * 1.15))}
             </span>
-            <span className="text-[13px] font-semibold text-slate-600">FCFA / jour</span>
+            <span className="text-[13px] font-semibold text-slate-600">/ jour</span>
           </div>
           {joursMinimum > 1 && (
             <p className="text-[12px] font-semibold text-slate-600 mt-1.5">
@@ -157,15 +159,26 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
 
         <div className="p-5 space-y-4">
 
-          {/* ── Calendar replaces date inputs ── */}
-          <ReservationCalendar
-            vehicleId={vehicleId}
-            joursMinimum={joursMinimum}
-            dateDebut={dateDebut}
-            dateFin={dateFin}
-            onDateDebutChange={setDateDebut}
-            onDateFinChange={setDateFin}
-          />
+          {/* ── Calendar toggle ── */}
+          {!calendarOpen ? (
+            <button
+              type="button"
+              onClick={() => setCalendarOpen(true)}
+              className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-300 bg-slate-50 hover:bg-emerald-50/50 px-4 py-4 text-[13px] font-bold text-slate-600 hover:text-emerald-700 transition-all duration-200"
+            >
+              <Clock className="w-4 h-4" strokeWidth={2} />
+              {dateDebut && dateFin ? `${dateDebut} → ${dateFin}` : 'Choisir les dates'}
+            </button>
+          ) : (
+            <ReservationCalendar
+              vehicleId={vehicleId}
+              joursMinimum={joursMinimum}
+              dateDebut={dateDebut}
+              dateFin={dateFin}
+              onDateDebutChange={setDateDebut}
+              onDateFinChange={setDateFin}
+            />
+          )}
 
           {/* Duration indicator */}
           {nbJours > 0 && (
@@ -188,10 +201,10 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
             <div className="space-y-2 rounded-xl bg-slate-50 p-4">
               <div className="flex justify-between items-center text-[13px]">
                 <span className="text-slate-500 font-medium">
-                  {formatPrice(Math.round(pricing.totalLocataire / nbJours))} FCFA × {nbJours}j
+                  {formatPrice(Math.round(pricing.totalLocataire / nbJours))} × {nbJours}j
                 </span>
                 <span className="font-semibold text-slate-700 tabular-nums">
-                  {formatPrice(pricing.totalLocataire)} FCFA
+                  {formatPrice(pricing.totalLocataire)}
                 </span>
               </div>
               {deliveryFee > 0 && (
@@ -201,15 +214,14 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
                     Livraison
                   </span>
                   <span className="font-semibold text-slate-700 tabular-nums">
-                    {formatPrice(deliveryFee)} FCFA
+                    {formatPrice(deliveryFee)}
                   </span>
                 </div>
               )}
               <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
                 <span className="text-[14px] font-bold text-slate-900">Total</span>
                 <span className="text-[18px] font-black text-emerald-600 tabular-nums">
-                  {formatPrice(pricing.totalLocataire + deliveryFee)}{' '}
-                  <span className="text-[12px] font-semibold text-emerald-400">FCFA</span>
+                  {formatPrice(pricing.totalLocataire + deliveryFee)}
                 </span>
               </div>
               {loadingPricing && (
@@ -242,7 +254,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
                     Se faire livrer le véhicule
                   </span>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    + {formatPrice(fraisLivraison)} FCFA de frais de livraison
+                    + {formatPrice(fraisLivraison)} de frais de livraison
                   </p>
                 </div>
               </label>
