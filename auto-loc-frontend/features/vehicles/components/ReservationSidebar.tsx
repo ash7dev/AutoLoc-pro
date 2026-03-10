@@ -159,26 +159,15 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
 
         <div className="p-5 space-y-4">
 
-          {/* ── Calendar toggle ── */}
-          {!calendarOpen ? (
-            <button
-              type="button"
-              onClick={() => setCalendarOpen(true)}
-              className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 hover:border-emerald-300 bg-slate-50 hover:bg-emerald-50/50 px-4 py-4 text-[13px] font-bold text-slate-600 hover:text-emerald-700 transition-all duration-200"
-            >
-              <Clock className="w-4 h-4" strokeWidth={2} />
-              {dateDebut && dateFin ? `${dateDebut} → ${dateFin}` : 'Choisir les dates'}
-            </button>
-          ) : (
-            <ReservationCalendar
-              vehicleId={vehicleId}
-              joursMinimum={joursMinimum}
-              dateDebut={dateDebut}
-              dateFin={dateFin}
-              onDateDebutChange={setDateDebut}
-              onDateFinChange={setDateFin}
-            />
-          )}
+          {/* ── Calendar ── */}
+          <ReservationCalendar
+            vehicleId={vehicleId}
+            joursMinimum={joursMinimum}
+            dateDebut={dateDebut}
+            dateFin={dateFin}
+            onDateDebutChange={setDateDebut}
+            onDateFinChange={setDateFin}
+          />
 
           {/* Duration indicator */}
           {nbJours > 0 && (

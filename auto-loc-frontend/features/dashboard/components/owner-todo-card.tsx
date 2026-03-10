@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, AlertCircle, Clock, CheckCircle2, ChevronDown, Flame } from "lucide-react";
+import {
+  ArrowUpRight,
+  TriangleAlert,
+  CheckCircle,
+  ChevronDown,
+  ArrowRight,
+  Dot,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -19,82 +26,85 @@ export interface OwnerTodoItem {
   meta?: string;
 }
 
-/* ════════════════════════════════════════════════════════════════
-   PRIORITY CONFIG
-════════════════════════════════════════════════════════════════ */
-const PRIORITY = {
-  urgent: {
-    dot: "bg-red-500",
-    labelCls: "text-red-600 bg-red-50 border-red-200",
-    label: "Urgent",
-    rowBorder: "border-red-100 hover:border-red-200 hover:bg-red-50/30",
-  },
-  normal: {
-    dot: "bg-slate-300",
-    labelCls: "text-slate-500 bg-slate-100 border-slate-200",
-    label: "À faire",
-    rowBorder: "border-slate-100 hover:border-slate-200 hover:bg-slate-50/50",
-  },
-} as const;
-
 const PAGE_SIZE = 4;
 
 /* ════════════════════════════════════════════════════════════════
    TODO ITEM
 ════════════════════════════════════════════════════════════════ */
 function TodoItem({ item }: { item: OwnerTodoItem }) {
-  const p = item.priority ?? "normal";
-  const cfg = PRIORITY[p];
+  const isUrgent = item.priority === "urgent";
 
   const inner = (
     <div className={cn(
-      "group flex items-start gap-3.5 rounded-xl border bg-white px-4 py-3.5 transition-all duration-150",
-      cfg.rowBorder,
+      "group relative flex items-center gap-4 px-4 py-3.5 transition-all duration-150",
+      isUrgent
+        ? "bg-red-950/30 hover:bg-red-950/50"
+        : "hover:bg-white/5",
       item.href && "cursor-pointer",
     )}>
 
-      {/* Priority dot */}
-      <div className="flex flex-col items-center pt-1.5 flex-shrink-0">
-        <span className={cn("w-2 h-2 rounded-full", cfg.dot, p === "urgent" && "animate-pulse")} />
+      {/* Left colored strip */}
+      <div className={cn(
+        "absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full transition-all duration-150",
+        isUrgent
+          ? "bg-red-500 group-hover:bg-red-400"
+          : "bg-emerald-500/40 group-hover:bg-emerald-400",
+      )} />
+
+      {/* Icon */}
+      <div className={cn(
+        "flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-xl",
+        isUrgent
+          ? "bg-red-500/15 border border-red-500/30"
+          : "bg-emerald-400/10 border border-emerald-400/20",
+      )}>
+        {isUrgent
+          ? <TriangleAlert className="w-3.5 h-3.5 text-red-400" strokeWidth={2} />
+          : <Dot className="w-5 h-5 text-emerald-400" strokeWidth={2} />
+        }
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-3">
-          <p className={cn(
-            "text-[13.5px] font-bold leading-snug",
-            p === "urgent" ? "text-slate-900" : "text-slate-700",
-          )}>
-            {item.title}
-          </p>
-          <span className={cn(
-            "flex-shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold",
-            cfg.labelCls,
-          )}>
-            {cfg.label}
-          </span>
-        </div>
+        <p className={cn(
+          "text-[13px] font-semibold leading-snug tracking-tight",
+          isUrgent ? "text-white" : "text-white/80",
+        )}>
+          {item.title}
+        </p>
 
         {item.description && (
-          <p className="mt-0.5 text-[12px] font-medium text-slate-400 leading-snug">
+          <p className="mt-0.5 text-[11.5px] font-medium text-white/35 leading-snug">
             {item.description}
           </p>
         )}
 
         {item.meta && (
-          <p className="mt-1.5 text-[10.5px] font-black uppercase tracking-widest text-slate-300">
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-white/20">
             {item.meta}
           </p>
         )}
       </div>
 
-      {/* Arrow — only on hover, only if href */}
-      {item.href && (
-        <ArrowRight
-          className="w-3.5 h-3.5 flex-shrink-0 text-slate-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all mt-1"
-          strokeWidth={2.5}
-        />
-      )}
+      {/* Right side */}
+      <div className="flex-shrink-0 flex items-center gap-2">
+        {isUrgent && (
+          <span className="text-[9px] font-black uppercase tracking-widest text-red-400 bg-red-400/10 border border-red-400/20 px-2 py-0.5 rounded-md">
+            Urgent
+          </span>
+        )}
+        {item.href && (
+          <div className={cn(
+            "flex items-center justify-center w-6 h-6 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-150",
+            isUrgent ? "bg-red-500/20" : "bg-emerald-400/10",
+          )}>
+            <ArrowUpRight className={cn(
+              "w-3 h-3",
+              isUrgent ? "text-red-400" : "text-emerald-400",
+            )} strokeWidth={2.5} />
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -108,11 +118,11 @@ function TodoItem({ item }: { item: OwnerTodoItem }) {
 ════════════════════════════════════════════════════════════════ */
 function TodoSkeleton() {
   return (
-    <div className="flex items-start gap-3.5 rounded-xl border border-slate-100 bg-white px-4 py-3.5 animate-pulse">
-      <div className="w-2 h-2 rounded-full bg-slate-200 mt-1.5 flex-shrink-0" />
-      <div className="flex-1 space-y-2 pt-0.5">
-        <div className="h-3.5 w-3/5 rounded-lg bg-slate-100" />
-        <div className="h-3 w-2/5 rounded-lg bg-slate-100" />
+    <div className="flex items-center gap-4 px-4 py-3.5 animate-pulse">
+      <div className="w-8 h-8 rounded-xl bg-white/10 flex-shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="h-3 w-3/5 rounded-md bg-white/10" />
+        <div className="h-2.5 w-2/5 rounded-md bg-white/[0.06]" />
       </div>
     </div>
   );
@@ -126,7 +136,7 @@ export function OwnerTodoCard({
   items = [],
   allHref = "/dashboard/owner",
   loading = false,
-  emptyLabel = "Tout est à jour — aucune action requise.",
+  emptyLabel = "Aucune action en attente",
 }: {
   title?: string;
   items?: OwnerTodoItem[];
@@ -143,68 +153,87 @@ export function OwnerTodoCard({
   const hasMore = visible < sorted.length;
 
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm shadow-slate-100/60">
+    <div className="relative overflow-hidden rounded-2xl bg-foreground shadow-lg flex flex-col">
+
+      {/* Top highlight */}
+      <div className="absolute top-0 left-6 right-6 h-px bg-white/10" />
 
       {/* ── Header ─────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+      <div className="flex items-center justify-between px-5 pt-5 pb-4">
         <div className="flex items-center gap-3">
-          <h3 className="text-[14px] font-black tracking-tight text-slate-900">{title}</h3>
+          <p className="text-xs font-semibold uppercase tracking-widest text-white/40">
+            {title}
+          </p>
 
           {urgentItems.length > 0 && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-200 text-[10px] font-bold text-red-600">
-              <Flame className="w-2.5 h-2.5" strokeWidth={2.5} />
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-500/15 border border-red-500/25 text-[9px] font-black text-red-400 uppercase tracking-wider">
+              <TriangleAlert className="w-2.5 h-2.5" strokeWidth={2.5} />
               {urgentItems.length} urgent{urgentItems.length > 1 ? "s" : ""}
             </span>
           )}
+        </div>
 
-          {urgentItems.length === 0 && items.length > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-slate-900 text-[10px] font-black text-emerald-400">
+        <div className="flex items-center gap-3">
+          {items.length > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full bg-emerald-400/15 border border-emerald-400/25 text-[10px] font-black text-emerald-400">
               {items.length}
             </span>
           )}
+          {items.length > 0 && (
+            <Link
+              href={allHref}
+              className="inline-flex items-center gap-1 text-[11.5px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors duration-200"
+            >
+              Voir tout
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          )}
         </div>
-
-        {items.length > 0 && (
-          <Link
-            href={allHref}
-            className="inline-flex items-center gap-1 text-[12px] font-semibold text-slate-400 hover:text-slate-900 transition-colors"
-          >
-            Voir tout
-            <ChevronDown className="w-3 h-3 -rotate-90" strokeWidth={2.5} />
-          </Link>
-        )}
       </div>
 
-      {/* ── Summary strip ──────────────────────────────────── */}
+      {/* ── Stats strip ────────────────────────────────────── */}
       {!loading && items.length > 0 && (
-        <div className="flex items-center gap-4 px-5 py-2.5 bg-slate-50/60 border-b border-slate-100">
-          {urgentItems.length > 0 && (
-            <span className="flex items-center gap-1.5 text-[11px] font-bold text-red-500">
-              <AlertCircle className="w-3 h-3" strokeWidth={2.5} />
-              {urgentItems.length} urgent{urgentItems.length > 1 ? "s" : ""}
-            </span>
-          )}
-          {urgentItems.length > 0 && <div className="w-px h-3 bg-slate-200" />}
-          <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
-            <Clock className="w-3 h-3" strokeWidth={1.75} />
-            {normalItems.length} à traiter
-          </span>
-        </div>
+        <>
+          <div className="mx-5 h-px bg-white/10" />
+          <div className="grid grid-cols-2 divide-x divide-white/10 mx-0 mt-0">
+            <div className="px-5 py-3">
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1">Urgents</p>
+              <p className={cn(
+                "text-[22px] font-black leading-none tracking-tight",
+                urgentItems.length > 0 ? "text-red-400" : "text-white/20",
+              )}>
+                {urgentItems.length}
+              </p>
+            </div>
+            <div className="px-5 py-3">
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1">À traiter</p>
+              <p className="text-[22px] font-black leading-none tracking-tight text-white/70">
+                {normalItems.length}
+              </p>
+            </div>
+          </div>
+        </>
       )}
 
+      {/* ── Separator ──────────────────────────────────────── */}
+      <div className="mx-5 h-px bg-white/10" />
+
       {/* ── Body ───────────────────────────────────────────── */}
-      <div className="p-4 space-y-2">
+      <div className="flex flex-col py-2">
 
         {/* Loading */}
         {loading && Array.from({ length: 3 }).map((_, i) => <TodoSkeleton key={i} />)}
 
         {/* Empty */}
         {!loading && items.length === 0 && (
-          <div className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3.5">
-            <div className="w-7 h-7 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center flex-shrink-0">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2} />
+          <div className="flex items-center gap-4 mx-4 my-3 rounded-xl bg-emerald-400/8 border border-emerald-400/15 px-4 py-4">
+            <div className="w-9 h-9 rounded-xl bg-emerald-400/15 border border-emerald-400/20 flex items-center justify-center flex-shrink-0">
+              <CheckCircle className="w-4 h-4 text-emerald-400" strokeWidth={1.75} />
             </div>
-            <p className="text-[13px] font-semibold text-emerald-700">{emptyLabel}</p>
+            <div>
+              <p className="text-[13px] font-semibold text-white/80">{emptyLabel}</p>
+              <p className="text-[11px] font-medium text-white/35 mt-0.5">Votre tableau de bord est à jour.</p>
+            </div>
           </div>
         )}
 
@@ -214,17 +243,17 @@ export function OwnerTodoCard({
           .map(item => <TodoItem key={item.id} item={item} />)
         }
 
-        {/* Divider between urgent and normal */}
+        {/* Séparateur urgent / normal */}
         {!loading &&
           urgentItems.length > 0 &&
           normalItems.length > 0 &&
           paginated.some(i => i.priority !== "urgent") && (
-            <div className="flex items-center gap-3 py-0.5">
-              <div className="h-px flex-1 bg-slate-100" />
-              <span className="text-[9.5px] font-black uppercase tracking-[0.15em] text-slate-300">
+            <div className="flex items-center gap-3 px-5 py-1.5">
+              <div className="h-px flex-1 bg-white/10" />
+              <span className="text-[9px] font-black uppercase tracking-[0.15em] text-white/20">
                 À traiter
               </span>
-              <div className="h-px flex-1 bg-slate-100" />
+              <div className="h-px flex-1 bg-white/10" />
             </div>
           )}
 
@@ -233,26 +262,30 @@ export function OwnerTodoCard({
           .filter(i => i.priority !== "urgent")
           .map(item => <TodoItem key={item.id} item={item} />)
         }
-
-        {/* Load more */}
-        {hasMore && (
-          <button
-            type="button"
-            onClick={() => setVisible(v => v + PAGE_SIZE)}
-            className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[12px] font-semibold text-slate-400 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all duration-150 mt-1"
-          >
-            <ChevronDown className="w-3.5 h-3.5" strokeWidth={2.5} />
-            {Math.min(PAGE_SIZE, sorted.length - visible)} de plus
-          </button>
-        )}
-
-        {/* Footer count */}
-        {!loading && !hasMore && items.length > 0 && (
-          <p className="text-center text-[11px] font-medium text-slate-300 pt-0.5">
-            {items.length} action{items.length > 1 ? "s" : ""} au total
-          </p>
-        )}
       </div>
+
+      {/* ── Footer ─────────────────────────────────────────── */}
+      {(hasMore || (!loading && !hasMore && items.length > 0)) && (
+        <>
+          <div className="mx-5 h-px bg-white/10" />
+          <div className="px-4 py-3">
+            {hasMore ? (
+              <button
+                type="button"
+                onClick={() => setVisible(v => v + PAGE_SIZE)}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-[11.5px] font-semibold text-white/40 hover:text-white/70 hover:bg-white/8 hover:border-white/15 transition-all duration-150"
+              >
+                <ChevronDown className="w-3.5 h-3.5" strokeWidth={2.5} />
+                {Math.min(PAGE_SIZE, sorted.length - visible)} de plus
+              </button>
+            ) : (
+              <p className="text-center text-[10.5px] font-medium text-white/20">
+                {items.length} action{items.length > 1 ? "s" : ""} au total
+              </p>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
