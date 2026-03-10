@@ -369,9 +369,6 @@ export function MarketplaceNavbar() {
 
           {/* Right slot */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Currency converter */}
-            <CurrencySelector />
-
             {!hydrated && (
               <div className="w-32 h-9 bg-slate-100 rounded-2xl animate-pulse" />
             )}
@@ -417,6 +414,9 @@ export function MarketplaceNavbar() {
                 isOwner={isOwner}
               />
             )}
+
+            {/* Currency selector */}
+            <CurrencySelector />
 
             {/* Hamburger — mobile only */}
             <button
