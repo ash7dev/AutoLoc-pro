@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { ThemeProvider, ColorSystemProvider, CurrencyProvider } from '../providers';
+import { ThemeProvider, ColorSystemProvider, CurrencyProviderServer } from '../providers';
 import './globals.css';
 
 const BASE_URL = 'https://autoloc.sn';
@@ -99,7 +99,7 @@ export default function RootLayout({
       <body>
         <ThemeProvider defaultTheme="light" storageKey="autoloc-theme">
           <ColorSystemProvider>
-            <CurrencyProvider>{children}</CurrencyProvider>
+            <CurrencyProviderServer>{children}</CurrencyProviderServer>
           </ColorSystemProvider>
         </ThemeProvider>
       </body>

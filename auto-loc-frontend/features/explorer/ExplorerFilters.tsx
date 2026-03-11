@@ -4,6 +4,7 @@ import React from 'react';
 import { X, RotateCcw, Star, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ExplorerFiltersState } from './ExplorerGrid';
+import { useCurrency } from '@/providers/currency-provider';
 
 // ─── Static data (exported for reuse in ActiveFilters) ────────────────────────
 export const ZONES = [
@@ -44,10 +45,10 @@ export const TRANSMISSIONS = [
 ];
 
 export const BUDGET_PRESETS = [
-    { value: 15000, label: '15 000 FCFA' },
-    { value: 30000, label: '30 000 FCFA' },
-    { value: 50000, label: '50 000 FCFA' },
-    { value: 100000, label: '100 000 FCFA' },
+    { value: 15000 },
+    { value: 30000 },
+    { value: 50000 },
+    { value: 100000 },
 ];
 
 export const EQUIPMENTS = [
@@ -112,6 +113,17 @@ function FilterContent({
     onReset: () => void;
     hasActiveFilters: boolean;
 }) {
+    const { formatPrice, info, isCFA, convert } = useCurrency();
+
+    // Budget inputs: state is always stored in CFA internally.
+    // For display, convert CFA → current currency. On change, convert back to CFA.
+    const toDisplay = (cfaValue: number | null) =>
+        cfaValue != null ? (isCFA ? cfaValue : parseFloat(convert(cfaValue).toFixed(2))) : '';
+    const toCFA = (raw: string) =>
+        raw ? (isCFA ? Number(raw) : Math.round(Number(raw) / info.rate)) : null;
+
+    const inputStep = isCFA ? 5000 : 1;
+
     return (
         <div className="flex flex-col gap-6">
             {/* Zone */}
@@ -150,26 +162,26 @@ function FilterContent({
 
             {/* Budget range */}
             <div>
-                <p className={SECTION_TITLE}>Budget / jour (FCFA)</p>
+                <p className={SECTION_TITLE}>Budget / jour ({info.short})</p>
                 <div className="flex items-center gap-2">
                     <input
                         type="number"
                         placeholder="Min"
-                        value={filters.budgetMin ?? ''}
-                        onChange={(e) => onChange({ budgetMin: e.target.value ? Number(e.target.value) : null })}
+                        value={toDisplay(filters.budgetMin)}
+                        onChange={(e) => onChange({ budgetMin: toCFA(e.target.value) })}
                         className={cn(SELECT_CLASS, 'w-1/2 text-center')}
                         min={0}
-                        step={5000}
+                        step={inputStep}
                     />
                     <span className="text-white/30 text-xs font-bold">—</span>
                     <input
                         type="number"
                         placeholder="Max"
-                        value={filters.budgetMax ?? ''}
-                        onChange={(e) => onChange({ budgetMax: e.target.value ? Number(e.target.value) : null })}
+                        value={toDisplay(filters.budgetMax)}
+                        onChange={(e) => onChange({ budgetMax: toCFA(e.target.value) })}
                         className={cn(SELECT_CLASS, 'w-1/2 text-center')}
                         min={0}
-                        step={5000}
+                        step={inputStep}
                     />
                 </div>
                 <div className="grid grid-cols-2 gap-2 mt-2">
@@ -180,7 +192,7 @@ function FilterContent({
                             onClick={() => onChange({ budgetMax: filters.budgetMax === b.value ? null : b.value })}
                             className={cn(PILL(filters.budgetMax === b.value), 'text-center justify-center text-[11px]')}
                         >
-                            ≤ {b.label}
+                            ≤ {formatPrice(b.value)}
                         </button>
                     ))}
                 </div>

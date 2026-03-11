@@ -10,7 +10,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { VehicleSearchResult, VehicleStatus, FuelType, Transmission } from '@/lib/nestjs/vehicles';
-import { TYPE_LABELS, formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
+import { TYPE_LABELS } from '@/features/vehicles/owner/vehicle-helpers';
+import { useCurrency } from '@/providers/currency-provider';
 
 /* ════════════════════════════════════════════════════════════════
    TYPES
@@ -68,8 +69,8 @@ function bestTierMinDays(tiers: TarifTier[]): number | null {
 ════════════════════════════════════════════════════════════════ */
 function PricingStrip({ vehicle }: { vehicle: VehicleCardItem }) {
   const tiers = vehicle.tarifsProgressifs ?? [];
-  const base = Number(vehicle.prixParJour);
-  const savings = tiers.length > 0 ? maxSavings(base, tiers) : 0;
+  const ownerBase = Number(vehicle.prixParJour);
+  const savings = tiers.length > 0 ? maxSavings(ownerBase, tiers) : 0;
   const minDays = bestTierMinDays(tiers);
 
   if (savings <= 0 || minDays == null) return null;
@@ -93,9 +94,11 @@ function PricingStrip({ vehicle }: { vehicle: VehicleCardItem }) {
 ════════════════════════════════════════════════════════════════ */
 function FeaturedCard({ vehicle }: { vehicle: VehicleCardItem }) {
   const [liked, setLiked] = useState(false);
+  const { formatPrice } = useCurrency();
   const photo = mainPhoto(vehicle);
   const tiers = vehicle.tarifsProgressifs ?? [];
-  const base = Number(vehicle.prixParJour);
+  const ownerBase = Number(vehicle.prixParJour);
+  const base = Math.round(ownerBase * 1.15); // tenant price with 15% commission
   const hasTiers = tiers.length > 0;
   const minDays = bestTierMinDays(tiers);
   const reservations = vehicle.totalLocations ?? 0;
@@ -197,20 +200,20 @@ function FeaturedCard({ vehicle }: { vehicle: VehicleCardItem }) {
                 Tarif par jour
               </p>
               <p className="text-[20px] font-black text-emerald-400 tabular-nums leading-tight">
-                {formatPrice(base)}{' '}
-                <span className="text-[11px] font-semibold text-emerald-400/50">FCFA/j</span>
+                {formatPrice(base)}
+                <span className="text-[11px] font-semibold text-emerald-400/50">/jour</span>
               </p>
             </div>
-            {hasTiers && maxSavings(base, tiers) > 0 && (
+            {hasTiers && maxSavings(ownerBase, tiers) > 0 && (
               <span className="flex-shrink-0 text-[10px] font-black text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2.5 py-1 rounded-lg tabular-nums">
-                −{maxSavings(base, tiers)}%
+                −{maxSavings(ownerBase, tiers)}%
               </span>
             )}
           </div>
-          {hasTiers && maxSavings(base, tiers) > 0 && minDays != null && (
+          {hasTiers && maxSavings(ownerBase, tiers) > 0 && minDays != null && (
             <div className="flex items-center gap-1.5 text-[11.5px] font-semibold text-emerald-400/70">
               <TrendingDown className="w-3 h-3 flex-shrink-0" strokeWidth={2.5} />
-              Économisez jusqu'à {maxSavings(base, tiers)}% à partir de {minDays}
+              Économisez jusqu'à {maxSavings(ownerBase, tiers)}% à partir de {minDays}
               {minDays > 1 ? ' jours' : ' jour'}
             </div>
           )}
@@ -237,8 +240,9 @@ function FeaturedCard({ vehicle }: { vehicle: VehicleCardItem }) {
 ════════════════════════════════════════════════════════════════ */
 function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
   const [liked, setLiked] = useState(false);
+  const { formatPrice } = useCurrency();
   const photo = mainPhoto(vehicle);
-  const base = Number(vehicle.prixParJour);
+  const base = Math.round(Number(vehicle.prixParJour) * 1.15); // tenant price with 15% commission
   const tiers = vehicle.tarifsProgressifs ?? [];
   const reservations = vehicle.totalLocations ?? 0;
 
@@ -293,7 +297,7 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
           <p className="text-[16px] font-black text-emerald-400 leading-none tabular-nums">
             {formatPrice(base)}
           </p>
-          <p className="text-[8.5px] font-bold text-white/35 uppercase tracking-wide mt-0.5">FCFA/j</p>
+          <p className="text-[8.5px] font-bold text-white/35 uppercase tracking-wide mt-0.5">/jour</p>
         </div>
       </div>
 

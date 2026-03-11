@@ -4,13 +4,14 @@ import React from 'react';
 import { X, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ExplorerFiltersState } from './ExplorerGrid';
+import { useCurrency } from '@/providers/currency-provider';
 import {
     ZONES, VEHICLE_TYPES, FUEL_TYPES, TRANSMISSIONS,
     BUDGET_PRESETS, SORT_OPTIONS, EQUIPMENTS,
 } from './ExplorerFilters';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function getFilterPills(filters: ExplorerFiltersState) {
+function getFilterPills(filters: ExplorerFiltersState, currencyFormat: (n: number) => string) {
     const pills: { key: string; label: string; field: keyof ExplorerFiltersState; resetValue: any }[] = [];
 
     if (filters.zone) {
@@ -32,7 +33,7 @@ function getFilterPills(filters: ExplorerFiltersState) {
     if (filters.budgetMin !== null) {
         pills.push({
             key: 'budgetMin',
-            label: `≥ ${filters.budgetMin.toLocaleString('fr-FR')} FCFA`,
+            label: `≥ ${currencyFormat(filters.budgetMin)}`,
             field: 'budgetMin',
             resetValue: null,
         });
@@ -40,7 +41,7 @@ function getFilterPills(filters: ExplorerFiltersState) {
     if (filters.budgetMax !== null) {
         pills.push({
             key: 'budget',
-            label: `≤ ${BUDGET_PRESETS.find((b) => b.value === filters.budgetMax)?.label ?? `${filters.budgetMax?.toLocaleString('fr-FR')} FCFA`}`,
+            label: `≤ ${currencyFormat(filters.budgetMax!)}`,
             field: 'budgetMax',
             resetValue: null,
         });
@@ -111,7 +112,8 @@ export function ExplorerActiveFilters({
     onChange,
     onClearAll,
 }: ExplorerActiveFiltersProps): React.ReactElement | null {
-    const pills = getFilterPills(filters);
+    const { formatPrice } = useCurrency();
+    const pills = getFilterPills(filters, formatPrice);
 
     if (pills.length === 0) return null;
 

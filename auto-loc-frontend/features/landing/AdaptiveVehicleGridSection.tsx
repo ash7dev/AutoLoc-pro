@@ -13,8 +13,8 @@ import {
   Rocket, PlusCircle, Filter, Grid3x3, List,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { TYPE_LABELS, formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
-import { 
+import { TYPE_LABELS } from '@/features/vehicles/owner/vehicle-helpers';
+import {
   useAdaptiveVehicleDisplay,
   getDisplayHints,
   type AdaptiveDisplayOptions,
@@ -33,13 +33,13 @@ interface AdaptiveHeaderProps {
   stats: any;
 }
 
-function AdaptiveHeader({ 
-  title, 
-  subtitle, 
-  showViewAll, 
+function AdaptiveHeader({
+  title,
+  subtitle,
+  showViewAll,
   viewAllHref = '/explorer',
   strategy,
-  stats 
+  stats
 }: AdaptiveHeaderProps) {
   return (
     <div className="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -148,11 +148,11 @@ interface AdaptiveFiltersProps {
   strategy: any;
 }
 
-function AdaptiveFilters({ 
-  activeFilter, 
-  onFilterChange, 
-  vehicleCount, 
-  strategy 
+function AdaptiveFilters({
+  activeFilter,
+  onFilterChange,
+  vehicleCount,
+  strategy
 }: AdaptiveFiltersProps) {
   const FILTER_TABS = [
     { value: '', label: 'Tous', icon: Car },
@@ -202,11 +202,11 @@ interface AdaptiveLayoutProps {
   gridClasses: string;
 }
 
-function AdaptiveLayout({ 
-  distribution, 
-  strategy, 
-  isVisible, 
-  gridClasses 
+function AdaptiveLayout({
+  distribution,
+  strategy,
+  isVisible,
+  gridClasses
 }: AdaptiveLayoutProps) {
   return (
     <div className="space-y-6">
@@ -238,7 +238,7 @@ function AdaptiveLayout({
               <div className="h-px bg-slate-200 flex-1" />
             </div>
           )}
-          
+
           <div className={gridClasses}>
             {distribution.grid.map((vehicle, index) => (
               <EnhancedVehicleCard
@@ -343,7 +343,7 @@ export function AdaptiveVehicleGridSection({
   return (
     <section ref={sectionRef} className="px-4 py-10 lg:px-8 lg:py-14">
       <div className="mx-auto max-w-7xl">
-        
+
         {/* Header adaptatif */}
         <AdaptiveHeader
           title={title || displayHints.title}
@@ -391,7 +391,7 @@ export function AdaptiveVehicleGridSection({
                 </div>
               ))}
             </div>
-            
+
             {/* Grid skeletons */}
             <div className={gridClasses}>
               {Array.from({ length: Math.min(strategy.maxGridItems, 6) }).map((_, i) => (

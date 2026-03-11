@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { MapPin, Tag, Calendar, ArrowRight, Car, Search, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCurrency } from '@/providers/currency-provider';
 import {
   Sheet,
   SheetContent,
@@ -51,11 +52,11 @@ const TYPES_VEHICULES = [
 ];
 
 const PRIX_MAX_OPTIONS = [
-  { value: '', label: 'À partir de 25 000 FCFA' },
-  { value: '30000', label: "Jusqu'à 30 000 FCFA" },
-  { value: '50000', label: "Jusqu'à 50 000 FCFA" },
-  { value: '75000', label: "Jusqu'à 75 000 FCFA" },
-  { value: '100000', label: "Jusqu'à 100 000 FCFA" },
+  { value: '', cfaAmount: 25000, prefix: 'À partir de' },
+  { value: '30000', cfaAmount: 30000, prefix: "Jusqu'à" },
+  { value: '50000', cfaAmount: 50000, prefix: "Jusqu'à" },
+  { value: '75000', cfaAmount: 75000, prefix: "Jusqu'à" },
+  { value: '100000', cfaAmount: 100000, prefix: "Jusqu'à" },
 ];
 
 // ─── Styles champs ────────────────────────────────────────────────────────────
@@ -71,6 +72,7 @@ const LABEL_CLASS =
 // ─── Bannière Hero ────────────────────────────────────────────────────────────
 export function BannerSection(): React.ReactElement {
   const router = useRouter();
+  const { formatPrice } = useCurrency();
   const [filters, setFilters] = useState<SearchFilters>({
     q: '',
     ville: '',
@@ -269,9 +271,9 @@ export function BannerSection(): React.ReactElement {
                         onChange={(e) => handleChange('prixMax', e.target.value)}
                         className={FIELD_CLASS}
                       >
-                        {PRIX_MAX_OPTIONS.map(({ value, label }) => (
-                          <option key={value} value={value} className="bg-slate-900 text-white">
-                            {label}
+                        {PRIX_MAX_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value} className="bg-slate-900 text-white">
+                            {opt.prefix} {formatPrice(opt.cfaAmount)}
                           </option>
                         ))}
                       </select>
@@ -378,9 +380,9 @@ export function BannerSection(): React.ReactElement {
                 onChange={(e) => handleChange('prixMax', e.target.value)}
                 className={FIELD_CLASS}
               >
-                {PRIX_MAX_OPTIONS.map(({ value, label }) => (
-                  <option key={value} value={value} className="bg-slate-900 text-white">
-                    {label}
+                {PRIX_MAX_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value} className="bg-slate-900 text-white">
+                    {opt.prefix} {formatPrice(opt.cfaAmount)}
                   </option>
                 ))}
               </select>

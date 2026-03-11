@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { MapPin, Car, Tag, Calendar, X, Search, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCurrency } from '@/providers/currency-provider';
 
 /* ─── Zone labels (matches BannerSection zones) ──────────────────────────── */
 const ZONE_LABELS: Record<string, string> = {
@@ -62,9 +63,7 @@ function formatDate(iso: string): string {
     }
 }
 
-function formatPrice(v: string): string {
-    return Number(v).toLocaleString('fr-FR');
-}
+
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 export function SearchSummaryBar({
@@ -78,6 +77,7 @@ export function SearchSummaryBar({
     loading,
     onRemoveFilter,
 }: SearchSummaryBarProps) {
+    const { formatPrice: currFmt } = useCurrency();
     const pills: ActiveFilter[] = [];
 
     if (zone) {
@@ -99,7 +99,7 @@ export function SearchSummaryBar({
     if (prixMax) {
         pills.push({
             key: 'prixMax',
-            label: `≤ ${formatPrice(prixMax)} FCFA`,
+            label: `≤ ${currFmt(Number(prixMax))}`,
             value: prixMax,
             icon: <Tag className="h-3 w-3" strokeWidth={2.5} />,
         });

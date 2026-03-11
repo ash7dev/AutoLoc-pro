@@ -153,7 +153,7 @@ export function OwnerTodoCard({
   const hasMore = visible < sorted.length;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-foreground shadow-lg flex flex-col">
+    <div className="relative overflow-hidden rounded-2xl bg-foreground shadow-lg flex flex-col h-full">
 
       {/* Top highlight */}
       <div className="absolute top-0 left-6 right-6 h-px bg-white/10" />
@@ -219,7 +219,7 @@ export function OwnerTodoCard({
       <div className="mx-5 h-px bg-white/10" />
 
       {/* ── Body ───────────────────────────────────────────── */}
-      <div className="flex flex-col py-2">
+      <div className="flex flex-col py-2 flex-1">
 
         {/* Loading */}
         {loading && Array.from({ length: 3 }).map((_, i) => <TodoSkeleton key={i} />)}
@@ -265,24 +265,18 @@ export function OwnerTodoCard({
       </div>
 
       {/* ── Footer ─────────────────────────────────────────── */}
-      {(hasMore || (!loading && !hasMore && items.length > 0)) && (
+      {hasMore && (
         <>
           <div className="mx-5 h-px bg-white/10" />
           <div className="px-4 py-3">
-            {hasMore ? (
-              <button
-                type="button"
-                onClick={() => setVisible(v => v + PAGE_SIZE)}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-[11.5px] font-semibold text-white/40 hover:text-white/70 hover:bg-white/8 hover:border-white/15 transition-all duration-150"
-              >
-                <ChevronDown className="w-3.5 h-3.5" strokeWidth={2.5} />
-                {Math.min(PAGE_SIZE, sorted.length - visible)} de plus
-              </button>
-            ) : (
-              <p className="text-center text-[10.5px] font-medium text-white/20">
-                {items.length} action{items.length > 1 ? "s" : ""} au total
-              </p>
-            )}
+            <button
+              type="button"
+              onClick={() => setVisible(v => v + PAGE_SIZE)}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-[11.5px] font-semibold text-white/40 hover:text-white/70 hover:bg-white/8 hover:border-white/15 transition-all duration-150"
+            >
+              <ChevronDown className="w-3.5 h-3.5" strokeWidth={2.5} />
+              {Math.min(PAGE_SIZE, sorted.length - visible)} de plus
+            </button>
           </div>
         </>
       )}

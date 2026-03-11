@@ -17,7 +17,8 @@ import {
   type TarifTier,
   type VehicleStatus,
 } from '@/lib/nestjs/vehicles';
-import { TYPE_LABELS, formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
+import { TYPE_LABELS } from '@/features/vehicles/owner/vehicle-helpers';
+import { useCurrency } from '@/providers/currency-provider';
 
 /* ════════════════════════════════════════════════════════════════
    TYPES
@@ -164,8 +165,10 @@ function SkeletonCard({ delay }: { delay: number }) {
 ════════════════════════════════════════════════════════════════ */
 function FeaturedCard({ vehicle, visible }: { vehicle: VehicleGridItem; visible: boolean }) {
   const [liked, setLiked] = useState(false);
+  const { formatPrice } = useCurrency();
   const tiers = vehicle.tarifsProgressifs ?? [];
   const savings = maxSavings(Number(vehicle.prixParJour), tiers);
+  const tenantPrice = Math.round(Number(vehicle.prixParJour) * 1.15);
 
   return (
     <Link
@@ -273,8 +276,8 @@ function FeaturedCard({ vehicle, visible }: { vehicle: VehicleGridItem; visible:
             <div>
               <p className="text-[9.5px] font-black uppercase tracking-[0.14em] text-white/25 mb-1">Tarif de base</p>
               <p className="text-[26px] font-black text-emerald-400 tabular-nums leading-none">
-                {formatPrice(Number(vehicle.prixParJour))}
-                <span className="text-[11px] font-semibold text-emerald-400/45 ml-1.5">FCFA / jour</span>
+                {formatPrice(tenantPrice)}
+                <span className="text-[11px] font-semibold text-emerald-400/45 ml-1.5">/ jour</span>
               </p>
             </div>
             {savings > 0 && (
@@ -311,8 +314,10 @@ function FeaturedCard({ vehicle, visible }: { vehicle: VehicleGridItem; visible:
 ════════════════════════════════════════════════════════════════ */
 function VehicleCard({ vehicle, index, visible }: { vehicle: VehicleGridItem; index: number; visible: boolean }) {
   const [liked, setLiked] = useState(false);
+  const { formatPrice } = useCurrency();
   const tiers = vehicle.tarifsProgressifs ?? [];
   const savings = maxSavings(Number(vehicle.prixParJour), tiers);
+  const tenantPrice = Math.round(Number(vehicle.prixParJour) * 1.15);
   const delay = Math.min(index * 70, 420);
 
   return (
@@ -373,9 +378,9 @@ function VehicleCard({ vehicle, index, visible }: { vehicle: VehicleGridItem; in
         {/* Price badge — bottom right, always visible */}
         <div className="absolute bottom-3 right-3 z-10 rounded-xl bg-slate-950/85 backdrop-blur-md px-3 py-2 text-right">
           <p className="text-[17px] font-black text-emerald-400 leading-none tabular-nums">
-            {formatPrice(Number(vehicle.prixParJour))}
+            {formatPrice(tenantPrice)}
           </p>
-          <p className="text-[8.5px] font-bold text-white/35 uppercase tracking-[0.1em] mt-0.5">FCFA / jour</p>
+          <p className="text-[8.5px] font-bold text-white/35 uppercase tracking-[0.1em] mt-0.5">/ jour</p>
         </div>
       </div>
 

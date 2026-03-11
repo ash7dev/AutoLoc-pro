@@ -38,7 +38,14 @@ const CurrencyContext = createContext<CurrencyContextValue | null>(null);
 
 // ── Provider ────────────────────────────────────────────────────────────────
 
-export function CurrencyProvider({ children }: { children: React.ReactNode }) {
+export function CurrencyProvider({
+    children,
+    initialRates = {},
+}: {
+    children: React.ReactNode;
+    /** Live rates from server (keyed by currency code, base XOF). Falls back to static rates. */
+    initialRates?: Record<string, number>;
+}) {
     const [currency, setCurrencyState] = useState<CurrencyCode>('XOF');
 
     // Hydrate from localStorage on mount
@@ -61,12 +68,21 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         [currency],
     );
 
+    // Live rate takes priority over static fallback
+    const getRate = useCallback(
+        (code: CurrencyCode): number => {
+            if (code === 'XOF') return 1;
+            return initialRates[code] ?? CURRENCIES.find(c => c.code === code)!.rate;
+        },
+        [initialRates],
+    );
+
     const convert = useCallback(
         (amountCFA: number) => {
             if (currency === 'XOF') return amountCFA;
-            return amountCFA * info.rate;
+            return amountCFA * getRate(currency);
         },
-        [currency, info.rate],
+        [currency, getRate],
     );
 
     const formatPrice = useCallback(
@@ -74,14 +90,13 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
             if (currency === 'XOF') {
                 return new Intl.NumberFormat('fr-FR').format(Math.round(amountCFA)) + ' FCFA';
             }
-            const converted = amountCFA * info.rate;
-            // For small amounts show 2 decimals, otherwise round
+            const converted = amountCFA * getRate(currency);
             const formatted = converted >= 1
                 ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(converted)
                 : converted.toFixed(4);
             return `${formatted} ${info.symbol}`;
         },
-        [currency, info.rate, info.symbol],
+        [currency, getRate, info.symbol],
     );
 
     const value = useMemo<CurrencyContextValue>(

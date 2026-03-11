@@ -15,13 +15,14 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { searchVehicles, type VehicleType } from '@/lib/nestjs/vehicles';
-import { TYPE_LABELS, formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
-import { 
-  useVehicleGrid, 
+import { TYPE_LABELS } from '@/features/vehicles/owner/vehicle-helpers';
+import { useCurrency } from '@/providers/currency-provider';
+import {
+  useVehicleGrid,
   enhanceVehicleData,
   getEmptyStateConfig,
   type EnhancedVehicleSearchResult,
-  type UseVehicleGridOptions 
+  type UseVehicleGridOptions
 } from './vehicle-grid-enhancements';
 
 // ─── Filter tabs (inchangées) ──────────────────────────────────────────────────────
@@ -43,6 +44,9 @@ export function EnhancedVehicleCard({
   index: number;
   isVisible: boolean;
 }): React.ReactElement {
+  const { formatPrice } = useCurrency();
+  const tenantPrice = Math.round(Number(vehicle.prixParJour) * 1.15);
+
   return (
     <Link
       href={`/vehicle/${vehicle.id}`}
@@ -110,10 +114,10 @@ export function EnhancedVehicleCard({
         {/* Price bottom-right */}
         <div className="absolute bottom-3 right-3 rounded-xl bg-black/80 backdrop-blur-sm px-3 py-2 text-right">
           <p className="text-[17px] font-black text-emerald-400 leading-none tabular-nums">
-            {formatPrice(vehicle.prixParJour)}
+            {formatPrice(tenantPrice)}
           </p>
           <p className="text-[9px] font-bold text-white/40 uppercase tracking-wide mt-0.5">
-            FCFA / jour
+            / jour
             {vehicle.fallbackUsed && (
               <span className="text-amber-400 ml-1">· Démo</span>
             )}
@@ -190,6 +194,9 @@ export function EnhancedFeaturedVehicleCard({
   vehicle: EnhancedVehicleSearchResult;
   isVisible: boolean;
 }): React.ReactElement {
+  const { formatPrice } = useCurrency();
+  const tenantPrice = Math.round(Number(vehicle.prixParJour) * 1.15);
+
   return (
     <Link
       href={`/vehicle/${vehicle.id}`}
@@ -305,8 +312,8 @@ export function EnhancedFeaturedVehicleCard({
           <div className="mt-8 flex items-center gap-5 flex-wrap">
             <div>
               <p className="text-[28px] font-black text-emerald-400 leading-none tabular-nums">
-                {formatPrice(vehicle.prixParJour)}
-                <span className="text-[14px] font-semibold text-emerald-400/50 ml-1">FCFA</span>
+                {formatPrice(tenantPrice)}
+                <span className="text-[14px] font-semibold text-emerald-400/50 ml-1">/jour</span>
               </p>
               <p className="text-[11px] font-semibold text-white/25 uppercase tracking-wide mt-1">
                 par jour
@@ -606,7 +613,7 @@ export function EnhancedVehicleGridSection({
 
         {/* Enhanced empty state */}
         {!loading && !hasData && (
-          <EnhancedEmptyState 
+          <EnhancedEmptyState
             config={emptyStateConfig}
             onRetry={retry}
             canRetry={canRetry}

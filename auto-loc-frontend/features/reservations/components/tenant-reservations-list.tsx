@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Reservation } from '@/lib/nestjs/reservations';
-import { formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
+import { useCurrency } from '@/providers/currency-provider';
 
 interface Props {
     initialReservations: Reservation[];
@@ -122,6 +122,7 @@ export function TenantReservationsList({ initialReservations }: Props): React.Re
 // ── Reservation Card ──────────────────────────────────────────────────────────
 
 function TenantReservationCard({ reservation }: { reservation: Reservation }) {
+    const { formatPrice } = useCurrency();
     const { vehicule } = reservation;
     const mainPhoto = vehicule?.photos?.[0]?.url ?? null;
     const statusCfg = STATUS_CONFIG[reservation.statut] ?? {
@@ -186,7 +187,7 @@ function TenantReservationCard({ reservation }: { reservation: Reservation }) {
                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
                         <p className="text-[15px] font-black text-emerald-600 tabular-nums">
                             {Number.isFinite(Number(reservation.prixTotal))
-                                ? `${formatPrice(Number(reservation.prixTotal))} FCFA`
+                                ? formatPrice(Number(reservation.prixTotal))
                                 : '—'}
                         </p>
                         <span className="flex items-center gap-1 text-[12px] font-medium text-black/30">
