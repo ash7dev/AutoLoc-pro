@@ -351,12 +351,12 @@ export function MarketplaceNavbar() {
 
           {/* Logo */}
           <Link href="/" className="group flex-shrink-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logoAutoLoc.png"
+            <Image
+              src="/logoAutoLoc.jpg"
               alt="AutoLoc"
-              className="h-10 w-auto object-contain group-hover:opacity-75 transition-opacity duration-200"
-              style={{ filter: 'invert(1)' }}
+              width={80}
+              height={80}
+              className="object-contain group-hover:opacity-80 transition-opacity duration-200"
             />
           </Link>
 
