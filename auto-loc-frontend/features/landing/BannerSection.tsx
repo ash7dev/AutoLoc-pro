@@ -110,8 +110,8 @@ function DatePickerField({ value, onChange, minDate, placeholder = 'Sélectionne
       <PopoverContent
         className={cn(
           'w-auto p-0 z-50',
-          'border border-white/10 bg-[#0a0a0a]/95 backdrop-blur-2xl',
-          'shadow-2xl shadow-black/60 rounded-2xl overflow-hidden',
+          'border border-slate-100 bg-white',
+          'shadow-2xl shadow-slate-200/60 rounded-2xl overflow-hidden',
         )}
         align="start"
         sideOffset={6}
@@ -129,32 +129,35 @@ function DatePickerField({ value, onChange, minDate, placeholder = 'Sélectionne
           disabled={(date) => !!minDate && date < minDate}
           initialFocus
           classNames={{
-            months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
-            month: 'space-y-3 p-4',
-            caption: 'flex justify-center pt-1 relative items-center',
-            caption_label: 'text-[13px] font-bold text-white tracking-tight',
-            nav: 'space-x-1 flex items-center',
+            months: 'flex flex-col',
+            month: 'space-y-2 p-4',
+            caption: 'flex justify-center pt-1 relative items-center mb-1',
+            caption_label: 'text-[13.5px] font-black text-slate-800 tracking-tight',
+            nav: 'flex items-center',
             nav_button: cn(
-              'h-7 w-7 p-0 rounded-lg border border-white/10 bg-transparent',
-              'hover:bg-white/10 hover:border-white/20 transition-all duration-150',
-              'text-white/40 hover:text-white inline-flex items-center justify-center',
+              'h-8 w-8 p-0 rounded-xl border border-slate-200 bg-white',
+              'hover:bg-slate-100 hover:border-slate-300 transition-all duration-150',
+              'text-slate-500 inline-flex items-center justify-center',
             ),
             nav_button_previous: 'absolute left-1',
             nav_button_next: 'absolute right-1',
             table: 'w-full border-collapse',
-            head_row: 'flex mb-1',
-            head_cell: 'text-white/25 w-9 text-center font-semibold text-[10px] uppercase tracking-wider',
-            row: 'flex w-full mt-1',
-            cell: 'h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20',
+            head_row: 'flex',
+            head_cell: 'text-slate-300 w-9 text-center font-black text-[9.5px] uppercase tracking-widest py-1',
+            row: 'flex w-full mt-0.5',
+            cell: 'h-9 w-9 text-center p-0 relative focus-within:z-20',
             day: cn(
-              'h-9 w-9 p-0 font-medium rounded-xl text-white/60 text-[13px]',
-              'hover:bg-white/10 hover:text-white transition-all duration-150',
+              'h-9 w-9 p-0 font-semibold rounded-xl text-[12.5px] text-slate-700',
+              'hover:bg-emerald-50 hover:text-emerald-600 transition-all duration-150',
               'inline-flex items-center justify-center',
             ),
-            day_selected: 'bg-emerald-400 !text-black font-bold hover:bg-emerald-400 hover:!text-black rounded-xl',
-            day_today: 'border border-emerald-400/50 text-emerald-400 font-semibold',
-            day_outside: 'text-white/15 opacity-40',
-            day_disabled: 'text-white/15 opacity-30 cursor-not-allowed hover:bg-transparent hover:text-white/15',
+            day_selected: cn(
+              'bg-emerald-500 !text-white font-bold rounded-xl',
+              'hover:bg-emerald-500 hover:!text-white shadow-md shadow-emerald-500/25',
+            ),
+            day_today: 'border border-emerald-400/50 text-emerald-600 font-bold',
+            day_outside: 'text-slate-200 opacity-60',
+            day_disabled: 'text-slate-300 opacity-50 cursor-not-allowed hover:bg-transparent hover:text-slate-300',
             day_range_middle: '',
             day_hidden: 'invisible',
           }}

@@ -1,52 +1,159 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fetchBlockedDates, type BlockedRange } from '@/lib/nestjs/vehicles';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 
-/* ── Helpers ────────────────────────────────────────────────────── */
-
-const DAYS_FR = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'];
-const MONTHS_FR = [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
-];
-
-function toDateStr(d: Date): string {
-    return d.toISOString().split('T')[0];
-}
+/* ── Helpers ─────────────────────────────────────────────────────── */
 
 function parseDate(s: string): Date {
     const [y, m, d] = s.split('-').map(Number);
     return new Date(y, m - 1, d);
 }
 
-function isSameDay(a: Date, b: Date): boolean {
-    return a.getFullYear() === b.getFullYear() &&
-        a.getMonth() === b.getMonth() &&
-        a.getDate() === b.getDate();
+function toDateStr(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function isDateInRange(date: Date, from: string, to: string): boolean {
-    const d = toDateStr(date);
-    return d >= from && d <= to;
+function fmtDisplay(iso: string): string {
+    return parseDate(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-function getDaysInMonth(year: number, month: number): Date[] {
-    const days: Date[] = [];
-    const first = new Date(year, month, 1);
-    const last = new Date(year, month + 1, 0);
-    for (let d = 1; d <= last.getDate(); d++) {
-        days.push(new Date(year, month, d));
-    }
-    // Pad start with empty slots (Monday = 0)
-    const startDay = (first.getDay() + 6) % 7;
-    const padded: (Date | null)[] = Array(startDay).fill(null);
-    return [...padded, ...days] as Date[];
+/* ── Single Date Picker ──────────────────────────────────────────── */
+
+interface DatePickerProps {
+    label: string;
+    value: string;
+    placeholder: string;
+    onChange: (iso: string) => void;
+    disabledFn: (date: Date) => boolean;
+    isActive?: boolean;
 }
 
-/* ── Component ──────────────────────────────────────────────────── */
+function VehicleDatePicker({ label, value, placeholder, onChange, disabledFn, isActive }: DatePickerProps) {
+    const [open, setOpen] = useState(false);
+    const selected = value ? parseDate(value) : undefined;
+
+    return (
+        <div className="flex-1 min-w-0">
+            <p className="text-[9.5px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">
+                {label}
+            </p>
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <button
+                        type="button"
+                        className={cn(
+                            'w-full flex items-center justify-between gap-2 rounded-xl px-3.5 py-2.5',
+                            'border text-[13px] font-medium transition-all duration-200',
+                            'hover:border-emerald-400/60 hover:bg-emerald-50/40',
+                            'focus:outline-none focus:ring-1 focus:ring-emerald-400/30',
+                            value
+                                ? 'border-slate-200 bg-slate-50 text-slate-800'
+                                : 'border-dashed border-slate-200 bg-white text-slate-400',
+                            isActive && !value && 'border-emerald-400/60 bg-emerald-50/40 text-emerald-600',
+                            open && 'border-emerald-400/60 ring-1 ring-emerald-400/20',
+                        )}
+                    >
+                        <span className="truncate">
+                            {value ? fmtDisplay(value) : placeholder}
+                        </span>
+                        <CalendarIcon
+                            className={cn(
+                                'h-3.5 w-3.5 shrink-0 transition-colors',
+                                value ? 'text-emerald-500' : 'text-slate-300',
+                            )}
+                            strokeWidth={1.75}
+                        />
+                    </button>
+                </PopoverTrigger>
+                <PopoverContent
+                    className={cn(
+                        'w-auto p-0 z-50',
+                        'border border-slate-100 bg-white',
+                        'shadow-2xl shadow-slate-200/60 rounded-2xl overflow-hidden',
+                    )}
+                    align="start"
+                    sideOffset={6}
+                >
+                    <Calendar
+                        mode="single"
+                        selected={selected}
+                        onSelect={(date) => {
+                            if (date) {
+                                onChange(toDateStr(date));
+                                setOpen(false);
+                            }
+                        }}
+                        disabled={disabledFn}
+                        initialFocus
+                        classNames={{
+                            months: 'flex flex-col',
+                            month: 'space-y-2 p-4',
+                            caption: 'flex justify-center pt-1 relative items-center mb-1',
+                            caption_label: 'text-[13.5px] font-black text-slate-800 tracking-tight',
+                            nav: 'flex items-center',
+                            nav_button: cn(
+                                'h-8 w-8 p-0 rounded-xl border border-slate-200 bg-white',
+                                'hover:bg-slate-100 hover:border-slate-300 transition-all duration-150',
+                                'text-slate-500 inline-flex items-center justify-center',
+                            ),
+                            nav_button_previous: 'absolute left-1',
+                            nav_button_next: 'absolute right-1',
+                            table: 'w-full border-collapse',
+                            head_row: 'flex',
+                            head_cell: 'text-slate-300 w-9 text-center font-black text-[9.5px] uppercase tracking-widest py-1',
+                            row: 'flex w-full mt-0.5',
+                            cell: 'h-9 w-9 text-center p-0 relative focus-within:z-20',
+                            day: cn(
+                                'h-9 w-9 p-0 font-semibold rounded-xl text-[12.5px] text-slate-700',
+                                'hover:bg-emerald-50 hover:text-emerald-600 transition-all duration-150',
+                                'inline-flex items-center justify-center',
+                            ),
+                            day_selected: cn(
+                                'bg-emerald-500 !text-white font-bold rounded-xl',
+                                'hover:bg-emerald-500 hover:!text-white',
+                                'shadow-md shadow-emerald-500/25',
+                            ),
+                            day_today: 'border border-emerald-400/50 text-emerald-600 font-bold',
+                            day_outside: 'text-slate-200 opacity-60',
+                            day_disabled: cn(
+                                'text-red-300 line-through opacity-70 cursor-not-allowed',
+                                'bg-red-50/60 hover:bg-red-50/60 hover:text-red-300 rounded-none',
+                            ),
+                            day_range_middle: '',
+                            day_hidden: 'invisible',
+                        }}
+                    />
+                    {/* Legend */}
+                    <div className="flex items-center gap-4 px-4 py-2.5 border-t border-slate-100 bg-slate-50/60">
+                        <div className="flex items-center gap-1.5">
+                            <span className="w-3 h-3 rounded bg-red-50 border border-red-200/60" />
+                            <span className="text-[9.5px] font-semibold text-slate-400">Indisponible</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="w-3 h-3 rounded-lg bg-emerald-500" />
+                            <span className="text-[9.5px] font-semibold text-slate-400">Sélectionné</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="w-3 h-3 rounded border border-emerald-400/50 bg-white" />
+                            <span className="text-[9.5px] font-semibold text-slate-400">Aujourd&apos;hui</span>
+                        </div>
+                    </div>
+                </PopoverContent>
+            </Popover>
+        </div>
+    );
+}
+
+/* ── Main Component ──────────────────────────────────────────────── */
 
 interface Props {
     vehicleId: string;
@@ -65,21 +172,18 @@ export function ReservationCalendar({
     onDateDebutChange,
     onDateFinChange,
 }: Props) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = useMemo(() => {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }, []);
 
-    const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-    const [currentYear, setCurrentYear] = useState(today.getFullYear());
     const [blockedRanges, setBlockedRanges] = useState<BlockedRange[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [selectingEnd, setSelectingEnd] = useState(false);
 
     useEffect(() => {
-        setLoading(true);
         fetchBlockedDates(vehicleId)
             .then((res) => setBlockedRanges(res.blockedRanges))
-            .catch(() => setBlockedRanges([]))
-            .finally(() => setLoading(false));
+            .catch(() => setBlockedRanges([]));
     }, [vehicleId]);
 
     const blockedSet = useMemo(() => {
@@ -88,274 +192,55 @@ export function ReservationCalendar({
             const start = parseDate(range.from);
             const end = parseDate(range.to);
             for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                set.add(toDateStr(d));
+                set.add(toDateStr(new Date(d)));
             }
         }
         return set;
     }, [blockedRanges]);
 
-    const days = useMemo(
-        () => getDaysInMonth(currentYear, currentMonth),
-        [currentYear, currentMonth],
-    );
-
-    const prevMonth = () => {
-        if (currentMonth === 0) {
-            setCurrentMonth(11);
-            setCurrentYear(currentYear - 1);
-        } else {
-            setCurrentMonth(currentMonth - 1);
-        }
+    const isBlockedOrPast = (date: Date): boolean => {
+        return date < today || blockedSet.has(toDateStr(date));
     };
 
-    const nextMonth = () => {
-        if (currentMonth === 11) {
-            setCurrentMonth(0);
-            setCurrentYear(currentYear + 1);
-        } else {
-            setCurrentMonth(currentMonth + 1);
-        }
-    };
-
-    // Check if range between two dates has any blocked days
-    const hasBlockedBetween = (start: string, end: string): boolean => {
-        const s = parseDate(start);
-        const e = parseDate(end);
-        for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
-            if (blockedSet.has(toDateStr(d))) return true;
+    const isBlockedOrBeforeStart = (date: Date): boolean => {
+        if (date < today || blockedSet.has(toDateStr(date))) return true;
+        if (dateDebut) {
+            const start = parseDate(dateDebut);
+            const minEnd = new Date(start);
+            minEnd.setDate(minEnd.getDate() + joursMinimum - 1);
+            if (date < minEnd) return true;
+            // Also block if any date in range is blocked
+            for (let d = new Date(start); d <= date; d.setDate(d.getDate() + 1)) {
+                if (blockedSet.has(toDateStr(new Date(d)))) return true;
+            }
         }
         return false;
     };
 
-    const handleDayClick = (day: Date) => {
-        const str = toDateStr(day);
-
-        if (!selectingEnd || !dateDebut) {
-            // Selecting start date
-            onDateDebutChange(str);
-            onDateFinChange('');
-            setSelectingEnd(true);
-        } else {
-            // Selecting end date
-            if (str <= dateDebut) {
-                // Clicked before start — reset
-                onDateDebutChange(str);
-                onDateFinChange('');
-                setSelectingEnd(true);
-                return;
-            }
-
-            // Check if the range includes blocked days
-            if (hasBlockedBetween(dateDebut, str)) {
-                // Reset — can't span across blocked dates
-                onDateDebutChange(str);
-                onDateFinChange('');
-                setSelectingEnd(true);
-                return;
-            }
-
-            // Compute nbJours
-            const diff = Math.round(
-                (parseDate(str).getTime() - parseDate(dateDebut).getTime()) / 86_400_000,
-            ) + 1;
-            if (diff < joursMinimum) return; // Not enough days
-
-            onDateFinChange(str);
-            setSelectingEnd(false);
-        }
-    };
-
-    const isBlocked = (day: Date): boolean => {
-        return blockedSet.has(toDateStr(day));
-    };
-
-    const isPast = (day: Date): boolean => {
-        return day < today;
-    };
-
-    const isInRange = (day: Date): boolean => {
-        if (!dateDebut || !dateFin) return false;
-        const str = toDateStr(day);
-        return str >= dateDebut && str <= dateFin;
-    };
-
-    const isStart = (day: Date): boolean => dateDebut ? isSameDay(day, parseDate(dateDebut)) : false;
-    const isEnd = (day: Date): boolean => dateFin ? isSameDay(day, parseDate(dateFin)) : false;
-    const isToday = (day: Date): boolean => isSameDay(day, today);
-
-    const canGoBack = currentYear > today.getFullYear() ||
-        (currentYear === today.getFullYear() && currentMonth > today.getMonth());
-
     return (
-        <div className="space-y-2">
-            {/* Selection summary */}
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-                {/* Prise en charge */}
-                <div className={cn(
-                    "rounded-xl px-3 py-2.5 border transition-all duration-200",
-                    selectingEnd && !dateFin
-                        ? "border-emerald-400 bg-emerald-50 ring-1 ring-emerald-400/30"
-                        : dateDebut
-                            ? "border-slate-200 bg-slate-50"
-                            : "border-dashed border-slate-200 bg-white",
-                )}>
-                    <p className={cn(
-                        "text-[9.5px] font-bold uppercase tracking-widest mb-0.5",
-                        selectingEnd && !dateFin ? "text-emerald-500" : "text-slate-400",
-                    )}>
-                        Prise en charge
-                    </p>
-                    <p className={cn(
-                        "font-bold text-[12px]",
-                        dateDebut ? "text-slate-800" : "text-slate-300",
-                    )}>
-                        {dateDebut
-                            ? parseDate(dateDebut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-                            : '—'
-                        }
-                    </p>
-                </div>
-                {/* Date de retour */}
-                <div className={cn(
-                    "rounded-xl px-3 py-2.5 border transition-all duration-200",
-                    selectingEnd && dateDebut && !dateFin
-                        ? "border-dashed border-emerald-400 bg-emerald-50/60 animate-pulse"
-                        : dateFin
-                            ? "border-slate-200 bg-slate-50"
-                            : "border-dashed border-slate-200 bg-white",
-                )}>
-                    <p className={cn(
-                        "text-[9.5px] font-bold uppercase tracking-widest mb-0.5",
-                        selectingEnd && dateDebut && !dateFin ? "text-emerald-500" : "text-slate-400",
-                    )}>
-                        Date de retour
-                    </p>
-                    <p className={cn(
-                        "font-bold text-[12px]",
-                        dateFin ? "text-slate-800" : "text-slate-300",
-                    )}>
-                        {dateFin
-                            ? parseDate(dateFin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-                            : '—'
-                        }
-                    </p>
-                </div>
-            </div>
-
-            {/* Calendar */}
-            <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm">
-                {/* Month nav */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-                    <button
-                        type="button"
-                        onClick={prevMonth}
-                        disabled={!canGoBack}
-                        className="w-8 h-8 rounded-xl flex items-center justify-center border border-slate-200
-              hover:bg-slate-100 hover:border-slate-300 transition-all duration-150 disabled:opacity-25 disabled:cursor-not-allowed"
-                    >
-                        <ChevronLeft className="w-4 h-4 text-slate-500" strokeWidth={2.5} />
-                    </button>
-                    <span className="text-[13.5px] font-black text-slate-800 tracking-tight">
-                        {MONTHS_FR[currentMonth]} {currentYear}
-                    </span>
-                    <button
-                        type="button"
-                        onClick={nextMonth}
-                        className="w-8 h-8 rounded-xl flex items-center justify-center border border-slate-200
-              hover:bg-slate-100 hover:border-slate-300 transition-all duration-150"
-                    >
-                        <ChevronRight className="w-4 h-4 text-slate-500" strokeWidth={2.5} />
-                    </button>
-                </div>
-
-                {loading ? (
-                    <div className="flex items-center justify-center py-14">
-                        <div className="w-5 h-5 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" />
-                    </div>
-                ) : (
-                    <div className="p-3">
-                        {/* Day headers */}
-                        <div className="grid grid-cols-7 mb-2">
-                            {DAYS_FR.map((d) => (
-                                <div key={d} className="text-center text-[9.5px] font-black uppercase tracking-widest text-slate-300 py-1">
-                                    {d}
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Day cells */}
-                        <div className="grid grid-cols-7 gap-0.5">
-                            {days.map((day, i) => {
-                                if (!day) {
-                                    return <div key={`empty-${i}`} className="h-9" />;
-                                }
-
-                                const blocked = isBlocked(day);
-                                const past = isPast(day);
-                                const disabled = blocked || past;
-                                const inRange = isInRange(day);
-                                const start = isStart(day);
-                                const end = isEnd(day);
-                                const todayMark = isToday(day);
-
-                                return (
-                                    <button
-                                        key={toDateStr(day)}
-                                        type="button"
-                                        disabled={disabled}
-                                        onClick={() => handleDayClick(day)}
-                                        className={cn(
-                                            'relative h-9 w-full rounded-xl text-[12.5px] font-semibold transition-all duration-150',
-
-                                            // Disabled states
-                                            disabled && 'cursor-not-allowed',
-                                            past && !blocked && 'text-slate-200',
-                                            blocked && 'rounded-none text-red-300 line-through cursor-not-allowed',
-                                            blocked && 'bg-gradient-to-br from-red-50 to-rose-50/60',
-
-                                            // Normal selectable
-                                            !disabled && !inRange && !start && !end && 'text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 hover:scale-105',
-
-                                            // In range (between start and end)
-                                            inRange && !start && !end && 'bg-emerald-100/70 text-emerald-700 rounded-none',
-
-                                            // Start — rounded left
-                                            start && !end && 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25 rounded-r-none rounded-l-xl',
-                                            // End — rounded right
-                                            end && !start && 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25 rounded-l-none rounded-r-xl',
-                                            // Single day (start === end)
-                                            start && end && 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25 rounded-xl',
-                                        )}
-                                    >
-                                        {day.getDate()}
-                                        {todayMark && !start && !end && (
-                                            <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-emerald-400" />
-                                        )}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-
-                {/* Legend */}
-                <div className="flex items-center gap-4 px-4 py-2.5 border-t border-slate-100 bg-slate-50/60">
-                    <div className="flex items-center gap-1.5">
-                        <span className="w-3 h-3 rounded bg-gradient-to-br from-red-100 to-rose-100 border border-red-200/60" />
-                        <span className="text-[9.5px] font-semibold text-slate-400">Indisponible</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <span className="w-3 h-3 rounded-lg bg-emerald-500" />
-                        <span className="text-[9.5px] font-semibold text-slate-400">Sélectionné</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <span className="relative w-3 h-3 rounded border border-slate-200 bg-white">
-                            <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-emerald-400" />
-                        </span>
-                        <span className="text-[9.5px] font-semibold text-slate-400">Aujourd&apos;hui</span>
-                    </div>
-                </div>
-            </div>
+        <div className="flex gap-2">
+            <VehicleDatePicker
+                label="Prise en charge"
+                value={dateDebut}
+                placeholder="Choisir une date"
+                onChange={(iso) => {
+                    onDateDebutChange(iso);
+                    // Reset fin if it's no longer valid
+                    if (dateFin && dateFin <= iso) {
+                        onDateFinChange('');
+                    }
+                }}
+                disabledFn={isBlockedOrPast}
+                isActive={!dateDebut}
+            />
+            <VehicleDatePicker
+                label="Date de retour"
+                value={dateFin}
+                placeholder="Choisir une date"
+                onChange={onDateFinChange}
+                disabledFn={isBlockedOrBeforeStart}
+                isActive={!!dateDebut && !dateFin}
+            />
         </div>
     );
 }
