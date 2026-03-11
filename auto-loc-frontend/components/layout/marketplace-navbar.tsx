@@ -351,15 +351,13 @@ export function MarketplaceNavbar() {
 
           {/* Logo */}
           <Link href="/" className="group flex-shrink-0">
-            <div className="bg-slate-900 rounded-xl px-3 py-1.5 group-hover:opacity-80 transition-opacity duration-200">
-              <Image
-                src="/logoAutoLoc.png"
-                alt="AutoLoc"
-                width={160}
-                height={48}
-                className="h-8 w-auto object-contain"
-              />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logoAutoLoc.png"
+              alt="AutoLoc"
+              className="h-10 w-auto object-contain group-hover:opacity-75 transition-opacity duration-200"
+              style={{ filter: 'invert(1)' }}
+            />
           </Link>
 
           {/* Center nav desktop */}
