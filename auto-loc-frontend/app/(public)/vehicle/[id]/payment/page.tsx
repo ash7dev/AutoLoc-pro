@@ -13,13 +13,14 @@ import { cn } from '@/lib/utils';
 import { fetchVehicle, fetchVehiclePricing, type Vehicle, type PricingResponse } from '@/lib/nestjs/vehicles';
 import { useAuthFetch } from '@/features/auth/hooks/use-auth-fetch';
 import { useRoleStore } from '@/features/auth/stores/role.store';
-import { formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
+import { useCurrency } from '@/providers/currency-provider';
 
 type PaymentStep = 'recap' | 'processing' | 'success' | 'error';
 type PaymentMethod = 'WAVE' | 'ORANGE_MONEY';
 
 export default function PaymentPage() {
     const router = useRouter();
+    const { formatPrice } = useCurrency();
     const searchParams = useSearchParams();
     const vehicleId = typeof window !== 'undefined'
         ? window.location.pathname.split('/vehicle/')[1]?.split('/payment')[0] ?? ''
@@ -234,23 +235,23 @@ export default function PaymentPage() {
                     <h2 className="text-[14px] font-bold text-black mb-3">Détail du prix</h2>
                     <div className="flex justify-between text-[13px]">
                         <span className="text-black/50">
-                            {formatPrice(pricing.prixParJour)} × {nbJours} jour{nbJours > 1 ? 's' : ''}
+                            {formatPrice(Math.round(pricing.totalLocataire / pricing.nbJours))} × {nbJours} jour{nbJours > 1 ? 's' : ''}
                         </span>
                         <span className="font-semibold text-black tabular-nums">
-                            {formatPrice(pricing.totalBase)} FCFA
+                            {formatPrice(pricing.totalLocataire)}
                         </span>
                     </div>
                     <div className="flex justify-between text-[13px]">
-                        <span className="text-black/50">Frais de service</span>
-                        <span className="font-semibold text-black tabular-nums">
-                            {formatPrice(pricing.montantCommission)} FCFA
+                        <span className="text-black/50">dont frais de service (15%)</span>
+                        <span className="font-semibold text-black/40 tabular-nums text-[12px]">
+                            incl. {formatPrice(pricing.montantCommission)}
                         </span>
                     </div>
                     <div className="border-t border-slate-100 pt-3" />
                     <div className="flex justify-between text-[16px]">
                         <span className="font-bold text-black">Total à payer</span>
                         <span className="font-black text-emerald-600 tabular-nums">
-                            {formatPrice(pricing.totalLocataire)} FCFA
+                            {formatPrice(pricing.totalLocataire)}
                         </span>
                     </div>
                 </div>
@@ -335,7 +336,7 @@ export default function PaymentPage() {
                     )}
                 >
                     <CreditCard className="w-5 h-5" strokeWidth={2} />
-                    Finaliser le paiement — {formatPrice(pricing.totalLocataire)} FCFA
+                    Finaliser le paiement — {formatPrice(pricing.totalLocataire)}
                 </button>
             </div>
         </main>

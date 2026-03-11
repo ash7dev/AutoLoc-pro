@@ -30,7 +30,7 @@ export function VehiclePricingTable({ prixParJour, tiers }: Props): React.ReactE
           </span>
           <div>
             <p className="text-[22px] font-black text-emerald-700 tabular-nums leading-tight">
-              {formatPrice(prixParJour)}
+              {formatPrice(Math.round(prixParJour * 1.15))}
             </p>
             <p className="text-[12px] font-semibold text-emerald-600 mt-0.5">par jour · tarif fixe</p>
           </div>
@@ -39,9 +39,11 @@ export function VehiclePricingTable({ prixParJour, tiers }: Props): React.ReactE
     );
   }
 
-  const basePrice = Math.max(...displayTiers.map((t) => t.prix));
-  const minPrice = Math.min(...displayTiers.map((t) => t.prix));
-  const hasDiscount = displayTiers.length > 1 && basePrice > minPrice;
+  // Apply 15% tenant commission to all tier prices for display
+  const tenantTiers = displayTiers.map((t) => ({ ...t, tenantPrix: Math.round(t.prix * 1.15) }));
+  const basePrice = Math.max(...tenantTiers.map((t) => t.tenantPrix));
+  const minPrice = Math.min(...tenantTiers.map((t) => t.tenantPrix));
+  const hasDiscount = tenantTiers.length > 1 && basePrice > minPrice;
   const maxSavingPct = hasDiscount
     ? Math.round(((basePrice - minPrice) / basePrice) * 100)
     : 0;
@@ -92,16 +94,16 @@ export function VehiclePricingTable({ prixParJour, tiers }: Props): React.ReactE
 
       {/* ── Tier rows ───────────────────────────────────────────── */}
       <div className="space-y-2.5">
-        {displayTiers.map((tier) => {
+        {tenantTiers.map((tier) => {
           const label = tier.joursMax
             ? `${tier.joursMin} – ${tier.joursMax} jours`
             : `${tier.joursMin}+ jours`;
-          const isLowest = tier.prix === minPrice;
-          const savingPct = Math.round(((basePrice - tier.prix) / basePrice) * 100);
-          const savingFcfa = basePrice - tier.prix;
+          const isLowest = tier.tenantPrix === minPrice;
+          const savingPct = Math.round(((basePrice - tier.tenantPrix) / basePrice) * 100);
+          const savingFcfa = basePrice - tier.tenantPrix;
           // Bar fill: base tier → 15%, best tier → 100%
           const barPct = hasDiscount
-            ? Math.round(15 + ((basePrice - tier.prix) / (basePrice - minPrice)) * 85)
+            ? Math.round(15 + ((basePrice - tier.tenantPrix) / (basePrice - minPrice)) * 85)
             : 100;
 
           return (
@@ -141,7 +143,7 @@ export function VehiclePricingTable({ prixParJour, tiers }: Props): React.ReactE
                     'text-[22px] font-black tabular-nums leading-none',
                     isLowest ? 'text-emerald-600' : 'text-slate-900',
                   )}>
-                    {formatPrice(tier.prix)}
+                    {formatPrice(tier.tenantPrix)}
                   </span>
                   <span className="text-[12px] font-semibold text-slate-500 ml-1">/j</span>
                 </div>

@@ -25,36 +25,36 @@ interface SearchFilters {
 
 // ─── Données statiques ────────────────────────────────────────────────────────
 const ZONES_DAKAR = [
-  { value: '',                          label: 'Toutes les zones'                          },
-  { value: 'almadies-ngor-mamelles',    label: 'Almadies – Ngor – Mamelles'               },
-  { value: 'ouakam-yoff',               label: 'Ouakam – Yoff'                            },
-  { value: 'mermoz-sacrecoeur-ckg',     label: 'Mermoz – Sacré-Cœur – Cité Keur Gorgui'  },
-  { value: 'plateau-medina-gueuletapee',label: 'Plateau – Médina – Gueule Tapée'          },
-  { value: 'liberte-sicap-granddakar',  label: 'Liberté – Sicap – Grand Dakar'            },
-  { value: 'parcelles-grandyoff',       label: 'Parcelles Assainies – Grand Yoff'         },
-  { value: 'pikine-guediawaye',         label: 'Pikine – Guédiawaye'                      },
-  { value: 'keurmassar-rufisque',       label: 'Keur Massar – Rufisque'                   },
+  { value: '', label: 'Toutes les zones' },
+  { value: 'almadies-ngor-mamelles', label: 'Almadies – Ngor – Mamelles' },
+  { value: 'ouakam-yoff', label: 'Ouakam – Yoff' },
+  { value: 'mermoz-sacrecoeur-ckg', label: 'Mermoz – Sacré-Cœur – Cité Keur Gorgui' },
+  { value: 'plateau-medina-gueuletapee', label: 'Plateau – Médina – Gueule Tapée' },
+  { value: 'liberte-sicap-granddakar', label: 'Liberté – Sicap – Grand Dakar' },
+  { value: 'parcelles-grandyoff', label: 'Parcelles Assainies – Grand Yoff' },
+  { value: 'pikine-guediawaye', label: 'Pikine – Guédiawaye' },
+  { value: 'keurmassar-rufisque', label: 'Keur Massar – Rufisque' },
 ];
 
 const TYPES_VEHICULES = [
-  { value: '',           label: 'Tous les types' },
-  { value: 'CITADINE',   label: 'Citadine'       },
-  { value: 'BERLINE',    label: 'Berline'        },
-  { value: 'SUV',        label: 'SUV'            },
-  { value: 'PICKUP',     label: 'Pick-up'        },
-  { value: 'MINIVAN',    label: 'Minivan'        },
-  { value: 'MONOSPACE',  label: 'Monospace'      },
-  { value: 'MINIBUS',    label: 'Minibus'        },
-  { value: 'UTILITAIRE', label: 'Utilitaire'     },
-  { value: 'LUXE',       label: 'Luxe'           },
-  { value: 'FOUR_X_FOUR',label: '4x4'            },
+  { value: '', label: 'Tous les types' },
+  { value: 'CITADINE', label: 'Citadine' },
+  { value: 'BERLINE', label: 'Berline' },
+  { value: 'SUV', label: 'SUV' },
+  { value: 'PICKUP', label: 'Pick-up' },
+  { value: 'MINIVAN', label: 'Minivan' },
+  { value: 'MONOSPACE', label: 'Monospace' },
+  { value: 'MINIBUS', label: 'Minibus' },
+  { value: 'UTILITAIRE', label: 'Utilitaire' },
+  { value: 'LUXE', label: 'Luxe' },
+  { value: 'FOUR_X_FOUR', label: '4x4' },
 ];
 
 const PRIX_MAX_OPTIONS = [
-  { value: '', label: 'Tous les prix' },
-  { value: '15000', label: "Jusqu'à 15 000 FCFA" },
+  { value: '', label: 'À partir de 25 000 FCFA' },
   { value: '30000', label: "Jusqu'à 30 000 FCFA" },
   { value: '50000', label: "Jusqu'à 50 000 FCFA" },
+  { value: '75000', label: "Jusqu'à 75 000 FCFA" },
   { value: '100000', label: "Jusqu'à 100 000 FCFA" },
 ];
 

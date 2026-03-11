@@ -402,7 +402,7 @@ export function VehicleDetailHero({ vehicle }: Props): React.ReactElement {
             {/* Price mobile only */}
             <div className="lg:hidden flex items-baseline gap-1.5 pt-1">
               <span className="text-[30px] font-black text-emerald-500 tabular-nums leading-none">
-                {formatPrice(vehicle.prixParJour)}
+                {formatPrice(Math.round(Number(vehicle.prixParJour) * 1.15))}
               </span>
               <span className="text-[13px] font-semibold text-slate-600">/jour</span>
             </div>

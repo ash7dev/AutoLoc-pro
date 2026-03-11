@@ -87,7 +87,7 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum }: M
                 <div>
                     <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Dès</p>
                     <p className="text-[20px] font-black text-slate-900 tabular-nums leading-tight">
-                        {currencyFormat(prixParJour)}
+                        {currencyFormat(Math.round(prixParJour * 1.15))}
                         <span className="text-[11px] font-semibold text-slate-400 ml-1">/j</span>
                     </p>
                 </div>
