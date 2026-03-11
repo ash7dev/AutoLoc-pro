@@ -352,7 +352,7 @@ export function MarketplaceNavbar() {
           {/* Logo */}
           <Link href="/" className="group flex-shrink-0">
             <Image
-              src="/logoAutoLoc.PNG"
+              src="/logoAutoLoc.png"
               alt="AutoLoc"
               width={140}
               height={40}

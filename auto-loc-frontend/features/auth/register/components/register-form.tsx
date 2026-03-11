@@ -104,7 +104,7 @@ export function RegisterForm() {
             {/* Logo */}
             <div className="mb-10">
               <Image
-                src="/logoAutoLoc.PNG"
+                src="/logoAutoLoc.png"
                 alt="AutoLoc"
                 width={160}
                 height={48}
@@ -178,7 +178,7 @@ export function RegisterForm() {
             {/* Mobile logo */}
             <div className="flex lg:hidden justify-center mb-8">
               <Image
-                src="/logoAutoLoc.PNG"
+                src="/logoAutoLoc.png"
                 alt="AutoLoc"
                 width={160}
                 height={48}
