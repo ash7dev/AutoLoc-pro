@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   Clock, CreditCard, CheckCircle2,
@@ -34,7 +35,6 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
   const [gateLoading, setGateLoading] = useState(false);
   const [wantsDelivery, setWantsDelivery] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [calendarOpen, setCalendarOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const deliveryAvailable = fraisLivraison != null && fraisLivraison > 0;
@@ -317,10 +317,16 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
           </button>
 
           {/* Trust note */}
-          <p className="flex items-center justify-center gap-1.5 text-[11.5px] text-slate-400 font-medium text-center">
-            <Shield className="w-3 h-3 text-slate-300" strokeWidth={2} />
-            Aucun débit avant confirmation du propriétaire
-          </p>
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <Image src="/wavelogo.jpeg" alt="Wave" width={22} height={22} className="rounded-full object-cover" />
+              <Image src="/orangeMoneylogo.jpg" alt="Orange Money" width={22} height={22} className="rounded-full object-cover" />
+            </div>
+            <p className="flex items-center justify-center gap-1.5 text-[11.5px] text-slate-400 font-medium text-center">
+              <Shield className="w-3 h-3 text-slate-300" strokeWidth={2} />
+              Aucun débit avant confirmation du propriétaire
+            </p>
+          </div>
         </div>
       </div>
 
