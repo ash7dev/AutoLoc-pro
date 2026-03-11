@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fetchBlockedDates, type BlockedRange } from '@/lib/nestjs/vehicles';
 import {
