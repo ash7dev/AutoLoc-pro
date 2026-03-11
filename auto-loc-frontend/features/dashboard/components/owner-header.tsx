@@ -2,14 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus, Bell, Car, Clock, CheckCircle2, FileText } from "lucide-react";
+import { Plus, Bell, Car, Clock, CheckCircle2, FileText, ArrowUpRight } from "lucide-react";
 
 export function OwnerHeader({
   title,
   subtitle,
   showFleetStats = false,
   fleetStats,
+  ctaLabel,
+  ctaShortLabel,
+  ctaHref,
+  ctaVariant,
 }: {
   title: string;
   subtitle: string;
@@ -20,6 +25,10 @@ export function OwnerHeader({
     active: number;
     drafts: number;
   };
+  ctaLabel?: string;
+  ctaShortLabel?: string;
+  ctaHref?: string;
+  ctaVariant?: 'withdraw';
 }) {
   const router = useRouter();
   const [time, setTime] = useState("");
@@ -131,14 +140,25 @@ export function OwnerHeader({
           </button>
 
           {/* CTA */}
-          <Button
-            onClick={() => router.push("/dashboard/owner/vehicles/new")}
-            className="gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-sm px-3 sm:px-4 h-9 transition-all shadow-[0_0_20px_rgba(52,211,153,0.25)] hover:shadow-[0_0_28px_rgba(52,211,153,0.4)]"
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Ajouter un véhicule</span>
-            <span className="sm:hidden">Ajouter</span>
-          </Button>
+          {ctaHref ? (
+            <Link
+              href={ctaHref}
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-sm px-3 sm:px-4 h-9 transition-all shadow-[0_0_20px_rgba(52,211,153,0.25)] hover:shadow-[0_0_28px_rgba(52,211,153,0.4)]"
+            >
+              {ctaVariant === 'withdraw' ? <ArrowUpRight className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              <span className="hidden sm:inline">{ctaLabel ?? "Ajouter un véhicule"}</span>
+              <span className="sm:hidden">{ctaShortLabel ?? ctaLabel ?? "Ajouter"}</span>
+            </Link>
+          ) : (
+            <Button
+              onClick={() => router.push("/dashboard/owner/vehicles/new")}
+              className="gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-sm px-3 sm:px-4 h-9 transition-all shadow-[0_0_20px_rgba(52,211,153,0.25)] hover:shadow-[0_0_28px_rgba(52,211,153,0.4)]"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Ajouter un véhicule</span>
+              <span className="sm:hidden">Ajouter</span>
+            </Button>
+          )}
         </div>
       </div>
     </div>

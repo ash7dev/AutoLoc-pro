@@ -33,7 +33,7 @@ export function WalletOverview({ data }: WalletOverviewProps) {
     return (
         <div className="space-y-6">
             {/* ── Wallet Snapshot ───────────────────────────────────────────── */}
-            <WalletSnapshot data={snapshotData} />
+            <WalletSnapshot data={snapshotData} hideCta />
 
             {/* ── Transactions ─────────────────────────────────────────────── */}
             <div className="rounded-xl border border-[hsl(var(--border))] bg-card">

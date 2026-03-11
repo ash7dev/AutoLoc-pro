@@ -270,7 +270,7 @@ export function OwnerDashboardView({
             </div>
 
             {/* Desktop Layout */}
-            <div className="hidden lg:block">
+            <div className="hidden lg:flex lg:flex-col lg:gap-6">
                 {/* Row 2 — Revenue + Wallet */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     <div className="lg:col-span-1">

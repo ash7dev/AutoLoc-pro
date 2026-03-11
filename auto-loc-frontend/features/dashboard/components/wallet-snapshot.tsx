@@ -16,12 +16,14 @@ export function WalletSnapshot({
   href = "/dashboard/owner/wallet",
   loading = false,
   ctaLabel = "Gérer le wallet",
+  hideCta = false,
 }: {
   title?: string;
   data?: WalletSnapshotData;
   href?: string;
   loading?: boolean;
   ctaLabel?: string;
+  hideCta?: boolean;
 }) {
   return (
     <div className="relative overflow-hidden rounded-lg bg-foreground p-4 sm:p-6 shadow-lg h-full flex flex-col">
@@ -33,13 +35,15 @@ export function WalletSnapshot({
         <p className="text-xs font-semibold uppercase tracking-widest text-white/40">
           {title}
         </p>
-        <Link
-          href={href}
-          className="inline-flex items-center gap-1 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors duration-200"
-        >
-          {ctaLabel}
-          <ArrowRight className="h-3 w-3" />
-        </Link>
+        {!hideCta && (
+          <Link
+            href={href}
+            className="inline-flex items-center gap-1 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors duration-200"
+          >
+            {ctaLabel}
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        )}
       </div>
 
       {/* Main balance */}

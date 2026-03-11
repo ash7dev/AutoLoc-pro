@@ -5,7 +5,6 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { fetchWallet } from "@/lib/nestjs/wallet";
 import { OwnerHeader } from "@/features/dashboard/components/owner-header";
 import { WalletOverview } from "@/features/wallet/components/wallet-overview";
-
 export default async function OwnerWalletPage() {
     const nestToken = cookies().get("nest_access")?.value ?? null;
     let token: string | null = nestToken;
@@ -29,6 +28,10 @@ export default async function OwnerWalletPage() {
             <OwnerHeader
                 title="Portefeuille"
                 subtitle="Solde, transactions et retraits"
+                ctaLabel="Retirer des fonds"
+                ctaShortLabel="Retirer"
+                ctaHref="#withdraw"
+                ctaVariant="withdraw"
             />
             <WalletOverview data={walletData} />
         </div>

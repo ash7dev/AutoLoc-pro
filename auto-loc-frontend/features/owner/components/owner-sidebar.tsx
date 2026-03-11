@@ -10,7 +10,6 @@ import {
   CalendarRange,
   Banknote,
   BadgeCheck,
-  Star,
   SlidersHorizontal,
   UserRound,
   LogOut,
@@ -29,7 +28,6 @@ const DESKTOP_NAV_ITEMS = [
   { href: '/dashboard/owner/vehicles', icon: Car, label: 'Véhicules' },
   { href: '/dashboard/owner/reservations', icon: CalendarRange, label: 'Réservations' },
   { href: '/dashboard/owner/wallet', icon: Banknote, label: 'Portefeuille' },
-  { href: '/dashboard/owner/reviews', icon: Star, label: 'Avis' },
   { href: '/dashboard/owner/kyc', icon: BadgeCheck, label: 'Vérification' },
   {
     href: '/dashboard/settings',
@@ -56,7 +54,6 @@ const MOBILE_NAV_ITEMS = [
       { name: 'Informations', href: '/dashboard/settings/profile' },
       { name: 'Notifications', href: '/dashboard/settings/notifications' },
       { name: 'Aide & Support', href: '/dashboard/settings/support' },
-      { name: 'Avis', href: '/dashboard/owner/reviews' },
       { name: 'Vérification', href: '/dashboard/owner/kyc' },
       { name: 'Mode locataire', href: 'switch-locataire' },
       { name: 'Déconnexion', href: 'sign-out' },
