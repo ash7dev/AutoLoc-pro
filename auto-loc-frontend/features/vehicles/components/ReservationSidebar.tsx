@@ -319,8 +319,8 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
           {/* Trust note */}
           <div className="flex flex-col items-center gap-2">
             <div className="flex items-center gap-1.5">
-              <Image src="/wavelogo.jpeg" alt="Wave" width={22} height={22} className="rounded-full object-cover" />
-              <Image src="/orangeMoneylogo.jpg" alt="Orange Money" width={22} height={22} className="rounded-full object-cover" />
+              <Image src="/wavelogo.jpeg" alt="Wave" width={24} height={24} className="rounded-full object-cover" />
+              <Image src="/orangeMoneylogo.jpg" alt="Orange Money" width={24} height={24} className="rounded-full object-cover" />
             </div>
             <p className="flex items-center justify-center gap-1.5 text-[11.5px] text-slate-400 font-medium text-center">
               <Shield className="w-3 h-3 text-slate-300" strokeWidth={2} />
