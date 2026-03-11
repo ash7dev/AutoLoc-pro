@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { MapPin, Tag, Calendar, ArrowRight, Car, Search, SlidersHorizontal } from 'lucide-react';
+import { MapPin, Tag, Calendar as CalendarIcon, ArrowRight, Car, Search, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCurrency } from '@/providers/currency-provider';
 import {
@@ -13,6 +13,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface SearchFilters {
@@ -69,6 +75,95 @@ const FIELD_CLASS = cn(
 const LABEL_CLASS =
   'flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1.5';
 
+// ─── DatePickerField ──────────────────────────────────────────────────────────
+interface DatePickerFieldProps {
+  value: string;
+  onChange: (iso: string) => void;
+  minDate?: Date;
+  placeholder?: string;
+}
+
+function DatePickerField({ value, onChange, minDate, placeholder = 'Sélectionner' }: DatePickerFieldProps) {
+  const [open, setOpen] = useState(false);
+
+  const selected = value ? new Date(value + 'T00:00:00') : undefined;
+
+  const displayValue = selected
+    ? selected.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '';
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            FIELD_CLASS,
+            'flex items-center justify-between w-full text-left gap-2',
+            !value && 'text-white/40',
+          )}
+        >
+          <span className="truncate">{displayValue || placeholder}</span>
+          <CalendarIcon className="h-3.5 w-3.5 text-white/30 shrink-0" strokeWidth={1.75} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className={cn(
+          'w-auto p-0 z-50',
+          'border border-white/10 bg-[#0a0a0a]/95 backdrop-blur-2xl',
+          'shadow-2xl shadow-black/60 rounded-2xl overflow-hidden',
+        )}
+        align="start"
+        sideOffset={6}
+      >
+        <Calendar
+          mode="single"
+          selected={selected}
+          onSelect={(date) => {
+            if (date) {
+              const iso = date.toISOString().split('T')[0];
+              onChange(iso);
+              setOpen(false);
+            }
+          }}
+          disabled={(date) => !!minDate && date < minDate}
+          initialFocus
+          classNames={{
+            months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
+            month: 'space-y-3 p-4',
+            caption: 'flex justify-center pt-1 relative items-center',
+            caption_label: 'text-[13px] font-bold text-white tracking-tight',
+            nav: 'space-x-1 flex items-center',
+            nav_button: cn(
+              'h-7 w-7 p-0 rounded-lg border border-white/10 bg-transparent',
+              'hover:bg-white/10 hover:border-white/20 transition-all duration-150',
+              'text-white/40 hover:text-white inline-flex items-center justify-center',
+            ),
+            nav_button_previous: 'absolute left-1',
+            nav_button_next: 'absolute right-1',
+            table: 'w-full border-collapse',
+            head_row: 'flex mb-1',
+            head_cell: 'text-white/25 w-9 text-center font-semibold text-[10px] uppercase tracking-wider',
+            row: 'flex w-full mt-1',
+            cell: 'h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20',
+            day: cn(
+              'h-9 w-9 p-0 font-medium rounded-xl text-white/60 text-[13px]',
+              'hover:bg-white/10 hover:text-white transition-all duration-150',
+              'inline-flex items-center justify-center',
+            ),
+            day_selected: 'bg-emerald-400 !text-black font-bold hover:bg-emerald-400 hover:!text-black rounded-xl',
+            day_today: 'border border-emerald-400/50 text-emerald-400 font-semibold',
+            day_outside: 'text-white/15 opacity-40',
+            day_disabled: 'text-white/15 opacity-30 cursor-not-allowed hover:bg-transparent hover:text-white/15',
+            day_range_middle: '',
+            day_hidden: 'invisible',
+          }}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 // ─── Bannière Hero ────────────────────────────────────────────────────────────
 export function BannerSection(): React.ReactElement {
   const router = useRouter();
@@ -98,7 +193,8 @@ export function BannerSection(): React.ReactElement {
     router.push(`/vehicle?${params.toString()}`);
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   // Badge filtres actifs (hors texte)
   const activeFiltersCount = [
@@ -283,26 +379,24 @@ export function BannerSection(): React.ReactElement {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className={LABEL_CLASS}>
-                          <Calendar className="h-3 w-3" /> Prise en charge
+                          <CalendarIcon className="h-3 w-3" /> Prise en charge
                         </label>
-                        <input
-                          type="date"
-                          min={today}
+                        <DatePickerField
                           value={filters.dateReservation}
-                          onChange={(e) => handleChange('dateReservation', e.target.value)}
-                          className={FIELD_CLASS}
+                          onChange={(iso) => handleChange('dateReservation', iso)}
+                          minDate={today}
+                          placeholder="Choisir"
                         />
                       </div>
                       <div>
                         <label className={LABEL_CLASS}>
-                          <Calendar className="h-3 w-3" /> Date de retour
+                          <CalendarIcon className="h-3 w-3" /> Date de retour
                         </label>
-                        <input
-                          type="date"
-                          min={filters.dateReservation || today}
+                        <DatePickerField
                           value={filters.dateRetour}
-                          onChange={(e) => handleChange('dateRetour', e.target.value)}
-                          className={FIELD_CLASS}
+                          onChange={(iso) => handleChange('dateRetour', iso)}
+                          minDate={filters.dateReservation ? new Date(filters.dateReservation + 'T00:00:00') : today}
+                          placeholder="Choisir"
                         />
                       </div>
                     </div>
@@ -393,14 +487,13 @@ export function BannerSection(): React.ReactElement {
             {/* Prise en charge */}
             <div className="flex-1 min-w-0">
               <label className={LABEL_CLASS}>
-                <Calendar className="h-3 w-3" /> Prise en charge
+                <CalendarIcon className="h-3 w-3" /> Prise en charge
               </label>
-              <input
-                type="date"
-                min={today}
+              <DatePickerField
                 value={filters.dateReservation}
-                onChange={(e) => handleChange('dateReservation', e.target.value)}
-                className={FIELD_CLASS}
+                onChange={(iso) => handleChange('dateReservation', iso)}
+                minDate={today}
+                placeholder="Choisir une date"
               />
             </div>
 
@@ -409,14 +502,13 @@ export function BannerSection(): React.ReactElement {
             {/* Date de retour */}
             <div className="flex-1 min-w-0">
               <label className={LABEL_CLASS}>
-                <Calendar className="h-3 w-3" /> Date de retour
+                <CalendarIcon className="h-3 w-3" /> Date de retour
               </label>
-              <input
-                type="date"
-                min={filters.dateReservation || today}
+              <DatePickerField
                 value={filters.dateRetour}
-                onChange={(e) => handleChange('dateRetour', e.target.value)}
-                className={FIELD_CLASS}
+                onChange={(iso) => handleChange('dateRetour', iso)}
+                minDate={filters.dateReservation ? new Date(filters.dateReservation + 'T00:00:00') : today}
+                placeholder="Choisir une date"
               />
             </div>
 

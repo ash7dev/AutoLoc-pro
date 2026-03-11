@@ -106,8 +106,8 @@ export function RegisterForm() {
               <Image
                 src="/logoAutoLoc.jpg"
                 alt="AutoLoc"
-                width={200}
-                height={80}
+                width={220}
+                height={110}
                 className="object-contain"
               />
             </div>
