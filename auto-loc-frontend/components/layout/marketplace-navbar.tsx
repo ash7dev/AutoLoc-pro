@@ -354,8 +354,8 @@ export function MarketplaceNavbar() {
             <Image
               src="/logoAutoLoc.jpg"
               alt="AutoLoc"
-              width={80}
-              height={80}
+              width={210}
+              height={100}
               className="object-contain group-hover:opacity-80 transition-opacity duration-200"
             />
           </Link>

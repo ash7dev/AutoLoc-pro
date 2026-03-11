@@ -104,11 +104,11 @@ export function RegisterForm() {
             {/* Logo */}
             <div className="mb-10">
               <Image
-                src="/logoAutoLoc.png"
+                src="/logoAutoLoc.jpg"
                 alt="AutoLoc"
-                width={160}
-                height={48}
-                className="h-11 w-auto object-contain"
+                width={200}
+                height={80}
+                className="object-contain"
               />
             </div>
 
@@ -178,11 +178,11 @@ export function RegisterForm() {
             {/* Mobile logo */}
             <div className="flex lg:hidden justify-center mb-8">
               <Image
-                src="/logoAutoLoc.png"
+                src="/logoAutoLoc.jpg"
                 alt="AutoLoc"
-                width={160}
-                height={48}
-                className="h-10 w-auto object-contain"
+                width={200}
+                height={80}
+                className="object-contain"
               />
             </div>
 
