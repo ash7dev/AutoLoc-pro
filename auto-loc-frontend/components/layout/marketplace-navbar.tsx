@@ -350,13 +350,13 @@ export function MarketplaceNavbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between gap-6">
 
           {/* Logo */}
-          <Link href="/" className="group flex-shrink-0">
+          <Link href="/" className="group flex-shrink-0 -ml-[5px]">
             <Image
               src="/logoAutoLoc.jpg"
               alt="AutoLoc"
-              width={210}
-              height={100}
-              className="object-contain group-hover:opacity-80 transition-opacity duration-200"
+              width={220}
+              height={110}
+              className="w-[120px] sm:w-[160px] md:w-[220px] object-contain group-hover:opacity-80 transition-opacity duration-200"
             />
           </Link>
 
