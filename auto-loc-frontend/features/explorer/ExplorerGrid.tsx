@@ -16,6 +16,7 @@ import { KycNudgeModal } from '@/features/onboarding/KycNudgeModal';
 import { ExplorerHero } from './ExplorerHero';
 import { ExplorerFilters } from './ExplorerFilters';
 import { ExplorerActiveFilters, getFilterPills } from './ExplorerActiveFilters';
+import { useCurrency } from '@/providers/currency-provider';
 import { ExplorerResultsHeader } from './ExplorerResultsHeader';
 import { ExplorerVehicleCard } from './ExplorerVehicleCard';
 import { VehicleGridSkeleton } from './ExplorerSkeleton';
@@ -334,6 +335,7 @@ function ResultsHeader({
    MAIN ORCHESTRATOR
 ════════════════════════════════════════════════════════════════ */
 export function ExplorerGrid(): React.ReactElement {
+  const { formatPrice } = useCurrency();
   const [filters, setFilters] = useState<ExplorerFiltersState>(DEFAULT_FILTERS);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -437,7 +439,7 @@ export function ExplorerGrid(): React.ReactElement {
   const handleFiltersChange = (f: ExplorerFiltersState) => setFilters(f);
   const handleReset = () => { setFilters(DEFAULT_FILTERS); setSearchQuery(''); };
 
-  const activeFilterCount = getFilterPills(filters).length;
+  const activeFilterCount = getFilterPills(filters, formatPrice).length;
   const hasActiveFilters = activeFilterCount > 0 || searchQuery.trim().length > 0;
 
   return (
