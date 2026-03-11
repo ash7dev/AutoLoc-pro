@@ -108,11 +108,11 @@ export function Footer(): React.ReactElement {
             <div className="flex flex-col gap-6">
               <Link href="/" className="group inline-block w-fit">
                 <Image
-                  src="/logoAutoLoc.jpg"
+                  src="/logoAutoLoc.PNG"
                   alt="AutoLoc"
-                  width={52}
-                  height={52}
-                  className="object-contain rounded-xl group-hover:opacity-80 transition-opacity duration-200"
+                  width={160}
+                  height={48}
+                  className="h-10 w-auto object-contain group-hover:opacity-80 transition-opacity duration-200"
                 />
               </Link>
 

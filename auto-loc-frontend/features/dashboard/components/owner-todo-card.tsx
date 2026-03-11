@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ArrowRight,
   Dot,
+  CalendarClock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -24,6 +25,7 @@ export interface OwnerTodoItem {
   href?: string;
   priority?: TodoPriority;
   meta?: string;
+  date?: string; // e.g. "Début le 12 mar." or "Fin le 15 mar."
 }
 
 const PAGE_SIZE = 4;
@@ -79,11 +81,24 @@ function TodoItem({ item }: { item: OwnerTodoItem }) {
           </p>
         )}
 
-        {item.meta && (
-          <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-white/20">
-            {item.meta}
-          </p>
-        )}
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          {item.meta && (
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/20">
+              {item.meta}
+            </p>
+          )}
+          {item.date && (
+            <span className={cn(
+              "inline-flex items-center gap-1 text-[10px] font-semibold rounded-md px-1.5 py-0.5",
+              isUrgent
+                ? "bg-red-500/10 text-red-400/80"
+                : "bg-white/5 text-white/30",
+            )}>
+              <CalendarClock className="w-2.5 h-2.5" strokeWidth={2} />
+              {item.date}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Right side */}

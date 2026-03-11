@@ -352,11 +352,11 @@ export function MarketplaceNavbar() {
           {/* Logo */}
           <Link href="/" className="group flex-shrink-0">
             <Image
-              src="/logoAutoLoc.jpg"
+              src="/logoAutoLoc.PNG"
               alt="AutoLoc"
-              width={48}
-              height={48}
-              className="object-contain group-hover:opacity-80 transition-opacity duration-200"
+              width={140}
+              height={40}
+              className="h-9 w-auto object-contain group-hover:opacity-80 transition-opacity duration-200"
             />
           </Link>
 

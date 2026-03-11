@@ -26,6 +26,10 @@ interface OwnerDashboardViewProps {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
+function fmtDate(iso: string) {
+    return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+}
+
 function buildTodoItems(reservations: Reservation[] = [], vehicles: Vehicle[] = []) {
     const items: Array<{
         id: number;
@@ -34,11 +38,13 @@ function buildTodoItems(reservations: Reservation[] = [], vehicles: Vehicle[] = 
         priority: "urgent" | "normal";
         href: string;
         meta?: string;
+        date?: string;
     }> = [];
 
     // Paid reservations waiting for confirmation
     const payees = reservations.filter((r) => r.statut === "PAYEE");
     if (payees.length > 0) {
+        const earliest = payees.reduce((a, b) => a.dateDebut < b.dateDebut ? a : b);
         items.push({
             id: 1,
             title: `${payees.length} réservation${payees.length > 1 ? "s" : ""} à confirmer`,
@@ -46,12 +52,14 @@ function buildTodoItems(reservations: Reservation[] = [], vehicles: Vehicle[] = 
             priority: "urgent",
             href: "/dashboard/owner/reservations",
             meta: "Action requise",
+            date: `Début le ${fmtDate(earliest.dateDebut)}`,
         });
     }
 
     // Confirmed reservations (check-in incoming)
     const confirmees = reservations.filter((r) => r.statut === "CONFIRMEE");
     if (confirmees.length > 0) {
+        const earliest = confirmees.reduce((a, b) => a.dateDebut < b.dateDebut ? a : b);
         items.push({
             id: 2,
             title: `${confirmees.length} check-in${confirmees.length > 1 ? "s" : ""} à effectuer`,
@@ -59,6 +67,7 @@ function buildTodoItems(reservations: Reservation[] = [], vehicles: Vehicle[] = 
             priority: "urgent",
             href: "/dashboard/owner/reservations",
             meta: "À venir",
+            date: `Check-in le ${fmtDate(earliest.dateDebut)}`,
         });
     }
 
@@ -79,12 +88,14 @@ function buildTodoItems(reservations: Reservation[] = [], vehicles: Vehicle[] = 
     // In-progress reservations
     const enCours = reservations.filter((r) => r.statut === "EN_COURS");
     if (enCours.length > 0) {
+        const earliest = enCours.reduce((a, b) => a.dateFin < b.dateFin ? a : b);
         items.push({
             id: 4,
             title: `${enCours.length} location${enCours.length > 1 ? "s" : ""} en cours`,
             description: "N'oubliez pas le check-out à la fin.",
             priority: "normal",
             href: "/dashboard/owner/reservations",
+            date: `Fin le ${fmtDate(earliest.dateFin)}`,
         });
     }
 

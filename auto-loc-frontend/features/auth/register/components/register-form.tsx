@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Eye, EyeOff, ArrowRight, CheckCircle, Loader2, Car, Phone, Mail, Lock } from 'lucide-react';
+import Image from 'next/image';
+import { Eye, EyeOff, ArrowRight, CheckCircle, Loader2, Phone, Mail, Lock } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, RegisterInput } from '../schema';
@@ -101,11 +102,14 @@ export function RegisterForm() {
           <div className="max-w-lg" style={{ animation: 'fadeInLeft .7s cubic-bezier(.16,1,.3,1) both' }}>
 
             {/* Logo */}
-            <div className="flex items-center gap-3 mb-10">
-              <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center">
-                <Car className="w-5 h-5 text-emerald-400" />
-              </div>
-              <span className="autoloc-hero text-2xl text-gray-900">Auto<em>Loc</em></span>
+            <div className="mb-10">
+              <Image
+                src="/logoAutoLoc.PNG"
+                alt="AutoLoc"
+                width={160}
+                height={48}
+                className="h-11 w-auto object-contain"
+              />
             </div>
 
             <h1 className="autoloc-body text-5xl font-bold text-gray-900 mb-6 leading-tight">
@@ -172,11 +176,14 @@ export function RegisterForm() {
           <div className="w-full max-w-md mx-auto">
 
             {/* Mobile logo */}
-            <div className="flex lg:hidden items-center justify-center gap-3 mb-8">
-              <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center">
-                <Car className="w-5 h-5 text-emerald-400" />
-              </div>
-              <span className="autoloc-hero text-2xl text-gray-900">Auto<em>Loc</em></span>
+            <div className="flex lg:hidden justify-center mb-8">
+              <Image
+                src="/logoAutoLoc.PNG"
+                alt="AutoLoc"
+                width={160}
+                height={48}
+                className="h-10 w-auto object-contain"
+              />
             </div>
 
             {/* Header */}
