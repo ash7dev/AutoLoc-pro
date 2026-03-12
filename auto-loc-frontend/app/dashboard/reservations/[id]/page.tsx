@@ -220,34 +220,27 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                 <ReservationActions reservationId={r.id} statut={r.statut} />
 
                 {/* ══════════════════════════════════════════════════
-                    TIMELINE — top like Stripe
+                    CONTRAT
                 ══════════════════════════════════════════════════ */}
-                <Card icon={Clock} title="Chronologie" accent="emerald">
-                    <div>
-                        {timeline.map((ev, i) => {
-                            const isLast = i === timeline.length - 1;
-                            const col: Record<string, { icon: string; line: string }> = {
-                                emerald: { icon: 'bg-emerald-50 border-emerald-200 text-emerald-600', line: 'bg-emerald-200' },
-                                red:     { icon: 'bg-red-50 border-red-200 text-red-500',             line: 'bg-red-200'    },
-                            };
-                            const c = col[ev.color] ?? col.emerald;
-                            return (
-                                <div key={ev.label} className="flex gap-4">
-                                    <div className="flex flex-col items-center flex-shrink-0">
-                                        <div className={`w-8 h-8 rounded-full border flex items-center justify-center ${c.icon}`}>
-                                            <ev.icon className="w-3.5 h-3.5" strokeWidth={2} />
-                                        </div>
-                                        {!isLast && <div className={`w-px flex-1 min-h-[24px] my-1 ${c.line}`} />}
-                                    </div>
-                                    <div className={`${isLast ? 'pb-0' : 'pb-4'} pt-1`}>
-                                        <p className="text-[13px] font-bold text-slate-800 leading-none">{ev.label}</p>
-                                        <p className="text-[11px] text-slate-400 mt-1">{fmtDateTime(ev.date)}</p>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                {['PAYEE', 'CONFIRMEE', 'EN_COURS', 'TERMINEE', 'ANNULEE'].includes(r.statut) && (
+                    <div className="flex items-center gap-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm px-5 py-4">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-emerald-500" strokeWidth={1.75} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[13.5px] font-black text-slate-800">Contrat de location</p>
+                            <p className="text-[11.5px] text-slate-400 mt-0.5">Généré automatiquement · Signé numériquement</p>
+                        </div>
+                        <Link
+                            href={`/dashboard/reservations/${r.id}/contrat`}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-[12px] font-bold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-sm flex-shrink-0"
+                        >
+                            <Receipt className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            Voir
+                            <ArrowRight className="w-3 h-3" strokeWidth={2.5} />
+                        </Link>
                     </div>
-                </Card>
+                )}
 
                 {/* ══════════════════════════════════════════════════
                     MAIN GRID
@@ -410,27 +403,34 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                 </div>
 
                 {/* ══════════════════════════════════════════════════
-                    CONTRAT
+                    TIMELINE
                 ══════════════════════════════════════════════════ */}
-                {['PAYEE', 'CONFIRMEE', 'EN_COURS', 'TERMINEE', 'ANNULEE'].includes(r.statut) && (
-                    <div className="flex items-center gap-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm px-5 py-4">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
-                            <FileText className="w-5 h-5 text-emerald-500" strokeWidth={1.75} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-[13.5px] font-black text-slate-800">Contrat de location</p>
-                            <p className="text-[11.5px] text-slate-400 mt-0.5">Généré automatiquement · Signé numériquement</p>
-                        </div>
-                        <Link
-                            href={`/dashboard/reservations/${r.id}/contrat`}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-[12px] font-bold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-sm flex-shrink-0"
-                        >
-                            <Receipt className="w-3.5 h-3.5" strokeWidth={2.5} />
-                            Voir
-                            <ArrowRight className="w-3 h-3" strokeWidth={2.5} />
-                        </Link>
+                <Card icon={Clock} title="Chronologie" accent="emerald">
+                    <div>
+                        {timeline.map((ev, i) => {
+                            const isLast = i === timeline.length - 1;
+                            const col: Record<string, { icon: string; line: string }> = {
+                                emerald: { icon: 'bg-emerald-50 border-emerald-200 text-emerald-600', line: 'bg-emerald-200' },
+                                red:     { icon: 'bg-red-50 border-red-200 text-red-500',             line: 'bg-red-200'    },
+                            };
+                            const c = col[ev.color] ?? col.emerald;
+                            return (
+                                <div key={ev.label} className="flex gap-4">
+                                    <div className="flex flex-col items-center flex-shrink-0">
+                                        <div className={`w-8 h-8 rounded-full border flex items-center justify-center ${c.icon}`}>
+                                            <ev.icon className="w-3.5 h-3.5" strokeWidth={2} />
+                                        </div>
+                                        {!isLast && <div className={`w-px flex-1 min-h-[24px] my-1 ${c.line}`} />}
+                                    </div>
+                                    <div className={`${isLast ? 'pb-0' : 'pb-4'} pt-1`}>
+                                        <p className="text-[13px] font-bold text-slate-800 leading-none">{ev.label}</p>
+                                        <p className="text-[11px] text-slate-400 mt-1">{fmtDateTime(ev.date)}</p>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
-                )}
+                </Card>
 
                 {/* ══════════════════════════════════════════════════
                     ALERTS
@@ -479,7 +479,7 @@ function Card({ icon: Icon, title, children, className, accent = 'emerald' }: {
     );
 }
 
-function InfoRow({ icon: Icon, label, children, iconCls = 'bg-white border border-slate-200', iconColor = 'text-slate-500' }: {
+function InfoRow({ icon: Icon, label, children, iconCls = 'bg-emerald-50 border-emerald-100', iconColor = 'text-emerald-500' }: {
     icon: React.ElementType; label: string; children: React.ReactNode;
     iconCls?: string; iconColor?: string;
 }) {

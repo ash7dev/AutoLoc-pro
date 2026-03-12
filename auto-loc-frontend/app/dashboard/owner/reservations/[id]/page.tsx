@@ -231,36 +231,27 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                 />
 
                 {/* ══════════════════════════════════════════════════
-                    TIMELINE — top-level like Stripe / Linear
+                    CONTRAT
                 ══════════════════════════════════════════════════ */}
-                <Card icon={Clock} title="Chronologie" accent="emerald">
-                    <div>
-                        {timeline.map((ev, i) => {
-                            const isLast = i === timeline.length - 1;
-                            const col: Record<string, { icon: string; line: string }> = {
-                                slate:   { icon: "bg-emerald-50 border-emerald-200 text-emerald-600", line: "bg-emerald-200" },
-                                emerald: { icon: "bg-emerald-50 border-emerald-200 text-emerald-600", line: "bg-emerald-200" },
-                                blue:    { icon: "bg-emerald-50 border-emerald-200 text-emerald-600", line: "bg-emerald-200" },
-                                red:     { icon: "bg-red-50 border-red-200 text-red-500",             line: "bg-red-200"    },
-                            };
-                            const c = col[ev.color] ?? col.slate;
-                            return (
-                                <div key={ev.label} className="flex gap-4">
-                                    <div className="flex flex-col items-center flex-shrink-0">
-                                        <div className={`w-8 h-8 rounded-full border flex items-center justify-center ${c.icon}`}>
-                                            <ev.icon className="w-3.5 h-3.5" strokeWidth={2} />
-                                        </div>
-                                        {!isLast && <div className={`w-px flex-1 min-h-[24px] my-1 ${c.line}`} />}
-                                    </div>
-                                    <div className={`${isLast ? "pb-0" : "pb-4"} pt-1`}>
-                                        <p className="text-[13px] font-bold text-slate-800 leading-none">{ev.label}</p>
-                                        <p className="text-[11px] text-slate-400 mt-1">{fmtDateTime(ev.date)}</p>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                {["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE", "ANNULEE"].includes(r.statut) && (
+                    <div className="flex items-center gap-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm px-5 py-4">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-emerald-500" strokeWidth={1.75} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[13.5px] font-black text-slate-800">Contrat de location</p>
+                            <p className="text-[11.5px] text-slate-400 mt-0.5">Généré automatiquement · Signé numériquement</p>
+                        </div>
+                        <Link
+                            href={`/dashboard/reservations/${r.id}/contrat`}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-[12px] font-bold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-sm flex-shrink-0"
+                        >
+                            <FileText className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            Voir
+                            <ArrowRight className="w-3 h-3" strokeWidth={2.5} />
+                        </Link>
                     </div>
-                </Card>
+                )}
 
                 {/* ══════════════════════════════════════════════════
                     MAIN GRID
@@ -296,9 +287,9 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
 
                             {/* Phone — masked before confirmation */}
                             <div className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl border transition-all ${revealed ? "bg-slate-50 border-slate-200" : "bg-slate-50/40 border-dashed border-slate-200/70"}`}>
-                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${revealed ? "bg-white border border-slate-200" : "bg-slate-100"}`}>
+                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${revealed ? "bg-emerald-50 border border-emerald-200" : "bg-slate-100"}`}>
                                     {revealed
-                                        ? <Phone className="w-3.5 h-3.5 text-slate-500" strokeWidth={2} />
+                                        ? <Phone className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
                                         : <Lock className="w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
                                     }
                                 </div>
@@ -325,9 +316,9 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
 
                             {/* Privacy note before confirmation */}
                             {!revealed && (
-                                <div className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl bg-blue-50/60 border border-blue-100">
-                                    <BadgeCheck className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" strokeWidth={2} />
-                                    <p className="text-[11px] text-blue-600/80 font-medium leading-relaxed">
+                                <div className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl bg-emerald-50/60 border border-emerald-100">
+                                    <BadgeCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" strokeWidth={2} />
+                                    <p className="text-[11px] text-emerald-700/70 font-medium leading-relaxed">
                                         Les coordonnées complètes du locataire seront accessibles une fois la réservation confirmée.
                                     </p>
                                 </div>
@@ -353,7 +344,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                             <div>
                                 <p className="text-[17px] font-black text-slate-900 tracking-tight">
                                     {r.vehicule.marque}{" "}
-                                    <span className="text-blue-600">{r.vehicule.modele}</span>
+                                    <span className="text-emerald-500">{r.vehicule.modele}</span>
                                 </p>
                                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                                     {r.vehicule.annee && <span className="text-[11px] font-semibold text-slate-400">{r.vehicule.annee}</span>}
@@ -376,15 +367,15 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                             )}
 
                             {r.adresseLivraison && (
-                                <div className="flex items-start gap-3 px-3.5 py-2.5 rounded-xl bg-blue-50 border border-blue-100">
-                                    <div className="w-7 h-7 rounded-lg bg-white border border-blue-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <MapPin className="w-3.5 h-3.5 text-blue-500" strokeWidth={2} />
+                                <div className="flex items-start gap-3 px-3.5 py-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
+                                    <div className="w-7 h-7 rounded-lg bg-white border border-emerald-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <MapPin className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Livraison demandée</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">Livraison demandée</p>
                                         <p className="text-[12.5px] font-semibold text-slate-700 mt-0.5">{r.adresseLivraison}</p>
                                         {r.fraisLivraison && (
-                                            <p className="text-[11px] font-bold text-blue-500 mt-1">+{fmtMoney(r.fraisLivraison)} FCFA</p>
+                                            <p className="text-[11px] font-bold text-emerald-600 mt-1">+{fmtMoney(r.fraisLivraison)} FCFA</p>
                                         )}
                                     </div>
                                 </div>
@@ -481,27 +472,36 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                 </div>
 
                 {/* ══════════════════════════════════════════════════
-                    CONTRAT
+                    TIMELINE
                 ══════════════════════════════════════════════════ */}
-                {["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE", "ANNULEE"].includes(r.statut) && (
-                    <div className="flex items-center gap-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm px-5 py-4">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
-                            <FileText className="w-5 h-5 text-emerald-500" strokeWidth={1.75} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-[13.5px] font-black text-slate-800">Contrat de location</p>
-                            <p className="text-[11.5px] text-slate-400 mt-0.5">Généré automatiquement · Signé numériquement</p>
-                        </div>
-                        <Link
-                            href={`/dashboard/reservations/${r.id}/contrat`}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-[12px] font-bold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-sm flex-shrink-0"
-                        >
-                            <FileText className="w-3.5 h-3.5" strokeWidth={2.5} />
-                            Voir
-                            <ArrowRight className="w-3 h-3" strokeWidth={2.5} />
-                        </Link>
+                <Card icon={Clock} title="Chronologie" accent="emerald">
+                    <div>
+                        {timeline.map((ev, i) => {
+                            const isLast = i === timeline.length - 1;
+                            const col: Record<string, { icon: string; line: string }> = {
+                                slate:   { icon: "bg-emerald-50 border-emerald-200 text-emerald-600", line: "bg-emerald-200" },
+                                emerald: { icon: "bg-emerald-50 border-emerald-200 text-emerald-600", line: "bg-emerald-200" },
+                                blue:    { icon: "bg-emerald-50 border-emerald-200 text-emerald-600", line: "bg-emerald-200" },
+                                red:     { icon: "bg-red-50 border-red-200 text-red-500",             line: "bg-red-200"    },
+                            };
+                            const c = col[ev.color] ?? col.slate;
+                            return (
+                                <div key={ev.label} className="flex gap-4">
+                                    <div className="flex flex-col items-center flex-shrink-0">
+                                        <div className={`w-8 h-8 rounded-full border flex items-center justify-center ${c.icon}`}>
+                                            <ev.icon className="w-3.5 h-3.5" strokeWidth={2} />
+                                        </div>
+                                        {!isLast && <div className={`w-px flex-1 min-h-[24px] my-1 ${c.line}`} />}
+                                    </div>
+                                    <div className={`${isLast ? "pb-0" : "pb-4"} pt-1`}>
+                                        <p className="text-[13px] font-bold text-slate-800 leading-none">{ev.label}</p>
+                                        <p className="text-[11px] text-slate-400 mt-1">{fmtDateTime(ev.date)}</p>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
-                )}
+                </Card>
 
                 {/* ══════════════════════════════════════════════════
                     ALERTS
@@ -541,7 +541,7 @@ function Card({ icon: Icon, title, children, className, accent = "slate" }: {
     );
 }
 
-function InfoRow({ icon: Icon, label, children, iconCls = "bg-white border border-slate-200", iconColor = "text-slate-500" }: {
+function InfoRow({ icon: Icon, label, children, iconCls = "bg-emerald-50 border-emerald-100", iconColor = "text-emerald-500" }: {
     icon: React.ElementType; label: string; children: React.ReactNode;
     iconCls?: string; iconColor?: string;
 }) {

@@ -182,6 +182,7 @@ export function OwnerDashboardView({
         const month = revDate.getMonth();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+        // Accumulate revenue per day (indexed 1..daysInMonth)
         const dailyRevenue = new Array(daysInMonth + 1).fill(0);
         let totalRev = 0;
 
@@ -195,25 +196,27 @@ export function OwnerDashboardView({
             }
         });
 
-        // Generate data points every 5 days or all days? Let's do roughly 6 points
-        const points: Array<{ day: string; value: number; highlight?: boolean }> = [];
-        const formatter = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short" });
+        // Build cumulative sums so the chart shows a rising curve
+        const cumulative = new Array(daysInMonth + 1).fill(0);
+        for (let d = 1; d <= daysInMonth; d++) {
+            cumulative[d] = cumulative[d - 1] + dailyRevenue[d];
+        }
 
-        // Let's create a point every ~5 days to prevent chart clutter
+        const formatter = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short" });
         const steps = [1, 5, 10, 15, 20, 25, daysInMonth];
+        const points: Array<{ day: string; value: number; highlight?: boolean }> = [];
+
         for (const day of steps) {
             if (day > daysInMonth) continue;
-            const d = new Date(year, month, day);
             points.push({
-                day: formatter.format(d),
-                value: dailyRevenue[day] || 0
+                day: formatter.format(new Date(year, month, day)),
+                value: cumulative[day],
             });
         }
 
-        const maxVal = Math.max(1, ...points.map(p => p.value));
-        if (maxVal > 1) {
-            const maxPoint = points.find(p => p.value === maxVal);
-            if (maxPoint) maxPoint.highlight = true;
+        // Highlight the last point (final total)
+        if (points.length > 0 && totalRev > 0) {
+            points[points.length - 1].highlight = true;
         }
 
         return { points, totalRev };

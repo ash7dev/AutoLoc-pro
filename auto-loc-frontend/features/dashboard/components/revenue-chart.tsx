@@ -56,6 +56,17 @@ export function RevenueChart({
 }) {
   const maxValue = Math.max(1, ...data.map((d) => d.value));
 
+  // Dynamic Y-axis labels based on actual max
+  const yLabels = (() => {
+    if (maxValue <= 1) return ["150K", "100K", "50K", "0"];
+    const top = Math.ceil(maxValue / 1000) * 1000;
+    const fmt = (v: number) =>
+      v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M`
+      : v >= 1_000 ? `${Math.round(v / 1_000)}K`
+      : `${v}`;
+    return [fmt(top), fmt(Math.round(top * 2 / 3)), fmt(Math.round(top / 3)), "0"];
+  })();
+
   const handleMonthChange = (val: string) => {
     onMonthChange?.(val);
   };
@@ -99,7 +110,7 @@ export function RevenueChart({
         <div className="relative h-40 sm:h-56 flex-1 min-h-[160px] sm:min-h-[224px]">
           {/* Y-axis */}
           <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between">
-            {["150K", "100K", "50K", "0"].map((label) => (
+            {yLabels.map((label) => (
               <span key={label} className="text-xs text-muted-foreground w-10 text-right">
                 {label}
               </span>
@@ -151,10 +162,10 @@ export function RevenueChart({
                     >
                       <p className="font-semibold">{point.day}</p>
                       <p className="text-muted-foreground">
-                        {point.value.toLocaleString("fr-FR")} FCFA
+                        {point.value.toLocaleString("fr-FR")} FCFA cumulés
                       </p>
                       {point.highlight && (
-                        <p className="text-emerald-400 font-bold">Pic du mois 🏆</p>
+                        <p className="text-emerald-400 font-bold">Total du mois</p>
                       )}
                     </TooltipContent>
                   </Tooltip>
