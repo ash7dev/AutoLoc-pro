@@ -164,7 +164,7 @@ function EditableRow({
                         )}>
                             {flash
                                 ? <span className="flex items-center gap-1.5 text-emerald-600 font-semibold"><CheckCircle2 className="w-3.5 h-3.5" />Enregistré</span>
-                                : (displayValue ?? value || 'Non renseigné')}
+                                : (displayValue ?? (value || 'Non renseigné'))}
                         </p>
                     )}
 
