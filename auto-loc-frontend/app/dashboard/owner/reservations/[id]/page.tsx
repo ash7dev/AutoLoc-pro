@@ -196,7 +196,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                                 <p className="text-[2rem] font-black text-emerald-400 tabular-nums leading-none mt-1">
                                     {fmtMoney(netAmt)}
                                 </p>
-                                <p className="text-[11px] text-emerald-400/50 font-semibold mt-1">FCFA · {netPct}% du total</p>
+                                <p className="text-[11px] text-emerald-400/50 font-semibold mt-1">FCFA ·</p>
                             </div>
                         </div>
 
@@ -461,7 +461,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                                     <div className="h-full bg-slate-200 flex-1 rounded-r-full" />
                                 </div>
                                 <p className="text-[11px] text-slate-400 font-medium">
-                                    Sur {fmtMoney(totalLocataire)} FCFA payés, vous recevrez{" "}
+                                    Revenu Net {" "}
                                     <span className="font-black text-emerald-600">{fmtMoney(netAmt)} FCFA</span>.
                                 </p>
                             </div>
