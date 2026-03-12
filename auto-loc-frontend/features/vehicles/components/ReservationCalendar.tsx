@@ -125,8 +125,8 @@ function VehicleDatePicker({ label, value, placeholder, onChange, disabledFn, is
                             day_today: 'border border-emerald-400/50 text-emerald-600 font-bold',
                             day_outside: 'text-slate-200 opacity-60',
                             day_disabled: cn(
-                                'text-red-300 line-through opacity-70 cursor-not-allowed',
-                                'bg-red-50/60 hover:bg-red-50/60 hover:text-red-300 rounded-none',
+                                'text-red-500 line-through opacity-80 cursor-not-allowed',
+                                'bg-red-100 hover:bg-red-100 hover:text-red-500 rounded-none',
                             ),
                             day_range_middle: '',
                             day_hidden: 'invisible',
