@@ -154,9 +154,9 @@ export class ConfirmPaymentUseCase {
 
             this.logger.log(`Payment confirmed for reservation ${reservationId}`);
 
-            // ── 7. Post-commit: Generate contract PDF (ACTIF) ──────────────
+            // ── 7. Post-commit: Generate contract PDF (EN_COURS — awaiting owner confirmation) ──
             const contrat = await this.contractGeneration
-                .generateAndStore(reservationId, { statutContrat: 'ACTIF' })
+                .generateAndStore(reservationId, { statutContrat: 'EN_COURS' })
                 .catch((err) => {
                     this.logger.error(`Contract generation failed: ${err.message}`);
                     return null;

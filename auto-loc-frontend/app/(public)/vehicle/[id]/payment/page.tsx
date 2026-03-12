@@ -37,6 +37,7 @@ export default function PaymentPage() {
     const [method, setMethod] = useState<PaymentMethod>('WAVE');
     const [contractAccepted, setContractAccepted] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
+    const [createdReservationId, setCreatedReservationId] = useState('');
     const activeRole = useRoleStore((s) => s.activeRole);
     const setActiveRole = useRoleStore((s) => s.setActiveRole);
     const { authFetch } = useAuthFetch();
@@ -91,6 +92,7 @@ export default function PaymentPage() {
 
             // Simulate successful payment (no real API keys)
             await authFetch(`/reservations/${reservationId}/confirm-payment`, { method: 'PATCH' });
+            setCreatedReservationId(reservationId);
             setStep('success');
         } catch (err) {
             setErrorMsg(err instanceof Error ? err.message : 'Erreur lors du paiement');
@@ -141,22 +143,22 @@ export default function PaymentPage() {
                     <p className="mt-2 text-[14px] text-black/50 max-w-sm mx-auto leading-relaxed">
                         Votre réservation pour la{' '}
                         <span className="font-semibold text-black">{vehicle.marque} {vehicle.modele}</span>{' '}
-                        a été confirmée avec succès. Le propriétaire sera notifié.
+                        a été confirmée avec succès. Votre contrat de location est prêt.
                     </p>
                 </div>
                 <div className="flex items-center gap-3 mt-4">
                     <Link
-                        href="/reservations"
-                        className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-[13px] font-bold text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-600 transition-all"
+                        href={createdReservationId ? `/dashboard/reservations/${createdReservationId}/contrat` : '/dashboard/reservations'}
+                        className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-[13px] font-bold text-white shadow-lg shadow-blue-600/25 hover:bg-blue-700 transition-all"
                     >
-                        Mes réservations
+                        Voir mon contrat
                         <ChevronRight className="w-4 h-4" />
                     </Link>
                     <Link
-                        href="/explorer"
+                        href="/dashboard/reservations"
                         className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-[13px] font-semibold text-black hover:bg-slate-50 transition-all"
                     >
-                        Explorer
+                        Mes réservations
                     </Link>
                 </div>
             </main>

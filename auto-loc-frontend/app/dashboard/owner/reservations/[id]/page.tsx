@@ -274,24 +274,22 @@ export default async function ReservationDetailPage({
                 </div>
 
                 {/* ── Contrat ───────────────────────────────────────── */}
-                {r.contratUrl && (
+                {['PAYEE', 'CONFIRMEE', 'EN_COURS', 'TERMINEE', 'ANNULEE'].includes(r.statut) && (
                     <div className="rounded-2xl bg-white border border-slate-200/80 shadow-sm px-5 py-4 flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
                             <FileText className="w-5 h-5 text-blue-500" strokeWidth={1.75} />
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-[13px] font-bold text-slate-800">Contrat de location</p>
-                            <p className="text-[11px] text-slate-400 mt-0.5">PDF · Généré automatiquement</p>
+                            <p className="text-[11px] text-slate-400 mt-0.5">Généré automatiquement après paiement</p>
                         </div>
-                        <a
-                            href={`/api/nest/reservations/${r.id}/contrat`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        <Link
+                            href={`/dashboard/reservations/${r.id}/contrat`}
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 border border-blue-200 text-[12px] font-bold text-blue-600 hover:bg-blue-100 transition-colors shrink-0"
                         >
-                            <Download className="w-3.5 h-3.5" strokeWidth={2.5} />
-                            Télécharger
-                        </a>
+                            <FileText className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            Voir le contrat
+                        </Link>
                     </div>
                 )}
 

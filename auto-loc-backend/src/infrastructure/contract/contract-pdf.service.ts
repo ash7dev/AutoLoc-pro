@@ -4,7 +4,7 @@ const PDFDocument = require('pdfkit');
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-export type StatutContrat = 'ACTIF' | 'ANNULE' | 'EXPIRE';
+export type StatutContrat = 'EN_COURS' | 'ACTIF' | 'ANNULE' | 'EXPIRE';
 
 export interface ContractParty {
     prenom: string;
@@ -53,6 +53,7 @@ const MUTED_COLOR = '#6b7280';
 const BORDER_COLOR = '#e5e7eb';
 const SUCCESS_COLOR = '#059669';
 const DANGER_COLOR = '#dc2626';
+const WARNING_COLOR = '#d97706';
 const PAGE_MARGIN = 50;
 const CONTENT_WIDTH = 595.28 - 2 * PAGE_MARGIN; // A4 width minus margins
 
@@ -92,7 +93,7 @@ export class ContractPdfService {
                 this.renderFooter(doc);
 
                 // Watermark on every page for cancelled/expired contracts
-                if (data.statutContrat !== 'ACTIF') {
+                if (data.statutContrat === 'ANNULE' || data.statutContrat === 'EXPIRE') {
                     this.renderWatermark(doc, data);
                 }
 
@@ -117,6 +118,14 @@ export class ContractPdfService {
                 .fillColor('#ffffff')
                 .font('Helvetica-Bold')
                 .text('CONTRAT ACTIF', badgeX + 10, badgeY + 6, { width: 100, align: 'center' });
+        } else if (data.statutContrat === 'EN_COURS') {
+            // Amber badge
+            doc.roundedRect(badgeX, badgeY, 120, 22, 4)
+                .fill(WARNING_COLOR);
+            doc.fontSize(9)
+                .fillColor('#ffffff')
+                .font('Helvetica-Bold')
+                .text('EN COURS', badgeX + 10, badgeY + 6, { width: 100, align: 'center' });
         } else {
             // Red badge
             const label = data.statutContrat === 'EXPIRE'
@@ -130,8 +139,27 @@ export class ContractPdfService {
                 .text(label, badgeX + 4, badgeY + 6, { width: 112, align: 'center' });
         }
 
+        // EN_COURS info box
+        if (data.statutContrat === 'EN_COURS') {
+            const boxY = 155;
+            doc.roundedRect(PAGE_MARGIN, boxY, CONTENT_WIDTH, 32, 3)
+                .fillAndStroke('#fffbeb', WARNING_COLOR);
+
+            doc.fontSize(8)
+                .fillColor(WARNING_COLOR)
+                .font('Helvetica-Bold')
+                .text(
+                    '⚠ Ce contrat est en attente de confirmation par le propriétaire.',
+                    PAGE_MARGIN + 10,
+                    boxY + 10,
+                    { width: CONTENT_WIDTH - 20 },
+                );
+
+            doc.y = boxY + 42;
+        }
+
         // Cancellation info box
-        if (data.statutContrat !== 'ACTIF') {
+        if (data.statutContrat === 'ANNULE' || data.statutContrat === 'EXPIRE') {
             const boxY = 155;
             doc.roundedRect(PAGE_MARGIN, boxY, CONTENT_WIDTH, 40, 3)
                 .fillAndStroke('#fef2f2', DANGER_COLOR);

@@ -1,6 +1,7 @@
 import {
     ForbiddenException,
     Injectable,
+    Logger,
     NotFoundException,
 } from '@nestjs/common';
 import { StatutReservation } from '@prisma/client';
@@ -8,6 +9,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { QueueService } from '../../../infrastructure/queue/queue.service';
 import { RequestUser } from '../../../common/types/auth.types';
 import { ReservationStateMachine } from '../reservation.state-machine';
+import { ContractGenerationService } from '../contract-generation.service';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -20,9 +22,12 @@ export interface ConfirmReservationResult {
 
 @Injectable()
 export class ConfirmReservationUseCase {
+    private readonly logger = new Logger(ConfirmReservationUseCase.name);
+
     constructor(
         private readonly prisma: PrismaService,
         private readonly queue: QueueService,
+        private readonly contractGeneration: ContractGenerationService,
     ) { }
 
     async execute(
@@ -98,6 +103,13 @@ export class ConfirmReservationUseCase {
                 },
             })
             .catch(() => { });
+
+        // 7. Regenerate contract PDF with ACTIF status (EN_COURS → ACTIF)
+        await this.contractGeneration
+            .generateAndStore(reservationId, { statutContrat: 'ACTIF' })
+            .catch((err) => {
+                this.logger.warn(`Contract regeneration failed for ${reservationId}: ${err.message}`);
+            });
 
         return { reservationId: updated.id, statut: updated.statut };
     }
