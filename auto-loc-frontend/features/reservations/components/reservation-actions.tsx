@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
     Check, X, LogIn, LogOut, Loader2, Scale,
-    AlertTriangle, ChevronRight, CheckCircle2, FileWarning,
+    AlertTriangle, ChevronRight, CheckCircle2, FileWarning, ShieldAlert,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReservationStatut } from "@/lib/nestjs/reservations";
@@ -16,6 +16,7 @@ import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 interface ReservationActionsProps {
     reservationId: string;
     statut: ReservationStatut;
+    locataireKycStatus?: string;
     className?: string;
 }
 
@@ -351,7 +352,7 @@ function DisputeForm({
    MAIN
 ════════════════════════════════════════════════════════════════ */
 export function ReservationActions({
-    reservationId, statut, className,
+    reservationId, statut, locataireKycStatus, className,
 }: ReservationActionsProps) {
     const router = useRouter();
     const [loading, setLoading] = useState<string | null>(null);
@@ -362,6 +363,17 @@ export function ReservationActions({
 
     const actions = getActions(statut);
     if (actions.length === 0) return null;
+
+    // KYC locataire — bloque la confirmation si non vérifié
+    const kycBlocked = statut === "PAYEE" && locataireKycStatus !== "VERIFIE";
+    const kycLabel =
+        !locataireKycStatus || locataireKycStatus === "NON_VERIFIE"
+            ? "Le locataire n'a pas encore soumis son KYC."
+            : locataireKycStatus === "EN_ATTENTE"
+                ? "Le KYC du locataire est en cours de vérification."
+                : locataireKycStatus === "REJETE"
+                    ? "Le KYC du locataire a été rejeté."
+                    : null;
 
     const apiMap: Record<string, () => Promise<void>> = {
         confirm: () => authFetch(`/reservations/${reservationId}/confirm`, { method: "PATCH" }),
@@ -406,6 +418,19 @@ export function ReservationActions({
     return (
         <div className={cn("space-y-3", className)}>
 
+            {/* Blocage KYC locataire */}
+            {kycBlocked && kycLabel && (
+                <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5">
+                    <div className="w-7 h-7 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <ShieldAlert className="w-3.5 h-3.5 text-amber-600" strokeWidth={2} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[12.5px] font-bold text-amber-800">Confirmation bloquée</p>
+                        <p className="text-[11.5px] text-amber-700 mt-0.5 leading-relaxed">{kycLabel} Vous pourrez confirmer une fois son identité vérifiée.</p>
+                    </div>
+                </div>
+            )}
+
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-2">
                 {actions.map(action => (
@@ -413,7 +438,7 @@ export function ReservationActions({
                         key={action.key}
                         action={action}
                         loading={loading === action.key}
-                        disabled={isLoading}
+                        disabled={isLoading || (action.key === "confirm" && kycBlocked)}
                         onClick={() => handleAction(action)}
                     />
                 ))}

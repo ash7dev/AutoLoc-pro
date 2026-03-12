@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { FileSearch, X, Loader2, AlertCircle } from "lucide-react";
+import { ShieldCheck, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ModalShell } from "@/features/shared/ModalShell";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 
 interface TenantDocsViewerProps {
     reservationId: string;
+    /** When true, renders as a compact inline chip instead of a full-width button */
+    compact?: boolean;
 }
 
 interface LocataireDocs {
@@ -19,7 +21,7 @@ interface LocataireDocs {
     permisUrl?: string;
 }
 
-export function TenantDocsViewer({ reservationId }: TenantDocsViewerProps) {
+export function TenantDocsViewer({ reservationId, compact }: TenantDocsViewerProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [docs, setDocs] = useState<LocataireDocs | null>(null);
     const [loading, setLoading] = useState(false);
@@ -44,15 +46,25 @@ export function TenantDocsViewer({ reservationId }: TenantDocsViewerProps) {
 
     return (
         <>
-            <Button
-                onClick={handleOpen}
-                variant="outline"
-                size="sm"
-                className="gap-2 text-xs font-semibold h-8"
-            >
-                <FileSearch className="w-3.5 h-3.5 text-slate-500" />
-                Voir infos locataire
-            </Button>
+            {compact ? (
+                <button
+                    onClick={handleOpen}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 transition-all active:scale-95"
+                >
+                    <ShieldCheck className="w-3 h-3" strokeWidth={2.5} />
+                    Voir KYC
+                </button>
+            ) : (
+                <Button
+                    onClick={handleOpen}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 text-xs font-semibold h-8 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Voir KYC
+                </Button>
+            )}
 
             {isOpen && (
                 <ModalShell

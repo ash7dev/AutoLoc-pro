@@ -49,7 +49,7 @@ export class ConfirmReservationUseCase {
                 statut: true,
                 proprietaireId: true,
                 dateDebut: true,
-                locataire: { select: { telephone: true, prenom: true } },
+                locataire: { select: { telephone: true, prenom: true, statutKyc: true } },
             },
         });
         if (!reservation) throw new NotFoundException('Reservation not found');
@@ -57,6 +57,11 @@ export class ConfirmReservationUseCase {
         // 3. Ownership check
         if (reservation.proprietaireId !== proprietaire.id) {
             throw new ForbiddenException('Access denied');
+        }
+
+        // 3.5. Tenant KYC check
+        if (reservation.locataire?.statutKyc !== 'VERIFIE') {
+            throw new ForbiddenException("Le profil KYC du locataire doit être vérifié avant de pouvoir confirmer la réservation");
         }
 
         // 4. State machine: PAYEE → CONFIRMEE

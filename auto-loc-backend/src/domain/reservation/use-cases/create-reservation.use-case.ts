@@ -218,9 +218,6 @@ export class CreateReservationUseCase {
         if (locataire.bloqueJusqua && locataire.bloqueJusqua > new Date()) {
             throw new ForbiddenException('Account temporarily blocked');
         }
-        if (locataire.statutKyc !== 'VERIFIE') {
-            throw new ForbiddenException('KYC verification required');
-        }
         return locataire;
     }
 

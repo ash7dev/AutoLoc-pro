@@ -38,6 +38,7 @@ export interface ReservationUser {
     nom: string;
     telephone?: string;
     noteLocataire?: number;
+    kycStatus?: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
 }
 
 export interface Reservation {

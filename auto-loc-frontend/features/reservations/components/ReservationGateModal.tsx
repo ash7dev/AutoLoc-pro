@@ -14,7 +14,8 @@ function resolveGate(profile: ProfileResponse): Gate {
   if (!profile.hasUtilisateur) return "phone";
   if (!profile.phoneVerified || !profile.phone) return "phone";
   const kyc = profile.kycStatus;
-  if (kyc !== "VERIFIE") return "kyc";
+  // Bloquer uniquement si KYC jamais soumis ou rejeté — EN_ATTENTE et VERIFIE passent
+  if (!kyc || kyc === "NON_VERIFIE" || kyc === "REJETE") return "kyc";
   if (!profile.hasPermis) return "permis";
   return "ready";
 }
@@ -69,7 +70,7 @@ export function ReservationGateModal({
       }
       subtitle={
         gate === "phone" ? "Étape requise pour sécuriser votre réservation." :
-          gate === "kyc" ? "Votre KYC doit être validé pour réserver." :
+          gate === "kyc" ? "Soumettez vos documents pour continuer — la validation se fait en parallèle." :
             "Une photo de votre permis est nécessaire."
       }
       tag="Auto Loc · Locataire"
@@ -88,7 +89,7 @@ export function ReservationGateModal({
           kycStatus={currentProfile.kycStatus}
           onProceed={() => onOpenChange(false)}
           onSubmitted={refreshProfile}
-          pendingMode="block"
+          pendingMode="continue"
         />
       )}
 

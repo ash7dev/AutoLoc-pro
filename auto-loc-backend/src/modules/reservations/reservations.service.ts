@@ -89,7 +89,19 @@ function serializeReservation(r: Record<string, unknown> & {
     fraisLivraison: (r as Record<string, unknown>).fraisLivraison != null
       ? String((r as Record<string, unknown>).fraisLivraison)
       : null,
-    locataire: r.locataire,
+    locataire: r.locataire
+      ? (() => {
+          const l = r.locataire as Record<string, unknown>;
+          return {
+            id: l.id,
+            prenom: l.prenom,
+            nom: l.nom,
+            telephone: l.telephone ?? undefined,
+            noteLocataire: l.noteLocataire ?? undefined,
+            kycStatus: l.statutKyc ?? undefined,
+          };
+        })()
+      : undefined,
     vehicule: r.vehicule,
     paiement: r.paiement,
   };
@@ -368,6 +380,8 @@ export class ReservationsService {
             prenom: true,
             nom: true,
             telephone: true,
+            noteLocataire: true,
+            statutKyc: true,
           },
         },
         paiement: {
@@ -528,7 +542,7 @@ export class ReservationsService {
           },
         },
         locataire: {
-          select: { id: true, prenom: true, nom: true, telephone: true },
+          select: { id: true, prenom: true, nom: true, telephone: true, noteLocataire: true, statutKyc: true },
         },
         proprietaire: {
           select: { id: true, prenom: true, nom: true, telephone: true },
