@@ -111,10 +111,10 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
 
     /* ── Timeline ── */
     const timeline = [
-        { label: "Réservation créée",  date: r.creeLe,                                     icon: Clock,         color: "slate" },
+        { label: "Réservation créée",  date: r.creeLe,                                     icon: Clock,         color: "emerald" },
         r.confirmeeLe && { label: "Confirmée",           date: r.confirmeeLe,              icon: CheckCircle2,  color: "emerald" },
-        (r.checkInLe ?? leg.checkinLe) && { label: "Check-in effectué", date: (r.checkInLe ?? leg.checkinLe)!, icon: LogIn, color: "blue" },
-        (r.checkOutLe ?? leg.checkoutLe) && { label: "Check-out effectué", date: (r.checkOutLe ?? leg.checkoutLe)!, icon: LogOut, color: "blue" },
+        (r.checkInLe ?? leg.checkinLe) && { label: "Check-in effectué", date: (r.checkInLe ?? leg.checkinLe)!, icon: LogIn, color: "emerald" },
+        (r.checkOutLe ?? leg.checkoutLe) && { label: "Check-out effectué", date: (r.checkOutLe ?? leg.checkoutLe)!, icon: LogOut, color: "emerald" },
         (r.annuleeLe ?? leg.annuleLe) && { label: "Annulée", date: (r.annuleeLe ?? leg.annuleLe)!, icon: XCircle, color: "red" },
     ].filter(Boolean) as { label: string; date: string; icon: React.ElementType; color: string }[];
 
@@ -208,8 +208,8 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                                 { icon: CalendarDays,label: "Durée",           value: `${nbJours} jour${nbJours > 1 ? "s" : ""}` },
                             ].map(item => (
                                 <div key={item.label} className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center">
-                                        <item.icon className="w-3.5 h-3.5 text-white/35" strokeWidth={1.75} />
+                                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                        <item.icon className="w-3.5 h-3.5 text-emerald-400/80" strokeWidth={1.75} />
                                     </div>
                                     <div>
                                         <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/25">{item.label}</p>
@@ -229,6 +229,38 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                     statut={r.statut}
                     locataireKycStatus={r.locataire.kycStatus}
                 />
+
+                {/* ══════════════════════════════════════════════════
+                    TIMELINE — top-level like Stripe / Linear
+                ══════════════════════════════════════════════════ */}
+                <Card icon={Clock} title="Chronologie" accent="emerald">
+                    <div>
+                        {timeline.map((ev, i) => {
+                            const isLast = i === timeline.length - 1;
+                            const col: Record<string, { icon: string; line: string }> = {
+                                slate:   { icon: "bg-emerald-50 border-emerald-200 text-emerald-600", line: "bg-emerald-200" },
+                                emerald: { icon: "bg-emerald-50 border-emerald-200 text-emerald-600", line: "bg-emerald-200" },
+                                blue:    { icon: "bg-emerald-50 border-emerald-200 text-emerald-600", line: "bg-emerald-200" },
+                                red:     { icon: "bg-red-50 border-red-200 text-red-500",             line: "bg-red-200"    },
+                            };
+                            const c = col[ev.color] ?? col.slate;
+                            return (
+                                <div key={ev.label} className="flex gap-4">
+                                    <div className="flex flex-col items-center flex-shrink-0">
+                                        <div className={`w-8 h-8 rounded-full border flex items-center justify-center ${c.icon}`}>
+                                            <ev.icon className="w-3.5 h-3.5" strokeWidth={2} />
+                                        </div>
+                                        {!isLast && <div className={`w-px flex-1 min-h-[24px] my-1 ${c.line}`} />}
+                                    </div>
+                                    <div className={`${isLast ? "pb-0" : "pb-4"} pt-1`}>
+                                        <p className="text-[13px] font-bold text-slate-800 leading-none">{ev.label}</p>
+                                        <p className="text-[11px] text-slate-400 mt-1">{fmtDateTime(ev.date)}</p>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </Card>
 
                 {/* ══════════════════════════════════════════════════
                     MAIN GRID
@@ -305,7 +337,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                     </Card>
 
                     {/* ── Véhicule ──────────────────────────────── */}
-                    <Card icon={Car} title="Véhicule" accent="blue">
+                    <Card icon={Car} title="Véhicule" accent="emerald">
                         <div className="space-y-3.5">
 
                             {/* Photo thumbnail */}
@@ -361,7 +393,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                     </Card>
 
                     {/* ── Paiement ──────────────────────────────── */}
-                    <Card icon={CreditCard} title="Paiement" accent="slate">
+                    <Card icon={CreditCard} title="Paiement" accent="emerald">
                         <div className="space-y-3.5">
 
                             {/* Provider */}
@@ -453,8 +485,8 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                 ══════════════════════════════════════════════════ */}
                 {["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE", "ANNULEE"].includes(r.statut) && (
                     <div className="flex items-center gap-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm px-5 py-4">
-                        <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
-                            <FileText className="w-5 h-5 text-blue-500" strokeWidth={1.75} />
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-emerald-500" strokeWidth={1.75} />
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-[13.5px] font-black text-slate-800">Contrat de location</p>
@@ -462,7 +494,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                         </div>
                         <Link
                             href={`/dashboard/reservations/${r.id}/contrat`}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-blue-600 text-[12px] font-bold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-sm flex-shrink-0"
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-[12px] font-bold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-sm flex-shrink-0"
                         >
                             <FileText className="w-3.5 h-3.5" strokeWidth={2.5} />
                             Voir
@@ -470,38 +502,6 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                         </Link>
                     </div>
                 )}
-
-                {/* ══════════════════════════════════════════════════
-                    TIMELINE
-                ══════════════════════════════════════════════════ */}
-                <Card icon={Clock} title="Chronologie">
-                    <div>
-                        {timeline.map((ev, i) => {
-                            const isLast = i === timeline.length - 1;
-                            const col: Record<string, { icon: string; line: string }> = {
-                                slate:   { icon: "bg-slate-100 border-slate-200 text-slate-500",    line: "bg-slate-200"   },
-                                emerald: { icon: "bg-emerald-50 border-emerald-200 text-emerald-600", line: "bg-emerald-200" },
-                                blue:    { icon: "bg-blue-50 border-blue-200 text-blue-500",         line: "bg-blue-200"    },
-                                red:     { icon: "bg-red-50 border-red-200 text-red-500",            line: "bg-red-200"     },
-                            };
-                            const c = col[ev.color] ?? col.slate;
-                            return (
-                                <div key={ev.label} className="flex gap-4">
-                                    <div className="flex flex-col items-center flex-shrink-0">
-                                        <div className={`w-8 h-8 rounded-full border flex items-center justify-center ${c.icon}`}>
-                                            <ev.icon className="w-3.5 h-3.5" strokeWidth={2} />
-                                        </div>
-                                        {!isLast && <div className={`w-px flex-1 min-h-[24px] my-1 ${c.line}`} />}
-                                    </div>
-                                    <div className={`${isLast ? "pb-0" : "pb-4"} pt-1`}>
-                                        <p className="text-[13px] font-bold text-slate-800 leading-none">{ev.label}</p>
-                                        <p className="text-[11px] text-slate-400 mt-1">{fmtDateTime(ev.date)}</p>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </Card>
 
                 {/* ══════════════════════════════════════════════════
                     ALERTS

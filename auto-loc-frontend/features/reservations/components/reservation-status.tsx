@@ -35,8 +35,8 @@ const STATUS: Record<string, StatusConfig> = {
     },
     CONFIRMEE: {
         label: "Confirmée",
-        pill: "bg-indigo-50 border-indigo-200 text-indigo-700",
-        dot: "bg-indigo-500",
+        pill: "bg-emerald-50 border-emerald-200 text-emerald-700",
+        dot: "bg-emerald-500",
     },
     EN_COURS: {
         label: "En cours",
