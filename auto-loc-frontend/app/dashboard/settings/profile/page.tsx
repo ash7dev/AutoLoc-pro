@@ -7,6 +7,7 @@ import { ChevronLeft, User, ShieldCheck, Star } from 'lucide-react';
 import { ApiError } from '@/lib/nestjs/api-client';
 import { fetchUserProfile, type UserProfile } from '@/lib/nestjs/auth';
 import { SettingsForm } from '@/features/dashboard/components/settings-form';
+import { KycProfileButton } from '@/features/kyc/KycProfileButton';
 
 export const metadata: Metadata = {
   title: 'Informations — AutoLoc',
@@ -61,11 +62,13 @@ export default async function ProfileSettingsPage() {
   });
 
   const kycLabel =
-    profile.statutKyc === 'APPROUVE'
+    profile.statutKyc === 'VERIFIE'
       ? 'Vérifié'
       : profile.statutKyc === 'EN_ATTENTE'
         ? 'En attente'
-        : 'Non vérifié';
+        : profile.statutKyc === 'REJETE'
+          ? 'Rejeté'
+          : 'Non vérifié';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -107,9 +110,12 @@ export default async function ProfileSettingsPage() {
             icon={ShieldCheck}
             label="Statut KYC"
             value={kycLabel}
-            accent={profile.statutKyc === 'APPROUVE'}
+            accent={profile.statutKyc === 'VERIFIE'}
           />
         </div>
+
+        {/* KYC CTA — shown only if not verified */}
+        <KycProfileButton kycStatus={profile.statutKyc as any} />
 
         {/* Form card */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 lg:p-8">

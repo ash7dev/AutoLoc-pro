@@ -9,14 +9,12 @@ import {
   LayoutDashboard,
   CalendarRange,
   Banknote,
-  BadgeCheck,
   SlidersHorizontal,
   UserRound,
   LogOut,
   Loader2,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSwitchToLocataire } from '../hooks/use-switch-to-locataire';
@@ -28,17 +26,7 @@ const DESKTOP_NAV_ITEMS = [
   { href: '/dashboard/owner/vehicles', icon: Car, label: 'Véhicules' },
   { href: '/dashboard/owner/reservations', icon: CalendarRange, label: 'Réservations' },
   { href: '/dashboard/owner/wallet', icon: Banknote, label: 'Portefeuille' },
-  { href: '/dashboard/owner/kyc', icon: BadgeCheck, label: 'Vérification' },
-  {
-    href: '/dashboard/settings',
-    icon: SlidersHorizontal,
-    label: 'Paramètres',
-    submenu: [
-      { name: 'Informations', href: '/dashboard/settings/profile' },
-      { name: 'Notifications', href: '/dashboard/settings/notifications' },
-      { name: 'Aide & Support', href: '/dashboard/settings/support' },
-    ],
-  },
+  { href: '/dashboard/settings/profile', icon: SlidersHorizontal, label: 'Paramètres' },
 ] as const;
 
 const MOBILE_NAV_ITEMS = [
@@ -54,7 +42,6 @@ const MOBILE_NAV_ITEMS = [
       { name: 'Informations', href: '/dashboard/settings/profile' },
       { name: 'Notifications', href: '/dashboard/settings/notifications' },
       { name: 'Aide & Support', href: '/dashboard/settings/support' },
-      { name: 'Vérification', href: '/dashboard/owner/kyc' },
       { name: 'Mode locataire', href: 'switch-locataire' },
       { name: 'Déconnexion', href: 'sign-out' },
     ],
@@ -134,9 +121,8 @@ export function OwnerSidebar() {
   const { signOut, loading: signingOut } = useSignOut();
 
   const [collapsed, setCollapsed] = useState(true);
-  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
-  const NavContent = ({ compact }: { compact: boolean }) => (
+const NavContent = ({ compact }: { compact: boolean }) => (
     <div className="flex flex-col h-full">
 
       {/* ── Logo ─────────────────────────────────────────────────── */}
@@ -168,69 +154,15 @@ export function OwnerSidebar() {
       )}>
         {DESKTOP_NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-          const hasSubmenu = 'submenu' in item && item.submenu && item.submenu.length > 0;
-          const isSubmenuOpen = openSubmenu === item.href;
-
           return (
-            <div key={item.href}>
-              {hasSubmenu ? (
-                <button
-                  type="button"
-                  onClick={() => setOpenSubmenu(isSubmenuOpen ? null : item.href)}
-                  title={compact ? item.label : undefined}
-                  className={cn(
-                    'group relative w-full flex items-center gap-3 rounded-xl font-medium transition-all duration-200',
-                    compact ? 'px-0 py-3.5 justify-center' : 'px-3 py-2.5 text-[14.5px]',
-                    isActive
-                      ? 'bg-black text-emerald-400'
-                      : 'text-black hover:bg-slate-50 hover:text-black'
-                  )}
-                >
-                  <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
-                  {!compact && (
-                    <>
-                      <span className="flex-1 text-left tracking-tight leading-none">{item.label}</span>
-                      <ChevronDown className={cn(
-                        'w-3.5 h-3.5 transition-transform duration-200',
-                        isSubmenuOpen ? 'rotate-180' : '',
-                        isActive ? 'text-emerald-400/60' : 'text-black'
-                      )} />
-                    </>
-                  )}
-                  {compact && (
-                    <span className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs rounded-xl
-                      opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap
-                      transition-opacity duration-150 z-50 shadow-xl border border-slate-800">
-                      {item.label}
-                    </span>
-                  )}
-                </button>
-              ) : (
-                <NavItem
-                  href={item.href}
-                  icon={<item.icon className="w-[18px] h-[18px]" />}
-                  label={item.label}
-                  active={isActive}
-                  collapsed={compact}
-                />
-              )}
-
-              {/* Submenu */}
-              {hasSubmenu && isSubmenuOpen && !compact && (
-                <div className="mt-0.5 space-y-0.5">
-                  {(item as any).submenu.map((sub: { name: string; href: string }) => (
-                    <NavItem
-                      key={sub.href}
-                      href={sub.href}
-                      label={sub.name}
-                      active={pathname === sub.href}
-                      collapsed={false}
-                      subItem
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+            <NavItem
+              key={item.href}
+              href={item.href}
+              icon={<item.icon className="w-[18px] h-[18px]" />}
+              label={item.label}
+              active={isActive}
+              collapsed={compact}
+            />
           );
         })}
       </nav>
