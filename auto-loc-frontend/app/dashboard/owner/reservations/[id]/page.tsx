@@ -243,7 +243,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                             <p className="text-[11.5px] text-slate-400 mt-0.5">Généré automatiquement · Signé numériquement</p>
                         </div>
                         <Link
-                            href={`/dashboard/reservations/${r.id}/contrat`}
+                            href={`/dashboard/reservations/${r.id}/contrat?from=owner`}
                             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-[12px] font-bold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-sm flex-shrink-0"
                         >
                             <FileText className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -358,11 +358,9 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                                 </InfoRow>
                             )}
 
-                            {(r.vehicule.ville || (r.vehicule as typeof r.vehicule & { adresse?: string }).adresse) && (
-                                <InfoRow icon={MapPin} label="Localisation">
-                                    <span className="capitalize text-slate-800">
-                                        {(r.vehicule as typeof r.vehicule & { adresse?: string }).adresse ?? r.vehicule.ville}
-                                    </span>
+                            {r.vehicule.ville && (
+                                <InfoRow icon={MapPin} label={r.adresseLivraison ? "Lieu de départ" : "Adresse de récupération"}>
+                                    <span className="capitalize text-slate-800">{r.vehicule.ville}</span>
                                 </InfoRow>
                             )}
 

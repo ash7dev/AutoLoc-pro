@@ -117,7 +117,7 @@ export default async function TenantReservationDetailPage({ params }: { params: 
 
                 {/* ── Back ─────────────────────────────────────── */}
                 <Link
-                    href="/dashboard/reservations"
+                    href="/dashboard"
                     className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-slate-400 hover:text-slate-800 transition-colors group"
                 >
                     <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" strokeWidth={2.5} />
@@ -290,7 +290,7 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                             )}
 
                             {v?.ville && (
-                                <InfoRow icon={MapPin} label="Localisation">
+                                <InfoRow icon={MapPin} label={r.adresseLivraison ? "Lieu du véhicule" : "Adresse de récupération"}>
                                     <span className="capitalize text-slate-800">{v.ville}</span>
                                 </InfoRow>
                             )}

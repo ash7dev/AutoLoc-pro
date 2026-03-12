@@ -82,9 +82,10 @@ const CONTRACT_STATUS_META: Record<ContractStatus, {
 ════════════════════════════════════════════════════════════════ */
 interface PageProps {
     params: { id: string };
+    searchParams?: { from?: string };
 }
 
-export default async function ContractPage({ params }: PageProps) {
+export default async function ContractPage({ params, searchParams }: PageProps) {
     /* ── Auth ── */
     const nestToken = cookies().get('nest_access')?.value ?? null;
     let token: string | null = nestToken;
@@ -130,6 +131,8 @@ export default async function ContractPage({ params }: PageProps) {
     const showPhone = contractStatus !== 'EN_COURS';
     const contractDate = fmtDate(r.creeLe);
     const contractRef = r.id.slice(0, 8).toUpperCase();
+    const isOwner = searchParams?.from === 'owner';
+    const backHref = isOwner ? `/dashboard/owner/reservations/${r.id}` : `/dashboard/reservations/${r.id}`;
 
     return (
         <div className="min-h-screen bg-slate-50/80 print:bg-white print:min-h-0">
@@ -137,7 +140,7 @@ export default async function ContractPage({ params }: PageProps) {
 
                 {/* ── Back (hidden in print) ────────────────────── */}
                 <Link
-                    href={`/dashboard/reservations/${r.id}`}
+                    href={backHref}
                     className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 hover:text-slate-700 transition-colors group print:hidden"
                 >
                     <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" strokeWidth={2.5} />
@@ -399,7 +402,7 @@ export default async function ContractPage({ params }: PageProps) {
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 print:hidden">
                     <PrintButton contratUrl={r.contratUrl} variant="large" />
                     <Link
-                        href={`/dashboard/reservations/${r.id}`}
+                        href={backHref}
                         className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-slate-200 bg-white text-[13px] font-semibold text-slate-700 hover:bg-slate-50 transition-all"
                     >
                         <ArrowLeft className="w-4 h-4" />
