@@ -34,6 +34,10 @@ import {
   ConfirmPaymentResult,
 } from '../../domain/reservation/use-cases/confirm-payment.use-case';
 import { CloudinaryService } from '../../infrastructure/cloudinary/cloudinary.service';
+import {
+  ContractPdfService,
+  ContractData,
+} from '../../infrastructure/contract/contract-pdf.service';
 
 export { CreateReservationResult };
 
@@ -118,6 +122,7 @@ export class ReservationsService {
     private readonly checkinUseCase: CheckInUseCase,
     private readonly checkoutUseCase: CheckOutUseCase,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly contractPdfService: ContractPdfService,
   ) { }
 
   // ── POST /reservations ────────────────────────────────────────────────────────
@@ -178,8 +183,10 @@ export class ReservationsService {
   }
 
   // ── GET /reservations/:id/contrat ────────────────────────────────────────────
+  // Génère le PDF à la volée (en mémoire) et retourne le buffer.
+  // Pas de dépendance à Cloudinary pour le téléchargement — zéro 401 possible.
 
-  async getContrat(user: RequestUser, reservationId: string) {
+  async getContratBuffer(user: RequestUser, reservationId: string): Promise<{ buffer: Buffer; filename: string }> {
     const utilisateur = await this.prisma.utilisateur.findUnique({
       where: { userId: user.sub },
       select: { id: true },
@@ -189,10 +196,22 @@ export class ReservationsService {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: reservationId },
       select: {
+        id: true,
+        statut: true,
         locataireId: true,
         proprietaireId: true,
-        contratUrl: true,
-        contratPublicId: true,
+        dateDebut: true,
+        dateFin: true,
+        prixParJour: true,
+        totalBase: true,
+        montantCommission: true,
+        totalLocataire: true,
+        netProprietaire: true,
+        annuleLe: true,
+        raisonAnnulation: true,
+        locataire: { select: { prenom: true, nom: true, telephone: true, email: true } },
+        proprietaire: { select: { prenom: true, nom: true, telephone: true, email: true } },
+        vehicule: { select: { marque: true, modele: true, annee: true, type: true, immatriculation: true, ville: true } },
       },
     });
     if (!reservation) throw new NotFoundException('Reservation not found');
@@ -202,32 +221,63 @@ export class ReservationsService {
       reservation.proprietaireId === utilisateur.id;
     if (!isParty) throw new ForbiddenException('Access denied');
 
-    if (!reservation.contratUrl && !reservation.contratPublicId) {
-      throw new NotFoundException('Le contrat n\'est pas encore disponible');
-    }
+    const debut = new Date(reservation.dateDebut);
+    const fin = new Date(reservation.dateFin);
+    const nbJours = Math.max(1, Math.round((fin.getTime() - debut.getTime()) / 86_400_000));
 
-    const publicIdFromUrl = this.extractContratPublicId(reservation.contratUrl ?? undefined);
-    const publicId = reservation.contratPublicId ?? publicIdFromUrl;
-    if (!publicId) {
-      return { contratUrl: reservation.contratUrl! };
-    }
+    type StatutContrat = 'EN_COURS' | 'ACTIF' | 'ANNULE' | 'EXPIRE';
+    const statutMap: Record<string, StatutContrat> = {
+      CONFIRMEE: 'ACTIF',
+      EN_COURS: 'ACTIF',
+      TERMINEE: 'ACTIF',
+      PAYEE: 'EN_COURS',
+      ANNULEE: 'ANNULE',
+    };
+    const statutContrat: StatutContrat = statutMap[reservation.statut] ?? 'EN_COURS';
 
-    const contratUrl = this.cloudinaryService.getContractDownloadUrl(publicId);
+    const contractData: ContractData = {
+      reservationId: reservation.id,
+      dateContrat: new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }),
+      statutContrat,
+      raisonAnnulation: reservation.raisonAnnulation ?? undefined,
+      dateAnnulation: reservation.annuleLe
+        ? new Date(reservation.annuleLe).toLocaleDateString('fr-FR')
+        : undefined,
+      locataire: {
+        prenom: reservation.locataire.prenom,
+        nom: reservation.locataire.nom,
+        telephone: reservation.locataire.telephone,
+        email: reservation.locataire.email,
+      },
+      proprietaire: {
+        prenom: reservation.proprietaire.prenom,
+        nom: reservation.proprietaire.nom,
+        telephone: reservation.proprietaire.telephone,
+        email: reservation.proprietaire.email,
+      },
+      vehicule: {
+        marque: reservation.vehicule.marque,
+        modele: reservation.vehicule.modele,
+        annee: reservation.vehicule.annee,
+        type: reservation.vehicule.type,
+        immatriculation: reservation.vehicule.immatriculation,
+        ville: reservation.vehicule.ville,
+      },
+      tarifs: {
+        dateDebut: debut.toLocaleDateString('fr-FR'),
+        dateFin: fin.toLocaleDateString('fr-FR'),
+        nbJours,
+        prixParJour: String(reservation.prixParJour),
+        totalBase: String(reservation.totalBase),
+        commission: String(reservation.montantCommission),
+        totalLocataire: String(reservation.totalLocataire),
+        netProprietaire: String(reservation.netProprietaire),
+      },
+    };
 
-    return { contratUrl };
-  }
-
-  private extractContratPublicId(contratUrl?: string | null): string | null {
-    if (!contratUrl) return null;
-    try {
-      const url = new URL(contratUrl);
-      const rawPath = url.pathname.replace(/^\/+/, '');
-      if (!rawPath.startsWith('contrats/')) return null;
-      const noExt = rawPath.replace(/\.pdf$/i, '');
-      return noExt;
-    } catch {
-      return null;
-    }
+    const buffer = await this.contractPdfService.generate(contractData);
+    const ref = reservation.id.slice(0, 8).toUpperCase();
+    return { buffer, filename: `contrat-autoloc-${ref}.pdf` };
   }
 
   // ── GET /reservations/:id/locataire-docs ─────────────────────────────────────

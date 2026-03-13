@@ -172,18 +172,26 @@ export class ReservationsController {
 
   /**
    * GET /reservations/:id/contrat
-   * Télécharger le contrat (locataire OU propriétaire).
+   * Génère le PDF à la volée et le streame directement au client.
+   * Aucune dépendance à Cloudinary pour le téléchargement.
    */
   @Get(':id/contrat')
-  @HttpCode(HttpStatus.OK)
   async getContrat(
     @Req() req: Request & { user?: RequestUser },
     @Param('id', ParseUUIDPipe) reservationId: string,
     @Res() res: Response,
   ) {
     const user = req.user!;
-    const { contratUrl } = await this.reservationsService.getContrat(user, reservationId);
-    return res.redirect(contratUrl);
+    const { buffer, filename } = await this.reservationsService.getContratBuffer(user, reservationId);
+
+    (res as unknown as import('express').Response)
+      .set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename="${filename}"`,
+        'Content-Length': buffer.length,
+        'Cache-Control': 'no-store',
+      })
+      .end(buffer);
   }
 
   /**
