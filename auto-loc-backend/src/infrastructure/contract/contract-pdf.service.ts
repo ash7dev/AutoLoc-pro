@@ -81,6 +81,7 @@ export class ContractPdfService {
             try {
                 const doc = new PDFDocument({
                     size: 'A4',
+                    bufferPages: true,
                     margins: { top: M, bottom: M, left: M, right: M },
                     info: {
                         Title: `Contrat de location AutoLoc — ${data.reservationId.slice(0, 8).toUpperCase()}`,
