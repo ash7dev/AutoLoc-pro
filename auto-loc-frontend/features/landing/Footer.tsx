@@ -108,7 +108,7 @@ export function Footer(): React.ReactElement {
             <div className="flex flex-col gap-6">
               <Link href="/" className="group inline-block w-fit">
                 <Image
-                  src="/logoAutoLoc.jpg"
+                  src="/footerlogo.jpg"
                   alt="AutoLoc"
                   width={200}
                   height={80}
