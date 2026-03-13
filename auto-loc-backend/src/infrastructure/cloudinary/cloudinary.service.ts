@@ -59,16 +59,17 @@ export class CloudinaryService implements OnModuleInit {
   }
 
   getContractDownloadUrl(publicId: string): string {
-    // For raw resources, cloudinary.url() does NOT auto-append a format.
-    // The stored publicId may or may not include '.pdf', so we normalize:
-    // strip any trailing .pdf, then always append exactly one .pdf.
+    // Generate a signed private download URL valid for 5 minutes.
+    // Avoids Cloudinary 401s caused by unsigned raw/attachment URLs
+    // when Strict Transformations is enabled on the cloud.
     const normalizedId = publicId.replace(/\.pdf$/i, '');
-    return cloudinary.url(`${normalizedId}.pdf`, {
-      resource_type: 'raw',
-      type: 'upload',
-      secure: true,
-      flags: 'attachment',
-    });
+    const expiresAt = Math.floor(Date.now() / 1000) + 5 * 60;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (cloudinary.utils as any).private_download_url(
+      `${normalizedId}.pdf`,
+      'pdf',
+      { resource_type: 'raw', expires_at: expiresAt, attachment: true },
+    );
   }
 
   async uploadEtatLieuPhoto(buffer: Buffer, reservationId: string, type: string): Promise<UploadResultDto> {

@@ -6,11 +6,16 @@ export type NotificationType =
     | 'reservation.paid'
     | 'reservation.cancelled'
     | 'reservation.checkin'
+    | 'reservation.checkin.owner_confirmed'
+    | 'reservation.checkin.tenant_confirmed'
+    | 'reservation.checkin.reminder_veille'
+    | 'reservation.checkin.reminder_jour'
     | 'reservation.checkout'
     | 'avis.recu'
     | 'kyc.verified'
     | 'litige.ouvert'
-    | 'litige.resolu';
+    | 'litige.resolu'
+    | 'wallet.credited';
 
 interface TemplateConfig {
     subject: string;
@@ -110,6 +115,45 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
         ].join('')),
     },
 
+    'reservation.checkin.owner_confirmed': {
+        subject: 'Le propriétaire a confirmé le check-in',
+        body: (data) => baseLayout('Check-in en attente de votre confirmation', [
+            p('Le propriétaire a confirmé le check-in. Il ne manque plus que votre confirmation pour démarrer la location.'),
+            highlight('Réservation', String(data.reservationId ?? '')),
+            p('Connectez-vous à AutoLoc pour confirmer le check-in.'),
+        ].join('')),
+    },
+
+    'reservation.checkin.tenant_confirmed': {
+        subject: 'Le locataire a confirmé le check-in',
+        body: (data) => baseLayout('Check-in en attente de votre confirmation', [
+            p('Le locataire a confirmé le check-in. Il ne manque plus que votre confirmation pour démarrer la location.'),
+            highlight('Réservation', String(data.reservationId ?? '')),
+            p('Connectez-vous à AutoLoc pour confirmer le check-in.'),
+        ].join('')),
+    },
+
+    'reservation.checkin.reminder_veille': {
+        subject: 'Rappel — Check-in demain 📅',
+        body: (data) => baseLayout('Votre location commence demain', [
+            p(`Bonjour <strong>${String(data.prenom ?? '')}</strong>,`),
+            p('Votre location démarre demain. Pensez à effectuer le check-in le jour J avec l\'autre partie.'),
+            highlight('Date de début', String(data.dateDebut ?? '')),
+            p('Le check-in confirme la remise du véhicule et déclenche le début officiel de la location.'),
+        ].join('')),
+    },
+
+    'reservation.checkin.reminder_jour': {
+        subject: '⚠️ Check-in non effectué — Il vous reste peu de temps',
+        body: (data) => baseLayout('Check-in non effectué', [
+            p(`Bonjour <strong>${String(data.prenom ?? '')}</strong>,`),
+            p('Votre location a commencé aujourd\'hui mais le check-in n\'a pas encore été finalisé.'),
+            highlight('Date de début', String(data.dateDebut ?? '')),
+            p('<strong>Si le check-in n\'est pas effectué avant minuit, la réservation sera automatiquement annulée.</strong>'),
+            p('Connectez-vous à AutoLoc dès maintenant pour régulariser la situation.'),
+        ].join('')),
+    },
+
     'reservation.checkout': {
         subject: 'Check-out effectué — Location terminée 🏁',
         body: (data) => baseLayout('Location terminée', [
@@ -154,6 +198,16 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
             data.resolution
                 ? p(`Résolution : ${data.resolution}`)
                 : '',
+        ].join('')),
+    },
+
+    'wallet.credited': {
+        subject: 'Revenu crédité sur votre wallet 💰',
+        body: (data) => baseLayout('Revenu disponible', [
+            p(`Bonjour <strong>${String(data.proprietairePrenom ?? '')}</strong>,`),
+            p('Le check-in a été finalisé. Votre revenu de location a été crédité sur votre wallet AutoLoc.'),
+            highlight('Réservation', String(data.reservationId ?? '')),
+            p('Vous pouvez consulter votre solde et demander un retrait depuis votre espace propriétaire.'),
         ].join('')),
     },
 };

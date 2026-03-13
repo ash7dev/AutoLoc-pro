@@ -182,7 +182,7 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
 
                                 {/* Print button — PDF if available, otherwise window.print() */}
                                 <div className="print:hidden">
-                                    <PrintButton contratUrl={r.contratUrl} variant="small" />
+                                    <PrintButton reservationId={r.id} variant="small" />
                                 </div>
                             </div>
                         </div>
@@ -400,7 +400,7 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
 
                 {/* ── Bottom actions (hidden in print) ──────────── */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 print:hidden">
-                    <PrintButton contratUrl={r.contratUrl} variant="large" />
+                    <PrintButton reservationId={r.id} variant="large" />
                     <Link
                         href={backHref}
                         className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-slate-200 bg-white text-[13px] font-semibold text-slate-700 hover:bg-slate-50 transition-all"
