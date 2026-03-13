@@ -294,79 +294,89 @@ export class ContractPdfService {
 
         // Pricing table
         const tableY = doc.y;
-        const rows: Array<{ label: string; value: string; bold?: boolean; accent?: boolean; bg?: string }> = [
-            { label: `Prix journalier × ${t.nbJours} jour${t.nbJours > 1 ? 's' : ''}`, value: `${Number(t.totalBase).toLocaleString('fr-FR')} FCFA` },
-            { label: 'Frais de service AutoLoc (15%)', value: `${Number(t.commission).toLocaleString('fr-FR')} FCFA` },
-            { label: 'Total réglé par le locataire', value: `${Number(t.totalLocataire).toLocaleString('fr-FR')} FCFA`, bold: true, bg: C.surface },
-            { label: 'Revenu net propriétaire', value: `${Number(t.netProprietaire).toLocaleString('fr-FR')} FCFA`, bold: true, accent: true, bg: C.emeraldBg },
+        const rows: Array<{ label: string; value: string; bold?: boolean; accent?: boolean; bg?: string; large?: boolean }> = [
+            { label: `Prix journalier (${Number(t.prixParJour).toLocaleString('fr-FR')} FCFA) × ${t.nbJours} jour${t.nbJours > 1 ? 's' : ''}`, value: `${Number(t.totalBase).toLocaleString('fr-FR')} FCFA` },
+            { label: 'Frais de service AutoLoc (15 %)', value: `${Number(t.commission).toLocaleString('fr-FR')} FCFA` },
+            { label: 'Total réglé par le locataire', value: `${Number(t.totalLocataire).toLocaleString('fr-FR')} FCFA`, bold: true, bg: C.surface, large: true },
+            { label: 'Revenu net du propriétaire', value: `${Number(t.netProprietaire).toLocaleString('fr-FR')} FCFA`, bold: true, accent: true, bg: C.emeraldBg, large: true },
         ];
 
         rows.forEach((row, i) => {
-            const y = tableY + i * rowH;
+            const rh = row.large ? rowH + 6 : rowH;
+            const y = tableY + rows.slice(0, i).reduce((acc, r) => acc + (r.large ? rowH + 6 : rowH), 0);
             const bg = row.bg ?? (i % 2 === 0 ? '#FFFFFF' : C.surface);
-            doc.rect(M, y, CW, rowH).fillColor(bg).fill();
-            doc.rect(M, y, CW, rowH).strokeColor(C.border).lineWidth(0.3).stroke();
+            doc.rect(M, y, CW, rh).fillColor(bg).fill();
+            doc.rect(M, y, CW, rh).strokeColor(C.border).lineWidth(0.3).stroke();
 
-            const font = row.bold ? 'Helvetica-Bold' : 'Helvetica';
+            const labelFont = row.bold ? 'Helvetica-Bold' : 'Helvetica';
             const textColor = row.accent ? C.emerald : C.body;
+            const labelSize = row.large ? 9 : 8.5;
+            const valueSize = row.large ? 12 : 9;
+            const vPad = Math.floor((rh - labelSize) / 2) - 1;
 
-            doc.fontSize(8.5).fillColor(C.body).font(font)
-                .text(row.label, M + 14, y + 7, { width: CW - 120 });
-            doc.fontSize(8.5).fillColor(textColor).font('Helvetica-Bold')
-                .text(row.value, M + CW - 110, y + 7, { width: 100, align: 'right' });
+            doc.fontSize(labelSize).fillColor(C.body).font(labelFont)
+                .text(row.label, M + 14, y + vPad, { width: CW - 130 });
+            doc.fontSize(valueSize).fillColor(textColor).font('Helvetica-Bold')
+                .text(row.value, M + CW - 125, y + Math.floor((rh - valueSize) / 2) - 1, { width: 115, align: 'right' });
         });
 
-        doc.y = tableY + rows.length * rowH + 16;
+        const totalRowH = rows.reduce((acc, r) => acc + (r.large ? rowH + 6 : rowH), 0);
+        doc.y = tableY + totalRowH + 16;
     }
 
     // ── Cancellation policy ────────────────────────────────────────────────────
 
     private renderCancellationPolicy(doc: PDFKit.PDFDocument): void {
-        if (doc.y > 560) doc.addPage();
+        if (doc.y > 530) doc.addPage();
         this.sectionTitle(doc, 'POLITIQUE D\'ANNULATION');
 
         const startY = doc.y;
         const colW = (CW - 12) / 2;
 
-        const blocks: Array<{ title: string; items: string[] }> = [
+        const blocks: Array<{ title: string; paras: string[] }> = [
             {
-                title: 'Par le locataire',
-                items: [
-                    '> 5 jours avant le début : remboursement 100%',
-                    '2 à 5 jours : remboursement 75%',
-                    '< 24h : aucun remboursement',
+                title: 'Annulation par le locataire',
+                paras: [
+                    'Plus de 5 jours avant le début de la location : le locataire est remboursé intégralement du montant versé, déduction faite des frais de service AutoLoc.',
+                    'Entre 2 et 5 jours avant le début : le remboursement s\'élève à 75 % du montant total réglé. Les 25 % restants sont retenus à titre d\'indemnisation.',
+                    'Moins de 24 heures avant le début : aucun remboursement ne peut être accordé. Le montant intégral est acquis.',
                 ],
             },
             {
-                title: 'Par le propriétaire',
-                items: [
-                    '> 7 jours : remboursement intégral',
-                    '3–7 jours : remboursement + pénalité 20%',
-                    '< 3 jours : remboursement + pénalité 40%',
+                title: 'Annulation par le propriétaire',
+                paras: [
+                    'Plus de 7 jours avant le début de la location : le locataire est remboursé intégralement, sans pénalité pour le propriétaire.',
+                    'Entre 3 et 7 jours avant le début : en plus du remboursement intégral du locataire, une pénalité de 20 % est appliquée au propriétaire.',
+                    'Moins de 3 jours avant le début : le locataire est remboursé et une pénalité de 40 % est mise à la charge du propriétaire.',
                 ],
             },
         ];
 
         blocks.forEach((block, i) => {
             const x = i === 0 ? M : M + colW + 12;
-            const lineH = 13;
-            const boxH = 16 + block.items.length * lineH + 8;
+            const lineH = 11.5;
+            const textWidth = colW - 28;
+            // Estimate height: title + 3 paras × approx 3 lines each
+            const boxH = 18 + block.paras.length * (lineH * 3.2) + 8;
 
             doc.roundedRect(x, startY, colW, boxH, 5)
                 .fillColor(C.surface).fill();
             doc.roundedRect(x, startY, colW, boxH, 5)
                 .strokeColor(C.border).lineWidth(0.5).stroke();
 
-            doc.fontSize(8).fillColor(C.ink).font('Helvetica-Bold')
-                .text(block.title, x + 12, startY + 8, { width: colW - 24 });
+            doc.fontSize(8.5).fillColor(C.ink).font('Helvetica-Bold')
+                .text(block.title, x + 12, startY + 10, { width: textWidth });
 
-            block.items.forEach((item, j) => {
+            let paraY = startY + 24;
+            block.paras.forEach((para) => {
                 doc.fontSize(7.5).fillColor(C.body).font('Helvetica')
-                    .text(`• ${item}`, x + 12, startY + 22 + j * lineH, { width: colW - 24 });
+                    .text(para, x + 12, paraY, { width: textWidth, lineGap: 1.5 });
+                paraY = doc.y + 5;
             });
         });
 
-        doc.y = startY + 16 + 3 * 13 + 8 + 16;
+        // Move doc.y past the taller block
+        doc.y = startY + 18 + blocks[0].paras.length * (11.5 * 3.2) + 8 + 16;
     }
 
     // ── General conditions ─────────────────────────────────────────────────────
@@ -397,12 +407,14 @@ export class ContractPdfService {
     // ── Signatures ─────────────────────────────────────────────────────────────
 
     private renderSignatures(doc: PDFKit.PDFDocument, data: ContractData): void {
-        if (doc.y > 630) doc.addPage();
+        if (doc.y > 590) doc.addPage();
         this.sectionTitle(doc, 'SIGNATURES');
 
         const colW = (CW - 16) / 2;
         const startY = doc.y;
-        const boxH = 88;
+        const boxH = 118;
+        const sigZoneH = 42;   // height of the dotted signature zone
+        const sigZoneTop = 50; // y offset inside the card
 
         const parties = [
             { label: 'LE LOCATAIRE', name: `${data.locataire.prenom} ${data.locataire.nom}`, x: M },
@@ -410,32 +422,52 @@ export class ContractPdfService {
         ];
 
         parties.forEach(({ label, name, x }) => {
-            doc.roundedRect(x, startY, colW, boxH, 5)
+            // Card background + border
+            doc.roundedRect(x, startY, colW, boxH, 6)
                 .fillColor('#FFFFFF').fill();
-            doc.roundedRect(x, startY, colW, boxH, 5)
-                .strokeColor(C.border).lineWidth(0.5).stroke();
+            doc.roundedRect(x, startY, colW, boxH, 6)
+                .strokeColor(C.border).lineWidth(0.75).stroke();
 
+            // Header row — emerald left accent
+            doc.rect(x, startY, 3.5, 38).fillColor(C.accentLine).fill();
+
+            // Party label + name
             doc.fontSize(7).fillColor(C.muted).font('Helvetica-Bold')
-                .text(label, x + 12, startY + 8, { width: colW - 24, characterSpacing: 0.7 });
-            doc.fontSize(8.5).fillColor(C.ink).font('Helvetica-Bold')
-                .text(name, x + 12, startY + 20, { width: colW - 24 });
+                .text(label, x + 14, startY + 8, { width: colW - 24, characterSpacing: 0.9 });
+            doc.fontSize(10).fillColor(C.ink).font('Helvetica-Bold')
+                .text(name, x + 14, startY + 20, { width: colW - 24 });
+
+            // "Lu et approuvé" mention
             doc.fontSize(7.5).fillColor(C.muted).font('Helvetica')
-                .text('Lu et approuvé — Bon pour accord', x + 12, startY + 34, { width: colW - 24 });
+                .text('Lu et approuvé — Bon pour accord', x + 14, startY + 38, { width: colW - 28 });
 
-            // Signature line
-            doc.moveTo(x + 12, startY + 66).lineTo(x + colW - 12, startY + 66)
-                .strokeColor(C.border).lineWidth(1).stroke();
+            // ── Signature zone (dotted rect) ──
+            const szX = x + 12;
+            const szY = startY + sigZoneTop;
+            const szW = colW * 0.56;
+            doc.rect(szX, szY, szW, sigZoneH)
+                .fillColor(C.surface).fill();
+            doc.rect(szX, szY, szW, sigZoneH)
+                .strokeColor(C.border).lineWidth(0.5)
+                .dash(3, { space: 3 }).stroke();
+            doc.undash();
             doc.fontSize(7).fillColor(C.muted).font('Helvetica')
-                .text('Signature', x + 12, startY + 70, { width: 60 });
+                .text('Signature', szX + 4, szY + sigZoneH - 11, { width: 50 });
 
-            // Date field
-            doc.moveTo(x + colW - 80, startY + 66).lineTo(x + colW - 12, startY + 66)
-                .strokeColor(C.border).lineWidth(1).stroke();
+            // ── Date zone ──
+            const dzX = x + colW * 0.64;
+            const dzW = colW - colW * 0.64 - 12;
+            doc.rect(dzX, szY, dzW, sigZoneH)
+                .fillColor(C.surface).fill();
+            doc.rect(dzX, szY, dzW, sigZoneH)
+                .strokeColor(C.border).lineWidth(0.5)
+                .dash(3, { space: 3 }).stroke();
+            doc.undash();
             doc.fontSize(7).fillColor(C.muted).font('Helvetica')
-                .text('Date', x + colW - 80, startY + 70, { width: 40 });
+                .text('Date', dzX + 4, szY + sigZoneH - 11, { width: dzW - 8 });
         });
 
-        doc.y = startY + boxH + 16;
+        doc.y = startY + boxH + 20;
     }
 
     // ── Footer ─────────────────────────────────────────────────────────────────

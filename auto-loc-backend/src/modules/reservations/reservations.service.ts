@@ -87,6 +87,7 @@ function serializeReservation(r: Record<string, unknown> & {
     checkInLe: r.checkinLe ?? undefined,
     checkOutLe: r.checkoutLe ?? undefined,
     annuleeLe: r.annuleLe ?? undefined,
+    raisonAnnulation: (r as Record<string, unknown>).raisonAnnulation as string | undefined ?? undefined,
     contratUrl: r.contratUrl ?? undefined,
     proprietaireId: r.proprietaireId,
     adresseLivraison: (r as Record<string, unknown>).adresseLivraison ?? null,

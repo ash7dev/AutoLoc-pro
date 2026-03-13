@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -5,7 +6,7 @@ import { ApiError } from '@/lib/nestjs/api-client';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchReservationById } from '@/lib/nestjs/reservations';
 import {
-    ArrowLeft, FileText,
+    ArrowLeft,
     CheckCircle2, Clock, AlertTriangle,
 } from 'lucide-react';
 import { PrintButton } from './print-button';
@@ -138,7 +139,7 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
         <div className="min-h-screen bg-slate-50/80 print:bg-white print:min-h-0">
             <div className="max-w-4xl mx-auto px-4 py-8 lg:px-8 lg:py-10 space-y-6 print:py-0 print:px-0 print:space-y-0">
 
-                {/* ── Back (hidden in print) ────────────────────── */}
+                {/* ── Back ─────────────────────────────────────── */}
                 <Link
                     href={backHref}
                     className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 hover:text-slate-700 transition-colors group print:hidden"
@@ -150,25 +151,34 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
                 {/* ── Contract Document ─────────────────────────── */}
                 <div className="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden print:border-0 print:shadow-none print:rounded-none">
 
-                    {/* ── Header (OVH style) ─────────────────────── */}
+                    {/* ── Header ─────────────────────────────────── */}
                     <div className="px-6 lg:px-8 pt-8 pb-6 border-b border-slate-100">
+                        {/* Emerald top accent bar */}
+                        <div className="absolute left-0 top-0 w-1 h-full bg-emerald-500 rounded-l-2xl hidden" />
+
                         <div className="flex items-start justify-between gap-4">
                             <div>
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
-                                        <span className="text-white font-black text-[14px]">AL</span>
-                                    </div>
-                                    <span className="text-[20px] font-black text-blue-700 tracking-tight">AutoLoc</span>
+                                {/* Logo */}
+                                <div className="flex items-center gap-3 mb-5">
+                                    <Image
+                                        src="/logoAutoLoc.jpg"
+                                        alt="AutoLoc"
+                                        width={120}
+                                        height={36}
+                                        className="h-9 w-auto object-contain"
+                                        priority
+                                    />
                                 </div>
+
                                 <h1 className="text-[18px] lg:text-[20px] font-black text-slate-900 tracking-tight">
-                                    Contrat de location
+                                    Contrat de location de véhicule
                                 </h1>
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
+                                <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mt-2">
                                     <p className="text-[12px] text-slate-400 font-medium">
-                                        Numéro : <span className="font-bold text-slate-600">{contractRef}</span>
+                                        Référence : <span className="font-bold text-slate-600">{contractRef}</span>
                                     </p>
                                     <p className="text-[12px] text-slate-400 font-medium">
-                                        Date : <span className="font-bold text-slate-600">{contractDate}</span>
+                                        Établi le : <span className="font-bold text-slate-600">{contractDate}</span>
                                     </p>
                                 </div>
                             </div>
@@ -180,7 +190,6 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
                                     {meta.label}
                                 </span>
 
-                                {/* Print button — PDF if available, otherwise window.print() */}
                                 <div className="print:hidden">
                                     <PrintButton reservationId={r.id} variant="small" />
                                 </div>
@@ -188,12 +197,12 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
                         </div>
                     </div>
 
-                    {/* ── Contact info (TOP, like user requested) ── */}
+                    {/* ── Parties ──────────────────────────────────── */}
                     <div className="px-6 lg:px-8 py-5 bg-slate-50/60 border-b border-slate-100 print:bg-white">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             {/* Locataire */}
                             <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-2">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">
                                     Locataire
                                 </p>
                                 <p className="text-[13px] font-bold text-slate-800">
@@ -208,26 +217,26 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
 
                             {/* Propriétaire */}
                             <div className="sm:text-right">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-2">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">
                                     Propriétaire
                                 </p>
                                 <p className="text-[13px] font-bold text-slate-800">
                                     Propriétaire véhicule
                                 </p>
                                 <p className="text-[12px] text-slate-500 mt-0.5">
-                                    Réf. propriétaire : {r.proprietaireId?.slice(0, 8).toUpperCase() ?? '—'}
+                                    Réf. : {r.proprietaireId?.slice(0, 8).toUpperCase() ?? '—'}
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    {/* ── Status banner (EN_COURS / ANNULE) ─────── */}
+                    {/* ── Status banners ───────────────────────────── */}
                     {contractStatus === 'EN_COURS' && (
                         <div className="mx-6 lg:mx-8 mt-5 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3">
                             <Clock className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" strokeWidth={2} />
                             <div>
                                 <p className="text-[12px] font-bold text-amber-700">Contrat en cours de validation</p>
-                                <p className="text-[11px] text-amber-600/70 mt-0.5">
+                                <p className="text-[11px] text-amber-600/80 mt-0.5 leading-relaxed">
                                     En attente de la confirmation du propriétaire. Les numéros de téléphone seront visibles après confirmation.
                                 </p>
                             </div>
@@ -237,25 +246,32 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
                         <div className="mx-6 lg:mx-8 mt-5 px-4 py-3 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
                             <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" strokeWidth={2} />
                             <div>
-                                <p className="text-[12px] font-bold text-red-700">Contrat annulé</p>
-                                <p className="text-[11px] text-red-600/70 mt-0.5">
-                                    Cette réservation a été annulée. Le contrat n'est plus valide.
+                                <p className="text-[12px] font-bold text-red-700">Contrat résilié</p>
+                                <p className="text-[11px] text-red-600/80 mt-0.5 leading-relaxed">
+                                    {r.raisonAnnulation
+                                        ? r.raisonAnnulation
+                                        : 'Cette réservation a été annulée. Le contrat n\'est plus en vigueur.'}
+                                    {r.annuleeLe && (
+                                        <span className="ml-1 font-medium">
+                                            — le {fmtDate(r.annuleeLe, { day: 'numeric', month: 'long', year: 'numeric' })}.
+                                        </span>
+                                    )}
                                 </p>
                             </div>
                         </div>
                     )}
 
-                    {/* ── LOCATION table ────────────────────────────── */}
+                    {/* ── Location table ────────────────────────────── */}
                     <div className="px-6 lg:px-8 pt-6 pb-2">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead>
-                                    <tr className="bg-blue-700 text-white print:bg-blue-100 print:text-blue-800">
+                                    <tr className="bg-emerald-700 text-white print:bg-emerald-100 print:text-emerald-800">
                                         <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-tl-lg">Location</th>
                                         <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest">Véhicule</th>
-                                        <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-right">Prix unitaire</th>
-                                        <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-center">Quantité</th>
-                                        <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-right rounded-tr-lg">Prix HT</th>
+                                        <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-right">Prix / jour</th>
+                                        <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-center">Jours</th>
+                                        <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-right rounded-tr-lg">Sous-total</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -298,12 +314,12 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
                         </div>
                     </div>
 
-                    {/* ── SERVICE table ─────────────────────────────── */}
+                    {/* ── Service table ─────────────────────────────── */}
                     <div className="px-6 lg:px-8 py-2">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead>
-                                    <tr className="bg-blue-700 text-white print:bg-blue-100 print:text-blue-800">
+                                    <tr className="bg-emerald-700 text-white print:bg-emerald-100 print:text-emerald-800">
                                         <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-tl-lg" colSpan={3}>
                                             Frais de service
                                         </th>
@@ -317,18 +333,18 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
                                             Commission plateforme AutoLoc
                                         </td>
                                         <td className="px-4 py-3 text-[12px] font-bold text-slate-700 text-center">
-                                            15%
+                                            15 %
                                         </td>
                                         <td className="px-4 py-3 text-[12px] font-bold text-slate-700 text-right tabular-nums">
                                             {fmtMoney(commissionAmount)} FCFA
                                         </td>
                                     </tr>
 
-                                    <tr className="bg-blue-50 border-t-2 border-blue-200">
-                                        <td colSpan={4} className="px-4 py-3 text-right text-[12px] font-black uppercase tracking-widest text-blue-700">
-                                            Total TTC
+                                    <tr className="bg-emerald-50 border-t-2 border-emerald-200">
+                                        <td colSpan={4} className="px-4 py-3 text-right text-[12px] font-black uppercase tracking-widest text-emerald-700">
+                                            Total réglé par le locataire
                                         </td>
-                                        <td className="px-4 py-3 text-[14px] font-black text-blue-700 text-right tabular-nums">
+                                        <td className="px-4 py-3 text-[16px] font-black text-emerald-700 text-right tabular-nums">
                                             {fmtMoney(totalLocataire)} FCFA
                                         </td>
                                     </tr>
@@ -337,52 +353,74 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
                         </div>
                     </div>
 
-                    {/* ── Revenue propriétaire info ─────────────────── */}
+                    {/* ── Revenu propriétaire ───────────────────────── */}
                     <div className="px-6 lg:px-8 py-3">
-                        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                        <div className="flex items-center justify-between px-4 py-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
                             <span className="text-[12px] font-bold text-emerald-700">
-                                Revenu versé au propriétaire
+                                Revenu net versé au propriétaire
                             </span>
-                            <span className="text-[14px] font-black text-emerald-700 tabular-nums">
+                            <span className="text-[16px] font-black text-emerald-700 tabular-nums">
                                 {fmtMoney(netProprietaire)} FCFA
                             </span>
                         </div>
                     </div>
 
-                    {/* ── Conditions ────────────────────────────────── */}
+                    {/* ── Politique d'annulation ────────────────────── */}
                     <div className="px-6 lg:px-8 py-5 border-t border-slate-100">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-3">
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-emerald-600 mb-4">
                             Politique d&apos;annulation
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-[11px] font-bold text-slate-700 mb-1.5">Par le locataire :</p>
-                                <ul className="space-y-1 text-[11px] text-slate-500 leading-relaxed">
-                                    <li>• Plus de 5 jours avant : remboursement 100%</li>
-                                    <li>• 2 à 5 jours : remboursement 75%</li>
-                                    <li>• Moins de 24h : aucun remboursement</li>
-                                </ul>
+                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                <p className="text-[11px] font-black text-slate-700 mb-3 uppercase tracking-wide">
+                                    Annulation par le locataire
+                                </p>
+                                <div className="space-y-2.5 text-[11px] text-slate-600 leading-relaxed">
+                                    <p>
+                                        <span className="font-semibold text-slate-700">Plus de 5 jours avant le début :</span>{' '}
+                                        le locataire est remboursé intégralement du montant versé, déduction faite des frais de service AutoLoc.
+                                    </p>
+                                    <p>
+                                        <span className="font-semibold text-slate-700">Entre 2 et 5 jours avant le début :</span>{' '}
+                                        le remboursement s&apos;élève à 75 % du montant total réglé. Les 25 % restants sont retenus à titre d&apos;indemnisation.
+                                    </p>
+                                    <p>
+                                        <span className="font-semibold text-slate-700">Moins de 24 heures avant le début :</span>{' '}
+                                        aucun remboursement ne peut être accordé. Le montant intégral est acquis.
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-[11px] font-bold text-slate-700 mb-1.5">Par le propriétaire :</p>
-                                <ul className="space-y-1 text-[11px] text-slate-500 leading-relaxed">
-                                    <li>• Plus de 7 jours : remboursement intégral</li>
-                                    <li>• 3–7 jours : remboursement + pénalité 20%</li>
-                                    <li>• Moins de 3 jours : remboursement + pénalité 40%</li>
-                                </ul>
+                            <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                <p className="text-[11px] font-black text-slate-700 mb-3 uppercase tracking-wide">
+                                    Annulation par le propriétaire
+                                </p>
+                                <div className="space-y-2.5 text-[11px] text-slate-600 leading-relaxed">
+                                    <p>
+                                        <span className="font-semibold text-slate-700">Plus de 7 jours avant le début :</span>{' '}
+                                        le locataire est remboursé intégralement, sans pénalité pour le propriétaire.
+                                    </p>
+                                    <p>
+                                        <span className="font-semibold text-slate-700">Entre 3 et 7 jours avant le début :</span>{' '}
+                                        en plus du remboursement intégral du locataire, une pénalité de 20 % est appliquée au propriétaire.
+                                    </p>
+                                    <p>
+                                        <span className="font-semibold text-slate-700">Moins de 3 jours avant le début :</span>{' '}
+                                        le locataire est remboursé et une pénalité de 40 % est mise à la charge du propriétaire.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* ── Conditions générales ──────────────────────── */}
                     <div className="px-6 lg:px-8 py-5 border-t border-slate-100">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-3">
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-emerald-600 mb-3">
                             Conditions générales
                         </h3>
                         <ol className="space-y-1.5 text-[11px] text-slate-500 leading-relaxed list-decimal list-inside">
                             <li>Le locataire s&apos;engage à utiliser le véhicule en bon père de famille et à le restituer dans l&apos;état initial.</li>
-                            <li>Le véhicule doit être restitué à la date et au lieu convenus. Tout retard sera facturé au prix journalier majoré de 50%.</li>
-                            <li>Le locataire est responsable de toute infraction au code de la route commise pendant la durée de location.</li>
+                            <li>Le véhicule doit être restitué à la date et au lieu convenus. Tout retard sera facturé au prix journalier majoré de 50 %.</li>
+                            <li>Le locataire est responsable de toute infraction au code de la route commise pendant la durée de la location.</li>
                             <li>En cas de panne ou d&apos;accident, le locataire doit immédiatement prévenir le propriétaire et la plateforme AutoLoc.</li>
                             <li>Le propriétaire garantit que le véhicule est en bon état, assuré et dispose d&apos;une visite technique valide.</li>
                             <li>Tout litige sera soumis à la médiation de la plateforme AutoLoc avant toute action judiciaire.</li>
@@ -390,15 +428,46 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
                         </ol>
                     </div>
 
+                    {/* ── Signatures placeholder ────────────────────── */}
+                    <div className="px-6 lg:px-8 py-5 border-t border-slate-100">
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-emerald-600 mb-4">
+                            Signatures
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {[
+                                { role: 'LE LOCATAIRE', name: `${r.locataire.prenom} ${r.locataire.nom}` },
+                                { role: 'LE PROPRIÉTAIRE', name: 'Propriétaire véhicule' },
+                            ].map(({ role, name }) => (
+                                <div key={role} className="rounded-xl border border-slate-200 overflow-hidden">
+                                    {/* Accent bar */}
+                                    <div className="h-1 bg-emerald-500 w-full" />
+                                    <div className="p-4">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{role}</p>
+                                        <p className="text-[13px] font-bold text-slate-800 mb-1">{name}</p>
+                                        <p className="text-[10px] text-slate-400 mb-4">Lu et approuvé — Bon pour accord</p>
+                                        <div className="flex gap-3">
+                                            <div className="flex-1 border border-dashed border-slate-300 rounded-lg bg-slate-50 h-12 flex items-end p-2">
+                                                <span className="text-[10px] text-slate-400">Signature</span>
+                                            </div>
+                                            <div className="w-28 border border-dashed border-slate-300 rounded-lg bg-slate-50 h-12 flex items-end p-2">
+                                                <span className="text-[10px] text-slate-400">Date</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* ── Footer ────────────────────────────────────── */}
                     <div className="px-6 lg:px-8 py-4 bg-slate-50 border-t border-slate-100 text-center print:bg-white">
                         <p className="text-[10px] text-slate-400">
-                            AutoLoc — Plateforme de location de véhicules au Sénégal. Ce contrat est généré automatiquement et fait office de preuve de la réservation.
+                            AutoLoc — Plateforme de location de véhicules entre particuliers au Sénégal · Réf. {contractRef} · {contractDate}
                         </p>
                     </div>
                 </div>
 
-                {/* ── Bottom actions (hidden in print) ──────────── */}
+                {/* ── Bottom actions ────────────────────────────── */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 print:hidden">
                     <PrintButton reservationId={r.id} variant="large" />
                     <Link

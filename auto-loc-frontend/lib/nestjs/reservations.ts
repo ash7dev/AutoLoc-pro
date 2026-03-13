@@ -56,6 +56,7 @@ export interface Reservation {
     checkInLe?: string;
     checkOutLe?: string;
     annuleeLe?: string;
+    raisonAnnulation?: string | null;
     contratUrl?: string;
     vehicule: ReservationVehicle;
     locataire: ReservationUser;

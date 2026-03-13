@@ -56,7 +56,7 @@ export class ReservationAutoCloseJob {
                         statut: 'ANNULEE',
                         annuleLe: new Date(),
                         raisonAnnulation:
-                            'Auto-annulée : aucun check-in effectué le jour de la location.',
+                            'Contrat résilié automatiquement : aucun check-in n\'a été effectué par les deux parties à la date convenue de la location.',
                     },
                 });
                 this.logger.log(`Reservation ${r.id} auto-cancelled (dateDebut was ${r.dateDebut.toISOString()})`);
