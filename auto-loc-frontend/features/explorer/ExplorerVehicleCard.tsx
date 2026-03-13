@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   MapPin, Star, Users, ArrowRight,
-  Fuel, Settings2, Zap, Car,
+  Fuel, Zap, Car,
   TrendingDown, Tag, Heart, Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -64,30 +64,6 @@ function bestTierMinDays(tiers: TarifTier[]): number | null {
   return Number.isFinite(minDays) ? minDays : null;
 }
 
-/* ════════════════════════════════════════════════════════════════
-   PRICING STRIP  — tarifs dégressifs toujours visibles
-════════════════════════════════════════════════════════════════ */
-function PricingStrip({ vehicle }: { vehicle: VehicleCardItem }) {
-  const tiers = vehicle.tarifsProgressifs ?? [];
-  const ownerBase = Number(vehicle.prixParJour);
-  const savings = tiers.length > 0 ? maxSavings(ownerBase, tiers) : 0;
-  const minDays = bestTierMinDays(tiers);
-
-  if (savings <= 0 || minDays == null) return null;
-
-  return (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-100">
-      <TrendingDown className="w-3 h-3 text-emerald-500 flex-shrink-0" strokeWidth={2.5} />
-      <span className="text-[11.5px] font-semibold text-emerald-700">
-        Économisez jusqu'à{' '}
-        <span className="font-black">{savings}%</span>
-        {' '}à partir de{' '}
-        <span className="font-black">{minDays}</span>
-        {minDays > 1 ? ' jours' : ' jour'}
-      </span>
-    </div>
-  );
-}
 
 /* ════════════════════════════════════════════════════════════════
    FEATURED CARD  — large horizontal layout
@@ -236,152 +212,201 @@ function FeaturedCard({ vehicle }: { vehicle: VehicleCardItem }) {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   STANDARD CARD
+   STANDARD CARD  — premium SaaS redesign
 ════════════════════════════════════════════════════════════════ */
 function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
   const [liked, setLiked] = useState(false);
   const { formatPrice } = useCurrency();
   const photo = mainPhoto(vehicle);
-  const base = Math.round(Number(vehicle.prixParJour) * 1.15); // tenant price with 15% commission
+  const base = Math.round(Number(vehicle.prixParJour) * 1.15);
   const tiers = vehicle.tarifsProgressifs ?? [];
   const reservations = vehicle.totalLocations ?? 0;
+  const savings = tiers.length > 0 ? maxSavings(Number(vehicle.prixParJour), tiers) : 0;
+  const minDays = bestTierMinDays(tiers);
+  const isVerified = vehicle.statut === 'VERIFIE';
+  const isPopular = reservations >= 5;
 
   return (
     <Link
       href={`/vehicle/${vehicle.id}`}
       className={cn(
-        'group flex flex-col bg-white rounded-2xl border border-slate-100 overflow-hidden',
-        'shadow-sm shadow-slate-100',
-        'hover:shadow-lg hover:shadow-slate-200/70 hover:-translate-y-1 hover:border-slate-200',
-        'transition-all duration-300',
+        'group relative flex flex-col bg-white rounded-[22px] overflow-hidden',
+        'border border-slate-100/80',
+        'shadow-[0_2px_12px_rgba(0,0,0,0.06)]',
+        'hover:-translate-y-1.5 hover:shadow-[0_12px_40px_rgba(5,150,105,0.12)] hover:border-emerald-200/60',
+        'transition-all duration-400 ease-out',
       )}
     >
-      {/* Photo */}
-      <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+      {/* ── Photo ── */}
+      <div className="relative overflow-hidden bg-slate-100" style={{ aspectRatio: '16/10' }}>
         {photo ? (
-          <Image src={photo} alt={`${vehicle.marque} ${vehicle.modele}`}
-            fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
+          <Image
+            src={photo}
+            alt={`${vehicle.marque} ${vehicle.modele}`}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
+          />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Car className="h-10 w-10 text-slate-300" strokeWidth={1.5} />
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-slate-50 to-slate-100">
+            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+              <Car className="h-6 w-6 text-slate-300" strokeWidth={1.5} />
+            </div>
+            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.15em]">Photo à venir</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
-          {vehicle.statut === 'VERIFIE' && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-black/72 backdrop-blur-sm border border-emerald-400/25 px-2.5 py-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span className="text-[9.5px] font-black uppercase tracking-widest text-emerald-400">Vérifié</span>
+        {/* Bottom gradient for readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
+
+        {/* ── Top-left badges ── */}
+        <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10">
+          {isVerified && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-black/50 backdrop-blur-md border border-emerald-400/30 px-2.5 py-1">
+              <Shield className="h-2.5 w-2.5 text-emerald-400" strokeWidth={2.5} />
+              <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Vérifié</span>
             </span>
           )}
-          {reservations >= 5 && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-black/65 backdrop-blur-sm px-2.5 py-1">
-              <Zap className="h-2.5 w-2.5 text-amber-400" strokeWidth={2.5} />
-              <span className="text-[9.5px] font-black text-amber-400 uppercase tracking-widest">Populaire</span>
+          {isPopular && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/90 backdrop-blur-md px-2.5 py-1 shadow-sm">
+              <Zap className="h-2.5 w-2.5 text-white" strokeWidth={2.5} fill="currentColor" />
+              <span className="text-[9px] font-black text-white uppercase tracking-widest">Populaire</span>
             </span>
           )}
         </div>
 
-        {/* Fav */}
-        <button type="button" onClick={e => { e.preventDefault(); setLiked(l => !l); }}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-10 hover:scale-110">
-          <Heart className={cn('h-3.5 w-3.5 transition-colors', liked ? 'fill-red-500 text-red-500' : 'text-slate-500')} strokeWidth={2} />
+        {/* ── Heart — always visible ── */}
+        <button
+          type="button"
+          onClick={e => { e.preventDefault(); setLiked(l => !l); }}
+          className={cn(
+            'absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center',
+            'backdrop-blur-md border transition-all duration-200',
+            liked
+              ? 'bg-red-500 border-red-400/50 shadow-lg shadow-red-500/30'
+              : 'bg-black/35 border-white/15 hover:bg-black/50',
+          )}
+        >
+          <Heart
+            className={cn('h-3.5 w-3.5 transition-all duration-200', liked ? 'fill-white text-white scale-110' : 'text-white/80')}
+            strokeWidth={2}
+          />
         </button>
 
-        {/* Price badge */}
-        <div className="absolute bottom-3 right-3 z-10 rounded-xl bg-black/78 backdrop-blur-md px-3 py-2 text-right">
-          <p className="text-[8.5px] font-bold text-white/35 uppercase tracking-wide mb-0.5">Tarif par jour</p>
-          <p className="text-[16px] font-black text-emerald-400 leading-none tabular-nums">
-            {formatPrice(base)}
+        {/* ── Price pill — bottom-left ── */}
+        <div className="absolute bottom-3 left-3.5 z-10">
+          <div className="rounded-xl px-3 py-1.5 backdrop-blur-md"
+            style={{ background: 'linear-gradient(135deg, rgba(5,150,105,0.92) 0%, rgba(16,185,129,0.88) 100%)', boxShadow: '0 4px 16px rgba(5,150,105,0.35)' }}>
+            <p className="text-[18px] font-black text-white tabular-nums leading-none tracking-tight">
+              {formatPrice(base)}
+              <span className="text-[10px] font-bold text-white/65 ml-1">/ jour</span>
+            </p>
+          </div>
+          {savings > 0 && minDays != null && (
+            <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-amber-500/90 backdrop-blur-sm px-2 py-0.5 shadow-sm">
+              <TrendingDown className="h-2.5 w-2.5 text-white" strokeWidth={2.5} />
+              <span className="text-[9px] font-black text-white">−{savings}% dès {minDays}j</span>
+            </div>
+          )}
+        </div>
+
+        {/* ── Vehicle name overlay — bottom-right ── */}
+        <div className="absolute bottom-3 right-3.5 z-10 text-right">
+          <p className="text-[15px] font-black text-white leading-tight drop-shadow-sm">
+            {vehicle.marque}
           </p>
-          <p className="text-[8.5px] font-bold text-white/35 uppercase tracking-wide mt-0.5">/jour</p>
+          <p className="text-[13px] font-black text-emerald-300 leading-tight drop-shadow-sm">
+            {vehicle.modele}
+          </p>
         </div>
       </div>
 
-      {/* Body */}
-      <div className="flex flex-col flex-1 p-4 gap-3">
+      {/* ── Body ── */}
+      <div className="flex flex-col flex-1 px-4 pt-3.5 pb-4 gap-3">
 
         {/* Type + city */}
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">
+          <span className="inline-flex items-center gap-1 text-[9.5px] font-black uppercase tracking-[0.14em] text-emerald-600">
+            <Car className="h-2.5 w-2.5" strokeWidth={2.5} />
             {TYPE_LABELS[vehicle.type] ?? vehicle.type}
           </span>
-          <span className="flex items-center gap-1 text-[11px] font-medium text-slate-400">
-            <MapPin className="h-3 w-3" strokeWidth={2} />
+          <span className="flex items-center gap-1 text-[10.5px] font-semibold text-slate-400">
+            <MapPin className="h-2.5 w-2.5 text-slate-300" strokeWidth={2} />
             {vehicle.ville}
           </span>
         </div>
 
-        {/* Name */}
-        <div>
-          <h3 className="text-[15px] font-black tracking-tight text-slate-900 leading-tight">
-            {vehicle.marque} <span className="text-emerald-500">{vehicle.modele}</span>
-          </h3>
-          <p className="text-[11.5px] font-medium text-slate-400 mt-0.5">
-            {vehicle.annee}
-            {vehicle.transmission && ` · ${vehicle.transmission}`}
-          </p>
-        </div>
+        {/* Year + transmission */}
+        <p className="text-[11px] font-medium text-slate-400 -mt-1">
+          {vehicle.annee}
+          {vehicle.transmission && (
+            <span className="ml-1.5 text-slate-300">· {vehicle.transmission === 'AUTOMATIQUE' ? 'Automatique' : 'Manuelle'}</span>
+          )}
+        </p>
 
-        {/* Specs row */}
+        {/* Specs chips */}
         {(vehicle.carburant || vehicle.nombrePlaces) && (
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap -mt-0.5">
             {vehicle.carburant && (
-              <span className="flex items-center gap-1.5 text-[11.5px] font-semibold text-slate-500">
-                <Fuel className="h-3 w-3 text-slate-300" strokeWidth={1.75} />
-                {vehicle.carburant}
+              <span className="inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500">
+                <Fuel className="h-2.5 w-2.5 text-slate-400" strokeWidth={2} />
+                {vehicle.carburant === 'ESSENCE' ? 'Essence'
+                  : vehicle.carburant === 'DIESEL' ? 'Diesel'
+                  : vehicle.carburant === 'HYBRIDE' ? 'Hybride'
+                  : 'Électrique'}
               </span>
             )}
             {vehicle.nombrePlaces && (
-              <span className="flex items-center gap-1.5 text-[11.5px] font-semibold text-slate-500">
-                <Users className="h-3 w-3 text-slate-300" strokeWidth={1.75} />
+              <span className="inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500">
+                <Users className="h-2.5 w-2.5 text-slate-400" strokeWidth={2} />
                 {vehicle.nombrePlaces} places
-              </span>
-            )}
-            {vehicle.transmission && (
-              <span className="flex items-center gap-1.5 text-[11.5px] font-semibold text-slate-500">
-                <Settings2 className="h-3 w-3 text-slate-300" strokeWidth={1.75} />
-                {vehicle.transmission}
               </span>
             )}
           </div>
         )}
 
-        {/* ── Pricing strip ── toujours visible */}
-        <PricingStrip vehicle={vehicle} />
+        <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent" />
 
-        <div className="h-px bg-slate-100" />
-
-        {/* Footer */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-3">
-            {vehicle.note > 0 && (
-              <span className="flex items-center gap-1 text-[12px] font-bold text-slate-700">
-                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" strokeWidth={0} />
-                {Number(vehicle.note).toFixed(1)}
-              </span>
-            )}
-            {reservations > 0 && (
-              <span className="flex items-center gap-1 text-[11px] font-medium text-slate-400">
-                <Zap className="h-3 w-3" strokeWidth={2} />
-                {reservations} loc.
-              </span>
-            )}
-          </div>
-
-          <span className={cn(
-            'inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2',
-            'bg-slate-900 text-[12px] font-bold text-emerald-400',
-            'group-hover:bg-emerald-500 group-hover:text-white',
-            'transition-all duration-200 shadow-sm',
-          )}>
-            Réserver
-            <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" strokeWidth={2.5} />
-          </span>
+        {/* Rating + locations */}
+        <div className="flex items-center gap-3">
+          {vehicle.note > 0 ? (
+            <span className="flex items-center gap-1 text-[12px] font-bold text-slate-700">
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" strokeWidth={0} />
+              {Number(vehicle.note).toFixed(1)}
+              {(vehicle.totalAvis ?? 0) > 0 && (
+                <span className="text-[11px] font-normal text-slate-400 ml-0.5">({vehicle.totalAvis})</span>
+              )}
+            </span>
+          ) : (
+            <span className="text-[11px] font-medium text-slate-300">Nouveau</span>
+          )}
+          {reservations > 0 && (
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-400">
+              <Zap className="h-3 w-3 text-amber-400" strokeWidth={2} fill="currentColor" />
+              {reservations} location{reservations > 1 ? 's' : ''}
+            </span>
+          )}
         </div>
+
+        {/* CTA */}
+        <span
+          className={cn(
+            'relative w-full inline-flex items-center justify-center gap-2 rounded-xl py-2.5',
+            'text-[13px] font-black text-white overflow-hidden',
+            'shadow-md shadow-emerald-500/20',
+            'group-hover:shadow-lg group-hover:shadow-emerald-500/30',
+            'transition-all duration-300',
+          )}
+          style={{ background: 'linear-gradient(135deg, #34D399 0%, #059669 60%, #047857 100%)' }}
+        >
+          {/* Shine sweep on hover */}
+          <span
+            className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out pointer-events-none"
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)' }}
+          />
+          Réserver
+          <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform duration-200" strokeWidth={2.5} />
+        </span>
       </div>
     </Link>
   );
