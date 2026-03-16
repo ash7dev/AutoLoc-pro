@@ -38,7 +38,7 @@ export class ReservationIdempotencyService {
                 if (parsed?.reservationId) return parsed;
             } catch {
                 if (redisVal === 'processing') {
-                    throw new ConflictException('Request already in progress');
+                    throw new ConflictException('Requête déjà en cours de traitement');
                 }
                 return { reservationId: redisVal, paymentUrl: '' };
             }
@@ -74,7 +74,7 @@ export class ReservationIdempotencyService {
             IDEMPOTENCY_TTL_S,
         );
         if (!locked) {
-            throw new ConflictException('Request already in progress');
+            throw new ConflictException('Requête déjà en cours de traitement');
         }
     }
 

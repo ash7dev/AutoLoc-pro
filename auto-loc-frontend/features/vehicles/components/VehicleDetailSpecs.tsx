@@ -27,7 +27,7 @@ function QuickStat({
   return (
     <div className={cn(
       'flex flex-col items-center justify-center gap-1.5 px-4 py-4 text-center',
-      'flex-1 min-w-[80px]',
+      'shrink-0 w-[88px]',
     )}>
       <span className="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-50">
         <Icon className="w-4 h-4 text-emerald-600" strokeWidth={1.75} />

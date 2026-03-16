@@ -19,7 +19,7 @@ export class UsersController {
    */
   @Get()
   async listUsers(@Query() dto: GetAdminUsersDto) {
-    return this.usersService.listAdminUsers(dto.kycStatus);
+    return this.usersService.listAdminUsers(dto.kycStatus, dto.page ?? 1);
   }
 
   @Patch(':id/status')

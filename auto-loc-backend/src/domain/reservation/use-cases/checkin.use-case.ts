@@ -8,12 +8,15 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { QueueService } from '../../../infrastructure/queue/queue.service';
 import { RequestUser } from '../../../common/types/auth.types';
 import { BusinessRuleException } from '../../../common/exceptions/business-rule.exception';
-import { ReservationStateMachine } from '../reservation.state-machine';
+
 import { CreditWalletUseCase } from '../../wallet/use-cases/credit-wallet.use-case';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-export type CheckInRole = 'PROPRIETAIRE' | 'LOCATAIRE';
+export enum CheckInRole {
+    PROPRIETAIRE = 'PROPRIETAIRE',
+    LOCATAIRE = 'LOCATAIRE',
+}
 
 export interface CheckInInput {
     role: CheckInRole;
@@ -39,7 +42,6 @@ export class CheckInUseCase {
     constructor(
         private readonly prisma: PrismaService,
         private readonly queue: QueueService,
-        private readonly stateMachine: ReservationStateMachine,
         private readonly creditWallet: CreditWalletUseCase,
     ) { }
 
@@ -53,7 +55,7 @@ export class CheckInUseCase {
             where: { userId: user.sub },
             select: { id: true },
         });
-        if (!utilisateur) throw new ForbiddenException('Profile not completed');
+        if (!utilisateur) throw new ForbiddenException('Profil incomplet');
 
         // ── 2. Fetch reservation ───────────────────────────────────────────
         const reservation = await this.prisma.reservation.findUnique({
@@ -72,7 +74,7 @@ export class CheckInUseCase {
                 proprietaire: { select: { telephone: true, prenom: true } },
             },
         });
-        if (!reservation) throw new NotFoundException('Reservation not found');
+        if (!reservation) throw new NotFoundException('Réservation introuvable');
 
         // ── 3. Verify the user is the correct party ────────────────────────
         if (input.role === 'PROPRIETAIRE') {
@@ -109,11 +111,10 @@ export class CheckInUseCase {
 
         // ── 6. State must be CONFIRMEE ─────────────────────────────────────
         if (reservation.statut !== StatutReservation.CONFIRMEE) {
-            this.stateMachine.transition(
-                reservation.statut,
-                StatutReservation.EN_COURS,
+            throw new BusinessRuleException(
+                `Le check-in n'est possible que pour une réservation confirmée (statut actuel : ${reservation.statut})`,
+                'CHECKIN_INVALID_STATUS',
             );
-            // If we reach here, the state machine allows it (shouldn't happen for non-CONFIRMEE)
         }
 
         // ── 7. Verify dateDebut (J-1 tolérance) ───────────────────────────

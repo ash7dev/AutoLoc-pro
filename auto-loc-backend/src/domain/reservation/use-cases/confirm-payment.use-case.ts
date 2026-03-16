@@ -84,7 +84,7 @@ export class ConfirmPaymentUseCase {
                     },
                 },
             });
-            if (!reservation) throw new NotFoundException('Reservation not found');
+            if (!reservation) throw new NotFoundException('Réservation introuvable');
 
             // ── 3. Check if already processed (DB-level idempotence) ───────
             if (reservation.paiement?.statut === StatutPaiement.CONFIRME) {

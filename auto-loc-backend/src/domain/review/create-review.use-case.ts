@@ -44,7 +44,7 @@ export class CreateReviewUseCase {
     ): Promise<CreateReviewResult> {
         // ── 1. Validate note range ─────────────────────────────────────────
         if (input.note < 1 || input.note > 5 || !Number.isInteger(input.note)) {
-            throw new ForbiddenException('Note must be an integer between 1 and 5');
+            throw new ForbiddenException('La note doit être un entier entre 1 et 5');
         }
 
         // ── 2. Fetch reservation ───────────────────────────────────────────
@@ -58,7 +58,7 @@ export class CreateReviewUseCase {
             },
         });
         if (!reservation) {
-            throw new NotFoundException('Reservation not found');
+            throw new NotFoundException('Réservation introuvable');
         }
 
         // ── 3. Verify reservation is TERMINEE ──────────────────────────────

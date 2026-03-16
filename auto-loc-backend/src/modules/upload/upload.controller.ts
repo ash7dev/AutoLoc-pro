@@ -27,12 +27,12 @@ export class UploadController {
     @UploadedFile() file: Express.Multer.File | undefined,
   ): Promise<{ url: string; publicId: string }> {
     if (!file?.buffer) {
-      throw new BadRequestException('File is required');
+      throw new BadRequestException('Fichier requis');
     }
     try {
       await assertValidImageBuffer(file.buffer, ALLOWED_MIMES);
     } catch {
-      throw new BadRequestException('Invalid file format. Allowed: JPEG, PNG, WebP.');
+      throw new BadRequestException('Format de fichier invalide. Formats acceptés : JPEG, PNG, WebP.');
     }
 
     try {
@@ -43,7 +43,7 @@ export class UploadController {
         err instanceof Error ? err.message : 'Cloudinary upload failed',
         err instanceof Error ? err.stack : undefined,
       );
-      throw new InternalServerErrorException('Upload failed');
+      throw new InternalServerErrorException("Échec de l'upload");
     }
   }
 }

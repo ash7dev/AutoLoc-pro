@@ -17,7 +17,7 @@ export class AccountStatusGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const user = (request as Request & { user?: RequestUser }).user;
     if (!user?.sub) {
-      throw new UnauthorizedException('User not authenticated');
+      throw new UnauthorizedException('Utilisateur non authentifié');
     }
 
     const utilisateur = await this.prisma.utilisateur.findUnique({
@@ -29,11 +29,11 @@ export class AccountStatusGuard implements CanActivate {
     if (!utilisateur) return true;
 
     if (!utilisateur.actif) {
-      throw new ForbiddenException('Account suspended');
+      throw new ForbiddenException('Compte suspendu');
     }
 
     if (utilisateur.bloqueJusqua && utilisateur.bloqueJusqua > new Date()) {
-      throw new ForbiddenException('Account temporarily blocked');
+      throw new ForbiddenException('Compte temporairement bloqué');
     }
 
     return true;

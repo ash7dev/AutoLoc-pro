@@ -178,8 +178,7 @@ function ProfileDropdown({
           )}
           <DropdownItem href="/reservations" icon={CalendarRange} label="Mes réservations" />
           <DropdownItem href="/notifications" icon={Bell} label="Notifications" />
-          <DropdownItem href="/profile" icon={User} label="Mon profil" />
-          <DropdownItem href="/settings" icon={Settings} label="Paramètres" />
+          <DropdownItem href="/dashboard/settings/profile" icon={Settings} label="Paramètres" />
           <div className="my-2 border-t border-slate-50" />
           <DropdownItem
             icon={signingOut ? Loader2 : LogOut}

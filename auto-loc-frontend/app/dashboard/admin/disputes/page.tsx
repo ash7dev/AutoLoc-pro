@@ -1,19 +1,52 @@
 import React from 'react';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { Scale, ArrowLeft } from 'lucide-react';
 import { AdminDisputesList, type Dispute } from '../../../../features/admin/components/admin-disputes-list';
+import { fetchAdminDisputes } from '../../../../lib/nestjs/admin';
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const MOCK_DISPUTES: Dispute[] = [
-  { id: 'd1', reservationId: '#4521', renterName: 'Ibrahima Fall', ownerName: 'Moussa Diop', vehicle: 'Toyota Land Cruiser', reason: 'Dommage signalé', description: 'Rayure sur le pare-chocs avant non déclarée par le locataire.', amount: 125000, openedAt: 'Il y a 2h', status: 'open', priority: 'high' },
-  { id: 'd2', reservationId: '#4498', renterName: 'Fatou Sow', ownerName: 'Amadou Ba', vehicle: 'Renault Duster', reason: 'Annulation tardive', description: 'Locataire a annulé 1h avant la prise en charge.', amount: 18000, openedAt: 'Hier', status: 'investigating', priority: 'medium' },
-  { id: 'd3', reservationId: '#4475', renterName: 'Ousmane Diallo', ownerName: 'Aissatou Ndiaye', vehicle: 'Peugeot 308', reason: 'Véhicule non conforme', description: 'Le véhicule ne correspondait pas aux photos de l\'annonce.', amount: null, openedAt: 'Il y a 3j', status: 'open', priority: 'high' },
-  { id: 'd4', reservationId: '#4430', renterName: 'Mariama Sy', ownerName: 'Ibrahima Fall', vehicle: 'Mercedes Classe C', reason: 'Retard de remise', description: 'Propriétaire a livré le véhicule 2h en retard.', amount: 10000, openedAt: 'Il y a 5j', status: 'resolved', priority: 'low' },
-  { id: 'd5', reservationId: '#4412', renterName: 'Cheikh Ndoye', ownerName: 'Fatou Sow', vehicle: 'Ford Ranger', reason: 'Problème mécanique', description: 'Panne moteur à 3h de la location. Dépanneuse nécessaire.', amount: 85000, openedAt: 'Il y a 1 sem.', status: 'dismissed', priority: 'medium' },
-];
+function derivePriority(amount: number | null): Dispute['priority'] {
+  if (amount === null) return 'medium';
+  if (amount >= 100_000) return 'high';
+  if (amount >= 30_000) return 'medium';
+  return 'low';
+}
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-export default function AdminDisputesPage(): React.ReactElement {
+const STATUT_MAP: Record<string, Dispute['status']> = {
+  EN_ATTENTE: 'open',
+  FONDE: 'resolved',
+  NON_FONDE: 'dismissed',
+};
+
+export default async function AdminDisputesPage(): Promise<React.ReactElement> {
+  const token = cookies().get('nest_access')?.value;
+  if (!token) redirect('/login');
+
+  let disputes: Dispute[] = [];
+  try {
+    const data = await fetchAdminDisputes(token);
+    disputes = data.map((d) => ({
+      id: d.id,
+      reservationId: `#${d.reservationId.slice(0, 6).toUpperCase()}`,
+      renterName: d.renterName,
+      ownerName: d.ownerName,
+      vehicle: d.vehicle,
+      reason: d.description.length > 60 ? d.description.slice(0, 57) + '…' : d.description,
+      description: d.description,
+      amount: d.amount,
+      openedAt: new Date(d.openedAt).toLocaleDateString('fr-FR', {
+        day: 'numeric', month: 'short', year: 'numeric',
+      }),
+      status: STATUT_MAP[d.statut] ?? 'open',
+      priority: derivePriority(d.amount),
+    }));
+  } catch {
+    // Afficher liste vide si erreur
+  }
+
+  const activeCount = disputes.filter((d) => d.status === 'open' || d.status === 'investigating').length;
+
   return (
     <div className="p-6 lg:p-8">
       {/* Header */}
@@ -28,13 +61,15 @@ export default function AdminDisputesPage(): React.ReactElement {
           <div>
             <h1 className="text-2xl font-black tracking-tight text-black">Litiges</h1>
             <p className="text-[13px] font-medium text-black/40">
-              {MOCK_DISPUTES.filter((d) => d.status === 'open' || d.status === 'investigating').length} litige{MOCK_DISPUTES.filter((d) => d.status === 'open' || d.status === 'investigating').length > 1 ? 's' : ''} actif{MOCK_DISPUTES.filter((d) => d.status === 'open' || d.status === 'investigating').length > 1 ? 's' : ''}
+              {activeCount > 0
+                ? `${activeCount} litige${activeCount > 1 ? 's' : ''} actif${activeCount > 1 ? 's' : ''}`
+                : 'Aucun litige actif'}
             </p>
           </div>
         </div>
       </div>
 
-      <AdminDisputesList disputes={MOCK_DISPUTES} />
+      <AdminDisputesList disputes={disputes} />
     </div>
   );
 }

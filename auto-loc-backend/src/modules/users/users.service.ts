@@ -13,10 +13,17 @@ export class UsersService {
 
   // ── Admin list ──────────────────────────────────────────────────────────────
 
-  async listAdminUsers(kycStatus?: StatutKyc) {
-    const users = await this.prisma.utilisateur.findMany({
-      where: kycStatus ? { statutKyc: kycStatus } : {},
+  async listAdminUsers(kycStatus?: StatutKyc, page = 1) {
+    const where = kycStatus ? { statutKyc: kycStatus } : {};
+    const take = 30;
+    const skip = (page - 1) * take;
+
+    const [users, total] = await Promise.all([
+      this.prisma.utilisateur.findMany({
+      where,
       orderBy: { creeLe: 'asc' },
+      take,
+      skip,
       include: {
         profile: { select: { role: true, createdAt: true } },
         vehicules: {
@@ -27,10 +34,12 @@ export class UsersService {
         },
         _count: { select: { vehicules: true } },
       },
-    });
+    }),
+      this.prisma.utilisateur.count({ where }),
+    ]);
 
     const now = new Date();
-    return users.map((u) => ({
+    const data = users.map((u) => ({
       id: u.id,
       userId: u.userId,
       email: u.email,
@@ -78,6 +87,8 @@ export class UsersService {
       })),
       _count: { vehicles: u._count.vehicules },
     }));
+
+    return { data, total, page, limit: take };
   }
 
   async setUserStatus(userId: string, dto: BanUserDto) {
@@ -85,7 +96,7 @@ export class UsersService {
       where: { id: userId },
       select: { id: true, actif: true, bloqueJusqua: true, telephone: true },
     });
-    if (!utilisateur) throw new NotFoundException('User not found');
+    if (!utilisateur) throw new NotFoundException('Utilisateur introuvable');
 
     const updated = await this.prisma.utilisateur.update({
       where: { id: userId },
@@ -178,9 +189,9 @@ export class UsersService {
   async approveKyc(userId: string) {
     const utilisateur = await this.prisma.utilisateur.findUnique({
       where: { id: userId },
-      select: { id: true, statutKyc: true },
+      select: { id: true, statutKyc: true, email: true },
     });
-    if (!utilisateur) throw new NotFoundException('User not found');
+    if (!utilisateur) throw new NotFoundException('Utilisateur introuvable');
 
     const updated = await this.prisma.utilisateur.update({
       where: { id: userId },
@@ -198,6 +209,14 @@ export class UsersService {
       },
       data: { statut: StatutVehicule.EN_ATTENTE_VALIDATION },
     });
+
+    if (utilisateur.email) {
+      this.notification.send({
+        email: utilisateur.email,
+        type: 'kyc.verified',
+        data: {},
+      }).catch(() => { });
+    }
 
     return {
       utilisateurId: updated.id,
@@ -301,11 +320,11 @@ export class UsersService {
   async rejectKyc(userId: string, raison?: string) {
     const utilisateur = await this.prisma.utilisateur.findUnique({
       where: { id: userId },
-      select: { id: true, statutKyc: true },
+      select: { id: true, statutKyc: true, email: true },
     });
-    if (!utilisateur) throw new NotFoundException('User not found');
+    if (!utilisateur) throw new NotFoundException('Utilisateur introuvable');
 
-    return this.prisma.utilisateur.update({
+    const updated = await this.prisma.utilisateur.update({
       where: { id: userId },
       data: {
         statutKyc: StatutKyc.REJETE,
@@ -313,5 +332,15 @@ export class UsersService {
       },
       select: { id: true, statutKyc: true, kycRejectionReason: true },
     });
+
+    if (utilisateur.email) {
+      this.notification.send({
+        email: utilisateur.email,
+        type: 'kyc.rejected',
+        data: { raison: raison ?? null },
+      }).catch(() => { });
+    }
+
+    return updated;
   }
 }

@@ -197,7 +197,7 @@ export class VehiclesController {
     @UploadedFile() file: Express.Multer.File | undefined,
   ) {
     if (!file?.buffer) {
-      throw new BadRequestException('File is required');
+      throw new BadRequestException('Fichier requis');
     }
     return this.vehiclesService.addPhoto(id, file);
   }
@@ -229,7 +229,7 @@ export class VehiclesController {
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFile() file: Express.Multer.File | undefined,
   ) {
-    if (!file?.buffer) throw new BadRequestException('File is required');
+    if (!file?.buffer) throw new BadRequestException('Fichier requis');
     return this.vehiclesService.uploadCarteGrise(id, file);
   }
 
@@ -245,7 +245,7 @@ export class VehiclesController {
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFile() file: Express.Multer.File | undefined,
   ) {
-    if (!file?.buffer) throw new BadRequestException('File is required');
+    if (!file?.buffer) throw new BadRequestException('Fichier requis');
     return this.vehiclesService.uploadAssuranceDoc(id, file);
   }
 }

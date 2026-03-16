@@ -6,6 +6,7 @@ import { ApiError } from '@/lib/nestjs/api-client';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchReservationById } from '@/lib/nestjs/reservations';
 import { ReservationActions } from '@/features/reservations/components/reservation-actions';
+import { ReviewForm } from '@/features/reviews/components/review-form';
 import {
     ArrowLeft, Car, Banknote, Clock, CheckCircle2,
     XCircle, LogIn, LogOut, Hash, AlertTriangle,
@@ -117,7 +118,7 @@ export default async function TenantReservationDetailPage({ params }: { params: 
 
                 {/* ── Back ─────────────────────────────────────── */}
                 <Link
-                    href="/dashboard"
+                    href="/reservations"
                     className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-slate-400 hover:text-slate-800 transition-colors group"
                 >
                     <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" strokeWidth={2.5} />
@@ -231,14 +232,24 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                             <p className="text-[13.5px] font-black text-slate-800">Contrat de location</p>
                             <p className="text-[11.5px] text-slate-400 mt-0.5">Généré automatiquement · Signé numériquement</p>
                         </div>
-                        <Link
-                            href={`/dashboard/reservations/${r.id}/contrat`}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-[12px] font-bold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-sm flex-shrink-0"
-                        >
-                            <Receipt className="w-3.5 h-3.5" strokeWidth={2.5} />
-                            Voir
-                            <ArrowRight className="w-3 h-3" strokeWidth={2.5} />
-                        </Link>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            <a
+                                href={`/api/nest/reservations/${r.id}/contrat`}
+                                download={`contrat-${r.id.slice(0, 8)}.pdf`}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-bold text-slate-600 transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-sm"
+                            >
+                                <Banknote className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                PDF
+                            </a>
+                            <Link
+                                href={`/dashboard/reservations/${r.id}/contrat`}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-[12px] font-bold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-sm"
+                            >
+                                <Receipt className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                Voir
+                                <ArrowRight className="w-3 h-3" strokeWidth={2.5} />
+                            </Link>
+                        </div>
                     </div>
                 )}
 
@@ -433,12 +444,21 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                 </Card>
 
                 {/* ══════════════════════════════════════════════════
+                    REVIEW
+                ══════════════════════════════════════════════════ */}
+                {r.statut === 'TERMINEE' && (
+                    <ReviewForm reservationId={r.id} />
+                )}
+
+                {/* ══════════════════════════════════════════════════
                     ALERTS
                 ══════════════════════════════════════════════════ */}
                 {r.statut === 'ANNULEE' && (
                     <Alert icon={XCircle} bg="bg-red-50" border="border-red-200" iconBg="bg-red-100 border-red-200" iconColor="text-red-500"
                         title="Réservation annulée"
-                        text="Cette réservation a été annulée. Contactez le support si vous avez des questions." />
+                        text={r.raisonAnnulation
+                            ? `Cette réservation a été annulée. Motif : ${r.raisonAnnulation}`
+                            : "Cette réservation a été annulée. Contactez le support si vous avez des questions."} />
                 )}
                 {r.statut === 'LITIGE' && (
                     <Alert icon={AlertTriangle} bg="bg-orange-50" border="border-orange-200" iconBg="bg-orange-100 border-orange-200" iconColor="text-orange-500"

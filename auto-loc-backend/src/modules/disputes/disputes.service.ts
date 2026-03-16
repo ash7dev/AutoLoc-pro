@@ -9,12 +9,16 @@ import { StatutReservation } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RequestUser } from '../../common/types/auth.types';
 import { CreateDisputeDto } from './dto/create-dispute.dto';
+import { NotificationService } from '../../infrastructure/notifications/notification.service';
 
 const DISPUTE_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
 
 @Injectable()
 export class DisputesService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notification: NotificationService,
+  ) { }
 
   // ── POST /reservations/:id/dispute ────────────────────────────────────────────
 
@@ -23,7 +27,7 @@ export class DisputesService {
       where: { userId: user.sub },
       select: { id: true },
     });
-    if (!utilisateur) throw new ForbiddenException('Profile not completed');
+    if (!utilisateur) throw new ForbiddenException('Profil incomplet');
 
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: reservationId },
@@ -35,14 +39,16 @@ export class DisputesService {
         dateFin: true,
         checkoutLe: true,
         litige: { select: { id: true } },
+        locataire: { select: { email: true } },
+        proprietaire: { select: { email: true } },
       },
     });
-    if (!reservation) throw new NotFoundException('Reservation not found');
+    if (!reservation) throw new NotFoundException('Réservation introuvable');
 
     // ── Determine role ──────────────────────────────────────────────────
     const isOwner = reservation.proprietaireId === utilisateur.id;
     const isTenant = reservation.locataireId === utilisateur.id;
-    if (!isOwner && !isTenant) throw new ForbiddenException('Access denied');
+    if (!isOwner && !isTenant) throw new ForbiddenException('Accès refusé');
 
     // ── Already has a dispute? ──────────────────────────────────────────
     if (reservation.litige) {
@@ -132,11 +138,54 @@ export class DisputesService {
       return created;
     });
 
+    const notifData = { reservationId };
+    const emails = [reservation.locataire?.email, reservation.proprietaire?.email].filter(Boolean) as string[];
+    for (const email of emails) {
+      this.notification.send({ email, type: 'litige.ouvert', data: notifData }).catch(() => { });
+    }
+
     return {
       disputeId: litige.id,
       statut: litige.statut,
       creeLe: litige.creeLe,
       declaredBy: isOwner ? 'PROPRIETAIRE' : 'LOCATAIRE',
     };
+  }
+
+  // ── GET /admin/disputes ───────────────────────────────────────────────────────
+
+  async adminList() {
+    const litiges = await this.prisma.litige.findMany({
+      orderBy: { creeLe: 'desc' },
+      select: {
+        id: true,
+        description: true,
+        coutEstime: true,
+        statut: true,
+        creeLe: true,
+        reservation: {
+          select: {
+            id: true,
+            locataire: { select: { prenom: true, nom: true } },
+            proprietaire: { select: { prenom: true, nom: true } },
+            vehicule: { select: { marque: true, modele: true } },
+          },
+        },
+      },
+    });
+
+    return litiges.map((l) => ({
+      id: l.id,
+      reservationId: l.reservation.id,
+      renterName: [l.reservation.locataire?.prenom, l.reservation.locataire?.nom].filter(Boolean).join(' ') || '—',
+      ownerName: [l.reservation.proprietaire?.prenom, l.reservation.proprietaire?.nom].filter(Boolean).join(' ') || '—',
+      vehicle: l.reservation.vehicule
+        ? `${l.reservation.vehicule.marque} ${l.reservation.vehicule.modele}`
+        : '—',
+      description: l.description,
+      amount: l.coutEstime ? Number(l.coutEstime) : null,
+      openedAt: l.creeLe,
+      statut: l.statut,
+    }));
   }
 }

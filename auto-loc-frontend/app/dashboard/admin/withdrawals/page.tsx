@@ -1,23 +1,50 @@
 import React from 'react';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { Banknote, ArrowLeft } from 'lucide-react';
 import { AdminWithdrawalsList, type Withdrawal } from '../../../../features/admin/components/admin-withdrawals-list';
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const MOCK_WITHDRAWALS: Withdrawal[] = [
-  { id: 'w1', ownerName: 'Moussa Diop', amount: 350000, method: 'Virement', bankInfo: 'BOA •• 4521', requestedAt: 'Il y a 1h', status: 'pending' },
-  { id: 'w2', ownerName: 'Fatou Sow', amount: 180000, method: 'Wave', bankInfo: '+221 77 ••• 67', requestedAt: 'Il y a 4h', status: 'pending' },
-  { id: 'w3', ownerName: 'Amadou Ba', amount: 520000, method: 'Virement', bankInfo: 'CBAO •• 7832', requestedAt: 'Hier', status: 'pending' },
-  { id: 'w4', ownerName: 'Ousmane Diallo', amount: 95000, method: 'Orange Money', bankInfo: '+221 76 ••• 12', requestedAt: 'Hier', status: 'pending' },
-  { id: 'w5', ownerName: 'Aissatou Ndiaye', amount: 275000, method: 'Virement', bankInfo: 'SGBS •• 1290', requestedAt: 'Il y a 2j', status: 'processed' },
-  { id: 'w6', ownerName: 'Ibrahima Fall', amount: 45000, method: 'Wave', bankInfo: '+221 78 ••• 90', requestedAt: 'Il y a 3j', status: 'rejected' },
-];
+import { fetchAdminWithdrawals } from '../../../../lib/nestjs/admin';
 
 function formatPrice(n: number) { return new Intl.NumberFormat('fr-FR').format(n); }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-export default function AdminWithdrawalsPage(): React.ReactElement {
-  const totalPending = MOCK_WITHDRAWALS
+const METHOD_LABELS: Record<string, string> = {
+  WAVE: 'Wave',
+  ORANGE_MONEY: 'Orange Money',
+  VIREMENT: 'Virement',
+};
+
+const STATUT_MAP: Record<string, Withdrawal['status']> = {
+  EN_ATTENTE: 'pending',
+  VALIDE: 'pending',
+  EFFECTUE: 'processed',
+  REJETE: 'rejected',
+};
+
+export default async function AdminWithdrawalsPage(): Promise<React.ReactElement> {
+  const token = cookies().get('nest_access')?.value;
+  if (!token) redirect('/login');
+
+  let withdrawals: Withdrawal[] = [];
+  try {
+    const data = await fetchAdminWithdrawals(token);
+    withdrawals = data.map((w) => ({
+      id: w.id,
+      ownerName: w.ownerName,
+      amount: w.amount,
+      method: METHOD_LABELS[w.method] ?? w.method,
+      bankInfo: w.bankInfo,
+      requestedAt: new Date(w.demandeeLe).toLocaleDateString('fr-FR', {
+        day: 'numeric', month: 'short', year: 'numeric',
+      }),
+      status: STATUT_MAP[w.statut] ?? 'pending',
+    }));
+  } catch {
+    // Afficher liste vide si erreur
+  }
+
+  const pendingCount = withdrawals.filter((w) => w.status === 'pending').length;
+  const totalPending = withdrawals
     .filter((w) => w.status === 'pending')
     .reduce((s, w) => s + w.amount, 0);
 
@@ -35,13 +62,15 @@ export default function AdminWithdrawalsPage(): React.ReactElement {
           <div>
             <h1 className="text-2xl font-black tracking-tight text-black">Retraits</h1>
             <p className="text-[13px] font-medium text-black/40">
-              {formatPrice(totalPending)} FCFA en attente · {MOCK_WITHDRAWALS.filter((w) => w.status === 'pending').length} demande{MOCK_WITHDRAWALS.filter((w) => w.status === 'pending').length > 1 ? 's' : ''}
+              {pendingCount > 0
+                ? `${formatPrice(totalPending)} FCFA en attente · ${pendingCount} demande${pendingCount > 1 ? 's' : ''}`
+                : 'Aucune demande en attente'}
             </p>
           </div>
         </div>
       </div>
 
-      <AdminWithdrawalsList withdrawals={MOCK_WITHDRAWALS} />
+      <AdminWithdrawalsList withdrawals={withdrawals} />
     </div>
   );
 }

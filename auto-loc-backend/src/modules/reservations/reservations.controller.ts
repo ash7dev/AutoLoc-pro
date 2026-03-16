@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseEnumPipe,
   ParseUUIDPipe,
   Patch,
   Post,
@@ -24,6 +25,7 @@ import { RoleProfile } from '@prisma/client';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/guards/roles.guard';
 import { ReservationOwnerGuard } from '../../shared/guards/reservation-owner.guard';
+import { InternalKeyGuard } from '../../shared/guards/internal-key.guard';
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { RequestUser } from '../../common/types/auth.types';
 import { ReservationsService } from './reservations.service';
@@ -78,10 +80,16 @@ export class ReservationsController {
 
   /**
    * PATCH /reservations/:id/confirm-payment
-   * Confirme le paiement d'une réservation (EN_ATTENTE_PAIEMENT → PAYEE).
-   * Endpoint temporaire pour dev/test — sera remplacé par webhook.
+   * Simule la confirmation de paiement (EN_ATTENTE_PAIEMENT → PAYEE).
+   *
+   * Endpoint de simulation — sera remplacé par un webhook Wave/Orange Money
+   * avec validation de signature HMAC en production.
+   *
+   * Protégé par InternalKeyGuard : nécessite le header X-Internal-Key
+   * correspondant à la variable d'environnement INTERNAL_API_KEY.
    */
   @Patch(':id/confirm-payment')
+  @UseGuards(InternalKeyGuard)
   @HttpCode(HttpStatus.OK)
   async confirmPayment(
     @Param('id', ParseUUIDPipe) reservationId: string,
@@ -115,14 +123,10 @@ export class ReservationsController {
   async checkin(
     @Req() req: Request & { user?: RequestUser },
     @Param('id', ParseUUIDPipe) reservationId: string,
-    @Query('role') role?: string,
+    @Query('role', new ParseEnumPipe(CheckInRole)) role: CheckInRole,
   ) {
     const user = req.user!;
-    const checkinRole: CheckInRole =
-      role?.toUpperCase() === 'LOCATAIRE' ? 'LOCATAIRE' : 'PROPRIETAIRE';
-    return this.reservationsService.checkin(user, reservationId, {
-      role: checkinRole,
-    });
+    return this.reservationsService.checkin(user, reservationId, { role });
   }
 
   /**
@@ -158,7 +162,7 @@ export class ReservationsController {
     @Query('categorie') categorie?: string,
   ) {
     if (!file?.buffer) {
-      throw new BadRequestException('File is required');
+      throw new BadRequestException('Fichier requis');
     }
     const user = req.user!;
     return this.reservationsService.uploadPhotoEtatLieu(
@@ -205,9 +209,10 @@ export class ReservationsController {
   async findForOwner(
     @Req() req: Request & { user?: RequestUser },
     @Query('vehiculeId') vehiculeId?: string,
+    @Query('page') page?: string,
   ) {
     const user = req.user!;
-    return this.reservationsService.findForOwner(user, vehiculeId);
+    return this.reservationsService.findForOwner(user, vehiculeId, page ? Number(page) : 1);
   }
 
   /**
@@ -237,9 +242,10 @@ export class ReservationsController {
   async findForTenant(
     @Req() req: Request & { user?: RequestUser },
     @Query('statut') statut?: string,
+    @Query('page') page?: string,
   ) {
     const user = req.user!;
-    return this.reservationsService.findForTenant(user, statut);
+    return this.reservationsService.findForTenant(user, statut, page ? Number(page) : 1);
   }
 
   /**

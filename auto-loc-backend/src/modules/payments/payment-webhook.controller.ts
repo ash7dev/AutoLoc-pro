@@ -71,7 +71,7 @@ export class PaymentWebhookController {
             this.logger.error(
                 `WEBHOOK_SIGNATURE_INVALID [${routeName}] — sig=${signature?.substring(0, 16)}...`,
             );
-            throw new UnauthorizedException('Invalid webhook signature');
+            throw new UnauthorizedException('Signature webhook invalide');
         }
 
         // 3. Parse payload
@@ -80,7 +80,7 @@ export class PaymentWebhookController {
             payload = provider.parseWebhookPayload(rawBody);
         } catch (err) {
             this.logger.error(`WEBHOOK_PARSE_ERROR [${routeName}]:`, err);
-            throw new BadRequestException('Invalid webhook payload');
+            throw new BadRequestException('Payload webhook invalide');
         }
 
         this.logger.log(

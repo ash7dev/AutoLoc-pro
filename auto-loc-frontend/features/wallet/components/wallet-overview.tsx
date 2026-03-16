@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WalletData, WalletTransaction } from "@/lib/nestjs/wallet";
 import { WalletSnapshot } from "@/features/dashboard/components/wallet-snapshot";
+import { WithdrawalForm } from "./withdrawal-form";
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
@@ -34,6 +36,9 @@ export function WalletOverview({ data }: WalletOverviewProps) {
         <div className="space-y-6">
             {/* ── Wallet Snapshot ───────────────────────────────────────────── */}
             <WalletSnapshot data={snapshotData} hideCta />
+
+            {/* ── Withdrawal Form ───────────────────────────────────────────── */}
+            <WithdrawalForm soldeDisponible={data.balance.soldeDisponible} />
 
             {/* ── Transactions ─────────────────────────────────────────────── */}
             <div className="rounded-xl border border-[hsl(var(--border))] bg-card">
@@ -76,7 +81,7 @@ function TransactionRow({ transaction: tx }: { transaction: WalletTransaction })
         year: "numeric",
     });
 
-    return (
+    const inner = (
         <div className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/30 transition-colors">
             {/* Icon */}
             <div className={cn(
@@ -105,4 +110,10 @@ function TransactionRow({ transaction: tx }: { transaction: WalletTransaction })
             </div>
         </div>
     );
+
+    return tx.reservationId ? (
+        <Link href={`/dashboard/reservations/${tx.reservationId}`} className="block">
+            {inner}
+        </Link>
+    ) : inner;
 }

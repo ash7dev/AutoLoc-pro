@@ -192,7 +192,7 @@ export class ReservationsService {
       where: { userId: user.sub },
       select: { id: true },
     });
-    if (!utilisateur) throw new ForbiddenException('Profile not completed');
+    if (!utilisateur) throw new ForbiddenException('Profil incomplet');
 
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: reservationId },
@@ -215,12 +215,12 @@ export class ReservationsService {
         vehicule: { select: { marque: true, modele: true, annee: true, type: true, immatriculation: true, ville: true } },
       },
     });
-    if (!reservation) throw new NotFoundException('Reservation not found');
+    if (!reservation) throw new NotFoundException('Réservation introuvable');
 
     const isParty =
       reservation.locataireId === utilisateur.id ||
       reservation.proprietaireId === utilisateur.id;
-    if (!isParty) throw new ForbiddenException('Access denied');
+    if (!isParty) throw new ForbiddenException('Accès refusé');
 
     const debut = new Date(reservation.dateDebut);
     const fin = new Date(reservation.dateFin);
@@ -288,7 +288,7 @@ export class ReservationsService {
       where: { userId: user.sub },
       select: { id: true },
     });
-    if (!utilisateur) throw new ForbiddenException('Profile not completed');
+    if (!utilisateur) throw new ForbiddenException('Profil incomplet');
 
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: reservationId },
@@ -306,11 +306,11 @@ export class ReservationsService {
         },
       },
     });
-    if (!reservation) throw new NotFoundException('Reservation not found');
+    if (!reservation) throw new NotFoundException('Réservation introuvable');
 
     // Only the owner can view tenant docs
     if (reservation.proprietaireId !== utilisateur.id) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException('Accès refusé');
     }
 
     return {
@@ -336,7 +336,7 @@ export class ReservationsService {
       where: { userId: user.sub },
       select: { id: true },
     });
-    if (!utilisateur) throw new ForbiddenException('Profile not completed');
+    if (!utilisateur) throw new ForbiddenException('Profil incomplet');
 
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: reservationId },
@@ -347,12 +347,12 @@ export class ReservationsService {
         statut: true,
       },
     });
-    if (!reservation) throw new NotFoundException('Reservation not found');
+    if (!reservation) throw new NotFoundException('Réservation introuvable');
 
     const isParty =
       reservation.locataireId === utilisateur.id ||
       reservation.proprietaireId === utilisateur.id;
-    if (!isParty) throw new ForbiddenException('Access denied');
+    if (!isParty) throw new ForbiddenException('Accès refusé');
 
     // Upload to Cloudinary
     const upload = await this.cloudinaryService.uploadEtatLieuPhoto(
@@ -397,19 +397,25 @@ export class ReservationsService {
 
   // ── GET /reservations/owner ──────────────────────────────────────────────────
 
-  async findForOwner(user: RequestUser, vehiculeId?: string) {
+  async findForOwner(user: RequestUser, vehiculeId?: string, page = 1) {
     const proprietaire = await this.prisma.utilisateur.findUnique({
       where: { userId: user.sub },
       select: { id: true },
     });
-    if (!proprietaire) throw new ForbiddenException('Profile not completed');
+    if (!proprietaire) throw new ForbiddenException('Profil incomplet');
 
     const where: Record<string, unknown> = { proprietaireId: proprietaire.id };
     if (vehiculeId) where.vehiculeId = vehiculeId;
 
-    const reservations = await this.prisma.reservation.findMany({
+    const take = 20;
+    const skip = (page - 1) * take;
+
+    const [reservations, total] = await Promise.all([
+      this.prisma.reservation.findMany({
       where,
       orderBy: { creeLe: 'desc' },
+      take,
+      skip,
       include: {
         vehicule: {
           select: {
@@ -444,25 +450,33 @@ export class ReservationsService {
           },
         },
       },
-    });
-    return { data: reservations.map(serializeReservation), total: reservations.length };
+    }),
+      this.prisma.reservation.count({ where }),
+    ]);
+    return { data: reservations.map(serializeReservation), total, page, limit: take };
   }
 
   // ── GET /reservations/tenant ────────────────────────────────────────────────
 
-  async findForTenant(user: RequestUser, statut?: string) {
+  async findForTenant(user: RequestUser, statut?: string, page = 1) {
     const locataire = await this.prisma.utilisateur.findUnique({
       where: { userId: user.sub },
       select: { id: true },
     });
-    if (!locataire) throw new ForbiddenException('Profile not completed');
+    if (!locataire) throw new ForbiddenException('Profil incomplet');
 
     const where: Record<string, unknown> = { locataireId: locataire.id };
     if (statut) where.statut = statut;
 
-    const reservations = await this.prisma.reservation.findMany({
+    const take = 20;
+    const skip = (page - 1) * take;
+
+    const [reservations, total] = await Promise.all([
+      this.prisma.reservation.findMany({
       where,
       orderBy: { creeLe: 'desc' },
+      take,
+      skip,
       include: {
         vehicule: {
           select: {
@@ -495,9 +509,11 @@ export class ReservationsService {
           },
         },
       },
-    });
+    }),
+      this.prisma.reservation.count({ where }),
+    ]);
 
-    return { data: reservations.map(serializeReservation), total: reservations.length };
+    return { data: reservations.map(serializeReservation), total, page, limit: take };
   }
 
   // ── GET /reservations/owner/stats ────────────────────────────────────────────
@@ -507,7 +523,7 @@ export class ReservationsService {
       where: { userId: user.sub },
       select: { id: true },
     });
-    if (!proprietaire) throw new ForbiddenException('Profile not completed');
+    if (!proprietaire) throw new ForbiddenException('Profil incomplet');
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -572,7 +588,7 @@ export class ReservationsService {
       where: { userId: user.sub },
       select: { id: true },
     });
-    if (!utilisateur) throw new ForbiddenException('Profile not completed');
+    if (!utilisateur) throw new ForbiddenException('Profil incomplet');
 
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: reservationId },
@@ -601,14 +617,17 @@ export class ReservationsService {
         paiement: {
           select: { statut: true, montant: true, devise: true, fournisseur: true },
         },
+        photosEtatLieu: {
+          orderBy: [{ type: 'asc' }, { position: 'asc' }],
+        },
       },
     });
-    if (!reservation) throw new NotFoundException('Reservation not found');
+    if (!reservation) throw new NotFoundException('Réservation introuvable');
 
     const isParty =
       reservation.locataireId === utilisateur.id ||
       reservation.proprietaireId === utilisateur.id;
-    if (!isParty) throw new ForbiddenException('Access denied');
+    if (!isParty) throw new ForbiddenException('Accès refusé');
 
     return serializeReservation(reservation as Parameters<typeof serializeReservation>[0]);
   }

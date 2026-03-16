@@ -7,17 +7,20 @@ import type { ProfileResponse } from '../../../lib/nestjs/auth';
 type Role = ProfileResponse['role'];
 
 interface RoleState {
+  // Tokens conservés en mémoire uniquement — jamais persistés en storage.
+  // L'auth réelle est gérée par les cookies httpOnly via /api/nest/*.
   accessToken: string | null;
   refreshToken: string | null;
+  // Préférence UI non-sensible : persiste en localStorage pour survivre au refresh.
   activeRole: Role | null;
   setSession: (input: { accessToken: string; refreshToken: string; activeRole: Role }) => void;
   setActiveRole: (role: Role) => void;
   clearRole: () => void;
 }
 
-const storage =
+const localStore =
   typeof window !== 'undefined'
-    ? createJSONStorage(() => sessionStorage)
+    ? createJSONStorage(() => localStorage)
     : createJSONStorage(() => ({
         getItem: () => null,
         setItem: () => {},
@@ -36,8 +39,10 @@ export const useRoleStore = create<RoleState>()(
       clearRole: () => set({ accessToken: null, refreshToken: null, activeRole: null }),
     }),
     {
-      name: 'autoloc-nest-session',
-      storage,
+      name: 'autoloc-role',
+      storage: localStore,
+      // Seul activeRole est persisté — les tokens restent en mémoire uniquement.
+      partialize: (state) => ({ activeRole: state.activeRole }),
     },
   ),
 );

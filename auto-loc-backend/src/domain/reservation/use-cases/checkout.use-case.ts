@@ -36,7 +36,7 @@ export class CheckOutUseCase {
             where: { userId: user.sub },
             select: { id: true },
         });
-        if (!proprietaire) throw new ForbiddenException('Profile not completed');
+        if (!proprietaire) throw new ForbiddenException('Profil incomplet');
 
         // ── 2. Fetch reservation ───────────────────────────────────────────
         const reservation = await this.prisma.reservation.findUnique({
@@ -48,11 +48,11 @@ export class CheckOutUseCase {
                 locataire: { select: { telephone: true, prenom: true } },
             },
         });
-        if (!reservation) throw new NotFoundException('Reservation not found');
+        if (!reservation) throw new NotFoundException('Réservation introuvable');
 
         // ── 3. Ownership check ─────────────────────────────────────────────
         if (reservation.proprietaireId !== proprietaire.id) {
-            throw new ForbiddenException('Access denied');
+            throw new ForbiddenException('Accès refusé');
         }
 
         // ── 4. State machine: EN_COURS → TERMINEE ─────────────────────────

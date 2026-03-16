@@ -61,7 +61,7 @@ export class VehiclesService {
       select: { id: true, statutKyc: true },
     });
     if (!utilisateur) {
-      throw new ForbiddenException('Profile not completed');
+      throw new ForbiddenException('Profil incomplet');
     }
     return utilisateur;
   }
@@ -72,7 +72,7 @@ export class VehiclesService {
       select: { id: true },
     });
     if (active) {
-      throw new ConflictException('Operation not allowed: vehicle has an active or confirmed rental');
+      throw new ConflictException('Opération refusée : le véhicule a une location active ou confirmée');
     }
   }
 
@@ -87,7 +87,7 @@ export class VehiclesService {
   async create(user: RequestUser, dto: CreateVehicleDto) {
     const utilisateur = await this.getUtilisateurOrThrow(user.sub);
     if (utilisateur.statutKyc === StatutKyc.NON_VERIFIE || utilisateur.statutKyc === StatutKyc.REJETE) {
-      throw new ForbiddenException('KYC submission required');
+      throw new ForbiddenException('Soumission du KYC requise');
     }
     const statutInitial =
       utilisateur.statutKyc === StatutKyc.VERIFIE
@@ -156,7 +156,7 @@ export class VehiclesService {
       }, { timeout: 15000 });
     } catch (err: unknown) {
       if ((err as { code?: string }).code === 'P2002') {
-        throw new ConflictException('A vehicle with this registration number already exists');
+        throw new ConflictException('Un véhicule avec cette immatriculation existe déjà');
       }
       throw err;
     }
@@ -171,10 +171,15 @@ export class VehiclesService {
     const vehicles = await this.prisma.vehicule.findMany({
       where: { proprietaireId: utilisateur.id },
       orderBy: { creeLe: 'desc' },
+      take: 100,
       include: {
         photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
         tarifsProgressifs: { orderBy: { position: 'asc' } },
         equipements: { include: { equipement: true } },
+        indisponibilites: {
+          where: { dateFin: { gte: new Date() } },
+          orderBy: { dateDebut: 'asc' },
+        },
         _count: { select: { reservations: true } },
       },
     });
@@ -204,14 +209,14 @@ export class VehiclesService {
       include: {
         photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
         tarifsProgressifs: { orderBy: { position: 'asc' } },
-        proprietaire: { select: { prenom: true, nom: true, avatarUrl: true } },
+        proprietaire: { select: { prenom: true, nom: true, avatarUrl: true, noteProprietaire: true, totalAvis: true } },
         equipements: { include: { equipement: true } },
         _count: { select: { reservations: true } },
       },
     });
 
     if (!vehicle) {
-      throw new NotFoundException('Vehicle not found');
+      throw new NotFoundException('Véhicule introuvable');
     }
 
     // Le propriétaire peut toujours voir son propre véhicule.
@@ -227,7 +232,7 @@ export class VehiclesService {
 
     // Pour le public : seulement les véhicules vérifiés.
     if (vehicle.statut !== StatutVehicule.VERIFIE) {
-      throw new NotFoundException('Vehicle not found');
+      throw new NotFoundException('Véhicule introuvable');
     }
 
     return vehicle;
@@ -248,7 +253,7 @@ export class VehiclesService {
         },
       },
     });
-    if (!vehicle) throw new NotFoundException('Vehicle not found');
+    if (!vehicle) throw new NotFoundException('Véhicule introuvable');
 
     const result = this.pricing.calculate(
       vehicle.prixParJour,
@@ -340,7 +345,7 @@ export class VehiclesService {
       }, { timeout: 15000 });
     } catch (err: unknown) {
       if ((err as { code?: string }).code === 'P2002') {
-        throw new ConflictException('A vehicle with this registration number already exists');
+        throw new ConflictException('Un véhicule avec cette immatriculation existe déjà');
       }
       throw err;
     }
@@ -639,7 +644,7 @@ export class VehiclesService {
     try {
       await assertValidImageBuffer(file.buffer, ALLOWED_MIMES);
     } catch {
-      throw new BadRequestException('Invalid file format. Allowed: JPEG, PNG, WebP.');
+      throw new BadRequestException('Format de fichier invalide. Formats acceptés : JPEG, PNG, WebP.');
     }
 
     const { url, publicId } = await this.cloudinary.uploadVehiclePhoto(file.buffer);
@@ -666,7 +671,7 @@ export class VehiclesService {
     });
 
     if (!photo) {
-      throw new NotFoundException('Photo not found');
+      throw new NotFoundException('Photo introuvable');
     }
 
     await this.prisma.photoVehicule.delete({ where: { id: photoId } });
@@ -700,7 +705,7 @@ export class VehiclesService {
    * GET /admin/vehicles — Liste tous les véhicules, filtrable par statut.
    * Supporte le statut virtuel PENDING (EN_ATTENTE_VALIDATION + BROUILLON).
    */
-  async adminListVehicles(statut?: StatutVehicule | 'PENDING') {
+  async adminListVehicles(statut?: StatutVehicule | 'PENDING', page = 1) {
     const where =
       statut === 'PENDING'
         ? { statut: { in: [StatutVehicule.EN_ATTENTE_VALIDATION, StatutVehicule.BROUILLON] } }
@@ -708,18 +713,26 @@ export class VehiclesService {
           ? { statut }
           : {};
 
-    const vehicles = await this.prisma.vehicule.findMany({
-      where,
-      orderBy: { creeLe: 'asc' },
-      include: {
-        photos: { orderBy: { position: 'asc' } },
-        proprietaire: { select: { id: true, prenom: true, nom: true, email: true, telephone: true } },
-        equipements: { include: { equipement: true } },
-        _count: { select: { reservations: true } },
-      },
-    });
+    const take = 30;
+    const skip = (page - 1) * take;
 
-    return vehicles.map((v) => ({
+    const [vehicles, total] = await Promise.all([
+      this.prisma.vehicule.findMany({
+        where,
+        orderBy: { creeLe: 'asc' },
+        take,
+        skip,
+        include: {
+          photos: { orderBy: { position: 'asc' } },
+          proprietaire: { select: { id: true, prenom: true, nom: true, email: true, telephone: true } },
+          equipements: { include: { equipement: true } },
+          _count: { select: { reservations: true } },
+        },
+      }),
+      this.prisma.vehicule.count({ where }),
+    ]);
+
+    const data = vehicles.map((v) => ({
       id: v.id,
       marque: v.marque,
       modele: v.modele,
@@ -757,6 +770,8 @@ export class VehiclesService {
         }
         : null,
     }));
+
+    return { data, total, page, limit: take };
   }
 
   /**
@@ -771,9 +786,9 @@ export class VehiclesService {
       },
     });
 
-    if (!vehicle) throw new NotFoundException('Vehicle not found');
+    if (!vehicle) throw new NotFoundException('Véhicule introuvable');
     if (vehicle.statut === StatutVehicule.VERIFIE) {
-      throw new BadRequestException('Vehicle is already verified');
+      throw new BadRequestException('Ce véhicule est déjà vérifié');
     }
 
     const updated = await this.prisma.vehicule.update({
@@ -815,9 +830,9 @@ export class VehiclesService {
       },
     });
 
-    if (!vehicle) throw new NotFoundException('Vehicle not found');
+    if (!vehicle) throw new NotFoundException('Véhicule introuvable');
     if (vehicle.statut === StatutVehicule.SUSPENDU) {
-      throw new BadRequestException('Vehicle is already suspended');
+      throw new BadRequestException('Ce véhicule est déjà suspendu');
     }
 
     const updated = await this.prisma.vehicule.update({
@@ -877,7 +892,7 @@ export class VehiclesService {
       where: { id: vehiculeId },
       select: { id: true },
     });
-    if (!vehicle) throw new NotFoundException('Vehicle not found');
+    if (!vehicle) throw new NotFoundException('Véhicule introuvable');
 
     // Reservations actives (PAYEE, CONFIRMEE, EN_COURS)
     const reservations = await this.prisma.reservation.findMany({

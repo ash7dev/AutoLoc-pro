@@ -12,6 +12,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../../infrastructure/redis/redis.service';
 import { ALLOWED_MIMES } from '../upload/upload.config';
+import { NotificationService } from '../../infrastructure/notifications/notification.service';
 
 const DEFAULT_ROLE = 'LOCATAIRE';
 const ACCESS_TOKEN_TTL_DEFAULT = '15m';
@@ -30,6 +31,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
     private readonly cloudinary: CloudinaryService,
+    private readonly notification: NotificationService,
   ) { }
 
   /**
@@ -73,7 +75,7 @@ export class AuthService {
     dto: CompleteProfileDto,
   ): Promise<ProfileResponse> {
     if (!user.sub) {
-      throw new BadRequestException('Invalid user');
+      throw new BadRequestException('Utilisateur invalide');
     }
 
     // S'assure que le Profile existe avant de créer Utilisateur (FK obligatoire).
@@ -94,7 +96,7 @@ export class AuthService {
       select: { id: true },
     });
     if (phoneTaken) {
-      throw new BadRequestException('Telephone already in use');
+      throw new BadRequestException('Ce numéro de téléphone est déjà utilisé');
     }
 
     const emailToCheck = user.email ?? `${user.sub}@autoloc.local`;
@@ -103,7 +105,7 @@ export class AuthService {
       select: { id: true },
     });
     if (emailTaken) {
-      throw new BadRequestException('Email already in use');
+      throw new BadRequestException('Cet email est déjà utilisé');
     }
 
     const createdUtilisateur = await this.prisma.utilisateur.create({
@@ -125,6 +127,12 @@ export class AuthService {
       data: { phone: normalizedPhone },
     });
 
+    this.notification.send({
+      email: emailToCheck,
+      type: 'user.welcome',
+      data: { prenom: dto.prenom },
+    }).catch(() => { });
+
     const profile = await this.getOrCreateProfile(user);
     return {
       ...profile,
@@ -141,7 +149,7 @@ export class AuthService {
    */
   async switchRole(user: RequestUser, dto: SwitchRoleDto): Promise<{ role: RoleProfile }> {
     if (!user.sub) {
-      throw new BadRequestException('Invalid user');
+      throw new BadRequestException('Utilisateur invalide');
     }
 
     await this.prisma.profile.update({
@@ -154,7 +162,7 @@ export class AuthService {
 
   async requestPhoneOtp(user: RequestUser): Promise<{ expiresIn: number }> {
     if (!user.sub) {
-      throw new BadRequestException('Invalid user');
+      throw new BadRequestException('Utilisateur invalide');
     }
 
     const cooldownKey = this.getOtpCooldownKey(user.sub);
@@ -176,7 +184,7 @@ export class AuthService {
 
   async updatePhone(user: RequestUser, telephone: string): Promise<ProfileResponse> {
     if (!user.sub) {
-      throw new BadRequestException('Invalid user');
+      throw new BadRequestException('Utilisateur invalide');
     }
     // eslint-disable-next-line no-console
     console.log('[Auth] updatePhone', { userId: user.sub, telephone });
@@ -187,7 +195,7 @@ export class AuthService {
       select: { id: true },
     });
     if (phoneTaken) {
-      throw new BadRequestException('Telephone already in use');
+      throw new BadRequestException('Ce numéro de téléphone est déjà utilisé');
     }
 
     const existing = await this.prisma.utilisateur.findUnique({
@@ -228,7 +236,7 @@ export class AuthService {
 
   async verifyPhoneOtp(user: RequestUser, code: string): Promise<ProfileResponse> {
     if (!user.sub) {
-      throw new BadRequestException('Invalid user');
+      throw new BadRequestException('Utilisateur invalide');
     }
     await this.ensureUtilisateurExists(user.sub);
 
@@ -236,7 +244,7 @@ export class AuthService {
     const stored = await this.redisService.get(key);
     // Simulation mode: accept any 6-digit code (provider not configured yet).
     if (!/^\d{6}$/.test(code)) {
-      throw new BadRequestException('Invalid or expired code');
+      throw new BadRequestException('Code invalide ou expiré');
     }
     if (stored) {
       await this.redisService.del(key);
@@ -257,14 +265,14 @@ export class AuthService {
     documentFrontBuffer: Buffer,
     documentBackBuffer: Buffer,
   ): Promise<ProfileResponse> {
-    if (!user.sub) throw new BadRequestException('Invalid user');
+    if (!user.sub) throw new BadRequestException('Utilisateur invalide');
     await this.ensureUtilisateurExists(user.sub);
 
     try {
       await assertValidImageBuffer(documentFrontBuffer, ALLOWED_MIMES);
       await assertValidImageBuffer(documentBackBuffer, ALLOWED_MIMES);
     } catch {
-      throw new BadRequestException('Invalid file format. Allowed: JPEG, PNG, WebP.');
+      throw new BadRequestException('Format de fichier invalide. Formats acceptés : JPEG, PNG, WebP.');
     }
 
     const [frontResult, backResult] = await Promise.all([
@@ -294,13 +302,13 @@ export class AuthService {
     user: RequestUser,
     fileBuffer: Buffer,
   ): Promise<{ url: string }> {
-    if (!user.sub) throw new BadRequestException('Invalid user');
+    if (!user.sub) throw new BadRequestException('Utilisateur invalide');
     await this.ensureUtilisateurExists(user.sub);
 
     try {
       await assertValidImageBuffer(fileBuffer, ALLOWED_MIMES);
     } catch {
-      throw new BadRequestException('Invalid file format. Allowed: JPEG, PNG, WebP.');
+      throw new BadRequestException('Format de fichier invalide. Formats acceptés : JPEG, PNG, WebP.');
     }
 
     // Delete old permis if exists
@@ -329,7 +337,7 @@ export class AuthService {
     supabaseAccessToken: string,
   ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile }> {
     if (!supabaseAccessToken?.trim()) {
-      throw new BadRequestException('Missing accessToken');
+      throw new BadRequestException('accessToken manquant');
     }
 
     const payload = await this.jwksService.verify(supabaseAccessToken);
@@ -363,7 +371,7 @@ export class AuthService {
     refreshToken: string,
   ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile }> {
     if (!refreshToken?.trim()) {
-      throw new BadRequestException('Missing refreshToken');
+      throw new BadRequestException('refreshToken manquant');
     }
 
     const secret = this.getJwtSecret();
@@ -378,11 +386,11 @@ export class AuthService {
     try {
       decoded = await this.jwtService.verifyAsync(refreshToken, { secret });
     } catch {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException('Jeton de rafraîchissement invalide');
     }
 
     if (decoded.typ !== 'refresh') {
-      throw new UnauthorizedException('Invalid token type');
+      throw new UnauthorizedException('Type de jeton invalide');
     }
 
     const user: RequestUser = {
@@ -442,7 +450,7 @@ export class AuthService {
       select: { id: true },
     });
     if (!existing) {
-      throw new BadRequestException('Profile not completed');
+      throw new BadRequestException('Profil incomplet');
     }
   }
 

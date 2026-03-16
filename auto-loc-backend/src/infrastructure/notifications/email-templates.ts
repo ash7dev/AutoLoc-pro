@@ -2,6 +2,7 @@
 // Templates HTML minimalistes et professionnels pour chaque type de notification.
 
 export type NotificationType =
+    | 'reservation.created'
     | 'reservation.confirmed'
     | 'reservation.paid'
     | 'reservation.cancelled'
@@ -13,8 +14,10 @@ export type NotificationType =
     | 'reservation.checkout'
     | 'avis.recu'
     | 'kyc.verified'
+    | 'kyc.rejected'
     | 'litige.ouvert'
     | 'litige.resolu'
+    | 'user.welcome'
     | 'wallet.credited';
 
 interface TemplateConfig {
@@ -83,6 +86,16 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
             p('Votre réservation a été confirmée par le propriétaire.'),
             highlight('Réservation', String(data.reservationId ?? '')),
             p('Le véhicule vous attend — n\'oubliez pas de faire le check-in le jour J !'),
+        ].join('')),
+    },
+
+    'reservation.created': {
+        subject: 'Votre réservation est en attente de paiement',
+        body: (data) => baseLayout('Réservation initiée', [
+            p(`Bonjour${data.prenom ? ` ${data.prenom}` : ''},`),
+            p('Votre demande de réservation a bien été enregistrée.'),
+            data.vehicule ? highlight('Véhicule', String(data.vehicule)) : '',
+            p('Pour confirmer votre réservation, finalisez le paiement via le lien fourni. Elle sera automatiquement annulée si le paiement n\'est pas reçu dans les 48 heures.'),
         ].join('')),
     },
 
@@ -178,6 +191,28 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
         body: () => baseLayout('KYC Validé', [
             p('Votre vérification d\'identité a été validée avec succès.'),
             p('Vous pouvez maintenant publier des véhicules et effectuer des réservations.'),
+        ].join('')),
+    },
+
+    'kyc.rejected': {
+        subject: 'Vérification d\'identité refusée',
+        body: (data) => baseLayout('Vérification d\'identité non validée', [
+            p('Votre dossier de vérification d\'identité n\'a pas pu être validé.'),
+            data.raison
+                ? highlight('Motif du refus', String(data.raison))
+                : '',
+            p('Veuillez soumettre à nouveau vos documents en vous assurant qu\'ils sont lisibles, en cours de validité et correspondent bien à votre profil.'),
+            p('Pour toute question, contactez notre support.'),
+        ].join('')),
+    },
+
+    'user.welcome': {
+        subject: 'Bienvenue sur AutoLoc',
+        body: (data) => baseLayout('Bienvenue sur AutoLoc', [
+            p(`Bonjour <strong>${String(data.prenom ?? '')}</strong>,`),
+            p('Votre compte AutoLoc est prêt. Vous pouvez dès maintenant explorer des véhicules disponibles près de chez vous.'),
+            p('Pour louer un véhicule ou publier le vôtre, complétez votre vérification d\'identité depuis votre espace personnel.'),
+            p('Bonne expérience sur AutoLoc !'),
         ].join('')),
     },
 

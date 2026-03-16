@@ -23,7 +23,7 @@ export class ResourceOwnerGuard implements CanActivate {
     const user = (request as Request & { user?: RequestUser }).user;
 
     if (!user?.sub) {
-      throw new UnauthorizedException('Not authenticated');
+      throw new UnauthorizedException('Non authentifié');
     }
 
     const vehicleId = request.params.id;
@@ -35,7 +35,7 @@ export class ResourceOwnerGuard implements CanActivate {
     });
 
     if (!utilisateur) {
-      throw new ForbiddenException('Profile not completed');
+      throw new ForbiddenException('Profil incomplet');
     }
 
     const vehicle = await this.prisma.vehicule.findUnique({
@@ -44,11 +44,11 @@ export class ResourceOwnerGuard implements CanActivate {
     });
 
     if (!vehicle) {
-      throw new NotFoundException('Vehicle not found');
+      throw new NotFoundException('Véhicule introuvable');
     }
 
     if (vehicle.proprietaireId !== utilisateur.id) {
-      throw new ForbiddenException('Access denied: not the vehicle owner');
+      throw new ForbiddenException('Accès refusé : vous n\'êtes pas le propriétaire de ce véhicule');
     }
 
     return true;

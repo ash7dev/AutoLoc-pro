@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   Clock, CreditCard, CheckCircle2,
-  ArrowRight, Loader2, Shield, Info, Truck, MapPin,
+  ArrowRight, Loader2, Shield, Info, Truck, MapPin, AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles';
@@ -29,6 +29,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
   const [dateFin, setDateFin] = useState('');
   const [pricing, setPricing] = useState<PricingResponse | null>(null);
   const [loadingPricing, setLoadingPricing] = useState(false);
+  const [pricingError, setPricingError] = useState(false);
   const [contractAccepted, setContractAccepted] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
   const [gateProfile, setGateProfile] = useState<ProfileResponse | null>(null);
@@ -54,10 +55,14 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
   const fetchPricingData = useCallback(async (days: number) => {
     if (days < 1) return;
     setLoadingPricing(true);
+    setPricingError(false);
     try {
       const result = await fetchVehiclePricing(vehicleId, days);
       setPricing(result);
     } catch {
+      // Fallback local : permet à l'utilisateur de continuer vers le paiement
+      // où le vrai prix sera recalculé. On signale l'estimation via pricingError.
+      setPricingError(true);
       setPricing({
         nbJours: days,
         prixParJour,
@@ -78,6 +83,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
       debounceRef.current = setTimeout(() => fetchPricingData(nbJours), 300);
     } else {
       setPricing(null);
+      setPricingError(false);
     }
     return () => clearTimeout(debounceRef.current);
   }, [nbJours, fetchPricingData]);
@@ -216,6 +222,14 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, frais
               {loadingPricing && (
                 <div className="flex justify-center pt-1">
                   <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                </div>
+              )}
+              {pricingError && !loadingPricing && (
+                <div className="flex items-center gap-2 pt-2 border-t border-amber-100">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" strokeWidth={2} />
+                  <p className="text-[11px] font-medium text-amber-600">
+                    Prix estimé — le montant exact sera confirmé à l&apos;étape suivante.
+                  </p>
                 </div>
               )}
             </div>

@@ -63,7 +63,7 @@ export class CancelReservationUseCase {
             where: { userId: user.sub },
             select: { id: true },
         });
-        if (!utilisateur) throw new ForbiddenException('Profile not completed');
+        if (!utilisateur) throw new ForbiddenException('Profil incomplet');
 
         // ── 2. Fetch reservation with relations ────────────────────────────────
         const reservation = await this.prisma.reservation.findUnique({
@@ -91,7 +91,7 @@ export class CancelReservationUseCase {
                 proprietaire: { select: { telephone: true, prenom: true } },
             },
         });
-        if (!reservation) throw new NotFoundException('Reservation not found');
+        if (!reservation) throw new NotFoundException('Réservation introuvable');
 
         // ── 3. Authorization: locataire OU proprietaire ────────────────────────
         const isLocataire = reservation.locataireId === utilisateur.id;

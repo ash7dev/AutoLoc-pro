@@ -31,7 +31,7 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const user = (request as Request & { user?: RequestUser }).user;
     if (!user?.sub) {
-      throw new UnauthorizedException('User not authenticated');
+      throw new UnauthorizedException('Utilisateur non authentifié');
     }
 
     // Source de vérité des rôles = table Profile (liée à Supabase userId).
@@ -41,12 +41,12 @@ export class RolesGuard implements CanActivate {
     });
 
     if (!profile?.role) {
-      throw new ForbiddenException('Role not found');
+      throw new ForbiddenException('Rôle introuvable');
     }
 
     const hasRole = requiredRoles.includes(profile.role as RoleProfile);
     if (!hasRole) {
-      throw new ForbiddenException('Insufficient role');
+      throw new ForbiddenException('Rôle insuffisant');
     }
 
     return true;

@@ -148,7 +148,7 @@ export default function PaymentPage() {
                     vehiculeId: vehicleId,
                     dateDebut, dateFin,
                     fournisseur: method,
-                    idempotencyKey: `${vehicleId}-${dateDebut}-${dateFin}-${Date.now()}`,
+                    idempotencyKey: crypto.randomUUID(),
                 },
             });
             await authFetch(`/reservations/${reservationId}/confirm-payment`, { method: 'PATCH' });

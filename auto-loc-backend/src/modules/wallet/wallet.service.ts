@@ -12,7 +12,7 @@ export class WalletService {
       where: { userId: user.sub },
       select: { id: true },
     });
-    if (!utilisateur) throw new NotFoundException('Profile not completed');
+    if (!utilisateur) throw new NotFoundException('Profil incomplet');
 
     let wallet = await this.prisma.wallet.findUnique({
       where: { utilisateurId: utilisateur.id },
@@ -82,22 +82,56 @@ export class WalletService {
     };
   }
 
+  async adminListWithdrawals() {
+    const retraits = await this.prisma.retrait.findMany({
+      orderBy: { demandeeLe: 'desc' },
+      select: {
+        id: true,
+        montant: true,
+        methode: true,
+        statut: true,
+        raisonRejet: true,
+        demandeeLe: true,
+        traiteLe: true,
+        wallet: {
+          select: {
+            utilisateur: {
+              select: { prenom: true, nom: true, telephone: true },
+            },
+          },
+        },
+      },
+    });
+
+    return retraits.map((r) => ({
+      id: r.id,
+      ownerName: [r.wallet.utilisateur?.prenom, r.wallet.utilisateur?.nom].filter(Boolean).join(' ') || '—',
+      amount: Number(r.montant),
+      method: r.methode,
+      bankInfo: r.wallet.utilisateur?.telephone ?? '—',
+      statut: r.statut,
+      raisonRejet: r.raisonRejet ?? null,
+      demandeeLe: r.demandeeLe,
+      traiteLe: r.traiteLe ?? null,
+    }));
+  }
+
   async requestWithdrawal(user: RequestUser, montant: number) {
     const utilisateur = await this.prisma.utilisateur.findUnique({
       where: { userId: user.sub },
       select: { id: true },
     });
-    if (!utilisateur) throw new NotFoundException('Profile not completed');
+    if (!utilisateur) throw new NotFoundException('Profil incomplet');
 
     const wallet = await this.prisma.wallet.findUnique({
       where: { utilisateurId: utilisateur.id },
       select: { id: true, soldeDisponible: true },
     });
-    if (!wallet) throw new NotFoundException('Wallet not found');
+    if (!wallet) throw new NotFoundException('Portefeuille introuvable');
 
     const amount = new Prisma.Decimal(montant);
-    if (amount.lte(0)) throw new BadRequestException('Invalid amount');
-    if (amount.gt(wallet.soldeDisponible)) throw new BadRequestException('Insufficient balance');
+    if (amount.lte(0)) throw new BadRequestException('Montant invalide');
+    if (amount.gt(wallet.soldeDisponible)) throw new BadRequestException('Solde insuffisant');
 
     await this.prisma.$transaction(async (tx) => {
       const newSolde = wallet.soldeDisponible.sub(amount);

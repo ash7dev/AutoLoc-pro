@@ -19,12 +19,12 @@ export class JwtGuard implements CanActivate {
     const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith(BEARER_PREFIX)) {
-      throw new UnauthorizedException('Missing or invalid Authorization header');
+      throw new UnauthorizedException("En-tête d'autorisation manquant ou invalide");
     }
 
     const token = authHeader.slice(BEARER_PREFIX.length).trim();
     if (!token) {
-      throw new UnauthorizedException('Missing token');
+      throw new UnauthorizedException('Jeton manquant');
     }
 
     try {
@@ -37,7 +37,7 @@ export class JwtGuard implements CanActivate {
       (request as Request & { user: RequestUser }).user = user;
       return true;
     } catch {
-      throw new UnauthorizedException('Invalid or expired token');
+      throw new UnauthorizedException('Jeton invalide ou expiré');
     }
   }
 }

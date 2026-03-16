@@ -1,6 +1,8 @@
 import {
+    BadRequestException,
     ForbiddenException,
     Injectable,
+    Logger,
     NotFoundException,
 } from '@nestjs/common';
 import { FournisseurPaiement, Prisma, StatutReservation } from '@prisma/client';
@@ -16,6 +18,7 @@ import {
     IdempotencyResult,
 } from '../reservation-idempotency.service';
 import { RevalidateService } from '../../../infrastructure/revalidate/revalidate.service';
+import { NotificationService } from '../../../infrastructure/notifications/notification.service';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -43,6 +46,8 @@ export interface CreateReservationResult {
 
 @Injectable()
 export class CreateReservationUseCase {
+    private readonly logger = new Logger(CreateReservationUseCase.name);
+
     constructor(
         private readonly prisma: PrismaService,
         private readonly redis: RedisService,
@@ -52,6 +57,7 @@ export class CreateReservationUseCase {
         private readonly availability: ReservationAvailabilityService,
         private readonly idempotency: ReservationIdempotencyService,
         private readonly revalidate: RevalidateService,
+        private readonly notification: NotificationService,
     ) { }
 
     async execute(
@@ -67,6 +73,15 @@ export class CreateReservationUseCase {
             input.dateDebut,
             input.dateFin,
         );
+
+        // ── 2.5 Validate dateDebut is not in the past ─────────────────────────────
+        const todayUTC = new Date();
+        todayUTC.setUTCHours(0, 0, 0, 0);
+        if (dates.debut < todayUTC) {
+            throw new BadRequestException(
+                'La date de début de location ne peut pas être dans le passé',
+            );
+        }
 
         // ── 3. Validate vehicle & business rules ──────────────────────────────────
         const vehicule = await this.validateVehicle(
@@ -171,7 +186,19 @@ export class CreateReservationUseCase {
                 { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
             );
         } catch (err) {
-            await this.payment.refundPayment(input.fournisseur, paymentRef).catch(() => { });
+            // Le paiement a été initié AVANT la transaction — on tente un remboursement.
+            // Si le remboursement échoue, on logue pour permettre un traitement manuel.
+            await this.payment
+                .refundPayment(input.fournisseur, paymentRef)
+                .catch((refundErr: unknown) => {
+                    const msg = refundErr instanceof Error ? refundErr.message : String(refundErr);
+                    this.logger.error(
+                        `Remboursement automatique échoué après échec de transaction — ` +
+                        `intervention manuelle requise. ` +
+                        `fournisseur=${input.fournisseur} ref=${paymentRef} vehiculeId=${input.vehiculeId}`,
+                        msg,
+                    );
+                });
             await this.idempotency.releaseLock(idempotencyKey);
             throw err;
         }
@@ -183,6 +210,18 @@ export class CreateReservationUseCase {
         };
         await this.idempotency.commitResult(idempotencyKey, result);
         await this.queue.schedulePaymentExpiry(reservation.id);
+
+        if (locataire.email) {
+            this.notification.send({
+                email: locataire.email,
+                type: 'reservation.created',
+                data: {
+                    prenom: locataire.prenom ?? undefined,
+                    vehicule: `${vehicule.marque} ${vehicule.modele}`,
+                    reservationId: reservation.id,
+                },
+            }).catch(() => { });
+        }
 
         const city = vehicule.ville?.toLowerCase?.() ?? '';
         const cityPattern = city
@@ -207,16 +246,18 @@ export class CreateReservationUseCase {
             where: { userId: userSub },
             select: {
                 id: true,
+                email: true,
+                prenom: true,
                 statutKyc: true,
                 dateNaissance: true,
                 actif: true,
                 bloqueJusqua: true,
             },
         });
-        if (!locataire) throw new ForbiddenException('Profile not completed');
-        if (!locataire.actif) throw new ForbiddenException('Account suspended');
+        if (!locataire) throw new ForbiddenException('Profil incomplet');
+        if (!locataire.actif) throw new ForbiddenException('Compte suspendu');
         if (locataire.bloqueJusqua && locataire.bloqueJusqua > new Date()) {
-            throw new ForbiddenException('Account temporarily blocked');
+            throw new ForbiddenException('Compte temporairement bloqué');
         }
         return locataire;
     }
@@ -236,31 +277,33 @@ export class CreateReservationUseCase {
                 joursMinimum: true,
                 ageMinimum: true,
                 ville: true,
+                marque: true,
+                modele: true,
                 tarifsProgressifs: {
                     orderBy: { joursMin: 'asc' },
                     select: { joursMin: true, joursMax: true, prix: true },
                 },
             },
         });
-        if (!vehicule) throw new NotFoundException('Vehicle not found');
+        if (!vehicule) throw new NotFoundException('Véhicule introuvable');
         if (vehicule.statut !== 'VERIFIE') {
-            throw new ForbiddenException('Vehicle is not available for rental');
+            throw new ForbiddenException('Ce véhicule n\'est pas disponible à la location');
         }
         if (vehicule.proprietaireId === locataire.id) {
-            throw new ForbiddenException('Cannot rent your own vehicle');
+            throw new ForbiddenException('Vous ne pouvez pas louer votre propre véhicule');
         }
         if (nbJours < vehicule.joursMinimum) {
             throw new ForbiddenException(
-                `Minimum rental duration is ${vehicule.joursMinimum} day(s)`,
+                `La durée minimale de location est de ${vehicule.joursMinimum} jour(s)`,
             );
         }
         if (!locataire.dateNaissance) {
-            throw new ForbiddenException('Birth date required to verify age');
+            throw new ForbiddenException('Date de naissance requise pour vérifier l\'âge');
         }
         const age = this.pricing.calculateAge(locataire.dateNaissance);
         if (age < vehicule.ageMinimum) {
             throw new ForbiddenException(
-                `Minimum driver age is ${vehicule.ageMinimum} years`,
+                `L'âge minimum pour ce véhicule est de ${vehicule.ageMinimum} ans`,
             );
         }
         return vehicule;

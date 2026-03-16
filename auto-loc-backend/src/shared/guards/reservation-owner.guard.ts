@@ -23,7 +23,7 @@ export class ReservationOwnerGuard implements CanActivate {
     const user = (request as Request & { user?: RequestUser }).user;
 
     if (!user?.sub) {
-      throw new UnauthorizedException('Not authenticated');
+      throw new UnauthorizedException('Non authentifié');
     }
 
     const reservationId = request.params.id;
@@ -34,7 +34,7 @@ export class ReservationOwnerGuard implements CanActivate {
       select: { id: true },
     });
     if (!utilisateur) {
-      throw new ForbiddenException('Profile not completed');
+      throw new ForbiddenException('Profil incomplet');
     }
 
     const reservation = await this.prisma.reservation.findUnique({
@@ -42,11 +42,11 @@ export class ReservationOwnerGuard implements CanActivate {
       select: { proprietaireId: true },
     });
     if (!reservation) {
-      throw new NotFoundException('Reservation not found');
+      throw new NotFoundException('Réservation introuvable');
     }
 
     if (reservation.proprietaireId !== utilisateur.id) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException('Accès refusé');
     }
 
     return true;

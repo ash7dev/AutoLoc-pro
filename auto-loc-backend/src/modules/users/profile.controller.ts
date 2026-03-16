@@ -52,7 +52,7 @@ export class ProfileController {
                 },
             },
         });
-        if (!utilisateur) throw new ForbiddenException('Profile not completed');
+        if (!utilisateur) throw new ForbiddenException('Profil incomplet');
 
         return {
             id: utilisateur.id,
@@ -89,7 +89,7 @@ export class ProfileController {
             where: { userId: user.sub },
             select: { id: true },
         });
-        if (!utilisateur) throw new ForbiddenException('Profile not completed');
+        if (!utilisateur) throw new ForbiddenException('Profil incomplet');
 
         const data: Record<string, unknown> = {};
         if (dto.prenom !== undefined) data.prenom = dto.prenom;

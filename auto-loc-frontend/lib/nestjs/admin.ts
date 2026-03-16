@@ -138,6 +138,38 @@ export interface SuspendVehicleDto {
   raison: string;
 }
 
+// ── Admin Withdrawals ─────────────────────────────────────────────────────────
+
+export type StatutRetrait = 'EN_ATTENTE' | 'VALIDE' | 'EFFECTUE' | 'REJETE';
+
+export interface AdminWithdrawal {
+  id: string;
+  ownerName: string;
+  amount: number;
+  method: 'WAVE' | 'ORANGE_MONEY' | 'VIREMENT';
+  bankInfo: string;
+  statut: StatutRetrait;
+  raisonRejet: string | null;
+  demandeeLe: string;
+  traiteLe: string | null;
+}
+
+// ── Admin Disputes ────────────────────────────────────────────────────────────
+
+export type StatutLitige = 'EN_ATTENTE' | 'FONDE' | 'NON_FONDE';
+
+export interface AdminDispute {
+  id: string;
+  reservationId: string;
+  renterName: string;
+  ownerName: string;
+  vehicle: string;
+  description: string;
+  amount: number | null;
+  statut: StatutLitige;
+  openedAt: string;
+}
+
 // ── Path helpers ──────────────────────────────────────────────────────────────
 
 export const ADMIN_PATHS = {
@@ -152,6 +184,8 @@ export const ADMIN_PATHS = {
   banUser: (id: string) => `/admin/users/${id}/status`,
   approveKyc: (id: string) => `/admin/users/${id}/kyc/approve`,
   rejectKyc: (id: string) => `/admin/users/${id}/kyc/reject`,
+  withdrawals: '/admin/withdrawals',
+  disputes: '/admin/disputes',
 } as const;
 
 // ── Server-side fetch functions (RSC / layouts) ────────────────────────────────
@@ -178,4 +212,12 @@ export async function fetchAdminStats(accessToken: string): Promise<AdminStats> 
 
 export async function fetchAdminActivity(accessToken: string): Promise<AdminActivityItem[]> {
   return apiFetch<AdminActivityItem[]>(ADMIN_PATHS.activity, { accessToken });
+}
+
+export async function fetchAdminWithdrawals(accessToken: string): Promise<AdminWithdrawal[]> {
+  return apiFetch<AdminWithdrawal[]>(ADMIN_PATHS.withdrawals, { accessToken });
+}
+
+export async function fetchAdminDisputes(accessToken: string): Promise<AdminDispute[]> {
+  return apiFetch<AdminDispute[]>(ADMIN_PATHS.disputes, { accessToken });
 }

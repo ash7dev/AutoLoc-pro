@@ -28,7 +28,7 @@ export class AdminVehiclesController {
    */
   @Get()
   listVehicles(@Query() dto: GetAdminVehiclesDto) {
-    return this.vehiclesService.adminListVehicles(dto.statut);
+    return this.vehiclesService.adminListVehicles(dto.statut, dto.page ?? 1);
   }
 
   /**

@@ -17,7 +17,7 @@ export class ProfileCompletedGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const user = (request as Request & { user?: RequestUser }).user;
     if (!user?.sub) {
-      throw new UnauthorizedException('User not authenticated');
+      throw new UnauthorizedException('Utilisateur non authentifié');
     }
 
     const utilisateur = await this.prisma.utilisateur.findUnique({
@@ -26,7 +26,7 @@ export class ProfileCompletedGuard implements CanActivate {
     });
 
     if (!utilisateur?.profileCompleted) {
-      throw new ForbiddenException('Profile completion required');
+      throw new ForbiddenException('Profil à compléter');
     }
 
     return true;

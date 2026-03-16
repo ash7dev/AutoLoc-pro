@@ -99,7 +99,7 @@ function VehicleActions({
         {vehicle.statut === "VERIFIE" && (
           <DropdownMenuItem asChild>
             <Link
-              href={`/vehicles/${vehicle.id}`}
+              href={`/vehicle/${vehicle.id}`}
               target="_blank"
               className="group flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm"
             >
@@ -367,7 +367,7 @@ function VehicleCard({
           <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
             {isActive && (
               <Link
-                href={`/vehicles/${vehicle.id}`}
+                href={`/vehicle/${vehicle.id}`}
                 target="_blank"
                 className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold text-muted-foreground/60 hover:text-foreground hover:bg-muted/60 transition-colors duration-150"
                 title="Voir l'annonce"

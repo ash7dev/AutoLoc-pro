@@ -18,7 +18,7 @@ export class KycVerifiedGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const user = (request as Request & { user?: RequestUser }).user;
     if (!user?.sub) {
-      throw new UnauthorizedException('User not authenticated');
+      throw new UnauthorizedException('Utilisateur non authentifié');
     }
 
     const utilisateur = await this.prisma.utilisateur.findUnique({
@@ -27,11 +27,11 @@ export class KycVerifiedGuard implements CanActivate {
     });
 
     if (!utilisateur) {
-      throw new ForbiddenException('Profile not completed');
+      throw new ForbiddenException('Profil incomplet');
     }
 
     if (utilisateur.statutKyc !== StatutKyc.VERIFIE) {
-      throw new ForbiddenException('KYC verification required');
+      throw new ForbiddenException('Vérification d\'identité requise');
     }
 
     return true;
