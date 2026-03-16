@@ -184,16 +184,21 @@ function ActionButton({
    INLINE CONFIRM  — clean white card, no dark hacks
 ════════════════════════════════════════════════════════════════ */
 function InlineConfirm({
-    action, onConfirm, onCancel, loading,
+    action, onConfirm, onCancel, loading, reason, onReasonChange,
 }: {
     action: ActionConfig;
     onConfirm: () => void;
     onCancel: () => void;
     loading: boolean;
+    reason?: string;
+    onReasonChange?: (v: string) => void;
 }) {
+    const isCancel = action.key === "cancel";
+    const canConfirm = !isCancel || (reason?.trim() ?? "").length >= 3;
+
     return (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 shadow-sm">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 shadow-sm">
+            <div className="flex items-center gap-3">
                 <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center flex-shrink-0">
                     <action.icon className="w-3.5 h-3.5 text-slate-500" strokeWidth={2} />
                 </div>
@@ -202,7 +207,26 @@ function InlineConfirm({
                 </p>
             </div>
 
-            <div className="flex items-center gap-2 flex-shrink-0 pl-10 sm:pl-0">
+            {/* Raison d'annulation — uniquement pour cancel */}
+            {isCancel && onReasonChange !== undefined && (
+                <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
+                        Raison <span className="text-red-400">*</span>
+                    </label>
+                    <textarea
+                        value={reason ?? ""}
+                        onChange={e => onReasonChange(e.target.value)}
+                        placeholder="Ex : Véhicule indisponible pour cette période…"
+                        rows={2}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-red-300 focus:ring-2 focus:ring-red-300/15 resize-none transition-all"
+                    />
+                    {(reason?.trim().length ?? 0) > 0 && (reason?.trim().length ?? 0) < 3 && (
+                        <p className="text-[11px] text-red-500 font-medium">Minimum 3 caractères</p>
+                    )}
+                </div>
+            )}
+
+            <div className="flex items-center gap-2 justify-end">
                 <button
                     type="button"
                     onClick={onCancel}
@@ -214,9 +238,9 @@ function InlineConfirm({
                 <button
                     type="button"
                     onClick={onConfirm}
-                    disabled={loading}
+                    disabled={loading || !canConfirm}
                     className={cn(
-                        "flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[12px] font-bold transition-all",
+                        "flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[12px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed",
                         action.style === "danger"
                             ? "bg-red-500 hover:bg-red-600 text-white shadow-sm shadow-red-500/20"
                             : "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm",

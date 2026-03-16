@@ -163,16 +163,21 @@ export function PhoneVerifyGate({
           </div>
         )}
         {!profile.hasUtilisateur && (
-          <input
-            type="date"
-            value={dateNaissance}
-            onChange={(e) => { setDateNaissance(e.target.value); setError(null); }}
-            className={cn(
-              "w-full h-12 rounded-xl border bg-background px-4 text-base outline-none transition-all",
-              "focus:ring-2 focus:ring-ring focus:border-transparent",
-              error ? "border-destructive" : "border-[hsl(var(--border))]",
-            )}
-          />
+          <div className="space-y-1.5">
+            <label className="text-[12px] font-semibold text-slate-500">
+              Date de naissance
+            </label>
+            <input
+              type="date"
+              value={dateNaissance}
+              onChange={(e) => { setDateNaissance(e.target.value); setError(null); }}
+              className={cn(
+                "w-full h-12 rounded-xl border bg-background px-4 text-base outline-none transition-all",
+                "focus:ring-2 focus:ring-ring focus:border-transparent",
+                error ? "border-destructive" : "border-[hsl(var(--border))]",
+              )}
+            />
+          </div>
         )}
 
         {/* Phone input with country code selector */}

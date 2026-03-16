@@ -354,29 +354,29 @@ export class ContractPdfService {
 
         blocks.forEach((block, i) => {
             const x = i === 0 ? M : M + colW + 12;
-            const lineH = 11.5;
+            const lineH = 13;
             const textWidth = colW - 28;
-            // Estimate height: title + 3 paras × approx 3 lines each
-            const boxH = 18 + block.paras.length * (lineH * 3.2) + 8;
+            // Estimate height: title + paras × approx 3 lines each
+            const boxH = 22 + block.paras.length * (lineH * 3.5) + 10;
 
             doc.roundedRect(x, startY, colW, boxH, 5)
                 .fillColor(C.surface).fill();
             doc.roundedRect(x, startY, colW, boxH, 5)
                 .strokeColor(C.border).lineWidth(0.5).stroke();
 
-            doc.fontSize(8.5).fillColor(C.ink).font('Helvetica-Bold')
+            doc.fontSize(9.5).fillColor(C.ink).font('Helvetica-Bold')
                 .text(block.title, x + 12, startY + 10, { width: textWidth });
 
-            let paraY = startY + 24;
+            let paraY = startY + 26;
             block.paras.forEach((para) => {
-                doc.fontSize(7.5).fillColor(C.body).font('Helvetica')
-                    .text(para, x + 12, paraY, { width: textWidth, lineGap: 1.5 });
-                paraY = doc.y + 5;
+                doc.fontSize(8.5).fillColor(C.body).font('Helvetica')
+                    .text(para, x + 12, paraY, { width: textWidth, lineGap: 2 });
+                paraY = doc.y + 6;
             });
         });
 
         // Move doc.y past the taller block
-        doc.y = startY + 18 + blocks[0].paras.length * (11.5 * 3.2) + 8 + 16;
+        doc.y = startY + 22 + blocks[0].paras.length * (13 * 3.5) + 10 + 16;
     }
 
     // ── General conditions ─────────────────────────────────────────────────────
@@ -387,14 +387,14 @@ export class ContractPdfService {
 
         const articles: Array<{ label: string; items: string[] }> = [
             {
-                label: 'Article 3 — Obligations du propriétaire',
+                label: 'Article 1 — Obligations du propriétaire',
                 items: [
                     'Le propriétaire met à disposition le véhicule en parfait état de fonctionnement, propre et avec le niveau de carburant convenu, à la date et heure de début de la location.',
                     'Il garantit que le véhicule est couvert par une assurance valide incluant la location à des tiers et fournit tous les documents de circulation (carte grise, attestation d\'assurance).',
                 ],
             },
             {
-                label: 'Article 4 — Obligations du locataire',
+                label: 'Article 2 — Obligations du locataire',
                 items: [
                     'Le locataire s\'engage à utiliser le véhicule en bon père de famille, dans le respect du Code de la route sénégalais, et à le restituer dans l\'état initial à la date et heure convenues.',
                     'Tout retard de restitution sera facturé au prix journalier majoré de 50 %. Le locataire ne peut en aucun cas sous-louer le véhicule à un tiers.',
@@ -402,13 +402,13 @@ export class ContractPdfService {
                 ],
             },
             {
-                label: 'Article 8 — État des lieux',
+                label: 'Article 3 — État des lieux',
                 items: [
                     'Un état des lieux contradictoire est établi entre le propriétaire et le locataire au début et à la fin de la période de location, accompagné de photos et vidéos. Cet état des lieux fait foi en cas de litige sur l\'état du véhicule.',
                 ],
             },
             {
-                label: 'Article 9 — Accidents et dommages',
+                label: 'Article 4 — Accidents et dommages',
                 items: [
                     'En cas d\'accident, de vol ou de dommages survenus pendant la location, le locataire informe immédiatement le propriétaire et AutoLoc, et remplit un constat amiable.',
                     'Le locataire est tenu responsable des dommages causés au véhicule, sous réserve des franchises d\'assurance applicables. Tout litige est soumis à la médiation d\'AutoLoc avant toute action judiciaire. Le présent contrat est régi par le droit sénégalais.',
@@ -417,30 +417,30 @@ export class ContractPdfService {
         ];
 
         articles.forEach((article) => {
-            if (doc.y > 680) doc.addPage();
+            if (doc.y > 660) doc.addPage();
 
             // Article label
-            doc.fontSize(8).fillColor(C.ink).font('Helvetica-Bold')
+            doc.fontSize(9).fillColor(C.ink).font('Helvetica-Bold')
                 .text(article.label, M + 8, doc.y, { width: CW - 16 });
-            doc.y += 4;
+            doc.y += 5;
 
             // Bullet items
             article.items.forEach((item) => {
                 const bulletX = M + 16;
-                const textX = M + 26;
+                const textX = M + 27;
                 const itemY = doc.y;
-                doc.fontSize(7).fillColor(C.muted).font('Helvetica')
+                doc.fontSize(8).fillColor(C.muted).font('Helvetica')
                     .text('–', bulletX, itemY, { width: 8 });
-                doc.fontSize(7.5).fillColor(C.body).font('Helvetica')
-                    .text(item, textX, itemY, { width: CW - 36, lineGap: 1.5 });
-                doc.y += 4;
+                doc.fontSize(8.5).fillColor(C.body).font('Helvetica')
+                    .text(item, textX, itemY, { width: CW - 38, lineGap: 2 });
+                doc.y += 5;
             });
 
-            doc.y += 8;
+            doc.y += 9;
         });
 
         // CGU reference line
-        doc.fontSize(7).fillColor(C.muted).font('Helvetica')
+        doc.fontSize(7.5).fillColor(C.muted).font('Helvetica')
             .text('Le texte intégral des conditions générales est disponible sur : autoloc.sn/cgu', M + 8, doc.y, { width: CW - 16 });
         doc.y += 16;
     }

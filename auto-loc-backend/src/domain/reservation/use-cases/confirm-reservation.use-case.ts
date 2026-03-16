@@ -59,9 +59,10 @@ export class ConfirmReservationUseCase {
             throw new ForbiddenException('Access denied');
         }
 
-        // 3.5. Tenant KYC check
-        if (reservation.locataire?.statutKyc !== 'VERIFIE') {
-            throw new ForbiddenException("Le profil KYC du locataire doit être vérifié avant de pouvoir confirmer la réservation");
+        // 3.5. Tenant KYC check — VERIFIE ou EN_ATTENTE acceptés (vérification en cours)
+        const kycOk = ['VERIFIE', 'EN_ATTENTE'].includes(reservation.locataire?.statutKyc ?? '');
+        if (!kycOk) {
+            throw new ForbiddenException("Le locataire doit soumettre son KYC avant que vous puissiez confirmer la réservation");
         }
 
         // 4. State machine: PAYEE → CONFIRMEE
