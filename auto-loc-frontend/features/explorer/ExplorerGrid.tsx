@@ -223,51 +223,10 @@ function ResultsArea({
   return (
     <div ref={sectionRef} className="space-y-7">
 
-      {/* ── Featured ─────────────────────────────────────────── */}
-      {dist.featured.length > 0 && (
-        <div
-          className={cn(
-            strategy.featuredCount > 1 ? 'grid gap-5 lg:grid-cols-2' : '',
-            'transition-all duration-700',
-            visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6',
-          )}
-        >
-          {dist.featured.map((vehicle) => {
-            const qualifies = Number(vehicle.note) >= 4 && (vehicle.totalAvis ?? 0) >= 3;
-            return (
-              <div key={vehicle.id} className="relative">
-                {qualifies && (
-                  <div className="absolute -top-2.5 left-4 z-10">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1.5 shadow-lg shadow-emerald-500/30">
-                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-white">
-                        Coup de cœur
-                      </span>
-                    </span>
-                  </div>
-                )}
-                <ExplorerVehicleCard vehicle={vehicle} featured />
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ── Divider ──────────────────────────────────────────── */}
-      {dist.featured.length > 0 && dist.grid.length > 0 && (
-        <div className="flex items-center gap-4">
-          <div className="h-px bg-slate-100 flex-1" />
-          <span className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-slate-400 whitespace-nowrap px-1">
-            {dist.grid.length} autre{dist.grid.length > 1 ? 's' : ''} disponible{dist.grid.length > 1 ? 's' : ''}
-          </span>
-          <div className="h-px bg-slate-100 flex-1" />
-        </div>
-      )}
-
       {/* ── Grid ─────────────────────────────────────────────── */}
-      {dist.grid.length > 0 && (
+      {[...dist.featured, ...dist.grid].length > 0 && (
         <div className={gridColsCls}>
-          {dist.grid.map((vehicle, i) => (
+          {[...dist.featured, ...dist.grid].map((vehicle, i) => (
             <div
               key={vehicle.id}
               className={cn(

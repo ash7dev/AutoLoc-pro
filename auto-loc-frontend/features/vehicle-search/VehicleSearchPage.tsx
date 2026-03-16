@@ -193,11 +193,7 @@ export function VehicleSearchPage() {
         router.push(`/vehicle?${params.toString()}`);
     }
 
-    /* ── Featured vehicle (first one if score qualifies) ───────── */
-    const featured = filteredVehicles.length > 3
-        ? filteredVehicles[0]
-        : null;
-    const gridVehicles = featured ? filteredVehicles.slice(1) : filteredVehicles;
+    const gridVehicles = filteredVehicles;
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -308,39 +304,6 @@ export function VehicleSearchPage() {
                     <EmptyState />
                 ) : (
                     <div ref={gridRef} className="space-y-8">
-
-                        {/* Featured */}
-                        {featured && (
-                            <div
-                                className={cn(
-                                    'transition-all duration-700',
-                                    visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6',
-                                )}
-                            >
-                                <div className="relative">
-                                    <div className="absolute -top-2.5 left-4 z-10">
-                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1.5 shadow-lg shadow-emerald-500/30">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-white">
-                                                Meilleur choix
-                                            </span>
-                                        </span>
-                                    </div>
-                                    <ExplorerVehicleCard vehicle={featured as any} featured />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Divider */}
-                        {featured && gridVehicles.length > 0 && (
-                            <div className="flex items-center gap-4">
-                                <div className="h-px bg-slate-100 flex-1" />
-                                <span className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-slate-400 whitespace-nowrap px-1">
-                                    {gridVehicles.length} autre{gridVehicles.length > 1 ? 's' : ''} disponible{gridVehicles.length > 1 ? 's' : ''}
-                                </span>
-                                <div className="h-px bg-slate-100 flex-1" />
-                            </div>
-                        )}
 
                         {/* Grid */}
                         {gridVehicles.length > 0 && (

@@ -32,7 +32,6 @@ type VehicleCardItem = VehicleSearchResult & {
 
 interface Props {
   vehicle: VehicleCardItem;
-  featured?: boolean;
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -66,7 +65,7 @@ function bestTierMinDays(tiers: TarifTier[]): number | null {
 
 
 /* ════════════════════════════════════════════════════════════════
-   FEATURED CARD  — large horizontal layout
+   FEATURED CARD  — kept for reference, not used
 ════════════════════════════════════════════════════════════════ */
 function FeaturedCard({ vehicle }: { vehicle: VehicleCardItem }) {
   const [liked, setLiked] = useState(false);
@@ -425,6 +424,6 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
 /* ════════════════════════════════════════════════════════════════
    EXPORT
 ════════════════════════════════════════════════════════════════ */
-export function ExplorerVehicleCard({ vehicle, featured = false }: Props): React.ReactElement {
-  return featured ? <FeaturedCard vehicle={vehicle} /> : <StandardCard vehicle={vehicle} />;
+export function ExplorerVehicleCard({ vehicle }: Props): React.ReactElement {
+  return <StandardCard vehicle={vehicle} />;
 }

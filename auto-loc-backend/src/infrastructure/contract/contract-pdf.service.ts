@@ -382,26 +382,67 @@ export class ContractPdfService {
     // ── General conditions ─────────────────────────────────────────────────────
 
     private renderConditions(doc: PDFKit.PDFDocument): void {
-        if (doc.y > 580) doc.addPage();
+        if (doc.y > 480) doc.addPage();
         this.sectionTitle(doc, 'CONDITIONS GÉNÉRALES');
 
-        const conditions = [
-            'Le locataire s\'engage à utiliser le véhicule en bon père de famille et à le restituer dans l\'état initial.',
-            'Tout retard de restitution sera facturé au prix journalier majoré de 50%, sauf accord préalable.',
-            'Le locataire est responsable des infractions commises pendant la durée de la location.',
-            'En cas de panne ou d\'accident, le locataire prévient immédiatement le propriétaire et AutoLoc.',
-            'Le propriétaire garantit que le véhicule est en bon état, assuré et dispose d\'une visite technique valide.',
-            'Tout litige est soumis à la médiation d\'AutoLoc avant toute action judiciaire.',
-            'Le présent contrat est régi par le droit en vigueur au Sénégal.',
+        const articles: Array<{ label: string; items: string[] }> = [
+            {
+                label: 'Article 3 — Obligations du propriétaire',
+                items: [
+                    'Le propriétaire met à disposition le véhicule en parfait état de fonctionnement, propre et avec le niveau de carburant convenu, à la date et heure de début de la location.',
+                    'Il garantit que le véhicule est couvert par une assurance valide incluant la location à des tiers et fournit tous les documents de circulation (carte grise, attestation d\'assurance).',
+                ],
+            },
+            {
+                label: 'Article 4 — Obligations du locataire',
+                items: [
+                    'Le locataire s\'engage à utiliser le véhicule en bon père de famille, dans le respect du Code de la route sénégalais, et à le restituer dans l\'état initial à la date et heure convenues.',
+                    'Tout retard de restitution sera facturé au prix journalier majoré de 50 %. Le locataire ne peut en aucun cas sous-louer le véhicule à un tiers.',
+                    'Le locataire est responsable de toute infraction au code de la route commise pendant la location et doit signaler immédiatement tout accident ou dommage au propriétaire et à AutoLoc.',
+                ],
+            },
+            {
+                label: 'Article 8 — État des lieux',
+                items: [
+                    'Un état des lieux contradictoire est établi entre le propriétaire et le locataire au début et à la fin de la période de location, accompagné de photos et vidéos. Cet état des lieux fait foi en cas de litige sur l\'état du véhicule.',
+                ],
+            },
+            {
+                label: 'Article 9 — Accidents et dommages',
+                items: [
+                    'En cas d\'accident, de vol ou de dommages survenus pendant la location, le locataire informe immédiatement le propriétaire et AutoLoc, et remplit un constat amiable.',
+                    'Le locataire est tenu responsable des dommages causés au véhicule, sous réserve des franchises d\'assurance applicables. Tout litige est soumis à la médiation d\'AutoLoc avant toute action judiciaire. Le présent contrat est régi par le droit sénégalais.',
+                ],
+            },
         ];
 
-        const startY = doc.y;
-        conditions.forEach((item, i) => {
-            doc.fontSize(7.5).fillColor(C.body).font('Helvetica')
-                .text(`${i + 1}.  ${item}`, M + 8, startY + i * 14, { width: CW - 8 });
+        articles.forEach((article) => {
+            if (doc.y > 680) doc.addPage();
+
+            // Article label
+            doc.fontSize(8).fillColor(C.ink).font('Helvetica-Bold')
+                .text(article.label, M + 8, doc.y, { width: CW - 16 });
+            doc.y += 4;
+
+            // Bullet items
+            article.items.forEach((item) => {
+                const bulletX = M + 16;
+                const textX = M + 26;
+                const itemY = doc.y;
+                doc.fontSize(7).fillColor(C.muted).font('Helvetica')
+                    .text('–', bulletX, itemY, { width: 8 });
+                doc.fontSize(7.5).fillColor(C.body).font('Helvetica')
+                    .text(item, textX, itemY, { width: CW - 36, lineGap: 1.5 });
+                doc.y += 4;
+            });
+
+            doc.y += 8;
         });
 
-        doc.y = startY + conditions.length * 14 + 16;
+        // CGU reference line
+        doc.fontSize(7).fillColor(C.muted).font('Helvetica')
+            .text('Le texte intégral des conditions générales est disponible sur : autoloc.sn/cgu', M + 8, doc.y, { width: CW - 16 });
+        doc.y += 16;
     }
 
     // ── Signatures ─────────────────────────────────────────────────────────────
