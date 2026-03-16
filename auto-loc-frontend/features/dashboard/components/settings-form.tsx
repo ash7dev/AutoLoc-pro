@@ -39,7 +39,7 @@ function completionPercent(p: UserProfile) {
         { done: !!p.dateNaissance, label: 'Date de naissance' },
         { done: !!p.telephone, label: 'Téléphone' },
         { done: p.phoneVerified, label: 'Téléphone vérifié' },
-        { done: p.statutKyc === 'APPROUVE', label: 'Identité vérifiée' },
+        { done: p.statutKyc === 'VERIFIE', label: 'Identité vérifiée' },
     ];
     return {
         percent: Math.round((steps.filter((s) => s.done).length / steps.length) * 100),
@@ -343,7 +343,7 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
         } catch { setGlobalError('Erreur lors de la mise à jour de la date'); }
     }
 
-    const kycBadge = profile.statutKyc === 'APPROUVE' ? (
+    const kycBadge = profile.statutKyc === 'VERIFIE' ? (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
             <BadgeCheck className="w-2.5 h-2.5" /> Vérifié
         </span>
@@ -534,7 +534,7 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
 
             {/* ── Identité & Sécurité ───────────────────────────────── */}
             <Section title="Identité & Sécurité">
-                {profile.statutKyc === 'APPROUVE' ? (
+                {profile.statutKyc === 'VERIFIE' ? (
                     <InfoRow
                         label="Vérification d'identité"
                         value="Identité confirmée — compte certifié"
