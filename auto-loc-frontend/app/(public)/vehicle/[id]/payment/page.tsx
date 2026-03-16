@@ -312,9 +312,10 @@ export default function PaymentPage() {
                         </p>
                         <p className="text-[12px] leading-relaxed text-black/40 mt-0.5">
                             En cochant cette case, j&apos;accepte les{' '}
-                            <span className="text-emerald-600 underline decoration-dotted">
-                                conditions générales de location
-                            </span>{' '}
+                            <Link href="/cgu" target="_blank" onClick={e => e.stopPropagation()}
+                                className="text-emerald-600 underline decoration-dotted hover:text-emerald-700">
+                                conditions générales d&apos;utilisation
+                            </Link>{' '}
                             et le{' '}
                             <span className="text-emerald-600 underline decoration-dotted">
                                 contrat de réservation

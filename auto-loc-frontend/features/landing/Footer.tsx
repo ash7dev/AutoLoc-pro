@@ -29,7 +29,7 @@ const FOOTER_LINKS = {
     { label: 'Keur Massar – Rufisque', href: '/explorer?zone=keurmassar-rufisque' },
   ],
   legal: [
-    { label: "Conditions d'utilisation", href: '/legal/terms' },
+    { label: "Conditions générales (CGU)", href: '/cgu' },
     { label: 'Politique de confidentialité', href: '/legal/privacy' },
     { label: 'Politique de cookies', href: '/legal/cookies' },
     { label: 'Mentions légales', href: '/legal/mentions' },

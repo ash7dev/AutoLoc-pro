@@ -131,6 +131,9 @@ export interface VehicleSearchResult {
   photoUrl: string | null;
   statut?: VehicleStatus;
   tarifsProgressifs?: TarifTier[];
+  carburant?: FuelType | null;
+  transmission?: Transmission | null;
+  nombrePlaces?: number | null;
 }
 
 export interface SearchVehiclesParams {

@@ -37,6 +37,9 @@ interface VehicleSearchRow {
   note: unknown;
   totalLocations: number;
   photoUrl: string | null;
+  carburant: string | null;
+  transmission: string | null;
+  nombrePlaces: number | null;
 }
 
 @Injectable()
@@ -531,6 +534,9 @@ export class VehiclesService {
         v."totalAvis",
         v.statut::text AS statut,
         v."totalLocations",
+        v.carburant::text AS carburant,
+        v.transmission::text AS transmission,
+        v."nombrePlaces",
         (
           SELECT p.url
           FROM "PhotoVehicule" p
@@ -587,6 +593,9 @@ export class VehiclesService {
         totalAvis: Number((r as any).totalAvis ?? 0),
         statut: (r as any).statut ?? 'VERIFIE',
         totalLocations: Number(r.totalLocations),
+        carburant: r.carburant ?? null,
+        transmission: r.transmission ?? null,
+        nombrePlaces: r.nombrePlaces ? Number(r.nombrePlaces) : null,
         photoUrl: r.photoUrl,
         tarifsProgressifs: (tiersByVehicle.get(r.id) ?? []).map((t) => ({
           id: t.id,

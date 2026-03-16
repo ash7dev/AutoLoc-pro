@@ -5,9 +5,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   MapPin, Star, ArrowRight, Heart,
-  Zap, Car, TrendingUp, TrendingDown,
-  Rocket, PlusCircle, Tag, Shield,
-  ChevronRight, Sparkles, Clock,
+  Fuel, Users, Settings2,
+  Zap, Car, TrendingDown, TrendingUp,
+  Rocket, PlusCircle, Shield,
+  ChevronRight, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -30,63 +31,10 @@ type VehicleGridItem = VehicleSearchResult & {
 };
 
 /* ════════════════════════════════════════════════════════════════
-   DISPLAY STRATEGY ENGINE
+   CONSTANTS
 ════════════════════════════════════════════════════════════════ */
-interface DisplayStrategy {
-  name: string;
-  featuredCount: number;
-  gridColumns: { mobile: number; tablet: number; desktop: number };
-  maxGridItems: number;
-  showFilters: boolean;
-  showViewAll: boolean;
-  priorityRules: Array<{ field: keyof VehicleGridItem; direction: 'asc' | 'desc'; weight: number }>;
-}
+const MAX_VISIBLE = 9;
 
-const STRATEGIES: Record<string, DisplayStrategy> = {
-  sparse: { name: 'sparse', featuredCount: 1, gridColumns: { mobile: 1, tablet: 2, desktop: 2 }, maxGridItems: 2, showFilters: false, showViewAll: false, priorityRules: [{ field: 'totalLocations', direction: 'desc', weight: 8 }, { field: 'note', direction: 'desc', weight: 7 }, { field: 'prixParJour', direction: 'asc', weight: 5 }] },
-  limited: { name: 'limited', featuredCount: 1, gridColumns: { mobile: 1, tablet: 2, desktop: 3 }, maxGridItems: 5, showFilters: true, showViewAll: false, priorityRules: [{ field: 'totalLocations', direction: 'desc', weight: 8 }, { field: 'note', direction: 'desc', weight: 7 }, { field: 'prixParJour', direction: 'asc', weight: 5 }] },
-  normal: { name: 'normal', featuredCount: 1, gridColumns: { mobile: 1, tablet: 2, desktop: 3 }, maxGridItems: 8, showFilters: true, showViewAll: true, priorityRules: [{ field: 'note', direction: 'desc', weight: 7 }, { field: 'totalLocations', direction: 'desc', weight: 6 }, { field: 'prixParJour', direction: 'asc', weight: 4 }] },
-  abundant: { name: 'abundant', featuredCount: 2, gridColumns: { mobile: 1, tablet: 2, desktop: 4 }, maxGridItems: 12, showFilters: true, showViewAll: true, priorityRules: [{ field: 'note', direction: 'desc', weight: 7 }, { field: 'totalLocations', direction: 'desc', weight: 6 }, { field: 'prixParJour', direction: 'asc', weight: 4 }] },
-};
-
-function pickStrategy(n: number) {
-  if (n <= 3) return STRATEGIES.sparse;
-  if (n <= 6) return STRATEGIES.limited;
-  if (n <= 12) return STRATEGIES.normal;
-  return STRATEGIES.abundant;
-}
-
-function calcScore(v: VehicleGridItem, rules: DisplayStrategy['priorityRules']) {
-  return rules.reduce((acc, r) => {
-    const raw: number = (v[r.field] as number) ?? 0;
-    const norm = r.field === 'note' ? raw / 5 : r.field === 'totalLocations' ? Math.min(raw / 20, 1) : Math.max(0, 1 - raw / 100_000);
-    return acc + (r.direction === 'desc' ? norm : 1 - norm) * r.weight;
-  }, 0);
-}
-
-function distribute(vehicles: VehicleGridItem[], s: DisplayStrategy) {
-  const sorted = [...vehicles].sort((a, b) => calcScore(b, s.priorityRules) - calcScore(a, s.priorityRules));
-  return {
-    featured: sorted.slice(0, s.featuredCount),
-    grid: sorted.slice(s.featuredCount, s.featuredCount + s.maxGridItems),
-    hidden: sorted.slice(s.featuredCount + s.maxGridItems),
-    total: vehicles.length,
-  };
-}
-
-function getHints(s: DisplayStrategy, n: number) {
-  const map: Record<string, { title: string; subtitle: string; badge: string; Icon: React.ElementType }> = {
-    sparse: { title: 'Sélection premium', subtitle: 'Véhicules vérifiés et disponibles dès maintenant', badge: 'Sélection du moment', Icon: Sparkles },
-    limited: { title: 'Véhicules disponibles', subtitle: `${n} véhicules vérifiés disponibles maintenant`, badge: 'Disponibles', Icon: Zap },
-    normal: { title: 'Véhicules disponibles', subtitle: `Découvrez notre sélection de ${n} véhicules vérifiés`, badge: 'Sélection du moment', Icon: Zap },
-    abundant: { title: 'Large sélection', subtitle: `Plus de ${n} véhicules vérifiés partout au Sénégal`, badge: 'Large sélection', Icon: TrendingUp },
-  };
-  return map[s.name] ?? { title: 'Véhicules disponibles', subtitle: '', badge: '', Icon: Car };
-}
-
-/* ════════════════════════════════════════════════════════════════
-   FILTER TABS
-════════════════════════════════════════════════════════════════ */
 const FILTERS = [
   { value: '', label: 'Tous' },
   { value: 'BERLINE', label: 'Berlines' },
@@ -101,40 +49,33 @@ const FILTERS = [
   { value: 'FOUR_X_FOUR', label: '4×4' },
 ];
 
+const FUEL_LABELS: Record<string, string> = {
+  ESSENCE: 'Essence', DIESEL: 'Diesel', HYBRIDE: 'Hybride', ELECTRIQUE: 'Électrique',
+};
+
 /* ════════════════════════════════════════════════════════════════
-   TIER HELPERS
+   HELPERS
 ════════════════════════════════════════════════════════════════ */
 function bestTier(tiers: TarifTier[]) {
   return tiers.reduce((m, t) => Number(t.prix) < Number(m.prix) ? t : m, tiers[0]);
 }
+
 function maxSavings(base: number, tiers: TarifTier[]) {
   if (!tiers.length) return 0;
   return Math.round(((base - Number(bestTier(tiers).prix)) / base) * 100);
 }
 
-/* ════════════════════════════════════════════════════════════════
-   SKELETONS
-════════════════════════════════════════════════════════════════ */
-function SkeletonFeatured() {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] rounded-3xl overflow-hidden bg-slate-900 border border-white/5 min-h-[440px]" aria-hidden>
-      <div className="aspect-[16/10] lg:aspect-auto bg-slate-800 animate-pulse" />
-      <div className="p-8 lg:p-12 flex flex-col gap-5 justify-center">
-        <div className="h-3 w-24 rounded-full bg-white/6 animate-pulse" />
-        <div className="space-y-2">
-          <div className="h-10 w-48 rounded-xl bg-white/6 animate-pulse" />
-          <div className="h-10 w-36 rounded-xl bg-emerald-400/8 animate-pulse" />
-        </div>
-        <div className="flex gap-2">
-          {[0, 1, 2].map(i => <div key={i} className="h-8 w-20 rounded-xl bg-white/5 animate-pulse" />)}
-        </div>
-        <div className="h-20 rounded-2xl bg-white/5 animate-pulse" />
-        <div className="h-12 w-44 rounded-2xl bg-emerald-400/10 animate-pulse" />
-      </div>
-    </div>
-  );
+function sortVehicles(vehicles: VehicleGridItem[]) {
+  return [...vehicles].sort((a, b) => {
+    const scoreA = Number(a.note) * 7 + Math.min(a.totalLocations / 20, 1) * 6;
+    const scoreB = Number(b.note) * 7 + Math.min(b.totalLocations / 20, 1) * 6;
+    return scoreB - scoreA;
+  });
 }
 
+/* ════════════════════════════════════════════════════════════════
+   SKELETON CARD
+════════════════════════════════════════════════════════════════ */
 function SkeletonCard({ delay }: { delay: number }) {
   return (
     <div
@@ -142,17 +83,17 @@ function SkeletonCard({ delay }: { delay: number }) {
       style={{ animationDelay: `${delay}ms` }}
       aria-hidden
     >
+      <div className="h-[3px] bg-slate-100" />
       <div className="aspect-[16/10] bg-slate-100" />
       <div className="p-4 space-y-3">
-        <div className="flex justify-between">
-          <div className="h-3 w-14 rounded-full bg-slate-100" />
-          <div className="h-3 w-20 rounded-full bg-slate-100" />
+        <div className="h-6 w-40 rounded-lg bg-slate-100" />
+        <div className="h-3 w-28 rounded-full bg-slate-100" />
+        <div className="grid grid-cols-2 gap-2">
+          {[0, 1, 2, 3].map(i => <div key={i} className="h-6 rounded-lg bg-slate-100" />)}
         </div>
-        <div className="h-5 w-36 rounded-lg bg-slate-100" />
-        <div className="h-10 w-full rounded-xl bg-slate-100" />
         <div className="h-px bg-slate-100" />
         <div className="flex justify-between items-center">
-          <div className="h-4 w-16 rounded-lg bg-slate-100" />
+          <div className="h-7 w-24 rounded-lg bg-slate-100" />
           <div className="h-9 w-24 rounded-xl bg-slate-100" />
         </div>
       </div>
@@ -161,289 +102,210 @@ function SkeletonCard({ delay }: { delay: number }) {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   FEATURED CARD  — cinematic dark, full-bleed
-════════════════════════════════════════════════════════════════ */
-function FeaturedCard({ vehicle, visible }: { vehicle: VehicleGridItem; visible: boolean }) {
-  const [liked, setLiked] = useState(false);
-  const { formatPrice } = useCurrency();
-  const tiers = vehicle.tarifsProgressifs ?? [];
-  const savings = maxSavings(Number(vehicle.prixParJour), tiers);
-  const tenantPrice = Math.round(Number(vehicle.prixParJour) * 1.15);
-
-  return (
-    <Link
-      href={`/vehicle/${vehicle.id}`}
-      className={cn(
-        'group relative grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] rounded-3xl overflow-hidden',
-        'bg-slate-950 border border-white/8',
-        'hover:border-emerald-400/20 hover:shadow-[0_32px_64px_-12px_rgba(52,211,153,0.12)]',
-        'transition-all duration-700 ease-out',
-        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8',
-      )}
-    >
-      {/* ── Photo panel ──────────────────────────────────── */}
-      <div className="relative aspect-[16/10] lg:aspect-auto lg:min-h-[460px] overflow-hidden">
-        {vehicle.photoUrl ? (
-          <Image
-            src={vehicle.photoUrl}
-            alt={`${vehicle.marque} ${vehicle.modele}`}
-            fill sizes="(max-width: 1024px) 100vw, 55vw"
-            priority
-            className="object-cover transition-transform duration-1000 ease-out group-hover:scale-[1.05]"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-            <Car className="h-20 w-20 text-white/8" strokeWidth={0.75} />
-          </div>
-        )}
-
-        {/* Cinematic gradients */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-slate-950/80 hidden lg:block" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent lg:hidden" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
-
-        {/* Top badges row */}
-        <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400 px-3 py-1.5 shadow-lg shadow-emerald-500/30">
-            <Sparkles className="h-2.5 w-2.5 text-black" strokeWidth={2.5} />
-            <span className="text-[9.5px] font-black uppercase tracking-[0.15em] text-black">Coup de cœur</span>
-          </span>
-          {vehicle.statut === 'VERIFIE' && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-black/55 backdrop-blur-md border border-emerald-400/25 px-2.5 py-1.5">
-              <Shield className="h-2.5 w-2.5 text-emerald-400" strokeWidth={2.5} />
-              <span className="text-[9.5px] font-bold text-emerald-400 uppercase tracking-[0.15em]">Vérifié</span>
-            </span>
-          )}
-        </div>
-
-        {/* Favorite */}
-        <button
-          type="button"
-          onClick={e => { e.preventDefault(); setLiked(l => !l); }}
-          className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center hover:border-red-400/40 hover:bg-red-500/15 transition-all z-10"
-        >
-          <Heart className={cn('h-4 w-4 transition-all', liked ? 'fill-red-500 text-red-500 scale-110' : 'text-white/50')} strokeWidth={2} />
-        </button>
-      </div>
-
-      {/* ── Content panel ────────────────────────────────── */}
-      <div className="relative flex flex-col justify-center gap-5 p-7 lg:p-11">
-        {/* Ambient glow */}
-        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full opacity-[0.07] blur-3xl pointer-events-none"
-          style={{ background: 'radial-gradient(circle, #34d399, transparent 65%)' }} />
-
-        <div className="relative z-10 flex flex-col gap-5">
-
-          {/* Type label */}
-          <p className="text-[9.5px] font-black uppercase tracking-[0.22em] text-emerald-400/50">
-            {TYPE_LABELS[vehicle.type] ?? vehicle.type}
-          </p>
-
-          {/* Vehicle name */}
-          <div className="-mt-1">
-            <h3 className="text-[32px] lg:text-[40px] font-black tracking-tight text-white leading-[0.95]">
-              {vehicle.marque}
-            </h3>
-            <h3 className="text-[32px] lg:text-[40px] font-black tracking-tight text-emerald-400 leading-[0.95]">
-              {vehicle.modele}
-            </h3>
-            <p className="text-[12px] font-semibold text-white/25 mt-2">{vehicle.annee}</p>
-          </div>
-
-          {/* Stats pills */}
-          <div className="flex flex-wrap gap-2">
-            {vehicle.note > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/8 px-3 py-1.5">
-                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" strokeWidth={0} />
-                <span className="text-[12px] font-bold text-white">{Number(vehicle.note).toFixed(1)}</span>
-                <span className="text-[11px] text-white/30">· {vehicle.totalAvis ?? 0} avis</span>
-              </span>
-            )}
-            {vehicle.totalLocations > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/8 px-3 py-1.5">
-                <Zap className="h-3.5 w-3.5 text-amber-400" strokeWidth={2} />
-                <span className="text-[12px] font-semibold text-white/55">{vehicle.totalLocations} locations</span>
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/8 px-3 py-1.5">
-              <MapPin className="h-3.5 w-3.5 text-white/25" strokeWidth={1.75} />
-              <span className="text-[12px] font-medium text-white/35">{vehicle.ville}</span>
-            </span>
-          </div>
-
-          {/* Price block */}
-          <div className="rounded-2xl bg-white/5 border border-white/8 p-4 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[9.5px] font-black uppercase tracking-[0.14em] text-white/25 mb-1">Tarif de base</p>
-              <p className="text-[26px] font-black text-emerald-400 tabular-nums leading-none">
-                {formatPrice(tenantPrice)}
-                <span className="text-[11px] font-semibold text-emerald-400/45 ml-1.5">/ jour</span>
-              </p>
-            </div>
-            {savings > 0 && (
-              <div className="flex-shrink-0 text-right">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-400/10 border border-emerald-400/20">
-                  <TrendingDown className="w-3 h-3 text-emerald-400" strokeWidth={2.5} />
-                  <span className="text-[11px] font-black text-emerald-400">−{savings}%</span>
-                </div>
-                <p className="text-[9.5px] text-white/20 mt-1 font-medium">longue durée</p>
-              </div>
-            )}
-          </div>
-
-          {/* CTA */}
-          <span className={cn(
-            'inline-flex items-center gap-2.5 self-start rounded-2xl px-6 py-3.5',
-            'bg-emerald-400 text-black text-[13px] font-black',
-            'shadow-[0_8px_24px_-4px_rgba(52,211,153,0.35)]',
-            'group-hover:bg-emerald-300 group-hover:shadow-[0_12px_32px_-4px_rgba(52,211,153,0.45)]',
-            'group-hover:-translate-y-0.5',
-            'transition-all duration-300',
-          )}>
-            Réserver maintenant
-            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" strokeWidth={2.5} />
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-/* ════════════════════════════════════════════════════════════════
-   STANDARD VEHICLE CARD
+   VEHICLE CARD
 ════════════════════════════════════════════════════════════════ */
 function VehicleCard({ vehicle, index, visible }: { vehicle: VehicleGridItem; index: number; visible: boolean }) {
   const [liked, setLiked] = useState(false);
   const { formatPrice } = useCurrency();
   const tiers = vehicle.tarifsProgressifs ?? [];
   const savings = maxSavings(Number(vehicle.prixParJour), tiers);
+  const minDays = tiers.length > 0 ? Math.min(...tiers.map(t => Number(t.joursMin))) : null;
   const tenantPrice = Math.round(Number(vehicle.prixParJour) * 1.15);
   const delay = Math.min(index * 70, 420);
+  const isVerified = vehicle.statut === 'VERIFIE';
+  const isCoupDeCoeur = Number(vehicle.note) >= 4.5;
+  const isPopular = !isCoupDeCoeur && vehicle.totalLocations >= 10;
+  const transmLabel = vehicle.transmission === 'AUTOMATIQUE' ? 'Automatique'
+    : vehicle.transmission === 'MANUELLE' ? 'Manuelle' : null;
 
   return (
     <Link
       href={`/vehicle/${vehicle.id}`}
       className={cn(
-        'group flex flex-col bg-white rounded-2xl border border-slate-100 overflow-hidden',
-        'shadow-sm shadow-slate-100/80',
-        'hover:shadow-xl hover:shadow-slate-200/70 hover:-translate-y-1.5 hover:border-slate-200',
-        'transition-all duration-500 ease-out',
+        'group relative flex flex-col bg-white rounded-2xl overflow-hidden',
+        'border border-slate-100',
+        'shadow-[0_2px_10px_rgba(0,0,0,0.05)]',
+        'hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(5,150,105,0.13)] hover:border-emerald-200',
+        'transition-all duration-300 ease-out',
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8',
       )}
       style={{ transitionDelay: `${delay}ms` }}
     >
-      {/* ── Photo ─────────────────────────────────────────── */}
+      {/* Emerald top accent bar */}
+      <div className="h-[3px] w-full flex-shrink-0"
+        style={{ background: 'linear-gradient(90deg, #34D399, #059669, #34D399)' }} />
+
+      {/* ── Photo ── */}
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
         {vehicle.photoUrl ? (
           <Image
             src={vehicle.photoUrl}
             alt={`${vehicle.marque} ${vehicle.modele}`}
             fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-600 group-hover:scale-[1.05]"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Car className="h-10 w-10 text-slate-200" strokeWidth={1.5} />
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-slate-50 to-slate-100">
+            <Car className="h-8 w-8 text-slate-300" strokeWidth={1.5} />
           </div>
         )}
 
-        {/* Hover overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
-
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
-          {vehicle.statut === 'VERIFIE' && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-black/70 backdrop-blur-sm border border-emerald-400/20 px-2.5 py-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span className="text-[9px] font-black uppercase tracking-[0.15em] text-emerald-400">Vérifié</span>
+        {/* Top-left badges */}
+        <div className="absolute top-2.5 left-2.5 flex flex-col items-start gap-1.5 z-10">
+          {isCoupDeCoeur && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-0.5 shadow-md shadow-emerald-500/30">
+              <Sparkles className="h-2.5 w-2.5 text-white" strokeWidth={2.5} />
+              <span className="text-[8.5px] font-black uppercase tracking-widest text-white">Coup de cœur</span>
             </span>
           )}
-          {vehicle.totalLocations >= 5 && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-black/65 backdrop-blur-sm px-2.5 py-1">
-              <Zap className="h-2.5 w-2.5 text-amber-400" strokeWidth={2.5} />
-              <span className="text-[9px] font-black text-amber-400 uppercase tracking-[0.15em]">Populaire</span>
+          {isPopular && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 shadow-sm">
+              <Zap className="h-2.5 w-2.5 text-white" strokeWidth={2.5} fill="currentColor" />
+              <span className="text-[8.5px] font-black text-white uppercase tracking-widest">Populaire</span>
+            </span>
+          )}
+          {isVerified && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-black/50 backdrop-blur-md border border-emerald-400/30 px-2 py-0.5">
+              <Shield className="h-2.5 w-2.5 text-emerald-400" strokeWidth={2.5} />
+              <span className="text-[8.5px] font-black uppercase tracking-widest text-emerald-400">Vérifié</span>
             </span>
           )}
         </div>
 
-        {/* Favorite — appears on hover */}
-        <button
-          type="button"
-          onClick={e => { e.preventDefault(); setLiked(l => !l); }}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 hover:scale-110"
-        >
-          <Heart className={cn('h-3.5 w-3.5 transition-all', liked ? 'fill-red-500 text-red-500' : 'text-slate-500')} strokeWidth={2} />
-        </button>
-
-        {/* Price badge — bottom right, always visible */}
-        <div className="absolute bottom-3 right-3 z-10 rounded-xl bg-slate-950/85 backdrop-blur-md px-3 py-2 text-right">
-          <p className="text-[17px] font-black text-emerald-400 leading-none tabular-nums">
-            {formatPrice(tenantPrice)}
-          </p>
-          <p className="text-[8.5px] font-bold text-white/35 uppercase tracking-[0.1em] mt-0.5">/ jour</p>
+        {/* Top-right: year + heart */}
+        <div className="absolute top-2.5 right-2.5 flex flex-col items-end gap-1.5 z-10">
+          {vehicle.annee && (
+            <span className="rounded-lg bg-black/50 backdrop-blur-md border border-white/15 px-2 py-0.5 text-[10px] font-black text-white">
+              {vehicle.annee}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={e => { e.preventDefault(); setLiked(l => !l); }}
+            className={cn(
+              'w-7 h-7 rounded-full flex items-center justify-center',
+              'backdrop-blur-md border transition-all duration-200',
+              liked ? 'bg-red-500 border-red-400/50 shadow-lg shadow-red-500/30' : 'bg-black/35 border-white/15 hover:bg-black/50',
+            )}
+          >
+            <Heart
+              className={cn('h-3 w-3 transition-all duration-200', liked ? 'fill-white text-white scale-110' : 'text-white/80')}
+              strokeWidth={2}
+            />
+          </button>
         </div>
+
+        {/* Bottom-right: rating badge */}
+        {vehicle.note > 0 && (
+          <div className="absolute bottom-2.5 right-2.5 z-10">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600/90 backdrop-blur-md px-2 py-0.5 shadow-md">
+              <Star className="h-2.5 w-2.5 fill-white text-white" strokeWidth={0} />
+              <span className="text-[10px] font-black text-white">{Number(vehicle.note).toFixed(1)}</span>
+              {(vehicle.totalAvis ?? 0) > 0 && (
+                <span className="text-[9px] text-white/70">({vehicle.totalAvis})</span>
+              )}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* ── Body ──────────────────────────────────────────── */}
-      <div className="flex flex-col flex-1 p-4 gap-3">
-
-        {/* Type + city */}
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[9.5px] font-black uppercase tracking-[0.14em] text-slate-400">
-            {TYPE_LABELS[vehicle.type] ?? vehicle.type}
-          </span>
-          <span className="flex items-center gap-1 text-[11px] font-medium text-slate-400">
-            <MapPin className="h-2.5 w-2.5" strokeWidth={2} />
-            {vehicle.ville}
-          </span>
-        </div>
+      {/* ── Body ── */}
+      <div className="flex flex-col flex-1 px-4 pt-3 pb-4">
 
         {/* Name */}
-        <div>
-          <h3 className="text-[15px] font-black tracking-tight text-slate-900 leading-tight">
-            {vehicle.marque}{' '}
-            <span className="text-emerald-500">{vehicle.modele}</span>
-          </h3>
-          <p className="text-[11.5px] font-medium text-slate-400 mt-0.5">{vehicle.annee}</p>
+        <h3 className="text-[19px] font-black tracking-tight text-slate-800 leading-tight mb-1">
+          {vehicle.marque} <span className="text-emerald-600">{vehicle.modele}</span>
+        </h3>
+
+        {/* City + reservations */}
+        <div className="flex items-center gap-1.5 mb-4">
+          <MapPin className="h-2.5 w-2.5 text-slate-300 flex-shrink-0" strokeWidth={2} />
+          <span className="text-[11px] font-medium text-slate-400">{vehicle.ville}</span>
+          {vehicle.totalLocations > 0 && (
+            <>
+              <span className="text-slate-200">·</span>
+              <Zap className="h-2.5 w-2.5 text-amber-400" strokeWidth={2} fill="currentColor" />
+              <span className="text-[11px] font-semibold text-slate-400">{vehicle.totalLocations} loc.</span>
+            </>
+          )}
         </div>
 
+        {/* Specs 2×2 grid */}
+        {(vehicle.carburant || vehicle.nombrePlaces || vehicle.transmission || vehicle.type) && (
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 mb-4">
+            {vehicle.carburant && (
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <Fuel className="h-3 w-3 text-emerald-500" strokeWidth={2} />
+                </div>
+                <span className="text-[11px] font-semibold text-slate-600 truncate">{FUEL_LABELS[vehicle.carburant] ?? vehicle.carburant}</span>
+              </div>
+            )}
+            {vehicle.nombrePlaces && (
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <Users className="h-3 w-3 text-emerald-500" strokeWidth={2} />
+                </div>
+                <span className="text-[11px] font-semibold text-slate-600">{vehicle.nombrePlaces} places</span>
+              </div>
+            )}
+            {transmLabel && (
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <Settings2 className="h-3 w-3 text-emerald-500" strokeWidth={2} />
+                </div>
+                <span className="text-[11px] font-semibold text-slate-600 truncate">{transmLabel}</span>
+              </div>
+            )}
+            {vehicle.type && (
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <Car className="h-3 w-3 text-emerald-500" strokeWidth={2} />
+                </div>
+                <span className="text-[11px] font-semibold text-slate-600 truncate">{TYPE_LABELS[vehicle.type] ?? vehicle.type}</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Savings strip */}
-        {savings > 0 && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-100">
+        {savings > 0 && minDays != null && Number.isFinite(minDays) && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-100 mb-3">
             <TrendingDown className="w-3 h-3 text-emerald-600 flex-shrink-0" strokeWidth={2.5} />
             <p className="text-[11px] font-semibold text-emerald-700">
-              Économisez jusqu'à <span className="font-black">{savings}%</span> en longue durée
+              −<span className="font-black">{savings}%</span> dès {minDays}j
             </p>
           </div>
         )}
 
-        <div className="h-px bg-slate-100" />
+        <div className="h-px bg-slate-100 mb-3" />
 
-        {/* Footer */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            {vehicle.note > 0 && (
-              <span className="flex items-center gap-1 text-[12px] font-bold text-slate-700">
-                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" strokeWidth={0} />
-                {Number(vehicle.note).toFixed(1)}
-              </span>
-            )}
-            {vehicle.totalLocations > 0 && (
-              <span className="flex items-center gap-1 text-[11px] font-medium text-slate-400">
-                <Zap className="h-3 w-3" strokeWidth={2} />
-                {vehicle.totalLocations}
-              </span>
-            )}
+        {/* Price + CTA */}
+        <div className="flex items-end justify-between gap-3 mt-auto">
+          <div>
+            <p className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider">À partir de</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-[22px] font-black text-slate-800 tabular-nums leading-none">{formatPrice(tenantPrice)}</span>
+              <span className="text-[11px] font-semibold text-slate-400">/jour</span>
+            </div>
           </div>
 
-          <span className={cn(
-            'inline-flex items-center gap-1.5 rounded-xl',
-            'bg-slate-900 px-3.5 py-2 text-[12px] font-bold text-emerald-400',
-            'group-hover:bg-emerald-500 group-hover:text-white',
-            'transition-all duration-200 shadow-sm',
-          )}>
+          <span
+            className={cn(
+              'relative inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 flex-shrink-0',
+              'text-[12px] font-black text-white overflow-hidden',
+              'shadow-md shadow-emerald-500/20',
+              'group-hover:shadow-lg group-hover:shadow-emerald-500/30',
+              'transition-all duration-300',
+            )}
+            style={{ background: 'linear-gradient(135deg, #34D399 0%, #059669 60%, #047857 100%)' }}
+          >
+            <span
+              className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out pointer-events-none"
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)' }}
+            />
             Réserver
-            <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" strokeWidth={2.5} />
+            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform duration-200" strokeWidth={2.5} />
           </span>
         </div>
       </div>
@@ -506,37 +368,30 @@ function EmptyGlobal() {
    SECTION HEADER
 ════════════════════════════════════════════════════════════════ */
 function SectionHeader({
-  title, subtitle, badge, BadgeIcon, showViewAll, viewAllHref, vehicleCount, loading,
+  totalCount, showViewAll, viewAllHref, loading,
 }: {
-  title: string; subtitle: string; badge: string;
-  BadgeIcon: React.ElementType; showViewAll: boolean;
-  viewAllHref: string; vehicleCount: number; loading: boolean;
+  totalCount: number; showViewAll: boolean; viewAllHref: string; loading: boolean;
 }) {
-  const words = title.split(' ');
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div className="space-y-3">
-        {/* Badge */}
         <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-4 py-1.5">
-          <BadgeIcon className="h-3 w-3 text-emerald-500" strokeWidth={2} />
-          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-600">{badge}</span>
+          <TrendingUp className="h-3 w-3 text-emerald-500" strokeWidth={2} />
+          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-600">
+            {loading ? 'Chargement…' : `${totalCount} véhicule${totalCount > 1 ? 's' : ''} disponible${totalCount > 1 ? 's' : ''}`}
+          </span>
         </div>
-
-        {/* Headline */}
         <h2 className="text-[34px] lg:text-[48px] font-black tracking-tight text-slate-900 leading-[1.02]">
-          {words.map((w, i) =>
-            i === words.length - 1
-              ? <span key={i} className="text-emerald-500"> {w}</span>
-              : <span key={i}>{i > 0 ? ' ' : ''}{w}</span>
-          )}
+          Trouvez votre <span className="text-emerald-500">véhicule</span>
         </h2>
-
-        <p className="max-w-xl text-[14px] font-medium text-slate-500 leading-relaxed">{subtitle}</p>
+        <p className="max-w-xl text-[14px] font-medium text-slate-500 leading-relaxed">
+          Sélection de véhicules vérifiés, disponibles dès maintenant partout au Sénégal.
+        </p>
       </div>
 
       {showViewAll && (
         <Link href={viewAllHref}
-          className="inline-flex flex-shrink-0 items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[13px] font-semibold text-slate-700 shadow-sm hover:border-slate-300 hover:shadow-md transition-all lg:self-auto">
+          className="inline-flex flex-shrink-0 items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[13px] font-semibold text-slate-700 shadow-sm hover:border-emerald-200 hover:text-emerald-600 hover:shadow-md transition-all lg:self-auto">
           Voir tout
           <ChevronRight className="h-4 w-4 text-slate-400" strokeWidth={2.5} />
         </Link>
@@ -549,16 +404,13 @@ function SectionHeader({
    FILTER BAR
 ════════════════════════════════════════════════════════════════ */
 function FilterBar({
-  activeFilter, onFilter, vehicleCount, loading,
+  activeFilter, onFilter,
 }: {
   activeFilter: string;
   onFilter: (v: string) => void;
-  vehicleCount: number;
-  loading: boolean;
 }) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none items-center">
-      {/* Dark pill container for filters */}
+    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
       <div className="flex gap-1.5 bg-slate-900 rounded-2xl p-1.5 flex-shrink-0">
         {FILTERS.map(f => (
           <button
@@ -576,12 +428,6 @@ function FilterBar({
           </button>
         ))}
       </div>
-
-      {!loading && (
-        <span className="ml-2 text-[12px] font-medium text-slate-400 flex-shrink-0 tabular-nums">
-          {vehicleCount} véhicule{vehicleCount > 1 ? 's' : ''}
-        </span>
-      )}
     </div>
   );
 }
@@ -590,17 +436,11 @@ function FilterBar({
    MAIN SECTION
 ════════════════════════════════════════════════════════════════ */
 interface VehicleGridSectionProps {
-  title?: string;
-  subtitle?: string;
-  showFilters?: boolean;
   viewAllHref?: string;
   initialVehicles?: VehicleGridItem[];
 }
 
 export function VehicleGridSection({
-  title,
-  subtitle,
-  showFilters = true,
   viewAllHref = '/explorer',
   initialVehicles,
 }: VehicleGridSectionProps): React.ReactElement {
@@ -612,11 +452,9 @@ export function VehicleGridSection({
   const [visible, setVisible] = useState(false);
   const initialLoaded = useRef(false);
 
-  const strategy = pickStrategy(vehicles.length);
-  const dist = distribute(vehicles, strategy);
-  const hints = getHints(strategy, vehicles.length);
-  const showFilterBar = showFilters && strategy.showFilters;
-  const showViewAll = strategy.showViewAll && dist.hidden.length > 0;
+  const sorted = sortVehicles(vehicles);
+  const visible9 = sorted.slice(0, MAX_VISIBLE);
+  const hiddenCount = Math.max(0, sorted.length - MAX_VISIBLE);
   const activeLabel = FILTERS.find(f => f.value === activeFilter)?.label ?? '';
 
   useEffect(() => {
@@ -652,33 +490,19 @@ export function VehicleGridSection({
 
         {/* Header */}
         <SectionHeader
-          title={title || hints.title}
-          subtitle={subtitle || hints.subtitle}
-          badge={hints.badge}
-          BadgeIcon={hints.Icon}
-          showViewAll={showViewAll}
+          totalCount={vehicles.length}
+          showViewAll={hiddenCount > 0}
           viewAllHref={viewAllHref}
-          vehicleCount={vehicles.length}
           loading={loading}
         />
 
         {/* Filter bar */}
-        {showFilterBar && (
-          <FilterBar
-            activeFilter={activeFilter}
-            onFilter={setActiveFilter}
-            vehicleCount={vehicles.length}
-            loading={loading}
-          />
-        )}
+        <FilterBar activeFilter={activeFilter} onFilter={setActiveFilter} />
 
         {/* Loading */}
         {loading && (
-          <div className="space-y-6">
-            <SkeletonFeatured />
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {[0, 1, 2].map(i => <SkeletonCard key={i} delay={i * 80} />)}
-            </div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2, 3, 4, 5].map(i => <SkeletonCard key={i} delay={i * 80} />)}
           </div>
         )}
 
@@ -700,65 +524,33 @@ export function VehicleGridSection({
             : <EmptyGlobal />
         )}
 
-        {/* Content */}
-        {!loading && !error && vehicles.length > 0 && (
+        {/* Grid */}
+        {!loading && !error && visible9.length > 0 && (
           <div className="space-y-8">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {visible9.map((v, i) => (
+                <VehicleCard key={v.id} vehicle={v} index={i} visible={visible} />
+              ))}
+            </div>
 
-            {/* Featured card(s) */}
-            {dist.featured.length > 0 && (
-              <div className={cn(strategy.featuredCount > 1 && 'grid gap-6 lg:grid-cols-2')}>
-                {dist.featured.map(v => (
-                  <FeaturedCard key={v.id} vehicle={v} visible={visible} />
-                ))}
-              </div>
-            )}
-
-            {/* Divider */}
-            {dist.featured.length > 0 && dist.grid.length > 0 && (
-              <div className="flex items-center gap-4">
-                <div className="h-px bg-slate-100 flex-1" />
-                <span className="text-[10.5px] font-black uppercase tracking-[0.16em] text-slate-400 whitespace-nowrap">
-                  {dist.grid.length} autre{dist.grid.length > 1 ? 's' : ''} disponible{dist.grid.length > 1 ? 's' : ''}
-                </span>
-                <div className="h-px bg-slate-100 flex-1" />
-              </div>
-            )}
-
-            {/* Standard grid */}
-            {dist.grid.length > 0 && (
-              <div className={cn(
-                'grid gap-5',
-                'grid-cols-1',
-                strategy.gridColumns.tablet === 2 && 'sm:grid-cols-2',
-                strategy.gridColumns.desktop === 2 && 'lg:grid-cols-2',
-                strategy.gridColumns.desktop === 3 && 'lg:grid-cols-3',
-                strategy.gridColumns.desktop === 4 && 'lg:grid-cols-4',
-              )}>
-                {dist.grid.map((v, i) => (
-                  <VehicleCard key={v.id} vehicle={v} index={i} visible={visible} />
-                ))}
-              </div>
-            )}
-
-            {/* View more nudge */}
-            {dist.hidden.length > 0 && (
+            {/* View more */}
+            {hiddenCount > 0 && (
               <div className="flex justify-center pt-2">
                 <Link href={viewAllHref}
-                  className="group inline-flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm hover:shadow-lg hover:shadow-slate-200/60 hover:border-slate-300 transition-all">
+                  className="group inline-flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm hover:shadow-lg hover:shadow-slate-200/60 hover:border-emerald-200 transition-all">
                   <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center group-hover:bg-emerald-50 transition-colors">
                     <PlusCircle className="h-4 w-4 text-slate-500 group-hover:text-emerald-600 transition-colors" strokeWidth={2} />
                   </div>
                   <div className="text-left">
                     <p className="text-[13px] font-bold text-slate-800">
-                      {dist.hidden.length} autre{dist.hidden.length > 1 ? 's' : ''} véhicule{dist.hidden.length > 1 ? 's' : ''} disponible{dist.hidden.length > 1 ? 's' : ''}
+                      {hiddenCount} autre{hiddenCount > 1 ? 's' : ''} véhicule{hiddenCount > 1 ? 's' : ''} disponible{hiddenCount > 1 ? 's' : ''}
                     </p>
                     <p className="text-[11px] text-slate-400 mt-0.5">Voir toute la sélection</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all ml-1" strokeWidth={2} />
+                  <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all ml-1" strokeWidth={2} />
                 </Link>
               </div>
             )}
-
           </div>
         )}
 

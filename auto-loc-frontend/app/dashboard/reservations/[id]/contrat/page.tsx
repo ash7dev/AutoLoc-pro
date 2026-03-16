@@ -385,18 +385,64 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
 
                     {/* ── Conditions générales ──────────────────────── */}
                     <div className="px-4 sm:px-6 lg:px-8 py-5 border-t border-slate-100">
-                        <h3 className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-3">
-                            Conditions générales
-                        </h3>
-                        <ol className="space-y-1.5 text-[10px] sm:text-[11px] text-slate-500 leading-relaxed list-decimal list-inside">
-                            <li>Le locataire s&apos;engage à utiliser le véhicule en bon père de famille et à le restituer dans l&apos;état initial.</li>
-                            <li>Le véhicule doit être restitué à la date et au lieu convenus. Tout retard sera facturé au prix journalier majoré de 50 %.</li>
-                            <li>Le locataire est responsable de toute infraction au code de la route commise pendant la durée de la location.</li>
-                            <li>En cas de panne ou d&apos;accident, le locataire doit immédiatement prévenir le propriétaire et la plateforme AutoLoc.</li>
-                            <li>Le propriétaire garantit que le véhicule est en bon état, assuré et dispose d&apos;une visite technique valide.</li>
-                            <li>Tout litige sera soumis à la médiation d&apos;AutoLoc avant toute action judiciaire.</li>
-                            <li>Le présent contrat est régi par le droit en vigueur au Sénégal.</li>
-                        </ol>
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                            <h3 className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-600">
+                                Conditions générales
+                            </h3>
+                            <Link
+                                href="/cgu"
+                                target="_blank"
+                                className="text-[9px] sm:text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 underline decoration-dotted transition-colors print:hidden"
+                            >
+                                Voir les CGU complètes →
+                            </Link>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Art. 3 — Obligations du propriétaire */}
+                            <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 sm:p-4">
+                                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wide text-slate-500 mb-2">
+                                    Art. 3 — Obligations du propriétaire
+                                </p>
+                                <ul className="space-y-1.5 text-[10px] sm:text-[11px] text-slate-600 leading-relaxed">
+                                    <li className="flex gap-1.5"><span className="text-emerald-500 mt-0.5 flex-shrink-0">•</span>Mettre à disposition le véhicule en parfait état, propre et avec le niveau de carburant convenu.</li>
+                                    <li className="flex gap-1.5"><span className="text-emerald-500 mt-0.5 flex-shrink-0">•</span>Garantir une assurance valide incluant la location à des tiers.</li>
+                                    <li className="flex gap-1.5"><span className="text-emerald-500 mt-0.5 flex-shrink-0">•</span>Fournir tous les documents nécessaires à la circulation (carte grise, attestation d&apos;assurance).</li>
+                                </ul>
+                            </div>
+
+                            {/* Art. 4 — Obligations du locataire */}
+                            <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 sm:p-4">
+                                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wide text-slate-500 mb-2">
+                                    Art. 4 — Obligations du locataire
+                                </p>
+                                <ul className="space-y-1.5 text-[10px] sm:text-[11px] text-slate-600 leading-relaxed">
+                                    <li className="flex gap-1.5"><span className="text-emerald-500 mt-0.5 flex-shrink-0">•</span>Utiliser le véhicule en bon père de famille dans le respect du Code de la route.</li>
+                                    <li className="flex gap-1.5"><span className="text-emerald-500 mt-0.5 flex-shrink-0">•</span>Restituer le véhicule à la date et heure convenues, dans l&apos;état initial. Tout retard majoré de 50 %.</li>
+                                    <li className="flex gap-1.5"><span className="text-emerald-500 mt-0.5 flex-shrink-0">•</span>Signaler immédiatement tout accident ou dommage. Ne pas sous-louer le véhicule.</li>
+                                </ul>
+                            </div>
+
+                            {/* Art. 8 — État des lieux */}
+                            <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 sm:p-4">
+                                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wide text-slate-500 mb-2">
+                                    Art. 8 — État des lieux
+                                </p>
+                                <p className="text-[10px] sm:text-[11px] text-slate-600 leading-relaxed">
+                                    Un état des lieux contradictoire est établi au début et à la fin de la location, accompagné de photos et vidéos. Il fait foi en cas de litige sur l&apos;état du véhicule.
+                                </p>
+                            </div>
+
+                            {/* Art. 9 — Accidents et dommages */}
+                            <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 sm:p-4">
+                                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wide text-slate-500 mb-2">
+                                    Art. 9 — Accidents et dommages
+                                </p>
+                                <p className="text-[10px] sm:text-[11px] text-slate-600 leading-relaxed">
+                                    En cas d&apos;accident, de vol ou de dommages, le locataire informe immédiatement propriétaire et AutoLoc. Le locataire est responsable des dommages sous réserve des franchises applicables. Tout litige est soumis à la médiation AutoLoc, régi par le droit sénégalais.
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
                     {/* ── Signatures ────────────────────────────────── */}
