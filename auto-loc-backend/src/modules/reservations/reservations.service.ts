@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { StatutReservation, StatutVehicule, TypeEtatLieu, CategoriePhoto } from '@prisma/client';
+import { StatutReservation, StatutVehicule, StatutLitige, TypeEtatLieu, CategoriePhoto } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RequestUser } from '../../common/types/auth.types';
 import { CreateReservationDto } from './dto/create-reservation.dto';
@@ -393,6 +393,39 @@ export class ReservationsService {
     });
 
     return photo;
+  }
+
+  // ── GET /reservations/owner/notifications ────────────────────────────────────
+
+  async getOwnerNotificationsCount(user: RequestUser) {
+    const proprietaire = await this.prisma.utilisateur.findUnique({
+      where: { userId: user.sub },
+      select: { id: true },
+    });
+    if (!proprietaire) throw new ForbiddenException('Profil incomplet');
+
+    const [pendingConfirmations, pendingLitiges] = await Promise.all([
+      // Réservations payées en attente de confirmation du propriétaire
+      this.prisma.reservation.count({
+        where: {
+          proprietaireId: proprietaire.id,
+          statut: StatutReservation.PAYEE,
+        },
+      }),
+      // Litiges ouverts sur les réservations du propriétaire
+      this.prisma.litige.count({
+        where: {
+          statut: StatutLitige.EN_ATTENTE,
+          reservation: { proprietaireId: proprietaire.id },
+        },
+      }),
+    ]);
+
+    return {
+      pendingConfirmations,
+      pendingLitiges,
+      total: pendingConfirmations + pendingLitiges,
+    };
   }
 
   // ── GET /reservations/owner ──────────────────────────────────────────────────

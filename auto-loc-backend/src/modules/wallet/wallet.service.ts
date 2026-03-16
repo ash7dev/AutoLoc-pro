@@ -1,11 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, SensTransaction, StatutReservation, TypeTransactionWallet } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { TelegramService } from '../../infrastructure/telegram/telegram.service';
 import { RequestUser } from '../../common/types/auth.types';
 
 @Injectable()
 export class WalletService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly telegram: TelegramService,
+  ) { }
 
   async getWallet(user: RequestUser) {
     const utilisateur = await this.prisma.utilisateur.findUnique({
@@ -157,5 +161,12 @@ export class WalletService {
         },
       });
     });
+
+    // Alerte admin Telegram — fire-and-forget
+    this.telegram.sendAdminAlert(
+      `💸 <b>Demande de retrait</b>\n` +
+      `Montant : ${montant.toLocaleString('fr-FR')} FCFA\n` +
+      `<a href="https://autoloc.sn/dashboard/admin/withdrawals">Traiter →</a>`,
+    ).catch(() => { });
   }
 }

@@ -9,6 +9,7 @@ import { RedisService } from '../../../infrastructure/redis/redis.service';
 import { QueueService } from '../../../infrastructure/queue/queue.service';
 import { ReservationStateMachine } from '../reservation.state-machine';
 import { ContractGenerationService } from '../contract-generation.service';
+import { TelegramService } from '../../../infrastructure/telegram/telegram.service';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -41,6 +42,7 @@ export class ConfirmPaymentUseCase {
         private readonly queue: QueueService,
         private readonly stateMachine: ReservationStateMachine,
         private readonly contractGeneration: ContractGenerationService,
+        private readonly telegram: TelegramService,
     ) { }
 
     /**
@@ -153,6 +155,14 @@ export class ConfirmPaymentUseCase {
             );
 
             this.logger.log(`Payment confirmed for reservation ${reservationId}`);
+
+            // Alerte admin Telegram — fire-and-forget
+            this.telegram.sendAdminAlert(
+                `💰 <b>Paiement confirmé</b>\n` +
+                `Réservation : ${reservationId.slice(0, 8)}...\n` +
+                `Le propriétaire doit maintenant confirmer la réservation.\n` +
+                `<a href="https://autoloc.sn/dashboard/admin/reservations">Voir →</a>`,
+            ).catch(() => { });
 
             // ── 7. Post-commit: Generate contract PDF (EN_COURS — awaiting owner confirmation) ──
             const contrat = await this.contractGeneration

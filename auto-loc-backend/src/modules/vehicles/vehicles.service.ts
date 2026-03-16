@@ -11,6 +11,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CloudinaryService } from '../../infrastructure/cloudinary/cloudinary.service';
 import { RedisService } from '../../infrastructure/redis/redis.service';
 import { NotificationService } from '../../infrastructure/notifications/notification.service';
+import { TelegramService } from '../../infrastructure/telegram/telegram.service';
 import { RequestUser } from '../../common/types/auth.types';
 import { ALLOWED_MIMES } from '../upload/upload.config';
 import { assertValidImageBuffer } from '../../infrastructure/cloudinary/utils/file-validator';
@@ -51,6 +52,7 @@ export class VehiclesService {
     private readonly notification: NotificationService,
     private readonly pricing: ReservationPricingService,
     private readonly revalidate: RevalidateService,
+    private readonly telegram: TelegramService,
   ) { }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -94,8 +96,9 @@ export class VehiclesService {
         ? StatutVehicule.EN_ATTENTE_VALIDATION
         : StatutVehicule.BROUILLON;
 
+    let result: Awaited<ReturnType<typeof this.prisma.vehicule.findUniqueOrThrow>>;
     try {
-      return await this.prisma.$transaction(async (tx) => {
+      result = await this.prisma.$transaction(async (tx) => {
         const vehicle = await tx.vehicule.create({
           data: {
             proprietaireId: utilisateur.id,
@@ -160,6 +163,18 @@ export class VehiclesService {
       }
       throw err;
     }
+
+    // Alerte admin Telegram — uniquement si soumis pour validation (KYC vérifié)
+    if (statutInitial === StatutVehicule.EN_ATTENTE_VALIDATION) {
+      this.telegram.sendAdminAlert(
+        `🚗 <b>Nouveau véhicule soumis</b>\n` +
+        `${dto.marque} ${dto.modele} (${dto.annee}) — ${dto.ville}\n` +
+        `Prix : ${dto.prixParJour} FCFA/j\n` +
+        `<a href="https://autoloc.sn/dashboard/admin/vehicles">Valider →</a>`,
+      ).catch(() => { });
+    }
+
+    return result!;
   }
 
   /**

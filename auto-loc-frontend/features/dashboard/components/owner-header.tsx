@@ -1,10 +1,100 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus, Bell, Car, Clock, CheckCircle2, FileText, ArrowUpRight } from "lucide-react";
+import { Plus, Bell, Car, Clock, CheckCircle2, FileText, ArrowUpRight, ShieldAlert, CalendarCheck } from "lucide-react";
+import { useOwnerNotifications } from "../hooks/use-owner-notifications";
+import { cn } from "@/lib/utils";
+
+/* ── Notification Bell ───────────────────────────────────────────────── */
+function NotificationBell() {
+  const counts = useOwnerNotifications();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const total = counts?.total ?? 0;
+
+  // Close on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-white/50 hover:text-white hover:bg-white/[0.08] transition-all"
+      >
+        <Bell className={cn("h-4 w-4 transition-colors", open && "text-white")} />
+        {total > 0 && (
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-400 ring-1 ring-black animate-pulse" />
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-11 z-50 w-72 rounded-2xl border border-white/10 bg-[#111] shadow-2xl shadow-black/50 overflow-hidden">
+          {/* Header */}
+          <div className="px-4 py-3 border-b border-white/[0.06]">
+            <p className="text-xs font-semibold text-white/60 uppercase tracking-widest">Notifications</p>
+          </div>
+
+          {total === 0 ? (
+            <div className="px-4 py-6 text-center">
+              <CheckCircle2 className="h-6 w-6 text-emerald-400/50 mx-auto mb-2" />
+              <p className="text-sm text-white/40">Tout est à jour ✓</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/[0.05]">
+              {(counts?.pendingConfirmations ?? 0) > 0 && (
+                <Link
+                  href="/dashboard/reservations?statut=PAYEE"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.04] transition-colors"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400/15">
+                    <CalendarCheck className="h-4 w-4 text-amber-400" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white leading-tight">
+                      {counts!.pendingConfirmations} réservation{counts!.pendingConfirmations > 1 ? 's' : ''} à confirmer
+                    </p>
+                    <p className="text-xs text-white/40 mt-0.5">Paiement reçu — action requise</p>
+                  </div>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-white/30 shrink-0" />
+                </Link>
+              )}
+              {(counts?.pendingLitiges ?? 0) > 0 && (
+                <Link
+                  href="/dashboard/reservations?statut=LITIGE"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.04] transition-colors"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-400/15">
+                    <ShieldAlert className="h-4 w-4 text-red-400" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white leading-tight">
+                      {counts!.pendingLitiges} litige{counts!.pendingLitiges > 1 ? 's' : ''} en cours
+                    </p>
+                    <p className="text-xs text-white/40 mt-0.5">Intervention requise</p>
+                  </div>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-white/30 shrink-0" />
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function OwnerHeader({
   title,
@@ -134,10 +224,7 @@ export function OwnerHeader({
           <div className="hidden md:block h-8 w-px bg-white/10" />
 
           {/* Notification bell */}
-          <button className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-white/50 hover:text-white hover:bg-white/[0.08] transition-all">
-            <Bell className="h-4 w-4" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-400 ring-1 ring-black" />
-          </button>
+          <NotificationBell />
 
           {/* CTA */}
           {ctaHref ? (

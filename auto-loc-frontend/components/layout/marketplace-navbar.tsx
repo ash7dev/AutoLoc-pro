@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '../../lib/supabase/client';
-import { useNestToken } from '../../features/auth/hooks/use-nest-token';
+import { useHasVehicles } from '../../features/auth/hooks/use-has-vehicles';
 import { CurrencySelector } from './CurrencyConverter';
 
 /* ── Nav links ───────────────────────────────────────────────── */
@@ -90,9 +90,9 @@ function DropdownItem({
 
 /* ── Profile dropdown ────────────────────────────────────────── */
 function ProfileDropdown({
-  isOwner,
+  hasVehicles,
 }: {
-  isOwner: boolean;
+  hasVehicles: boolean | null;
 }) {
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -162,7 +162,7 @@ function ProfileDropdown({
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                 <p className="text-[11px] text-slate-400 font-medium">
-                  {isOwner ? 'Propriétaire Pro' : 'Locataire'}
+                  {hasVehicles ? 'Propriétaire Pro' : 'Locataire'}
                 </p>
               </div>
             </div>
@@ -171,8 +171,8 @@ function ProfileDropdown({
 
         {/* Items */}
         <div className="p-2 space-y-0.5">
-          {isOwner ? (
-            <DropdownItem href="/dashboard/owner" icon={LayoutDashboard} label="Espace propriétaire" badge="Pro" />
+          {hasVehicles === true ? (
+            <DropdownItem href="/dashboard/owner" icon={LayoutDashboard} label="Espace hôte" badge="Pro" />
           ) : (
             <DropdownItem href="/become-owner" icon={Building2} label="Devenir hôte" badge="Nouveau" />
           )}
@@ -290,7 +290,7 @@ export function MarketplaceNavbar() {
   const [mobileSearchVisible, setMobileSearchVisible] = useState(false);
   const [mobileSearch, setMobileSearch] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
-  const { activeRole } = useNestToken();
+  const hasVehicles = useHasVehicles(loggedIn);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -332,8 +332,6 @@ export function MarketplaceNavbar() {
 
   // Hide navbar on dashboard pages (owner/admin have their own nav)
   if (pathname.startsWith('/dashboard')) return null;
-
-  const isOwner = activeRole === 'PROPRIETAIRE';
 
   return (
     <header className={cn(
@@ -410,7 +408,7 @@ export function MarketplaceNavbar() {
 
             {hydrated && loggedIn && (
               <ProfileDropdown
-                isOwner={isOwner}
+                hasVehicles={hasVehicles}
               />
             )}
 

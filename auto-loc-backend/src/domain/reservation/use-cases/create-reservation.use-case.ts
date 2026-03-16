@@ -19,6 +19,7 @@ import {
 } from '../reservation-idempotency.service';
 import { RevalidateService } from '../../../infrastructure/revalidate/revalidate.service';
 import { NotificationService } from '../../../infrastructure/notifications/notification.service';
+import { TelegramService } from '../../../infrastructure/telegram/telegram.service';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -58,6 +59,7 @@ export class CreateReservationUseCase {
         private readonly idempotency: ReservationIdempotencyService,
         private readonly revalidate: RevalidateService,
         private readonly notification: NotificationService,
+        private readonly telegram: TelegramService,
     ) { }
 
     async execute(
@@ -222,6 +224,17 @@ export class CreateReservationUseCase {
                 },
             }).catch(() => { });
         }
+
+        // Alerte admin Telegram — fire-and-forget
+        const debutFmt = dates.debut.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+        const finFmt = dates.fin.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+        this.telegram.sendAdminAlert(
+            `📋 <b>Nouvelle réservation</b>\n` +
+            `Véhicule : ${vehicule.marque} ${vehicule.modele} — ${vehicule.ville}\n` +
+            `Période : ${debutFmt} → ${finFmt} (${dates.nbJours}j)\n` +
+            `Montant : ${price.totalLocataire} FCFA\n` +
+            `<a href="https://autoloc.sn/dashboard/admin/reservations">Voir →</a>`,
+        ).catch(() => { });
 
         const city = vehicule.ville?.toLowerCase?.() ?? '';
         const cityPattern = city

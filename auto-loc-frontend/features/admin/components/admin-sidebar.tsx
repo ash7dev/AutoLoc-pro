@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSignOut } from '../../auth/hooks/use-signout';
+import { useAdminBadges } from '../hooks/use-admin-badges';
 
 /* ── Navigation config ─────────────────────────────────────────────── */
 const NAV_ITEMS = [
@@ -95,6 +96,14 @@ export function AdminSidebar() {
   const pathname  = usePathname();
   const { signOut, loading: signingOut } = useSignOut();
   const [collapsed, setCollapsed] = useState(true);
+  const badges = useAdminBadges();
+
+  const badgeFor: Record<string, number | undefined> = {
+    '/dashboard/admin/kyc':         badges?.pendingKyc,
+    '/dashboard/admin/vehicles':    badges?.pendingVehicles,
+    '/dashboard/admin/withdrawals': badges?.pendingWithdrawals,
+    '/dashboard/admin/disputes':    badges?.pendingLitiges,
+  };
 
   const NavContent = ({ compact }: { compact: boolean }) => (
     <div className="flex flex-col h-full">
@@ -149,6 +158,7 @@ export function AdminSidebar() {
               label={item.label}
               active={isActive}
               collapsed={compact}
+              badge={badgeFor[item.href]}
             />
           );
         })}
@@ -210,20 +220,29 @@ export function AdminSidebar() {
             item.href === '/dashboard/admin'
               ? pathname === '/dashboard/admin'
               : pathname.startsWith(item.href);
+          const mobileBadge = badgeFor[item.href];
           return (
             <Link
               key={item.href}
               href={item.href}
               className="flex-1 flex flex-col items-center justify-center py-3 gap-1 min-w-0 group"
             >
-              <span className={cn(
-                'flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200',
-                isActive ? 'bg-black shadow-md shadow-black/20' : 'group-active:bg-slate-100',
-              )}>
-                <item.icon className={cn(
-                  'w-[18px] h-[18px] transition-colors duration-200',
-                  isActive ? 'text-emerald-400' : 'text-slate-400',
-                )} />
+              <span className="relative">
+                <span className={cn(
+                  'flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200',
+                  isActive ? 'bg-black shadow-md shadow-black/20' : 'group-active:bg-slate-100',
+                )}>
+                  <item.icon className={cn(
+                    'w-[18px] h-[18px] transition-colors duration-200',
+                    isActive ? 'text-emerald-400' : 'text-slate-400',
+                  )} />
+                </span>
+                {mobileBadge != null && mobileBadge > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center
+                    min-w-[14px] h-[14px] rounded-full bg-red-500 text-white text-[8px] font-bold px-0.5">
+                    {mobileBadge > 99 ? '99+' : mobileBadge}
+                  </span>
+                )}
               </span>
               <span className={cn(
                 'text-[9px] font-semibold tracking-tight leading-none truncate max-w-full px-1',

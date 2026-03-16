@@ -9,6 +9,7 @@ import { TypeAvis, StatutReservation } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { QueueService } from '../../infrastructure/queue/queue.service';
+import { TelegramService } from '../../infrastructure/telegram/telegram.service';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ export class CreateReviewUseCase {
     constructor(
         private readonly prisma: PrismaService,
         private readonly queue: QueueService,
+        private readonly telegram: TelegramService,
     ) { }
 
     async execute(
@@ -132,6 +134,15 @@ export class CreateReviewUseCase {
                 },
             })
             .catch(() => { });
+
+        // Alerte admin Telegram — monitoring qualité, fire-and-forget
+        const stars = '⭐'.repeat(input.note);
+        const roleLabel = typeAvis === TypeAvis.LOCATAIRE_NOTE_PROPRIO ? 'Locataire → Propriétaire' : 'Propriétaire → Locataire';
+        this.telegram.sendAdminAlert(
+            `${stars} <b>Nouvel avis (${input.note}/5)</b>\n` +
+            `${roleLabel}\n` +
+            `${input.commentaire ? `"${input.commentaire.slice(0, 120)}${input.commentaire.length > 120 ? '…' : ''}"` : 'Pas de commentaire'}`,
+        ).catch(() => { });
 
         return {
             avisId: avis.id,

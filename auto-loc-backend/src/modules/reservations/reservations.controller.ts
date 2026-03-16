@@ -199,6 +199,21 @@ export class ReservationsController {
   }
 
   /**
+   * GET /reservations/owner/notifications
+   * Compteurs de notifications pour la cloche du header propriétaire.
+   */
+  @Get('owner/notifications')
+  @UseGuards(RolesGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  @HttpCode(HttpStatus.OK)
+  async getOwnerNotifications(
+    @Req() req: Request & { user?: RequestUser },
+  ) {
+    const user = req.user!;
+    return this.reservationsService.getOwnerNotificationsCount(user);
+  }
+
+  /**
    * GET /reservations/owner
    * Liste les réservations d'un propriétaire connecté.
    */

@@ -14,10 +14,10 @@ import {
 import { useSignOut } from '../../features/auth/hooks/use-signout';
 
 interface UserMenuProps {
-  isOwner: boolean;
+  hasVehicles: boolean | null;
 }
 
-export function UserMenu({ isOwner }: UserMenuProps) {
+export function UserMenu({ hasVehicles }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { signOut, loading: signingOut } = useSignOut();
@@ -36,7 +36,7 @@ export function UserMenu({ isOwner }: UserMenuProps) {
     <div className="flex items-center gap-3">
 
       {/* CTA contextuel — basé uniquement sur le rôle */}
-      {isOwner ? (
+      {hasVehicles === true ? (
         <Link
           href="/dashboard/owner"
           className="autoloc-body text-sm font-semibold bg-gray-900 text-white px-4 py-2 rounded-xl hover:bg-gray-700 transition-all duration-150 flex items-center gap-1.5"

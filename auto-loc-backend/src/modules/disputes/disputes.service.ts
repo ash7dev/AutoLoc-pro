@@ -10,6 +10,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { RequestUser } from '../../common/types/auth.types';
 import { CreateDisputeDto } from './dto/create-dispute.dto';
 import { NotificationService } from '../../infrastructure/notifications/notification.service';
+import { TelegramService } from '../../infrastructure/telegram/telegram.service';
 
 const DISPUTE_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
 
@@ -18,6 +19,7 @@ export class DisputesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notification: NotificationService,
+    private readonly telegram: TelegramService,
   ) { }
 
   // ── POST /reservations/:id/dispute ────────────────────────────────────────────
@@ -143,6 +145,16 @@ export class DisputesService {
     for (const email of emails) {
       this.notification.send({ email, type: 'litige.ouvert', data: notifData }).catch(() => { });
     }
+
+    // Alerte admin Telegram — urgente, fire-and-forget
+    const role = isOwner ? 'Propriétaire' : 'Locataire';
+    const montant = dto.coutEstime ? `\nMontant estimé : ${Number(dto.coutEstime).toLocaleString('fr-FR')} FCFA` : '';
+    this.telegram.sendAdminAlert(
+      `🚨 <b>Litige ouvert</b>\n` +
+      `Déclaré par : ${role}\n` +
+      `Motif : ${dto.description.slice(0, 100)}${dto.description.length > 100 ? '…' : ''}${montant}\n` +
+      `<a href="https://autoloc.sn/dashboard/admin/disputes">Traiter en urgence →</a>`,
+    ).catch(() => { });
 
     return {
       disputeId: litige.id,

@@ -17,6 +17,7 @@ import {
 } from '../cancellation-policy.service';
 import { ContractGenerationService } from '../contract-generation.service';
 import { RevalidateService } from '../../../infrastructure/revalidate/revalidate.service';
+import { TelegramService } from '../../../infrastructure/telegram/telegram.service';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -51,6 +52,7 @@ export class CancelReservationUseCase {
         private readonly cancellationPolicy: CancellationPolicyService,
         private readonly contractGeneration: ContractGenerationService,
         private readonly revalidate: RevalidateService,
+        private readonly telegram: TelegramService,
     ) { }
 
     async execute(
@@ -263,7 +265,28 @@ export class CancelReservationUseCase {
             })
             .catch(() => { });
 
-        // 7d. Regenerate contract with ANNULÉ watermark
+        // 7d. Alerte admin Telegram pour les annulations actionnables
+        if (isLocataire && hasRefund) {
+            // Locataire annule après paiement → remboursement à traiter
+            this.telegram.sendAdminAlert(
+                `❌ <b>Annulation après paiement</b>\n` +
+                `Par : Locataire\n` +
+                `Motif : ${input.raison.slice(0, 100)}\n` +
+                `Remboursement dû : ${policy.refundAmount} FCFA (${policy.refundPercentage}%)\n` +
+                `<a href="https://autoloc.sn/dashboard/admin/reservations">Voir →</a>`,
+            ).catch(() => { });
+        } else if (isProprietaire && ([StatutReservation.PAYEE, StatutReservation.CONFIRMEE] as StatutReservation[]).includes(reservation.statut)) {
+            // Propriétaire annule une réservation déjà payée ou confirmée → mauvaise expérience
+            this.telegram.sendAdminAlert(
+                `⚠️ <b>Annulation propriétaire</b>\n` +
+                `Statut avant annulation : ${reservation.statut}\n` +
+                `Motif : ${input.raison.slice(0, 100)}\n` +
+                `Pénalité appliquée : ${policy.ownerPenaltyAmount} FCFA\n` +
+                `<a href="https://autoloc.sn/dashboard/admin/reservations">Surveiller →</a>`,
+            ).catch(() => { });
+        }
+
+        // 7e. Regenerate contract with ANNULÉ watermark
         await this.contractGeneration
             .generateAndStore(reservationId, {
                 statutContrat: 'ANNULE',

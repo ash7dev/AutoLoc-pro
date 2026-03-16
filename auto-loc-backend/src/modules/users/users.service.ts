@@ -186,6 +186,26 @@ export class UsersService {
     };
   }
 
+  // ── Lightweight badge count (polled every 30s by admin sidebar) ─────────────
+
+  async getNotificationsCount() {
+    const [pendingKyc, pendingVehicles, pendingWithdrawals, pendingLitiges] =
+      await Promise.all([
+        this.prisma.utilisateur.count({ where: { statutKyc: StatutKyc.EN_ATTENTE } }),
+        this.prisma.vehicule.count({ where: { statut: StatutVehicule.EN_ATTENTE_VALIDATION } }),
+        this.prisma.retrait.count({ where: { statut: StatutRetrait.EN_ATTENTE } }),
+        this.prisma.litige.count({ where: { statut: StatutLitige.EN_ATTENTE } }),
+      ]);
+
+    return {
+      pendingKyc,
+      pendingVehicles,
+      pendingWithdrawals,
+      pendingLitiges,
+      total: pendingKyc + pendingVehicles + pendingWithdrawals + pendingLitiges,
+    };
+  }
+
   async approveKyc(userId: string) {
     const utilisateur = await this.prisma.utilisateur.findUnique({
       where: { id: userId },

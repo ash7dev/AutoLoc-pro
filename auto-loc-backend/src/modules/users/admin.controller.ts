@@ -28,4 +28,13 @@ export class AdminController {
   getActivity() {
     return this.usersService.getRecentActivity();
   }
+
+  /**
+   * GET /admin/notifications/count
+   * Compteurs légers pour les badges de la sidebar admin (polled toutes les 30s).
+   */
+  @Get('notifications/count')
+  getNotificationsCount() {
+    return this.usersService.getNotificationsCount();
+  }
 }

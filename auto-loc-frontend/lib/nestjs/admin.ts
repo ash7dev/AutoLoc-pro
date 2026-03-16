@@ -186,6 +186,7 @@ export const ADMIN_PATHS = {
   rejectKyc: (id: string) => `/admin/users/${id}/kyc/reject`,
   withdrawals: '/admin/withdrawals',
   disputes: '/admin/disputes',
+  notificationsCount: '/admin/notifications/count',
 } as const;
 
 // ── Server-side fetch functions (RSC / layouts) ────────────────────────────────
@@ -220,4 +221,12 @@ export async function fetchAdminWithdrawals(accessToken: string): Promise<AdminW
 
 export async function fetchAdminDisputes(accessToken: string): Promise<AdminDispute[]> {
   return apiFetch<AdminDispute[]>(ADMIN_PATHS.disputes, { accessToken });
+}
+
+export interface AdminNotificationsCount {
+  pendingKyc: number;
+  pendingVehicles: number;
+  pendingWithdrawals: number;
+  pendingLitiges: number;
+  total: number;
 }

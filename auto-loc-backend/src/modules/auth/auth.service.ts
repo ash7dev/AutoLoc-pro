@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../../infrastructure/redis/redis.service';
 import { ALLOWED_MIMES } from '../upload/upload.config';
 import { NotificationService } from '../../infrastructure/notifications/notification.service';
+import { TelegramService } from '../../infrastructure/telegram/telegram.service';
 
 const DEFAULT_ROLE = 'LOCATAIRE';
 const ACCESS_TOKEN_TTL_DEFAULT = '15m';
@@ -32,6 +33,7 @@ export class AuthService {
     private readonly redisService: RedisService,
     private readonly cloudinary: CloudinaryService,
     private readonly notification: NotificationService,
+    private readonly telegram: TelegramService,
   ) { }
 
   /**
@@ -291,6 +293,17 @@ export class AuthService {
     });
 
     const profile = await this.getOrCreateProfile(user);
+
+    // Alerte admin Telegram — fire-and-forget
+    const identity = updated.prenom
+      ? `${updated.prenom}${updated.nom ? ' ' + updated.nom : ''}`
+      : updated.email ?? updated.id;
+    this.telegram.sendAdminAlert(
+      `🆔 <b>Nouveau KYC soumis</b>\n` +
+      `Utilisateur : ${identity}\n` +
+      `Statut : EN_ATTENTE — <a href="https://autoloc.sn/dashboard/admin/users">Vérifier →</a>`,
+    ).catch(() => { });
+
     return this.toResponse(profile, {
       id: updated.id,
       phoneVerified: updated.phoneVerified,
