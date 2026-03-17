@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { CheckCircle2, Loader2, ArrowRight, ChevronDown, Search } from "lucide-react";
+import { createPortal } from "react-dom";
+import { CheckCircle2, Loader2, ArrowRight, ChevronDown, Search, Calendar as CalendarIcon } from "lucide-react";
 import { ApiError } from "@/lib/nestjs/api-client";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import type { ProfileResponse } from "@/lib/nestjs/auth";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    COUNTRY LIST  (Sénégal en premier, puis ordre alphabétique)
@@ -193,7 +196,8 @@ function CountryPicker({
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const ref = useRef<HTMLDivElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const selected = COUNTRY_CODES.find(c => c.iso === value) ?? COUNTRY_CODES[0];
@@ -207,27 +211,34 @@ function CountryPicker({
     : COUNTRY_CODES;
 
   const handleOpen = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom + 4, left: rect.left });
+    }
     setOpen(true);
     setTimeout(() => searchRef.current?.focus(), 50);
   }, []);
 
   useEffect(() => {
+    if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (!triggerRef.current?.contains(target)) {
         setOpen(false);
         setSearch("");
       }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  }, [open]);
 
   return (
-    <div ref={ref} className="relative flex-shrink-0">
+    <div className="relative flex-shrink-0">
       {/* Trigger */}
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => open ? setOpen(false) : handleOpen()}
+        onClick={() => open ? (setOpen(false), setSearch("")) : handleOpen()}
         className={cn(
           "h-12 flex items-center gap-2 px-3.5 rounded-xl border bg-white transition-all",
           open
@@ -245,9 +256,12 @@ function CountryPicker({
         )} strokeWidth={2.5} />
       </button>
 
-      {/* Dropdown */}
-      {open && (
-        <div className="absolute top-[calc(100%+4px)] left-0 z-50 w-72 rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      {/* Dropdown — portal pour échapper aux overflow */}
+      {open && typeof window !== "undefined" && createPortal(
+        <div
+          style={{ position: "fixed", top: dropdownPos.top, left: dropdownPos.left, zIndex: 9999, width: 288 }}
+          className="rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        >
           {/* Search bar */}
           <div className="p-2 border-b border-slate-100">
             <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-100 focus-within:border-emerald-300 transition-colors">
@@ -261,13 +275,7 @@ function CountryPicker({
                 className="flex-1 bg-transparent text-[12.5px] text-slate-700 placeholder-slate-400 outline-none"
               />
               {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch("")}
-                  className="text-slate-300 hover:text-slate-500 transition-colors"
-                >
-                  ×
-                </button>
+                <button type="button" onClick={() => setSearch("")} className="text-slate-300 hover:text-slate-500 transition-colors">×</button>
               )}
             </div>
           </div>
@@ -275,9 +283,7 @@ function CountryPicker({
           {/* Country list */}
           <div className="max-h-56 overflow-y-auto overscroll-contain py-1">
             {filtered.length === 0 ? (
-              <p className="px-4 py-5 text-[12px] text-slate-400 text-center">
-                Aucun résultat pour « {search} »
-              </p>
+              <p className="px-4 py-5 text-[12px] text-slate-400 text-center">Aucun résultat pour « {search} »</p>
             ) : (
               filtered.map(c => (
                 <button
@@ -286,26 +292,20 @@ function CountryPicker({
                   onClick={() => { onChange(c.iso as CountryIso); setOpen(false); setSearch(""); }}
                   className={cn(
                     "w-full flex items-center gap-3 px-3.5 py-2.5 text-left transition-colors",
-                    value === c.iso
-                      ? "bg-emerald-50 hover:bg-emerald-50"
-                      : "hover:bg-slate-50",
+                    value === c.iso ? "bg-emerald-50" : "hover:bg-slate-50",
                   )}
                 >
                   <span className="text-lg flex-shrink-0 leading-none">{c.flag}</span>
-                  <span className="flex-1 text-[12.5px] font-medium text-slate-700 truncate">
-                    {c.country}
-                  </span>
-                  <span className={cn(
-                    "text-[11.5px] font-semibold flex-shrink-0",
-                    value === c.iso ? "text-emerald-600" : "text-slate-400",
-                  )}>
+                  <span className="flex-1 text-[12.5px] font-medium text-slate-700 truncate">{c.country}</span>
+                  <span className={cn("text-[11.5px] font-semibold flex-shrink-0", value === c.iso ? "text-emerald-600" : "text-slate-400")}>
                     {c.code}
                   </span>
                 </button>
               ))
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
@@ -449,12 +449,44 @@ export function PhoneVerifyGate({
       {/* Date de naissance */}
       {needsProfile && (
         <Field label="Date de naissance" required>
-          <input
-            type="date"
-            value={dateNaissance}
-            onChange={e => { setDateNaissance(e.target.value); setError(null); }}
-            className={INPUT_CLS(Boolean(error && !dateNaissance))}
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  "w-full h-12 rounded-xl border bg-white px-4 text-[13.5px] outline-none transition-all flex items-center justify-between gap-2",
+                  "hover:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 focus:border-emerald-400",
+                  error && !dateNaissance ? "border-red-300" : "border-slate-200",
+                  dateNaissance ? "text-slate-800 font-medium" : "text-slate-400",
+                )}
+              >
+                <span>
+                  {dateNaissance
+                    ? new Date(dateNaissance).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
+                    : "jj/mm/aaaa"}
+                </span>
+                <CalendarIcon className={cn("w-4 h-4 flex-shrink-0", dateNaissance ? "text-emerald-500" : "text-slate-300")} strokeWidth={1.75} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-[9999] border border-slate-100 bg-white shadow-xl rounded-2xl" align="start">
+              <Calendar
+                mode="single"
+                selected={dateNaissance ? new Date(dateNaissance) : undefined}
+                onSelect={(d) => {
+                  if (d) {
+                    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                    setDateNaissance(iso);
+                    setError(null);
+                  }
+                }}
+                disabled={(d) => d > new Date() || d < new Date("1900-01-01")}
+                initialFocus
+                captionLayout="dropdown-buttons"
+                fromYear={1940}
+                toYear={new Date().getFullYear() - 16}
+              />
+            </PopoverContent>
+          </Popover>
         </Field>
       )}
 
