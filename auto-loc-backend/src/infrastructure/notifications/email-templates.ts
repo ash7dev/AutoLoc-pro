@@ -99,22 +99,22 @@ function baseLayout(opts: {
         <!-- ══ HEADER ══ -->
         <tr>
           <td background="${FOOTER_LOGO_URL}" bgcolor="${BLACK}" style="background-image:url('${FOOTER_LOGO_URL}');background-size:cover;background-position:center;padding:0;">
-            <!-- Overlay sombre pour lisibilité -->
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(0,0,0,0.55);">
+            <!-- Overlay léger pour lisibilité -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(0,0,0,0.28);">
               <tr>
                 <td style="padding:0;">
                   <!-- Gradient bar top -->
                   <div style="height:3px;background:linear-gradient(90deg,${EMERALD},${EMERALD_DARK},rgba(0,0,0,0));"></div>
-                  <!-- Logo centré -->
-                  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="padding:32px 36px 28px;">
+                  <!-- Logo centré agrandi -->
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="padding:36px 36px 32px;">
                     <tr>
                       <td align="center">
-                        <img src="${LOGO_URL}" alt="AutoLoc" width="140" height="56"
-                          style="display:block;object-fit:contain;max-width:140px;">
+                        <img src="${LOGO_URL}" alt="AutoLoc" width="200" height="80"
+                          style="display:block;object-fit:contain;max-width:200px;">
                       </td>
                     </tr>
                     <tr>
-                      <td align="center" style="padding-top:14px;">
+                      <td align="center" style="padding-top:16px;">
                         <span style="display:inline-block;background:${EMERALD}28;border:1px solid ${EMERALD}66;
                           color:${EMERALD};font-size:10px;font-weight:700;letter-spacing:0.12em;
                           text-transform:uppercase;padding:4px 14px;border-radius:100px;">
@@ -134,7 +134,7 @@ function baseLayout(opts: {
         <!-- ══ TITLE BAND ══ -->
         <tr>
           <td background="${FOOTER_LOGO_URL}" bgcolor="${BLACK}" style="background-image:url('${FOOTER_LOGO_URL}');background-size:cover;background-position:center;padding:0;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(0,0,0,0.60);">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(0,0,0,0.32);">
               <tr>
                 <td style="padding:0 36px 32px;">
                   ${badge}
