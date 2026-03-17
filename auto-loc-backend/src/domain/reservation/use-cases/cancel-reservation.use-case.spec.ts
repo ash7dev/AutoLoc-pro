@@ -46,6 +46,10 @@ const mockRevalidateService = {
     revalidateTag: jest.fn().mockResolvedValue(undefined),
 };
 
+const mockTelegram = {
+    sendAdminAlert: jest.fn().mockResolvedValue(undefined),
+};
+
 function createUseCase(): CancelReservationUseCase {
     return new CancelReservationUseCase(
         mockPrisma as any,
@@ -55,6 +59,7 @@ function createUseCase(): CancelReservationUseCase {
         mockCancellationPolicy as any,
         mockContractGeneration as any,
         mockRevalidateService as any,
+        mockTelegram as any,
     );
 }
 

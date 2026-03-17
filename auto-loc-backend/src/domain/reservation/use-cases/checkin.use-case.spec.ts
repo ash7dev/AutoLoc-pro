@@ -1,6 +1,6 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { StatutReservation } from '@prisma/client';
-import { CheckInUseCase } from './checkin.use-case';
+import { CheckInUseCase, CheckInRole } from './checkin.use-case';
 import { BusinessRuleException } from '../../../common/exceptions/business-rule.exception';
 
 // ── Mocks ──────────────────────────────────────────────────────────────────────
@@ -21,9 +21,7 @@ const mockQueue = {
     scheduleNotification: jest.fn().mockResolvedValue('notif-id'),
 };
 
-const mockStateMachine = {
-    transition: jest.fn(),
-};
+
 
 const mockCreditWallet = {
     execute: jest.fn().mockResolvedValue({
@@ -60,7 +58,6 @@ describe('CheckInUseCase — Double Confirmation', () => {
         useCase = new CheckInUseCase(
             mockPrisma as any,
             mockQueue as any,
-            mockStateMachine as any,
             mockCreditWallet as any,
         );
         mockPrisma.utilisateur.findUnique.mockResolvedValue({ id: PROPRIETAIRE_ID });
@@ -73,7 +70,7 @@ describe('CheckInUseCase — Double Confirmation', () => {
         const result = await useCase.execute(
             { sub: 'owner-sub' } as any,
             RESERVATION_ID,
-            { role: 'PROPRIETAIRE' },
+            { role: CheckInRole.PROPRIETAIRE },
         );
 
         expect(result.statut).toBe(StatutReservation.CONFIRMEE);
@@ -100,7 +97,7 @@ describe('CheckInUseCase — Double Confirmation', () => {
         const result = await useCase.execute(
             { sub: 'tenant-sub' } as any,
             RESERVATION_ID,
-            { role: 'LOCATAIRE' },
+            { role: CheckInRole.LOCATAIRE },
         );
 
         expect(result.statut).toBe(StatutReservation.EN_COURS);
@@ -125,7 +122,7 @@ describe('CheckInUseCase — Double Confirmation', () => {
         const result = await useCase.execute(
             { sub: 'owner-sub' } as any,
             RESERVATION_ID,
-            { role: 'PROPRIETAIRE' },
+            { role: CheckInRole.PROPRIETAIRE },
         );
 
         expect(result.statut).toBe(StatutReservation.EN_COURS);
@@ -139,7 +136,7 @@ describe('CheckInUseCase — Double Confirmation', () => {
         mockPrisma.utilisateur.findUnique.mockResolvedValue({ id: 'stranger-id' });
 
         await expect(
-            useCase.execute({ sub: 'stranger' } as any, RESERVATION_ID, { role: 'PROPRIETAIRE' }),
+            useCase.execute({ sub: 'stranger' } as any, RESERVATION_ID, { role: CheckInRole.PROPRIETAIRE }),
         ).rejects.toThrow(ForbiddenException);
     });
 
@@ -147,7 +144,7 @@ describe('CheckInUseCase — Double Confirmation', () => {
         mockPrisma.utilisateur.findUnique.mockResolvedValue({ id: 'stranger-id' });
 
         await expect(
-            useCase.execute({ sub: 'stranger' } as any, RESERVATION_ID, { role: 'LOCATAIRE' }),
+            useCase.execute({ sub: 'stranger' } as any, RESERVATION_ID, { role: CheckInRole.LOCATAIRE }),
         ).rejects.toThrow(ForbiddenException);
     });
 
@@ -157,7 +154,7 @@ describe('CheckInUseCase — Double Confirmation', () => {
         mockPrisma.reservation.findUnique.mockResolvedValue(null);
 
         await expect(
-            useCase.execute({ sub: 'owner-sub' } as any, RESERVATION_ID, { role: 'PROPRIETAIRE' }),
+            useCase.execute({ sub: 'owner-sub' } as any, RESERVATION_ID, { role: CheckInRole.PROPRIETAIRE }),
         ).rejects.toThrow(NotFoundException);
     });
 
@@ -170,7 +167,7 @@ describe('CheckInUseCase — Double Confirmation', () => {
         });
 
         await expect(
-            useCase.execute({ sub: 'owner-sub' } as any, RESERVATION_ID, { role: 'PROPRIETAIRE' }),
+            useCase.execute({ sub: 'owner-sub' } as any, RESERVATION_ID, { role: CheckInRole.PROPRIETAIRE }),
         ).rejects.toThrow(BusinessRuleException);
     });
 
@@ -183,7 +180,7 @@ describe('CheckInUseCase — Double Confirmation', () => {
         });
 
         await expect(
-            useCase.execute({ sub: 'owner-sub' } as any, RESERVATION_ID, { role: 'PROPRIETAIRE' }),
+            useCase.execute({ sub: 'owner-sub' } as any, RESERVATION_ID, { role: CheckInRole.PROPRIETAIRE }),
         ).rejects.toThrow(BusinessRuleException);
     });
 
@@ -196,23 +193,20 @@ describe('CheckInUseCase — Double Confirmation', () => {
         });
 
         await expect(
-            useCase.execute({ sub: 'owner-sub' } as any, RESERVATION_ID, { role: 'PROPRIETAIRE' }),
+            useCase.execute({ sub: 'owner-sub' } as any, RESERVATION_ID, { role: CheckInRole.PROPRIETAIRE }),
         ).rejects.toThrow(BusinessRuleException);
     });
 
-    // ── 9. Bad state machine transition ────────────────────────────────────
+    // ── 9. Invalid status (not CONFIRMEE) ────────────────────────────────────
 
-    it('should reject bad transition via state machine', async () => {
+    it('should reject checkin for non-CONFIRMEE status', async () => {
         mockPrisma.reservation.findUnique.mockResolvedValue({
             ...baseReservation,
             statut: StatutReservation.ANNULEE,
         });
-        mockStateMachine.transition.mockImplementation(() => {
-            throw new BusinessRuleException('Transition invalide');
-        });
 
         await expect(
-            useCase.execute({ sub: 'owner-sub' } as any, RESERVATION_ID, { role: 'PROPRIETAIRE' }),
+            useCase.execute({ sub: 'owner-sub' } as any, RESERVATION_ID, { role: CheckInRole.PROPRIETAIRE }),
         ).rejects.toThrow(BusinessRuleException);
     });
 });

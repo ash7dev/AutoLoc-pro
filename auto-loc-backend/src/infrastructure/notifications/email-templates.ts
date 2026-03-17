@@ -31,7 +31,6 @@ interface TemplateConfig {
 const EMERALD      = '#10b981';
 const EMERALD_DARK = '#059669';
 const EMERALD_BG   = '#ecfdf5';
-const BLACK        = '#0a0a0a';
 const DARK         = '#111827';
 const GRAY         = '#6b7280';
 const LIGHT_GRAY   = '#f9fafb';
@@ -39,7 +38,6 @@ const BORDER       = '#e5e7eb';
 const WHITE        = '#ffffff';
 const FRONTEND_URL    = 'https://autoloc.sn';
 const LOGO_URL        = `${FRONTEND_URL}/logoAutoLoc.jpg`;
-const FOOTER_LOGO_URL = `${FRONTEND_URL}/footerlogo.jpg`;
 
 // ── Base layout ─────────────────────────────────────────────────────────────────
 
@@ -96,58 +94,68 @@ function baseLayout(opts: {
         style="max-width:580px;background:${WHITE};border-radius:20px;overflow:hidden;
           box-shadow:0 8px 40px rgba(0,0,0,0.10),0 1px 3px rgba(0,0,0,0.06);">
 
-        <!-- ══ HEADER ══ -->
+        <!-- ══ HEADER + TITLE (dark glass block) ══ -->
         <tr>
-          <td background="${FOOTER_LOGO_URL}" bgcolor="${BLACK}" style="background-image:url('${FOOTER_LOGO_URL}');background-size:cover;background-position:center;padding:0;">
-            <!-- Overlay léger pour lisibilité -->
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(0,0,0,0.28);">
+          <td bgcolor="#08080f" style="background:linear-gradient(160deg,#08080f 0%,#0d1a14 60%,#080f0d 100%);padding:0;">
+
+            <!-- Ligne accent top émeraude -->
+            <div style="height:2px;background:linear-gradient(90deg,transparent 0%,${EMERALD} 30%,${EMERALD_DARK} 70%,transparent 100%);"></div>
+
+            <!-- Glass panel intérieur -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td style="padding:0;">
-                  <!-- Gradient bar top -->
-                  <div style="height:3px;background:linear-gradient(90deg,${EMERALD},${EMERALD_DARK},rgba(0,0,0,0));"></div>
-                  <!-- Logo centré agrandi -->
-                  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="padding:36px 36px 32px;">
+                <td style="padding:40px 40px 0;">
+
+                  <!-- Logo centré dans panel glass -->
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                    style="background:linear-gradient(135deg,rgba(255,255,255,0.04) 0%,rgba(16,185,129,0.06) 100%);
+                      border:1px solid rgba(16,185,129,0.18);border-radius:16px;padding:28px 24px;">
                     <tr>
                       <td align="center">
-                        <img src="${LOGO_URL}" alt="AutoLoc" width="200" height="80"
-                          style="display:block;object-fit:contain;max-width:200px;">
+                        <img src="${LOGO_URL}" alt="AutoLoc" width="205" height="82"
+                          style="display:block;object-fit:contain;max-width:205px;">
                       </td>
                     </tr>
                     <tr>
-                      <td align="center" style="padding-top:16px;">
-                        <span style="display:inline-block;background:${EMERALD}28;border:1px solid ${EMERALD}66;
-                          color:${EMERALD};font-size:10px;font-weight:700;letter-spacing:0.12em;
-                          text-transform:uppercase;padding:4px 14px;border-radius:100px;">
+                      <td align="center" style="padding-top:14px;">
+                        <span style="display:inline-block;
+                          background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(5,150,105,0.08));
+                          border:1px solid rgba(16,185,129,0.35);
+                          color:${EMERALD};font-size:10px;font-weight:700;letter-spacing:0.14em;
+                          text-transform:uppercase;padding:5px 16px;border-radius:100px;">
                           Location de véhicules entre particuliers
                         </span>
                       </td>
                     </tr>
                   </table>
-                  <!-- Séparateur dégradé -->
-                  <div style="height:1px;background:linear-gradient(90deg,transparent,${EMERALD}55,transparent);margin:0 36px;"></div>
+
                 </td>
               </tr>
-            </table>
-          </td>
-        </tr>
 
-        <!-- ══ TITLE BAND ══ -->
-        <tr>
-          <td background="${FOOTER_LOGO_URL}" bgcolor="${BLACK}" style="background-image:url('${FOOTER_LOGO_URL}');background-size:cover;background-position:center;padding:0;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(0,0,0,0.32);">
+              <!-- Séparateur interne dégradé -->
               <tr>
-                <td style="padding:0 36px 32px;">
+                <td style="padding:28px 40px 0;">
+                  <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(16,185,129,0.4),transparent);"></div>
+                </td>
+              </tr>
+
+              <!-- Title band -->
+              <tr>
+                <td style="padding:24px 40px 36px;">
                   ${badge}
-                  <h1 style="margin:0;font-size:26px;font-weight:800;color:${WHITE};
+                  <h1 style="margin:0;font-size:27px;font-weight:800;color:#ffffff;
                     letter-spacing:-0.03em;line-height:1.2;">
                     ${opts.title}
                   </h1>
                   ${opts.subtitle
-                      ? `<p style="margin:8px 0 0;font-size:14px;color:#9ca3af;line-height:1.5;">${opts.subtitle}</p>`
+                      ? `<p style="margin:10px 0 0;font-size:14px;color:#94a3b8;line-height:1.6;font-weight:400;">${opts.subtitle}</p>`
                       : ''}
                 </td>
               </tr>
             </table>
+
+            <!-- Ligne accent bas -->
+            <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(16,185,129,0.25),transparent);"></div>
           </td>
         </tr>
 
@@ -326,6 +334,7 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
             badge: { text: 'Confirmée', color: EMERALD_DARK, bg: EMERALD_BG },
             cta: { label: 'Voir ma réservation', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
             content: [
+                p(`Bonjour${data.locatairePrenom ? ` <strong>${data.locatairePrenom}</strong>` : ''},`),
                 p('Super nouvelle ! Le propriétaire a confirmé votre réservation. Votre location est officielle.'),
                 infoCard([
                     { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
@@ -347,9 +356,11 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
             accentColor: '#ef4444',
             cta: { label: 'Explorer d\'autres véhicules', href: `${FRONTEND_URL}/explorer` },
             content: [
-                p(`La réservation ${data.raison ? `a été annulée pour le motif suivant : <strong>${data.raison}</strong>` : 'a été annulée'}.`),
+                p(`Bonjour${data.locatairePrenom ? ` <strong>${data.locatairePrenom}</strong>` : ''},`),
+                p(`Votre réservation ${data.raison ? `a été annulée pour le motif suivant : <strong>${data.raison}</strong>` : 'a été annulée'}.`),
                 infoCard([
                     { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
+                    { label: 'Annulée par', value: data.cancelledBy === 'PROPRIETAIRE' ? 'Le propriétaire' : 'Le locataire', icon: '👤' },
                     ...(data.refundAmount
                         ? [{ label: 'Remboursement', value: `${data.refundAmount} FCFA`, icon: '💸' }]
                         : []),
@@ -480,6 +491,7 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
             accentColor: '#8b5cf6',
             cta: { label: 'Laisser un avis', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
             content: [
+                p(`Bonjour${data.locatairePrenom ? ` <strong>${data.locatairePrenom}</strong>` : ''},`),
                 p('La location s\'est terminée avec succès. Merci d\'avoir utilisé <strong>AutoLoc</strong> !'),
                 infoCard([
                     { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },

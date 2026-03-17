@@ -315,16 +315,37 @@ export function MarketplaceNavbar() {
         {/* ── Contenu principal (logo + nav + auth) ── */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between gap-6">
 
-          {/* Logo */}
-          <Link href="/" className="group flex-shrink-0 -ml-[5px]">
-            <Image
-              src="/logoAutoLoc.jpg"
-              alt="AutoLoc"
-              width={220}
-              height={110}
-              className="w-[120px] sm:w-[160px] md:w-[220px] object-contain group-hover:opacity-80 transition-opacity duration-200"
-            />
-          </Link>
+          {/* Left slot : hamburger (mobile) + logo */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Hamburger — mobile only, à gauche du logo */}
+            <button
+              type="button"
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              className={cn(
+                'md:hidden flex items-center justify-center w-9 h-9 rounded-xl border transition-all duration-200',
+                menuOpen
+                  ? 'bg-slate-900 border-slate-800 text-white'
+                  : 'bg-white border-slate-200 text-black hover:bg-slate-50',
+              )}
+            >
+              {menuOpen
+                ? <X className="h-4 w-4" strokeWidth={2.5} />
+                : <Menu className="h-4 w-4" strokeWidth={2.5} />
+              }
+            </button>
+
+            {/* Logo */}
+            <Link href="/" className="group -ml-[5px]">
+              <Image
+                src="/logoAutoLoc.jpg"
+                alt="AutoLoc"
+                width={220}
+                height={110}
+                className="w-[120px] sm:w-[160px] md:w-[220px] object-contain group-hover:opacity-80 transition-opacity duration-200"
+              />
+            </Link>
+          </div>
 
           {/* Center nav desktop */}
           <div className="hidden md:flex items-center flex-1 justify-center">
@@ -383,24 +404,6 @@ export function MarketplaceNavbar() {
 
             {/* Currency selector */}
             <CurrencySelector />
-
-            {/* Hamburger — mobile only */}
-            <button
-              type="button"
-              onClick={() => setMenuOpen(o => !o)}
-              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-              className={cn(
-                'md:hidden flex items-center justify-center w-9 h-9 rounded-xl border transition-all duration-200',
-                menuOpen
-                  ? 'bg-slate-900 border-slate-800 text-white'
-                  : 'bg-white border-slate-200 text-black hover:bg-slate-50',
-              )}
-            >
-              {menuOpen
-                ? <X className="h-4 w-4" strokeWidth={2.5} />
-                : <Menu className="h-4 w-4" strokeWidth={2.5} />
-              }
-            </button>
           </div>
         </div>
 
