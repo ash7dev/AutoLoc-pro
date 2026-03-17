@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { X, XCircle, Loader2, AlertTriangle, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthFetch } from '@/features/auth/hooks/use-auth-fetch';
+import { translateError } from '@/lib/utils/api-error-fr';
 
 /* ════════════════════════════════════════════════════════════════
    TYPES
@@ -44,7 +45,7 @@ export function CancelModal({ reservationId, vehicleName, open, onClose }: Cance
         router.refresh();
       }, 1800);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur est survenue");
+      setError(translateError(err));
     } finally {
       setLoading(false);
     }

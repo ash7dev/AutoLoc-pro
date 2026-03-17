@@ -24,5 +24,9 @@ export default async function DashboardPage() {
     redirect('/dashboard/admin');
   }
 
+  if (profile.role === 'LOCATAIRE') {
+    redirect('/reservations');
+  }
+
   redirect('/dashboard/owner');
 }
