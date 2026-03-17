@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { ReservationStatut } from "@/lib/nestjs/reservations";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
+import { translateError } from "@/lib/utils/api-error-fr";
 
 /* ════════════════════════════════════════════════════════════════
    TYPES
@@ -402,7 +403,7 @@ export function ReservationActions({
     const apiMap: Record<string, () => Promise<void>> = {
         confirm: () => authFetch(`/reservations/${reservationId}/confirm`, { method: "PATCH" }),
         cancel: () => authFetch(`/reservations/${reservationId}/cancel`, { method: "PATCH", body: { raison: "Annulé par le propriétaire" } }),
-        checkin: () => authFetch(`/reservations/${reservationId}/checkin`, { method: "PATCH" }),
+        checkin: () => authFetch(`/reservations/${reservationId}/checkin?role=PROPRIETAIRE`, { method: "PATCH" }),
         checkout: () => authFetch(`/reservations/${reservationId}/checkout`, { method: "PATCH" }),
     };
 
@@ -414,7 +415,7 @@ export function ReservationActions({
             await apiMap[action.key]();
             router.refresh();
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Une erreur est survenue");
+            setError(translateError(err));
         } finally {
             setLoading(null);
         }
@@ -430,7 +431,7 @@ export function ReservationActions({
             setDisputeOpen(false);
             router.refresh();
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Une erreur est survenue");
+            setError(translateError(err));
         } finally {
             setLoading(null);
         }
