@@ -1,20 +1,18 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-    Camera, Upload, X, Loader2, CheckCircle2, AlertTriangle,
-    ImagePlus, Fuel, Gauge, Car,
+    Upload, X, Loader2, CheckCircle2, AlertTriangle,
+    ImagePlus, Fuel, Gauge, Car, Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
+import { translateError } from "@/lib/utils/api-error-fr";
 
-/* ════════════════════════════════════════════════════════════════
-   TYPES
-════════════════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════════ */
 interface CheckinModalProps {
     reservationId: string;
-    role: "PROPRIETAIRE" | "LOCATAIRE";
     open: boolean;
     onClose: () => void;
 }
@@ -24,7 +22,6 @@ interface PhotoSlot {
     label: string;
     icon: React.ElementType;
     categorie: string;
-    required: boolean;
 }
 
 interface UploadedPhoto {
@@ -34,18 +31,16 @@ interface UploadedPhoto {
 }
 
 const PHOTO_SLOTS: PhotoSlot[] = [
-    { key: "avant", label: "Avant", icon: Car, categorie: "AVANT", required: false },
-    { key: "arriere", label: "Arrière", icon: Car, categorie: "ARRIERE", required: false },
-    { key: "cote_gauche", label: "Côté gauche", icon: Car, categorie: "COTE_GAUCHE", required: false },
-    { key: "cote_droit", label: "Côté droit", icon: Car, categorie: "COTE_DROIT", required: false },
-    { key: "compteur", label: "Compteur km", icon: Gauge, categorie: "COMPTEUR_KM", required: false },
-    { key: "carburant", label: "Carburant", icon: Fuel, categorie: "CARBURANT", required: false },
+    { key: "avant", label: "Avant", icon: Car, categorie: "AVANT" },
+    { key: "arriere", label: "Arrière", icon: Car, categorie: "ARRIERE" },
+    { key: "cote_gauche", label: "Côté gauche", icon: Car, categorie: "COTE_GAUCHE" },
+    { key: "cote_droit", label: "Côté droit", icon: Car, categorie: "COTE_DROIT" },
+    { key: "compteur", label: "Compteur km", icon: Gauge, categorie: "COMPTEUR_KM" },
+    { key: "carburant", label: "Carburant", icon: Fuel, categorie: "CARBURANT" },
 ];
 
-/* ════════════════════════════════════════════════════════════════
-   COMPONENT
-════════════════════════════════════════════════════════════════ */
-export function CheckinModal({ reservationId, role, open, onClose }: CheckinModalProps) {
+/* ═════════════════════════════════════════════════════════════════ */
+export function CheckinModal({ reservationId, open, onClose }: CheckinModalProps) {
     const router = useRouter();
     const { authFetch } = useAuthFetch();
     const [photos, setPhotos] = useState<Record<string, UploadedPhoto>>({});
@@ -55,7 +50,16 @@ export function CheckinModal({ reservationId, role, open, onClose }: CheckinModa
     const [success, setSuccess] = useState(false);
 
     const photoCount = Object.keys(photos).length;
-    const roleLabel = role === "PROPRIETAIRE" ? "Propriétaire" : "Locataire";
+
+    // Reset state when modal closes
+    useEffect(() => {
+        if (!open) {
+            setPhotos({});
+            setUploading(null);
+            setError(null);
+            setSuccess(false);
+        }
+    }, [open]);
 
     const handleUpload = useCallback(async (slot: PhotoSlot, file: File) => {
         setUploading(slot.key);
@@ -63,14 +67,9 @@ export function CheckinModal({ reservationId, role, open, onClose }: CheckinModa
         try {
             const formData = new FormData();
             formData.append("file", file);
-
             const res = await fetch(
                 `/api/nest/reservations/${reservationId}/photos-etat?type=CHECKIN&categorie=${slot.categorie}`,
-                {
-                    method: "POST",
-                    body: formData,
-                    credentials: "include",
-                }
+                { method: "POST", body: formData, credentials: "include" }
             );
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
@@ -89,41 +88,29 @@ export function CheckinModal({ reservationId, role, open, onClose }: CheckinModa
         setSubmitting(true);
         setError(null);
         try {
-            await authFetch(`/reservations/${reservationId}/checkin?role=${role}`, {
-                method: "PATCH",
-            });
+            await authFetch(`/reservations/${reservationId}/checkin?role=PROPRIETAIRE`, { method: "PATCH" });
             setSuccess(true);
-            setTimeout(() => {
-                onClose();
-                router.refresh();
-            }, 1500);
+            setTimeout(() => { onClose(); router.refresh(); }, 1500);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Erreur lors du check-in");
+            setError(translateError(err));
         } finally {
             setSubmitting(false);
         }
-    }, [reservationId, role, authFetch, onClose, router]);
+    }, [reservationId, authFetch, onClose, router]);
 
     if (!open) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-                onClick={onClose}
-            />
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !submitting && onClose()} />
 
-            {/* Modal */}
             <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-900 border border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-slate-900/95 backdrop-blur-md border-b border-white/8">
                     <div>
-                        <h2 className="text-[17px] font-black text-white">
-                            Confirmer le check-in
-                        </h2>
+                        <h2 className="text-[17px] font-black text-white">Check-in</h2>
                         <p className="text-[12px] text-slate-400 mt-0.5">
-                            En tant que <span className="text-emerald-400 font-bold">{roleLabel}</span>
+                            Remise des clés au locataire
                         </p>
                     </div>
                     <button
@@ -135,21 +122,32 @@ export function CheckinModal({ reservationId, role, open, onClose }: CheckinModa
                 </div>
 
                 <div className="px-6 py-5 space-y-6">
-                    {/* ── Info banner ─────────────────────────── */}
-                    <div className="flex items-start gap-3 rounded-xl bg-blue-500/8 border border-blue-500/15 p-4">
-                        <Camera className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" strokeWidth={1.75} />
-                        <div className="space-y-1">
-                            <p className="text-[13px] font-bold text-white">
-                                Photos recommandées
-                            </p>
-                            <p className="text-[11.5px] text-slate-400 leading-relaxed">
-                                Prenez des photos de l&apos;état du véhicule pour vous protéger en cas de litige.
-                                Les photos ne sont <span className="text-blue-400 font-semibold">pas obligatoires</span> mais fortement recommandées.
-                            </p>
+                    {/* Info */}
+                    <div className="rounded-xl bg-emerald-500/8 border border-emerald-500/15 p-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                            <Info className="w-4 h-4 text-emerald-400 flex-shrink-0" strokeWidth={2} />
+                            <p className="text-[13px] font-black text-white">Photos optionnelles — mais fortement recommandées</p>
                         </div>
+                        <ul className="space-y-1.5 pl-1">
+                            <li className="flex items-start gap-2 text-[11.5px] text-slate-400 leading-relaxed">
+                                <span className="text-emerald-400 mt-0.5">✓</span>
+                                Prouve l&apos;état du véhicule <span className="text-white font-semibold">avant</span> la remise des clés
+                            </li>
+                            <li className="flex items-start gap-2 text-[11.5px] text-slate-400 leading-relaxed">
+                                <span className="text-emerald-400 mt-0.5">✓</span>
+                                Référence indispensable en cas de <span className="text-white font-semibold">litige ou dommage</span> au retour
+                            </li>
+                            <li className="flex items-start gap-2 text-[11.5px] text-slate-400 leading-relaxed">
+                                <span className="text-emerald-400 mt-0.5">✓</span>
+                                Vous protège légalement — sans photos, votre parole contre la sienne
+                            </li>
+                        </ul>
+                        <p className="text-[10.5px] text-slate-500 border-t border-white/6 pt-2.5">
+                            Vous pouvez confirmer le check-in sans uploader de photos. Cliquez directement sur &quot;Confirmer le check-in&quot; ci-dessous.
+                        </p>
                     </div>
 
-                    {/* ── Photo grid ──────────────────────────── */}
+                    {/* Photo grid */}
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">
                             Photos du véhicule ({photoCount}/6)
@@ -159,7 +157,6 @@ export function CheckinModal({ reservationId, role, open, onClose }: CheckinModa
                                 const uploaded = photos[slot.key];
                                 const isUploading = uploading === slot.key;
                                 const Icon = slot.icon;
-
                                 return (
                                     <label
                                         key={slot.key}
@@ -173,11 +170,7 @@ export function CheckinModal({ reservationId, role, open, onClose }: CheckinModa
                                     >
                                         {uploaded ? (
                                             <>
-                                                <img
-                                                    src={uploaded.url}
-                                                    alt={slot.label}
-                                                    className="absolute inset-0 w-full h-full object-cover"
-                                                />
+                                                <img src={uploaded.url} alt={slot.label} className="absolute inset-0 w-full h-full object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <Upload className="w-5 h-5 text-white" strokeWidth={2} />
                                                 </div>
@@ -194,7 +187,6 @@ export function CheckinModal({ reservationId, role, open, onClose }: CheckinModa
                                                 <ImagePlus className="w-3 h-3 text-slate-600 mt-1" strokeWidth={2} />
                                             </>
                                         )}
-
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -212,28 +204,16 @@ export function CheckinModal({ reservationId, role, open, onClose }: CheckinModa
                         </div>
                     </div>
 
-                    {/* ── Double confirmation info ────────────── */}
-                    <div className="flex items-start gap-3 rounded-xl bg-amber-500/8 border border-amber-500/15 p-4">
-                        <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" strokeWidth={2} />
-                        <p className="text-[11.5px] text-slate-400 leading-relaxed">
-                            <span className="text-amber-400 font-bold">Double confirmation requise</span> — Les deux parties (propriétaire et locataire) doivent confirmer le check-in pour
-                            que la location démarre et que le paiement soit débloqué.
-                        </p>
-                    </div>
-
-                    {/* ── Error ───────────────────────────────── */}
                     {error && (
                         <div className="flex items-center gap-2 text-[12px] font-semibold text-red-400">
-                            <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2} />
-                            {error}
+                            <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2} />{error}
                         </div>
                     )}
 
-                    {/* ── Success ─────────────────────────────── */}
                     {success && (
                         <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-[13px] font-bold text-emerald-400 animate-in fade-in duration-300">
                             <CheckCircle2 className="w-5 h-5" strokeWidth={2} />
-                            Check-in confirmé ! Redirection en cours…
+                            Check-in confirmé ! Redirection…
                         </div>
                     )}
                 </div>
@@ -241,7 +221,7 @@ export function CheckinModal({ reservationId, role, open, onClose }: CheckinModa
                 {/* Footer */}
                 <div className="sticky bottom-0 flex items-center gap-3 px-6 py-4 bg-slate-900/95 backdrop-blur-md border-t border-white/8">
                     <button
-                        onClick={onClose}
+                        onClick={() => !submitting && onClose()}
                         disabled={submitting}
                         className="px-5 py-2.5 rounded-xl text-[13px] font-semibold text-slate-400 hover:text-white hover:bg-white/6 border border-white/8 transition-all"
                     >
@@ -257,11 +237,7 @@ export function CheckinModal({ reservationId, role, open, onClose }: CheckinModa
                                 : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20",
                         )}
                     >
-                        {submitting ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <CheckCircle2 className="w-4 h-4" strokeWidth={2.5} />
-                        )}
+                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" strokeWidth={2.5} />}
                         Confirmer le check-in
                     </button>
                 </div>

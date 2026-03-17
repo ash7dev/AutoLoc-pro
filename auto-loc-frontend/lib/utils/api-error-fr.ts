@@ -30,6 +30,15 @@ const CODE_MAP: Record<string, string> = {
   // KYC
   KYC_NOT_VERIFIED:                'Votre identité n\'est pas encore vérifiée.',
   TENANT_KYC_NOT_VERIFIED:         'Le locataire n\'a pas encore été vérifié.',
+
+  // Annulation
+  CANCELLATION_INVALID_STATUS:     'L\'annulation n\'est plus possible à ce stade de la réservation.',
+  CANCELLATION_BLOCKED:            'L\'annulation est bloquée selon la politique en vigueur.',
+
+  // Litige
+  DISPUTE_ALREADY_EXISTS:          'Un litige existe déjà pour cette réservation.',
+  DISPUTE_WINDOW_EXPIRED:          'Le délai de 24h pour déclarer un litige est dépassé.',
+  DISPUTE_INVALID_STATUS:          'Un litige ne peut être déclaré que pour une réservation en cours ou terminée.',
 };
 
 /** Correspondances exactes ou partielles sur le message texte */

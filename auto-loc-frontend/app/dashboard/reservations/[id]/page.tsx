@@ -7,6 +7,8 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchReservationById } from '@/lib/nestjs/reservations';
 import { TenantCancelButton } from '@/features/reservations/components/tenant-cancel-button';
 import { TenantCheckinButton } from '@/features/reservations/components/tenant-checkin-button';
+import { TenantDisputeButton } from '@/features/reservations/components/tenant-dispute-button';
+import { PhotosEtatLieu } from '@/features/reservations/components/photos-etat-lieu';
 import { ReviewForm } from '@/features/reviews/components/review-form';
 import {
     ArrowLeft, Car, Banknote, Clock, CheckCircle2,
@@ -220,6 +222,21 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                     TENANT ACTIONS
                 ══════════════════════════════════════════════════ */}
                 <div className="space-y-3">
+                    {/* Location en cours — message informatif */}
+                    {r.statut === 'EN_COURS' && (
+                        <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3.5">
+                            <div className="w-7 h-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <LogIn className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2} />
+                            </div>
+                            <div>
+                                <p className="text-[12.5px] font-bold text-emerald-800">Votre location est en cours</p>
+                                <p className="text-[11.5px] text-emerald-700 mt-0.5 leading-relaxed">
+                                    Profitez de votre véhicule. Le propriétaire effectuera le check-out à la restitution.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Check-in locataire — disponible quand CONFIRMEE */}
                     {r.statut === 'CONFIRMEE' && (
                         <TenantCheckinButton
@@ -227,6 +244,11 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                             alreadyConfirmed={!!r.checkinLocataireLe}
                             ownerConfirmed={!!r.checkinProprietaireLe}
                         />
+                    )}
+
+                    {/* Litige locataire — véhicule non conforme, uniquement avant check-in confirmé */}
+                    {r.statut === 'CONFIRMEE' && !r.checkinLocataireLe && (
+                        <TenantDisputeButton reservationId={r.id} />
                     )}
 
                     {/* Annulation */}
@@ -432,6 +454,13 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                 </div>
 
                 {/* ══════════════════════════════════════════════════
+                    PHOTOS ÉTAT DES LIEUX
+                ══════════════════════════════════════════════════ */}
+                {r.photosEtatLieu && r.photosEtatLieu.length > 0 && (
+                    <PhotosEtatLieu photos={r.photosEtatLieu} />
+                )}
+
+                {/* ══════════════════════════════════════════════════
                     TIMELINE
                 ══════════════════════════════════════════════════ */}
                 <Card icon={Clock} title="Chronologie" accent="emerald">
@@ -481,7 +510,7 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                 {r.statut === 'LITIGE' && (
                     <Alert icon={AlertTriangle} bg="bg-orange-50" border="border-orange-200" iconBg="bg-orange-100 border-orange-200" iconColor="text-orange-500"
                         title="Litige en cours"
-                        text="Un litige a été déclaré sur cette réservation. Notre équipe examine votre dossier." />
+                        text="Un litige a été déclaré sur cette réservation. Notre équipe examine votre dossier et vous contactera dans les plus brefs délais." />
                 )}
 
                 {/* Waiting for owner confirmation */}

@@ -109,6 +109,7 @@ function serializeReservation(r: Record<string, unknown> & {
       : undefined,
     vehicule: r.vehicule,
     paiement: r.paiement,
+    photosEtatLieu: (r as Record<string, unknown>).photosEtatLieu ?? undefined,
   };
 }
 

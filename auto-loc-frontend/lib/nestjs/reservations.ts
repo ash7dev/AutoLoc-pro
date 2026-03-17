@@ -41,6 +41,14 @@ export interface ReservationUser {
     kycStatus?: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
 }
 
+export interface PhotoEtatLieu {
+    id: string;
+    type: 'CHECKIN' | 'CHECKOUT';
+    url: string;
+    categorie?: string;
+    position: number;
+}
+
 export interface Reservation {
     id: string;
     statut: ReservationStatut;
@@ -69,6 +77,7 @@ export interface Reservation {
         statut: string;
         fournisseur: string;
     };
+    photosEtatLieu?: PhotoEtatLieu[];
 }
 
 export interface ReservationsResponse {

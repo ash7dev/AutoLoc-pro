@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { fetchReservation } from "@/lib/nestjs/reservations";
 import { ReservationActions } from "@/features/reservations/components/reservation-actions";
 import { TenantDocsViewer } from "@/features/reservations/components/tenant-docs-viewer";
+import { PhotosEtatLieu } from "@/features/reservations/components/photos-etat-lieu";
 import {
     ArrowLeft, Car, FileText, Banknote, Clock, CheckCircle2,
     XCircle, LogIn, LogOut, Hash, AlertTriangle, ShieldCheck,
@@ -470,6 +471,13 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                         </div>
                     </Card>
                 </div>
+
+                {/* ══════════════════════════════════════════════════
+                    PHOTOS ÉTAT DES LIEUX
+                ══════════════════════════════════════════════════ */}
+                {r.photosEtatLieu && r.photosEtatLieu.length > 0 && (
+                    <PhotosEtatLieu photos={r.photosEtatLieu} />
+                )}
 
                 {/* ══════════════════════════════════════════════════
                     TIMELINE

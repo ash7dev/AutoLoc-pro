@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
     Check, X, LogIn, LogOut, Loader2, Scale,
-    AlertTriangle, ChevronRight, CheckCircle2, FileWarning, ShieldAlert, Clock,
+    AlertTriangle, ChevronRight, CheckCircle2, FileWarning, ShieldAlert, Clock, Ban,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReservationStatut } from "@/lib/nestjs/reservations";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import { translateError } from "@/lib/utils/api-error-fr";
+import { CheckinModal } from "./checkin-modal";
+import { CheckoutModal } from "./checkout-modal";
 
 /* ════════════════════════════════════════════════════════════════
    TYPES
@@ -387,10 +389,47 @@ export function ReservationActions({
     const [loading, setLoading] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [confirmKey, setConfirmKey] = useState<string | null>(null);
+    const [cancelReason, setCancelReason] = useState('');
     const [disputeOpen, setDisputeOpen] = useState(false);
+    const [checkinOpen, setCheckinOpen] = useState(false);
+    const [checkoutOpen, setCheckoutOpen] = useState(false);
     const { authFetch } = useAuthFetch();
 
     const actions = getActions(statut);
+
+    /* ── Statuts sans actions — messages informatifs ── */
+    if (statut === "LITIGE") {
+        return (
+            <div className={cn("flex items-start gap-3 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3.5", className)}>
+                <div className="w-7 h-7 rounded-lg bg-orange-100 border border-orange-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-orange-600" strokeWidth={2} />
+                </div>
+                <div>
+                    <p className="text-[12.5px] font-bold text-orange-800">Litige en cours</p>
+                    <p className="text-[11.5px] text-orange-700 mt-0.5 leading-relaxed">
+                        Un litige a été déclaré sur cette réservation. Notre équipe examine le dossier et vous contactera dans les plus brefs délais.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    if (statut === "EXPIREE") {
+        return (
+            <div className={cn("flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5", className)}>
+                <div className="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Ban className="w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
+                </div>
+                <div>
+                    <p className="text-[12.5px] font-bold text-slate-600">Réservation expirée</p>
+                    <p className="text-[11.5px] text-slate-500 mt-0.5 leading-relaxed">
+                        Le locataire n&apos;a pas finalisé le paiement dans les délais impartis. La réservation a été annulée automatiquement.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     if (actions.length === 0) return null;
 
     // KYC locataire — bloque la confirmation si non vérifié
@@ -406,15 +445,17 @@ export function ReservationActions({
 
     const apiMap: Record<string, () => Promise<void>> = {
         confirm: () => authFetch(`/reservations/${reservationId}/confirm`, { method: "PATCH" }),
-        cancel: () => authFetch(`/reservations/${reservationId}/cancel`, { method: "PATCH", body: { raison: "Annulé par le propriétaire" } }),
+        cancel: () => authFetch(`/reservations/${reservationId}/cancel`, { method: "PATCH", body: { raison: cancelReason.trim() } }),
         checkin: () => authFetch(`/reservations/${reservationId}/checkin?role=PROPRIETAIRE`, { method: "PATCH" }),
         checkout: () => authFetch(`/reservations/${reservationId}/checkout`, { method: "PATCH" }),
     };
 
     const handleAction = async (action: ActionConfig) => {
         if (action.key === "dispute") { setDisputeOpen(true); return; }
+        if (action.key === "checkin") { setCheckinOpen(true); return; }
+        if (action.key === "checkout") { setCheckoutOpen(true); return; }
         if (action.requireConfirm && confirmKey !== action.key) { setConfirmKey(action.key); return; }
-        setError(null); setLoading(action.key); setConfirmKey(null);
+        setError(null); setLoading(action.key); setConfirmKey(null); setCancelReason('');
         try {
             await apiMap[action.key]();
             router.refresh();
@@ -500,7 +541,9 @@ export function ReservationActions({
                     action={confirmingAction}
                     loading={isLoading}
                     onConfirm={() => handleAction(confirmingAction)}
-                    onCancel={() => setConfirmKey(null)}
+                    onCancel={() => { setConfirmKey(null); setCancelReason(''); }}
+                    reason={cancelReason}
+                    onReasonChange={setCancelReason}
                 />
             )}
 
@@ -521,6 +564,18 @@ export function ReservationActions({
                     <p className="text-[12px] font-semibold text-red-600">{error}</p>
                 </div>
             )}
+
+            {/* Modaux check-in / check-out */}
+            <CheckinModal
+                reservationId={reservationId}
+                open={checkinOpen}
+                onClose={() => setCheckinOpen(false)}
+            />
+            <CheckoutModal
+                reservationId={reservationId}
+                open={checkoutOpen}
+                onClose={() => setCheckoutOpen(false)}
+            />
         </div>
     );
 }

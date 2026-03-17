@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
     Camera, Upload, X, Loader2, CheckCircle2, AlertTriangle,
@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
+import { translateError } from "@/lib/utils/api-error-fr";
 
 /* ═════════════════════════════════════════════════════════════════ */
 interface CheckoutModalProps {
@@ -50,6 +51,16 @@ export function CheckoutModal({ reservationId, open, onClose }: CheckoutModalPro
 
     const photoCount = Object.keys(photos).length;
 
+    // Reset state when modal closes
+    useEffect(() => {
+        if (!open) {
+            setPhotos({});
+            setUploading(null);
+            setError(null);
+            setSuccess(false);
+        }
+    }, [open]);
+
     const handleUpload = useCallback(async (slot: PhotoSlot, file: File) => {
         setUploading(slot.key);
         setError(null);
@@ -67,7 +78,7 @@ export function CheckoutModal({ reservationId, open, onClose }: CheckoutModalPro
             const photo = await res.json();
             setPhotos(prev => ({ ...prev, [slot.key]: photo }));
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Erreur lors de l'upload");
+            setError(translateError(err));
         } finally {
             setUploading(null);
         }
@@ -81,7 +92,7 @@ export function CheckoutModal({ reservationId, open, onClose }: CheckoutModalPro
             setSuccess(true);
             setTimeout(() => { onClose(); router.refresh(); }, 1500);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Erreur lors du check-out");
+            setError(translateError(err));
         } finally {
             setSubmitting(false);
         }
@@ -91,7 +102,7 @@ export function CheckoutModal({ reservationId, open, onClose }: CheckoutModalPro
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !submitting && onClose()} />
 
             <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-900 border border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
@@ -112,18 +123,28 @@ export function CheckoutModal({ reservationId, open, onClose }: CheckoutModalPro
 
                 <div className="px-6 py-5 space-y-6">
                     {/* Info */}
-                    <div className="flex items-start gap-3 rounded-xl bg-blue-500/8 border border-blue-500/15 p-4">
-                        <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" strokeWidth={1.75} />
-                        <div className="space-y-1">
-                            <p className="text-[13px] font-bold text-white">
-                                Photos comparatives recommandées
-                            </p>
-                            <p className="text-[11.5px] text-slate-400 leading-relaxed">
-                                Comparez l&apos;état du véhicule avec les photos du check-in.
-                                En cas de dommages, ces photos seront essentielles pour le litige.
-                                Les photos sont <span className="text-blue-400 font-semibold">optionnelles</span>.
-                            </p>
+                    <div className="rounded-xl bg-blue-500/8 border border-blue-500/15 p-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                            <Info className="w-4 h-4 text-blue-400 flex-shrink-0" strokeWidth={2} />
+                            <p className="text-[13px] font-black text-white">Photos optionnelles — mais fortement recommandées</p>
                         </div>
+                        <ul className="space-y-1.5 pl-1">
+                            <li className="flex items-start gap-2 text-[11.5px] text-slate-400 leading-relaxed">
+                                <span className="text-blue-400 mt-0.5">✓</span>
+                                Comparez l&apos;état <span className="text-white font-semibold">avant / après</span> la location
+                            </li>
+                            <li className="flex items-start gap-2 text-[11.5px] text-slate-400 leading-relaxed">
+                                <span className="text-blue-400 mt-0.5">✓</span>
+                                Preuves essentielles pour tout <span className="text-white font-semibold">litige ou réclamation</span> de dommages
+                            </li>
+                            <li className="flex items-start gap-2 text-[11.5px] text-slate-400 leading-relaxed">
+                                <span className="text-blue-400 mt-0.5">✓</span>
+                                Vous protège légalement — sans photos, votre parole contre la sienne
+                            </li>
+                        </ul>
+                        <p className="text-[10.5px] text-slate-500 border-t border-white/6 pt-2.5">
+                            Vous pouvez valider le check-out sans uploader de photos. Cliquez directement sur &quot;Valider le check-out&quot; ci-dessous.
+                        </p>
                     </div>
 
                     {/* Photo grid */}
