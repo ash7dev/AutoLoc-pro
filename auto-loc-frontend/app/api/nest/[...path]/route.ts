@@ -47,7 +47,9 @@ function buildHeaders(accessToken: string | null, contentType: string | null, pa
   const h: Record<string, string> = {};
   if (contentType) h['Content-Type'] = contentType;
   if (accessToken) h['Authorization'] = `Bearer ${accessToken}`;
-  // Injecter la clé interne pour l'endpoint confirm-payment (simulation webhook Wave)
+  // TODO(wave-integration): Supprimer ce bloc une fois le webhook Wave en place.
+  // En prod avec Wave : le webhook appelle le backend directement (pas via ce proxy).
+  // Pour l'instant : le proxy injecte la clé interne pour simuler la confirmation de paiement.
   if (path.endsWith('/confirm-payment') && process.env.INTERNAL_API_KEY) {
     h['x-internal-key'] = process.env.INTERNAL_API_KEY;
   }

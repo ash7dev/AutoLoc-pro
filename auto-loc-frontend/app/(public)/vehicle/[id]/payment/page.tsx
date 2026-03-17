@@ -165,8 +165,10 @@ export default function PaymentPage() {
             });
             setCreatedReservationId(reservationId);
 
-            // confirm-payment can take time (notifications, contract generation).
-            // Use a 60s timeout and fall back to polling if it times out.
+            // TODO(wave-integration): Remplacer cet appel par le redirect vers la page de paiement Wave/Orange Money.
+            // Le webhook Wave appellera directement PATCH /reservations/:id/confirm-payment avec signature HMAC.
+            // En attendant les clés API : on appelle l'endpoint de simulation via le proxy Next.js
+            // qui injecte le header X-Internal-Key (voir app/api/nest/[...path]/route.ts).
             try {
                 await apiFetch(`/reservations/${reservationId}/confirm-payment`, {
                     method: 'PATCH',
