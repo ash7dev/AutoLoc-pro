@@ -60,7 +60,12 @@ export class ConfirmReservationUseCase {
             throw new ForbiddenException('Accès refusé');
         }
 
-        // 3.5. Vérification KYC locataire — seul le statut VERIFIE est accepté
+        // 3.5. Idempotence — déjà confirmée, on retourne silencieusement
+        if (reservation.statut === StatutReservation.CONFIRMEE) {
+            return { reservationId, statut: StatutReservation.CONFIRMEE };
+        }
+
+        // 3.6. Vérification KYC locataire — seul le statut VERIFIE est accepté
         if (reservation.locataire?.statutKyc !== 'VERIFIE') {
             throw new BusinessRuleException(
                 "Le locataire n'a pas encore été vérifié",

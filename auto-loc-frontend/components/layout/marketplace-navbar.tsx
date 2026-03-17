@@ -250,37 +250,6 @@ function SliderNav({ pathname }: { pathname: string }) {
   );
 }
 
-/* ── Mobile bottom nav (standalone — doit vivre EN DEHORS du <header>) ── */
-export function MobileBottomNav() {
-  const pathname = usePathname();
-  return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-t border-slate-100/80 flex pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-      {NAV_LINKS.map(({ href, icon: Icon, label }) => {
-        const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
-        return (
-          <Link
-            key={href}
-            href={href}
-            className="flex-1 flex flex-col items-center justify-center py-3 gap-1 group"
-          >
-            <span className={cn(
-              'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200',
-              isActive ? 'bg-black shadow-md shadow-black/20' : 'bg-transparent group-active:bg-slate-100'
-            )}>
-              <Icon className={cn('w-4.5 h-4.5 transition-colors duration-200', isActive ? 'text-emerald-400' : 'text-black')} />
-            </span>
-            <span className={cn(
-              'text-[9.5px] font-semibold tracking-tight transition-colors duration-200',
-              isActive ? 'text-emerald-400' : 'text-black'
-            )}>
-              {label}
-            </span>
-          </Link>
-        );
-      })}
-    </nav>
-  );
-}
 
 /* ── Main navbar ─────────────────────────────────────────────── */
 export function MarketplaceNavbar() {

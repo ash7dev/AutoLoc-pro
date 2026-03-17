@@ -83,7 +83,7 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum }: M
     return (
         <>
             {/* ── Bottom bar ─────────────────────────────────────────── */}
-            <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/90 backdrop-blur-md border-t border-slate-100 px-4 py-3 flex items-center justify-between gap-4">
+            <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-t border-slate-100 px-4 py-3 pb-safe flex items-center justify-between gap-4">
                 <div>
                     <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Dès</p>
                     <p className="text-[20px] font-black text-slate-900 tabular-nums leading-tight">

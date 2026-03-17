@@ -1,5 +1,5 @@
 import React from 'react';
-import { MarketplaceNavbar, MobileBottomNav } from '../../components/layout/marketplace-navbar';
+import { MarketplaceNavbar } from '../../components/layout/marketplace-navbar';
 
 export default function PublicLayout({
   children,
@@ -7,10 +7,9 @@ export default function PublicLayout({
   children: React.ReactNode;
 }): React.ReactElement {
   return (
-    <div className="min-h-screen pb-16 md:pb-0">
+    <div className="min-h-screen">
       <MarketplaceNavbar />
       {children}
-      <MobileBottomNav />
     </div>
   );
 }
