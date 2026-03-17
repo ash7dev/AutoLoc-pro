@@ -37,8 +37,9 @@ const GRAY         = '#6b7280';
 const LIGHT_GRAY   = '#f9fafb';
 const BORDER       = '#e5e7eb';
 const WHITE        = '#ffffff';
-const FRONTEND_URL = 'https://autoloc.sn';
-const LOGO_URL     = `${FRONTEND_URL}/logoAutoLoc.jpg`;
+const FRONTEND_URL    = 'https://autoloc.sn';
+const LOGO_URL        = `${FRONTEND_URL}/logoAutoLoc.jpg`;
+const FOOTER_LOGO_URL = `${FRONTEND_URL}/footerlogo.jpg`;
 
 // ── Base layout ─────────────────────────────────────────────────────────────────
 
@@ -50,8 +51,6 @@ function baseLayout(opts: {
     cta?: { label: string; href: string };
     accentColor?: string;
 }): string {
-    const accent = opts.accentColor ?? EMERALD;
-
     const badge = opts.badge
         ? `<div style="margin-bottom:20px;">
             <span style="display:inline-block;background:${opts.badge.bg};color:${opts.badge.color};
@@ -67,10 +66,10 @@ function baseLayout(opts: {
             <tr>
               <td align="center">
                 <a href="${opts.cta.href}"
-                  style="display:inline-block;background:${accent};color:#fff;
+                  style="display:inline-block;background:${EMERALD};color:#fff;
                     font-size:14px;font-weight:700;letter-spacing:0.02em;
                     text-decoration:none;padding:14px 32px;border-radius:12px;
-                    box-shadow:0 4px 14px ${accent}55;">
+                    box-shadow:0 4px 14px ${EMERALD}55;">
                   ${opts.cta.label} →
                 </a>
               </td>
@@ -99,43 +98,56 @@ function baseLayout(opts: {
 
         <!-- ══ HEADER ══ -->
         <tr>
-          <td style="background:${BLACK};padding:0;">
-            <!-- Gradient bar top -->
-            <div style="height:3px;background:linear-gradient(90deg,${EMERALD},${EMERALD_DARK},${BLACK});"></div>
-            <!-- Logo centré -->
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="padding:32px 36px 28px;">
+          <td background="${FOOTER_LOGO_URL}" bgcolor="${BLACK}" style="background-image:url('${FOOTER_LOGO_URL}');background-size:cover;background-position:center;padding:0;">
+            <!-- Overlay sombre pour lisibilité -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(0,0,0,0.55);">
               <tr>
-                <td align="center">
-                  <img src="${LOGO_URL}" alt="AutoLoc" width="140" height="56"
-                    style="display:block;object-fit:contain;max-width:140px;">
-                </td>
-              </tr>
-              <tr>
-                <td align="center" style="padding-top:14px;">
-                  <span style="display:inline-block;background:${EMERALD}18;border:1px solid ${EMERALD}44;
-                    color:${EMERALD};font-size:10px;font-weight:700;letter-spacing:0.12em;
-                    text-transform:uppercase;padding:4px 14px;border-radius:100px;">
-                    Location de véhicules entre particuliers
-                  </span>
+                <td style="padding:0;">
+                  <!-- Gradient bar top -->
+                  <div style="height:3px;background:linear-gradient(90deg,${EMERALD},${EMERALD_DARK},rgba(0,0,0,0));"></div>
+                  <!-- Logo centré -->
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="padding:32px 36px 28px;">
+                    <tr>
+                      <td align="center">
+                        <img src="${LOGO_URL}" alt="AutoLoc" width="140" height="56"
+                          style="display:block;object-fit:contain;max-width:140px;">
+                      </td>
+                    </tr>
+                    <tr>
+                      <td align="center" style="padding-top:14px;">
+                        <span style="display:inline-block;background:${EMERALD}28;border:1px solid ${EMERALD}66;
+                          color:${EMERALD};font-size:10px;font-weight:700;letter-spacing:0.12em;
+                          text-transform:uppercase;padding:4px 14px;border-radius:100px;">
+                          Location de véhicules entre particuliers
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                  <!-- Séparateur dégradé -->
+                  <div style="height:1px;background:linear-gradient(90deg,transparent,${EMERALD}55,transparent);margin:0 36px;"></div>
                 </td>
               </tr>
             </table>
-            <!-- Séparateur dégradé -->
-            <div style="height:1px;background:linear-gradient(90deg,transparent,${EMERALD}55,transparent);margin:0 36px;"></div>
           </td>
         </tr>
 
         <!-- ══ TITLE BAND ══ -->
         <tr>
-          <td style="background:${BLACK};padding:0 36px 32px;">
-            ${badge}
-            <h1 style="margin:0;font-size:26px;font-weight:800;color:${WHITE};
-              letter-spacing:-0.03em;line-height:1.2;">
-              ${opts.title}
-            </h1>
-            ${opts.subtitle
-                ? `<p style="margin:8px 0 0;font-size:14px;color:#9ca3af;line-height:1.5;">${opts.subtitle}</p>`
-                : ''}
+          <td background="${FOOTER_LOGO_URL}" bgcolor="${BLACK}" style="background-image:url('${FOOTER_LOGO_URL}');background-size:cover;background-position:center;padding:0;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(0,0,0,0.60);">
+              <tr>
+                <td style="padding:0 36px 32px;">
+                  ${badge}
+                  <h1 style="margin:0;font-size:26px;font-weight:800;color:${WHITE};
+                    letter-spacing:-0.03em;line-height:1.2;">
+                    ${opts.title}
+                  </h1>
+                  ${opts.subtitle
+                      ? `<p style="margin:8px 0 0;font-size:14px;color:#9ca3af;line-height:1.5;">${opts.subtitle}</p>`
+                      : ''}
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
 
