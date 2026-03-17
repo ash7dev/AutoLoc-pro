@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
     Check, X, LogIn, LogOut, Loader2, Scale,
-    AlertTriangle, ChevronRight, CheckCircle2, FileWarning, ShieldAlert,
+    AlertTriangle, ChevronRight, CheckCircle2, FileWarning, ShieldAlert, Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReservationStatut } from "@/lib/nestjs/reservations";
@@ -18,6 +18,8 @@ interface ReservationActionsProps {
     reservationId: string;
     statut: ReservationStatut;
     locataireKycStatus?: string;
+    checkinProprietaireLe?: string;
+    checkinLocataireLe?: string;
     className?: string;
 }
 
@@ -377,7 +379,9 @@ function DisputeForm({
    MAIN
 ════════════════════════════════════════════════════════════════ */
 export function ReservationActions({
-    reservationId, statut, locataireKycStatus, className,
+    reservationId, statut, locataireKycStatus,
+    checkinProprietaireLe, checkinLocataireLe,
+    className,
 }: ReservationActionsProps) {
     const router = useRouter();
     const [loading, setLoading] = useState<string | null>(null);
@@ -443,6 +447,21 @@ export function ReservationActions({
     return (
         <div className={cn("space-y-3", className)}>
 
+            {/* Check-in propriétaire déjà fait — attente locataire */}
+            {statut === "CONFIRMEE" && checkinProprietaireLe && !checkinLocataireLe && (
+                <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3.5">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Clock className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[12.5px] font-bold text-emerald-800">Vous avez confirmé le check-in</p>
+                        <p className="text-[11.5px] text-emerald-700 mt-0.5 leading-relaxed">
+                            En attente de confirmation du locataire pour démarrer la location.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Blocage KYC locataire */}
             {kycBlocked && kycLabel && (
                 <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5">
@@ -458,15 +477,21 @@ export function ReservationActions({
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-2">
-                {actions.map(action => (
-                    <ActionButton
-                        key={action.key}
-                        action={action}
-                        loading={loading === action.key}
-                        disabled={isLoading || (action.key === "confirm" && kycBlocked)}
-                        onClick={() => handleAction(action)}
-                    />
-                ))}
+                {actions
+                    .filter(action =>
+                        // Cacher le bouton checkin si le propriétaire a déjà confirmé
+                        !(action.key === "checkin" && checkinProprietaireLe)
+                    )
+                    .map(action => (
+                        <ActionButton
+                            key={action.key}
+                            action={action}
+                            loading={loading === action.key}
+                            disabled={isLoading || (action.key === "confirm" && kycBlocked)}
+                            onClick={() => handleAction(action)}
+                        />
+                    ))
+                }
             </div>
 
             {/* Inline confirm */}

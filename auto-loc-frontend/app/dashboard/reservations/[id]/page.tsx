@@ -6,6 +6,7 @@ import { ApiError } from '@/lib/nestjs/api-client';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchReservationById } from '@/lib/nestjs/reservations';
 import { TenantCancelButton } from '@/features/reservations/components/tenant-cancel-button';
+import { TenantCheckinButton } from '@/features/reservations/components/tenant-checkin-button';
 import { ReviewForm } from '@/features/reviews/components/review-form';
 import {
     ArrowLeft, Car, Banknote, Clock, CheckCircle2,
@@ -216,14 +217,26 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                 </div>
 
                 {/* ══════════════════════════════════════════════════
-                    TENANT CANCEL ACTION
+                    TENANT ACTIONS
                 ══════════════════════════════════════════════════ */}
-                {['EN_ATTENTE_PAIEMENT', 'PAYEE', 'CONFIRMEE'].includes(r.statut) && (
-                    <TenantCancelButton
-                        reservationId={r.id}
-                        vehicleName={v ? `${v.marque} ${v.modele}` : undefined}
-                    />
-                )}
+                <div className="space-y-3">
+                    {/* Check-in locataire — disponible quand CONFIRMEE */}
+                    {r.statut === 'CONFIRMEE' && (
+                        <TenantCheckinButton
+                            reservationId={r.id}
+                            alreadyConfirmed={!!r.checkinLocataireLe}
+                            ownerConfirmed={!!r.checkinProprietaireLe}
+                        />
+                    )}
+
+                    {/* Annulation */}
+                    {['EN_ATTENTE_PAIEMENT', 'PAYEE', 'CONFIRMEE'].includes(r.statut) && (
+                        <TenantCancelButton
+                            reservationId={r.id}
+                            vehicleName={v ? `${v.marque} ${v.modele}` : undefined}
+                        />
+                    )}
+                </div>
 
                 {/* ══════════════════════════════════════════════════
                     CONTRAT
