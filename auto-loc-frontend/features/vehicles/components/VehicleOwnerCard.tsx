@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Vehicle } from '@/lib/nestjs/vehicles';
-import { formatPrice } from '@/features/vehicles/owner/vehicle-helpers';
+
 import { useCurrency } from '@/providers/currency-provider';
 
 interface OwnerCardProps { vehicle: Vehicle }
@@ -110,13 +110,13 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum }: M
                         onClick={() => setSheetOpen(false)}
                     />
                     {/* Sheet */}
-                    <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white rounded-t-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+                    <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white rounded-t-3xl shadow-2xl flex flex-col max-h-[92dvh]">
                         {/* Handle */}
-                        <div className="flex justify-center pt-3 pb-1">
+                        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
                             <div className="w-10 h-1 rounded-full bg-slate-200" />
                         </div>
                         {/* Title */}
-                        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-50">
+                        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 flex-shrink-0">
                             <h3 className="text-[16px] font-black text-slate-900">Réserver ce véhicule</h3>
                             <button
                                 type="button"
@@ -126,15 +126,12 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum }: M
                                 <ChevronUp className="w-4 h-4 text-slate-500" strokeWidth={2.5} />
                             </button>
                         </div>
-                        {/* Inline ReservationSidebar content */}
-                        <div className="px-5 pb-8 pt-4">
-                            {/* Import the sidebar inline for the sheet */}
-                            <SheetReservationForm
-                                vehicleId={vehicleId}
-                                prixParJour={prixParJour}
-                                joursMinimum={joursMinimum}
-                            />
-                        </div>
+                        {/* Content + sticky footer */}
+                        <SheetReservationForm
+                            vehicleId={vehicleId}
+                            prixParJour={prixParJour}
+                            joursMinimum={joursMinimum}
+                        />
                     </div>
                 </>
             )}
@@ -221,7 +218,7 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBa
     }, [nbJours, doFetch]);
 
     return (
-        <div className="space-y-4">
+        <>
             <ReservationGateModal
                 open={gateOpen}
                 onOpenChange={setGateOpen}
@@ -229,63 +226,74 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBa
                 onProceed={() => router.push(`/vehicle/${vehicleId}/payment?${buildParams()}`)}
             />
 
-            {/* Calendar */}
-            <ReservationCalendar
-                vehicleId={vehicleId}
-                joursMinimum={joursMinimum}
-                dateDebut={dateDebut}
-                dateFin={dateFin}
-                onDateDebutChange={setDateDebut}
-                onDateFinChange={setDateFin}
-            />
+            {/* Scrollable content */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 pt-4 pb-4 space-y-4">
+                <ReservationCalendar
+                    vehicleId={vehicleId}
+                    joursMinimum={joursMinimum}
+                    dateDebut={dateDebut}
+                    dateFin={dateFin}
+                    onDateDebutChange={setDateDebut}
+                    onDateFinChange={setDateFin}
+                />
 
-            {/* Pricing */}
-            {datesValid && pricing && !loadingPricing && (
-                <div className="rounded-2xl bg-slate-50 p-4 space-y-2.5">
-                    <div className="flex justify-between text-[13px]">
-                        <span className="text-slate-500">{currencyFormat(pricing.prixParJour)} × {nbJours}j</span>
-                        <span className="font-semibold text-slate-700 tabular-nums">{currencyFormat(pricing.totalBase)}</span>
+                {datesValid && pricing && !loadingPricing && (
+                    <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 space-y-2.5">
+                        <div className="flex justify-between text-[13px]">
+                            <span className="text-slate-500">{currencyFormat(pricing.prixParJour)} × {nbJours}j</span>
+                            <span className="font-semibold text-slate-700 tabular-nums">{currencyFormat(pricing.totalBase)}</span>
+                        </div>
+                        <div className="flex justify-between text-[13px]">
+                            <span className="text-slate-500">Frais de service (15%)</span>
+                            <span className="font-semibold text-slate-700 tabular-nums">{currencyFormat(pricing.montantCommission)}</span>
+                        </div>
+                        <div className="pt-2.5 border-t border-slate-200 flex justify-between items-center">
+                            <span className="font-bold text-slate-900">Total</span>
+                            <span className="font-black text-emerald-600 text-[16px] tabular-nums">{currencyFormat(pricing.totalLocataire)}</span>
+                        </div>
                     </div>
-                    <div className="flex justify-between text-[13px]">
-                        <span className="text-slate-500">Frais de service (15%)</span>
-                        <span className="font-semibold text-slate-700 tabular-nums">{currencyFormat(pricing.montantCommission)}</span>
+                )}
+                {loadingPricing && (
+                    <div className="flex justify-center py-3">
+                        <ArrowRight className="w-4 h-4 animate-spin text-emerald-400" />
                     </div>
-                    <div className="pt-2 border-t border-slate-200 flex justify-between">
-                        <span className="font-bold text-slate-900">Total</span>
-                        <span className="font-black text-emerald-600 text-[15px] tabular-nums">{currencyFormat(pricing.totalLocataire)}</span>
+                )}
+            </div>
+
+            {/* Sticky footer */}
+            <div className="flex-shrink-0 border-t border-slate-100 px-5 pt-4 pb-8 space-y-3 bg-white">
+                <label className="flex items-start gap-3 cursor-pointer">
+                    <div className={cn('mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all',
+                        contractAccepted ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300')}>
+                        {contractAccepted && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                     </div>
-                </div>
-            )}
-            {loadingPricing && <div className="flex justify-center py-2"><ArrowRight className="w-4 h-4 animate-spin text-emerald-400" /></div>}
+                    <input type="checkbox" checked={contractAccepted} onChange={e => setContractAccepted(e.target.checked)} className="sr-only" />
+                    <span className="text-[12px] text-slate-500 leading-relaxed">
+                        J&apos;accepte les <span className="text-emerald-600 underline decoration-dotted">conditions</span> et le <span className="text-emerald-600 underline decoration-dotted">contrat</span>.
+                    </span>
+                </label>
 
-            {/* Contract */}
-            <label className="flex items-start gap-3 cursor-pointer group">
-                <div className={cn('mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all',
-                    contractAccepted ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300')}>
-                    {contractAccepted && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                </div>
-                <input type="checkbox" checked={contractAccepted} onChange={e => setContractAccepted(e.target.checked)} className="sr-only" />
-                <span className="text-[12px] text-slate-500 leading-relaxed">
-                    J&apos;accepte les <span className="text-emerald-600 underline decoration-dotted">conditions</span> et le <span className="text-emerald-600 underline decoration-dotted">contrat</span>.
-                </span>
-            </label>
+                <button
+                    type="button"
+                    disabled={!canReserve}
+                    onClick={handleReserve}
+                    className={cn(
+                        'w-full flex items-center justify-center gap-2 rounded-2xl py-4 text-[15px] font-bold transition-all duration-200',
+                        canReserve
+                            ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 active:scale-[0.98]'
+                            : 'bg-slate-100 text-slate-300 cursor-not-allowed',
+                    )}
+                >
+                    <CreditCard className="w-4.5 h-4.5" strokeWidth={2} />
+                    Confirmer et réserver
+                    <ArrowRight className="w-4 h-4 ml-auto" strokeWidth={2.5} />
+                </button>
 
-            {/* CTA */}
-            <button
-                type="button" disabled={!canReserve}
-                onClick={handleReserve}
-                className={cn('w-full flex items-center justify-center gap-2 rounded-2xl py-4 text-[15px] font-bold transition-all duration-200',
-                    canReserve ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600' : 'bg-slate-100 text-slate-300 cursor-not-allowed')}
-            >
-                <CreditCard className="w-4.5 h-4.5" strokeWidth={2} />
-                Confirmer et réserver
-                <ArrowRight className="w-4 h-4 ml-auto" strokeWidth={2.5} />
-            </button>
-
-            <p className="text-[11px] text-center text-slate-400">
-                <ShieldCheck className="w-3 h-3 inline mr-1" strokeWidth={1.75} />
-                Débité après confirmation du propriétaire
-            </p>
-        </div>
+                <p className="text-[11px] text-center text-slate-400">
+                    <ShieldCheck className="w-3 h-3 inline mr-1" strokeWidth={1.75} />
+                    Débité après confirmation du propriétaire
+                </p>
+            </div>
+        </>
     );
 }

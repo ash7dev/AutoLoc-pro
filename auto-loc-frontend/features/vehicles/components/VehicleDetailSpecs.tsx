@@ -7,7 +7,7 @@ import {
   Snowflake, Navigation, Bluetooth, Camera, Baby, Disc3, Armchair, Gauge,
   CheckCircle2,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 import type { Vehicle } from '@/lib/nestjs/vehicles';
 
 interface Props { vehicle: Vehicle }
@@ -17,7 +17,6 @@ function QuickStat({
   icon: Icon,
   label,
   value,
-  accent = false,
 }: {
   icon: React.ElementType;
   label: string;
@@ -25,16 +24,13 @@ function QuickStat({
   accent?: boolean;
 }) {
   return (
-    <div className={cn(
-      'flex flex-col items-center justify-center gap-1.5 px-4 py-4 text-center',
-      'shrink-0 w-[88px]',
-    )}>
-      <span className="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-50">
-        <Icon className="w-4 h-4 text-emerald-600" strokeWidth={1.75} />
+    <div className="flex flex-col items-center gap-2 rounded-2xl border border-slate-100 bg-white px-2 py-4 text-center shadow-sm">
+      <span className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]">
+        <Icon className="w-4.5 h-4.5 text-emerald-600" strokeWidth={1.75} />
       </span>
       <div>
-        <p className="text-[15px] font-bold text-slate-900 leading-tight">{value}</p>
-        <p className="text-[11px] font-semibold text-slate-600 mt-0.5 uppercase tracking-wide">{label}</p>
+        <p className="text-[13px] font-black text-slate-900 leading-tight">{value}</p>
+        <p className="text-[9.5px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{label}</p>
       </div>
     </div>
   );
@@ -125,34 +121,13 @@ export function VehicleDetailSpecs({ vehicle }: Props): React.ReactElement {
     <div className="space-y-5">
       <h2 className="text-[17px] font-black tracking-tight text-slate-900">Caractéristiques</h2>
 
-      {/* Quick stats horizontal bar */}
-      <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
-        <div className="flex divide-x divide-slate-100 overflow-x-auto scrollbar-none">
-          {fuelLabel && (
-            <QuickStat icon={Fuel} label="Carburant" value={fuelLabel} />
-          )}
-          {transLabel && (
-            <QuickStat icon={Settings2} label="Boîte" value={transLabel} />
-          )}
-          {vehicle.nombrePlaces && (
-            <QuickStat icon={Users} label="Places" value={`${vehicle.nombrePlaces}`} />
-          )}
-          {vehicle.joursMinimum && (
-            <QuickStat
-              icon={CalendarDays}
-              label="Min."
-              value={`${vehicle.joursMinimum}j`}
-              accent
-            />
-          )}
-          {vehicle.ageMinimum && (
-            <QuickStat
-              icon={UserCheck}
-              label="Âge min."
-              value={`${vehicle.ageMinimum} ans`}
-            />
-          )}
-        </div>
+      {/* Quick stats grid */}
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+        {fuelLabel && <QuickStat icon={Fuel} label="Carburant" value={fuelLabel} />}
+        {transLabel && <QuickStat icon={Settings2} label="Boîte" value={transLabel} />}
+        {vehicle.nombrePlaces && <QuickStat icon={Users} label="Places" value={`${vehicle.nombrePlaces}`} />}
+        {vehicle.joursMinimum && <QuickStat icon={CalendarDays} label="Min." value={`${vehicle.joursMinimum}j`} />}
+        {vehicle.ageMinimum && <QuickStat icon={UserCheck} label="Âge min." value={`${vehicle.ageMinimum} ans`} />}
       </div>
 
       {/* Equipment grid */}
