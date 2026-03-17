@@ -146,6 +146,9 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef } from 'react';
 import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles';
 import { ReservationCalendar } from '@/features/vehicles/components/ReservationCalendar';
+import { apiFetch, ApiError } from '@/lib/nestjs/api-client';
+import type { ProfileResponse } from '@/lib/nestjs/auth';
+import { ReservationGateModal } from '@/features/reservations/components/ReservationGateModal';
 
 function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBarProps) {
     const router = useRouter();
@@ -155,6 +158,9 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBa
     const [pricing, setPricing] = useState<PricingResponse | null>(null);
     const [loadingPricing, setLoadingPricing] = useState(false);
     const [contractAccepted, setContractAccepted] = useState(false);
+    const [gateOpen, setGateOpen] = useState(false);
+    const [gateProfile, setGateProfile] = useState<ProfileResponse | null>(null);
+    const [gateLoading, setGateLoading] = useState(false);
     const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
     const nbJours = dateDebut && dateFin
@@ -163,6 +169,31 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBa
 
     const datesValid = nbJours >= joursMinimum;
     const canReserve = datesValid && contractAccepted && pricing && !loadingPricing;
+
+    const buildParams = () => new URLSearchParams({ dateDebut, dateFin, nbJours: String(nbJours) });
+
+    async function handleReserve() {
+        if (!canReserve || gateLoading) return;
+        setGateLoading(true);
+        try {
+            const profile = await apiFetch<ProfileResponse>('/auth/me');
+            if (!profile.phoneVerified || !profile.phone || profile.kycStatus !== 'VERIFIE') {
+                setGateProfile(profile);
+                setGateOpen(true);
+                return;
+            }
+            router.push(`/vehicle/${vehicleId}/payment?${buildParams()}`);
+        } catch (err) {
+            if (err instanceof ApiError && err.status === 401) {
+                const redirect = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+                router.push(`/login?redirect=${redirect}`);
+                return;
+            }
+            router.push(`/vehicle/${vehicleId}/payment?${buildParams()}`);
+        } finally {
+            setGateLoading(false);
+        }
+    }
 
     const doFetch = useCallback(async (days: number) => {
         setLoadingPricing(true);
@@ -191,6 +222,13 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBa
 
     return (
         <div className="space-y-4">
+            <ReservationGateModal
+                open={gateOpen}
+                onOpenChange={setGateOpen}
+                profile={gateProfile}
+                onProceed={() => router.push(`/vehicle/${vehicleId}/payment?${buildParams()}`)}
+            />
+
             {/* Calendar */}
             <ReservationCalendar
                 vehicleId={vehicleId}
@@ -235,7 +273,7 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBa
             {/* CTA */}
             <button
                 type="button" disabled={!canReserve}
-                onClick={() => canReserve && router.push(`/vehicle/${vehicleId}/payment?${new URLSearchParams({ dateDebut, dateFin, nbJours: String(nbJours) })}`)}
+                onClick={handleReserve}
                 className={cn('w-full flex items-center justify-center gap-2 rounded-2xl py-4 text-[15px] font-bold transition-all duration-200',
                     canReserve ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600' : 'bg-slate-100 text-slate-300 cursor-not-allowed')}
             >

@@ -481,7 +481,7 @@ export function PhoneVerifyGate({
                 }}
                 disabled={(d) => d > new Date() || d < new Date("1900-01-01")}
                 initialFocus
-                captionLayout="dropdown-buttons"
+                captionLayout="dropdown"
                 fromYear={1940}
                 toYear={new Date().getFullYear() - 16}
               />
