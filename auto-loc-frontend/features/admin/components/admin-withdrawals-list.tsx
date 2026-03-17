@@ -32,7 +32,8 @@ export function AdminWithdrawalsList({ withdrawals }: AdminWithdrawalsListProps)
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'pending' | 'processed' | 'rejected'>('all');
 
-  const filtered = withdrawals.filter((w) => {
+  const safeWithdrawals = Array.isArray(withdrawals) ? withdrawals : [];
+  const filtered = safeWithdrawals.filter((w) => {
     if (filter !== 'all' && w.status !== filter) return false;
     if (search.trim()) {
       const q = search.toLowerCase();

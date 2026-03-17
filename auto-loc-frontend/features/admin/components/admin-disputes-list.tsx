@@ -43,7 +43,8 @@ export function AdminDisputesList({ disputes }: AdminDisputesListProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'open' | 'investigating' | 'resolved' | 'dismissed'>('all');
 
-  const filtered = disputes.filter((d) => {
+  const safeDisputes = Array.isArray(disputes) ? disputes : [];
+  const filtered = safeDisputes.filter((d) => {
     if (filter !== 'all' && d.status !== filter) return false;
     if (search.trim()) {
       const q = search.toLowerCase();

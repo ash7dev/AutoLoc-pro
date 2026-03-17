@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { fetchVehicle, fetchVehiclePricing, type Vehicle, type PricingResponse } from '@/lib/nestjs/vehicles';
 import { useAuthFetch } from '@/features/auth/hooks/use-auth-fetch';
+import { apiFetch, ApiError } from '@/lib/nestjs/api-client';
 import { useRoleStore } from '@/features/auth/stores/role.store';
 import { useCurrency } from '@/providers/currency-provider';
 
@@ -131,6 +132,17 @@ export default function PaymentPage() {
             .finally(() => setLoading(false));
     }, [vehicleId, dateDebut, dateFin, nbJours]);
 
+    async function pollUntilConfirmed(reservationId: string): Promise<boolean> {
+        for (let i = 0; i < 10; i++) {
+            await new Promise<void>((r) => setTimeout(r, 3_000));
+            try {
+                const r = await apiFetch<{ statut: string }>(`/reservations/${reservationId}`);
+                if (r.statut === 'CONFIRMEE') return true;
+            } catch { /* continue */ }
+        }
+        return false;
+    }
+
     async function handlePay() {
         if (!contractAccepted || !vehicle || !pricing) return;
         setStep('processing');
@@ -151,8 +163,30 @@ export default function PaymentPage() {
                     idempotencyKey: crypto.randomUUID(),
                 },
             });
-            await authFetch(`/reservations/${reservationId}/confirm-payment`, { method: 'PATCH' });
             setCreatedReservationId(reservationId);
+
+            // confirm-payment can take time (notifications, contract generation).
+            // Use a 60s timeout and fall back to polling if it times out.
+            try {
+                await apiFetch(`/reservations/${reservationId}/confirm-payment`, {
+                    method: 'PATCH',
+                    timeoutMs: 60_000,
+                    maxRetries: 0,
+                });
+            } catch (confirmErr) {
+                // On timeout (408): the backend may still be processing → poll.
+                if (confirmErr instanceof ApiError && confirmErr.status === 408) {
+                    const confirmed = await pollUntilConfirmed(reservationId);
+                    if (!confirmed) {
+                        setErrorMsg('Réservation créée — la confirmation prend du temps. Vérifiez vos réservations.');
+                        setStep('error');
+                        return;
+                    }
+                } else {
+                    throw confirmErr;
+                }
+            }
+
             setStep('success');
         } catch (err) {
             setErrorMsg(err instanceof Error ? err.message : 'Erreur lors du paiement');
@@ -174,16 +208,33 @@ export default function PaymentPage() {
 
     /* ── Error ── */
     if (!vehicle || !pricing || (step === 'error' && errorMsg)) {
+        const isReservationCreated = !!createdReservationId;
         return (
             <main className="min-h-screen bg-[#F8FAFB] flex flex-col items-center justify-center gap-4 px-4">
-                <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center">
-                    <Shield className="w-7 h-7 text-red-400" strokeWidth={1.5} />
+                <div className={cn('w-16 h-16 rounded-2xl border flex items-center justify-center',
+                    isReservationCreated ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100')}>
+                    <Shield className={cn('w-7 h-7', isReservationCreated ? 'text-amber-400' : 'text-red-400')} strokeWidth={1.5} />
                 </div>
-                <p className="text-[15px] font-bold text-slate-600">{errorMsg || 'Véhicule introuvable'}</p>
-                <button type="button" onClick={() => router.back()}
-                    className="text-[13px] font-semibold text-emerald-600 hover:text-emerald-700 underline decoration-dotted">
-                    Retour
-                </button>
+                <div className="text-center max-w-xs">
+                    <p className="text-[15px] font-bold text-slate-700">{errorMsg || 'Véhicule introuvable'}</p>
+                    {isReservationCreated && (
+                        <p className="text-[12px] text-slate-400 mt-1 leading-relaxed">
+                            Votre réservation a été créée. Le paiement est peut-être en cours de traitement.
+                        </p>
+                    )}
+                </div>
+                <div className="flex flex-col items-center gap-2 mt-1">
+                    {isReservationCreated && (
+                        <Link href="/dashboard/reservations"
+                            className="text-[13px] font-bold text-emerald-600 hover:text-emerald-700 underline decoration-dotted">
+                            Voir mes réservations
+                        </Link>
+                    )}
+                    <button type="button" onClick={() => router.back()}
+                        className="text-[13px] font-semibold text-slate-400 hover:text-slate-600 underline decoration-dotted">
+                        Retour
+                    </button>
+                </div>
             </main>
         );
     }

@@ -388,7 +388,9 @@ export function AdminKycList({ users }: { users: AdminUser[] }) {
   const [rejectUser, setRejectUser]   = useState<AdminUser | null>(null);
   const [toast, setToast]             = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
-  const filtered = users.filter((u) => {
+  const safeUsers = Array.isArray(users) ? users : [];
+
+  const filtered = safeUsers.filter((u) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     const name = u.utilisateur

@@ -617,7 +617,8 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
     open: boolean; vehicleId: string; vehicleName: string; raison: string; isReject: boolean;
   }>({ open: false, vehicleId: '', vehicleName: '', raison: '', isReject: false });
 
-  const filtered = vehicles.filter((v) => {
+  const safeVehicles = Array.isArray(vehicles) ? vehicles : [];
+  const filtered = safeVehicles.filter((v) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     const owner = v.proprietaire ? `${v.proprietaire.prenom ?? ''} ${v.proprietaire.nom ?? ''}`.toLowerCase() : '';

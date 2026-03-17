@@ -313,7 +313,8 @@ export function AdminUsersList({ users }: { users: AdminUser[] }) {
     open: boolean; userId: string; userName: string; raison: string;
   }>({ open: false, userId: '', userName: '', raison: '' });
 
-  const filtered = users.filter((u) => {
+  const safeUsers = Array.isArray(users) ? users : [];
+  const filtered = safeUsers.filter((u) => {
     if (roleFilter !== 'ALL' && u.role !== roleFilter) return false;
     if (!search.trim()) return true;
     const q = search.toLowerCase();

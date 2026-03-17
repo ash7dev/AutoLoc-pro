@@ -39,7 +39,8 @@ export function AdminActivityFeed({ items = [] }: AdminActivityFeedProps) {
   const [filter, setFilter]   = useState<ActivityStatus | 'all'>('all');
   const [visible, setVisible] = useState(PAGE_SIZE);
 
-  const filtered = filter === 'all' ? items : items.filter((i) => i.status === filter);
+  const safeItems = Array.isArray(items) ? items : [];
+  const filtered = filter === 'all' ? safeItems : safeItems.filter((i) => i.status === filter);
   const paginated = filtered.slice(0, visible);
   const hasMore   = visible < filtered.length;
 

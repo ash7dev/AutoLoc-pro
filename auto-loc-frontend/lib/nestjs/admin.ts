@@ -197,14 +197,34 @@ export async function fetchAdminVehicles(
   accessToken: string,
   statut?: AdminVehicleStatus,
 ): Promise<AdminVehicle[]> {
-  return apiFetch<AdminVehicle[]>(ADMIN_PATHS.vehicles(statut), { accessToken });
+  const res = await apiFetch<AdminVehicle[] | { data: AdminVehicle[] } | { vehicles: AdminVehicle[] } | { items: AdminVehicle[] }>(
+    ADMIN_PATHS.vehicles(statut),
+    { accessToken },
+  );
+  if (Array.isArray(res)) return res;
+  if (res && typeof res === 'object') {
+    const obj = res as Record<string, unknown>;
+    const inner = obj.data ?? obj.vehicles ?? obj.items;
+    if (Array.isArray(inner)) return inner as AdminVehicle[];
+  }
+  return [];
 }
 
 export async function fetchAdminUsers(
   accessToken: string,
   kycStatus?: KycStatus,
 ): Promise<AdminUser[]> {
-  return apiFetch<AdminUser[]>(ADMIN_PATHS.users(kycStatus), { accessToken });
+  const res = await apiFetch<AdminUser[] | { data: AdminUser[] } | { users: AdminUser[] } | { items: AdminUser[] }>(
+    ADMIN_PATHS.users(kycStatus),
+    { accessToken },
+  );
+  if (Array.isArray(res)) return res;
+  if (res && typeof res === 'object') {
+    const obj = res as Record<string, unknown>;
+    const inner = obj.data ?? obj.users ?? obj.items;
+    if (Array.isArray(inner)) return inner as AdminUser[];
+  }
+  return [];
 }
 
 export async function fetchAdminStats(accessToken: string): Promise<AdminStats> {
@@ -212,15 +232,36 @@ export async function fetchAdminStats(accessToken: string): Promise<AdminStats> 
 }
 
 export async function fetchAdminActivity(accessToken: string): Promise<AdminActivityItem[]> {
-  return apiFetch<AdminActivityItem[]>(ADMIN_PATHS.activity, { accessToken });
+  const res = await apiFetch<unknown>(ADMIN_PATHS.activity, { accessToken });
+  if (Array.isArray(res)) return res as AdminActivityItem[];
+  if (res && typeof res === 'object') {
+    const obj = res as Record<string, unknown>;
+    const inner = obj.data ?? obj.items ?? obj.activity;
+    if (Array.isArray(inner)) return inner as AdminActivityItem[];
+  }
+  return [];
 }
 
 export async function fetchAdminWithdrawals(accessToken: string): Promise<AdminWithdrawal[]> {
-  return apiFetch<AdminWithdrawal[]>(ADMIN_PATHS.withdrawals, { accessToken });
+  const res = await apiFetch<unknown>(ADMIN_PATHS.withdrawals, { accessToken });
+  if (Array.isArray(res)) return res as AdminWithdrawal[];
+  if (res && typeof res === 'object') {
+    const obj = res as Record<string, unknown>;
+    const inner = obj.data ?? obj.items ?? obj.withdrawals;
+    if (Array.isArray(inner)) return inner as AdminWithdrawal[];
+  }
+  return [];
 }
 
 export async function fetchAdminDisputes(accessToken: string): Promise<AdminDispute[]> {
-  return apiFetch<AdminDispute[]>(ADMIN_PATHS.disputes, { accessToken });
+  const res = await apiFetch<unknown>(ADMIN_PATHS.disputes, { accessToken });
+  if (Array.isArray(res)) return res as AdminDispute[];
+  if (res && typeof res === 'object') {
+    const obj = res as Record<string, unknown>;
+    const inner = obj.data ?? obj.items ?? obj.disputes;
+    if (Array.isArray(inner)) return inner as AdminDispute[];
+  }
+  return [];
 }
 
 export interface AdminNotificationsCount {
