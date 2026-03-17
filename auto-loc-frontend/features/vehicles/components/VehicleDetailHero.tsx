@@ -358,6 +358,7 @@ export function VehicleDetailHero({ vehicle }: Props): React.ReactElement {
               <Heart className={cn('w-4 h-4 transition-colors', liked ? 'fill-red-500 text-red-500' : 'text-slate-700')} strokeWidth={2} />
             </button>
           </div>
+
         </div>
 
         {/* ── Title block ─────────────────────────────────────── */}

@@ -129,14 +129,8 @@ function StepRow({ step, index }: { step: Step; index: number }) {
       {/* Left: step number + icon stack */}
       <div className="relative flex-shrink-0 mt-0.5">
         {/* Step icon */}
-        <div className={cn(
-          "w-10 h-10 rounded-xl flex items-center justify-center",
-          isDone ? "bg-emerald-100" : "bg-slate-100",
-        )}>
-          <StepIcon className={cn(
-            "w-4.5 h-4.5",
-            isDone ? "text-emerald-600" : "text-slate-400",
-          )} strokeWidth={1.75} />
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-100">
+          <StepIcon className="w-4.5 h-4.5 text-emerald-600" strokeWidth={1.75} />
         </div>
         {/* Status indicator — small badge bottom-right */}
         <div className={cn(
@@ -197,7 +191,7 @@ function PreGateOverlay({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-[2px] px-0 sm:px-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-[2px] px-0 sm:px-4 animate-in fade-in duration-200"
       onClick={onCancel}
     >
       <div
