@@ -8,6 +8,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { QueueService } from '../../../infrastructure/queue/queue.service';
 import { RequestUser } from '../../../common/types/auth.types';
 import { ReservationStateMachine } from '../reservation.state-machine';
+import { BusinessRuleException } from '../../../common/exceptions/business-rule.exception';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -45,6 +46,8 @@ export class CheckOutUseCase {
                 id: true,
                 statut: true,
                 proprietaireId: true,
+                dateFin: true,
+                checkoutLe: true,
                 locataire: { select: { telephone: true, prenom: true } },
             },
         });
@@ -55,7 +58,33 @@ export class CheckOutUseCase {
             throw new ForbiddenException('Accès refusé');
         }
 
-        // ── 4. State machine: EN_COURS → TERMINEE ─────────────────────────
+        // ── 4. Guards ──────────────────────────────────────────────────────
+        if (reservation.checkoutLe) {
+            throw new BusinessRuleException(
+                'Le check-out a déjà été effectué',
+                'CHECKOUT_ALREADY_FINALIZED',
+            );
+        }
+
+        if (reservation.statut !== StatutReservation.EN_COURS) {
+            throw new BusinessRuleException(
+                `Le check-out n'est possible que pour une réservation en cours (statut : ${reservation.statut})`,
+                'CHECKOUT_INVALID_STATUS',
+            );
+        }
+
+        const now = new Date();
+        const dateFin = new Date(reservation.dateFin);
+        // Allow checkout from 00:00 on the return day
+        dateFin.setHours(0, 0, 0, 0);
+        if (now < dateFin) {
+            throw new BusinessRuleException(
+                `Le check-out n'est disponible qu'à partir du ${dateFin.toISOString().split('T')[0]}`,
+                'CHECKOUT_TOO_EARLY',
+            );
+        }
+
+        // ── 4b. State machine: EN_COURS → TERMINEE ────────────────────────
         this.stateMachine.transition(
             reservation.statut,
             StatutReservation.TERMINEE,

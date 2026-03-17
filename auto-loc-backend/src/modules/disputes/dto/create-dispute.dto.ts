@@ -6,7 +6,7 @@ export class CreateDisputeDto {
   description!: string;
 
   @IsNumber()
-  @Min(0)
+  @Min(1)
   @IsOptional()
   coutEstime?: number;
 }

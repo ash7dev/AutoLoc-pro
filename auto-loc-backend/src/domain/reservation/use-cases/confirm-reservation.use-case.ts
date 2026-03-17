@@ -10,6 +10,7 @@ import { QueueService } from '../../../infrastructure/queue/queue.service';
 import { RequestUser } from '../../../common/types/auth.types';
 import { ReservationStateMachine } from '../reservation.state-machine';
 import { ContractGenerationService } from '../contract-generation.service';
+import { BusinessRuleException } from '../../../common/exceptions/business-rule.exception';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -59,10 +60,12 @@ export class ConfirmReservationUseCase {
             throw new ForbiddenException('Accès refusé');
         }
 
-        // 3.5. Tenant KYC check — VERIFIE ou EN_ATTENTE acceptés (vérification en cours)
-        const kycOk = ['VERIFIE', 'EN_ATTENTE'].includes(reservation.locataire?.statutKyc ?? '');
-        if (!kycOk) {
-            throw new ForbiddenException("Le locataire doit soumettre son KYC avant que vous puissiez confirmer la réservation");
+        // 3.5. Vérification KYC locataire — seul le statut VERIFIE est accepté
+        if (reservation.locataire?.statutKyc !== 'VERIFIE') {
+            throw new BusinessRuleException(
+                "Le locataire n'a pas encore été vérifié",
+                'TENANT_KYC_NOT_VERIFIED',
+            );
         }
 
         // 4. State machine: PAYEE → CONFIRMEE

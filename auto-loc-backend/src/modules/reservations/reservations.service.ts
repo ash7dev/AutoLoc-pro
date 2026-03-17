@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -354,6 +355,18 @@ export class ReservationsService {
       reservation.locataireId === utilisateur.id ||
       reservation.proprietaireId === utilisateur.id;
     if (!isParty) throw new ForbiddenException('Accès refusé');
+
+    // Validate status: CHECKIN photos only during CONFIRMEE or EN_COURS; CHECKOUT only during EN_COURS
+    const allowedStatuts: StatutReservation[] =
+      type === 'CHECKOUT'
+        ? [StatutReservation.EN_COURS]
+        : [StatutReservation.CONFIRMEE, StatutReservation.EN_COURS];
+
+    if (!allowedStatuts.includes(reservation.statut)) {
+      throw new BadRequestException(
+        `Upload de photo non autorisé pour une réservation en statut ${reservation.statut}`,
+      );
+    }
 
     // Upload to Cloudinary
     const upload = await this.cloudinaryService.uploadEtatLieuPhoto(

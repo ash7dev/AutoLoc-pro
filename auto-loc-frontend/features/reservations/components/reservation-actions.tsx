@@ -88,7 +88,7 @@ function getActions(statut: ReservationStatut): ActionConfig[] {
             return [
                 {
                     key: "dispute", label: "Ouvrir un litige",
-                    description: "Vous avez 48h après la fin de location",
+                    description: "Vous avez 24h après la fin de location",
                     icon: Scale, style: "ghost",
                 },
             ];
@@ -199,7 +199,7 @@ function InlineConfirm({
     onReasonChange?: (v: string) => void;
 }) {
     const isCancel = action.key === "cancel";
-    const canConfirm = !isCancel || (reason?.trim() ?? "").length >= 3;
+    const canConfirm = !isCancel || (reason?.trim() ?? "").length >= 5;
 
     return (
         <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 shadow-sm">
@@ -225,8 +225,8 @@ function InlineConfirm({
                         rows={2}
                         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-red-300 focus:ring-2 focus:ring-red-300/15 resize-none transition-all"
                     />
-                    {(reason?.trim().length ?? 0) > 0 && (reason?.trim().length ?? 0) < 3 && (
-                        <p className="text-[11px] text-red-500 font-medium">Minimum 3 caractères</p>
+                    {(reason?.trim().length ?? 0) > 0 && (reason?.trim().length ?? 0) < 5 && (
+                        <p className="text-[11px] text-red-500 font-medium">Minimum 5 caractères</p>
                     )}
                 </div>
             )}

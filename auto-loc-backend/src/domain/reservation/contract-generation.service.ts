@@ -77,6 +77,7 @@ export class ContractGenerationService {
                         type: true,
                         immatriculation: true,
                         ville: true,
+                        zoneConduite: true,
                     },
                 },
             },
@@ -126,6 +127,7 @@ export class ContractGenerationService {
                 type: reservation.vehicule.type,
                 immatriculation: reservation.vehicule.immatriculation,
                 ville: reservation.vehicule.ville,
+                zoneConduite: reservation.vehicule.zoneConduite ?? null,
             },
             tarifs: {
                 dateDebut: debut.toLocaleDateString('fr-FR'),

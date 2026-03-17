@@ -22,6 +22,7 @@ export interface ContractVehicle {
     type: string;
     immatriculation: string;
     ville: string;
+    zoneConduite?: string | null;
 }
 
 export interface ContractPricing {
@@ -236,10 +237,12 @@ export class ContractPdfService {
 
         const v = data.vehicule;
         const startY = doc.y;
+        const hasZone = !!v.zoneConduite;
+        const boxH = hasZone ? 90 : 60;
 
-        doc.roundedRect(M, startY, CW, 60, 5)
+        doc.roundedRect(M, startY, CW, boxH, 5)
             .fillColor(C.surface).fill();
-        doc.roundedRect(M, startY, CW, 60, 5)
+        doc.roundedRect(M, startY, CW, boxH, 5)
             .strokeColor(C.border).lineWidth(0.5).stroke();
 
         const col = CW / 4;
@@ -258,7 +261,33 @@ export class ContractPdfService {
                 .text(value, x, startY + 24, { width: col - 16 });
         });
 
-        doc.y = startY + 60 + 16;
+        // Zone autorisée — ligne séparée avec accent visuel
+        if (hasZone) {
+            const zoneY = startY + 58;
+            const isHorsDakar = v.zoneConduite === 'Hors Dakar autorisé';
+
+            doc.moveTo(M + 12, zoneY).lineTo(M + CW - 12, zoneY)
+                .strokeColor(C.border).lineWidth(0.5).stroke();
+
+            doc.fontSize(7).fillColor(C.muted).font('Helvetica-Bold')
+                .text('ZONE AUTORISÉE', M + 12, zoneY + 8, { characterSpacing: 0.6 });
+
+            const zoneColor = isHorsDakar ? C.emerald : C.amber;
+            doc.fontSize(9).fillColor(zoneColor).font('Helvetica-Bold')
+                .text(v.zoneConduite!, M + 12, zoneY + 20, { width: CW / 2 });
+
+            doc.fontSize(8).fillColor(C.muted).font('Helvetica')
+                .text(
+                    isHorsDakar
+                        ? 'Circulation autorisée sur tout le territoire sénégalais.'
+                        : 'Toute sortie de la région de Dakar constitue une violation du présent contrat et engage la responsabilité du locataire.',
+                    M + CW / 2,
+                    zoneY + 8,
+                    { width: CW / 2 - 12 },
+                );
+        }
+
+        doc.y = startY + boxH + 16;
     }
 
     // ── Pricing ────────────────────────────────────────────────────────────────

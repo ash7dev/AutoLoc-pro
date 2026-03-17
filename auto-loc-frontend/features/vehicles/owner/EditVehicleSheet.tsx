@@ -55,10 +55,7 @@ const ZONES_DAKAR = [
 
 const ZONES = [
   "Dakar uniquement",
-  "Grande Dakar (Rufisque inclus)",
-  "Toutes régions du Sénégal",
-  "Sénégal + Gambie",
-  "Pas de restriction",
+  "Hors Dakar autorisé",
 ];
 
 const ASSURANCES = [
