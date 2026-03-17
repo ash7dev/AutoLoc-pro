@@ -8,17 +8,14 @@ import { cn } from "@/lib/utils";
 import { useAddVehicleStore, Step3Data } from "../store";
 
 const ZONES = [
-  { value: "Dakar uniquement", icon: "🏙️" },
-  { value: "Grande Dakar (Rufisque inclus)", icon: "🗺️" },
-  { value: "Toutes régions du Sénégal", icon: "🇸🇳" },
-  { value: "Sénégal + Gambie", icon: "🌍" },
-  { value: "Pas de restriction", icon: "✈️" },
+  { value: "Dakar uniquement" },
+  { value: "Hors Dakar autorisé" },
 ];
 
 const ASSURANCES = [
-  { value: "Incluse (tous risques)", icon: "🛡️", desc: "Protection maximale" },
-  { value: "Responsabilité civile uniquement", icon: "⚖️", desc: "Couverture de base" },
-  { value: "Locataire responsable", icon: "📋", desc: "Le locataire gère" },
+  { value: "Incluse (tous risques)", desc: "Protection maximale" },
+  { value: "Responsabilité civile uniquement", desc: "Couverture de base" },
+  { value: "Locataire responsable", desc: "Le locataire gère" },
 ];
 
 const INPUT_CLASS =
@@ -81,7 +78,6 @@ export function StepConditions({ onNext, onBack }: Props) {
                 )}
               >
                 <input type="radio" value={z.value} {...register("zoneConduite")} className="sr-only" />
-                <span className="text-lg">{z.icon}</span>
                 <span className={cn("text-[12px] font-bold", active ? "text-emerald-700" : "text-slate-600")}>
                   {z.value}
                 </span>
@@ -107,7 +103,6 @@ export function StepConditions({ onNext, onBack }: Props) {
                 )}
               >
                 <input type="radio" value={a.value} {...register("assurance")} className="sr-only" />
-                <span className="text-2xl">{a.icon}</span>
                 <span className={cn("text-[12px] font-bold leading-tight", active ? "text-emerald-700" : "text-slate-700")}>
                   {a.value}
                 </span>

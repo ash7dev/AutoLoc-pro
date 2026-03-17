@@ -444,6 +444,7 @@ export class AuthService {
         phoneVerified: true,
         statutKyc: true,
         permisUrl: true,
+        dateNaissance: true,
         _count: { select: { vehicules: true } },
       },
     });
@@ -454,6 +455,7 @@ export class AuthService {
       kycStatus: found.statutKyc as ProfileResponse['kycStatus'],
       hasVehicles: found._count.vehicules > 0,
       hasPermis: !!found.permisUrl,
+      dateNaissance: found.dateNaissance ? found.dateNaissance.toISOString() : null,
     };
   }
 
@@ -502,6 +504,7 @@ export class AuthService {
       kycStatus?: ProfileResponse['kycStatus'];
       hasVehicles?: boolean;
       hasPermis?: boolean;
+      dateNaissance?: string | null;
     } = {},
   ): ProfileResponse {
     return {
@@ -517,6 +520,7 @@ export class AuthService {
       kycStatus: flags.kycStatus,
       hasVehicles: flags.hasVehicles,
       hasPermis: flags.hasPermis,
+      dateNaissance: flags.dateNaissance,
     };
   }
 

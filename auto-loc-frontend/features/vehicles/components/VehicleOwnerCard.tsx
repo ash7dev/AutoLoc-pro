@@ -74,9 +74,10 @@ interface MobileBarProps {
     vehicleId: string;
     prixParJour: number;
     joursMinimum: number;
+    ageMinimum?: number;
 }
 
-export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum }: MobileBarProps): React.ReactElement {
+export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum, ageMinimum }: MobileBarProps): React.ReactElement {
     const [sheetOpen, setSheetOpen] = useState(false);
     const { formatPrice: currencyFormat } = useCurrency();
 
@@ -131,6 +132,7 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum }: M
                             vehicleId={vehicleId}
                             prixParJour={prixParJour}
                             joursMinimum={joursMinimum}
+                            ageMinimum={ageMinimum}
                         />
                     </div>
                 </>
@@ -140,6 +142,7 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum }: M
 }
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useCallback, useEffect, useRef } from 'react';
 import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles';
 import { ReservationCalendar } from '@/features/vehicles/components/ReservationCalendar';
@@ -147,7 +150,16 @@ import { apiFetch, ApiError } from '@/lib/nestjs/api-client';
 import type { ProfileResponse } from '@/lib/nestjs/auth';
 import { ReservationGateModal } from '@/features/reservations/components/ReservationGateModal';
 
-function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBarProps) {
+function calcAge(dateStr: string): number {
+    const birth = new Date(dateStr);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+}
+
+function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum }: MobileBarProps) {
     const router = useRouter();
     const { formatPrice: currencyFormat } = useCurrency();
     const [dateDebut, setDateDebut] = useState('');
@@ -158,6 +170,7 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBa
     const [gateOpen, setGateOpen] = useState(false);
     const [gateProfile, setGateProfile] = useState<ProfileResponse | null>(null);
     const [gateLoading, setGateLoading] = useState(false);
+    const [inlineError, setInlineError] = useState<React.ReactNode | null>(null);
     const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
     const nbJours = dateDebut && dateFin
@@ -171,9 +184,29 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBa
 
     async function handleReserve() {
         if (!canReserve || gateLoading) return;
+        setInlineError(null);
         setGateLoading(true);
         try {
             const profile = await apiFetch<ProfileResponse>('/auth/me');
+            if (ageMinimum && ageMinimum > 0) {
+                if (!profile.dateNaissance) {
+                    setInlineError(
+                        <>
+                            Date de naissance manquante.{' '}
+                            <Link href="/dashboard/settings/profile" className="underline font-bold hover:text-red-900">
+                                Complétez votre profil
+                            </Link>{' '}
+                            pour continuer.
+                        </>,
+                    );
+                    return;
+                }
+                const age = calcAge(profile.dateNaissance);
+                if (age < ageMinimum) {
+                    setInlineError(`Âge minimum requis : ${ageMinimum} ans. Vous avez ${age} ans.`);
+                    return;
+                }
+            }
             if (!profile.phoneVerified || !profile.phone || profile.kycStatus !== 'VERIFIE') {
                 setGateProfile(profile);
                 setGateOpen(true);
@@ -262,6 +295,19 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum }: MobileBa
 
             {/* Sticky footer */}
             <div className="flex-shrink-0 border-t border-slate-100 px-5 pt-4 pb-8 space-y-3 bg-white">
+                {inlineError && (
+                    <div className="rounded-xl border border-red-200 bg-red-50 p-3.5">
+                        <div className="flex items-start gap-2.5">
+                            <div className="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <ShieldCheck className="w-3.5 h-3.5 text-red-500" strokeWidth={2} />
+                            </div>
+                            <div>
+                                <p className="text-[12.5px] font-bold text-red-800">Réservation impossible</p>
+                                <p className="text-[11.5px] text-red-700 mt-0.5 leading-relaxed">{inlineError}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <label className="flex items-start gap-3 cursor-pointer">
                     <div className={cn('mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all',
                         contractAccepted ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300')}>

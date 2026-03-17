@@ -22,6 +22,7 @@ export interface ProfileResponse {
   kycStatus?: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
   hasVehicles?: boolean;
   hasPermis?: boolean;
+  dateNaissance?: string | null;
 }
 
 export interface NestAuthResponse {

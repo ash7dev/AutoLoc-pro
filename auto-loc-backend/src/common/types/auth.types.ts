@@ -44,4 +44,5 @@ export interface ProfileResponse {
   // Indique si l'utilisateur possède au moins un véhicule (quel que soit le statut).
   hasVehicles?: boolean;
   hasPermis?: boolean;
+  dateNaissance?: string | null;
 }
