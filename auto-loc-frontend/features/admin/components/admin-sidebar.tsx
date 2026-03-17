@@ -16,6 +16,7 @@ import {
   LogOut,
   Loader2,
   ShieldCheck,
+  History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSignOut } from '../../auth/hooks/use-signout';
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/admin/withdrawals', icon: Banknote,        label: 'Retraits'        },
   { href: '/dashboard/admin/disputes',    icon: Scale,           label: 'Litiges'         },
   { href: '/dashboard/admin/users',       icon: Users,           label: 'Utilisateurs'    },
+  { href: '/dashboard/admin/audit',       icon: History,         label: 'Audit'           },
 ] as const;
 
 /* ── NavItem ──────────────────────────────────────────────────────── */
@@ -215,7 +217,7 @@ export function AdminSidebar() {
       {/* ══ MOBILE BOTTOM TAB BAR ══════════════════════════════════ */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex bg-white/90 backdrop-blur-xl pb-safe
         border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        {NAV_ITEMS.slice(0, 5).map((item) => {
+        {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === '/dashboard/admin'
               ? pathname === '/dashboard/admin'

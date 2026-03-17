@@ -8,6 +8,7 @@ import {
   Eye, X, ChevronLeft, ChevronRight, Star,
   Key, Calendar, Users, Shield,
   Phone, Mail, Info, ZoomIn, FileText, ExternalLink, Truck,
+  Timer, ArrowUp, ArrowDown, ChevronsUpDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminVehicle } from '../../../lib/nestjs/admin';
@@ -32,7 +33,19 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; d
   ARCHIVE: { label: 'Archivé', bg: 'bg-slate-100', text: 'text-slate-500', dot: 'bg-slate-300', border: 'border-slate-200' },
 };
 
+type VehicleSortKey = 'price' | 'date';
+
 function formatPrice(n: number) { return new Intl.NumberFormat('fr-FR').format(n); }
+
+function ageLabel(dateStr: string): string {
+  const ms = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(ms / 60_000);
+  if (mins < 60) return `${mins} min`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+  return `${Math.floor(hrs / 24)} j`;
+}
+
 function getOwnerInitials(v: AdminVehicle) {
   const p = v.proprietaire?.prenom?.[0] ?? '';
   const n = v.proprietaire?.nom?.[0] ?? '';
@@ -425,12 +438,31 @@ function VehicleDetailModal({ vehicle, pendingId, onClose, onValidate, onSuspend
 
 // ── Suspend dialog ─────────────────────────────────────────────────────────────
 
+const REJECT_TEMPLATES = [
+  'Photos non conformes ou insuffisantes',
+  'Informations incorrectes (marque, modèle, année)',
+  'Document non conforme (carte grise / assurance)',
+  'Prix anormalement élevé',
+  'Annonce en doublon',
+  'Violation des conditions d\'utilisation',
+];
+
+const SUSPEND_TEMPLATES = [
+  'Signalement d\'un locataire',
+  'Photos non conformes',
+  'Document expiré (assurance)',
+  'Litige en cours sur ce véhicule',
+  'Vérification requise par l\'équipe',
+];
+
 function SuspendDialog({ vehicleName, raison, onRaisonChange, onConfirm, onCancel, loading, isReject }: {
   vehicleName: string; raison: string;
   onRaisonChange: (v: string) => void;
   onConfirm: () => void; onCancel: () => void;
   loading: boolean; isReject?: boolean;
 }) {
+  const templates = isReject ? REJECT_TEMPLATES : SUSPEND_TEMPLATES;
+
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
@@ -448,12 +480,34 @@ function SuspendDialog({ vehicleName, raison, onRaisonChange, onConfirm, onCance
           </div>
         </div>
         <div className="p-5">
+          {/* Templates rapides */}
+          <p className="text-[10.5px] font-bold uppercase tracking-widest text-black/30 mb-2">
+            Raisons courantes
+          </p>
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {templates.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => onRaisonChange(t)}
+                className={cn(
+                  'px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all duration-150',
+                  raison === t
+                    ? 'bg-red-500 text-white border-red-500'
+                    : 'bg-slate-50 text-black/60 border-slate-200 hover:bg-slate-100 hover:border-slate-300',
+                )}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
           <label className="block mb-1.5 text-[11.5px] font-bold text-black/50">
-            Raison <span className="text-red-500">*</span>
+            Raison personnalisée <span className="text-red-500">*</span>
           </label>
           <textarea value={raison} onChange={(e) => onRaisonChange(e.target.value)}
             placeholder={isReject ? 'Ex : Informations incorrectes, photos non conformes…' : 'Ex : Photos non conformes…'}
-            rows={3}
+            rows={2}
             className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5
               text-[13px] font-medium text-black placeholder-black/25
               focus:border-red-400/50 focus:outline-none focus:ring-1 focus:ring-red-400/20
@@ -556,6 +610,12 @@ function VehicleCard({ vehicle, pendingId, onValidate, onSuspend, onDetails }: {
               <Clock className="h-3 w-3" strokeWidth={1.75} />
               {new Date(vehicle.creeLe).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
             </span>
+            {vehicle.statut === 'EN_ATTENTE_VALIDATION' && (
+              <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-amber-600">
+                <Timer className="h-3 w-3" strokeWidth={2} />
+                {ageLabel(vehicle.creeLe)}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -610,6 +670,7 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [search, setSearch] = useState('');
+  const [sort, setSort]     = useState<{ key: VehicleSortKey; dir: 'asc' | 'desc' }>({ key: 'date', dir: 'desc' });
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [detailVehicle, setDetailVehicle] = useState<AdminVehicle | null>(null);
@@ -624,6 +685,31 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
     const owner = v.proprietaire ? `${v.proprietaire.prenom ?? ''} ${v.proprietaire.nom ?? ''}`.toLowerCase() : '';
     return v.marque.toLowerCase().includes(q) || v.modele.toLowerCase().includes(q) || owner.includes(q);
   });
+
+  const sorted = [...filtered].sort((a, b) => {
+    const dir = sort.dir === 'asc' ? 1 : -1;
+    if (sort.key === 'price') return (a.prixParJour - b.prixParJour) * dir;
+    return (new Date(a.creeLe).getTime() - new Date(b.creeLe).getTime()) * dir;
+  });
+
+  function toggleSort(key: VehicleSortKey) {
+    setSort((s) => s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'desc' });
+  }
+
+  function SortBtnV({ label, sk }: { label: string; sk: VehicleSortKey }) {
+    const active = sort.key === sk;
+    const Icon = active ? (sort.dir === 'asc' ? ArrowUp : ArrowDown) : ChevronsUpDown;
+    return (
+      <button type="button" onClick={() => toggleSort(sk)}
+        className={cn(
+          'inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[12px] font-semibold transition-all',
+          active ? 'bg-black text-emerald-400' : 'bg-slate-100 text-black/50 hover:bg-slate-200 hover:text-black',
+        )}>
+        <Icon className="w-3 h-3" strokeWidth={2.5} />
+        {label}
+      </button>
+    );
+  }
 
   function showToast(type: 'success' | 'error', msg: string) {
     setToast({ type, msg });
@@ -721,7 +807,11 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
           ))}
         </div>
 
-        <div className="flex items-center gap-2 sm:ml-auto">
+        <div className="flex items-center gap-2 sm:ml-auto flex-wrap">
+          <span className="w-px h-5 bg-slate-200 hidden sm:block" />
+          <SortBtnV label="Prix" sk="price" />
+          <SortBtnV label="Date" sk="date" />
+          <span className="w-px h-5 bg-slate-200" />
           <span className="text-[12px] font-medium text-black/30">
             {filtered.length} véhicule{filtered.length > 1 ? 's' : ''}
           </span>
@@ -751,7 +841,7 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {filtered.map((v) => (
+          {sorted.map((v) => (
             <VehicleCard key={v.id} vehicle={v} pendingId={pendingId}
               onValidate={handleValidate}
               onSuspend={(id, name) => openSuspend(id, name, v.statut === 'EN_ATTENTE_VALIDATION' || v.statut === 'BROUILLON')}

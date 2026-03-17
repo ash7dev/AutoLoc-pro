@@ -9,6 +9,7 @@ import { AdminStatCards } from '../../../features/admin/components/admin-stat-ca
 import { AdminActivityFeed } from '../../../features/admin/components/admin-activity-feed';
 import { AdminQuickActions } from '../../../features/admin/components/admin-quick-actions';
 import { PendingKycWithListingSection } from '../../../features/admin/components/pending-kyc-with-listing';
+import { AdminAutoRefresh } from '../../../features/admin/components/admin-auto-refresh';
 
 function buildMetrics(stats: AdminStats): PlatformMetric[] {
   const revenu = stats.revenuCeMois;
@@ -75,6 +76,7 @@ export default async function AdminOverviewPage(): Promise<React.ReactElement> {
 
   return (
     <div className="p-6 lg:p-8">
+      <AdminAutoRefresh intervalMs={30_000} />
 
       {/* ── Welcome header ── */}
       <div className="mb-8">

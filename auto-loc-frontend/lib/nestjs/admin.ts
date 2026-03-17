@@ -79,6 +79,7 @@ export interface AdminUser {
   email: string | null;
   role: 'LOCATAIRE' | 'PROPRIETAIRE' | 'ADMIN' | 'SUPPORT';
   createdAt: string;
+  lastSeenAt?: string | null;
   isBanned: boolean;
   banRaison: string | null;
   kycStatus: KycStatus;
@@ -86,6 +87,7 @@ export interface AdminUser {
   kyc?: {
     documentUrl: string | null;
     selfieUrl: string | null;
+    permisUrl: string | null;
     soumisLe: string;
   };
   utilisateur: {
@@ -185,7 +187,10 @@ export const ADMIN_PATHS = {
   approveKyc: (id: string) => `/admin/users/${id}/kyc/approve`,
   rejectKyc: (id: string) => `/admin/users/${id}/kyc/reject`,
   withdrawals: '/admin/withdrawals',
+  validateWithdrawal: (id: string) => `/admin/withdrawals/${id}/validate`,
+  rejectWithdrawal: (id: string) => `/admin/withdrawals/${id}/reject`,
   disputes: '/admin/disputes',
+  updateDisputeStatus: (id: string) => `/admin/disputes/${id}/status`,
   notificationsCount: '/admin/notifications/count',
 } as const;
 

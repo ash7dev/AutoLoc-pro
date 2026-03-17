@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import {
   Users, Search, CheckCircle2, XCircle,
   BadgeCheck, ShieldOff, Shield, Loader2, AlertTriangle,
+  Eye, Phone, Mail, Car, Calendar, X, CreditCard,
+  ExternalLink, Clock, Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminUser } from '../../../lib/nestjs/admin';
@@ -13,6 +15,9 @@ import { ADMIN_PATHS } from '../../../lib/nestjs/admin';
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type RoleFilter = 'ALL' | 'LOCATAIRE' | 'PROPRIETAIRE';
+type KycFilter  = 'ALL' | AdminUser['kycStatus'];
+
+const PAGE_SIZE = 20;
 
 const ROLE_LABELS: Record<AdminUser['role'], { label: string; bg: string; text: string; border: string }> = {
   LOCATAIRE:    { label: 'Locataire',    bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200/60'   },
@@ -34,7 +39,37 @@ const ROLE_TABS: { value: RoleFilter; label: string }[] = [
   { value: 'PROPRIETAIRE', label: 'Propriétaires' },
 ];
 
+const KYC_FILTER_TABS: { value: KycFilter; label: string }[] = [
+  { value: 'ALL',         label: 'Tous'         },
+  { value: 'EN_ATTENTE',  label: 'En attente'   },
+  { value: 'VERIFIE',     label: 'Vérifié'      },
+  { value: 'REJETE',      label: 'Rejeté'       },
+  { value: 'NON_VERIFIE', label: 'Non vérifié'  },
+];
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
+
+function exportUsersCsv(users: AdminUser[]) {
+  const headers = ['Nom', 'Email', 'Téléphone', 'Rôle', 'KYC', 'Véhicules', 'Banni', 'Inscrit le'];
+  const rows = users.map((u) => [
+    u.utilisateur ? `${u.utilisateur.prenom} ${u.utilisateur.nom}` : '',
+    u.email ?? '',
+    u.utilisateur?.telephone ?? '',
+    u.role,
+    u.kycStatus,
+    String(u._count?.vehicles ?? 0),
+    u.isBanned ? 'Oui' : 'Non',
+    new Date(u.createdAt).toLocaleDateString('fr-FR'),
+  ]);
+  const csv = [headers, ...rows]
+    .map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'utilisateurs.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
 
 function getInitials(user: AdminUser) {
   const p = user.utilisateur?.prenom?.[0] ?? '';
@@ -46,6 +81,201 @@ function getUserName(user: AdminUser) {
   return user.utilisateur
     ? `${user.utilisateur.prenom} ${user.utilisateur.nom}`
     : (user.email ?? user.id);
+}
+
+// ── User detail modal ──────────────────────────────────────────────────────────
+
+function UserDetailModal({ user, onClose, onBan, onUnban, onApproveKyc, pendingId }: {
+  user: AdminUser;
+  onClose: () => void;
+  onBan: (id: string, name: string) => void;
+  onUnban: (id: string) => void;
+  onApproveKyc: (id: string) => void;
+  pendingId: string | null;
+}) {
+  const isLoading = pendingId === user.id;
+  const role = ROLE_LABELS[user.role];
+  const kyc  = KYC_LABELS[user.kycStatus];
+  const name = getUserName(user);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl shadow-black/20 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90dvh]"
+      >
+        {/* Header */}
+        <div className="relative flex-shrink-0 flex items-center justify-between px-5 py-4 bg-black overflow-hidden">
+          <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-emerald-400/10 blur-3xl pointer-events-none" />
+          <div className="relative z-10 flex items-center gap-3">
+            <div className={cn(
+              'flex items-center justify-center w-11 h-11 rounded-xl text-[15px] font-black flex-shrink-0 overflow-hidden',
+              user.isBanned ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-emerald-400',
+            )}>
+              {user.utilisateur?.avatarUrl
+                ? <img src={user.utilisateur.avatarUrl} alt={name} className="w-full h-full object-cover" />
+                : getInitials(user)
+              }
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-0.5">Profil utilisateur</p>
+              <p className="text-[14px] font-black text-white leading-tight">{name}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border', role.bg, role.text, role.border)}>
+                  {role.label}
+                </span>
+                {user.isBanned && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-500/20 border border-red-400/30 px-2 py-0.5 text-[10px] font-bold text-red-400">
+                    <ShieldOff className="w-2.5 h-2.5" strokeWidth={2.5} /> Banni
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <button type="button" onClick={onClose}
+            className="relative z-10 flex items-center justify-center w-8 h-8 rounded-xl border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all">
+            <X className="w-4 h-4" strokeWidth={2} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-4">
+
+          {/* Coordonnées */}
+          <div className="space-y-2">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-black/30">Coordonnées</p>
+            <div className="rounded-xl border border-slate-100 bg-slate-50/60 divide-y divide-slate-100">
+              {user.email && (
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <Mail className="w-3.5 h-3.5 text-black/30 flex-shrink-0" strokeWidth={1.75} />
+                  <span className="text-[13px] font-medium text-black/70 truncate">{user.email}</span>
+                </div>
+              )}
+              {user.utilisateur?.telephone ? (
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <Phone className="w-3.5 h-3.5 text-black/30 flex-shrink-0" strokeWidth={1.75} />
+                  <span className="text-[13px] font-medium text-black/70">{user.utilisateur.telephone}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <Phone className="w-3.5 h-3.5 text-black/20 flex-shrink-0" strokeWidth={1.75} />
+                  <span className="text-[13px] font-medium text-black/25 italic">Téléphone non renseigné</span>
+                </div>
+              )}
+              <div className="flex items-center gap-3 px-4 py-3">
+                <Calendar className="w-3.5 h-3.5 text-black/30 flex-shrink-0" strokeWidth={1.75} />
+                <span className="text-[13px] font-medium text-black/70">
+                  Inscrit le {new Date(user.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </span>
+              </div>
+              {user.lastSeenAt && (
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <Clock className="w-3.5 h-3.5 text-black/30 flex-shrink-0" strokeWidth={1.75} />
+                  <span className="text-[13px] font-medium text-black/70">
+                    Vu le {new Date(user.lastSeenAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Statuts */}
+          <div className="space-y-2">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-black/30">Vérifications</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-black/30 mb-1.5">KYC</p>
+                <span className={cn('inline-flex items-center gap-1.5 text-[12px] font-bold', kyc.text)}>
+                  <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', kyc.dot)} />
+                  {kyc.label}
+                </span>
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-black/30 mb-1.5">Permis</p>
+                <span className={cn(
+                  'inline-flex items-center gap-1.5 text-[12px] font-bold',
+                  user.kyc?.permisUrl ? 'text-emerald-600' : 'text-black/35',
+                )}>
+                  <CreditCard className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  {user.kyc?.permisUrl ? 'Fourni' : 'Non fourni'}
+                </span>
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-black/30 mb-1.5">Véhicules</p>
+                <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-black/70">
+                  <Car className="w-3.5 h-3.5 text-black/30" strokeWidth={1.75} />
+                  {user._count?.vehicles ?? 0} annonce{(user._count?.vehicles ?? 0) > 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-black/30 mb-1.5">Compte</p>
+                <span className={cn('text-[12px] font-bold', user.isBanned ? 'text-red-500' : 'text-emerald-600')}>
+                  {user.isBanned ? 'Banni' : 'Actif'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Raison du ban */}
+          {user.isBanned && user.banRaison && (
+            <div className="rounded-xl border border-red-100 bg-red-50/60 px-4 py-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-red-400 mb-1">Raison du bannissement</p>
+              <p className="text-[13px] font-medium text-red-700">{user.banRaison}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer actions */}
+        <div className="flex-shrink-0 border-t border-slate-100 bg-slate-50/80 px-5 py-4 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={onClose}
+              className="text-[12.5px] font-semibold text-black/40 hover:text-black/70 transition-colors">
+              Fermer
+            </button>
+            {user.role === 'PROPRIETAIRE' && (user._count?.vehicles ?? 0) > 0 && (
+              <a
+                href={`/dashboard/admin/vehicles?owner=${user.id}`}
+                className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+              >
+                <ExternalLink className="w-3.5 h-3.5" strokeWidth={2} />
+                Voir les annonces
+              </a>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {user.kycStatus === 'EN_ATTENTE' && (
+              <button type="button" disabled={isLoading}
+                onClick={() => { onApproveKyc(user.id); onClose(); }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-amber-300/50 bg-amber-50 text-[12px] font-bold text-amber-700 hover:bg-amber-100 transition-all disabled:opacity-40">
+                {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BadgeCheck className="w-3.5 h-3.5" strokeWidth={2} />}
+                Approuver KYC
+              </button>
+            )}
+            {user.role !== 'ADMIN' && (
+              user.isBanned ? (
+                <button type="button" disabled={isLoading}
+                  onClick={() => { onUnban(user.id); onClose(); }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-black text-emerald-400 text-[12px] font-bold hover:bg-emerald-500 hover:text-white shadow-sm transition-all disabled:opacity-40">
+                  {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Shield className="w-3.5 h-3.5" strokeWidth={2} />}
+                  Débannir
+                </button>
+              ) : (
+                <button type="button" disabled={isLoading}
+                  onClick={() => { onClose(); onBan(user.id, name); }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-[12px] font-bold text-black/50 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all disabled:opacity-40">
+                  <ShieldOff className="w-3.5 h-3.5" strokeWidth={2} />
+                  Bannir
+                </button>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ── Ban dialog ─────────────────────────────────────────────────────────────────
@@ -136,12 +366,13 @@ function BanDialog({ userName, raison, onRaisonChange, onConfirm, onCancel, load
 
 // ── User row ───────────────────────────────────────────────────────────────────
 
-function UserRow({ user, pendingId, onBan, onUnban, onApproveKyc }: {
+function UserRow({ user, pendingId, onBan, onUnban, onApproveKyc, onViewDetail }: {
   user: AdminUser;
   pendingId: string | null;
   onBan: (id: string, name: string) => void;
   onUnban: (id: string) => void;
   onApproveKyc: (id: string) => void;
+  onViewDetail: (user: AdminUser) => void;
 }) {
   const isLoading = pendingId === user.id;
   const role = ROLE_LABELS[user.role];
@@ -237,6 +468,16 @@ function UserRow({ user, pendingId, onBan, onUnban, onApproveKyc }: {
       {/* Actions */}
       <td className="px-5 py-3.5">
         <div className="flex items-center justify-end gap-2">
+          {/* Voir profil */}
+          <button
+            type="button"
+            onClick={() => onViewDetail(user)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-[11.5px] font-bold text-black/50 hover:bg-slate-50 hover:text-black hover:border-slate-300 transition-all"
+          >
+            <Eye className="h-3.5 w-3.5" strokeWidth={1.75} />
+            Voir
+          </button>
+
           {/* KYC approve */}
           {user.kycStatus === 'EN_ATTENTE' && (
             <button
@@ -305,24 +546,35 @@ function UserRow({ user, pendingId, onBan, onUnban, onApproveKyc }: {
 
 export function AdminUsersList({ users }: { users: AdminUser[] }) {
   const router = useRouter();
-  const [search, setSearch]       = useState('');
+  const [search, setSearch]         = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL');
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  const [toast, setToast]         = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
-  const [banDialog, setBanDialog] = useState<{
+  const [kycFilter, setKycFilter]   = useState<KycFilter>('ALL');
+  const [page, setPage]             = useState(0);
+  const [pendingId, setPendingId]   = useState<string | null>(null);
+  const [detailUser, setDetailUser] = useState<AdminUser | null>(null);
+  const [toast, setToast]           = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [banDialog, setBanDialog]   = useState<{
     open: boolean; userId: string; userName: string; raison: string;
   }>({ open: false, userId: '', userName: '', raison: '' });
 
   const safeUsers = Array.isArray(users) ? users : [];
   const filtered = safeUsers.filter((u) => {
     if (roleFilter !== 'ALL' && u.role !== roleFilter) return false;
+    if (kycFilter  !== 'ALL' && u.kycStatus !== kycFilter) return false;
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     const name = u.utilisateur
       ? `${u.utilisateur.prenom} ${u.utilisateur.nom}`.toLowerCase()
       : '';
-    return name.includes(q) || (u.email ?? '').toLowerCase().includes(q);
+    const phone = u.utilisateur?.telephone ?? '';
+    return name.includes(q) || (u.email ?? '').toLowerCase().includes(q) || phone.includes(q);
   });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage   = Math.min(page, totalPages - 1);
+  const paginated  = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+
+  function resetPage() { setPage(0); }
 
   function showToast(type: 'success' | 'error', msg: string) {
     setToast({ type, msg });
@@ -400,29 +652,46 @@ export function AdminUsersList({ users }: { users: AdminUser[] }) {
   return (
     <>
       {/* ── Toolbar ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-5 flex-wrap">
-        {/* Search */}
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-black/25" strokeWidth={2} />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un utilisateur…"
-            className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5
-              text-[13px] font-medium text-black placeholder-black/25
-              focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20
-              transition-all shadow-sm"
-          />
+      <div className="flex flex-col gap-3 mb-5">
+        {/* Row 1: Search + counter */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-black/25" strokeWidth={2} />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); resetPage(); }}
+              placeholder="Nom, email ou téléphone…"
+              className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5
+                text-[13px] font-medium text-black placeholder-black/25
+                focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20
+                transition-all shadow-sm"
+            />
+          </div>
+          <div className="flex items-center gap-2 sm:ml-auto">
+            <button
+              type="button"
+              onClick={() => exportUsersCsv(filtered)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-[12px] font-semibold text-black/50 hover:bg-slate-50 hover:text-black hover:border-slate-300 transition-all"
+            >
+              <Download className="w-3.5 h-3.5" strokeWidth={2} />
+              CSV
+            </button>
+            <span className="text-[12px] font-medium text-black/30">
+              {filtered.length} utilisateur{filtered.length > 1 ? 's' : ''}
+            </span>
+            <span className="inline-flex items-center justify-center min-w-[28px] h-7 px-2
+              rounded-xl bg-black text-emerald-400 text-[12px] font-black">
+              {filtered.length}
+            </span>
+          </div>
         </div>
 
-        {/* Role tabs */}
-        <div className="flex items-center gap-1.5">
+        {/* Row 2: Role tabs */}
+        <div className="flex items-center gap-1.5 flex-wrap">
           {ROLE_TABS.map((tab) => (
-            <button
-              key={tab.value}
-              type="button"
-              onClick={() => setRoleFilter(tab.value)}
+            <button key={tab.value} type="button"
+              onClick={() => { setRoleFilter(tab.value); resetPage(); }}
               className={cn(
                 'px-3.5 py-2 rounded-xl text-[12.5px] font-semibold transition-all duration-200',
                 roleFilter === tab.value
@@ -433,17 +702,24 @@ export function AdminUsersList({ users }: { users: AdminUser[] }) {
               {tab.label}
             </button>
           ))}
-        </div>
-
-        {/* Compteur */}
-        <div className="flex items-center gap-2 sm:ml-auto">
-          <span className="text-[12px] font-medium text-black/30">
-            {filtered.length} utilisateur{filtered.length > 1 ? 's' : ''}
-          </span>
-          <span className="inline-flex items-center justify-center min-w-[28px] h-7 px-2
-            rounded-xl bg-black text-emerald-400 text-[12px] font-black">
-            {filtered.length}
-          </span>
+          <span className="w-px h-5 bg-slate-200 mx-1" />
+          {KYC_FILTER_TABS.map((tab) => {
+            const cfg = tab.value !== 'ALL' ? KYC_LABELS[tab.value as AdminUser['kycStatus']] : null;
+            return (
+              <button key={tab.value} type="button"
+                onClick={() => { setKycFilter(tab.value); resetPage(); }}
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12.5px] font-semibold transition-all duration-200',
+                  kycFilter === tab.value
+                    ? 'bg-black text-emerald-400 shadow-sm shadow-black/10'
+                    : 'bg-slate-100 text-black/50 hover:bg-slate-200 hover:text-black',
+                )}
+              >
+                {cfg && <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', cfg.dot)} />}
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -490,7 +766,7 @@ export function AdminUsersList({ users }: { users: AdminUser[] }) {
                   </td>
                 </tr>
               ) : (
-                filtered.map((u) => (
+                paginated.map((u) => (
                   <UserRow
                     key={u.id}
                     user={u}
@@ -498,13 +774,65 @@ export function AdminUsersList({ users }: { users: AdminUser[] }) {
                     onBan={(id, name) => setBanDialog({ open: true, userId: id, userName: name, raison: '' })}
                     onUnban={handleUnban}
                     onApproveKyc={handleApproveKyc}
+                    onViewDetail={setDetailUser}
                   />
                 ))
               )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/60">
+            <span className="text-[12px] font-medium text-black/35">
+              Page {safePage + 1} / {totalPages} · {filtered.length} résultats
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button type="button" disabled={safePage === 0}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 text-[12px] font-semibold text-black/50
+                  hover:bg-white hover:text-black hover:border-slate-300 transition-all
+                  disabled:opacity-30 disabled:cursor-not-allowed">
+                ← Préc.
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i)
+                .filter((i) => Math.abs(i - safePage) <= 2)
+                .map((i) => (
+                  <button key={i} type="button" onClick={() => setPage(i)}
+                    className={cn(
+                      'w-8 h-8 rounded-xl text-[12px] font-bold transition-all',
+                      i === safePage
+                        ? 'bg-black text-emerald-400'
+                        : 'border border-slate-200 text-black/40 hover:bg-white hover:text-black hover:border-slate-300',
+                    )}>
+                    {i + 1}
+                  </button>
+                ))
+              }
+              <button type="button" disabled={safePage >= totalPages - 1}
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 text-[12px] font-semibold text-black/50
+                  hover:bg-white hover:text-black hover:border-slate-300 transition-all
+                  disabled:opacity-30 disabled:cursor-not-allowed">
+                Suiv. →
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Detail modal */}
+      {detailUser && (
+        <UserDetailModal
+          user={detailUser}
+          onClose={() => setDetailUser(null)}
+          onBan={(id, name) => setBanDialog({ open: true, userId: id, userName: name, raison: '' })}
+          onUnban={handleUnban}
+          onApproveKyc={handleApproveKyc}
+          pendingId={pendingId}
+        />
+      )}
 
       {/* Ban dialog */}
       {banDialog.open && (

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CheckCircle2, XCircle, Clock, Eye, Activity, ChevronDown } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Eye, Activity, ChevronDown, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminActivityItem } from '@/lib/nestjs/admin';
 
@@ -37,10 +37,16 @@ interface AdminActivityFeedProps {
 
 export function AdminActivityFeed({ items = [] }: AdminActivityFeedProps) {
   const [filter, setFilter]   = useState<ActivityStatus | 'all'>('all');
+  const [search, setSearch]   = useState('');
   const [visible, setVisible] = useState(PAGE_SIZE);
 
   const safeItems = Array.isArray(items) ? items : [];
-  const filtered = filter === 'all' ? safeItems : safeItems.filter((i) => i.status === filter);
+  const filtered = safeItems.filter((i) => {
+    if (filter !== 'all' && i.status !== filter) return false;
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return i.action.toLowerCase().includes(q) || i.detail.toLowerCase().includes(q);
+  });
   const paginated = filtered.slice(0, visible);
   const hasMore   = visible < filtered.length;
 
@@ -68,6 +74,23 @@ export function AdminActivityFeed({ items = [] }: AdminActivityFeedProps) {
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           En temps réel
         </span>
+      </div>
+
+      {/* ── Search ── */}
+      <div className="px-5 pt-3 pb-2 border-b border-slate-100">
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-black/25" strokeWidth={2} />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setVisible(PAGE_SIZE); }}
+            placeholder="Rechercher une action ou un détail…"
+            className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2
+              text-[12.5px] font-medium text-black placeholder-black/25
+              focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20
+              transition-all"
+          />
+        </div>
       </div>
 
       {/* ── Filter tabs ── */}
