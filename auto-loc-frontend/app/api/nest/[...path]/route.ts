@@ -43,10 +43,14 @@ function setCookies(response: NextResponse, session: NestSession) {
   });
 }
 
-function buildHeaders(accessToken: string | null, contentType: string | null): Record<string, string> {
+function buildHeaders(accessToken: string | null, contentType: string | null, path: string): Record<string, string> {
   const h: Record<string, string> = {};
   if (contentType) h['Content-Type'] = contentType;
   if (accessToken) h['Authorization'] = `Bearer ${accessToken}`;
+  // Injecter la clé interne pour l'endpoint confirm-payment (simulation webhook Wave)
+  if (path.endsWith('/confirm-payment') && process.env.INTERNAL_API_KEY) {
+    h['x-internal-key'] = process.env.INTERNAL_API_KEY;
+  }
   return h;
 }
 
@@ -108,7 +112,7 @@ async function proxy(
   // ── Première tentative ──────────────────────────────────────────
   let res = await fetch(url, {
     method: request.method,
-    headers: buildHeaders(accessToken, contentType),
+    headers: buildHeaders(accessToken, contentType, path),
     body: bodyBuffer ? Buffer.from(bodyBuffer) : undefined,
     redirect: 'manual',
   });
@@ -134,7 +138,7 @@ async function proxy(
         // Retry avec le nouveau token
         res = await fetch(url, {
           method: request.method,
-          headers: buildHeaders(accessToken, contentType),
+          headers: buildHeaders(accessToken, contentType, path),
           body: bodyBuffer ? Buffer.from(bodyBuffer) : undefined,
           redirect: 'manual',
         });
