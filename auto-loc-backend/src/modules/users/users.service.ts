@@ -48,9 +48,10 @@ export class UsersService {
       isBanned: !u.actif || (!!u.bloqueJusqua && u.bloqueJusqua > now),
       banRaison: null,
       kycStatus: u.statutKyc,
-      kyc: u.kycDocumentUrl || u.kycSelfieUrl ? {
+      kyc: u.kycDocumentUrl || u.kycSelfieUrl || u.permisUrl ? {
         documentUrl: u.kycDocumentUrl ?? null,
         selfieUrl: u.kycSelfieUrl ?? null,
+        permisUrl: u.permisUrl ?? null,
         soumisLe: u.misAJourLe.toISOString(),
       } : undefined,
       utilisateur: {

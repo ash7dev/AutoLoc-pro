@@ -273,6 +273,7 @@ function KycDocPanel({ kyc }: { kyc: NonNullable<AdminUser['kyc']> }) {
   const docs = [
     { url: kyc.documentUrl, label: 'Recto — Face avant' },
     { url: kyc.selfieUrl,   label: 'Verso — Face arrière' },
+    { url: kyc.permisUrl,   label: 'Permis de conduire' },
   ];
 
   return (

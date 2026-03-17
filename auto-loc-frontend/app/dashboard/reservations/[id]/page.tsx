@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { ApiError } from '@/lib/nestjs/api-client';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchReservationById } from '@/lib/nestjs/reservations';
-import { ReservationActions } from '@/features/reservations/components/reservation-actions';
+import { TenantCancelButton } from '@/features/reservations/components/tenant-cancel-button';
 import { ReviewForm } from '@/features/reviews/components/review-form';
 import {
     ArrowLeft, Car, Banknote, Clock, CheckCircle2,
@@ -216,9 +216,14 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                 </div>
 
                 {/* ══════════════════════════════════════════════════
-                    ACTIONS
+                    TENANT CANCEL ACTION
                 ══════════════════════════════════════════════════ */}
-                <ReservationActions reservationId={r.id} statut={r.statut} />
+                {['EN_ATTENTE_PAIEMENT', 'PAYEE', 'CONFIRMEE'].includes(r.statut) && (
+                    <TenantCancelButton
+                        reservationId={r.id}
+                        vehicleName={v ? `${v.marque} ${v.modele}` : undefined}
+                    />
+                )}
 
                 {/* ══════════════════════════════════════════════════
                     CONTRAT
