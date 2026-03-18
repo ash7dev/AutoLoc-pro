@@ -390,28 +390,24 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
               <span className="text-[22px] font-black text-slate-800 tabular-nums leading-none">{formatPrice(base)}</span>
               <span className="text-[11px] font-semibold text-slate-400">/jour</span>
             </div>
-            {savings > 0 && minDays != null && (
-              <div className="flex items-center gap-1 mt-0.5">
-                <TrendingDown className="h-2.5 w-2.5 text-amber-500 flex-shrink-0" strokeWidth={2.5} />
-                <span className="text-[9.5px] font-black text-amber-600">−{savings}% dès {minDays}j</span>
-              </div>
-            )}
+            <div className="flex items-center gap-1 mt-0.5 h-4">
+              {savings > 0 && minDays != null && (
+                <>
+                  <TrendingDown className="h-2.5 w-2.5 text-amber-500 flex-shrink-0" strokeWidth={2.5} />
+                  <span className="text-[9.5px] font-black text-amber-600">−{savings}% dès {minDays}j</span>
+                </>
+              )}
+            </div>
           </div>
 
           <span
             className={cn(
-              'relative inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 flex-shrink-0',
-              'text-[12px] font-black text-white overflow-hidden',
-              'shadow-md shadow-emerald-500/20',
-              'group-hover:shadow-lg group-hover:shadow-emerald-500/30',
-              'transition-all duration-300',
+              'inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 flex-shrink-0',
+              'text-[12px] font-black text-emerald-400',
+              'bg-slate-900 hover:bg-slate-800',
+              'transition-all duration-200',
             )}
-            style={{ background: 'linear-gradient(135deg, #34D399 0%, #059669 60%, #047857 100%)' }}
           >
-            <span
-              className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out pointer-events-none"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)' }}
-            />
             Réserver
             <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform duration-200" strokeWidth={2.5} />
           </span>
