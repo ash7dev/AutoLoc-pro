@@ -53,20 +53,14 @@ export function StepReview({ onBack }: Props) {
           reglesSpecifiques: step3?.reglesSpecifiques || undefined,
           equipements: step1.equipements?.length ? step1.equipements : undefined,
           fraisLivraison: step2.fraisLivraison || undefined,
+          photos: photos
+            .filter((p) => p.status === 'done' && p.url && p.publicId)
+            .map((p) => ({ url: p.url!, publicId: p.publicId! })),
         },
       });
 
       createdVehicleId = vehicle.id;
       setVehicleId(vehicle.id);
-
-      for (const file of photos) {
-        const form = new FormData();
-        form.append("file", file);
-        await authFetch(VEHICLE_PATHS.addPhoto(vehicle.id), {
-          method: "POST",
-          body: form as unknown as Record<string, unknown>,
-        });
-      }
 
       if (carteGrise) {
         const cgForm = new FormData();
@@ -107,7 +101,7 @@ export function StepReview({ onBack }: Props) {
   const fmtPrice = (n: number) =>
     new Intl.NumberFormat("fr-FR").format(n) + " FCFA";
 
-  const allValid = !!step1 && !!step2 && photos.length > 0 && !!carteGrise && !!assurance;
+  const allValid = !!step1 && !!step2 && photos.some((p) => p.status === 'done') && !!carteGrise && !!assurance;
 
   return (
     <div className="space-y-6">
@@ -168,7 +162,7 @@ export function StepReview({ onBack }: Props) {
       {/* ━━━ Fichiers ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <ReviewSection icon={FileCheck2} title="Fichiers">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <FileStatus label={`${photos.length} photo(s)`} ok={photos.length > 0} icon={Camera} />
+          <FileStatus label={`${photos.filter(p => p.status === 'done').length} photo(s)`} ok={photos.some(p => p.status === 'done')} icon={Camera} />
           <FileStatus label="Carte Grise" ok={!!carteGrise} icon={FileCheck2} />
           <FileStatus label="Assurance" ok={!!assurance} icon={Shield} />
         </div>

@@ -188,7 +188,49 @@ export const VEHICLE_PATHS = {
   uploadCarteGrise: (id: string) => `/vehicles/${id}/documents/carte-grise`,
   uploadAssurance: (id: string) => `/vehicles/${id}/documents/assurance`,
   blockedDates: (id: string) => `/vehicles/${id}/blocked-dates`,
+  uploadSignature: '/vehicles/upload-signature',
+  linkPhoto: (id: string) => `/vehicles/${id}/photos/link`,
 } as const;
+
+// ── Cloudinary direct upload ──────────────────────────────────────────────────
+
+export interface CloudinarySignature {
+  signature: string;
+  timestamp: number;
+  apiKey: string;
+  cloudName: string;
+  folder: string;
+}
+
+export async function fetchUploadSignature(): Promise<CloudinarySignature> {
+  return apiFetch<CloudinarySignature>('/vehicles/upload-signature');
+}
+
+/** Upload a file directly to Cloudinary using a pre-signed signature. */
+export async function uploadToCloudinary(
+  file: File,
+  sig: CloudinarySignature,
+): Promise<{ url: string; publicId: string }> {
+  const TRANSFORM = 'w_800,h_600,c_fill,f_webp,q_auto';
+  const form = new FormData();
+  form.append('file', file);
+  form.append('timestamp', String(sig.timestamp));
+  form.append('api_key', sig.apiKey);
+  form.append('signature', sig.signature);
+  form.append('folder', sig.folder);
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`,
+    { method: 'POST', body: form },
+  );
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Cloudinary upload failed: ${res.status} ${text}`);
+  }
+  const data = await res.json() as { secure_url: string; public_id: string };
+  const url = data.secure_url.replace('/upload/', `/upload/${TRANSFORM}/`);
+  return { url, publicId: data.public_id };
+}
 
 // ── Blocked dates (public, client-side) ──────────────────────────────────────
 

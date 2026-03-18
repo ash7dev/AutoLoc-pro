@@ -61,6 +61,17 @@ export class VehiclesController {
   }
 
   /**
+   * GET /vehicles/upload-signature — Génère une signature Cloudinary pour l'upload direct.
+   * Le frontend upload le fichier directement vers Cloudinary sans passer par ce serveur.
+   */
+  @Get('upload-signature')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  getUploadSignature() {
+    return this.vehiclesService.getUploadSignature();
+  }
+
+  /**
    * GET /vehicles/me — Liste mes véhicules avec nb réservations.
    * Doit être AVANT GET :id pour éviter que "me" soit capturé comme UUID.
    */
@@ -200,6 +211,20 @@ export class VehiclesController {
       throw new BadRequestException('Fichier requis');
     }
     return this.vehiclesService.addPhoto(id, file);
+  }
+
+  /**
+   * POST /vehicles/:id/photos/link — Enregistre une photo uploadée directement
+   * vers Cloudinary. Reçoit { url, publicId } en JSON (pas de fichier).
+   */
+  @Post(':id/photos/link')
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  linkPhoto(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: { url: string; publicId: string },
+  ) {
+    return this.vehiclesService.linkPhoto(id, body.url, body.publicId);
   }
 
   /**

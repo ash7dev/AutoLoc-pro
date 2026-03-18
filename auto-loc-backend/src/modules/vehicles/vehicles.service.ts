@@ -24,8 +24,10 @@ import { RevalidateService } from '../../infrastructure/revalidate/revalidate.se
 
 const MAX_PHOTOS = 8;
 const SEARCH_PAGE_SIZE = 12;
-const SEARCH_CACHE_TTL = 60; // secondes
+const SEARCH_CACHE_TTL = 60;    // secondes
 const SEARCH_CACHE_PREFIX = 'vehicles:search:';
+const DETAIL_CACHE_PREFIX = 'vehicles:detail:';
+const DETAIL_CACHE_TTL = 300;   // 5 minutes
 
 interface VehicleSearchRow {
   id: string;
@@ -79,6 +81,10 @@ export class VehiclesService {
   }
 
   // ── CRUD ─────────────────────────────────────────────────────────────────────
+
+  getUploadSignature() {
+    return this.cloudinary.getUploadSignature();
+  }
 
   /**
    * POST /vehicles — Créer un véhicule pour le propriétaire connecté.
@@ -144,6 +150,19 @@ export class VehiclesService {
           );
           await tx.vehiculeEquipement.createMany({
             data: eqRecords.map((eq) => ({ vehiculeId: vehicle.id, equipementId: eq.id })),
+          });
+        }
+
+        // Save photos from direct upload (URLs already on Cloudinary)
+        if (dto.photos?.length) {
+          await tx.photoVehicule.createMany({
+            data: dto.photos.map((p, i) => ({
+              vehiculeId: vehicle.id,
+              url: p.url,
+              publicId: p.publicId,
+              position: i,
+              estPrincipale: i === 0,
+            })),
           });
         }
 
@@ -219,6 +238,37 @@ export class VehiclesService {
    * - Public : uniquement si VERIFIE.
    */
   async findOne(user: RequestUser | null, id: string) {
+    // ── Chemin public : cache Redis (user non authentifié) ──────────────
+    // On ne cache que les requêtes sans token pour garantir qu'un propriétaire
+    // voit toujours son véhicule en temps réel (quel que soit son statut).
+    if (!user) {
+      const cacheKey = `${DETAIL_CACHE_PREFIX}${id}`;
+      const cached = await this.redis.get(cacheKey);
+      if (cached) {
+        return JSON.parse(cached);
+      }
+
+      const vehicle = await this.prisma.vehicule.findUnique({
+        where: { id },
+        include: {
+          photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
+          tarifsProgressifs: { orderBy: { position: 'asc' } },
+          proprietaire: { select: { prenom: true, nom: true, avatarUrl: true, noteProprietaire: true, totalAvis: true } },
+          equipements: { include: { equipement: true } },
+          _count: { select: { reservations: true } },
+        },
+      });
+
+      if (!vehicle || vehicle.statut !== StatutVehicule.VERIFIE) {
+        throw new NotFoundException('Véhicule introuvable');
+      }
+
+      // Stockage fire-and-forget : une erreur Redis ne bloque pas la réponse.
+      this.redis.set(cacheKey, JSON.stringify(vehicle), DETAIL_CACHE_TTL).catch(() => { });
+      return vehicle;
+    }
+
+    // ── Chemin authentifié : toujours Postgres (fraîcheur garantie) ─────
     const vehicle = await this.prisma.vehicule.findUnique({
       where: { id },
       include: {
@@ -234,23 +284,25 @@ export class VehiclesService {
       throw new NotFoundException('Véhicule introuvable');
     }
 
-    // Le propriétaire peut toujours voir son propre véhicule.
-    if (user?.sub) {
-      const utilisateur = await this.prisma.utilisateur.findUnique({
-        where: { userId: user.sub },
-        select: { id: true },
-      });
-      if (utilisateur?.id === vehicle.proprietaireId) {
-        return vehicle;
-      }
+    // Le propriétaire peut voir son véhicule quel que soit son statut.
+    const utilisateur = await this.prisma.utilisateur.findUnique({
+      where: { userId: user.sub },
+      select: { id: true },
+    });
+    if (utilisateur?.id === vehicle.proprietaireId) {
+      return vehicle;
     }
 
-    // Pour le public : seulement les véhicules vérifiés.
     if (vehicle.statut !== StatutVehicule.VERIFIE) {
       throw new NotFoundException('Véhicule introuvable');
     }
 
     return vehicle;
+  }
+
+  /** Supprime le cache détail d'un véhicule spécifique. */
+  private async invalidateDetailCache(vehicleId: string): Promise<void> {
+    await this.redis.del(`${DETAIL_CACHE_PREFIX}${vehicleId}`).catch(() => { });
   }
 
   /**
@@ -364,6 +416,8 @@ export class VehiclesService {
       }
       throw err;
     }
+
+    await this.invalidateDetailCache(vehicleId);
   }
 
   /**
@@ -378,7 +432,7 @@ export class VehiclesService {
       select: { publicId: true },
     });
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       await tx.photoVehicule.deleteMany({ where: { vehiculeId: vehicleId } });
       const updated = await tx.vehicule.update({
         where: { id: vehicleId },
@@ -393,6 +447,9 @@ export class VehiclesService {
       }
       return updated;
     });
+
+    await this.invalidateDetailCache(vehicleId);
+    return result;
   }
 
   // ── Recherche ────────────────────────────────────────────────────────────────
@@ -676,6 +733,26 @@ export class VehiclesService {
   }
 
   /**
+   * POST /vehicles/:id/photos/link — Enregistre une photo uploadée directement
+   * vers Cloudinary (direct upload). Ne touche pas aux fichiers.
+   */
+  async linkPhoto(vehiculeId: string, url: string, publicId: string) {
+    const count = await this.prisma.photoVehicule.count({ where: { vehiculeId } });
+    if (count >= MAX_PHOTOS) {
+      throw new BadRequestException('Maximum 8 photos atteint');
+    }
+    return this.prisma.photoVehicule.create({
+      data: {
+        vehiculeId,
+        url,
+        publicId,
+        position: count,
+        estPrincipale: count === 0,
+      },
+    });
+  }
+
+  /**
    * DELETE /vehicles/:id/photos/:photoId — Supprimer une photo.
    * Si la photo supprimée était principale, la suivante devient principale.
    */
@@ -813,6 +890,7 @@ export class VehiclesService {
     });
 
     await this.invalidateSearchCache(vehicle.ville);
+    await this.invalidateDetailCache(vehicleId);
 
     // Invalidate Next.js cache
     this.revalidate.revalidatePath(`/vehicle/${vehicleId}`).catch(() => { });
@@ -857,6 +935,7 @@ export class VehiclesService {
     });
 
     await this.invalidateSearchCache(vehicle.ville);
+    await this.invalidateDetailCache(vehicleId);
 
     // Invalidate Next.js cache
     this.revalidate.revalidatePath(`/vehicle/${vehicleId}`).catch(() => { });

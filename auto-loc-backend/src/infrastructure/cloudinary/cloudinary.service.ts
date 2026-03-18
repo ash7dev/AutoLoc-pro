@@ -5,12 +5,16 @@ import { Readable } from 'stream';
 import {
   VEHICLE_PHOTO_EAGER_TRANSFORMATION,
   VEHICLE_PHOTO_FOLDER,
+  VEHICLE_PHOTO_TRANSFORM,
 } from './utils/image-optimizer';
 import type { UploadResultDto } from './dto/upload-result.dto';
 
 @Injectable()
 export class CloudinaryService implements OnModuleInit {
   private initialized = false;
+  private cloudName: string = '';
+  private apiKey: string = '';
+  private apiSecret: string = '';
 
   constructor(private readonly configService: ConfigService) { }
 
@@ -27,11 +31,26 @@ export class CloudinaryService implements OnModuleInit {
       api_key: apiKey,
       api_secret: apiSecret,
     });
+    this.cloudName = cloudName;
+    this.apiKey = apiKey;
+    this.apiSecret = apiSecret;
     this.initialized = true;
   }
 
+  getUploadSignature(): { signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string } {
+    const timestamp = Math.round(Date.now() / 1000);
+    const folder = VEHICLE_PHOTO_FOLDER;
+    const signature = cloudinary.utils.api_sign_request({ timestamp, folder }, this.apiSecret);
+    return { signature, timestamp, apiKey: this.apiKey, cloudName: this.cloudName, folder };
+  }
+
   async uploadVehiclePhoto(buffer: Buffer): Promise<UploadResultDto> {
-    return this.uploadToFolder(buffer, VEHICLE_PHOTO_FOLDER, VEHICLE_PHOTO_EAGER_TRANSFORMATION);
+    const result = await this.uploadToFolder(buffer, VEHICLE_PHOTO_FOLDER);
+    // Injecte les paramètres de transformation dans l'URL publique.
+    // Cloudinary génère la version optimisée au premier accès et la cache indéfiniment.
+    // L'upload lui-même n'attend plus la génération synchrone (eager) → ~3× plus rapide.
+    const url = result.url.replace('/upload/', `/upload/${VEHICLE_PHOTO_TRANSFORM}/`);
+    return { ...result, url };
   }
 
   async uploadKycDocument(buffer: Buffer): Promise<UploadResultDto> {
@@ -94,23 +113,15 @@ export class CloudinaryService implements OnModuleInit {
   private uploadToFolder(
     buffer: Buffer,
     folder: string,
-    eager?: unknown[],
   ): Promise<UploadResultDto> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { folder, ...(eager ? { eager } : {}), resource_type: 'image' },
+        { folder, resource_type: 'image' },
         (err: unknown, result: unknown) => {
           if (err) { reject(err); return; }
-          const res = result as {
-            secure_url: string;
-            public_id: string;
-            eager?: Array<{ secure_url: string }>;
-          } | undefined;
+          const res = result as { secure_url: string; public_id: string } | undefined;
           if (!res) { reject(new Error('Cloudinary upload returned no result')); return; }
-          resolve({
-            url: res.eager?.[0]?.secure_url ?? res.secure_url,
-            publicId: res.public_id,
-          });
+          resolve({ url: res.secure_url, publicId: res.public_id });
         },
       );
       Readable.from(buffer).pipe(uploadStream);

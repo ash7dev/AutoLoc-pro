@@ -10,8 +10,19 @@ import {
   ValidateNested,
   IsArray,
 } from 'class-validator';
+import { IsBoolean, IsUrl } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Carburant, Transmission, TypeVehicule } from '@prisma/client';
+
+export class PhotoInputDto {
+  @IsString()
+  @IsNotEmpty()
+  url!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  publicId!: string;
+}
 
 export class PriceTierDto {
   @IsInt()
@@ -137,4 +148,10 @@ export class CreateVehicleDto {
   @Min(0)
   @Type(() => Number)
   fraisLivraison?: number;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PhotoInputDto)
+  photos?: PhotoInputDto[];
 }

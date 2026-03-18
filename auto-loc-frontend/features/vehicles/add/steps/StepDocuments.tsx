@@ -154,7 +154,7 @@ function DocumentZone({
                         </button>
                     </div>
                     <span className="text-[10px] font-medium text-slate-400">ou glisser-déposer · Image / PDF</span>
-                    <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => onFileSelect(e.target.files)} />
+                    <input ref={cameraRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => onFileSelect(e.target.files)} />
                     <input ref={galleryRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => onFileSelect(e.target.files)} />
                 </div>
             ) : (

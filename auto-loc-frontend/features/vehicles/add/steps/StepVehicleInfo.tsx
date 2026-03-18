@@ -3,23 +3,26 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-  ArrowRight, Car, MapPin, Settings2, Fuel, Users, Hash,
-  CalendarDays, CheckCircle2, Sparkles,
+  ArrowRight, Car, MapPin, Settings2, Fuel,
+  CheckCircle2, Sparkles,
+  Navigation, Thermometer, Bluetooth, Camera, Baby,
+  PanelTop, ScanLine, Gauge,
+  LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAddVehicleStore, Step1Data, VehicleType, FuelType, TransmissionType } from "../store";
 
-const VEHICLE_TYPES: { value: VehicleType; label: string; icon?: string }[] = [
-  { value: "CITADINE", label: "Citadine", icon: "🚗" },
-  { value: "BERLINE", label: "Berline", icon: "🏎️" },
-  { value: "SUV", label: "SUV", icon: "🚙" },
-  { value: "PICKUP", label: "Pick-up", icon: "🛻" },
-  { value: "MINIVAN", label: "Minivan", icon: "🚐" },
-  { value: "MONOSPACE", label: "Monospace", icon: "🚌" },
-  { value: "MINIBUS", label: "Minibus", icon: "🚎" },
-  { value: "UTILITAIRE", label: "Utilitaire", icon: "📦" },
-  { value: "LUXE", label: "Luxe", icon: "💎" },
-  { value: "FOUR_X_FOUR", label: "4x4", icon: "⛰️" },
+const VEHICLE_TYPES: { value: VehicleType; label: string }[] = [
+  { value: "CITADINE", label: "Citadine" },
+  { value: "BERLINE", label: "Berline" },
+  { value: "SUV", label: "SUV" },
+  { value: "PICKUP", label: "Pick-up" },
+  { value: "MINIVAN", label: "Minivan" },
+  { value: "MONOSPACE", label: "Monospace" },
+  { value: "MINIBUS", label: "Minibus" },
+  { value: "UTILITAIRE", label: "Utilitaire" },
+  { value: "LUXE", label: "Luxe" },
+  { value: "FOUR_X_FOUR", label: "4x4" },
 ];
 
 const FUEL_TYPES: { value: FuelType; label: string }[] = [
@@ -34,15 +37,15 @@ const TRANSMISSIONS: { value: TransmissionType; label: string }[] = [
   { value: "AUTOMATIQUE", label: "Automatique" },
 ];
 
-const EQUIPMENTS = [
-  { value: "GPS", label: "GPS", icon: "📍" },
-  { value: "CLIMATISATION", label: "Climatisation", icon: "❄️" },
-  { value: "BLUETOOTH", label: "Bluetooth", icon: "📶" },
-  { value: "CAMERA_RECUL", label: "Caméra de recul", icon: "📷" },
-  { value: "SIEGE_ENFANT", label: "Siège enfant", icon: "🪑" },
-  { value: "TOIT_OUVRANT", label: "Toit ouvrant", icon: "☀️" },
-  { value: "RADAR_STATIONNEMENT", label: "Radar stationnement", icon: "📡" },
-  { value: "REGULATEUR_VITESSE", label: "Rég. de vitesse", icon: "⚡" },
+const EQUIPMENTS: { value: string; label: string; Icon: LucideIcon }[] = [
+  { value: "GPS", label: "GPS", Icon: Navigation },
+  { value: "CLIMATISATION", label: "Climatisation", Icon: Thermometer },
+  { value: "BLUETOOTH", label: "Bluetooth", Icon: Bluetooth },
+  { value: "CAMERA_RECUL", label: "Caméra de recul", Icon: Camera },
+  { value: "SIEGE_ENFANT", label: "Siège enfant", Icon: Baby },
+  { value: "TOIT_OUVRANT", label: "Toit ouvrant", Icon: PanelTop },
+  { value: "RADAR_STATIONNEMENT", label: "Radar stationnement", Icon: ScanLine },
+  { value: "REGULATEUR_VITESSE", label: "Rég. de vitesse", Icon: Gauge },
 ];
 
 const ZONES_DAKAR = [
@@ -163,7 +166,7 @@ export function StepVehicleInfo({ onNext }: Props) {
                 <label
                   key={t.value}
                   className={cn(
-                    "flex items-center gap-2 px-3 py-2.5 rounded-xl border cursor-pointer transition-all duration-200",
+                    "flex items-center justify-center px-3 py-2.5 rounded-xl border cursor-pointer transition-all duration-200",
                     active
                       ? "border-emerald-400 bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-500/10 ring-1 ring-emerald-400/30"
                       : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50",
@@ -175,7 +178,6 @@ export function StepVehicleInfo({ onNext }: Props) {
                     {...register("type", { required: true })}
                     className="sr-only"
                   />
-                  <span className="text-sm">{t.icon}</span>
                   <span className="text-[12px] font-bold">{t.label}</span>
                 </label>
               );
@@ -251,7 +253,10 @@ export function StepVehicleInfo({ onNext }: Props) {
                     : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
                 )}
               >
-                <span className="text-base flex-shrink-0">{eq.icon}</span>
+                <eq.Icon
+                  className={cn("w-4 h-4 flex-shrink-0", active ? "text-emerald-500" : "text-slate-400")}
+                  strokeWidth={2}
+                />
                 <span className={cn("text-[12px] font-bold leading-tight", active ? "text-emerald-700" : "text-slate-600")}>
                   {eq.label}
                 </span>

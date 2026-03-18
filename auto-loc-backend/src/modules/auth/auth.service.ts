@@ -436,6 +436,7 @@ export class AuthService {
     kycStatus?: ProfileResponse['kycStatus'];
     hasVehicles?: boolean;
     hasPermis?: boolean;
+    dateNaissance?: string | null;
   }> {
     const found = await this.prisma.utilisateur.findUnique({
       where: { userId },

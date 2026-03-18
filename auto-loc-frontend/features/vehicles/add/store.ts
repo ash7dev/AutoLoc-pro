@@ -50,20 +50,30 @@ export interface Step3Data {
   reglesSpecifiques?: string;
 }
 
+export interface PhotoEntry {
+  id: string;
+  file: File;
+  url: string | null;
+  publicId: string | null;
+  status: 'uploading' | 'done' | 'error';
+}
+
 interface AddVehicleStore {
   vehicleId: string | null;
   step1: Step1Data | null;
   step2: Step2Data | null;
   step3: Step3Data | null;
-  photos: File[];
+  photos: PhotoEntry[];
+  carteGrise: File | null;
+  assurance: File | null;
   setStep1: (data: Step1Data) => void;
   setStep2: (data: Step2Data) => void;
   setStep3: (data: Step3Data) => void;
   setVehicleId: (id: string) => void;
-  addPhoto: (file: File) => void;
+  addPhotos: (files: File[]) => string[];
+  updatePhoto: (id: string, patch: Partial<Pick<PhotoEntry, 'url' | 'publicId' | 'status'>>) => void;
   removePhoto: (index: number) => void;
-  carteGrise: File | null;
-  assurance: File | null;
+  movePhotoToFirst: (index: number) => void;
   setDocument: (type: "carteGrise" | "assurance", file: File | null) => void;
   reset: () => void;
 }
@@ -80,8 +90,30 @@ export const useAddVehicleStore = create<AddVehicleStore>((set) => ({
   setStep2: (data) => set({ step2: data }),
   setStep3: (data) => set({ step3: data }),
   setVehicleId: (id) => set({ vehicleId: id }),
-  addPhoto: (file) => set((s) => ({ photos: [...s.photos, file] })),
-  removePhoto: (index) => set((s) => ({ photos: s.photos.filter((_, i) => i !== index) })),
+  addPhotos: (files) => {
+    const entries: PhotoEntry[] = files.map((file) => ({
+      id: `${Date.now()}-${Math.random()}`,
+      file,
+      url: null,
+      publicId: null,
+      status: 'uploading' as const,
+    }));
+    set((s) => ({ photos: [...s.photos, ...entries] }));
+    return entries.map((e) => e.id);
+  },
+  updatePhoto: (id, patch) =>
+    set((s) => ({
+      photos: s.photos.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+    })),
+  removePhoto: (index) =>
+    set((s) => ({ photos: s.photos.filter((_, i) => i !== index) })),
+  movePhotoToFirst: (index) =>
+    set((s) => {
+      const photos = [...s.photos];
+      const [moved] = photos.splice(index, 1);
+      return { photos: [moved, ...photos] };
+    }),
   setDocument: (type, file) => set({ [type]: file }),
-  reset: () => set({ vehicleId: null, step1: null, step2: null, step3: null, photos: [], carteGrise: null, assurance: null }),
+  reset: () =>
+    set({ vehicleId: null, step1: null, step2: null, step3: null, photos: [], carteGrise: null, assurance: null }),
 }));

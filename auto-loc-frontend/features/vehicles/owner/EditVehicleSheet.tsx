@@ -153,7 +153,8 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
   // Photo state
   const [existingPhotos, setExistingPhotos] = useState<VehiclePhoto[]>([]);
   const [deletedPhotoIds, setDeletedPhotoIds] = useState<string[]>([]);
-  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [newPhotos, setNewPhotos] = useState<{ file: File; url: string; publicId: string }[]>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
@@ -215,7 +216,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
     });
     setExistingPhotos([...vehicle.photos]);
     setDeletedPhotoIds([]);
-    setNewFiles([]);
+    setNewPhotos([]);
     setError(null);
 
     // Pre-fill equipements
@@ -243,7 +244,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
     if (!isOpen) {
       onClose();
       setError(null);
-      setNewFiles([]);
+      setNewPhotos([]);
       setDeletedPhotoIds([]);
     }
   };
@@ -268,19 +269,35 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
   };
 
   const handleRemoveNew = (index: number) => {
-    setNewFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    const totalPhotos = existingPhotos.length + newFiles.length + files.length;
-    const allowed = Math.min(files.length, 8 - existingPhotos.length - newFiles.length);
-    setNewFiles((prev) => [...prev, ...files.slice(0, allowed)]);
-    if (allowed < files.length || totalPhotos > 8) {
-      setError(`Maximum 8 photos. ${files.length - allowed} fichier(s) ignoré(s).`);
-    }
-    // Reset input so the same file can be re-selected
     e.target.value = "";
+    if (!files.length) return;
+    const allowed = Math.min(files.length, 8 - existingPhotos.length - newPhotos.length);
+    const toUpload = files.filter((f) => f.type.startsWith('image/')).slice(0, allowed);
+    if (!toUpload.length) return;
+    setUploadingPhotos(true);
+    setError(null);
+    try {
+      const sig = await authFetch<{ signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string }>(
+        VEHICLE_PATHS.uploadSignature,
+      );
+      const uploaded = await Promise.all(
+        toUpload.map(async (file) => {
+          const { uploadToCloudinary } = await import('@/lib/nestjs/vehicles');
+          const result = await uploadToCloudinary(file, sig);
+          return { file, url: result.url, publicId: result.publicId };
+        }),
+      );
+      setNewPhotos((prev) => [...prev, ...uploaded]);
+    } catch {
+      setError("Erreur lors de l'upload des photos. Réessayez.");
+    } finally {
+      setUploadingPhotos(false);
+    }
   };
 
   const toggleEquipment = (value: string) => {
@@ -359,23 +376,16 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
         ),
       );
 
-      // 3. Upload new photos (best-effort)
-      const uploaded: VehiclePhoto[] = [];
-      for (const file of newFiles) {
+      // 3. Link new photos (already uploaded to Cloudinary)
+      const linked: VehiclePhoto[] = [];
+      for (const photo of newPhotos) {
         try {
-          const form = new FormData();
-          form.append("file", file);
-          const photo = await authFetch<VehiclePhoto>(
-            VEHICLE_PATHS.addPhoto(vehicle.id),
-            {
-              method: "POST",
-              body: form as unknown as undefined,
-            },
+          const p = await authFetch<VehiclePhoto>(
+            VEHICLE_PATHS.linkPhoto(vehicle.id),
+            { method: 'POST', body: { url: photo.url, publicId: photo.publicId } as unknown as undefined },
           );
-          uploaded.push(photo);
-        } catch {
-          // ignore individual photo upload failures
-        }
+          linked.push(p);
+        } catch { /* ignore individual failures */ }
       }
 
       // Merge photos into updated vehicle (keep existing that weren't deleted + new uploads)
@@ -383,7 +393,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
         ...updated,
         photos: [
           ...existingPhotos,
-          ...uploaded,
+          ...linked,
         ],
       };
 
@@ -396,8 +406,8 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
     }
   };
 
-  const totalPhotoCount = existingPhotos.length + newFiles.length;
-  const canAddMore = totalPhotoCount < 8;
+  const totalPhotoCount = existingPhotos.length + newPhotos.length;
+  const canAddMore = !locked && totalPhotoCount < 8 && !uploadingPhotos;
 
   if (!open) return null;
 
@@ -762,7 +772,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
               <SectionHeader icon={Camera} title="Photos" />
 
               {/* Existing photos */}
-              {(existingPhotos.length > 0 || newFiles.length > 0) && (
+              {(existingPhotos.length > 0 || newPhotos.length > 0) && (
                 <div className="grid grid-cols-3 gap-2">
                   {existingPhotos.map((photo) => (
                     <div key={photo.id} className="relative group aspect-[4/3] overflow-hidden rounded-lg border border-[hsl(var(--border))] bg-muted/40">
@@ -790,11 +800,11 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                     </div>
                   ))}
 
-                  {newFiles.map((file, i) => (
+                  {newPhotos.map((photo, i) => (
                     <div key={i} className="relative group aspect-[4/3] overflow-hidden rounded-lg border border-[hsl(var(--border))] bg-muted/40">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={URL.createObjectURL(file)}
+                        src={URL.createObjectURL(photo.file)}
                         alt="preview"
                         className="h-full w-full object-cover"
                       />
@@ -815,8 +825,15 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                 </div>
               )}
 
+              {uploadingPhotos && (
+                <div className="flex items-center gap-2 text-[12px] text-emerald-600 font-medium">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Upload en cours…
+                </div>
+              )}
+
               {/* Add photos button */}
-              {!locked && canAddMore && (
+              {canAddMore && (
                 <>
                   <button
                     type="button"
@@ -851,7 +868,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                 </p>
               )}
 
-              {!canAddMore && !locked && (
+              {!locked && totalPhotoCount >= 8 && (
                 <p className="text-[10px] text-muted-foreground text-center">
                   Maximum 8 photos atteint.
                 </p>
