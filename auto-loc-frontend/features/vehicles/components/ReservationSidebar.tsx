@@ -388,7 +388,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
               'w-full flex items-center justify-center gap-2.5 rounded-xl px-5 py-4',
               'text-[14px] font-bold tracking-tight transition-all duration-200',
               canReserve
-                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-600 hover:shadow-xl hover:shadow-emerald-500/35 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md'
+                ? 'bg-slate-900 text-emerald-400 hover:bg-slate-800 active:scale-[0.98]'
                 : 'bg-slate-100 text-slate-400 cursor-not-allowed',
             )}
           >

@@ -95,7 +95,7 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum, age
                 <button
                     type="button"
                     onClick={() => setSheetOpen(true)}
-                    className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-[14px] font-bold px-6 py-3.5 rounded-2xl shadow-lg shadow-emerald-500/20 transition-all duration-150 active:scale-95"
+                    className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-emerald-400 text-[14px] font-bold px-6 py-3.5 rounded-2xl transition-all duration-150 active:scale-95"
                 >
                     Réserver
                     <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
@@ -326,7 +326,7 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                     className={cn(
                         'w-full flex items-center justify-center gap-2 rounded-2xl py-4 text-[15px] font-bold transition-all duration-200',
                         canReserve
-                            ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 active:scale-[0.98]'
+                            ? 'bg-slate-900 text-emerald-400 active:scale-[0.98]'
                             : 'bg-slate-100 text-slate-300 cursor-not-allowed',
                     )}
                 >
