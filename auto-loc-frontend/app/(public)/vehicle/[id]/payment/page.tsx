@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import {
     ArrowLeft, CheckCircle2, Loader2, Shield,
-    Clock, ChevronRight, PartyPopper, Check,
+    Clock, ChevronRight, PartyPopper, Check, Truck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -109,6 +109,8 @@ export default function PaymentPage() {
     const dateFin = searchParams.get('dateFin') ?? '';
     const nbJours = Number(searchParams.get('nbJours') ?? 0);
     const horsDakar = searchParams.get('horsDakar') === '1';
+    const wantsDelivery = searchParams.get('livraison') === '1';
+    const adresseLivraison = searchParams.get('adresseLivraison') ?? '';
 
     const [vehicle, setVehicle] = useState<Vehicle | null>(null);
     const [pricing, setPricing] = useState<PricingResponse | null>(null);
@@ -162,6 +164,8 @@ export default function PaymentPage() {
                     dateDebut, dateFin,
                     fournisseur: method,
                     idempotencyKey: crypto.randomUUID(),
+                    ...(wantsDelivery && adresseLivraison ? { adresseLivraison } : {}),
+                    ...(horsDakar ? { horsDakar: true } : {}),
                 },
             });
             setCreatedReservationId(reservationId);
@@ -199,6 +203,8 @@ export default function PaymentPage() {
 
     const mainPhoto = vehicle?.photos?.find((p) => p.estPrincipale)?.url ?? vehicle?.photos?.[0]?.url ?? null;
     const fmtDate = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+    const deliveryFee = wantsDelivery && vehicle?.fraisLivraison ? Number(vehicle.fraisLivraison) : 0;
+    const grandTotal = pricing ? pricing.totalLocataire + deliveryFee : 0;
 
     /* ── Loading ── */
     if (loading) {
@@ -386,11 +392,23 @@ export default function PaymentPage() {
                         </span>
                     </div>
 
+                    {deliveryFee > 0 && (
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-[13px] text-slate-500 flex items-center gap-1.5">
+                                <Truck className="w-3.5 h-3.5" strokeWidth={2} />
+                                Livraison — {adresseLivraison}
+                            </span>
+                            <span className="text-[13px] font-semibold text-slate-700 tabular-nums">
+                                {formatPrice(deliveryFee)}
+                            </span>
+                        </div>
+                    )}
+
                     <div className="h-px bg-slate-100 mb-3" />
 
                     <div className="flex items-center justify-between">
                         <span className="text-[15px] font-black text-slate-800">Total à payer</span>
-                        <span className="text-[22px] font-black text-emerald-600 tabular-nums">{formatPrice(pricing.totalLocataire)}</span>
+                        <span className="text-[22px] font-black text-emerald-600 tabular-nums">{formatPrice(grandTotal)}</span>
                     </div>
                 </div>
 
@@ -465,7 +483,7 @@ export default function PaymentPage() {
                         ? <WaveLogo size={22} />
                         : <OrangeMoneyLogo size={22} />
                     }
-                    Payer {formatPrice(pricing.totalLocataire)}
+                    Payer {formatPrice(grandTotal)}
                 </button>
 
                 <p className="text-center text-[11px] text-slate-300 mt-4">

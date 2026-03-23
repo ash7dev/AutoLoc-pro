@@ -36,6 +36,7 @@ export interface CreateReservationInput {
     idempotencyKey?: string;
     adresseLivraison?: string;
     fraisLivraison?: number;
+    horsDakar?: boolean;
 }
 
 export interface CreateReservationResult {
@@ -99,17 +100,29 @@ export class CreateReservationUseCase {
         await this.idempotency.acquireLock(idempotencyKey);
 
         // ── 5. Calculate pricing ──────────────────────────────────────────────────
+        // Supplément hors Dakar : source de vérité = véhicule en DB, jamais frontend
+        const supplementHorsDakar = input.horsDakar && vehicule.autoriseHorsDakar
+            ? Number(vehicule.supplementHorsDakarParJour ?? 0)
+            : 0;
+
         const price = this.pricing.calculate(
             vehicule.prixParJour,
             dates.nbJours,
             vehicule.tarifsProgressifs,
+            supplementHorsDakar,
         );
+
+        // Frais de livraison : source de vérité = véhicule en DB, jamais frontend
+        const fraisLivraison = input.adresseLivraison && vehicule.fraisLivraison
+            ? Number(vehicule.fraisLivraison)
+            : 0;
+        const totalAvecLivraison = price.totalLocataire + fraisLivraison;
 
         // ── 6. Initiate payment ───────────────────────────────────────────────────
         const paymentRef = `${input.vehiculeId.slice(0, 8)}-${Date.now()}`;
         const paymentUrl = await this.payment.initiatePayment(
             input.fournisseur,
-            price.totalLocataire,
+            totalAvecLivraison,
             paymentRef,
         );
 
@@ -138,13 +151,15 @@ export class CreateReservationUseCase {
                             totalBase: price.totalBase,
                             tauxCommission: price.tauxCommission,
                             montantCommission: price.montantCommission,
-                            totalLocataire: price.totalLocataire,
+                            totalLocataire: totalAvecLivraison,
                             netProprietaire: price.netProprietaire,
                             statut: StatutReservation.EN_ATTENTE_PAIEMENT,
                             paymentUrl,
                             delaiSignature,
                             adresseLivraison: input.adresseLivraison ?? null,
-                            fraisLivraison: input.fraisLivraison ?? null,
+                            fraisLivraison: fraisLivraison > 0 ? fraisLivraison : null,
+                            horsDakar: !!input.horsDakar && vehicule.autoriseHorsDakar,
+                            supplementHorsDakar: supplementHorsDakar > 0 ? supplementHorsDakar : null,
                         },
                         select: { id: true, paymentUrl: true },
                     });
@@ -152,7 +167,7 @@ export class CreateReservationUseCase {
                     await tx.paiement.create({
                         data: {
                             reservationId: res.id,
-                            montant: price.totalLocataire,
+                            montant: totalAvecLivraison,
                             devise: 'XOF',
                             fournisseur: input.fournisseur,
                             idTransactionFournisseur: paymentRef,
@@ -292,6 +307,9 @@ export class CreateReservationUseCase {
                 ville: true,
                 marque: true,
                 modele: true,
+                fraisLivraison: true,
+                autoriseHorsDakar: true,
+                supplementHorsDakarParJour: true,
                 tarifsProgressifs: {
                     orderBy: { joursMin: 'asc' },
                     select: { joursMin: true, joursMax: true, prix: true },

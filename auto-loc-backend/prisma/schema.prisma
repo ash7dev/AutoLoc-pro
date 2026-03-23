@@ -280,8 +280,12 @@ model Reservation {
   contratPublicId String?
 
   // Livraison (optionnel par réservation)
-  adresseLivraison String?
-  fraisLivraison   Decimal? @db.Decimal(10,2)
+  adresseLivraison   String?
+  fraisLivraison     Decimal? @db.Decimal(10,2)
+
+  // Hors Dakar (optionnel par réservation)
+  horsDakar          Boolean  @default(false)
+  supplementHorsDakar Decimal? @db.Decimal(10,2)
 
   creeLe          DateTime @default(now())
   misAJourLe      DateTime @updatedAt

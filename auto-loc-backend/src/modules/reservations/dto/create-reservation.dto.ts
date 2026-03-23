@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsNotEmpty,
@@ -42,4 +43,10 @@ export class CreateReservationDto {
   @Min(0)
   @Type(() => Number)
   fraisLivraison?: number;
+
+  // ── Hors Dakar (optionnel) ─────────────────────────────────────────────────
+
+  @IsOptional()
+  @IsBoolean()
+  horsDakar?: boolean;
 }
