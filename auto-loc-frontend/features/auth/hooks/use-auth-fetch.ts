@@ -7,6 +7,7 @@ interface AuthFetchOptions<TBody> {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   body?: TBody;
   headers?: Record<string, string>;
+  timeoutMs?: number;
 }
 
 /**

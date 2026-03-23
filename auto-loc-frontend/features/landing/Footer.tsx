@@ -83,16 +83,16 @@ export function Footer(): React.ReactElement {
     <footer className="mt-8">
       <div className="bg-black rounded-t-[2rem] overflow-hidden">
 
-        {/* ── Trust badges bar — desktop only ── */}
-        <div className="hidden lg:block border-b border-white/5 px-5 py-4 lg:px-16">
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 lg:justify-between">
+        {/* ── Trust badges bar ── */}
+        <div className="hidden lg:block border-b border-white/5 px-5 py-8 lg:px-16">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
             {TRUST_BADGES.map(({ icon: Icon, label }) => (
-              <div key={label} className="flex items-center gap-2">
-                <span className="flex items-center justify-center w-6 h-6 rounded-lg
-                  bg-emerald-400/10 border border-emerald-400/20">
-                  <Icon className="h-3 w-3 text-emerald-400" strokeWidth={2} />
+              <div key={label} className="flex flex-col items-center justify-center gap-3 text-center">
+                <span className="flex items-center justify-center w-14 h-14 rounded-2xl
+                  bg-emerald-400/10 border border-emerald-400/20 shadow-inner">
+                  <Icon className="h-7 w-7 text-emerald-400" strokeWidth={1.75} />
                 </span>
-                <span className="text-[12px] font-semibold text-white/50 tracking-tight">
+                <span className="text-[14px] font-semibold text-white/60 tracking-tight">
                   {label}
                 </span>
               </div>

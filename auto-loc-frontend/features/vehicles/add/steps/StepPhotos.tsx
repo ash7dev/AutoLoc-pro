@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import {
-  ArrowLeft, ArrowRight, X, Star, ImagePlus, Camera, Images,
+  ArrowLeft, ArrowRight, X, Star, ImagePlus, Images,
   Loader2, AlertCircle, RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,6 @@ interface Props {
 
 export function StepPhotos({ onNext, onBack }: Props) {
   const { photos, addPhotos, updatePhoto, removePhoto, movePhotoToFirst } = useAddVehicleStore();
-  const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const sigRef = useRef<CloudinarySignature | null>(null);
   const [sigError, setSigError] = useState(false);
@@ -225,23 +224,14 @@ export function StepPhotos({ onNext, onBack }: Props) {
                 <div className="flex flex-col sm:flex-row items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => cameraRef.current?.click()}
+                    onClick={() => galleryRef.current?.click()}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 text-white text-[11px] font-bold hover:bg-slate-800 active:scale-95 transition-all shadow-sm"
                   >
-                    <Camera className="h-3 w-3" strokeWidth={2.5} />
-                    Camera
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => galleryRef.current?.click()}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-[11px] font-bold hover:bg-slate-50 active:scale-95 transition-all"
-                  >
                     <ImagePlus className="h-3 w-3" strokeWidth={2.5} />
-                    Galerie
+                    Ajouter des photos
                   </button>
                 </div>
                 <span className="text-[10px] font-medium text-slate-400">ou glisser-déposer</span>
-                <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }} />
                 <input ref={galleryRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }} />
               </div>
             )}

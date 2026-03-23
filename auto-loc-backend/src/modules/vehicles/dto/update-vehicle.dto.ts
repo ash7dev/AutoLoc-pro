@@ -8,6 +8,7 @@ import {
   Max,
   Min,
   ValidateNested,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Carburant, Transmission, TypeVehicule } from '@prisma/client';
@@ -111,7 +112,17 @@ export class UpdateVehicleDto {
   @IsString({ each: true })
   equipements?: string[];
 
-  // ── Livraison ────────────────────────────────────────────────────────────────
+  // ── Livraison & Hors Dakar ──────────────────────────────────────────────────
+
+  @IsOptional()
+  @IsBoolean() // Needs to be added to imports if not there, wait, I can just not use IsBoolean or add it. Let me add imports. Actually, they might not be imported. Wait, I should import IsBoolean in UpdateVehicleDto.
+  autoriseHorsDakar?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  supplementHorsDakarParJour?: number;
 
   @IsOptional()
   @IsNumber()

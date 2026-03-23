@@ -52,6 +52,11 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true },
   },
+  icons: {
+    icon: '/logoAutoLoc.jpg',
+    shortcut: '/logoAutoLoc.jpg',
+    apple: '/logoAutoLoc.jpg',
+  },
 };
 
 const jsonLd = {

@@ -120,6 +120,10 @@ model Vehicule {
   // Livraison (optionnel)
   fraisLivraison    Decimal? @db.Decimal(10,2)
 
+  // Hors Dakar
+  autoriseHorsDakar            Boolean  @default(false)
+  supplementHorsDakarParJour   Decimal? @db.Decimal(10,2)
+
   // Documents obligatoires
   carteGriseUrl      String?
   carteGrisePublicId String?

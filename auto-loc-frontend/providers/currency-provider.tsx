@@ -5,12 +5,12 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 // ── Supported currencies ────────────────────────────────────────────────────
 
 export const CURRENCIES = [
-    { code: 'XOF', label: 'Franc CFA', short: 'CFA', symbol: 'FCFA', flag: '🇸🇳', rate: 1 },
-    { code: 'EUR', label: 'Euro', short: 'EUR', symbol: '€', flag: '🇪🇺', rate: 0.00152 },
-    { code: 'USD', label: 'Dollar US', short: 'USD', symbol: '$', flag: '🇺🇸', rate: 0.00166 },
-    { code: 'GBP', label: 'Livre Sterling', short: 'GBP', symbol: '£', flag: '🇬🇧', rate: 0.00131 },
-    { code: 'CAD', label: 'Dollar Canadien', short: 'CAD', symbol: 'CA$', flag: '🇨🇦', rate: 0.00228 },
-    { code: 'CHF', label: 'Franc Suisse', short: 'CHF', symbol: 'CHF', flag: '🇨🇭', rate: 0.00146 },
+    { code: 'XOF', label: 'Franc CFA', short: 'CFA', symbol: 'FCFA', flag: '🇸🇳', rate: 1,       locale: 'fr-FR' },
+    { code: 'EUR', label: 'Euro',          short: 'EUR', symbol: '€',    flag: '🇪🇺', rate: 0.00152, locale: 'fr-FR' },
+    { code: 'USD', label: 'Dollar US',     short: 'USD', symbol: '$',    flag: '🇺🇸', rate: 0.00166, locale: 'en-US' },
+    { code: 'GBP', label: 'Livre Sterling',short: 'GBP', symbol: '£',    flag: '🇬🇧', rate: 0.00131, locale: 'en-GB' },
+    { code: 'CAD', label: 'Dollar Canadien',short:'CAD', symbol: 'CA$',  flag: '🇨🇦', rate: 0.00228, locale: 'en-CA' },
+    { code: 'CHF', label: 'Franc Suisse',  short: 'CHF', symbol: 'CHF',  flag: '🇨🇭', rate: 0.00146, locale: 'de-CH' },
 ] as const;
 
 export type CurrencyCode = (typeof CURRENCIES)[number]['code'];
@@ -91,12 +91,14 @@ export function CurrencyProvider({
                 return new Intl.NumberFormat('fr-FR').format(Math.round(amountCFA)) + ' FCFA';
             }
             const converted = amountCFA * getRate(currency);
-            const formatted = converted >= 1
-                ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(converted)
-                : converted.toFixed(4);
-            return `${formatted} ${info.symbol}`;
+            return new Intl.NumberFormat(info.locale, {
+                style: 'currency',
+                currency,
+                maximumFractionDigits: converted >= 1 ? 2 : 4,
+                minimumFractionDigits: 0,
+            }).format(converted);
         },
-        [currency, getRate, info.symbol],
+        [currency, getRate, info.locale],
     );
 
     const value = useMemo<CurrencyContextValue>(

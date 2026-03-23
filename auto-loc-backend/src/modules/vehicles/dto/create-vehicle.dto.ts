@@ -141,7 +141,17 @@ export class CreateVehicleDto {
   @IsString({ each: true })
   equipements?: string[];
 
-  // ── Livraison ────────────────────────────────────────────────────────────────
+  // ── Livraison & Hors Dakar ──────────────────────────────────────────────────
+
+  @IsOptional()
+  @IsBoolean()
+  autoriseHorsDakar?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  supplementHorsDakarParJour?: number;
 
   @IsOptional()
   @IsNumber()

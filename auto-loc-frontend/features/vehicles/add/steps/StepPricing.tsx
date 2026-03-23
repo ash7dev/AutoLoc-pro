@@ -92,42 +92,91 @@ export function StepPricing({ onNext, onBack }: Props) {
         </div>
 
         {fields.length > 0 ? (
-          <div className="rounded-xl border border-slate-200 overflow-hidden">
-            {/* Header */}
-            <div className="grid grid-cols-[1fr_1fr_1fr_40px] gap-3 bg-slate-50 px-4 py-2.5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-              <span>À partir de (j)</span>
-              <span>Jusqu&apos;à (j)</span>
-              <span>Prix/j (FCFA)</span>
+          <div className="space-y-3 sm:space-y-0 sm:rounded-xl sm:border sm:border-slate-200 sm:overflow-hidden">
+            {/* Header — desktop only */}
+            <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_40px] gap-3 bg-slate-50 px-4 py-2.5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+              <span>À partir de (jours)</span>
+              <span>Jusqu&apos;à (jours)</span>
+              <span>Prix/jour (FCFA)</span>
               <span />
             </div>
 
             {fields.map((field, i) => (
-              <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_40px] gap-3 items-center px-4 py-3 border-t border-slate-100">
-                <input
-                  type="number"
-                  {...register(`tiers.${i}.joursMin` as const, { required: true, min: 1, valueAsNumber: true })}
-                  placeholder="1"
-                  className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-medium outline-none focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
-                />
-                <input
-                  type="number"
-                  {...register(`tiers.${i}.joursMax` as const, { min: 1, valueAsNumber: true })}
-                  placeholder="∞"
-                  className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-medium outline-none focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
-                />
-                <input
-                  type="number"
-                  {...register(`tiers.${i}.prix` as const, { required: true, min: 1, valueAsNumber: true })}
-                  placeholder="20 000"
-                  className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-medium outline-none focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
-                />
-                <button
-                  type="button"
-                  onClick={() => remove(i)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                >
-                  <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
-                </button>
+              <div key={field.id}>
+                {/* Mobile : carte par palier */}
+                <div className="sm:hidden rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Palier {i + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => remove(i)}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">À partir de (jours)</label>
+                      <input
+                        type="number"
+                        {...register(`tiers.${i}.joursMin` as const, { required: true, min: 1, valueAsNumber: true })}
+                        placeholder="1"
+                        className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-medium outline-none focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Jusqu&apos;à (jours)</label>
+                      <input
+                        type="number"
+                        {...register(`tiers.${i}.joursMax` as const, { min: 1, valueAsNumber: true })}
+                        placeholder="∞"
+                        className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-medium outline-none focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Prix/jour (FCFA)</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        {...register(`tiers.${i}.prix` as const, { required: true, min: 1, valueAsNumber: true })}
+                        placeholder="20 000"
+                        className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 pr-14 text-[13px] font-medium outline-none focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">FCFA</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Desktop : ligne de tableau */}
+                <div className="hidden sm:grid grid-cols-[1fr_1fr_1fr_40px] gap-3 items-center px-4 py-3 border-t border-slate-100">
+                  <input
+                    type="number"
+                    {...register(`tiers.${i}.joursMin` as const, { required: true, min: 1, valueAsNumber: true })}
+                    placeholder="1"
+                    className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-medium outline-none focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
+                  />
+                  <input
+                    type="number"
+                    {...register(`tiers.${i}.joursMax` as const, { min: 1, valueAsNumber: true })}
+                    placeholder="∞"
+                    className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-medium outline-none focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
+                  />
+                  <input
+                    type="number"
+                    {...register(`tiers.${i}.prix` as const, { required: true, min: 1, valueAsNumber: true })}
+                    placeholder="20 000"
+                    className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-medium outline-none focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => remove(i)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

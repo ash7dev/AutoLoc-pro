@@ -185,11 +185,14 @@ export const VEHICLE_PATHS = {
   indisponibilites: (id: string) => `/vehicles/${id}/indisponibilites`,
   deleteIndisponibilite: (vehicleId: string, indispoId: string) =>
     `/vehicles/${vehicleId}/indisponibilites/${indispoId}`,
-  uploadCarteGrise: (id: string) => `/vehicles/${id}/documents/carte-grise`,
-  uploadAssurance: (id: string) => `/vehicles/${id}/documents/assurance`,
   blockedDates: (id: string) => `/vehicles/${id}/blocked-dates`,
   uploadSignature: '/vehicles/upload-signature',
   linkPhoto: (id: string) => `/vehicles/${id}/photos/link`,
+  purgeDraft: (id: string) => `/vehicles/${id}/purge`,
+  documentUploadSignature: (id: string, docType: 'carte-grise' | 'assurance') =>
+    `/vehicles/${id}/documents/upload-signature?docType=${docType}`,
+  linkCarteGrise: (id: string) => `/vehicles/${id}/documents/carte-grise/link`,
+  linkAssurance: (id: string) => `/vehicles/${id}/documents/assurance/link`,
 } as const;
 
 // ── Cloudinary direct upload ──────────────────────────────────────────────────
@@ -230,6 +233,31 @@ export async function uploadToCloudinary(
   const data = await res.json() as { secure_url: string; public_id: string };
   const url = data.secure_url.replace('/upload/', `/upload/${TRANSFORM}/`);
   return { url, publicId: data.public_id };
+}
+
+/** Upload un document (image ou PDF) directement vers Cloudinary via l'endpoint auto. */
+export async function uploadDocumentToCloudinary(
+  file: File,
+  sig: CloudinarySignature,
+): Promise<{ url: string; publicId: string }> {
+  const form = new FormData();
+  form.append('file', file);
+  form.append('timestamp', String(sig.timestamp));
+  form.append('api_key', sig.apiKey);
+  form.append('signature', sig.signature);
+  form.append('folder', sig.folder);
+
+  // /auto/upload détecte automatiquement image vs raw (PDF)
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`,
+    { method: 'POST', body: form },
+  );
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Cloudinary document upload failed: ${res.status} ${text}`);
+  }
+  const data = await res.json() as { secure_url: string; public_id: string };
+  return { url: data.secure_url, publicId: data.public_id };
 }
 
 // ── Blocked dates (public, client-side) ──────────────────────────────────────

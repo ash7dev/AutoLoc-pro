@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAddVehicleStore } from "../store";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
-import { VEHICLE_PATHS, Vehicle } from "@/lib/nestjs/vehicles";
+import { VEHICLE_PATHS, Vehicle, uploadDocumentToCloudinary } from "@/lib/nestjs/vehicles";
 
 interface Props {
   onBack: () => void;
@@ -30,8 +30,10 @@ export function StepReview({ onBack }: Props) {
 
     let createdVehicleId: string | null = null;
 
+    // ── Étape 1 : créer l'annonce ─────────────────────────────────────
+    let vehicle: Vehicle;
     try {
-      const vehicle = await authFetch<Vehicle, Record<string, unknown>>(VEHICLE_PATHS.create, {
+      vehicle = await authFetch<Vehicle, Record<string, unknown>>(VEHICLE_PATHS.create, {
         method: "POST",
         body: {
           marque: step1.marque,
@@ -58,41 +60,57 @@ export function StepReview({ onBack }: Props) {
             .map((p) => ({ url: p.url!, publicId: p.publicId! })),
         },
       });
+    } catch (err) {
+      // La création elle-même a échoué (ex: immatriculation déjà enregistrée)
+      const message = err instanceof Error ? err.message : "Une erreur est survenue.";
+      setError(`La création de l'annonce a échoué : ${message}`);
+      setLoading(false);
+      return;
+    }
 
-      createdVehicleId = vehicle.id;
-      setVehicleId(vehicle.id);
+    createdVehicleId = vehicle.id;
+    setVehicleId(vehicle.id);
 
+    // ── Étape 2 : uploader les documents directement sur Cloudinary ──
+    try {
       if (carteGrise) {
-        const cgForm = new FormData();
-        cgForm.append("file", carteGrise);
-        await authFetch(VEHICLE_PATHS.uploadCarteGrise(vehicle.id), {
+        const cgSig = await authFetch<{ signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string }>(
+          VEHICLE_PATHS.documentUploadSignature(vehicle.id, 'carte-grise'),
+        );
+        const { url: cgUrl, publicId: cgPublicId } = await uploadDocumentToCloudinary(carteGrise, cgSig);
+        await authFetch(VEHICLE_PATHS.linkCarteGrise(vehicle.id), {
           method: "POST",
-          body: cgForm as unknown as Record<string, unknown>,
+          body: { url: cgUrl, publicId: cgPublicId },
         });
       }
 
       if (assurance) {
-        const assForm = new FormData();
-        assForm.append("file", assurance);
-        await authFetch(VEHICLE_PATHS.uploadAssurance(vehicle.id), {
+        const assSig = await authFetch<{ signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string }>(
+          VEHICLE_PATHS.documentUploadSignature(vehicle.id, 'assurance'),
+        );
+        const { url: assUrl, publicId: assPublicId } = await uploadDocumentToCloudinary(assurance, assSig);
+        await authFetch(VEHICLE_PATHS.linkAssurance(vehicle.id), {
           method: "POST",
-          body: assForm as unknown as Record<string, unknown>,
+          body: { url: assUrl, publicId: assPublicId },
         });
       }
 
       reset();
       router.push(`/dashboard/owner/vehicles/${vehicle.id}`);
     } catch (err) {
-      if (createdVehicleId) {
-        try {
-          await authFetch(VEHICLE_PATHS.archive(createdVehicleId), { method: "DELETE" });
-        } catch { /* rollback failed */ }
+      // L'upload des documents a échoué — on tente un rollback (purge du véhicule créé)
+      const message = err instanceof Error ? err.message : "Une erreur est survenue.";
+      try {
+        await authFetch(VEHICLE_PATHS.purgeDraft(createdVehicleId!), { method: "DELETE" });
+        setError(`L'envoi des documents a échoué : ${message}. Aucune donnée n'a été enregistrée.`);
+      } catch {
+        // Le purge a échoué (cas exceptionnel) — le véhicule existe sans documents
+        setError(
+          `L'envoi des documents a échoué : ${message}. ` +
+          `Votre annonce a été créée mais les documents n'ont pas pu être uploadés. ` +
+          `Vous pouvez les ajouter depuis votre tableau de bord.`
+        );
       }
-      setError(
-        err instanceof Error
-          ? `L'opération a échoué : ${err.message}. Aucune donnée n'a été enregistrée.`
-          : "Une erreur est survenue. Veuillez réessayer.",
-      );
     } finally {
       setLoading(false);
     }

@@ -32,7 +32,7 @@ import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { SearchVehiclesDto } from './dto/search-vehicles.dto';
 import { CreateIndisponibiliteDto } from './dto/create-indisponibilite.dto';
-import { VEHICLE_PHOTO_MULTER_OPTIONS } from '../upload/upload.config';
+import { VEHICLE_DOCUMENT_MULTER_OPTIONS, VEHICLE_PHOTO_MULTER_OPTIONS } from '../upload/upload.config';
 import { MulterExceptionFilter } from '../upload/multer-exception.filter';
 
 @Controller('vehicles')
@@ -80,6 +80,49 @@ export class VehiclesController {
   @Roles(RoleProfile.PROPRIETAIRE)
   findMine(@CurrentUser() user: RequestUser) {
     return this.vehiclesService.findMyVehicles(user);
+  }
+
+  /**
+   * GET /vehicles/:id/documents/upload-signature — Signature Cloudinary pour upload direct.
+   * Doit être AVANT GET :id pour éviter que "documents" soit capturé comme UUID.
+   */
+  @Get(':id/documents/upload-signature')
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  getDocumentUploadSignature(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('docType') docType: 'carte-grise' | 'assurance',
+  ) {
+    if (docType !== 'carte-grise' && docType !== 'assurance') {
+      throw new BadRequestException('docType doit être carte-grise ou assurance');
+    }
+    return this.vehiclesService.getDocumentUploadSignature(id, docType);
+  }
+
+  /**
+   * POST /vehicles/:id/documents/carte-grise/link — Lie une carte grise uploadée directement sur Cloudinary.
+   */
+  @Post(':id/documents/carte-grise/link')
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  linkCarteGrise(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: { url: string; publicId: string },
+  ) {
+    return this.vehiclesService.linkCarteGrise(id, dto.url, dto.publicId);
+  }
+
+  /**
+   * POST /vehicles/:id/documents/assurance/link — Lie une assurance uploadée directement sur Cloudinary.
+   */
+  @Post(':id/documents/assurance/link')
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  linkAssurance(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: { url: string; publicId: string },
+  ) {
+    return this.vehiclesService.linkAssurance(id, dto.url, dto.publicId);
   }
 
   /**
@@ -152,6 +195,17 @@ export class VehiclesController {
   @Roles(RoleProfile.PROPRIETAIRE)
   archive(@Param('id', ParseUUIDPipe) id: string) {
     return this.vehiclesService.archive(id);
+  }
+
+  /**
+   * DELETE /vehicles/:id/purge — Suppression définitive (BROUILLON / ARCHIVE uniquement).
+   * Utilisé comme rollback côté front quand l'upload de documents échoue après la création.
+   */
+  @Delete(':id/purge')
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  purgeDraft(@Param('id', ParseUUIDPipe) id: string) {
+    return this.vehiclesService.purgeDraft(id);
   }
 
   // ── INDISPONIBILITÉS (Calendrier de disponibilité) ───────────────────
@@ -249,7 +303,7 @@ export class VehiclesController {
   @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(RoleProfile.PROPRIETAIRE)
   @UseFilters(MulterExceptionFilter)
-  @UseInterceptors(FileInterceptor('file', VEHICLE_PHOTO_MULTER_OPTIONS))
+  @UseInterceptors(FileInterceptor('file', VEHICLE_DOCUMENT_MULTER_OPTIONS))
   async uploadCarteGrise(
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFile() file: Express.Multer.File | undefined,
@@ -265,7 +319,7 @@ export class VehiclesController {
   @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(RoleProfile.PROPRIETAIRE)
   @UseFilters(MulterExceptionFilter)
-  @UseInterceptors(FileInterceptor('file', VEHICLE_PHOTO_MULTER_OPTIONS))
+  @UseInterceptors(FileInterceptor('file', VEHICLE_DOCUMENT_MULTER_OPTIONS))
   async uploadAssuranceDoc(
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFile() file: Express.Multer.File | undefined,

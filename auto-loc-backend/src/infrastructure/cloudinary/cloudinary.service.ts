@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
 import {
-  VEHICLE_PHOTO_EAGER_TRANSFORMATION,
   VEHICLE_PHOTO_FOLDER,
   VEHICLE_PHOTO_TRANSFORM,
 } from './utils/image-optimizer';
@@ -40,6 +39,13 @@ export class CloudinaryService implements OnModuleInit {
   getUploadSignature(): { signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string } {
     const timestamp = Math.round(Date.now() / 1000);
     const folder = VEHICLE_PHOTO_FOLDER;
+    const signature = cloudinary.utils.api_sign_request({ timestamp, folder }, this.apiSecret);
+    return { signature, timestamp, apiKey: this.apiKey, cloudName: this.cloudName, folder };
+  }
+
+  getDocumentUploadSignature(vehicleId: string, docType: string): { signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string } {
+    const timestamp = Math.round(Date.now() / 1000);
+    const folder = `vehicule-docs/${vehicleId}/${docType}`;
     const signature = cloudinary.utils.api_sign_request({ timestamp, folder }, this.apiSecret);
     return { signature, timestamp, apiKey: this.apiKey, cloudName: this.cloudName, folder };
   }
@@ -99,7 +105,7 @@ export class CloudinaryService implements OnModuleInit {
   }
 
   async uploadVehicleDocument(buffer: Buffer, vehicleId: string, docType: string): Promise<UploadResultDto> {
-    return this.uploadToFolder(buffer, `vehicule-docs/${vehicleId}/${docType}`);
+    return this.uploadToFolder(buffer, `vehicule-docs/${vehicleId}/${docType}`, 'auto');
   }
 
   async uploadPermisDocument(buffer: Buffer, userId: string): Promise<UploadResultDto> {
@@ -110,13 +116,20 @@ export class CloudinaryService implements OnModuleInit {
     await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
   }
 
+  /** Supprime un document (image ou PDF) — essaie les deux resource_type. */
+  async deleteDocumentByPublicId(publicId: string): Promise<void> {
+    await cloudinary.uploader.destroy(publicId, { resource_type: 'image' }).catch(() => { });
+    await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' }).catch(() => { });
+  }
+
   private uploadToFolder(
     buffer: Buffer,
     folder: string,
+    resourceType: 'image' | 'auto' = 'image',
   ): Promise<UploadResultDto> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { folder, resource_type: 'image' },
+        { folder, resource_type: resourceType },
         (err: unknown, result: unknown) => {
           if (err) { reject(err); return; }
           const res = result as { secure_url: string; public_id: string } | undefined;

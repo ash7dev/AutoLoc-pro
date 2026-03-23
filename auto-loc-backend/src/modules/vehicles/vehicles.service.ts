@@ -127,6 +127,8 @@ export class VehiclesService {
             assurance: dto.assurance ?? null,
             reglesSpecifiques: dto.reglesSpecifiques ?? null,
             fraisLivraison: dto.fraisLivraison ?? null,
+            autoriseHorsDakar: dto.autoriseHorsDakar ?? false,
+            supplementHorsDakarParJour: dto.supplementHorsDakarParJour ?? null,
             statut: statutInitial,
             tarifsProgressifs: dto.tiers?.length
               ? {
@@ -178,7 +180,11 @@ export class VehiclesService {
       }, { timeout: 15000 });
     } catch (err: unknown) {
       if ((err as { code?: string }).code === 'P2002') {
-        throw new ConflictException('Un véhicule avec cette immatriculation existe déjà');
+        const target = (err as { meta?: { target?: string[] } }).meta?.target ?? [];
+        if (target.includes('immatriculation')) {
+          throw new ConflictException('Un véhicule avec cette immatriculation existe déjà');
+        }
+        throw new ConflictException('Contrainte d\'unicité violée : ' + target.join(', '));
       }
       throw err;
     }
@@ -306,14 +312,16 @@ export class VehiclesService {
   }
 
   /**
-   * GET /vehicles/:id/pricing?days=N — Tarification dynamique publique.
+   * GET /vehicles/:id/pricing?days=N&horsDakar=true|false — Tarification dynamique publique.
    * Utilise les TarifTier du véhicule pour résoudre le prix effectif.
    */
-  async getPricing(vehicleId: string, nbJours: number) {
+  async getPricing(vehicleId: string, nbJours: number, horsDakar: boolean = false) {
     const vehicle = await this.prisma.vehicule.findUnique({
       where: { id: vehicleId },
       select: {
         prixParJour: true,
+        autoriseHorsDakar: true,
+        supplementHorsDakarParJour: true,
         tarifsProgressifs: {
           orderBy: { joursMin: 'asc' },
           select: { joursMin: true, joursMax: true, prix: true },
@@ -322,14 +330,21 @@ export class VehiclesService {
     });
     if (!vehicle) throw new NotFoundException('Véhicule introuvable');
 
+    const supplement = horsDakar && vehicle.autoriseHorsDakar
+      ? Number(vehicle.supplementHorsDakarParJour ?? 0)
+      : 0;
+
     const result = this.pricing.calculate(
       vehicle.prixParJour,
       nbJours,
       vehicle.tarifsProgressifs,
+      supplement,
     );
 
     return {
       nbJours,
+      autoriseHorsDakar: vehicle.autoriseHorsDakar,
+      supplementHorsDakar: supplement,
       prixParJour: Number(result.prixParJour),
       totalBase: Number(result.totalBase),
       tauxCommission: Number(result.tauxCommission),
@@ -392,6 +407,8 @@ export class VehiclesService {
             assurance: dto.assurance,
             reglesSpecifiques: dto.reglesSpecifiques,
             fraisLivraison: dto.fraisLivraison,
+            autoriseHorsDakar: dto.autoriseHorsDakar,
+            supplementHorsDakarParJour: dto.supplementHorsDakarParJour,
             tarifsProgressifs: dto.tiers?.length
               ? {
                 create: dto.tiers.map((t, i) => ({
@@ -411,13 +428,50 @@ export class VehiclesService {
         });
       }, { timeout: 15000 });
     } catch (err: unknown) {
-      if ((err as { code?: string }).code === 'P2002') {
+      if ((err as { code?: string }).code !== 'P2002') throw err;
+      const target = (err as { meta?: { target?: string[] } }).meta?.target ?? [];
+      if (target.includes('immatriculation')) {
         throw new ConflictException('Un véhicule avec cette immatriculation existe déjà');
       }
-      throw err;
+      throw new ConflictException('Contrainte d\'unicité violée : ' + target.join(', '));
     }
 
     await this.invalidateDetailCache(vehicleId);
+  }
+
+  /**
+   * DELETE /vehicles/:id/purge — Suppression définitive d'un véhicule BROUILLON ou ARCHIVE.
+   * Utilisé comme rollback quand la création échoue après la sauvegarde du véhicule.
+   * Supprime les photos Cloudinary et la ligne DB (les relations cascadent).
+   */
+  async purgeDraft(vehicleId: string) {
+    const vehicle = await this.prisma.vehicule.findUnique({
+      where: { id: vehicleId },
+      select: { statut: true },
+    });
+    if (!vehicle) return;
+
+    const purgeable: StatutVehicule[] = [StatutVehicule.BROUILLON, StatutVehicule.EN_ATTENTE_VALIDATION, StatutVehicule.ARCHIVE];
+    if (!purgeable.includes(vehicle.statut)) {
+      throw new BadRequestException(
+        'Seuls les véhicules en brouillon, en attente de validation ou archivés peuvent être supprimés définitivement.',
+      );
+    }
+
+    // Supprimer les photos Cloudinary en parallèle (fire-and-forget, non bloquant)
+    const photos = await this.prisma.photoVehicule.findMany({
+      where: { vehiculeId: vehicleId },
+      select: { publicId: true },
+    });
+    const publicIds = photos.map((p) => p.publicId).filter(Boolean) as string[];
+    if (publicIds.length > 0) {
+      await Promise.all(
+        publicIds.map((id) => this.cloudinary.deleteByPublicId(id).catch(() => {})),
+      );
+    }
+
+    // Suppression dure — les relations (photos, tiers, équipements, indispos) cascadent
+    await this.prisma.vehicule.delete({ where: { id: vehicleId } });
   }
 
   /**
@@ -1078,6 +1132,42 @@ export class VehiclesService {
 
   // ── DOCUMENTS VÉHICULE ──────────────────────────────────────────────────
 
+  getDocumentUploadSignature(vehicleId: string, docType: 'carte-grise' | 'assurance') {
+    return this.cloudinary.getDocumentUploadSignature(vehicleId, docType);
+  }
+
+  async linkCarteGrise(vehicleId: string, url: string, publicId: string) {
+    const vehicle = await this.prisma.vehicule.findUnique({
+      where: { id: vehicleId },
+      select: { carteGrisePublicId: true },
+    });
+    if (!vehicle) throw new NotFoundException('Véhicule non trouvé');
+    if (vehicle.carteGrisePublicId) {
+      await this.cloudinary.deleteDocumentByPublicId(vehicle.carteGrisePublicId);
+    }
+    await this.prisma.vehicule.update({
+      where: { id: vehicleId },
+      data: { carteGriseUrl: url, carteGrisePublicId: publicId },
+    });
+    return { url };
+  }
+
+  async linkAssurance(vehicleId: string, url: string, publicId: string) {
+    const vehicle = await this.prisma.vehicule.findUnique({
+      where: { id: vehicleId },
+      select: { assuranceDocPublicId: true },
+    });
+    if (!vehicle) throw new NotFoundException('Véhicule non trouvé');
+    if (vehicle.assuranceDocPublicId) {
+      await this.cloudinary.deleteDocumentByPublicId(vehicle.assuranceDocPublicId);
+    }
+    await this.prisma.vehicule.update({
+      where: { id: vehicleId },
+      data: { assuranceDocUrl: url, assuranceDocPublicId: publicId },
+    });
+    return { url };
+  }
+
   async uploadCarteGrise(vehiculeId: string, file: Express.Multer.File) {
     const vehicle = await this.prisma.vehicule.findUnique({
       where: { id: vehiculeId },
@@ -1085,9 +1175,8 @@ export class VehiclesService {
     });
     if (!vehicle) throw new NotFoundException('Véhicule non trouvé');
 
-    // Delete old document if exists
     if (vehicle.carteGrisePublicId) {
-      await this.cloudinary.deleteByPublicId(vehicle.carteGrisePublicId).catch(() => { });
+      await this.cloudinary.deleteDocumentByPublicId(vehicle.carteGrisePublicId);
     }
 
     const upload = await this.cloudinary.uploadVehicleDocument(file.buffer, vehiculeId, 'carte-grise');
@@ -1108,7 +1197,7 @@ export class VehiclesService {
     if (!vehicle) throw new NotFoundException('Véhicule non trouvé');
 
     if (vehicle.assuranceDocPublicId) {
-      await this.cloudinary.deleteByPublicId(vehicle.assuranceDocPublicId).catch(() => { });
+      await this.cloudinary.deleteDocumentByPublicId(vehicle.assuranceDocPublicId);
     }
 
     const upload = await this.cloudinary.uploadVehicleDocument(file.buffer, vehiculeId, 'assurance');

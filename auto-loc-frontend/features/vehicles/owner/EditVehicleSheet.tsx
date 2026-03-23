@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import type { Vehicle, VehicleType, FuelType, Transmission, VehiclePhoto } from "@/lib/nestjs/vehicles";
-import { VEHICLE_PATHS } from "@/lib/nestjs/vehicles";
+import { VEHICLE_PATHS, uploadDocumentToCloudinary } from "@/lib/nestjs/vehicles";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -311,17 +311,16 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
     setUploadingDoc(type);
     setError(null);
     try {
-      const form = new FormData();
-      form.append("file", file);
-      const path = type === "carte-grise"
-        ? VEHICLE_PATHS.uploadCarteGrise(vehicle.id)
-        : VEHICLE_PATHS.uploadAssurance(vehicle.id);
-      const result = await authFetch<{ url: string }>(path, {
-        method: "POST",
-        body: form as unknown as undefined,
-      });
-      if (type === "carte-grise") setCarteGriseUrl(result.url);
-      else setAssuranceDocUrl(result.url);
+      const sig = await authFetch<{ signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string }>(
+        VEHICLE_PATHS.documentUploadSignature(vehicle.id, type),
+      );
+      const { url, publicId } = await uploadDocumentToCloudinary(file, sig);
+      const linkPath = type === "carte-grise"
+        ? VEHICLE_PATHS.linkCarteGrise(vehicle.id)
+        : VEHICLE_PATHS.linkAssurance(vehicle.id);
+      await authFetch(linkPath, { method: "POST", body: { url, publicId } });
+      if (type === "carte-grise") setCarteGriseUrl(url);
+      else setAssuranceDocUrl(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : `Erreur lors de l'upload du document.`);
     } finally {

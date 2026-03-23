@@ -77,16 +77,16 @@ export function HowItWorksSection(): React.ReactElement {
                 </div>
 
                 {/* ── Steps grid ── */}
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-5">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
                     {STEPS.map((step, i) => {
                         const Icon = step.icon;
                         return (
                             <div key={step.number} className="relative flex">
                                 {/* Connector arrow — desktop only, between cards */}
                                 {i < STEPS.length - 1 && (
-                                    <div className="absolute -right-[18px] top-1/2 -translate-y-1/2 z-10 hidden lg:block">
-                                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-400/10 border border-emerald-400/20">
-                                            <ArrowRight className="h-3.5 w-3.5 text-emerald-400" strokeWidth={2.5} />
+                                    <div className="absolute -right-8 top-1/2 -translate-y-1/2 z-10 hidden lg:flex items-center justify-center w-8 h-8">
+                                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/20">
+                                            <ArrowRight className="h-4 w-4 text-black" strokeWidth={3} />
                                         </div>
                                     </div>
                                 )}
@@ -111,7 +111,7 @@ export function HowItWorksSection(): React.ReactElement {
                                     />
 
                                     {/* Number */}
-                                    <span className="text-[64px] font-black leading-none text-emerald-400/10 absolute top-4 right-6 select-none">
+                                    <span className="text-[64px] font-black leading-none text-emerald-400/60 absolute top-4 right-6 select-none drop-shadow-md">
                                         {step.number}
                                     </span>
 

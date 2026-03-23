@@ -131,8 +131,9 @@ const NavContent = ({ compact }: { compact: boolean }) => (
           <Image
             src="/logoAutoLoc.jpg"
             alt="AutoLoc"
-            width={compact ? 45 : 52}
-            height={compact ? 42 : 48}
+            width={compact ? 55 : 85}
+            height={compact ? 50 : 75}
+            priority
             className="object-contain group-hover:opacity-80 transition-opacity duration-200"
           />
         </Link>
@@ -237,8 +238,9 @@ const NavContent = ({ compact }: { compact: boolean }) => (
           <Image
             src="/logoAutoLoc.jpg"
             alt="AutoLoc"
-            width={40}
-            height={40}
+            width={55}
+            height={55}
+            priority
             className="object-contain"
           />
         </Link>

@@ -6,7 +6,7 @@ import {
   ArrowRight, Car, MapPin, Settings2, Fuel,
   CheckCircle2, Sparkles,
   Navigation, Thermometer, Bluetooth, Camera, Baby,
-  PanelTop, ScanLine, Gauge,
+  PanelTop, ScanLine, Gauge, Smartphone, Flame, ScanFace,
   LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -42,10 +42,13 @@ const EQUIPMENTS: { value: string; label: string; Icon: LucideIcon }[] = [
   { value: "CLIMATISATION", label: "Climatisation", Icon: Thermometer },
   { value: "BLUETOOTH", label: "Bluetooth", Icon: Bluetooth },
   { value: "CAMERA_RECUL", label: "Caméra de recul", Icon: Camera },
+  { value: "CAMERA_360", label: "Caméra 360°", Icon: ScanFace },
   { value: "SIEGE_ENFANT", label: "Siège enfant", Icon: Baby },
+  { value: "SIEGE_CHAUFFANT", label: "Siège chauffant", Icon: Flame },
   { value: "TOIT_OUVRANT", label: "Toit ouvrant", Icon: PanelTop },
   { value: "RADAR_STATIONNEMENT", label: "Radar stationnement", Icon: ScanLine },
   { value: "REGULATEUR_VITESSE", label: "Rég. de vitesse", Icon: Gauge },
+  { value: "CARPLAY", label: "CarPlay / Android Auto", Icon: Smartphone },
 ];
 
 const ZONES_DAKAR = [
