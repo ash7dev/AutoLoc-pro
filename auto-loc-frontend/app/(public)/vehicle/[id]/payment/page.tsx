@@ -108,6 +108,7 @@ export default function PaymentPage() {
     const dateDebut = searchParams.get('dateDebut') ?? '';
     const dateFin = searchParams.get('dateFin') ?? '';
     const nbJours = Number(searchParams.get('nbJours') ?? 0);
+    const horsDakar = searchParams.get('horsDakar') === '1';
 
     const [vehicle, setVehicle] = useState<Vehicle | null>(null);
     const [pricing, setPricing] = useState<PricingResponse | null>(null);
@@ -125,7 +126,7 @@ export default function PaymentPage() {
         if (!vehicleId || !dateDebut || !dateFin || nbJours < 1) return;
         Promise.all([
             fetchVehicle(vehicleId),
-            fetchVehiclePricing(vehicleId, nbJours),
+            fetchVehiclePricing(vehicleId, nbJours, horsDakar),
         ])
             .then(([v, p]) => { setVehicle(v); setPricing(p); })
             .catch(() => setErrorMsg('Impossible de charger les détails'))

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft, CheckCircle2, Car, CircleDollarSign,
   FileText, Camera, FileCheck2, Loader2, AlertCircle,
-  Shield, Sparkles, Truck,
+  Shield, Sparkles, Truck, MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAddVehicleStore } from "../store";
@@ -55,6 +55,8 @@ export function StepReview({ onBack }: Props) {
           reglesSpecifiques: step3?.reglesSpecifiques || undefined,
           equipements: step1.equipements?.length ? step1.equipements : undefined,
           fraisLivraison: step2.fraisLivraison || undefined,
+          autoriseHorsDakar: step2.autoriseHorsDakar || false,
+          supplementHorsDakarParJour: step2.supplementHorsDakarParJour || undefined,
           photos: photos
             .filter((p) => p.status === 'done' && p.url && p.publicId)
             .map((p) => ({ url: p.url!, publicId: p.publicId! })),
@@ -166,6 +168,9 @@ export function StepReview({ onBack }: Props) {
         )}
         {step2?.fraisLivraison && step2.fraisLivraison > 0 && (
           <ReviewRow label="Frais de livraison" value={fmtPrice(step2.fraisLivraison)} icon={Truck} />
+        )}
+        {step2?.autoriseHorsDakar && step2.supplementHorsDakarParJour != null && (
+          <ReviewRow label="Supplément Hors Dakar" value={`${fmtPrice(step2.supplementHorsDakarParJour)} / j`} icon={MapPin} />
         )}
       </ReviewSection>
 

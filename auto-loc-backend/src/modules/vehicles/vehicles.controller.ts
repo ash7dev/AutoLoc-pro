@@ -168,9 +168,11 @@ export class VehiclesController {
   async getPricing(
     @Param('id', ParseUUIDPipe) id: string,
     @Query('days') daysStr?: string,
+    @Query('horsDakar') horsDakarStr?: string,
   ) {
     const days = daysStr ? parseInt(daysStr, 10) : 1;
-    return this.vehiclesService.getPricing(id, isNaN(days) || days < 1 ? 1 : days);
+    const horsDakar = horsDakarStr === 'true' || horsDakarStr === '1';
+    return this.vehiclesService.getPricing(id, isNaN(days) || days < 1 ? 1 : days, horsDakar);
   }
 
   /**

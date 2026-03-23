@@ -3,7 +3,7 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import {
   ArrowLeft, ArrowRight, Plus, Trash2, Info, Truck,
-  Banknote, CalendarDays, TrendingDown, Zap,
+  Banknote, CalendarDays, TrendingDown, Zap, MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAddVehicleStore, Step2Data } from "../store";
@@ -225,6 +225,56 @@ export function StepPricing({ onNext, onBack }: Props) {
             Laissez vide ou à 0 si vous ne proposez pas la livraison.
           </p>
         </FormField>
+      </SectionCard>
+
+      {/* ━━━ Section: Hors Dakar ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <SectionCard
+        icon={MapPin}
+        title="Voyages Hors Dakar"
+        subtitle="Autorisez les locataires à sortir de la région de Dakar"
+        badge="Optionnel"
+      >
+        <div className="flex items-start gap-3 rounded-xl bg-emerald-50/50 border border-emerald-100 p-4 mb-4">
+          <MapPin className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" strokeWidth={1.75} />
+          <div>
+            <p className="text-[12px] font-bold text-emerald-700">Autoriser ce véhicule à sortir de la région de Dakar ?</p>
+            <p className="text-[11px] text-emerald-600 mt-0.5 leading-relaxed">
+              Le locataire choisira cette option s'il prévoit de voyager hors de Dakar. Le supplément sera appliqué par jour.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <div className="relative flex items-center justify-center">
+              <input
+                type="checkbox"
+                {...register("autoriseHorsDakar")}
+                className="peer sr-only"
+              />
+              <div className="w-10 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+            </div>
+            <span className="text-[13px] font-bold text-slate-700">
+              Activer l'option Hors Dakar
+            </span>
+          </label>
+
+          {watch("autoriseHorsDakar") && (
+            <div className="pt-2 animate-in slide-in-from-top-2 fade-in duration-200">
+              <FormField label="Supplément par jour (FCFA)">
+                <div className="relative">
+                  <input
+                    type="number"
+                    {...register("supplementHorsDakarParJour", { min: 0, valueAsNumber: true })}
+                    placeholder="Ex : 5 000"
+                    className={cn(INPUT_CLASS, "pr-16")}
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 uppercase">FCFA</span>
+                </div>
+              </FormField>
+            </div>
+          )}
+        </div>
       </SectionCard>
 
       {/* ━━━ Navigation ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}

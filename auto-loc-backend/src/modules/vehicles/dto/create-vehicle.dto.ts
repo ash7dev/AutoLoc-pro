@@ -9,6 +9,7 @@ import {
   Min,
   ValidateNested,
   IsArray,
+  ValidateIf,
 } from 'class-validator';
 import { IsBoolean, IsUrl } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -147,7 +148,7 @@ export class CreateVehicleDto {
   @IsBoolean()
   autoriseHorsDakar?: boolean;
 
-  @IsOptional()
+  @ValidateIf((o) => o.autoriseHorsDakar === true)
   @IsNumber()
   @Min(0)
   @Type(() => Number)

@@ -69,6 +69,8 @@ export interface Vehicle {
   assurance: string | null;
   reglesSpecifiques: string | null;
   fraisLivraison: number | null;
+  autoriseHorsDakar?: boolean;
+  supplementHorsDakarParJour?: number | null;
   statut: VehicleStatus;
   estVerrouille?: boolean;
   note: number;
@@ -362,6 +364,8 @@ export async function fetchAllVerifiedVehicles(): Promise<VehicleSearchResult[]>
 
 export interface PricingResponse {
   nbJours: number;
+  autoriseHorsDakar?: boolean;
+  supplementHorsDakar?: number;
   prixParJour: number;
   totalBase: number;
   tauxCommission: number;
@@ -376,9 +380,12 @@ export interface PricingResponse {
 export async function fetchVehiclePricing(
   vehicleId: string,
   days: number,
+  horsDakar?: boolean,
 ): Promise<PricingResponse> {
+  const qs = new URLSearchParams({ days: String(days) });
+  if (horsDakar) qs.set('horsDakar', '1');
   return apiFetch<PricingResponse>(
-    `/vehicles/${vehicleId}/pricing?days=${days}`,
+    `/vehicles/${vehicleId}/pricing?${qs.toString()}`,
   );
 }
 

@@ -85,15 +85,19 @@ export class ReservationPricingService {
     /**
      * Calcule tous les montants de la réservation.
      * Utilise les tarifs progressifs si fournis, sinon le prix par jour de base.
+     * Ajoute le supplément hors Dakar le cas échéant.
      * Commission 15% ajoutée côté locataire ; propriétaire reçoit 100% du prix base.
      */
     calculate(
         prixParJour: Prisma.Decimal,
         nbJours: number,
         tiers?: TarifTierInput[],
+        supplementHorsDakar: number = 0,
     ): PricingResult {
         const effectivePrice = this.resolveTieredPrice(prixParJour, nbJours, tiers);
-        const totalBase = effectivePrice.mul(nbJours);
+        const finalPriceParJour = effectivePrice.add(new Prisma.Decimal(supplementHorsDakar));
+
+        const totalBase = finalPriceParJour.mul(nbJours);
         const montantCommission = totalBase
             .mul(TAUX_COMMISSION)
             .toDecimalPlaces(2);
@@ -101,7 +105,7 @@ export class ReservationPricingService {
         const netProprietaire = totalBase;
 
         return {
-            prixParJour: effectivePrice,
+            prixParJour: finalPriceParJour,
             totalBase,
             tauxCommission: TAUX_COMMISSION,
             montantCommission,

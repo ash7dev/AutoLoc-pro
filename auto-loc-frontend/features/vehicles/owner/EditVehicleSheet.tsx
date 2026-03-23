@@ -95,6 +95,8 @@ interface EditFormData {
   zoneConduite?: string;
   assurance?: string;
   reglesSpecifiques?: string;
+  autoriseHorsDakar?: boolean;
+  supplementHorsDakarParJour?: number;
 }
 
 // ── Section header ─────────────────────────────────────────────────────────────
@@ -213,6 +215,8 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
       zoneConduite: vehicle.zoneConduite ?? "",
       assurance: vehicle.assurance ?? "",
       reglesSpecifiques: vehicle.reglesSpecifiques ?? "",
+      autoriseHorsDakar: vehicle.autoriseHorsDakar ?? false,
+      supplementHorsDakarParJour: vehicle.supplementHorsDakarParJour ?? undefined,
     });
     setExistingPhotos([...vehicle.photos]);
     setDeletedPhotoIds([]);
@@ -363,6 +367,8 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
             zoneConduite: data.zoneConduite || undefined,
             assurance: data.assurance || undefined,
             reglesSpecifiques: data.reglesSpecifiques || undefined,
+            autoriseHorsDakar: data.autoriseHorsDakar || false,
+            supplementHorsDakarParJour: data.supplementHorsDakarParJour ? Number(data.supplementHorsDakarParJour) : undefined,
             equipements,
           },
         },
@@ -596,6 +602,38 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                     className={inputCls}
                   />
                 </Field>
+              </div>
+
+              {/* Hors Dakar */}
+              <div className="col-span-2 space-y-3 rounded-xl border border-[hsl(var(--border))] bg-muted/20 p-4">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="autoriseHorsDakar"
+                    {...register("autoriseHorsDakar")}
+                    disabled={locked}
+                    className="h-4 w-4 rounded border-[hsl(var(--border))] text-emerald-500 focus:ring-emerald-500"
+                  />
+                  <label htmlFor="autoriseHorsDakar" className="text-sm font-medium">
+                    Autoriser les locataires à sortir de la région de Dakar ?
+                  </label>
+                </div>
+                {watch("autoriseHorsDakar") && (
+                  <div className="pt-1">
+                    <Field
+                      label="Supplément par jour (FCFA)"
+                      error={errors.supplementHorsDakarParJour ? "Montant invalide" : undefined}
+                    >
+                      <input
+                        type="number"
+                        {...register("supplementHorsDakarParJour", { min: 0, valueAsNumber: true })}
+                        disabled={locked}
+                        placeholder="Ex : 5 000"
+                        className={inputCls}
+                      />
+                    </Field>
+                  </div>
+                )}
               </div>
 
               {/* Progressive tiers */}

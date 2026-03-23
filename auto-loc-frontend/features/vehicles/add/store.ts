@@ -41,6 +41,8 @@ export interface Step2Data {
   joursMinimum?: number;
   tiers: PriceTier[];
   fraisLivraison?: number;
+  autoriseHorsDakar?: boolean;
+  supplementHorsDakarParJour?: number;
 }
 
 export interface Step3Data {

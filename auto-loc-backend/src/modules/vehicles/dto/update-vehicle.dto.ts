@@ -9,6 +9,7 @@ import {
   Min,
   ValidateNested,
   IsBoolean,
+  ValidateIf,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Carburant, Transmission, TypeVehicule } from '@prisma/client';
@@ -118,7 +119,7 @@ export class UpdateVehicleDto {
   @IsBoolean() // Needs to be added to imports if not there, wait, I can just not use IsBoolean or add it. Let me add imports. Actually, they might not be imported. Wait, I should import IsBoolean in UpdateVehicleDto.
   autoriseHorsDakar?: boolean;
 
-  @IsOptional()
+  @ValidateIf((o) => o.autoriseHorsDakar === true)
   @IsNumber()
   @Min(0)
   @Type(() => Number)

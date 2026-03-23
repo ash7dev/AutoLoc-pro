@@ -31,9 +31,11 @@ interface Props {
   joursMinimum: number;
   ageMinimum?: number;
   fraisLivraison?: number | null;
+  autoriseHorsDakar?: boolean;
+  supplementHorsDakarParJour?: number | null;
 }
 
-export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMinimum, fraisLivraison }: Props): React.ReactElement {
+export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMinimum, fraisLivraison, autoriseHorsDakar, supplementHorsDakarParJour }: Props): React.ReactElement {
   const router = useRouter();
   const { formatPrice } = useCurrency();
   const [dateDebut, setDateDebut] = useState('');
@@ -46,6 +48,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
   const [gateProfile, setGateProfile] = useState<ProfileResponse | null>(null);
   const [gateLoading, setGateLoading] = useState(false);
   const [inlineError, setInlineError] = useState<React.ReactNode | null>(null);
+  const [horsDakar, setHorsDakar] = useState(false);
   const [wantsDelivery, setWantsDelivery] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
@@ -69,20 +72,23 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
     setLoadingPricing(true);
     setPricingError(false);
     try {
-      const result = await fetchVehiclePricing(vehicleId, days);
+      const result = await fetchVehiclePricing(vehicleId, days, horsDakar);
       setPricing(result);
     } catch {
       // Fallback local : permet à l'utilisateur de continuer vers le paiement
       // où le vrai prix sera recalculé. On signale l'estimation via pricingError.
       setPricingError(true);
+      const supp = horsDakar && autoriseHorsDakar ? (supplementHorsDakarParJour ?? 0) : 0;
       setPricing({
         nbJours: days,
+        autoriseHorsDakar,
+        supplementHorsDakar: supp,
         prixParJour,
-        totalBase: prixParJour * days,
+        totalBase: (prixParJour + supp) * days,
         tauxCommission: 0.15,
-        montantCommission: Math.round(prixParJour * days * 0.15),
-        totalLocataire: Math.round(prixParJour * days * 1.15),
-        netProprietaire: prixParJour * days,
+        montantCommission: Math.round((prixParJour + supp) * days * 0.15),
+        totalLocataire: Math.round((prixParJour + supp) * days * 1.15),
+        netProprietaire: (prixParJour + supp) * days,
       });
     } finally {
       setLoadingPricing(false);
@@ -98,7 +104,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
       setPricingError(false);
     }
     return () => clearTimeout(debounceRef.current);
-  }, [nbJours, fetchPricingData]);
+  }, [nbJours, horsDakar, fetchPricingData]);
 
   const canReserve = datesValid && contractAccepted && pricing && !loadingPricing
     && (!wantsDelivery || deliveryAddress.trim().length > 0);
@@ -108,6 +114,9 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
     if (wantsDelivery && deliveryAddress.trim()) {
       params.set('livraison', '1');
       params.set('adresseLivraison', deliveryAddress.trim());
+    }
+    if (horsDakar) {
+      params.set('horsDakar', '1');
     }
     return params;
   }
@@ -173,6 +182,9 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
             params.set('livraison', '1');
             params.set('adresseLivraison', deliveryAddress.trim());
           }
+          if (horsDakar) {
+            params.set('horsDakar', '1');
+          }
           router.push(`/vehicle/${vehicleId}/payment?${params.toString()}`);
         }}
       />
@@ -190,7 +202,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
           </div>
 
           {/* Conditions de location — toujours visibles */}
-          {(joursMinimum > 1 || (ageMinimum && ageMinimum > 0)) && (
+          {(joursMinimum > 1 || (ageMinimum && ageMinimum > 0) || autoriseHorsDakar === false) && (
             <div className="flex flex-wrap gap-2 mt-3">
               {joursMinimum > 1 && (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-[11.5px] font-semibold text-slate-600">
@@ -202,6 +214,12 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-100 text-[11.5px] font-semibold text-amber-700">
                   <UserCheck className="w-3 h-3 text-amber-500" strokeWidth={2} />
                   {ageMinimum} ans minimum
+                </span>
+              )}
+              {autoriseHorsDakar === false && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-[11.5px] font-semibold text-slate-600">
+                  <MapPin className="w-3 h-3 text-slate-400" strokeWidth={2} />
+                  Région de Dakar uniquement
                 </span>
               )}
             </div>
@@ -265,6 +283,16 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
                   </span>
                   <span className="font-semibold text-slate-700 tabular-nums">
                     {formatPrice(deliveryFee)}
+                  </span>
+                </div>
+              )}
+              {pricing.supplementHorsDakar != null && pricing.supplementHorsDakar > 0 && (
+                <div className="flex justify-between items-center text-[13px]">
+                  <span className="text-slate-500 font-medium flex items-center gap-1">
+                    🗺️ Supplément Hors Dakar
+                  </span>
+                  <span className="font-semibold text-slate-700 tabular-nums">
+                    {formatPrice(pricing.supplementHorsDakar * nbJours)}
                   </span>
                 </div>
               )}
@@ -335,6 +363,35 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Hors Dakar toggle */}
+          {autoriseHorsDakar && supplementHorsDakarParJour != null && (
+            <div className="rounded-xl border border-slate-200 p-3.5 space-y-2.5">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <button
+                  type="button"
+                  onClick={() => setHorsDakar(!horsDakar)}
+                  className={cn(
+                    'mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                    horsDakar
+                      ? 'bg-emerald-500 border-emerald-500'
+                      : 'border-slate-300 group-hover:border-slate-400 bg-white',
+                  )}
+                >
+                  {horsDakar && <CheckCircle2 className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                </button>
+                <div>
+                  <span className="text-[12.5px] font-semibold text-slate-700 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
+                    Voyage Hors Dakar
+                  </span>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    + {formatPrice(supplementHorsDakarParJour)} / jour
+                  </p>
+                </div>
+              </label>
             </div>
           )}
 
