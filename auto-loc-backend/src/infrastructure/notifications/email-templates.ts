@@ -271,7 +271,7 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
             title: `Bienvenue${data.prenom ? `, ${data.prenom}` : ''} !`,
             subtitle: 'Vérifiez votre identité en 2 minutes et accédez à tout.',
             badge: { text: 'Nouveau membre', color: EMERALD, bg: EMERALD_BG },
-            cta: { label: 'Vérifier mon identité →', href: `${FRONTEND_URL}/dashboard/kyc` },
+            cta: { label: 'Vérifier mon identité →', href: `${FRONTEND_URL}/dashboard/owner/kyc` },
             content: [
                 infoCard([
                     { label: 'Étape 1 — Maintenant', value: 'Vérifier votre identité (2 min)', icon: '🪪' },
