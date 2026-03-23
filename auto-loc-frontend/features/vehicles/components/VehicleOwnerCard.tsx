@@ -273,12 +273,8 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                 {datesValid && pricing && !loadingPricing && (
                     <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 space-y-2.5">
                         <div className="flex justify-between text-[13px]">
-                            <span className="text-slate-500">{currencyFormat(pricing.prixParJour)} × {nbJours}j</span>
-                            <span className="font-semibold text-slate-700 tabular-nums">{currencyFormat(pricing.totalBase)}</span>
-                        </div>
-                        <div className="flex justify-between text-[13px]">
-                            <span className="text-slate-500">Frais de service (15%)</span>
-                            <span className="font-semibold text-slate-700 tabular-nums">{currencyFormat(pricing.montantCommission)}</span>
+                            <span className="text-slate-500">{currencyFormat(Math.round(pricing.totalLocataire / nbJours))} × {nbJours}j</span>
+                            <span className="font-semibold text-slate-700 tabular-nums">{currencyFormat(pricing.totalLocataire)}</span>
                         </div>
                         <div className="pt-2.5 border-t border-slate-200 flex justify-between items-center">
                             <span className="font-bold text-slate-900">Total</span>
@@ -324,15 +320,18 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                     disabled={!canReserve}
                     onClick={handleReserve}
                     className={cn(
-                        'w-full flex items-center justify-center gap-2 rounded-2xl py-4 text-[15px] font-bold transition-all duration-200',
+                        'relative w-full flex items-center justify-center gap-2.5 rounded-2xl py-4 text-[15px] font-black tracking-tight transition-all duration-200 overflow-hidden',
                         canReserve
-                            ? 'bg-slate-900 text-emerald-400 active:scale-[0.98]'
+                            ? 'bg-slate-900 text-emerald-400 shadow-lg shadow-slate-900/30 hover:shadow-xl hover:shadow-slate-900/40 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md active:scale-[0.99]'
                             : 'bg-slate-100 text-slate-300 cursor-not-allowed',
                     )}
                 >
-                    <CreditCard className="w-4.5 h-4.5" strokeWidth={2} />
+                    {canReserve && (
+                        <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 pointer-events-none" />
+                    )}
+                    <CreditCard className="w-4.5 h-4.5 flex-shrink-0" strokeWidth={2} />
                     Confirmer et réserver
-                    <ArrowRight className="w-4 h-4 ml-auto" strokeWidth={2.5} />
+                    <ArrowRight className="w-4 h-4 flex-shrink-0" strokeWidth={2.5} />
                 </button>
 
                 <p className="text-[11px] text-center text-slate-400">
