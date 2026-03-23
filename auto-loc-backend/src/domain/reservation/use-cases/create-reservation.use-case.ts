@@ -116,7 +116,7 @@ export class CreateReservationUseCase {
         const fraisLivraison = input.adresseLivraison && vehicule.fraisLivraison
             ? Number(vehicule.fraisLivraison)
             : 0;
-        const totalAvecLivraison = price.totalLocataire + fraisLivraison;
+        const totalAvecLivraison = price.totalLocataire.add(new Prisma.Decimal(fraisLivraison));
 
         // ── 6. Initiate payment ───────────────────────────────────────────────────
         const paymentRef = `${input.vehiculeId.slice(0, 8)}-${Date.now()}`;
