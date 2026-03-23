@@ -108,6 +108,20 @@ export class CloudinaryService implements OnModuleInit {
     return this.uploadToFolder(buffer, `vehicule-docs/${vehicleId}/${docType}`, 'auto');
   }
 
+  /**
+   * Génère une URL signée temporaire pour un document véhicule.
+   * L'URL expire après 10 minutes — ne jamais exposer l'URL brute au client.
+   */
+  getSignedDocumentUrl(publicId: string): string {
+    const expiresAt = Math.floor(Date.now() / 1000) + 10 * 60;
+    return cloudinary.url(publicId, {
+      sign_url: true,
+      expires_at: expiresAt,
+      resource_type: 'auto',
+      secure: true,
+    });
+  }
+
   async uploadPermisDocument(buffer: Buffer, userId: string): Promise<UploadResultDto> {
     return this.uploadToFolder(buffer, `permis/${userId}`);
   }

@@ -299,6 +299,23 @@ export class VehiclesController {
   // ── DOCUMENTS VÉHICULE ─────────────────────────────────────────────────
 
   /**
+   * GET /vehicles/:id/documents/:docType/view — URL signée temporaire (10 min).
+   * Ne jamais exposer l'URL Cloudinary brute au client.
+   */
+  @Get(':id/documents/:docType/view')
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  getDocumentSignedUrl(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('docType') docType: string,
+  ) {
+    if (docType !== 'carte-grise' && docType !== 'assurance') {
+      throw new BadRequestException('docType invalide (carte-grise ou assurance)');
+    }
+    return this.vehiclesService.getDocumentSignedUrl(id, docType);
+  }
+
+  /**
    * POST /vehicles/:id/documents/carte-grise — Upload carte grise (multipart).
    */
   @Post(':id/documents/carte-grise')

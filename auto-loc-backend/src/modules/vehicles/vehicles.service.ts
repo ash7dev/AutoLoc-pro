@@ -295,15 +295,50 @@ export class VehiclesService {
       where: { userId: user.sub },
       select: { id: true },
     });
+
+    // Masque les URLs brutes des documents — seul l'endpoint sécurisé /documents/:type/view y accède.
+    const safeVehicle = {
+      ...vehicle,
+      carteGriseUrl: undefined,
+      carteGrisePublicId: undefined,
+      assuranceDocUrl: undefined,
+      assuranceDocPublicId: undefined,
+      hasCarteGrise: !!vehicle.carteGriseUrl,
+      hasAssuranceDoc: !!vehicle.assuranceDocUrl,
+    };
+
     if (utilisateur?.id === vehicle.proprietaireId) {
-      return vehicle;
+      return safeVehicle;
     }
 
     if (vehicle.statut !== StatutVehicule.VERIFIE) {
       throw new NotFoundException('Véhicule introuvable');
     }
 
-    return vehicle;
+    return safeVehicle;
+  }
+
+  /**
+   * Génère une URL signée temporaire (10 min) pour consulter un document véhicule.
+   * L'ownership est vérifié en amont par ResourceOwnerGuard.
+   */
+  async getDocumentSignedUrl(
+    vehicleId: string,
+    docType: 'carte-grise' | 'assurance',
+  ): Promise<{ url: string }> {
+    const vehicle = await this.prisma.vehicule.findUnique({
+      where: { id: vehicleId },
+      select: { carteGrisePublicId: true, assuranceDocPublicId: true },
+    });
+    if (!vehicle) throw new NotFoundException('Véhicule introuvable');
+
+    const publicId = docType === 'carte-grise'
+      ? vehicle.carteGrisePublicId
+      : vehicle.assuranceDocPublicId;
+
+    if (!publicId) throw new NotFoundException('Document non disponible');
+
+    return { url: this.cloudinary.getSignedDocumentUrl(publicId) };
   }
 
   /** Supprime le cache détail d'un véhicule spécifique. */

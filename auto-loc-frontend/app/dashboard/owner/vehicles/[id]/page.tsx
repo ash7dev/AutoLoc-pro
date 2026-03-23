@@ -8,6 +8,7 @@ import { fetchVehicle } from '@/lib/nestjs/vehicles';
 import { fetchVehicleReservations } from '@/lib/nestjs/reservations';
 import { AvailabilityCalendar } from '@/features/vehicles/components/availability-calendar';
 import { EditVehicleButton } from '@/features/vehicles/owner/EditVehicleButton';
+import { DocumentViewButton } from '@/features/vehicles/owner/DocumentViewButton';
 import { ReservationStatusBadge } from '@/features/reservations/components/reservation-status';
 import {
   ArrowLeft, Car, Fuel, Settings2, Users, Star,
@@ -491,36 +492,32 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
         {/* ── Documents ───────────────────────────────────────── */}
         <SectionCard title="Documents" icon={FileText}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${vehicle.carteGriseUrl ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
-              {vehicle.carteGriseUrl
+            <div className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${vehicle.hasCarteGrise ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
+              {vehicle.hasCarteGrise
                 ? <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" strokeWidth={2} />
                 : <XCircle className="w-5 h-5 text-slate-300 flex-shrink-0" strokeWidth={1.75} />}
               <div>
                 <p className="text-[12.5px] font-bold text-slate-800">Carte grise</p>
-                <p className={`text-[11px] mt-0.5 ${vehicle.carteGriseUrl ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
-                  {vehicle.carteGriseUrl ? 'Document uploadé' : 'Non fourni'}
+                <p className={`text-[11px] mt-0.5 ${vehicle.hasCarteGrise ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
+                  {vehicle.hasCarteGrise ? 'Document uploadé' : 'Non fourni'}
                 </p>
               </div>
-              {vehicle.carteGriseUrl && (
-                <a href={vehicle.carteGriseUrl} target="_blank" rel="noopener noreferrer" className="ml-auto text-[11px] font-bold text-emerald-600 hover:underline">
-                  Voir
-                </a>
+              {vehicle.hasCarteGrise && (
+                <DocumentViewButton vehicleId={vehicle.id} docType="carte-grise" />
               )}
             </div>
-            <div className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${vehicle.assuranceDocUrl ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
-              {vehicle.assuranceDocUrl
+            <div className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${vehicle.hasAssuranceDoc ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
+              {vehicle.hasAssuranceDoc
                 ? <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" strokeWidth={2} />
                 : <XCircle className="w-5 h-5 text-slate-300 flex-shrink-0" strokeWidth={1.75} />}
               <div>
                 <p className="text-[12.5px] font-bold text-slate-800">Assurance</p>
-                <p className={`text-[11px] mt-0.5 ${vehicle.assuranceDocUrl ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
-                  {vehicle.assuranceDocUrl ? 'Document uploadé' : 'Non fourni'}
+                <p className={`text-[11px] mt-0.5 ${vehicle.hasAssuranceDoc ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
+                  {vehicle.hasAssuranceDoc ? 'Document uploadé' : 'Non fourni'}
                 </p>
               </div>
-              {vehicle.assuranceDocUrl && (
-                <a href={vehicle.assuranceDocUrl} target="_blank" rel="noopener noreferrer" className="ml-auto text-[11px] font-bold text-emerald-600 hover:underline">
-                  Voir
-                </a>
+              {vehicle.hasAssuranceDoc && (
+                <DocumentViewButton vehicleId={vehicle.id} docType="assurance" />
               )}
             </div>
           </div>
