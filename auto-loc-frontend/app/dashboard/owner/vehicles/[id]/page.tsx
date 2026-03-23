@@ -14,7 +14,8 @@ import {
   Calendar, MapPin, Hash, Shield, TrendingUp,
   ExternalLink, ImageIcon, CalendarDays, FileText,
   MapPinned, ShieldCheck, UserCheck, ChevronRight,
-  Eye, Banknote,
+  Eye, Banknote, Globe, Truck, CheckCircle2, XCircle,
+  Package, Layers, Clock,
 } from 'lucide-react';
 
 /* ════════════════════════════════════════════════════════════════
@@ -175,6 +176,22 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
   const hasConditions = vehicle.reglesSpecifiques || vehicle.zoneConduite ||
     vehicle.assurance || (vehicle.joursMinimum > 1) || (vehicle.ageMinimum > 18);
 
+  // Revenus générés (reservations TERMINEE uniquement)
+  const revenusGeneres = reservations
+    .filter((r: any) => r.statut === 'TERMINEE')
+    .reduce((sum: number, r: any) => sum + Number(r.netProprietaire ?? 0), 0);
+
+  // Equipements
+  const equipements: string[] = (vehicle.equipements ?? []).map((e: any) =>
+    typeof e === 'string' ? e : e.equipement?.nom ?? '',
+  ).filter(Boolean);
+
+  // Tarifs progressifs
+  const tarifs: { joursMin: number; joursMax: number | null; prix: number }[] =
+    vehicle.tarifsProgressifs ?? [];
+
+  const hasTarification = tarifs.length > 0 || vehicle.fraisLivraison || vehicle.autoriseHorsDakar;
+
   return (
     <div className="min-h-screen bg-slate-50/40">
       <div className="max-w-6xl mx-auto px-4 py-6 lg:px-8 lg:py-8 space-y-6">
@@ -251,6 +268,9 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
                 {/* Specs */}
                 <div className="flex flex-wrap gap-2">
                   <SpecPill icon={MapPin} label={vehicle.ville} />
+                  {vehicle.adresse && vehicle.adresse !== vehicle.ville && (
+                    <SpecPill icon={MapPinned} label={vehicle.adresse} />
+                  )}
                   {vehicle.carburant && (
                     <SpecPill icon={Fuel} label={FUEL_LABEL[vehicle.carburant] ?? vehicle.carburant} />
                   )}
@@ -263,6 +283,7 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
                   {vehicle.immatriculation && (
                     <SpecPill icon={Hash} label={vehicle.immatriculation} />
                   )}
+                  <SpecPill icon={Clock} label={`Ajouté le ${new Date(vehicle.creeLe).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`} />
                 </div>
               </div>
 
@@ -307,11 +328,18 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
         </div>
 
         {/* ── KPI row ─────────────────────────────────────────── */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <KpiCard
             label="Locations totales"
             value={vehicle.totalLocations ?? 0}
             icon={TrendingUp}
+            accent
+          />
+          <KpiCard
+            label="Revenus générés"
+            value={revenusGeneres > 0 ? `${fmtMoney(revenusGeneres)} FCFA` : '—'}
+            sub={revenusGeneres > 0 ? 'net propriétaire' : 'Aucune location terminée'}
+            icon={Banknote}
             accent
           />
           <KpiCard
@@ -393,6 +421,110 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
             )}
           </SectionCard>
         </div>
+
+        {/* ── Équipements ─────────────────────────────────────── */}
+        {equipements.length > 0 && (
+          <SectionCard title="Équipements inclus" icon={Package}>
+            <div className="flex flex-wrap gap-2">
+              {equipements.map((eq) => (
+                <span
+                  key={eq}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-100 text-[12px] font-semibold text-emerald-700"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
+                  {eq}
+                </span>
+              ))}
+            </div>
+          </SectionCard>
+        )}
+
+        {/* ── Tarification ────────────────────────────────────── */}
+        {hasTarification && (
+          <SectionCard title="Tarification" icon={Layers}>
+            <div className="flex flex-col gap-3">
+              {tarifs.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400 mb-2">Tarifs dégressifs</p>
+                  <div className="flex flex-col divide-y divide-slate-100 rounded-xl border border-slate-100 overflow-hidden">
+                    {tarifs.map((t, i) => (
+                      <div key={i} className="flex items-center justify-between px-4 py-3 bg-white">
+                        <p className="text-[13px] font-semibold text-slate-700">
+                          {t.joursMax
+                            ? `${t.joursMin} – ${t.joursMax} jours`
+                            : `${t.joursMin} jours et plus`}
+                        </p>
+                        <p className="text-[14px] font-black text-emerald-600 tabular-nums">
+                          {fmtMoney(t.prix)} <span className="text-[11px] font-semibold text-slate-400">FCFA/j</span>
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {vehicle.fraisLivraison ? (
+                  <ConditionItem
+                    icon={Truck}
+                    iconBg="bg-indigo-50 border-indigo-100"
+                    iconColor="text-indigo-600"
+                    label={`${fmtMoney(vehicle.fraisLivraison)} FCFA`}
+                    sub="Frais de livraison"
+                  />
+                ) : null}
+                {vehicle.autoriseHorsDakar && (
+                  <ConditionItem
+                    icon={Globe}
+                    iconBg="bg-teal-50 border-teal-100"
+                    iconColor="text-teal-600"
+                    label={vehicle.supplementHorsDakarParJour
+                      ? `+${fmtMoney(vehicle.supplementHorsDakarParJour)} FCFA/j`
+                      : 'Inclus'}
+                    sub="Supplément hors Dakar"
+                  />
+                )}
+              </div>
+            </div>
+          </SectionCard>
+        )}
+
+        {/* ── Documents ───────────────────────────────────────── */}
+        <SectionCard title="Documents" icon={FileText}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${vehicle.carteGriseUrl ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
+              {vehicle.carteGriseUrl
+                ? <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" strokeWidth={2} />
+                : <XCircle className="w-5 h-5 text-slate-300 flex-shrink-0" strokeWidth={1.75} />}
+              <div>
+                <p className="text-[12.5px] font-bold text-slate-800">Carte grise</p>
+                <p className={`text-[11px] mt-0.5 ${vehicle.carteGriseUrl ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
+                  {vehicle.carteGriseUrl ? 'Document uploadé' : 'Non fourni'}
+                </p>
+              </div>
+              {vehicle.carteGriseUrl && (
+                <a href={vehicle.carteGriseUrl} target="_blank" rel="noopener noreferrer" className="ml-auto text-[11px] font-bold text-emerald-600 hover:underline">
+                  Voir
+                </a>
+              )}
+            </div>
+            <div className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${vehicle.assuranceDocUrl ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
+              {vehicle.assuranceDocUrl
+                ? <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" strokeWidth={2} />
+                : <XCircle className="w-5 h-5 text-slate-300 flex-shrink-0" strokeWidth={1.75} />}
+              <div>
+                <p className="text-[12.5px] font-bold text-slate-800">Assurance</p>
+                <p className={`text-[11px] mt-0.5 ${vehicle.assuranceDocUrl ? 'text-emerald-600 font-semibold' : 'text-slate-400'}`}>
+                  {vehicle.assuranceDocUrl ? 'Document uploadé' : 'Non fourni'}
+                </p>
+              </div>
+              {vehicle.assuranceDocUrl && (
+                <a href={vehicle.assuranceDocUrl} target="_blank" rel="noopener noreferrer" className="ml-auto text-[11px] font-bold text-emerald-600 hover:underline">
+                  Voir
+                </a>
+              )}
+            </div>
+          </div>
+        </SectionCard>
 
         {/* ── Conditions ──────────────────────────────────────── */}
         {hasConditions && (

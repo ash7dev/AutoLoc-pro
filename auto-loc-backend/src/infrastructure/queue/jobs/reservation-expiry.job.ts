@@ -10,6 +10,7 @@ import {
   RESERVATION_SIGNATURE_REMINDER_JOB,
   RESERVATION_CHECKIN_REMINDER_JOB,
   RESERVATION_AUTOCLOSE_JOB,
+  RESERVATION_POST_CHECKOUT_JOB,
 } from '../queue.config';
 import { StatutReservation, StatutPaiement } from '@prisma/client';
 
@@ -157,6 +158,23 @@ export class ReservationExpiryProcessor {
           modifiePar: 'SYSTEM_AUTOCLOSE',
         },
       });
+    });
+  }
+
+  @Process(RESERVATION_POST_CHECKOUT_JOB)
+  async handlePostCheckout(
+    job: Job<{ reservationId: string }>,
+  ): Promise<void> {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: job.data.reservationId },
+      select: { vehiculeId: true, statut: true },
+    });
+    if (!reservation) return;
+    if (reservation.statut !== 'TERMINEE') return;
+
+    await this.prisma.vehicule.update({
+      where: { id: reservation.vehiculeId },
+      data: { totalLocations: { increment: 1 } },
     });
   }
 

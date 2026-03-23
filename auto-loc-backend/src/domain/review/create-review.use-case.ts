@@ -57,6 +57,7 @@ export class CreateReviewUseCase {
                 statut: true,
                 locataireId: true,
                 proprietaireId: true,
+                vehiculeId: true,
             },
         });
         if (!reservation) {
@@ -120,6 +121,7 @@ export class CreateReviewUseCase {
         const { newAverage, totalAvis } = await this.recalculateRating(
             cibleId,
             typeAvis,
+            typeAvis === TypeAvis.LOCATAIRE_NOTE_PROPRIO ? reservation.vehiculeId : undefined,
         );
 
         // ── 7. Notification (best-effort) ──────────────────────────────────
@@ -159,6 +161,7 @@ export class CreateReviewUseCase {
     private async recalculateRating(
         cibleId: string,
         typeAvis: TypeAvis,
+        vehiculeId?: string,
     ): Promise<{ newAverage: number; totalAvis: number }> {
         // Calculate AVG(note) for all reviews where this user is the target
         // and the typeAvis matches (locataire rating or proprietaire rating)
@@ -184,6 +187,25 @@ export class CreateReviewUseCase {
                 totalAvis,
             },
         });
+
+        // Sync vehicle stats when a tenant rates the owner
+        if (vehiculeId) {
+            const vehicleAgg = await this.prisma.avis.aggregate({
+                where: {
+                    typeAvis: TypeAvis.LOCATAIRE_NOTE_PROPRIO,
+                    reservation: { vehiculeId },
+                },
+                _avg: { note: true },
+                _count: { note: true },
+            });
+            await this.prisma.vehicule.update({
+                where: { id: vehiculeId },
+                data: {
+                    note: new Prisma.Decimal((vehicleAgg._avg.note ?? 0).toFixed(2)),
+                    totalAvis: vehicleAgg._count.note,
+                },
+            });
+        }
 
         this.logger.log(
             `Rating recalculated for ${cibleId}: ${updateField}=${newAverage.toFixed(2)}, totalAvis=${totalAvis}`,
