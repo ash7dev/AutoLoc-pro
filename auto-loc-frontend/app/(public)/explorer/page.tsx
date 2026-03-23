@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { ExplorerGrid } from '@/features/explorer/ExplorerGrid';
 import { Footer } from '@/features/landing/Footer';
 
@@ -7,7 +8,9 @@ export const revalidate = 60;
 export default function ExplorerPage() {
     return (
         <main>
-            <ExplorerGrid />
+            <Suspense>
+                <ExplorerGrid />
+            </Suspense>
             <Footer />
         </main>
     );

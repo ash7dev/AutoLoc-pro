@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Car } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -295,7 +296,11 @@ function ResultsHeader({
 ════════════════════════════════════════════════════════════════ */
 export function ExplorerGrid(): React.ReactElement {
   const { formatPrice } = useCurrency();
-  const [filters, setFilters] = useState<ExplorerFiltersState>(DEFAULT_FILTERS);
+  const searchParams = useSearchParams();
+  const [filters, setFilters] = useState<ExplorerFiltersState>(() => ({
+    ...DEFAULT_FILTERS,
+    zone: searchParams.get('zone') ?? '',
+  }));
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [vehicles, setVehicles] = useState<VehicleGridItem[]>([]);

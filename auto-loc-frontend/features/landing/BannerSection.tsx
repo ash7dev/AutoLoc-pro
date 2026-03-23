@@ -312,15 +312,17 @@ export function BannerSection(): React.ReactElement {
 
                 <SheetContent
                   side="bottom"
-                  className="bg-slate-950 border-white/10 text-white rounded-t-2xl px-4 pb-8"
+                  className="bg-slate-950 border-white/10 text-white rounded-t-2xl p-0 flex flex-col max-h-[90vh]"
                 >
-                  <SheetHeader className="mb-5">
+                  {/* Header fixe */}
+                  <SheetHeader className="px-5 pt-5 pb-4 border-b border-white/10 shrink-0">
                     <SheetTitle className="text-white text-[15px] font-bold tracking-tight">
                       Filtres de recherche
                     </SheetTitle>
                   </SheetHeader>
 
-                  <div className="flex flex-col gap-4">
+                  {/* Contenu scrollable */}
+                  <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
                     {/* Ville */}
                     <div>
                       <label className={LABEL_CLASS}>
@@ -400,6 +402,22 @@ export function BannerSection(): React.ReactElement {
                         />
                       </div>
                     </div>
+                  </div>
+
+                  {/* CTA fixe en bas */}
+                  <div className="shrink-0 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 border-t border-white/10">
+                    <button
+                      type="submit"
+                      onClick={handleSubmit}
+                      className={cn(
+                        'w-full h-12 rounded-xl font-bold text-[14px]',
+                        'bg-emerald-400 text-black',
+                        'hover:bg-emerald-300 transition-colors duration-200',
+                        'shadow-lg shadow-emerald-400/20',
+                      )}
+                    >
+                      Rechercher
+                    </button>
                   </div>
                 </SheetContent>
               </Sheet>
