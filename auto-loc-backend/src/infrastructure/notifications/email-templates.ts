@@ -266,19 +266,18 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
     // ── Bienvenue ────────────────────────────────────────────────────────────────
 
     'user.welcome': {
-        subject: '🎉 Bienvenue sur AutoLoc !',
+        subject: '🚗 Votre compte AutoLoc est prêt — Une étape et c\'est parti',
         body: (data) => baseLayout({
             title: `Bienvenue${data.prenom ? `, ${data.prenom}` : ''} !`,
-            subtitle: 'Votre compte est prêt. Commencez à explorer.',
+            subtitle: 'Vérifiez votre identité en 2 minutes et accédez à tout.',
             badge: { text: 'Nouveau membre', color: EMERALD, bg: EMERALD_BG },
-            cta: { label: 'Explorer les véhicules', href: `${FRONTEND_URL}/explorer` },
+            cta: { label: 'Vérifier mon identité →', href: `${FRONTEND_URL}/dashboard/kyc` },
             content: [
-                p('Nous sommes ravis de vous accueillir sur <strong>AutoLoc</strong>, la plateforme de location de véhicules entre particuliers au Sénégal.'),
                 infoCard([
-                    { label: 'Prochaine étape', value: 'Vérifiez votre identité (KYC)', icon: '🪪' },
-                    { label: 'Après vérification', value: 'Louez ou publiez un véhicule', icon: '🚗' },
+                    { label: 'Étape 1 — Maintenant', value: 'Vérifier votre identité (2 min)', icon: '🪪' },
+                    { label: 'Étape 2 — Après validation', value: 'Louez ou publiez un véhicule', icon: '🔑' },
                 ]),
-                p('La vérification d\'identité prend moins de 2 minutes et vous ouvre l\'accès complet à la plateforme.'),
+                alertBox('La vérification est <strong>obligatoire</strong> pour louer ou publier. Elle protège toute la communauté AutoLoc.', 'info'),
             ].join(''),
         }),
     },
@@ -307,19 +306,18 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
     // ── Paiement confirmé ────────────────────────────────────────────────────────
 
     'reservation.paid': {
-        subject: '✅ Paiement reçu — Votre location est en bonne voie',
+        subject: '✅ Paiement reçu — On s\'occupe du reste',
         body: (data) => baseLayout({
-            title: 'Paiement confirmé !',
-            subtitle: 'Le propriétaire va maintenant confirmer votre réservation.',
-            badge: { text: 'Paiement reçu', color: EMERALD_DARK, bg: EMERALD_BG },
-            cta: { label: 'Voir ma réservation', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
+            title: 'Paiement reçu !',
+            subtitle: 'Votre argent est sécurisé. Le propriétaire a 24h pour confirmer.',
+            badge: { text: 'Paiement sécurisé', color: EMERALD_DARK, bg: EMERALD_BG },
+            cta: { label: 'Suivre ma réservation', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
             content: [
-                p('Votre paiement a bien été reçu et enregistré. Le propriétaire dispose de <strong>24 heures</strong> pour confirmer votre réservation.'),
                 infoCard([
                     { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
-                    { label: 'Statut', value: 'Paiement confirmé — En attente du propriétaire', icon: '✅' },
+                    { label: 'Statut', value: 'En attente de confirmation du propriétaire', icon: '⏳' },
                 ]),
-                p('Votre contrat de location est en cours de génération. Vous pourrez le consulter depuis votre espace réservation.'),
+                alertBox('Votre paiement est <strong>bloqué en escrow</strong> — il ne sera libéré qu\'après confirmation du check-in. Si le propriétaire ne confirme pas sous 24h, vous êtes <strong>remboursé automatiquement</strong>.', 'info'),
             ].join(''),
         }),
     },
@@ -327,20 +325,19 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
     // ── Réservation confirmée ────────────────────────────────────────────────────
 
     'reservation.confirmed': {
-        subject: '🎉 Bonne nouvelle — Votre réservation est confirmée !',
+        subject: '🎉 C\'est confirmé — Préparez-vous !',
         body: (data) => baseLayout({
-            title: 'Réservation confirmée !',
-            subtitle: 'Le propriétaire a accepté votre demande.',
+            title: `C'est confirmé${data.locatairePrenom ? `, ${data.locatairePrenom}` : ''} !`,
+            subtitle: 'Le propriétaire a validé. Votre location est officielle.',
             badge: { text: 'Confirmée', color: EMERALD_DARK, bg: EMERALD_BG },
-            cta: { label: 'Voir ma réservation', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
+            cta: { label: 'Voir les détails', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
             content: [
-                p(`Bonjour${data.locatairePrenom ? ` <strong>${data.locatairePrenom}</strong>` : ''},`),
-                p('Super nouvelle ! Le propriétaire a confirmé votre réservation. Votre location est officielle.'),
                 infoCard([
                     { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
-                    { label: 'Prochaine étape', value: 'Effectuer le check-in le jour J', icon: '🔑' },
+                    ...(data.locatairePhone ? [{ label: 'Contact propriétaire', value: String(data.locatairePhone), icon: '📞' }] : []),
+                    { label: 'Prochaine étape', value: 'Check-in le jour J', icon: '🔑' },
                 ]),
-                alertBox('Le check-in doit être effectué par les deux parties le jour du début de la location pour officialiser la remise du véhicule.', 'info'),
+                alertBox('Le jour de la prise en charge, <strong>les deux parties doivent confirmer le check-in</strong> sur AutoLoc pour démarrer officiellement la location et libérer le paiement.', 'info'),
             ].join(''),
         }),
     },
@@ -351,24 +348,22 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
         subject: '❌ Réservation annulée',
         body: (data) => baseLayout({
             title: 'Réservation annulée',
-            subtitle: 'Votre réservation a été annulée.',
+            subtitle: data.cancelledBy === 'PROPRIETAIRE'
+                ? 'Le propriétaire a annulé. Votre remboursement est en cours.'
+                : 'Votre réservation a été annulée.',
             badge: { text: 'Annulée', color: '#991b1b', bg: '#fef2f2' },
             accentColor: '#ef4444',
-            cta: { label: 'Explorer d\'autres véhicules', href: `${FRONTEND_URL}/explorer` },
+            cta: { label: 'Trouver un autre véhicule', href: `${FRONTEND_URL}/explorer` },
             content: [
-                p(`Bonjour${data.locatairePrenom ? ` <strong>${data.locatairePrenom}</strong>` : ''},`),
-                p(`Votre réservation ${data.raison ? `a été annulée pour le motif suivant : <strong>${data.raison}</strong>` : 'a été annulée'}.`),
                 infoCard([
                     { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
-                    { label: 'Annulée par', value: data.cancelledBy === 'PROPRIETAIRE' ? 'Le propriétaire' : 'Le locataire', icon: '👤' },
-                    ...(data.refundAmount
-                        ? [{ label: 'Remboursement', value: `${data.refundAmount} FCFA`, icon: '💸' }]
-                        : []),
+                    { label: 'Annulée par', value: data.cancelledBy === 'PROPRIETAIRE' ? 'Le propriétaire' : 'Vous', icon: '👤' },
+                    ...(data.raison ? [{ label: 'Motif', value: String(data.raison), icon: '📝' }] : []),
+                    ...(data.refundAmount ? [{ label: 'Remboursement', value: `${Number(data.refundAmount).toLocaleString('fr-FR')} FCFA`, icon: '💸' }] : []),
                 ]),
                 data.refundAmount
-                    ? alertBox('Votre remboursement sera traité dans un délai de <strong>3 à 5 jours ouvrables</strong> selon votre moyen de paiement.', 'info')
-                    : '',
-                p('Vous pouvez dès maintenant explorer d\'autres véhicules disponibles sur AutoLoc.'),
+                    ? alertBox(`Votre remboursement de <strong>${Number(data.refundAmount).toLocaleString('fr-FR')} FCFA</strong> sera crédité sous <strong>3 à 5 jours ouvrables</strong>.`, 'info')
+                    : alertBox('Aucun remboursement prévu selon les conditions d\'annulation.', 'warning'),
             ].join(''),
         }),
     },
@@ -440,20 +435,19 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
     // ── Rappel check-in la veille ─────────────────────────────────────────────────
 
     'reservation.checkin.reminder_veille': {
-        subject: '📅 Rappel — Votre location commence demain',
+        subject: '📅 Demain c\'est le grand jour — Prêt pour le check-in ?',
         body: (data) => baseLayout({
             title: 'Votre location commence demain',
-            subtitle: 'Préparez-vous pour le check-in.',
-            badge: { text: 'Rappel', color: '#1e40af', bg: '#eff6ff' },
+            subtitle: 'Retrouvez l\'autre partie et confirmez la remise sur l\'app.',
+            badge: { text: 'Rappel J-1', color: '#1e40af', bg: '#eff6ff' },
             accentColor: '#3b82f6',
-            cta: { label: 'Voir ma réservation', href: `${FRONTEND_URL}/dashboard/reservations` },
+            cta: { label: 'Voir ma réservation', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
             content: [
-                p(`Bonjour <strong>${String(data.prenom ?? '')}</strong>,`),
-                p('Votre location commence <strong>demain</strong>. Pensez à vous retrouver avec l\'autre partie pour effectuer le check-in.'),
                 infoCard([
                     { label: 'Date de début', value: String(data.dateDebut ?? ''), icon: '📅' },
+                    { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
                 ]),
-                p('Le check-in consiste à confirmer mutuellement la remise du véhicule depuis l\'application AutoLoc. Les deux parties doivent le faire pour démarrer la location.'),
+                alertBox('Les <strong>deux parties doivent confirmer le check-in</strong> sur AutoLoc le jour J. Sans check-in, le paiement reste bloqué et la location ne démarre pas officiellement.', 'info'),
             ].join(''),
         }),
     },
@@ -461,21 +455,19 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
     // ── Rappel check-in jour J ────────────────────────────────────────────────────
 
     'reservation.checkin.reminder_jour': {
-        subject: '⚠️ Urgent — Check-in non effectué aujourd\'hui',
+        subject: '🚨 Check-in non fait — Il vous reste jusqu\'à minuit',
         body: (data) => baseLayout({
-            title: 'Check-in non effectué',
-            subtitle: 'Action requise avant minuit.',
+            title: 'Check-in urgent',
+            subtitle: 'La location a commencé mais le check-in n\'est pas finalisé.',
             badge: { text: 'Urgent', color: '#991b1b', bg: '#fef2f2' },
             accentColor: '#ef4444',
-            cta: { label: 'Effectuer le check-in maintenant', href: `${FRONTEND_URL}/dashboard/reservations` },
+            cta: { label: 'Faire le check-in maintenant →', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
             content: [
-                p(`Bonjour <strong>${String(data.prenom ?? '')}</strong>,`),
-                p('Votre location a commencé aujourd\'hui mais le check-in n\'a pas encore été effectué.'),
                 infoCard([
-                    { label: 'Date de début', value: String(data.dateDebut ?? ''), icon: '📅' },
-                    { label: 'Délai limite', value: 'Aujourd\'hui avant minuit', icon: '⏰' },
+                    { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
+                    { label: 'Délai limite', value: 'Ce soir avant minuit', icon: '⏰' },
                 ]),
-                alertBox('⚠️ Si le check-in n\'est pas effectué avant minuit, la réservation sera <strong>automatiquement annulée</strong>.', 'error'),
+                alertBox('⚠️ Sans check-in avant minuit, la réservation sera <strong>annulée automatiquement</strong> et le paiement remboursé. Agissez maintenant.', 'error'),
             ].join(''),
         }),
     },
@@ -483,22 +475,20 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
     // ── Check-out ─────────────────────────────────────────────────────────────────
 
     'reservation.checkout': {
-        subject: '🏁 Location terminée — Merci d\'avoir utilisé AutoLoc',
+        subject: '🏁 Location terminée — Votre avis compte',
         body: (data) => baseLayout({
             title: 'Location terminée !',
-            subtitle: 'Le check-out a été effectué avec succès.',
+            subtitle: 'Merci de votre confiance. Un dernier geste compte beaucoup.',
             badge: { text: 'Terminée', color: '#5b21b6', bg: '#f5f3ff' },
             accentColor: '#8b5cf6',
-            cta: { label: 'Laisser un avis', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
+            cta: { label: 'Laisser mon avis →', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
             content: [
-                p(`Bonjour${data.locatairePrenom ? ` <strong>${data.locatairePrenom}</strong>` : ''},`),
-                p('La location s\'est terminée avec succès. Merci d\'avoir utilisé <strong>AutoLoc</strong> !'),
                 infoCard([
                     { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
-                    { label: 'Statut', value: 'Terminée', icon: '✅' },
+                    { label: 'Statut', value: 'Terminée avec succès', icon: '✅' },
                 ]),
                 divider(),
-                p('Votre avis est précieux pour la communauté AutoLoc. Prenez 30 secondes pour noter votre expérience — cela aide les autres utilisateurs à faire de bons choix.', 'text-align:center;'),
+                p('Les avis sont <strong>le moteur de la confiance</strong> sur AutoLoc. 30 secondes de votre part aident des dizaines de locataires à choisir le bon véhicule.', 'text-align:center;font-weight:500;'),
             ].join(''),
         }),
     },
@@ -506,22 +496,21 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
     // ── Avis reçu ─────────────────────────────────────────────────────────────────
 
     'avis.recu': {
-        subject: '⭐ Vous avez reçu un nouvel avis',
+        subject: '⭐ Nouvel avis — Voyez ce qu\'on dit de vous',
         body: (data) => baseLayout({
-            title: 'Nouvel avis reçu',
+            title: 'Vous avez reçu un avis',
             subtitle: 'Un membre de la communauté vous a évalué.',
-            badge: { text: 'Avis', color: '#92400e', bg: '#fffbeb' },
+            badge: { text: 'Avis reçu', color: '#92400e', bg: '#fffbeb' },
             accentColor: '#f59e0b',
-            cta: { label: 'Voir mon profil', href: `${FRONTEND_URL}/dashboard` },
+            cta: { label: 'Voir l\'avis', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
             content: [
-                p('Vous venez de recevoir un avis sur AutoLoc.'),
                 infoCard([
                     { label: 'Note', value: `${'⭐'.repeat(Number(data.note ?? 0))} (${data.note}/5)`, icon: '⭐' },
                     ...(data.commentaire
                         ? [{ label: 'Commentaire', value: `"${String(data.commentaire)}"`, icon: '💬' }]
                         : []),
                 ]),
-                p('Les avis contribuent à construire la confiance au sein de la communauté AutoLoc. Continuez à offrir une excellente expérience !'),
+                alertBox('Un bon score sur AutoLoc attire <strong>plus de réservations</strong>. Continuez comme ça !', 'info'),
             ].join(''),
         }),
     },
@@ -529,21 +518,18 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
     // ── KYC vérifié ──────────────────────────────────────────────────────────────
 
     'kyc.verified': {
-        subject: '✅ Identité vérifiée — Accès complet débloqué',
+        subject: '✅ Identité vérifiée — Vous pouvez louer dès maintenant',
         body: (data) => baseLayout({
-            title: 'Identité vérifiée !',
-            subtitle: 'Votre compte est maintenant pleinement actif.',
+            title: `Vous êtes vérifié${data.prenom ? `, ${data.prenom}` : ''} !`,
+            subtitle: 'Accès complet débloqué. Louez ou publiez dès maintenant.',
             badge: { text: 'Vérifié ✓', color: EMERALD_DARK, bg: EMERALD_BG },
-            cta: { label: 'Commencer sur AutoLoc', href: `${FRONTEND_URL}/explorer` },
+            cta: { label: 'Explorer les véhicules →', href: `${FRONTEND_URL}/explorer` },
             content: [
-                p(`Bonjour${data.prenom ? ` <strong>${data.prenom}</strong>` : ''},`),
-                p('Votre vérification d\'identité a été <strong>validée avec succès</strong>. Votre compte est maintenant pleinement actif.'),
                 infoCard([
-                    { label: 'Vous pouvez maintenant', value: 'Louer des véhicules', icon: '🔑' },
-                    { label: '', value: 'Publier vos véhicules', icon: '🚗' },
-                    { label: '', value: 'Accéder au wallet propriétaire', icon: '💰' },
+                    { label: 'Louer un véhicule', value: 'Accès immédiat à toutes les annonces', icon: '🔑' },
+                    { label: 'Publier votre véhicule', value: 'Commencez à générer des revenus', icon: '🚗' },
+                    { label: 'Wallet propriétaire', value: 'Encaissez et retirez vos gains', icon: '💰' },
                 ]),
-                p('Bienvenue dans la communauté AutoLoc !'),
             ].join(''),
         }),
     },
@@ -620,21 +606,19 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
     // ── Wallet crédité ───────────────────────────────────────────────────────────
 
     'wallet.credited': {
-        subject: '💰 Votre revenu a été crédité sur AutoLoc',
+        subject: '💰 Votre argent est disponible — Retirez quand vous voulez',
         body: (data) => baseLayout({
-            title: 'Revenu disponible !',
-            subtitle: 'Votre wallet vient d\'être crédité.',
+            title: 'Revenu crédité !',
+            subtitle: 'Le check-in est validé. Vos fonds sont disponibles maintenant.',
             badge: { text: 'Wallet crédité', color: EMERALD_DARK, bg: EMERALD_BG },
-            cta: { label: 'Voir mon wallet', href: `${FRONTEND_URL}/dashboard/owner/wallet` },
+            cta: { label: 'Voir mon wallet →', href: `${FRONTEND_URL}/dashboard/owner/wallet` },
             content: [
-                p(`Bonjour <strong>${String(data.proprietairePrenom ?? '')}</strong>,`),
-                p('Le check-in de votre location a été finalisé. Votre revenu a été <strong>crédité sur votre wallet AutoLoc</strong>.'),
                 infoCard([
                     { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
-                    { label: 'Statut', value: 'Fonds disponibles', icon: '💰' },
+                    ...(data.montant ? [{ label: 'Montant crédité', value: `${Number(data.montant).toLocaleString('fr-FR')} FCFA`, icon: '💰' }] : []),
+                    { label: 'Disponibilité', value: 'Immédiate', icon: '✅' },
                 ]),
-                divider(),
-                p('Depuis votre espace propriétaire, vous pouvez consulter votre solde et effectuer une demande de retrait à tout moment.', 'text-align:center;color:' + GRAY + ';font-size:14px;'),
+                alertBox('Vos fonds sont <strong>disponibles immédiatement</strong>. Effectuez un retrait vers votre compte Wave ou Orange Money depuis votre espace propriétaire.', 'info'),
             ].join(''),
         }),
     },

@@ -228,17 +228,8 @@ export class CreateReservationUseCase {
         await this.idempotency.commitResult(idempotencyKey, result);
         await this.queue.schedulePaymentExpiry(reservation.id);
 
-        if (locataire.email) {
-            this.notification.send({
-                email: locataire.email,
-                type: 'reservation.created',
-                data: {
-                    prenom: locataire.prenom ?? undefined,
-                    vehicule: `${vehicule.marque} ${vehicule.modele}`,
-                    reservationId: reservation.id,
-                },
-            }).catch(() => { });
-        }
+        // Email supprimé intentionnellement : l'utilisateur vient de créer la réservation
+        // et est encore sur le flux de paiement. L'email pertinent est reservation.paid.
 
         // Alerte admin Telegram — fire-and-forget
         const debutFmt = dates.debut.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
