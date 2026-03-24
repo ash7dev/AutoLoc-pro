@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, TrendingUp, Info } from "lucide-react";
+import { TrendingUp, BarChart2, Info } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -55,6 +55,7 @@ export function RevenueChart({
   onMonthChange?: (m: string) => void;
 }) {
   const maxValue = Math.max(1, ...data.map((d) => d.value));
+  const isEmpty = maxValue <= 1;
 
   // Dynamic Y-axis labels based on actual max
   const yLabels = (() => {
@@ -108,70 +109,84 @@ export function RevenueChart({
 
         {/* Chart */}
         <div className="relative h-40 sm:h-56 flex-1 min-h-[160px] sm:min-h-[224px]">
-          {/* Y-axis */}
-          <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between">
-            {yLabels.map((label) => (
-              <span key={label} className="text-xs text-muted-foreground w-10 text-right">
-                {label}
-              </span>
-            ))}
-          </div>
+          {isEmpty && !loading ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
+                <BarChart2 className="w-6 h-6 text-slate-300" strokeWidth={1.5} />
+              </div>
+              <div className="text-center">
+                <p className="text-[13px] font-semibold text-slate-500">Aucun revenu ce mois-ci</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Les données apparaîtront dès votre première location confirmée</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Y-axis */}
+              <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between">
+                {yLabels.map((label) => (
+                  <span key={label} className="text-xs text-muted-foreground w-10 text-right">
+                    {label}
+                  </span>
+                ))}
+              </div>
 
-          {/* Grid lines */}
-          <div className="absolute left-12 right-0 top-0 bottom-8 flex flex-col justify-between pointer-events-none">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="w-full h-px bg-border/50" />
-            ))}
-          </div>
+              {/* Grid lines */}
+              <div className="absolute left-12 right-0 top-0 bottom-8 flex flex-col justify-between pointer-events-none">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="w-full h-px bg-border/50" />
+                ))}
+              </div>
 
-          {/* Bars */}
-          <div className="absolute left-12 right-0 top-0 bottom-8 flex items-end gap-2">
-            {loading
-              ? Array.from({ length: 7 }).map((_, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2 animate-pulse">
-                  <div
-                    className="w-full rounded-t-md bg-muted"
-                    style={{ height: "40%" }}
-                  />
-                  <span className="text-xs text-muted-foreground">—</span>
-                </div>
-              ))
-              : data.map((point) => {
-                const heightPct = (point.value / maxValue) * 100;
-                return (
-                  <Tooltip key={point.day}>
-                    <TooltipTrigger asChild>
-                      <div className="flex-1 flex flex-col items-center gap-2 group cursor-default">
-                        <div
-                          className={cn(
-                            "w-full rounded-t-md transition-all duration-200",
-                            point.highlight
-                              ? "bg-emerald-400 group-hover:bg-emerald-500"
-                              : "bg-emerald-200 group-hover:bg-emerald-300"
+              {/* Bars */}
+              <div className="absolute left-12 right-0 top-0 bottom-8 flex items-end gap-2">
+                {loading
+                  ? Array.from({ length: 7 }).map((_, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-2 animate-pulse">
+                      <div
+                        className="w-full rounded-t-md bg-muted"
+                        style={{ height: "40%" }}
+                      />
+                      <span className="text-xs text-muted-foreground">—</span>
+                    </div>
+                  ))
+                  : data.map((point) => {
+                    const heightPct = Math.max(2, (point.value / maxValue) * 100);
+                    return (
+                      <Tooltip key={point.day}>
+                        <TooltipTrigger asChild>
+                          <div className="flex-1 flex flex-col items-center gap-2 group cursor-default">
+                            <div
+                              className={cn(
+                                "w-full rounded-t-md transition-all duration-200",
+                                point.highlight
+                                  ? "bg-emerald-400 group-hover:bg-emerald-500"
+                                  : "bg-emerald-200 group-hover:bg-emerald-300"
+                              )}
+                              style={{ height: `${heightPct}%` }}
+                            />
+                            <span className="text-xs text-muted-foreground truncate w-full text-center">
+                              {point.day.split(" ")[0]}
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="top"
+                          className="backdrop-blur-sm text-xs font-medium"
+                        >
+                          <p className="font-semibold">{point.day}</p>
+                          <p className="text-muted-foreground">
+                            {point.value.toLocaleString("fr-FR")} FCFA cumulés
+                          </p>
+                          {point.highlight && (
+                            <p className="text-emerald-400 font-bold">Total du mois</p>
                           )}
-                          style={{ height: `${heightPct}%` }}
-                        />
-                        <span className="text-xs text-muted-foreground truncate w-full text-center">
-                          {point.day.split(" ")[0]}
-                        </span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side="top"
-                      className="backdrop-blur-sm text-xs font-medium"
-                    >
-                      <p className="font-semibold">{point.day}</p>
-                      <p className="text-muted-foreground">
-                        {point.value.toLocaleString("fr-FR")} FCFA cumulés
-                      </p>
-                      {point.highlight && (
-                        <p className="text-emerald-400 font-bold">Total du mois</p>
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
-          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </TooltipProvider>

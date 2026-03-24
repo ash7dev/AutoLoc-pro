@@ -87,8 +87,11 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
     const totalLocataire  = Number(r.prixTotal             ?? leg.totalLocataire    ?? 0) || 0;
     const commissionAmt   = Number(r.commission            ?? leg.montantCommission  ?? 0) || 0;
     const netAmt          = Number(r.montantProprietaire   ?? leg.netProprietaire    ?? 0) || 0;
-    const commPct = totalLocataire > 0 ? Math.round((commissionAmt / totalLocataire) * 100) : 0;
-    const netPct  = totalLocataire > 0 ? Math.round((netAmt / totalLocataire) * 100) : 0;
+    // Taux contractuel fixe selon la politique tarifaire AutoLoc
+    const COMMISSION_RATE = 15;
+    const NET_RATE        = 100 - COMMISSION_RATE; // 85
+    const commPct = COMMISSION_RATE;
+    const netPct  = NET_RATE;
 
     /* ── Privacy: sensitive info hidden before confirmation ── */
     const revealed = ["CONFIRMEE", "EN_COURS", "TERMINEE", "LITIGE"].includes(r.statut);
