@@ -212,13 +212,23 @@ export function BannerSection(): React.ReactElement {
         {/* ── Bannière photo ── */}
         <div className="relative min-h-[65vh] lg:min-h-[82vh] overflow-hidden rounded-[2rem]">
 
+          {/* Web banner — caché sur mobile */}
           <Image
-            src="/banner.JPG"
+            src="/web-banner.jpg"
             alt="Location de véhicules au Sénégal — AutoLoc"
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center"
+            className="hidden sm:block object-cover object-center"
+          />
+          {/* Mobile banner — caché sur desktop */}
+          <Image
+            src="/mobile-banner.jpg"
+            alt="Location de véhicules au Sénégal — AutoLoc"
+            fill
+            priority
+            sizes="100vw"
+            className="sm:hidden object-cover object-center"
           />
 
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/80" />

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { ThemeProvider, ColorSystemProvider, CurrencyProviderServer } from '../providers';
+import { CookieBanner } from '@/features/cookies/CookieBanner';
 import './globals.css';
 
 const BASE_URL = 'https://autoloc.sn';
@@ -106,6 +107,7 @@ export default function RootLayout({
           <ColorSystemProvider>
             <CurrencyProviderServer>{children}</CurrencyProviderServer>
           </ColorSystemProvider>
+          <CookieBanner />
         </ThemeProvider>
       </body>
     </html>
