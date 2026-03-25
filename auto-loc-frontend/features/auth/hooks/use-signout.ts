@@ -17,13 +17,14 @@ export function useSignOut() {
     await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {});
     await supabase.auth.signOut();
     
-    // Rediriger selon le rôle avant de le clear
+    // Invalide le cache Next.js puis redirige sans laisser de trace dans l'historique
+    router.refresh();
     if (activeRole === 'PROPRIETAIRE') {
-      router.push('/login');
+      router.replace('/login');
     } else if (activeRole === 'LOCATAIRE') {
-      router.push('/');
+      router.replace('/');
     } else {
-      router.push('/login');
+      router.replace('/login');
     }
     
     clearRole();

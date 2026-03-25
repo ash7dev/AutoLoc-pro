@@ -78,24 +78,24 @@ export function useAuthFlow() {
     console.log('[AuthFlow] profile', profile);
 
     if (profile.role === 'ADMIN') {
-      router.push('/dashboard/admin');
+      router.replace('/dashboard/admin');
       inFlight.current = false;
       return;
     }
 
     if (profile.role === 'PROPRIETAIRE') {
-      router.push('/dashboard/owner');
+      router.replace('/dashboard/owner');
       inFlight.current = false;
       return;
     }
 
     const next = searchParams.get('next');
     if (next && next.startsWith('/')) {
-      router.push(next);
+      router.replace(next);
       inFlight.current = false;
       return;
     }
-    router.push('/');
+    router.replace('/');
     inFlight.current = false;
   };
 

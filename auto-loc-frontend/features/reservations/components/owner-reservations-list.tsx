@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { OwnerReservationCard } from "@/features/reservations/components/reservation-card";
-import { Archive } from "lucide-react";
+import Link from "next/link";
+import { Archive, Car } from "lucide-react";
 import type { Reservation, ReservationStatut } from "@/lib/nestjs/reservations";
 
 /* ════════════════════════════════════════════════════════════════
@@ -49,14 +50,23 @@ function StatsStrip({ reservations }: { reservations: Reservation[] }) {
 /* ── Empty state ──────────────────────────────────────────────── */
 function EmptyState() {
     return (
-        <div className="flex flex-col items-center gap-3 py-24 rounded-2xl border border-dashed border-slate-200 bg-white">
+        <div className="flex flex-col items-center gap-4 py-24 rounded-2xl border border-dashed border-slate-200 bg-white">
             <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center">
                 <Archive className="w-5 h-5 text-slate-300" strokeWidth={1.5} />
             </div>
             <div className="text-center">
                 <p className="text-[13.5px] font-bold text-slate-500">Aucune réservation</p>
-                <p className="text-[12px] text-slate-400 mt-1">Vos réservations apparaîtront ici</p>
+                <p className="text-[12px] text-slate-400 mt-1 max-w-xs mx-auto">
+                    Les réservations de vos locataires apparaîtront ici une fois vos véhicules publiés.
+                </p>
             </div>
+            <Link
+                href="/dashboard/owner/vehicles"
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-[12px] font-bold text-emerald-400 hover:bg-slate-800 transition-colors"
+            >
+                <Car className="w-3.5 h-3.5" strokeWidth={2} />
+                Gérer mes véhicules
+            </Link>
         </div>
     );
 }

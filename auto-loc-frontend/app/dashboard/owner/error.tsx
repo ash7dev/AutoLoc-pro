@@ -2,9 +2,9 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import { AlertTriangle, RefreshCw, LayoutDashboard } from "lucide-react";
 
-export default function DashboardError({
+export default function OwnerDashboardError({
   error,
   reset,
 }: {
@@ -14,12 +14,12 @@ export default function DashboardError({
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
       // eslint-disable-next-line no-console
-      console.error("[DashboardError]", error);
+      console.error("[OwnerError]", error);
     }
   }, [error]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 py-16">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-16">
       <div className="w-full max-w-md text-center">
 
         <div className="mx-auto mb-6 w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center">
@@ -30,7 +30,7 @@ export default function DashboardError({
           Une erreur est survenue
         </h2>
         <p className="text-[13px] text-slate-400 leading-relaxed mb-8 max-w-sm mx-auto">
-          Quelque chose s&apos;est mal passé. Réessaie ou reviens à l&apos;accueil.
+          Impossible de charger cette page. Réessaie ou reviens au tableau de bord.
         </p>
 
         <div className="flex flex-col gap-3">
@@ -44,11 +44,11 @@ export default function DashboardError({
           </button>
 
           <Link
-            href="/"
+            href="/dashboard/owner"
             className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3.5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors"
           >
-            <Home className="w-4 h-4" strokeWidth={2} />
-            Retour à l&apos;accueil
+            <LayoutDashboard className="w-4 h-4" strokeWidth={2} />
+            Tableau de bord
           </Link>
         </div>
 

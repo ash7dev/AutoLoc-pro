@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, Banknote, Clock3, Hourglass } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface WalletSnapshotData {
   available: string;
@@ -50,7 +51,13 @@ export function WalletSnapshot({
       <div className="mb-5">
         <p className="text-xs text-white/30 font-medium mb-1.5">Solde disponible</p>
         <p className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-          {loading ? "—" : data.available}
+          {loading ? (
+            <span className="inline-flex align-middle">
+              <Skeleton className="h-9 w-44 sm:w-52 bg-white/10 animate-pulse rounded-md" />
+            </span>
+          ) : (
+            data.available
+          )}
         </p>
         <div className="mt-2 flex items-center gap-1.5">
           <Banknote className="h-3 w-3 text-emerald-400" />
@@ -68,7 +75,11 @@ export function WalletSnapshot({
             <p className="text-sm text-white/60 font-medium">En attente</p>
           </div>
           <p className="text-base font-bold text-white">
-            {loading ? "—" : data.pending}
+            {loading ? (
+              <Skeleton className="h-6 w-28 bg-white/10 animate-pulse rounded-md" />
+            ) : (
+              data.pending
+            )}
           </p>
           <p className="text-xs text-white/40">Séquestre / check-in</p>
         </div>
@@ -79,7 +90,11 @@ export function WalletSnapshot({
             <p className="text-sm text-white/60 font-medium">En traitement</p>
           </div>
           <p className="text-base font-bold text-white">
-            {loading ? "—" : data.processing}
+            {loading ? (
+              <Skeleton className="h-6 w-28 bg-white/10 animate-pulse rounded-md" />
+            ) : (
+              data.processing
+            )}
           </p>
           <p className="text-xs text-white/40">Retraits en cours</p>
         </div>

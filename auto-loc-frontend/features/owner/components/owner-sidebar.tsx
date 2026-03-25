@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Car,
   LayoutDashboard,
@@ -55,15 +55,20 @@ interface NavItemProps {
   label: string;
   active: boolean;
   collapsed: boolean;
+  pending?: boolean;
   subItem?: boolean;
   onClick?: () => void;
 }
 
-function NavItem({ href, icon, label, active, collapsed, subItem = false, onClick }: NavItemProps) {
+function NavItem({ href, icon, label, active, collapsed, pending = false, subItem = false, onClick }: NavItemProps) {
   const handleClick = onClick ? (e: React.MouseEvent) => {
     e.preventDefault();
     onClick();
   } : undefined;
+
+  const displayIcon = pending
+    ? <Loader2 className="w-[18px] h-[18px] animate-spin" />
+    : icon;
 
   return (
     <Link
@@ -86,12 +91,13 @@ function NavItem({ href, icon, label, active, collapsed, subItem = false, onClic
           ? 'bg-black text-emerald-400'
           : !subItem
             ? 'text-black hover:bg-slate-50 hover:text-black'
-            : ''
+            : '',
+        pending && 'opacity-70 pointer-events-none',
       )}
     >
-      {icon && (
+      {displayIcon && (
         <span className="flex-shrink-0 transition-colors duration-200">
-          {icon}
+          {displayIcon}
         </span>
       )}
 
@@ -117,10 +123,25 @@ function SidebarDivider() {
 /* ── Main Sidebar ─────────────────────────────────────────────── */
 export function OwnerSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { switchToLocataire, loading: switching } = useSwitchToLocataire();
   const { signOut, loading: signingOut } = useSignOut();
 
   const [collapsed, setCollapsed] = useState(true);
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    setPendingHref(null);
+  }, [pathname]);
+
+  const handleNavClick = (href: string) => {
+    if (pathname === href || pathname.startsWith(`${href}/`)) return;
+    setPendingHref(href);
+    startTransition(() => {
+      router.push(href);
+    });
+  };
 
 const NavContent = ({ compact }: { compact: boolean }) => (
     <div className="flex flex-col h-full">
@@ -163,6 +184,8 @@ const NavContent = ({ compact }: { compact: boolean }) => (
               label={item.label}
               active={isActive}
               collapsed={compact}
+              pending={pendingHref === item.href}
+              onClick={() => handleNavClick(item.href)}
             />
           );
         })}

@@ -2,6 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { ThemeProvider, ColorSystemProvider, CurrencyProviderServer } from '../providers';
 import { CookieBanner } from '@/features/cookies/CookieBanner';
+import { Toaster } from 'sonner';
 import './globals.css';
 
 const BASE_URL = 'https://autoloc.sn';
@@ -108,6 +109,7 @@ export default function RootLayout({
             <CurrencyProviderServer>{children}</CurrencyProviderServer>
           </ColorSystemProvider>
           <CookieBanner />
+          <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
       </body>
     </html>

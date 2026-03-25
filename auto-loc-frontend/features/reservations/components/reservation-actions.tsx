@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import type { ReservationStatut } from "@/lib/nestjs/reservations";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import { translateError } from "@/lib/utils/api-error-fr";
+import { toast } from "sonner";
 import { CheckinModal } from "./checkin-modal";
 import { CheckoutModal } from "./checkout-modal";
 
@@ -459,8 +460,17 @@ export function ReservationActions({
         try {
             await apiMap[action.key]();
             router.refresh();
+            const successMessages: Record<string, string> = {
+                confirm: "Réservation confirmée",
+                cancel: "Réservation annulée",
+                checkin: "Check-in effectué",
+                checkout: "Check-out effectué",
+            };
+            toast.success(successMessages[action.key] ?? "Action effectuée");
         } catch (err) {
-            setError(translateError(err));
+            const msg = translateError(err);
+            setError(msg);
+            toast.error(msg);
         } finally {
             setLoading(null);
         }
@@ -475,8 +485,11 @@ export function ReservationActions({
             await authFetch(`/reservations/${reservationId}/dispute`, { method: "POST", body });
             setDisputeOpen(false);
             router.refresh();
+            toast.success("Litige ouvert avec succès");
         } catch (err) {
-            setError(translateError(err));
+            const msg = translateError(err);
+            setError(msg);
+            toast.error(msg);
         } finally {
             setLoading(null);
         }

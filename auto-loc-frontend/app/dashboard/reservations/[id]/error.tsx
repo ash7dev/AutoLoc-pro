@@ -2,9 +2,9 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import { AlertTriangle, RefreshCw, ArrowLeft } from "lucide-react";
 
-export default function DashboardError({
+export default function TenantReservationError({
   error,
   reset,
 }: {
@@ -14,12 +14,12 @@ export default function DashboardError({
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
       // eslint-disable-next-line no-console
-      console.error("[DashboardError]", error);
+      console.error("[ReservationError]", error);
     }
   }, [error]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 py-16">
+    <div className="min-h-screen bg-slate-50/60 flex flex-col items-center justify-center px-4 py-16">
       <div className="w-full max-w-md text-center">
 
         <div className="mx-auto mb-6 w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center">
@@ -27,10 +27,10 @@ export default function DashboardError({
         </div>
 
         <h2 className="text-[22px] font-black tracking-tight text-slate-900 mb-2">
-          Une erreur est survenue
+          Impossible de charger la réservation
         </h2>
         <p className="text-[13px] text-slate-400 leading-relaxed mb-8 max-w-sm mx-auto">
-          Quelque chose s&apos;est mal passé. Réessaie ou reviens à l&apos;accueil.
+          Une erreur est survenue lors du chargement de cette réservation. Réessaie ou reviens à la liste.
         </p>
 
         <div className="flex flex-col gap-3">
@@ -44,11 +44,11 @@ export default function DashboardError({
           </button>
 
           <Link
-            href="/"
+            href="/reservations"
             className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3.5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors"
           >
-            <Home className="w-4 h-4" strokeWidth={2} />
-            Retour à l&apos;accueil
+            <ArrowLeft className="w-4 h-4" strokeWidth={2} />
+            Mes réservations
           </Link>
         </div>
 

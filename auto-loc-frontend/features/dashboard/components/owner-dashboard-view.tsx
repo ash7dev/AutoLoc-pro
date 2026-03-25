@@ -297,7 +297,7 @@ export function OwnerDashboardView({
                         />
                     </div>
                     <div className="lg:col-span-1">
-                        <WalletSnapshot data={walletSnapshot} />
+                        <WalletSnapshot data={walletSnapshot} loading={!wallet} />
                     </div>
                 </div>
 

@@ -98,7 +98,7 @@ export function StepReview({ onBack }: Props) {
       }
 
       reset();
-      router.push(`/dashboard/owner/vehicles/${vehicle.id}`);
+      router.replace(`/dashboard/owner/vehicles/${vehicle.id}`);
     } catch (err) {
       // L'upload des documents a échoué — on tente un rollback (purge du véhicule créé)
       const message = err instanceof Error ? err.message : "Une erreur est survenue.";

@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { ExplorerGrid } from '@/features/explorer/ExplorerGrid';
 import { Footer } from '@/features/landing/Footer';
 
@@ -6,6 +7,26 @@ export const revalidate = 60;
 
 interface LocationPageProps {
     params: { ville: string };
+}
+
+export function generateMetadata({ params }: LocationPageProps): Metadata {
+    const ville = decodeURIComponent(params.ville);
+    const villeDisplay = ville.charAt(0).toUpperCase() + ville.slice(1);
+    const title = `Location de véhicules à ${villeDisplay} — AutoLoc`;
+    const description = `Louez un véhicule vérifié à ${villeDisplay} dès maintenant. SUV, berlines, pick-ups et utilitaires disponibles sur AutoLoc au Sénégal.`;
+
+    return {
+        title,
+        description,
+        openGraph: {
+            title,
+            description,
+            url: `https://autoloc.sn/location/${params.ville}`,
+        },
+        alternates: {
+            canonical: `https://autoloc.sn/location/${params.ville}`,
+        },
+    };
 }
 
 export default function LocationPage({ params }: LocationPageProps) {

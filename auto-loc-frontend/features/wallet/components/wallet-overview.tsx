@@ -50,8 +50,14 @@ export function WalletOverview({ data }: WalletOverviewProps) {
                 </div>
 
                 {data.transactions.length === 0 ? (
-                    <div className="p-8 text-center">
-                        <p className="text-sm text-muted-foreground">Aucune transaction pour le moment</p>
+                    <div className="flex flex-col items-center gap-3 py-12">
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+                            <Wallet className="w-4.5 h-4.5 text-slate-300" strokeWidth={1.5} />
+                        </div>
+                        <div className="text-center">
+                            <p className="text-[13px] font-semibold text-slate-500">Aucune transaction</p>
+                            <p className="text-[12px] text-slate-400 mt-0.5">Vos revenus apparaîtront ici après vos premières locations.</p>
+                        </div>
                     </div>
                 ) : (
                     <div className="divide-y divide-[hsl(var(--border))]">
