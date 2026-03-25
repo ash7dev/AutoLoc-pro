@@ -20,17 +20,13 @@ export function useHasVehicles(loggedIn: boolean): boolean | null {
         let cancelled = false;
 
         fetch('/api/nest/vehicles/me', { credentials: 'include' })
-            .then((res) => {
-                if (!res.ok) return null;
-                return res.json() as Promise<unknown[]>;
-            })
-            .then((data) => {
+            .then(async (res) => {
+                if (!res.ok) return;
+                const data = await res.json() as unknown[];
                 if (cancelled) return;
                 setHasVehicles(Array.isArray(data) && data.length > 0);
             })
-            .catch(() => {
-                if (!cancelled) setHasVehicles(false);
-            });
+            .catch(() => { /* réseau indisponible : on garde null (loading) */ });
 
         return () => { cancelled = true; };
     }, [loggedIn]);

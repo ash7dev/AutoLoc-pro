@@ -9,7 +9,6 @@ export function useSignOut() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const clearRole = useRoleStore((s) => s.clearRole);
-  const activeRole = useRoleStore((s) => s.activeRole);
 
   const signOut = async () => {
     setLoading(true);
@@ -19,13 +18,7 @@ export function useSignOut() {
     
     // Invalide le cache Next.js puis redirige sans laisser de trace dans l'historique
     router.refresh();
-    if (activeRole === 'PROPRIETAIRE') {
-      router.replace('/login');
-    } else if (activeRole === 'LOCATAIRE') {
-      router.replace('/');
-    } else {
-      router.replace('/login');
-    }
+    router.replace('/');
     
     clearRole();
     setLoading(false);

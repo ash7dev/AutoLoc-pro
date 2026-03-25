@@ -13,8 +13,10 @@ interface RoleState {
   refreshToken: string | null;
   // Préférence UI non-sensible : persiste en localStorage pour survivre au refresh.
   activeRole: Role | null;
+  hasVehicles: boolean | null;
   setSession: (input: { accessToken: string; refreshToken: string; activeRole: Role }) => void;
   setActiveRole: (role: Role) => void;
+  setHasVehicles: (hasVehicles: boolean) => void;
   clearRole: () => void;
 }
 
@@ -33,16 +35,18 @@ export const useRoleStore = create<RoleState>()(
       accessToken: null,
       refreshToken: null,
       activeRole: null,
+      hasVehicles: null,
       setSession: ({ accessToken, refreshToken, activeRole }) =>
         set({ accessToken, refreshToken, activeRole }),
       setActiveRole: (activeRole) => set({ activeRole }),
-      clearRole: () => set({ accessToken: null, refreshToken: null, activeRole: null }),
+      setHasVehicles: (hasVehicles) => set({ hasVehicles }),
+      clearRole: () => set({ accessToken: null, refreshToken: null, activeRole: null, hasVehicles: null }),
     }),
     {
       name: 'autoloc-role',
       storage: localStore,
-      // Seul activeRole est persisté — les tokens restent en mémoire uniquement.
-      partialize: (state) => ({ activeRole: state.activeRole }),
+      // Seul activeRole et hasVehicles sont persistés — les tokens restent en mémoire uniquement.
+      partialize: (state) => ({ activeRole: state.activeRole, hasVehicles: state.hasVehicles }),
     },
   ),
 );

@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '../../lib/supabase/client';
-import { useHasVehicles } from '../../features/auth/hooks/use-has-vehicles';
+import { useHasVehiclesFromStore } from '../../features/auth/hooks/use-has-vehicles-from-store';
 import { CurrencySelector } from './CurrencyConverter';
 
 /* ── Nav links ───────────────────────────────────────────────── */
@@ -172,10 +172,10 @@ function ProfileDropdown({
         {/* Items */}
         <div className="p-2 space-y-0.5">
           {hasVehicles === true ? (
-            <DropdownItem href="/dashboard/owner" icon={LayoutDashboard} label="Espace hôte" badge="Pro" />
-          ) : (
+            <DropdownItem href="/dashboard/owner" icon={LayoutDashboard} label="Mon espace" badge="Pro" />
+          ) : hasVehicles === false ? (
             <DropdownItem href="/become-owner" icon={Building2} label="Devenir hôte" badge="Nouveau" />
-          )}
+          ) : null}
           <DropdownItem href="/reservations" icon={CalendarRange} label="Mes réservations" />
           <DropdownItem href="/notifications" icon={Bell} label="Notifications" />
           <DropdownItem href="/dashboard/settings/profile" icon={Settings} label="Paramètres" />
@@ -259,7 +259,7 @@ export function MarketplaceNavbar() {
   const [mobileSearchVisible, setMobileSearchVisible] = useState(false);
   const [mobileSearch, setMobileSearch] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
-  const hasVehicles = useHasVehicles(loggedIn);
+  const hasVehicles = useHasVehiclesFromStore();
   const pathname = usePathname();
   const router = useRouter();
 

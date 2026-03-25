@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { useAuthFetch } from '../../auth/hooks/use-auth-fetch';
 import type { Vehicle, CreateVehicleInput } from '../../../lib/nestjs/vehicles';
 import { VEHICLE_PATHS } from '../../../lib/nestjs/vehicles';
+import { useRoleStore } from '../../auth/stores/role.store';
 
 /**
  * Hook de gestion de la liste des véhicules du propriétaire.
@@ -46,6 +47,10 @@ export function useVehicles() {
           { method: 'POST', body: input },
         );
         setVehicles((prev) => [vehicle, ...prev]);
+        
+        // Mettre à jour le store pour le menu du navbar
+        useRoleStore.getState().setHasVehicles(true);
+        
         return vehicle;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erreur lors de la création');
@@ -67,11 +72,18 @@ export function useVehicles() {
       setError(null);
       try {
         await authFetch(VEHICLE_PATHS.archive(vehicleId), { method: 'DELETE' });
-        setVehicles((prev) =>
-          prev.map((v) =>
+        setVehicles((prev) => {
+          const updated = prev.map((v) =>
             v.id === vehicleId ? { ...v, statut: 'ARCHIVE' as const } : v,
-          ),
-        );
+          );
+          
+          // Vérifier s'il reste des véhicules non archivés
+          const activeVehicles = updated.filter(v => v.statut !== 'ARCHIVE');
+          useRoleStore.getState().setHasVehicles(activeVehicles.length > 0);
+          
+          return updated;
+        });
+        
         return true;
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur lors de l'archivage");

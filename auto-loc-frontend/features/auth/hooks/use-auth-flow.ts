@@ -77,6 +77,11 @@ export function useAuthFlow() {
     // eslint-disable-next-line no-console
     console.log('[AuthFlow] profile', profile);
 
+    // Stocker hasVehicles dans le store pour le menu utilisateur
+    if (profile.hasVehicles !== undefined) {
+      useRoleStore.getState().setHasVehicles(profile.hasVehicles);
+    }
+
     if (profile.role === 'ADMIN') {
       router.replace('/dashboard/admin');
       inFlight.current = false;
