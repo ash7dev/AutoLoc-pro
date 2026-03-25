@@ -20,13 +20,27 @@ export function useBecomeOwner() {
         method: 'PATCH',
         body: { role: 'PROPRIETAIRE' },
       });
+      
+      // Marquer le changement de rôle pour invalider les caches
       try {
         document.cookie = `role_switch_at=${Date.now()}; path=/; max-age=300`;
       } catch {
         // ignore
       }
+      
+      // Mettre à jour le store immédiatement
       setActiveRole('PROPRIETAIRE');
-      router.push('/dashboard/owner');
+      
+      // Forcer la navigation avec replace pour éviter l'historique
+      router.replace('/dashboard/owner');
+      
+      // Force un rechargement léger si la redirection ne fonctionne pas
+      setTimeout(() => {
+        if (window.location.pathname === '/become-owner') {
+          window.location.href = '/dashboard/owner';
+        }
+      }, 500);
+      
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Une erreur est survenue.';

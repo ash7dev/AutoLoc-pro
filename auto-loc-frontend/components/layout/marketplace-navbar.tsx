@@ -25,6 +25,8 @@ import {
 import { cn } from '@/lib/utils';
 import { supabase } from '../../lib/supabase/client';
 import { useHasVehiclesFromStore } from '../../features/auth/hooks/use-has-vehicles-from-store';
+import { fetchMe } from '../../lib/nestjs/auth';
+import { useRoleStore } from '../../features/auth/stores/role.store';
 import { CurrencySelector } from './CurrencyConverter';
 
 /* ── Nav links ───────────────────────────────────────────────── */
@@ -262,6 +264,34 @@ export function MarketplaceNavbar() {
   const hasVehicles = useHasVehiclesFromStore();
   const pathname = usePathname();
   const router = useRouter();
+
+  // Initialiser hasVehicles pour les utilisateurs déjà connectés
+  useEffect(() => {
+    if (loggedIn && hasVehicles === null) {
+      const accessToken = useRoleStore.getState().accessToken;
+      if (accessToken) {
+        fetchMe(accessToken).then(profile => {
+          if (profile.hasVehicles !== undefined) {
+            useRoleStore.getState().setHasVehicles(profile.hasVehicles);
+          }
+        }).catch(() => {
+          // Erreur silencieuse - on garde null
+        });
+      } else {
+        // Si pas de accessToken, essayer de récupérer le profil via le cookie
+        fetch('/api/auth/me', { credentials: 'include' })
+          .then(res => res.ok ? res.json() : Promise.reject())
+          .then(profile => {
+            if (profile.hasVehicles !== undefined) {
+              useRoleStore.getState().setHasVehicles(profile.hasVehicles);
+            }
+          })
+          .catch(() => {
+            // Erreur silencieuse - on garde null
+          });
+      }
+    }
+  }, [loggedIn, hasVehicles]);
 
   function handleMobileSearch(e: React.FormEvent) {
     e.preventDefault();
