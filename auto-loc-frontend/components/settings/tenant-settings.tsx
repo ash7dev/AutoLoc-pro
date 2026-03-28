@@ -49,8 +49,8 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
   
   // 1. Charger et synchroniser le profil seulement si non fourni
   useEffect(() => {
-    // Ne charger que si aucun profil initial n'est fourni (undefined, pas null)
-    if (initialProfile === undefined) {
+    // Si aucun profil n'est fourni (undefined ou null), on le charge
+    if (!initialProfile) {
       const loadProfile = async () => {
         try {
           const accessToken = useRoleStore.getState().accessToken;
@@ -66,7 +66,8 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
       };
       loadProfile();
     } else {
-      // Si un profil est fourni (même null), on arrête le loading
+      // Si un profil est fourni, on l'utilise directement
+      setProfile(initialProfile);
       setLoading(false);
     }
   }, [initialProfile]);
