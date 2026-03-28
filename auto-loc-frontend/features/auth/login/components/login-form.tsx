@@ -96,23 +96,11 @@ export default function LoginAutoLoc() {
 
   /* ── RENDER ─────────────────────────────────────────── */
   if (!isMounted) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
-      </div>
-    );
+    return null; // Pas de spinner au montage initial
   }
 
-  // Écran de loading pendant la redirection OAuth
   if (isRedirecting) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto" />
-          <p className="text-gray-600 text-sm">Connexion en cours...</p>
-        </div>
-      </div>
-    );
+    return null; // Redirection silencieuse sans spinner
   }
 
   return (
