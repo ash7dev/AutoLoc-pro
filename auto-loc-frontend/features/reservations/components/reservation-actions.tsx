@@ -23,6 +23,7 @@ interface ReservationActionsProps {
     locataireKycStatus?: string;
     checkinProprietaireLe?: string;
     checkinLocataireLe?: string;
+    tacitCheckinDeadlineLe?: string | null;
     className?: string;
 }
 
@@ -384,6 +385,7 @@ function DisputeForm({
 export function ReservationActions({
     reservationId, statut, locataireKycStatus,
     checkinProprietaireLe, checkinLocataireLe,
+    tacitCheckinDeadlineLe,
     className,
 }: ReservationActionsProps) {
     const router = useRouter();
@@ -503,14 +505,16 @@ export function ReservationActions({
 
             {/* Check-in propriétaire déjà fait — attente locataire */}
             {statut === "CONFIRMEE" && checkinProprietaireLe && !checkinLocataireLe && (
-                <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3.5">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Clock className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2} />
+                <div className="flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3.5 mb-2">
+                    <div className="w-7 h-7 rounded-lg bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Clock className="w-3.5 h-3.5 text-blue-600" strokeWidth={2} />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[12.5px] font-bold text-emerald-800">Vous avez confirmé le check-in</p>
-                        <p className="text-[11.5px] text-emerald-700 mt-0.5 leading-relaxed">
-                            En attente de confirmation du locataire pour démarrer la location.
+                        <p className="text-[12.5px] font-bold text-blue-800">Vous avez validé le départ</p>
+                        <p className="text-[11.5px] text-blue-700 mt-0.5 leading-relaxed">
+                            {tacitCheckinDeadlineLe 
+                                ? `En attente du locataire. S'il n'agit pas avant le ${new Date(tacitCheckinDeadlineLe).toLocaleDateString("fr-FR", {day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"})}, la location démarrera automatiquement.` 
+                                : "En attente de confirmation du locataire pour démarrer la location."}
                         </p>
                     </div>
                 </div>
