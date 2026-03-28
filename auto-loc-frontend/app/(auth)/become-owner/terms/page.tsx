@@ -7,7 +7,7 @@ import { fetchMe } from '../../../../lib/nestjs/auth';
  * - Non connecté → /login
  * - Déjà PROPRIETAIRE → /dashboard/owner
  * - ADMIN → /dashboard/admin
- * - LOCATAIRE → redirige vers dashboard/owner (le switch a déjà été fait)
+ * - LOCATAIRE → affiche les termes (le switch sera fait côté client)
  */
 export default async function OwnerTermsPage() {
   const supabase = createSupabaseServerClient();
@@ -28,12 +28,8 @@ export default async function OwnerTermsPage() {
     redirect('/dashboard/admin');
   }
 
-  // Si on arrive ici en tant que LOCATAIRE, c'est que le switch n'a pas été fait
-  // On redirige vers /become-owner pour faire le switch d'abord
-  if (profile.role === 'LOCATAIRE') {
-    redirect('/become-owner');
-  }
-
+  // Pour les LOCATAIRE, on affiche directement la page des termes
+  // Le switch vers PROPRIETAIRE sera géré côté client dans le composant
   // Import dynamique pour éviter les problèmes de SSR
   const { OwnerTermsValidation } = await import('../../../../features/owner/become-owner/components/owner-terms-validation');
   return <OwnerTermsValidation />;

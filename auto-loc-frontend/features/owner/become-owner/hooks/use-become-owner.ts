@@ -16,6 +16,7 @@ export function useBecomeOwner() {
     setLoading(true);
     setError(null);
     try {
+      // Faire le switch de rôle
       await authFetch('/auth/switch-role', {
         method: 'PATCH',
         body: { role: 'PROPRIETAIRE' },
@@ -31,15 +32,8 @@ export function useBecomeOwner() {
       // Mettre à jour le store immédiatement
       setActiveRole('PROPRIETAIRE');
       
-      // Forcer la navigation avec replace pour éviter l'historique
+      // Rediriger vers la page des termes
       router.replace('/become-owner/terms');
-      
-      // Force un rechargement léger si la redirection ne fonctionne pas
-      setTimeout(() => {
-        if (window.location.pathname === '/become-owner') {
-          window.location.href = '/become-owner/terms';
-        }
-      }, 500);
       
     } catch (err: unknown) {
       const message =
