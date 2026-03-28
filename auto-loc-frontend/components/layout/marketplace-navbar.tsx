@@ -421,25 +421,6 @@ export function MarketplaceNavbar() {
             */}
             {hydrated && !loggedIn && (
               <>
-                {/* Mobile : boutons auth inline dans la barre */}
-                <Link
-                  href="/login"
-                  className="md:hidden inline-flex items-center px-3 py-1.5 text-[12.5px] font-medium text-black
-                    rounded-xl border border-slate-200 hover:bg-slate-50
-                    transition-all duration-200 tracking-tight"
-                >
-                  Connexion
-                </Link>
-                <Link
-                  href="/register"
-                  className="md:hidden relative inline-flex items-center px-3 py-1.5 text-[12.5px] font-semibold text-white
-                    bg-slate-900 hover:bg-slate-800 rounded-xl transition-all duration-200 tracking-tight
-                    shadow-md shadow-slate-900/20"
-                >
-                  Commencer
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border-2 border-white" />
-                </Link>
-
                 {/* Desktop : boutons auth */}
                 <Link
                   href="/login"
@@ -467,24 +448,45 @@ export function MarketplaceNavbar() {
               </>
             )}
 
-            {/*
-              CONNECTÉ :
-              - Mobile  → rien ici, le hamburger (gauche) ouvre le menu avec toutes les options
-              - Desktop → Espace hôte + ProfileDropdown
-            */}
             {hydrated && loggedIn && (
               <>
-                <Link
-                  href="/dashboard/owner"
-                  className="hidden md:inline-flex px-4 py-2 text-[13px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all duration-200"
+                {/* Mobile : Profil circulaire */}
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="md:hidden flex items-center justify-center w-9 h-9 rounded-full border-2 border-slate-200 bg-slate-900 hover:border-slate-300 transition-all duration-200"
                 >
-                  Espace hôte
-                </Link>
+                  <span className="text-[12px] font-bold text-white">
+                    {/* Initiales de l'utilisateur - pour l'instant "U" */}
+                    U
+                  </span>
+                </button>
+
+                {/* Desktop : Espace hôte dynamique selon hasVehicles + Mon compte */}
+                {hasVehicles === true ? (
+                  <Link
+                    href="/dashboard/owner"
+                    className="hidden md:inline-flex px-4 py-2 text-[13px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all duration-200"
+                  >
+                    Espace hôte PRO
+                  </Link>
+                ) : hasVehicles === false ? (
+                  <Link
+                    href="/become-owner"
+                    className="hidden md:inline-flex px-4 py-2 text-[13px] font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all duration-200 shadow-md shadow-slate-900/20"
+                  >
+                    Devenir hôte
+                    <span className="ml-1.5 w-2 h-2 bg-emerald-400 rounded-full border border-white/50" />
+                  </Link>
+                ) : null}
                 <div className="hidden md:block">
                   <ProfileDropdown hasVehicles={hasVehicles} />
                 </div>
               </>
             )}
+
+            {/* Currency selector : toujours visible à droite pour tout le monde */}
+            <CurrencySelector />
           </div>
         </div>
 
@@ -552,14 +554,31 @@ export function MarketplaceNavbar() {
             );
           })}
 
-          {/* ── DÉCONNECTÉ : sélecteur de devise dans le menu ── */}
+          {/* ── DÉCONNECTÉ : boutons auth dans le menu ── */}
           {hydrated && !loggedIn && (
             <>
               <div className="my-2 border-t border-slate-100" />
-              <div className="px-4 py-3">
-                <p className="text-[12px] font-medium text-slate-500 mb-2 tracking-tight uppercase">Devise</p>
-                <CurrencySelector />
-              </div>
+              <Link
+                href="/login"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight text-black hover:bg-slate-50 transition-all duration-150"
+              >
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100">
+                  <User className="h-3.5 w-3.5" strokeWidth={1.75} />
+                </span>
+                Se connecter
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-semibold tracking-tight text-white bg-slate-900 hover:bg-slate-800 transition-all duration-150 shadow-md shadow-slate-900/20"
+              >
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-white/10">
+                  <Plus className="h-3.5 w-3.5" strokeWidth={1.75} />
+                </span>
+                Commencer
+                <span className="ml-auto w-2 h-2 bg-emerald-400 rounded-full border border-white/50" />
+              </Link>
             </>
           )}
 
@@ -589,16 +608,6 @@ export function MarketplaceNavbar() {
                   <CalendarRange className="h-3.5 w-3.5" strokeWidth={1.75} />
                 </span>
                 Mes réservations
-              </Link>
-              <Link
-                href="/notifications"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight text-black hover:bg-slate-50 transition-all duration-150"
-              >
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100">
-                  <Bell className="h-3.5 w-3.5" strokeWidth={1.75} />
-                </span>
-                Notifications
               </Link>
               <Link
                 href="/dashboard/settings/profile"
