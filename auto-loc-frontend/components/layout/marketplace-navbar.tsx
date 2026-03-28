@@ -21,6 +21,7 @@ import {
   Search,
   Menu,
   X,
+  Plus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '../../lib/supabase/client';
@@ -261,6 +262,7 @@ export function MarketplaceNavbar() {
   const [mobileSearchVisible, setMobileSearchVisible] = useState(false);
   const [mobileSearch, setMobileSearch] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const hasVehicles = useHasVehiclesFromStore();
   const pathname = usePathname();
   const router = useRouter();
@@ -299,6 +301,13 @@ export function MarketplaceNavbar() {
     if (mobileSearch.trim()) params.set('q', mobileSearch.trim());
     router.push(`/vehicle?${params.toString()}`);
   }
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await supabase.auth.signOut();
+    setSigningOut(false);
+    setMenuOpen(false);
+  };
 
   useEffect(() => {
     let active = true;
@@ -412,28 +421,38 @@ export function MarketplaceNavbar() {
                   Commencer
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border-2 border-white" />
                 </Link>
-
-                {/* Mobile : Se connecter */}
-                <Link
-                  href="/login"
-                  className="md:hidden px-4 py-2 text-[13px] font-semibold text-white
-                    bg-slate-900 hover:bg-slate-800
-                    rounded-xl transition-all duration-200 tracking-tight
-                    shadow-md shadow-slate-900/20"
-                >
-                  Se connecter
-                </Link>
               </div>
             )}
 
             {hydrated && loggedIn && (
-              <ProfileDropdown
-                hasVehicles={hasVehicles}
-              />
+              <>
+                {/* Mobile : Profil circulaire */}
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="md:hidden flex items-center justify-center w-9 h-9 rounded-full border-2 border-slate-200 bg-slate-900 hover:border-slate-300 transition-all duration-200"
+                >
+                  <span className="text-[12px] font-bold text-white">
+                    {/* Initiales de l'utilisateur - pour l'instant "U" */}
+                    U
+                  </span>
+                </button>
+
+                {/* Desktop : Espace hôte + Mon compte */}
+                <Link
+                  href="/dashboard/owner"
+                  className="hidden md:inline-flex px-4 py-2 text-[13px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all duration-200"
+                >
+                  Espace hôte
+                </Link>
+                <ProfileDropdown
+                  hasVehicles={hasVehicles}
+                />
+              </>
             )}
 
-            {/* Currency selector */}
-            <CurrencySelector />
+            {/* Currency selector - seulement si non connecté */}
+            {hydrated && !loggedIn && <CurrencySelector />}
           </div>
         </div>
 
@@ -499,7 +518,7 @@ export function MarketplaceNavbar() {
             );
           })}
 
-          {/* Auth links — mobile only, not logged in */}
+          {/* Auth links — mobile only */}
           {hydrated && !loggedIn && (
             <>
               <div className="my-2 border-t border-slate-100" />
@@ -511,8 +530,76 @@ export function MarketplaceNavbar() {
                 <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100">
                   <User className="h-3.5 w-3.5" strokeWidth={1.75} />
                 </span>
-                Connexion
+                Se connecter
               </Link>
+              <Link
+                href="/register"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-semibold tracking-tight text-white bg-slate-900 hover:bg-slate-800 transition-all duration-150 shadow-md shadow-slate-900/20"
+              >
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-white/10">
+                  <Plus className="h-3.5 w-3.5" strokeWidth={1.75} />
+                </span>
+                Commencer
+                <span className="ml-auto w-2 h-2 bg-emerald-400 rounded-full border border-white/50" />
+              </Link>
+              <div className="my-2 border-t border-slate-100" />
+              <div className="px-4 py-3">
+                <p className="text-[12px] font-medium text-slate-600 mb-2">Devise</p>
+                <CurrencySelector />
+              </div>
+            </>
+          )}
+
+          {/* User links — mobile only, logged in */}
+          {hydrated && loggedIn && (
+            <>
+              <div className="my-2 border-t border-slate-100" />
+              <Link
+                href="/dashboard/owner"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-semibold tracking-tight text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all duration-150"
+              >
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-100">
+                  <Car className="h-3.5 w-3.5" strokeWidth={1.75} />
+                </span>
+                Mon espace
+                <span className="ml-auto px-2 py-0.5 bg-emerald-600 text-[10px] font-bold rounded-full text-emerald-50">
+                  Pro
+                </span>
+              </Link>
+              <Link
+                href="/reservations"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight text-black hover:bg-slate-50 transition-all duration-150"
+              >
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100">
+                  <CalendarRange className="h-3.5 w-3.5" strokeWidth={1.75} />
+                </span>
+                Mes réservations
+              </Link>
+              <Link
+                href="/dashboard/settings/profile"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight text-black hover:bg-slate-50 transition-all duration-150"
+              >
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100">
+                  <Settings className="h-3.5 w-3.5" strokeWidth={1.75} />
+                </span>
+                Paramètres
+              </Link>
+              <div className="my-2 border-t border-slate-100" />
+              <button
+                type="button"
+                onClick={() => { setMenuOpen(false); handleSignOut(); }}
+                disabled={signingOut}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight text-red-600 hover:bg-red-50 transition-all duration-150 disabled:opacity-50"
+              >
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-100">
+                  {signingOut ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" strokeWidth={1.75} />}
+                </span>
+                {signingOut ? 'Déconnexion…' : 'Se déconnecter'}
+              </button>
             </>
           )}
         </nav>
