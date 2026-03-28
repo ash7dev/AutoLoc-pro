@@ -446,17 +446,7 @@ export function MarketplaceNavbar() {
 
             {hydrated && loggedIn && (
               <>
-                {/* Mobile : Profil circulaire */}
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="md:hidden flex items-center justify-center w-9 h-9 rounded-full border-2 border-slate-200 bg-slate-900 hover:border-slate-300 transition-all duration-200"
-                >
-                  <span className="text-[12px] font-bold text-white">
-                    {/* Initiales de l'utilisateur - pour l'instant "U" */}
-                    U
-                  </span>
-                </button>
+                {/* Mobile : Le Profil circulaire a été supprimé car remplacé par le menu hamburger */}
 
                 {/* Desktop : Mon compte (Espace hôte PRO est dans le dropdown) */}
                 {hasVehicles === false && (
@@ -474,10 +464,8 @@ export function MarketplaceNavbar() {
               </>
             )}
 
-            {/* Currency selector : toujours visible à droite pour tout le monde en mode desktop */}
-            <div className="hidden md:block">
-              <CurrencySelector />
-            </div>
+            {/* Currency selector : toujours visible à droite pour tout le monde */}
+            <CurrencySelector />
           </div>
         </div>
 
@@ -538,7 +526,8 @@ export function MarketplaceNavbar() {
                   'w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0',
                   isActive ? 'bg-white/10' : 'bg-slate-100',
                 )}>
-                  <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  {/* Augmentation de l'épaisseur des traits (strokeWidth de 1.75 à 2.5) */}
+                  <Icon className="h-4 w-4" strokeWidth={2.5} />
                 </span>
                 {label}
               </Link>
@@ -572,14 +561,6 @@ export function MarketplaceNavbar() {
               </Link>
             </>
           )}
-
-          {/* ── SELECTEUR DE DEVISE MOBILE DANS LE MENU ── */}
-          <div className="md:hidden mt-2 px-4 py-2 border-t border-slate-100">
-            <div className="flex items-center justify-between">
-              <span className="text-[14px] font-medium tracking-tight text-slate-700">Devise</span>
-              <CurrencySelector />
-            </div>
-          </div>
 
           {/* ── CONNECTÉ : options utilisateur dans le menu ── */}
           {hydrated && loggedIn && (
