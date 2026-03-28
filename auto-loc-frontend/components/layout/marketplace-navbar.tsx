@@ -314,12 +314,18 @@ export function MarketplaceNavbar() {
 
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
-      setLoggedIn(Boolean(data.session?.access_token));
+      const isLoggedIn = Boolean(data.session?.access_token);
+      setLoggedIn(isLoggedIn);
       setHydrated(true);
+      // eslint-disable-next-line no-console
+      console.log('[Navbar] Session checked:', { isLoggedIn, hasToken: !!data.session?.access_token });
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setLoggedIn(Boolean(session?.access_token));
+      const isLoggedIn = Boolean(session?.access_token);
+      setLoggedIn(isLoggedIn);
+      // eslint-disable-next-line no-console
+      console.log('[Navbar] Auth state changed:', { isLoggedIn, hasToken: !!session?.access_token });
     });
 
     const onScroll = () => {
@@ -395,6 +401,13 @@ export function MarketplaceNavbar() {
 
           {/* Right slot */}
           <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Debug info - à enlever plus tard */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-[10px] text-red-500 hidden md:block">
+                {hydrated ? (loggedIn ? '✅' : '❌') : '⏳'}
+              </div>
+            )}
+
             {!hydrated && (
               <div className="w-32 h-9 bg-slate-100 rounded-2xl animate-pulse" />
             )}
@@ -488,8 +501,8 @@ export function MarketplaceNavbar() {
       {/* ── Mobile menu drawer ── */}
       <div
         className={cn(
-          'md:hidden overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
-          menuOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0 pointer-events-none',
+          'md:hidden overflow-y-auto transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+          menuOpen ? 'max-h-[70vh] opacity-100' : 'max-h-0 opacity-0 pointer-events-none',
         )}
       >
         <nav className="px-4 pb-4 pt-1 space-y-1 border-t border-slate-100/80">
