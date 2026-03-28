@@ -148,16 +148,20 @@ const NavContent = ({ compact }: { compact: boolean }) => (
 
       {/* ── Logo ─────────────────────────────────────────────────── */}
       <div className="flex items-center justify-center px-3 py-5">
-        <Link href="/dashboard/owner" className="group">
+        <button 
+          onClick={switchToLocataire} 
+          disabled={switching}
+          className="group hover:opacity-80 disabled:opacity-50 transition-all duration-200"
+        >
           <Image
             src="/logoAutoLoc.jpg"
             alt="AutoLoc"
             width={compact ? 45 : 180}
             height={compact ? 45 : 90}
             priority
-            className="object-contain group-hover:opacity-80 transition-opacity duration-200"
+            className="object-contain"
           />
-        </Link>
+        </button>
       </div>
 
       {/* ── Section label ────────────────────────────────────────── */}
@@ -257,16 +261,20 @@ const NavContent = ({ compact }: { compact: boolean }) => (
       {/* ══ MOBILE TOP BAR ══════════════════════════════════════════ */}
       <div className="lg:hidden fixed top-0 inset-x-0 z-40 flex items-center px-5 h-14
         bg-white/80 backdrop-blur-xl border-b border-slate-100 shadow-sm shadow-slate-100/80">
-        <Link href="/dashboard/owner">
+        <button 
+          onClick={switchToLocataire} 
+          disabled={switching}
+          className="hover:opacity-80 disabled:opacity-50 transition-opacity"
+        >
           <Image
             src="/logoAutoLoc.jpg"
             alt="AutoLoc"
-            width={120}
-            height={60}
+            width={140}
+            height={65}
             priority
             className="object-contain"
           />
-        </Link>
+        </button>
       </div>
 
       {/* ══ MOBILE BOTTOM TAB BAR ══════════════════════════════════ */}

@@ -176,7 +176,7 @@ function ProfileDropdown({
         {/* Items */}
         <div className="p-2 space-y-0.5">
           {hasVehicles === true ? (
-            <DropdownItem onClick={() => { switchToProprietaire(); }} disabled={switchingRole} icon={switchingRole ? Loader2 : LayoutDashboard} label={switchingRole ? "Chargement..." : "Mon espace"} badge="Pro" />
+            <DropdownItem onClick={() => { switchToProprietaire(); }} disabled={switchingRole} icon={switchingRole ? Loader2 : LayoutDashboard} label={switchingRole ? "Chargement..." : "Espace Propriétaire"} badge="Pro" />
           ) : hasVehicles === false ? (
             <DropdownItem href="/become-owner" icon={Building2} label="Devenir hôte" badge="Nouveau" />
           ) : null}
