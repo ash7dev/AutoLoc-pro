@@ -40,15 +40,16 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
   const [errorSync, setErrorSync] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    birthDate: '',
+    firstName: initialProfile?.prenom || '',
+    lastName: initialProfile?.nom || '',
+    email: initialProfile?.email || '',
+    phone: initialProfile?.telephone || '',
+    birthDate: initialProfile?.dateNaissance || '',
   });
   
-  // 1. Charger et synchroniser le profil
+  // 1. Charger et synchroniser le profil seulement si non fourni
   useEffect(() => {
+    // Ne charger que si aucun profil initial n'est fourni
     if (!initialProfile) {
       const loadProfile = async () => {
         try {

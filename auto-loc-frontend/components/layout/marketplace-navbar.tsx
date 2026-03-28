@@ -573,7 +573,7 @@ export function MarketplaceNavbar() {
                       <Car className="h-4 w-4" strokeWidth={2.5} />
                     )}
                   </span>
-                  {switchingRole ? "Chargement..." : "Mon espace"}
+                  {switchingRole ? "Chargement..." : "Espace Propriétaire"}
                   <span className="ml-auto px-2 py-0.5 bg-emerald-600 text-[10px] font-bold rounded-full text-emerald-50">
                     Pro
                   </span>

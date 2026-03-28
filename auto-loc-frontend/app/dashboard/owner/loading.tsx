@@ -1,5 +1,8 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LogoLoader } from "@/components/ui/logo-loader";
 import { OverviewStats } from "@/features/dashboard/components/overview-stats";
 import { MobileRevenueCard } from "@/features/dashboard/components/mobile-revenue-card";
 import { RevenueChart } from "@/features/dashboard/components/revenue-chart";
@@ -153,10 +156,21 @@ function QuickActionsMobileSkeleton() {
 }
 
 export default function OwnerDashboardLoading() {
+  const [showLogo, setShowLogo] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowLogo(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (showLogo) {
+    return <LogoLoader />;
+  }
+
   const reservations: ReservationItem[] = [];
 
   return (
-    <div className="flex flex-col gap-4 p-3 sm:gap-6 sm:p-6">
+    <div className="flex flex-col gap-4 p-3 sm:gap-6 sm:p-6 animate-in fade-in duration-500">
       <OwnerHeaderSkeleton
         title="Tableau de bord"
         subtitle="Vue d'ensemble"
