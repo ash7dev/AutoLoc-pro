@@ -49,8 +49,8 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
   
   // 1. Charger et synchroniser le profil seulement si non fourni
   useEffect(() => {
-    // Ne charger que si aucun profil initial n'est fourni
-    if (!initialProfile) {
+    // Ne charger que si aucun profil initial n'est fourni (undefined, pas null)
+    if (initialProfile === undefined) {
       const loadProfile = async () => {
         try {
           const accessToken = useRoleStore.getState().accessToken;
@@ -65,6 +65,9 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
         }
       };
       loadProfile();
+    } else {
+      // Si un profil est fourni (même null), on arrête le loading
+      setLoading(false);
     }
   }, [initialProfile]);
   
@@ -166,12 +169,12 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
             <p className="text-blue-700/80 mt-1 font-medium tracking-tight text-sm sm:text-base">Espace Locataire</p>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-3">
               <span className="text-xs sm:text-sm text-blue-800 bg-blue-100 px-3 py-1.5 rounded-full font-semibold inline-block">
-                Actif depuis {profile?.creeLe ? new Date(profile.creeLe).getFullYear() : '2024'}
+                Actif depuis {profile?.creeLe ? new Date(profile.creeLe).getFullYear() : new Date().getFullYear()}
               </span>
               <div className="flex items-center justify-center sm:justify-start gap-1">
                 <Award className="w-4 h-4 text-amber-500" />
                 <span className="text-xs sm:text-sm font-medium text-amber-700">
-                  {profile?.noteLocataire?.toFixed(1) || '5.0'}/5
+                  {profile?.noteLocataire ? `${profile.noteLocataire.toFixed(1)}/5` : 'Nouveau'}
                 </span>
               </div>
             </div>
@@ -197,7 +200,7 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
               <Award className="w-5 h-5 text-blue-600 flex-shrink-0" />
               <div className="min-w-0">
                 <p className="font-medium text-blue-900 text-sm sm:text-base truncate">Note Locataire</p>
-                <p className="text-xs sm:text-sm text-blue-700">{profile?.noteLocataire || 5.0} / 5 étoiles</p>
+                <p className="text-xs sm:text-sm text-blue-700">{profile?.noteLocataire ? `${profile.noteLocataire.toFixed(1)} / 5 étoiles` : "Pas encore d'avis"}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 sm:p-4 bg-amber-50/50 rounded-xl border border-amber-100 hover:bg-amber-50 transition-colors lg:col-span-1">
