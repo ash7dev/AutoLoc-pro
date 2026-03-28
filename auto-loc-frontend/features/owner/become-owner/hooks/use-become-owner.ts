@@ -32,8 +32,8 @@ export function useBecomeOwner() {
       // Mettre à jour le store immédiatement
       setActiveRole('PROPRIETAIRE');
       
-      // Rediriger vers la page des termes
-      router.replace('/become-owner/terms');
+      // Rediriger directement vers le dashboard propriétaire
+      router.replace('/dashboard/owner');
       
     } catch (err: unknown) {
       const message =
