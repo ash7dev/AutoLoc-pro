@@ -28,6 +28,7 @@ import { supabase } from '../../lib/supabase/client';
 import { useHasVehiclesFromStore } from '../../features/auth/hooks/use-has-vehicles-from-store';
 import { fetchMe } from '../../lib/nestjs/auth';
 import { useRoleStore } from '../../features/auth/stores/role.store';
+import { useSwitchToProprietaire } from '../../features/owner/hooks/use-switch-to-proprietaire';
 import { CurrencySelector } from './CurrencyConverter';
 
 /* ── Nav links ───────────────────────────────────────────────── */
@@ -99,6 +100,7 @@ function ProfileDropdown({
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { switchToProprietaire } = useSwitchToProprietaire();
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -174,7 +176,7 @@ function ProfileDropdown({
         {/* Items */}
         <div className="p-2 space-y-0.5">
           {hasVehicles === true ? (
-            <DropdownItem href="/dashboard/owner" icon={LayoutDashboard} label="Mon espace" badge="Pro" />
+            <DropdownItem onClick={() => { setOpen(false); switchToProprietaire(); }} icon={LayoutDashboard} label="Mon espace" badge="Pro" />
           ) : hasVehicles === false ? (
             <DropdownItem href="/become-owner" icon={Building2} label="Devenir hôte" badge="Nouveau" />
           ) : null}
@@ -265,6 +267,7 @@ export function MarketplaceNavbar() {
   const hasVehicles = useHasVehiclesFromStore();
   const pathname = usePathname();
   const router = useRouter();
+  const { switchToProprietaire } = useSwitchToProprietaire();
 
   // Initialiser hasVehicles pour les utilisateurs déjà connectés
   useEffect(() => {
@@ -566,19 +569,38 @@ export function MarketplaceNavbar() {
           {hydrated && loggedIn && (
             <>
               <div className="my-2 border-t border-slate-100" />
-              <Link
-                href="/dashboard/owner"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-semibold tracking-tight text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all duration-150"
-              >
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-100">
-                  <Car className="h-3.5 w-3.5" strokeWidth={1.75} />
-                </span>
-                Mon espace
-                <span className="ml-auto px-2 py-0.5 bg-emerald-600 text-[10px] font-bold rounded-full text-emerald-50">
-                  Pro
-                </span>
-              </Link>
+              {hasVehicles === true ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    switchToProprietaire();
+                  }}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-semibold tracking-tight text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all duration-150"
+                >
+                  <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-100">
+                    <Car className="h-4 w-4" strokeWidth={2.5} />
+                  </span>
+                  Mon espace
+                  <span className="ml-auto px-2 py-0.5 bg-emerald-600 text-[10px] font-bold rounded-full text-emerald-50">
+                    Pro
+                  </span>
+                </button>
+              ) : hasVehicles === false ? (
+                <Link
+                  href="/become-owner"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight text-white bg-slate-900 hover:bg-slate-800 transition-all duration-150 shadow-md shadow-slate-900/20"
+                >
+                  <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-white/10">
+                    <Building2 className="h-4 w-4" strokeWidth={2.5} />
+                  </span>
+                  Devenir hôte
+                  <span className="ml-auto px-2 py-0.5 bg-emerald-600 text-[10px] font-bold rounded-full text-emerald-50">
+                    Nouveau
+                  </span>
+                </Link>
+              ) : null}
               <Link
                 href="/reservations"
                 onClick={() => setMenuOpen(false)}

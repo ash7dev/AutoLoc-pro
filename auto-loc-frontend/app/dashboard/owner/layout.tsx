@@ -27,10 +27,10 @@ export default async function OwnerLayout({
 
   let profile;
   const roleSwitchAt = cookies().get('role_switch_at')?.value ?? '';
-  
+
   // Inclure le timestamp dans la clé de cache pour forcer l'invalidation
   const cacheKey = ['profile', token, roleSwitchAt];
-  
+
   try {
     profile = await unstable_cache(
       () => fetchMe(token),
