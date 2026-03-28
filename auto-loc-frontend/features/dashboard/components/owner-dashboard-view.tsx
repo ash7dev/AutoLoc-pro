@@ -56,18 +56,33 @@ function buildTodoItems(reservations: Reservation[] = [], vehicles: Vehicle[] = 
         });
     }
 
-    // Confirmed reservations (check-in incoming)
-    const confirmees = reservations.filter((r) => r.statut === "CONFIRMEE");
-    if (confirmees.length > 0) {
-        const earliest = confirmees.reduce((a, b) => a.dateDebut < b.dateDebut ? a : b);
+    // Confirmed reservations (check-in incoming for the owner)
+    const pendingOwnerCheckins = reservations.filter((r) => r.statut === "CONFIRMEE" && !r.checkinProprietaireLe);
+    if (pendingOwnerCheckins.length > 0) {
+        const earliest = pendingOwnerCheckins.reduce((a, b) => a.dateDebut < b.dateDebut ? a : b);
         items.push({
             id: 2,
-            title: `${confirmees.length} check-in${confirmees.length > 1 ? "s" : ""} à effectuer`,
-            description: "Le paiement est déclenché après validation du check-in.",
+            title: `${pendingOwnerCheckins.length} check-in${pendingOwnerCheckins.length > 1 ? "s" : ""} à effectuer`,
+            description: "Le paiement est déclenché après validation de l'état des lieux.",
             priority: "urgent",
             href: "/dashboard/owner/reservations",
-            meta: "À venir",
-            date: `Check-in le ${fmtDate(earliest.dateDebut)}`,
+            meta: "À effectuer",
+            date: `Prévu le ${fmtDate(earliest.dateDebut)}`,
+        });
+    }
+
+    // Confirmed reservations (waiting for tenant tactile validation)
+    const pendingTenantCheckins = reservations.filter((r) => r.statut === "CONFIRMEE" && r.checkinProprietaireLe && !r.checkinLocataireLe);
+    if (pendingTenantCheckins.length > 0) {
+        const earliest = pendingTenantCheckins.reduce((a, b) => a.dateDebut < b.dateDebut ? a : b);
+        items.push({
+            id: 21,
+            title: `${pendingTenantCheckins.length} validation${pendingTenantCheckins.length > 1 ? "s" : ""} locataire en attente`,
+            description: "La location démarrera automatiquement au bout de la date limite.",
+            priority: "normal",
+            href: "/dashboard/owner/reservations",
+            meta: "Attente",
+            date: `Fait le ${fmtDate(earliest.checkinProprietaireLe!)}`,
         });
     }
 
