@@ -136,7 +136,8 @@ export function OwnerSidebar() {
   }, [pathname]);
 
   const handleNavClick = (href: string) => {
-    if (pathname === href || pathname.startsWith(`${href}/`)) return;
+    // Permettre la navigation exacte vers le dashboard même si on est sur des sous-pages
+    if (pathname === href) return;
     setPendingHref(href);
     startTransition(() => {
       router.push(href);

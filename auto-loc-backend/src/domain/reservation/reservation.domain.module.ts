@@ -14,6 +14,8 @@ import { CheckinSideEffectsService } from './checkin-side-effects.service';
 import { TacitCheckinUseCase } from './use-cases/tacit-checkin.use-case';
 import { CheckOutUseCase } from './use-cases/checkout.use-case';
 import { ExpireReservationUseCase } from './use-cases/expire-reservation.use-case';
+import { RefuseVehicleUseCase } from './use-cases/refuse-vehicle.use-case';
+import { ResolveDisputeUseCase } from './use-cases/resolve-dispute.use-case';
 import { QueueModule } from '../../infrastructure/queue/queue.module';
 import { ContractModule } from '../../infrastructure/contract/contract.module';
 import { CloudinaryModule } from '../../infrastructure/cloudinary/cloudinary.module';
@@ -46,6 +48,8 @@ import { WalletDomainModule } from '../wallet/wallet.domain.module';
         TacitCheckinUseCase,
         CheckOutUseCase,
         ExpireReservationUseCase,
+        RefuseVehicleUseCase,
+        ResolveDisputeUseCase,
     ],
     exports: [
         ReservationPricingService,
@@ -60,6 +64,8 @@ import { WalletDomainModule } from '../wallet/wallet.domain.module';
         ExpireReservationUseCase,
         ReservationStateMachine,
         ContractGenerationService,
+        RefuseVehicleUseCase,
+        ResolveDisputeUseCase,
     ],
 })
 export class ReservationDomainModule { }

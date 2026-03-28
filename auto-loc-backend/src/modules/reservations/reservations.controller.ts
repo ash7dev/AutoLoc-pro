@@ -130,6 +130,23 @@ export class ReservationsController {
   }
 
   /**
+   * POST /reservations/:id/refus-checkin
+   * Locataire refuse le véhicule au check-in (Non-conformité). Passe de CONFIRMEE à LITIGE.
+   */
+  @Post(':id/refus-checkin')
+  @UseGuards(RolesGuard)
+  @Roles(RoleProfile.LOCATAIRE)
+  @HttpCode(HttpStatus.CREATED)
+  async refuseCheckin(
+    @Req() req: Request & { user?: RequestUser },
+    @Param('id', ParseUUIDPipe) reservationId: string,
+    @Body() body: { raison: string },
+  ) {
+    const user = req.user!;
+    return this.reservationsService.refuseCheckin(user, reservationId, { raison: body.raison });
+  }
+
+  /**
    * PATCH /reservations/:id/checkout
    * Propriétaire termine la location (EN_COURS → TERMINEE).
    */

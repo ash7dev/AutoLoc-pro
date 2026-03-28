@@ -190,7 +190,7 @@ export const ADMIN_PATHS = {
   validateWithdrawal: (id: string) => `/admin/withdrawals/${id}/validate`,
   rejectWithdrawal: (id: string) => `/admin/withdrawals/${id}/reject`,
   disputes: '/admin/disputes',
-  updateDisputeStatus: (id: string) => `/admin/disputes/${id}/status`,
+  updateDisputeStatus: (id: string) => `/admin/disputes/${id}/resolve`,
   notificationsCount: '/admin/notifications/count',
 } as const;
 
@@ -267,6 +267,10 @@ export async function fetchAdminDisputes(accessToken: string): Promise<AdminDisp
     if (Array.isArray(inner)) return inner as AdminDispute[];
   }
   return [];
+}
+
+export async function fetchAdminDisputeDetail(accessToken: string, id: string): Promise<any> {
+  return await apiFetch(`/admin/disputes/${id}`, { accessToken });
 }
 
 export interface AdminNotificationsCount {

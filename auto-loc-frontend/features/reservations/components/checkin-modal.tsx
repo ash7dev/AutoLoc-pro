@@ -123,27 +123,27 @@ export function CheckinModal({ reservationId, open, onClose }: CheckinModalProps
 
                 <div className="px-6 py-5 space-y-6">
                     {/* Info */}
-                    <div className="rounded-xl bg-emerald-500/8 border border-emerald-500/15 p-4 space-y-3">
+                    <div className="rounded-xl bg-blue-500/8 border border-blue-500/15 p-4 space-y-3">
                         <div className="flex items-center gap-2">
-                            <Info className="w-4 h-4 text-emerald-400 flex-shrink-0" strokeWidth={2} />
-                            <p className="text-[13px] font-black text-white">Photos optionnelles — mais fortement recommandées</p>
+                            <Info className="w-4 h-4 text-blue-400 flex-shrink-0" strokeWidth={2} />
+                            <p className="text-[13px] font-black text-white">Photos obligatoires — État des lieux de départ</p>
                         </div>
                         <ul className="space-y-1.5 pl-1">
                             <li className="flex items-start gap-2 text-[11.5px] text-slate-400 leading-relaxed">
-                                <span className="text-emerald-400 mt-0.5">✓</span>
+                                <span className="text-blue-400 mt-0.5">✓</span>
                                 Prouve l&apos;état du véhicule <span className="text-white font-semibold">avant</span> la remise des clés
                             </li>
                             <li className="flex items-start gap-2 text-[11.5px] text-slate-400 leading-relaxed">
-                                <span className="text-emerald-400 mt-0.5">✓</span>
-                                Référence indispensable en cas de <span className="text-white font-semibold">litige ou dommage</span> au retour
+                                <span className="text-blue-400 mt-0.5">✓</span>
+                                Conditionne le <span className="text-white font-semibold">déclenchement de votre paiement</span>
                             </li>
                             <li className="flex items-start gap-2 text-[11.5px] text-slate-400 leading-relaxed">
-                                <span className="text-emerald-400 mt-0.5">✓</span>
-                                Vous protège légalement — sans photos, votre parole contre la sienne
+                                <span className="text-blue-400 mt-0.5">✓</span>
+                                Permet la <span className="text-white font-semibold">validation automatique</span> au bout de 24h
                             </li>
                         </ul>
-                        <p className="text-[10.5px] text-slate-500 border-t border-white/6 pt-2.5">
-                            Vous pouvez confirmer le check-in sans uploader de photos. Cliquez directement sur &quot;Confirmer le check-in&quot; ci-dessous.
+                        <p className="text-[10.5px] text-slate-500 border-t border-white/6 pt-2.5 font-medium">
+                            Vous devez obligatoirement uploader au moins 1 photo pour pouvoir confirmer le Check-in.
                         </p>
                     </div>
 
@@ -228,11 +228,11 @@ export function CheckinModal({ reservationId, open, onClose }: CheckinModalProps
                     </button>
                     <button
                         onClick={handleSubmit}
-                        disabled={submitting || success}
+                        disabled={submitting || success || photoCount === 0}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-200",
-                            submitting || success
-                                ? "bg-emerald-500/30 text-emerald-400/60 cursor-not-allowed"
+                            submitting || success || photoCount === 0
+                                ? "bg-emerald-500/10 text-emerald-500/40 cursor-not-allowed border border-emerald-500/10"
                                 : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20",
                         )}
                     >

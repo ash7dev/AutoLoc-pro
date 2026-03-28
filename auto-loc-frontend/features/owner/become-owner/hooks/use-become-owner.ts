@@ -32,12 +32,12 @@ export function useBecomeOwner() {
       setActiveRole('PROPRIETAIRE');
       
       // Forcer la navigation avec replace pour éviter l'historique
-      router.replace('/dashboard/owner');
+      router.replace('/become-owner/terms');
       
       // Force un rechargement léger si la redirection ne fonctionne pas
       setTimeout(() => {
         if (window.location.pathname === '/become-owner') {
-          window.location.href = '/dashboard/owner';
+          window.location.href = '/become-owner/terms';
         }
       }, 500);
       

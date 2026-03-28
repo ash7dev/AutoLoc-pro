@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Search, AlertTriangle, Scale, Calendar, Car, User,
@@ -253,8 +254,14 @@ function DisputeCard({
               className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-black/40 hover:text-black/70 transition-colors"
             >
               {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              {expanded ? 'Réduire' : 'Voir détails'}
+              {expanded ? 'Réduire' : 'Aperçu rapide'}
             </button>
+            <Link
+              href={`/dashboard/admin/disputes/${dispute.id}`}
+              className="inline-flex items-center gap-1 text-[11.5px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors ml-2"
+            >
+              Dossier complet &rarr;
+            </Link>
           </div>
 
           {/* Actions */}
@@ -356,16 +363,21 @@ export function AdminDisputesList({ disputes }: AdminDisputesListProps) {
   }
 
   async function handleUpdateStatus(id: string, statut: 'EN_INVESTIGATION' | 'FONDE' | 'NON_FONDE') {
+    if (statut === 'EN_INVESTIGATION') {
+      showToast('success', 'Litige passé en cours d\'investigation (interface seulement).');
+      return;
+    }
+
     setPendingId(id);
     setConfirmTarget(null);
     try {
       const res = await fetch(`/api/nest${ADMIN_PATHS.updateDisputeStatus(id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ statut }),
+        body: JSON.stringify({ decision: statut }),
       });
       if (!res.ok) throw new Error();
-      const labels = { EN_INVESTIGATION: 'Litige passé en cours d\'investigation.', FONDE: 'Litige classé fondé.', NON_FONDE: 'Litige classé non fondé.' };
+      const labels = { EN_INVESTIGATION: '', FONDE: 'Litige classé fondé.', NON_FONDE: 'Litige classé non fondé.' };
       showToast('success', labels[statut]);
       router.refresh();
     } catch {

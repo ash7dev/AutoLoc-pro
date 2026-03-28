@@ -20,6 +20,7 @@ const ALLOWED: Partial<Record<StatutReservation, StatutReservation[]>> = {
   [StatutReservation.CONFIRMEE]: [
     StatutReservation.EN_COURS,
     StatutReservation.ANNULEE,
+    StatutReservation.LITIGE,
   ],
   [StatutReservation.EN_COURS]: [
     StatutReservation.TERMINEE,
@@ -27,7 +28,10 @@ const ALLOWED: Partial<Record<StatutReservation, StatutReservation[]>> = {
   ],
   [StatutReservation.TERMINEE]: [],
   [StatutReservation.ANNULEE]: [],
-  [StatutReservation.LITIGE]: [StatutReservation.TERMINEE],
+  [StatutReservation.LITIGE]: [
+    StatutReservation.TERMINEE,
+    StatutReservation.ANNULEE,
+  ],
 };
 
 const TERMINAL: ReadonlySet<StatutReservation> = new Set([

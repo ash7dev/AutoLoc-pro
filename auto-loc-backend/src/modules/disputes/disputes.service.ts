@@ -200,4 +200,55 @@ export class DisputesService {
       statut: l.statut,
     }));
   }
+
+  // ── GET /admin/disputes/:id ───────────────────────────────────────────────────
+
+  async adminDetail(id: string) {
+    const litige = await this.prisma.litige.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        description: true,
+        coutEstime: true,
+        statut: true,
+        creeLe: true,
+        reservation: {
+          select: {
+            id: true,
+            statut: true,
+            totalLocataire: true,
+            netProprietaire: true,
+            locataire: { select: { id: true, prenom: true, nom: true, email: true, telephone: true } },
+            proprietaire: { select: { id: true, prenom: true, nom: true, email: true, telephone: true } },
+            vehicule: { select: { marque: true, modele: true, immatriculation: true } },
+            // On récupère les photos du check-in liées à cette réservation
+            photosEtatLieu: {
+              where: { type: 'CHECKIN' },
+              select: { url: true, creeLe: true, categorie: true }
+            }
+          },
+        },
+      },
+    });
+
+    if (!litige) throw new NotFoundException('Litige introuvable');
+
+    return {
+      id: litige.id,
+      description: litige.description,
+      amount: litige.coutEstime ? Number(litige.coutEstime) : null,
+      statut: litige.statut,
+      openedAt: litige.creeLe,
+      reservation: {
+        id: litige.reservation.id,
+        statut: litige.reservation.statut,
+        totalLocataire: Number(litige.reservation.totalLocataire),
+        netProprietaire: Number(litige.reservation.netProprietaire),
+        locataire: litige.reservation.locataire,
+        proprietaire: litige.reservation.proprietaire,
+        vehicule: litige.reservation.vehicule,
+        photosCheckin: litige.reservation.photosEtatLieu,
+      }
+    };
+  }
 }

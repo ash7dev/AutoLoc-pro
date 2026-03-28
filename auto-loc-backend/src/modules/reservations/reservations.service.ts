@@ -34,6 +34,11 @@ import {
   ConfirmPaymentUseCase,
   ConfirmPaymentResult,
 } from '../../domain/reservation/use-cases/confirm-payment.use-case';
+import {
+  RefuseVehicleUseCase,
+  RefuseVehicleInput,
+  RefuseVehicleResult
+} from '../../domain/reservation/use-cases/refuse-vehicle.use-case';
 import { CloudinaryService } from '../../infrastructure/cloudinary/cloudinary.service';
 import {
   ContractPdfService,
@@ -126,6 +131,7 @@ export class ReservationsService {
     private readonly cancelUseCase: CancelReservationUseCase,
     private readonly checkinUseCase: CheckInUseCase,
     private readonly checkoutUseCase: CheckOutUseCase,
+    private readonly refuseVehicleUseCase: RefuseVehicleUseCase,
     private readonly cloudinaryService: CloudinaryService,
     private readonly contractPdfService: ContractPdfService,
   ) { }
@@ -138,6 +144,16 @@ export class ReservationsService {
     headerIdempotencyKey?: string,
   ): Promise<CreateReservationResult> {
     return this.createUseCase.execute(user, dto, headerIdempotencyKey);
+  }
+
+  // ── POST /reservations/:id/refus-checkin ──────────────────────────────────────
+
+  async refuseCheckin(
+    user: RequestUser,
+    reservationId: string,
+    input: RefuseVehicleInput,
+  ): Promise<RefuseVehicleResult> {
+    return this.refuseVehicleUseCase.execute(user, reservationId, input);
   }
 
   // ── PATCH /reservations/:id/confirm ──────────────────────────────────────────

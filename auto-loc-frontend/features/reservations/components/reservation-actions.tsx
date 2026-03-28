@@ -513,7 +513,9 @@ export function ReservationActions({
                         <p className="text-[12.5px] font-bold text-blue-800">Vous avez validé le départ</p>
                         <p className="text-[11.5px] text-blue-700 mt-0.5 leading-relaxed">
                             {tacitCheckinDeadlineLe 
-                                ? `En attente du locataire. S'il n'agit pas avant le ${new Date(tacitCheckinDeadlineLe).toLocaleDateString("fr-FR", {day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"})}, la location démarrera automatiquement.` 
+                                ? (new Date(tacitCheckinDeadlineLe).getTime() < Date.now()
+                                    ? "La date limite de validation automatique est atteinte. Le système est en train de finaliser la location (si vos photos d'état des lieux sont valides)."
+                                    : `En attente du locataire. S'il n'agit pas avant le ${new Date(tacitCheckinDeadlineLe).toLocaleDateString("fr-FR", {day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"})}, la location démarrera automatiquement.`) 
                                 : "En attente de confirmation du locataire pour démarrer la location."}
                         </p>
                     </div>

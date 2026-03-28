@@ -222,6 +222,21 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                     TENANT ACTIONS
                 ══════════════════════════════════════════════════ */}
                 <div className="space-y-3">
+                    {/* Litige en cours — message informatif */}
+                    {r.statut === 'LITIGE' && (
+                        <div className="flex items-start gap-3 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3.5">
+                            <div className="w-7 h-7 rounded-lg bg-orange-100 border border-orange-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <AlertTriangle className="w-3.5 h-3.5 text-orange-600" strokeWidth={2} />
+                            </div>
+                            <div>
+                                <p className="text-[12.5px] font-bold text-orange-800">Litige en cours d'examen</p>
+                                <p className="text-[11.5px] text-orange-700 mt-0.5 leading-relaxed">
+                                    Vos fonds ont été sécurisés et l'état de cette réservation est bloqué. L'équipe AutoLoc analyse vos preuves et vous rendra un verdict rapidement.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Location en cours — message informatif */}
                     {r.statut === 'EN_COURS' && (
                         <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3.5">
