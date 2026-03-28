@@ -441,10 +441,6 @@ export function MarketplaceNavbar() {
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border-2 border-white" />
                 </Link>
 
-                {/* Currency selector : desktop uniquement dans la barre */}
-                <div className="hidden md:block">
-                  <CurrencySelector />
-                </div>
               </>
             )}
 
@@ -462,15 +458,8 @@ export function MarketplaceNavbar() {
                   </span>
                 </button>
 
-                {/* Desktop : Espace hôte dynamique selon hasVehicles + Mon compte */}
-                {hasVehicles === true ? (
-                  <Link
-                    href="/dashboard/owner"
-                    className="hidden md:inline-flex px-4 py-2 text-[13px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all duration-200"
-                  >
-                    Espace hôte PRO
-                  </Link>
-                ) : hasVehicles === false ? (
+                {/* Desktop : Mon compte (Espace hôte PRO est dans le dropdown) */}
+                {hasVehicles === false && (
                   <Link
                     href="/become-owner"
                     className="hidden md:inline-flex px-4 py-2 text-[13px] font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all duration-200 shadow-md shadow-slate-900/20"
@@ -478,15 +467,17 @@ export function MarketplaceNavbar() {
                     Devenir hôte
                     <span className="ml-1.5 w-2 h-2 bg-emerald-400 rounded-full border border-white/50" />
                   </Link>
-                ) : null}
+                )}
                 <div className="hidden md:block">
                   <ProfileDropdown hasVehicles={hasVehicles} />
                 </div>
               </>
             )}
 
-            {/* Currency selector : toujours visible à droite pour tout le monde */}
-            <CurrencySelector />
+            {/* Currency selector : toujours visible à droite pour tout le monde en mode desktop */}
+            <div className="hidden md:block">
+              <CurrencySelector />
+            </div>
           </div>
         </div>
 
@@ -581,6 +572,14 @@ export function MarketplaceNavbar() {
               </Link>
             </>
           )}
+
+          {/* ── SELECTEUR DE DEVISE MOBILE DANS LE MENU ── */}
+          <div className="md:hidden mt-2 px-4 py-2 border-t border-slate-100">
+            <div className="flex items-center justify-between">
+              <span className="text-[14px] font-medium tracking-tight text-slate-700">Devise</span>
+              <CurrencySelector />
+            </div>
+          </div>
 
           {/* ── CONNECTÉ : options utilisateur dans le menu ── */}
           {hydrated && loggedIn && (
