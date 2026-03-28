@@ -360,29 +360,8 @@ export function MarketplaceNavbar() {
         {/* ── Contenu principal (logo + nav + auth) ── */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between gap-6">
 
-          {/* Left slot : hamburger (toujours présent sur mobile) + logo */}
+          {/* Left slot : logo uniquement */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/*
-              Hamburger : unique déclencheur du menu mobile,
-              visible connecté ET déconnecté.
-            */}
-            <button
-              type="button"
-              onClick={() => setMenuOpen(o => !o)}
-              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-              className={cn(
-                'md:hidden flex items-center justify-center w-9 h-9 rounded-xl border transition-all duration-200',
-                menuOpen
-                  ? 'bg-slate-900 border-slate-800 text-white'
-                  : 'bg-white border-slate-200 text-black hover:bg-slate-50',
-              )}
-            >
-              {menuOpen
-                ? <X className="h-4 w-4" strokeWidth={2.5} />
-                : <Menu className="h-4 w-4" strokeWidth={2.5} />
-              }
-            </button>
-
             {/* Logo */}
             <Link href="/" className="group -ml-[5px]">
               <Image
@@ -451,16 +430,7 @@ export function MarketplaceNavbar() {
               <>
                 {/* Mobile : Le Profil circulaire a été supprimé car remplacé par le menu hamburger */}
 
-                {/* Desktop : Mon compte (Espace hôte PRO est dans le dropdown) */}
-                {hasVehicles === false && (
-                  <Link
-                    href="/become-owner"
-                    className="hidden md:inline-flex px-4 py-2 text-[13px] font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all duration-200 shadow-md shadow-slate-900/20"
-                  >
-                    Devenir hôte
-                    <span className="ml-1.5 w-2 h-2 bg-emerald-400 rounded-full border border-white/50" />
-                  </Link>
-                )}
+                {/* Desktop : Mon compte (Espace hôte PRO et Devenir hôte sont dans le dropdown) */}
                 <div className="hidden md:block">
                   <ProfileDropdown hasVehicles={hasVehicles} />
                 </div>
@@ -469,6 +439,27 @@ export function MarketplaceNavbar() {
 
             {/* Currency selector : toujours visible à droite pour tout le monde */}
             <CurrencySelector />
+
+            {/*
+              Hamburger : unique déclencheur du menu mobile,
+              déplacé à droite après le sélecteur de devises.
+            */}
+            <button
+              type="button"
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              className={cn(
+                'md:hidden flex items-center justify-center w-9 h-9 rounded-xl border transition-all duration-200',
+                menuOpen
+                  ? 'bg-slate-900 border-slate-800 text-white'
+                  : 'bg-white border-slate-200 text-black hover:bg-slate-50',
+              )}
+            >
+              {menuOpen
+                ? <X className="h-4 w-4" strokeWidth={2.5} />
+                : <Menu className="h-4 w-4" strokeWidth={2.5} />
+              }
+            </button>
           </div>
         </div>
 
