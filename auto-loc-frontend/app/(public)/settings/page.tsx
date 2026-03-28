@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { ApiError } from '@/lib/nestjs/api-client';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchUserProfile, type UserProfile } from '@/lib/nestjs/auth';
-import { SettingsForm } from '@/features/dashboard/components/settings-form';
+import { TenantSettings } from '@/components/settings/tenant-settings';
 import { Footer } from '@/features/landing/Footer';
 
 export const metadata: Metadata = {
@@ -38,19 +38,8 @@ export default async function SettingsPage() {
     }
 
     return (
-        <main className="min-h-screen bg-white">
-            <div className="mx-auto max-w-3xl px-4 py-8 lg:px-8 lg:py-12">
-                <div className="mb-8">
-                    <h1 className="text-2xl font-black tracking-tight text-black">
-                        Paramètres
-                    </h1>
-                    <p className="text-[14px] text-black/40 mt-1">
-                        Modifiez vos informations personnelles
-                    </p>
-                </div>
-
-                <SettingsForm profile={profile} />
-            </div>
+        <main className="min-h-screen bg-gray-50">
+            <TenantSettings profile={profile} />
             <Footer />
         </main>
     );

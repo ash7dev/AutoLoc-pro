@@ -182,7 +182,7 @@ function ProfileDropdown({
           ) : null}
           <DropdownItem href="/reservations" icon={CalendarRange} label="Mes réservations" />
           <DropdownItem href="/notifications" icon={Bell} label="Notifications" />
-          <DropdownItem href="/dashboard/settings/profile" icon={Settings} label="Paramètres" />
+          <DropdownItem href="/settings" icon={Settings} label="Paramètres" />
           <div className="my-2 border-t border-slate-50" />
           <DropdownItem
             icon={signingOut ? Loader2 : LogOut}
@@ -604,7 +604,7 @@ export function MarketplaceNavbar() {
                 Mes réservations
               </Link>
               <Link
-                href="/dashboard/settings/profile"
+                href="/settings"
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight text-black hover:bg-slate-50 transition-all duration-150"
               >
