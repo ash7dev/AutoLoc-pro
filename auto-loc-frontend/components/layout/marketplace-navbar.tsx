@@ -100,7 +100,7 @@ function ProfileDropdown({
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { switchToProprietaire } = useSwitchToProprietaire();
+  const { switchToProprietaire, loading: switchingRole } = useSwitchToProprietaire();
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -176,7 +176,7 @@ function ProfileDropdown({
         {/* Items */}
         <div className="p-2 space-y-0.5">
           {hasVehicles === true ? (
-            <DropdownItem onClick={() => { setOpen(false); switchToProprietaire(); }} icon={LayoutDashboard} label="Mon espace" badge="Pro" />
+            <DropdownItem onClick={() => { switchToProprietaire(); }} disabled={switchingRole} icon={switchingRole ? Loader2 : LayoutDashboard} label={switchingRole ? "Chargement..." : "Mon espace"} badge="Pro" />
           ) : hasVehicles === false ? (
             <DropdownItem href="/become-owner" icon={Building2} label="Devenir hôte" badge="Nouveau" />
           ) : null}
@@ -267,7 +267,7 @@ export function MarketplaceNavbar() {
   const hasVehicles = useHasVehiclesFromStore();
   const pathname = usePathname();
   const router = useRouter();
-  const { switchToProprietaire } = useSwitchToProprietaire();
+  const { switchToProprietaire, loading: switchingRole } = useSwitchToProprietaire();
 
   // Initialiser hasVehicles pour les utilisateurs déjà connectés
   useEffect(() => {
@@ -275,22 +275,18 @@ export function MarketplaceNavbar() {
       const accessToken = useRoleStore.getState().accessToken;
       if (accessToken) {
         fetchMe(accessToken).then(profile => {
-          if (profile.hasVehicles !== undefined) {
-            useRoleStore.getState().setHasVehicles(profile.hasVehicles);
-          }
+          useRoleStore.getState().setHasVehicles(Boolean(profile.hasVehicles));
         }).catch(() => {
-          // Erreur silencieuse - on garde null
+          useRoleStore.getState().setHasVehicles(false);
         });
       } else {
         fetch('/api/auth/me', { credentials: 'include' })
           .then(res => res.ok ? res.json() : Promise.reject())
           .then(profile => {
-            if (profile.hasVehicles !== undefined) {
-              useRoleStore.getState().setHasVehicles(profile.hasVehicles);
-            }
+            useRoleStore.getState().setHasVehicles(Boolean(profile.hasVehicles));
           })
           .catch(() => {
-            // Erreur silencieuse - on garde null
+            useRoleStore.getState().setHasVehicles(false);
           });
       }
     }
@@ -564,15 +560,20 @@ export function MarketplaceNavbar() {
                 <button
                   type="button"
                   onClick={() => {
-                    setMenuOpen(false);
+                    // Ne pas fermer le menu tout de suite pour laisser le temps de voir le loader
                     switchToProprietaire();
                   }}
-                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-semibold tracking-tight text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all duration-150"
+                  disabled={switchingRole}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-semibold tracking-tight text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all duration-150 disabled:opacity-70"
                 >
                   <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-100">
-                    <Car className="h-4 w-4" strokeWidth={2.5} />
+                    {switchingRole ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-emerald-700" strokeWidth={2.5} />
+                    ) : (
+                      <Car className="h-4 w-4" strokeWidth={2.5} />
+                    )}
                   </span>
-                  Mon espace
+                  {switchingRole ? "Chargement..." : "Mon espace"}
                   <span className="ml-auto px-2 py-0.5 bg-emerald-600 text-[10px] font-bold rounded-full text-emerald-50">
                     Pro
                   </span>
