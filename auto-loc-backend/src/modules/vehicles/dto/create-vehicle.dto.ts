@@ -11,7 +11,7 @@ import {
   IsArray,
   ValidateIf,
 } from 'class-validator';
-import { IsBoolean, IsUrl } from 'class-validator';
+import { IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Carburant, Transmission, TypeVehicule } from '@prisma/client';
 

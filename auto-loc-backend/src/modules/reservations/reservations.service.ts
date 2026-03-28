@@ -85,6 +85,8 @@ function serializeReservation(r: Record<string, unknown> & {
     confirmeeLe: r.confirmeeLe ?? undefined,
     checkinProprietaireLe: (r as Record<string, unknown>).checkinProprietaireLe ?? undefined,
     checkinLocataireLe: (r as Record<string, unknown>).checkinLocataireLe ?? undefined,
+    tacitCheckinDeadlineLe: (r as Record<string, unknown>).tacitCheckinDeadlineLe ?? undefined,
+    checkinLocataireSource: (r as Record<string, unknown>).checkinLocataireSource ?? undefined,
     checkInLe: r.checkinLe ?? undefined,
     checkOutLe: r.checkoutLe ?? undefined,
     annuleeLe: r.annuleLe ?? undefined,

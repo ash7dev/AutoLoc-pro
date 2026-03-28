@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   User,
   Shield,
@@ -29,45 +30,27 @@ interface OwnerSettingsProps {
 
 export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
   const { switchToLocataire, loading: switchingRole } = useSwitchToLocataire();
+  const queryClient = useQueryClient();
+  const accessToken = useRoleStore((state) => state.accessToken);
+
   const [activeTab, setActiveTab] = useState('profile');
   const [editingField, setEditingField] = useState<keyof typeof formData | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(initialProfile || null);
-  const [loading, setLoading] = useState(!initialProfile);
-  const [saving, setSaving] = useState(false);
   const [errorSync, setErrorSync] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
-    firstName: initialProfile?.prenom || '',
-    lastName: initialProfile?.nom || '',
-    email: initialProfile?.email || '',
-    phone: initialProfile?.telephone || '',
-    birthDate: initialProfile?.dateNaissance || '',
+  const { data: profile, isLoading: loadingProfile } = useQuery({
+    queryKey: ['userProfile', accessToken],
+    queryFn: () => fetchUserProfile(accessToken!),
+    enabled: !!accessToken && !initialProfile,
+    initialData: initialProfile || undefined,
   });
-  
-  // 1. Charger et synchroniser le profil seulement si non fourni
-  useEffect(() => {
-    // Si aucun profil n'est fourni (undefined ou null), on le charge
-    if (!initialProfile) {
-      const loadProfile = async () => {
-        try {
-          const accessToken = useRoleStore.getState().accessToken;
-          if (accessToken) {
-            const userProfile = await fetchUserProfile(accessToken);
-            setProfile(userProfile);
-          }
-        } catch (error) {
-          console.error('Error loading profile:', error);
-        } finally {
-          setLoading(false);
-        }
-      };
-      loadProfile();
-    } else {
-      // Si un profil est fourni, on l'utilise directement
-      setProfile(initialProfile);
-      setLoading(false);
-    }
-  }, [initialProfile]);
+
+  const [formData, setFormData] = useState({
+    firstName: profile?.prenom || '',
+    lastName: profile?.nom || '',
+    email: profile?.email || '',
+    phone: profile?.telephone || '',
+    birthDate: profile?.dateNaissance || '',
+  });
   
   useEffect(() => {
     if (profile) {
@@ -80,6 +63,25 @@ export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
       });
     }
   }, [profile]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: (payload: Partial<Pick<UserProfile, 'prenom' | 'nom' | 'dateNaissance'>>) => 
+      updateUserProfile(payload),
+    onSuccess: (_, variables) => {
+      queryClient.setQueryData(['userProfile', accessToken], (old: UserProfile | undefined) => {
+        if (!old) return old;
+        return { ...old, ...variables };
+      });
+      setEditingField(null);
+      setErrorSync(null);
+    },
+    onError: () => {
+      setErrorSync("Erreur lors de la mise à jour des informations.");
+    }
+  });
+
+  const loading = loadingProfile && !initialProfile;
+  const saving = updateProfileMutation.isPending;
 
   if (loading) {
     return (
@@ -99,29 +101,15 @@ export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
   const handleSave = async (field: keyof typeof formData) => {
     if (!profile) return;
     
-    setSaving(true);
     setErrorSync(null);
 
-    try {
-      // Préparation du payload précis
-      const payload: Partial<Pick<UserProfile, 'prenom' | 'nom' | 'dateNaissance'>> = {};
-      if (field === 'firstName') payload.prenom = formData.firstName;
-      if (field === 'lastName') payload.nom = formData.lastName;
-      if (field === 'birthDate') payload.dateNaissance = formData.birthDate;
+    // Préparation du payload précis
+    const payload: Partial<Pick<UserProfile, 'prenom' | 'nom' | 'dateNaissance'>> = {};
+    if (field === 'firstName') payload.prenom = formData.firstName;
+    if (field === 'lastName') payload.nom = formData.lastName;
+    if (field === 'birthDate') payload.dateNaissance = formData.birthDate;
 
-      // Appel au vrai endpoint NestJS
-      await updateUserProfile(payload);
-
-      // Mise à jour de l'état local du proxy `profile`
-      setProfile((prev) => prev ? { ...prev, ...payload } : prev);
-      
-      // Fin d'édition
-      setEditingField(null);
-    } catch (err) {
-      setErrorSync("Erreur lors de la mise à jour des informations.");
-    } finally {
-      setSaving(false);
-    }
+    updateProfileMutation.mutate(payload);
   };
 
   const cancelEdit = () => {

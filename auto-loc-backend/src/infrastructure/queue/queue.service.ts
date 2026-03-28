@@ -9,9 +9,11 @@ import {
   RESERVATION_CHECKIN_REMINDER_JOB,
   RESERVATION_AUTOCLOSE_JOB,
   RESERVATION_POST_CHECKOUT_JOB,
+  RESERVATION_TACIT_CHECKIN_REMINDER_JOB,
   NOTIFICATION_QUEUE_NAME,
   NOTIFICATION_JOB_NAME,
 } from './queue.config';
+import { getCheckoutAutoCloseDelayMs } from '../../domain/reservation/reservation-checkin.constants';
 
 const DEFAULT_PAYMENT_EXPIRY_MS = 15 * 60 * 1000;
 const DEFAULT_SIGNATURE_EXPIRY_MS = 48 * 60 * 60 * 1000;
@@ -102,18 +104,33 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     return String(job.id);
   }
 
-  // Auto-clôture 24h après la date de fin si pas de check-out.
+  // Auto-clôture 48h après la fin du dernier jour de location (fenêtre inspection proprio).
   async scheduleAutoClose(
     reservationId: string,
     dateFin: Date,
   ): Promise<string> {
-    const delayMs = dateFin.getTime() - Date.now() + ONE_DAY_MS;
+    const delayMs = getCheckoutAutoCloseDelayMs(dateFin);
     const job = await this.reservationQueue.add(
       RESERVATION_AUTOCLOSE_JOB,
       { reservationId },
-      { delay: Math.max(delayMs, 0) },
+      { delay: delayMs },
     );
     return String(job.id);
+  }
+
+  /** Rappels locataire H+0 et H+12 après check-in proprio (validation tacite annoncée). */
+  async scheduleTacitCheckinReminders(reservationId: string): Promise<void> {
+    const twelveHours = 12 * 60 * 60 * 1000;
+    await this.reservationQueue.add(
+      RESERVATION_TACIT_CHECKIN_REMINDER_JOB,
+      { reservationId, phase: 'immediate' as const },
+      { delay: 0 },
+    );
+    await this.reservationQueue.add(
+      RESERVATION_TACIT_CHECKIN_REMINDER_JOB,
+      { reservationId, phase: 'mid' as const },
+      { delay: twelveHours },
+    );
   }
 
   async scheduleNotification(

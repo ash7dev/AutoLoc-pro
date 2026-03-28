@@ -11,12 +11,17 @@ import {
   RESERVATION_CHECKIN_REMINDER_JOB,
   RESERVATION_AUTOCLOSE_JOB,
   RESERVATION_POST_CHECKOUT_JOB,
+  RESERVATION_TACIT_CHECKIN_REMINDER_JOB,
 } from '../queue.config';
 import { StatutReservation, StatutPaiement } from '@prisma/client';
+import { QueueService } from '../queue.service';
+import { isPastCheckoutInspectionWindow } from '../../../domain/reservation/reservation-checkin.constants';
 
 const DEFAULT_COUNTRY_CODE = '+221';
 const SYSTEM_SIGNATURE_REMINDER = 'SYSTEM_SIGNATURE_REMINDER';
 const SYSTEM_CHECKIN_REMINDER = 'SYSTEM_CHECKIN_REMINDER';
+const SYSTEM_TACIT_REMINDER_IMMEDIATE = 'SYSTEM_TACIT_REMINDER_IMMEDIATE';
+const SYSTEM_TACIT_REMINDER_MID = 'SYSTEM_TACIT_REMINDER_MID';
 
 @Processor(RESERVATION_QUEUE_NAME)
 export class ReservationExpiryProcessor {
@@ -24,6 +29,7 @@ export class ReservationExpiryProcessor {
     private readonly prisma: PrismaService,
     private readonly notification: NotificationService,
     private readonly expireUseCase: ExpireReservationUseCase,
+    private readonly queue: QueueService,
   ) { }
 
   @Process(RESERVATION_PAYMENT_EXPIRY_JOB)
@@ -128,24 +134,89 @@ export class ReservationExpiryProcessor {
     );
   }
 
+  @Process(RESERVATION_TACIT_CHECKIN_REMINDER_JOB)
+  async handleTacitCheckinReminder(
+    job: Job<{ reservationId: string; phase: 'immediate' | 'mid' }>,
+  ): Promise<void> {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: job.data.reservationId },
+      select: {
+        id: true,
+        statut: true,
+        checkinLocataireLe: true,
+        tacitCheckinDeadlineLe: true,
+        locataire: { select: { telephone: true, prenom: true } },
+      },
+    });
+    if (!reservation) return;
+    if (
+      reservation.statut !== StatutReservation.CONFIRMEE ||
+      reservation.checkinLocataireLe ||
+      !reservation.tacitCheckinDeadlineLe
+    ) {
+      return;
+    }
+
+    const tag =
+      job.data.phase === 'immediate'
+        ? SYSTEM_TACIT_REMINDER_IMMEDIATE
+        : SYSTEM_TACIT_REMINDER_MID;
+    if (await this.wasReminderSent(job.data.reservationId, tag)) {
+      return;
+    }
+
+    const phone = reservation.locataire?.telephone;
+    if (phone) {
+      const shortId = job.data.reservationId.slice(0, 8);
+      const body =
+        job.data.phase === 'immediate'
+          ? `AutoLoc : le propriétaire a enregistré le départ et l'état du véhicule. Validez votre check-in dans l'app sous 24 h. Sans action, la location sera considérée comme démarrée (rés. ${shortId}…).`
+          : `Rappel AutoLoc : validez votre check-in dans l'app. Sans validation, la location démarrera automatiquement selon l'état des lieux enregistré (rés. ${shortId}…).`;
+
+      await this.notification.sendWhatsApp({
+        to: this.normalizeWhatsAppNumber(phone),
+        body,
+      });
+    }
+
+    await this.markReminderSent(
+      job.data.reservationId,
+      StatutReservation.CONFIRMEE,
+      tag,
+    );
+  }
+
   @Process(RESERVATION_AUTOCLOSE_JOB)
   async handleAutoClose(
     job: Job<{ reservationId: string }>,
   ): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
+    const now = new Date();
+
+    const outcome = await this.prisma.$transaction(async (tx) => {
       const reservation = await tx.reservation.findUnique({
         where: { id: job.data.reservationId },
-        select: { id: true, statut: true },
+        select: {
+          id: true,
+          statut: true,
+          dateFin: true,
+          checkoutLe: true,
+        },
       });
-      if (!reservation) return;
+      if (!reservation) return { closed: false as const };
 
-      if (reservation.statut !== StatutReservation.EN_COURS) return;
+      if (reservation.statut !== StatutReservation.EN_COURS || reservation.checkoutLe) {
+        return { closed: false as const };
+      }
+
+      if (!isPastCheckoutInspectionWindow(reservation.dateFin, now)) {
+        return { closed: false as const };
+      }
 
       await tx.reservation.update({
         where: { id: reservation.id },
         data: {
           statut: StatutReservation.TERMINEE,
-          closeLe: new Date(),
+          checkoutLe: now,
           updatedBySystem: true,
         },
       });
@@ -158,7 +229,12 @@ export class ReservationExpiryProcessor {
           modifiePar: 'SYSTEM_AUTOCLOSE',
         },
       });
+      return { closed: true as const };
     });
+
+    if (outcome.closed) {
+      await this.queue.schedulePostCheckout(job.data.reservationId).catch(() => { });
+    }
   }
 
   @Process(RESERVATION_POST_CHECKOUT_JOB)

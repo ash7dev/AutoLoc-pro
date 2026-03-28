@@ -10,6 +10,8 @@ import { ConfirmReservationUseCase } from './use-cases/confirm-reservation.use-c
 import { ConfirmPaymentUseCase } from './use-cases/confirm-payment.use-case';
 import { CancelReservationUseCase } from './use-cases/cancel-reservation.use-case';
 import { CheckInUseCase } from './use-cases/checkin.use-case';
+import { CheckinSideEffectsService } from './checkin-side-effects.service';
+import { TacitCheckinUseCase } from './use-cases/tacit-checkin.use-case';
 import { CheckOutUseCase } from './use-cases/checkout.use-case';
 import { ExpireReservationUseCase } from './use-cases/expire-reservation.use-case';
 import { QueueModule } from '../../infrastructure/queue/queue.module';
@@ -39,7 +41,9 @@ import { WalletDomainModule } from '../wallet/wallet.domain.module';
         ConfirmReservationUseCase,
         ConfirmPaymentUseCase,
         CancelReservationUseCase,
+        CheckinSideEffectsService,
         CheckInUseCase,
+        TacitCheckinUseCase,
         CheckOutUseCase,
         ExpireReservationUseCase,
     ],
@@ -49,7 +53,9 @@ import { WalletDomainModule } from '../wallet/wallet.domain.module';
         ConfirmReservationUseCase,
         ConfirmPaymentUseCase,
         CancelReservationUseCase,
+        CheckinSideEffectsService,
         CheckInUseCase,
+        TacitCheckinUseCase,
         CheckOutUseCase,
         ExpireReservationUseCase,
         ReservationStateMachine,

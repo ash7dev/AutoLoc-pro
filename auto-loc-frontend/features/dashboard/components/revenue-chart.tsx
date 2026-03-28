@@ -137,16 +137,18 @@ export function RevenueChart({
                 ))}
               </div>
 
-              {/* Bars */}
-              <div className="absolute left-12 right-0 top-0 bottom-8 flex items-end gap-2">
+              {/* Bars — items-stretch + zone à hauteur définie : sinon height:% sur les barres se résout à 0 (parent auto) */}
+              <div className="absolute left-12 right-0 top-0 bottom-8 flex gap-2 items-stretch">
                 {loading
                   ? Array.from({ length: 7 }).map((_, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-2 animate-pulse">
-                      <div
-                        className="w-full rounded-t-md bg-muted"
-                        style={{ height: "40%" }}
-                      />
-                      <span className="text-xs text-muted-foreground">—</span>
+                    <div
+                      key={i}
+                      className="flex min-h-0 flex-1 flex-col gap-2 animate-pulse"
+                    >
+                      <div className="flex min-h-0 flex-1 flex-col justify-end">
+                        <div className="h-[40%] w-full rounded-t-md bg-muted" />
+                      </div>
+                      <span className="shrink-0 text-center text-xs text-muted-foreground">—</span>
                     </div>
                   ))
                   : data.map((point) => {
@@ -154,17 +156,19 @@ export function RevenueChart({
                     return (
                       <Tooltip key={point.day}>
                         <TooltipTrigger asChild>
-                          <div className="flex-1 flex flex-col items-center gap-2 group cursor-default">
-                            <div
-                              className={cn(
-                                "w-full rounded-t-md transition-all duration-200",
-                                point.highlight
-                                  ? "bg-emerald-400 group-hover:bg-emerald-500"
-                                  : "bg-emerald-200 group-hover:bg-emerald-300"
-                              )}
-                              style={{ height: `${heightPct}%` }}
-                            />
-                            <span className="text-xs text-muted-foreground truncate w-full text-center">
+                          <div className="group flex min-h-0 flex-1 cursor-default flex-col gap-2">
+                            <div className="flex min-h-0 flex-1 flex-col justify-end">
+                              <div
+                                className={cn(
+                                  "w-full rounded-t-md transition-all duration-200",
+                                  point.highlight
+                                    ? "bg-emerald-400 group-hover:bg-emerald-500"
+                                    : "bg-emerald-200 group-hover:bg-emerald-300",
+                                )}
+                                style={{ height: `${heightPct}%` }}
+                              />
+                            </div>
+                            <span className="w-full shrink-0 truncate text-center text-xs text-muted-foreground">
                               {point.day.split(" ")[0]}
                             </span>
                           </div>

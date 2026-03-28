@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { StatutReservation } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueueService } from '../infrastructure/queue/queue.service';
+import { TacitCheckinUseCase } from '../domain/reservation/use-cases/tacit-checkin.use-case';
+import { isPastCheckoutInspectionWindow } from '../domain/reservation/reservation-checkin.constants';
 
 /**
  * Auto-cancel unchecked-in reservations.
@@ -17,6 +20,7 @@ export class ReservationAutoCloseJob {
     constructor(
         private readonly prisma: PrismaService,
         private readonly queue: QueueService,
+        private readonly tacitCheckinUseCase: TacitCheckinUseCase,
     ) { }
 
     /**
@@ -170,34 +174,59 @@ export class ReservationAutoCloseJob {
     }
 
     /**
-     * Auto-close EN_COURS reservations past dateFin.
+     * Validation tacite check-in locataire (24h après check-in proprio + photos).
+     * Runs every 10 minutes.
+     */
+    @Cron(CronExpression.EVERY_10_MINUTES)
+    async handleTacitCheckinDeadline(): Promise<void> {
+        await this.tacitCheckinUseCase.processDue(new Date());
+    }
+
+    /**
+     * Auto-close EN_COURS → TERMINEE après fin de location + 48h (fenêtre inspection proprio).
      * Runs every 30 minutes.
      */
     @Cron(CronExpression.EVERY_30_MINUTES)
     async handleAutoClose() {
         const now = new Date();
 
-        const expired = await this.prisma.reservation.findMany({
+        const candidates = await this.prisma.reservation.findMany({
             where: {
-                statut: 'EN_COURS',
-                dateFin: { lt: now },
+                statut: StatutReservation.EN_COURS,
+                checkoutLe: null,
             },
-            select: { id: true },
+            select: { id: true, dateFin: true },
         });
+
+        const expired = candidates.filter((r) =>
+            isPastCheckoutInspectionWindow(r.dateFin, now),
+        );
 
         if (expired.length === 0) return;
 
-        this.logger.log(`Auto-closing ${expired.length} expired EN_COURS reservation(s)`);
+        this.logger.log(`Auto-closing ${expired.length} EN_COURS reservation(s) after inspection window`);
 
         for (const r of expired) {
             try {
-                await this.prisma.reservation.update({
-                    where: { id: r.id },
-                    data: {
-                        statut: 'TERMINEE',
-                        checkoutLe: now,
-                    },
+                await this.prisma.$transaction(async (tx) => {
+                    await tx.reservation.update({
+                        where: { id: r.id },
+                        data: {
+                            statut: StatutReservation.TERMINEE,
+                            checkoutLe: now,
+                            updatedBySystem: true,
+                        },
+                    });
+                    await tx.reservationHistorique.create({
+                        data: {
+                            reservationId: r.id,
+                            ancienStatut: StatutReservation.EN_COURS,
+                            nouveauStatut: StatutReservation.TERMINEE,
+                            modifiePar: 'SYSTEM_AUTOCLOSE_POST_INSPECTION',
+                        },
+                    });
                 });
+                await this.queue.schedulePostCheckout(r.id).catch(() => { });
             } catch (err) {
                 this.logger.error(`Failed to auto-close reservation ${r.id}`, err);
             }

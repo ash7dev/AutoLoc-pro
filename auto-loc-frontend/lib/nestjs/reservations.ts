@@ -66,6 +66,8 @@ export interface Reservation {
     annuleeLe?: string;
     checkinProprietaireLe?: string;
     checkinLocataireLe?: string;
+    tacitCheckinDeadlineLe?: string | null;
+    checkinLocataireSource?: 'USER' | 'SYSTEM_TACIT' | null;
     raisonAnnulation?: string | null;
     contratUrl?: string;
     vehicule: ReservationVehicle;

@@ -517,6 +517,11 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                 {/* ══════════════════════════════════════════════════
                     ALERTS
                 ══════════════════════════════════════════════════ */}
+                {r.tacitCheckinDeadlineLe && !r.checkinLocataireLe && r.statut === "CONFIRMEE" && (
+                    <Alert icon={Clock} bg="bg-blue-50" border="border-blue-200" iconBg="bg-blue-100 border-blue-200" iconColor="text-blue-500"
+                        title="En attente de validation du locataire"
+                        text={`Vous avez validé le départ. Si le locataire n'agit pas avant le ${fmtDateTime(r.tacitCheckinDeadlineLe)}, la location démarrera automatiquement.`} />
+                )}
                 {r.statut === "ANNULEE" && (
                     <Alert icon={XCircle} bg="bg-red-50" border="border-red-200" iconBg="bg-red-100 border-red-200" iconColor="text-red-500"
                         title="Réservation annulée" text="Cette réservation a été annulée. Contactez le support si vous avez des questions." />

@@ -13,24 +13,21 @@ const mockTx = {
 const mockPrisma = {
     utilisateur: { findUnique: jest.fn() },
     reservation: { findUnique: jest.fn() },
+    photoEtatLieu: { count: jest.fn().mockResolvedValue(1) },
     $transaction: jest.fn(async (fn: any) => fn(mockTx)),
 };
 
 const mockQueue = {
     scheduleAutoClose: jest.fn().mockResolvedValue('job-id'),
     scheduleNotification: jest.fn().mockResolvedValue('notif-id'),
+    scheduleTacitCheckinReminders: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockCheckinSideEffects = {
+    runAfterFinalizedCheckin: jest.fn().mockResolvedValue({ walletCredited: true }),
 };
 
 
-
-const mockCreditWallet = {
-    execute: jest.fn().mockResolvedValue({
-        walletId: 'wallet-123',
-        montantCredite: 85000,
-        nouveauSolde: 85000,
-        alreadyCredited: false,
-    }),
-};
 
 const PROPRIETAIRE_ID = 'prop-123';
 const LOCATAIRE_ID = 'loc-456';
@@ -58,7 +55,7 @@ describe('CheckInUseCase — Double Confirmation', () => {
         useCase = new CheckInUseCase(
             mockPrisma as any,
             mockQueue as any,
-            mockCreditWallet as any,
+            mockCheckinSideEffects as any,
         );
         mockPrisma.utilisateur.findUnique.mockResolvedValue({ id: PROPRIETAIRE_ID });
         mockPrisma.reservation.findUnique.mockResolvedValue({ ...baseReservation });
@@ -79,10 +76,9 @@ describe('CheckInUseCase — Double Confirmation', () => {
         expect(result.checkinLe).toBeNull();
         expect(result.finalized).toBe(false);
 
-        // Should NOT credit wallet
-        expect(mockCreditWallet.execute).not.toHaveBeenCalled();
-        // Should NOT schedule auto-close
+        expect(mockCheckinSideEffects.runAfterFinalizedCheckin).not.toHaveBeenCalled();
         expect(mockQueue.scheduleAutoClose).not.toHaveBeenCalled();
+        expect(mockQueue.scheduleTacitCheckinReminders).toHaveBeenCalled();
     });
 
     // ── 2. Both confirm → finalized with wallet credit ─────────────────────
@@ -105,10 +101,9 @@ describe('CheckInUseCase — Double Confirmation', () => {
         expect(result.finalized).toBe(true);
         expect(result.walletCredited).toBe(true);
 
-        // Should credit wallet
-        expect(mockCreditWallet.execute).toHaveBeenCalledWith(RESERVATION_ID);
-        // Should schedule auto-close
-        expect(mockQueue.scheduleAutoClose).toHaveBeenCalled();
+        expect(mockCheckinSideEffects.runAfterFinalizedCheckin).toHaveBeenCalledWith(
+            expect.objectContaining({ reservationId: RESERVATION_ID }),
+        );
     });
 
     // ── 3. Reverse order: tenant first, owner second ───────────────────────
@@ -208,5 +203,15 @@ describe('CheckInUseCase — Double Confirmation', () => {
         await expect(
             useCase.execute({ sub: 'owner-sub' } as any, RESERVATION_ID, { role: CheckInRole.PROPRIETAIRE }),
         ).rejects.toThrow(BusinessRuleException);
+    });
+
+    it('should reject owner check-in without at least one CHECKIN photo', async () => {
+        mockPrisma.photoEtatLieu.count.mockResolvedValue(0);
+
+        await expect(
+            useCase.execute({ sub: 'owner-sub' } as any, RESERVATION_ID, { role: CheckInRole.PROPRIETAIRE }),
+        ).rejects.toThrow(BusinessRuleException);
+
+        mockPrisma.photoEtatLieu.count.mockResolvedValue(1);
     });
 });

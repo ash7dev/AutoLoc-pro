@@ -500,6 +500,11 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                 {/* ══════════════════════════════════════════════════
                     ALERTS
                 ══════════════════════════════════════════════════ */}
+                {r.tacitCheckinDeadlineLe && !r.checkinLocataireLe && r.statut === 'CONFIRMEE' && (
+                    <Alert icon={AlertTriangle} bg="bg-amber-50" border="border-amber-200" iconBg="bg-amber-100 border-amber-200" iconColor="text-amber-500"
+                        title="Action requise : Validation Automatique"
+                        text={`Le propriétaire a signalé que vous avez récupéré le véhicule. Sans action de votre part avant le ${fmtDateTime(r.tacitCheckinDeadlineLe)}, la location sera considérée comme démarrée automatiquement.`} />
+                )}
                 {r.statut === 'ANNULEE' && (
                     <Alert icon={XCircle} bg="bg-red-50" border="border-red-200" iconBg="bg-red-100 border-red-200" iconColor="text-red-500"
                         title="Réservation annulée"

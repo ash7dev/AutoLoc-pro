@@ -14,6 +14,7 @@ export const RESERVATION_SIGNATURE_REMINDER_JOB = 'reservation-signature-reminde
 export const RESERVATION_CHECKIN_REMINDER_JOB = 'reservation-checkin-reminder';
 export const RESERVATION_AUTOCLOSE_JOB = 'reservation-autoclose';
 export const RESERVATION_POST_CHECKOUT_JOB = 'reservation-post-checkout';
+export const RESERVATION_TACIT_CHECKIN_REMINDER_JOB = 'reservation-tacit-checkin-reminder';
 
 // Aliases pour compatibilité avec les processors existants
 export const RESERVATION_EXPIRY_JOB_NAME = RESERVATION_PAYMENT_EXPIRY_JOB;

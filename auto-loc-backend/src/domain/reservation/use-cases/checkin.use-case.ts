@@ -3,13 +3,17 @@ import {
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
-import { StatutReservation } from '@prisma/client';
+import { CheckinLocataireSource, StatutReservation, TypeEtatLieu } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { QueueService } from '../../../infrastructure/queue/queue.service';
 import { RequestUser } from '../../../common/types/auth.types';
 import { BusinessRuleException } from '../../../common/exceptions/business-rule.exception';
 
-import { CreditWalletUseCase } from '../../wallet/use-cases/credit-wallet.use-case';
+import { CheckinSideEffectsService } from '../checkin-side-effects.service';
+import {
+    MIN_CHECKIN_ETAT_LIEU_PHOTOS,
+    TACIT_CHECKIN_MS,
+} from '../reservation-checkin.constants';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -42,7 +46,7 @@ export class CheckInUseCase {
     constructor(
         private readonly prisma: PrismaService,
         private readonly queue: QueueService,
-        private readonly creditWallet: CreditWalletUseCase,
+        private readonly checkinSideEffects: CheckinSideEffectsService,
     ) { }
 
     async execute(
@@ -70,7 +74,8 @@ export class CheckInUseCase {
                 checkinProprietaireLe: true,
                 checkinLocataireLe: true,
                 checkinLe: true,
-                locataire: { select: { telephone: true, prenom: true } },
+                tacitCheckinDeadlineLe: true,
+                locataire: { select: { telephone: true, prenom: true, email: true } },
                 proprietaire: { select: { telephone: true, prenom: true } },
             },
         });
@@ -129,6 +134,19 @@ export class CheckInUseCase {
             );
         }
 
+        // ── 7b. Propriétaire : au moins une photo d'état des lieux départ ───
+        if (input.role === 'PROPRIETAIRE') {
+            const photoCount = await this.prisma.photoEtatLieu.count({
+                where: { reservationId, type: TypeEtatLieu.CHECKIN },
+            });
+            if (photoCount < MIN_CHECKIN_ETAT_LIEU_PHOTOS) {
+                throw new BusinessRuleException(
+                    'Au moins une photo d\'état des lieux (départ) est requise avant le check-in propriétaire.',
+                    'CHECKIN_OWNER_PHOTOS_REQUIRED',
+                );
+            }
+        }
+
         // ── 8. Determine if this confirmation finalizes check-in ───────────
         const otherPartyConfirmed =
             input.role === 'PROPRIETAIRE'
@@ -144,11 +162,16 @@ export class CheckInUseCase {
             updateData.checkinProprietaireLe = confirmationTime;
         } else {
             updateData.checkinLocataireLe = confirmationTime;
+            updateData.checkinLocataireSource = CheckinLocataireSource.USER;
+            updateData.tacitCheckinDeadlineLe = null;
         }
 
         if (willFinalize) {
             updateData.checkinLe = confirmationTime;
             updateData.statut = StatutReservation.EN_COURS;
+            updateData.tacitCheckinDeadlineLe = null;
+        } else if (input.role === 'PROPRIETAIRE') {
+            updateData.tacitCheckinDeadlineLe = new Date(confirmationTime.getTime() + TACIT_CHECKIN_MS);
         }
 
         await this.prisma.$transaction(async (tx) => {
@@ -172,58 +195,42 @@ export class CheckInUseCase {
         // ── 10. Post-commit side effects (only if finalized) ───────────────
         let walletCredited = false;
         if (willFinalize) {
-            // 💰 Crédit wallet propriétaire
-            try {
-                const walletResult = await this.creditWallet.execute(reservationId);
-                walletCredited = !walletResult.alreadyCredited;
-            } catch (err) {
-                // Log but don't fail the check-in
-                // Wallet credit can be retried via admin or background job
-                const errMsg = err instanceof Error ? err.message : String(err);
-                process.stderr.write(`[CheckIn] Wallet credit failed for ${reservationId}: ${errMsg}\n`);
-            }
-
-            // Schedule auto-close 24h after dateFin
-            await this.queue
-                .scheduleAutoClose(reservationId, reservation.dateFin)
-                .catch(() => { });
-
-            // Notifications
+            const side = await this.checkinSideEffects.runAfterFinalizedCheckin({
+                reservationId,
+                dateFin: reservation.dateFin,
+                locataire: reservation.locataire,
+                proprietaire: reservation.proprietaire,
+            });
+            walletCredited = side.walletCredited;
+        } else if (input.role === 'PROPRIETAIRE') {
             await this.queue
                 .scheduleNotification({
-                    type: 'reservation.checkin',
+                    type: 'reservation.checkin.owner_confirmed',
                     data: {
                         reservationId,
                         locatairePhone: reservation.locataire?.telephone ?? null,
-                        locatairePrenom: reservation.locataire?.prenom ?? null,
                         proprietairePhone: reservation.proprietaire?.telephone ?? null,
-                        proprietairePrenom: reservation.proprietaire?.prenom ?? null,
                     },
                 })
                 .catch(() => { });
 
-            // Notification wallet
-            if (walletCredited) {
-                await this.queue
-                    .scheduleNotification({
-                        type: 'wallet.credited',
-                        data: {
-                            reservationId,
-                            proprietairePhone: reservation.proprietaire?.telephone ?? null,
-                            proprietairePrenom: reservation.proprietaire?.prenom ?? null,
-                        },
-                    })
-                    .catch(() => { });
-            }
-        } else {
-            // Notify the other party that they need to confirm
-            const notifType = input.role === 'PROPRIETAIRE'
-                ? 'reservation.checkin.owner_confirmed'
-                : 'reservation.checkin.tenant_confirmed';
+            await this.queue.scheduleTacitCheckinReminders(reservationId).catch(() => { });
 
             await this.queue
                 .scheduleNotification({
-                    type: notifType,
+                    type: 'reservation.checkin.tacit_window',
+                    data: {
+                        reservationId,
+                        locatairePhone: reservation.locataire?.telephone ?? null,
+                        locatairePrenom: reservation.locataire?.prenom ?? null,
+                        email: reservation.locataire?.email ?? undefined,
+                    },
+                })
+                .catch(() => { });
+        } else {
+            await this.queue
+                .scheduleNotification({
+                    type: 'reservation.checkin.tenant_confirmed',
                     data: {
                         reservationId,
                         locatairePhone: reservation.locataire?.telephone ?? null,

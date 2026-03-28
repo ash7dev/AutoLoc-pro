@@ -20,7 +20,6 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { RevalidateModule } from './infrastructure/revalidate/revalidate.module';
 import { WalletModule } from './modules/wallet/wallet.module';
-import { ReservationAutoCloseJob } from './jobs/reservation-auto-close.job';
 
 // Sentry (optional — active only if SENTRY_DSN is set)
 const SENTRY_DSN = process.env.SENTRY_DSN;
@@ -81,8 +80,6 @@ if (SENTRY_DSN) {
   providers: [
     // Global rate limiter guard
     { provide: APP_GUARD, useClass: ThrottlerGuard },
-    // Scheduled jobs
-    ReservationAutoCloseJob,
   ],
 })
 export class AppModule { }

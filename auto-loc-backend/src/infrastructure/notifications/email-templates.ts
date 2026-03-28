@@ -12,6 +12,8 @@ export type NotificationType =
     | 'reservation.checkin.tenant_confirmed'
     | 'reservation.checkin.reminder_veille'
     | 'reservation.checkin.reminder_jour'
+    | 'reservation.checkin.tacit_window'
+    | 'reservation.checkin.tacit_applied'
     | 'reservation.checkout'
     | 'avis.recu'
     | 'kyc.verified'
@@ -428,6 +430,42 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
                     { label: 'Propriétaire', value: '⏳ En attente', icon: '👤' },
                 ]),
                 alertBox('Connectez-vous sur AutoLoc et confirmez le check-in depuis votre espace réservation.', 'warning'),
+            ].join(''),
+        }),
+    },
+
+    // ── Fenêtre validation tacite (email locataire, en parallèle des relances WhatsApp) ─
+
+    'reservation.checkin.tacit_window': {
+        subject: '⏱️ 24 h pour valider votre check-in — AutoLoc',
+        body: (data) => baseLayout({
+            title: 'Le propriétaire a enregistré le départ',
+            subtitle: 'Validez ou signalez un problème dans les 24 heures.',
+            badge: { text: 'Action requise', color: '#92400e', bg: '#fffbeb' },
+            accentColor: '#f59e0b',
+            cta: { label: 'Ouvrir la réservation', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
+            content: [
+                p('Le propriétaire a confirmé le check-in et l’état des lieux de départ. <strong>Validez votre check-in</strong> dans l’application ou signalez un litige si vous n’êtes pas d’accord.'),
+                p('Sans action de votre part dans les <strong>24 heures</strong>, la location sera considérée comme démarrée sur la base de l’état des lieux enregistré par le propriétaire (validation tacite, voir CGU).'),
+                infoCard([
+                    { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
+                ]),
+            ].join(''),
+        }),
+    },
+
+    'reservation.checkin.tacit_applied': {
+        subject: '🟢 Location démarrée — validation tacite du check-in',
+        body: (data) => baseLayout({
+            title: 'Check-in validé automatiquement',
+            subtitle: 'Vous n’aviez pas confirmé dans le délai imparti.',
+            badge: { text: 'En cours', color: EMERALD_DARK, bg: EMERALD_BG },
+            cta: { label: 'Voir la réservation', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
+            content: [
+                p('La location est considérée comme <strong>démarrée</strong> : vous pouvez encore <strong>signaler un problème</strong> via le support ou la section litige selon nos conditions générales.'),
+                infoCard([
+                    { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
+                ]),
             ].join(''),
         }),
     },

@@ -270,6 +270,10 @@ model Reservation {
   confirmeeLe     DateTime?
   checkinProprietaireLe DateTime?
   checkinLocataireLe    DateTime?
+  // Fin fenêtre 24h après check-in proprio (photos OK) — validation tacite locataire
+  tacitCheckinDeadlineLe DateTime?
+  // Locataire : USER (manuel) ou SYSTEM_TACIT (cron)
+  checkinLocataireSource CheckinLocataireSource?
   checkinLe       DateTime?
   checkoutLe      DateTime?
   closeLe         DateTime?
@@ -304,6 +308,7 @@ model Reservation {
   @@index([proprietaireId, statut])
   @@index([statut])
   @@index([delaiSignature, statut])
+  @@index([statut, tacitCheckinDeadlineLe])
   // 🔴 ANTI DOUBLE BOOKING : ajouter en migration SQL manuelle :
   // CREATE EXTENSION IF NOT EXISTS btree_gist;
   // ALTER TABLE "Reservation" ADD CONSTRAINT no_double_booking
@@ -311,6 +316,11 @@ model Reservation {
   //   "vehiculeId" WITH =,
   //   daterange("dateDebut", "dateFin", '[]') WITH &&
   // ) WHERE (statut NOT IN ('ANNULEE'));
+}
+
+enum CheckinLocataireSource {
+  USER
+  SYSTEM_TACIT
 }
 
 enum StatutReservation {

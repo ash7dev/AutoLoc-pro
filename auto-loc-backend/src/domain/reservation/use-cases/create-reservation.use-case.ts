@@ -18,7 +18,6 @@ import {
     IdempotencyResult,
 } from '../reservation-idempotency.service';
 import { RevalidateService } from '../../../infrastructure/revalidate/revalidate.service';
-import { NotificationService } from '../../../infrastructure/notifications/notification.service';
 import { TelegramService } from '../../../infrastructure/telegram/telegram.service';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -59,7 +58,6 @@ export class CreateReservationUseCase {
         private readonly availability: ReservationAvailabilityService,
         private readonly idempotency: ReservationIdempotencyService,
         private readonly revalidate: RevalidateService,
-        private readonly notification: NotificationService,
         private readonly telegram: TelegramService,
     ) { }
 
