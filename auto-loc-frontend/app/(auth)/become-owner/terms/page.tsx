@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '../../../../lib/supabase/server';
 import { fetchMe } from '../../../../lib/nestjs/auth';
+import { headers } from 'next/headers';
 
 /**
  * /become-owner/terms — Page de validation des conditions propriétaire
  * - Non connecté → /login
- * - Déjà PROPRIETAIRE → /dashboard/owner
  * - ADMIN → /dashboard/admin
- * - LOCATAIRE → affiche les termes (le switch sera fait côté client)
+ * - PROPRIETAIRE ou LOCATAIRE → affiche les termes (la validation se fait côté client)
  */
 export default async function OwnerTermsPage() {
   const supabase = createSupabaseServerClient();
@@ -20,16 +20,12 @@ export default async function OwnerTermsPage() {
 
   const profile = await fetchMe(token);
 
-  if (profile.role === 'PROPRIETAIRE') {
-    redirect('/dashboard/owner');
-  }
-
   if (profile.role === 'ADMIN') {
     redirect('/dashboard/admin');
   }
 
-  // Pour les LOCATAIRE, on affiche directement la page des termes
-  // Le switch vers PROPRIETAIRE sera géré côté client dans le composant
+  // Pour PROPRIETAIRE et LOCATAIRE, on affiche toujours la page des termes
+  // La logique de redirection sera gérée côté client dans le composant
   // Import dynamique pour éviter les problèmes de SSR
   const { OwnerTermsValidation } = await import('../../../../features/owner/become-owner/components/owner-terms-validation');
   return <OwnerTermsValidation />;

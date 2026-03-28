@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Shield, 
   AlertTriangle, 
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSwitchToLocataire } from '../../../owner/hooks/use-switch-to-locataire';
+import { useRoleStore } from '../../../auth/stores/role.store';
 
 // Basé sur vos CGU réelles - Article 3: Obligations du propriétaire
 const OWNER_OBLIGATIONS = [
@@ -90,6 +91,15 @@ export function OwnerTermsValidation() {
   const [understoodSanctions, setUnderstoodSanctions] = useState(false);
   const router = useRouter();
   const { switchToLocataire, loading: switchingBack } = useSwitchToLocataire();
+  const activeRole = useRoleStore((s) => s.activeRole);
+
+  // Si l'utilisateur est déjà PROPRIETAIRE et accède directement à cette page,
+  // on le redirige vers le dashboard
+  useEffect(() => {
+    if (activeRole === 'PROPRIETAIRE' && document.referrer === '') {
+      router.replace('/dashboard/owner');
+    }
+  }, [activeRole, router]);
 
   const handleAccept = () => {
     if (!acceptedTerms || !understoodSanctions) return;
