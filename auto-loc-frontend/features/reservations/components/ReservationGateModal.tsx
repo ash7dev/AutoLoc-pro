@@ -14,7 +14,7 @@ import { apiFetch } from "@/lib/nestjs/api-client";
 import { cn } from "@/lib/utils";
 
 /* ── Types ───────────────────────────────────────────────── */
-type Gate = "phone" | "kyc" | "permis" | "age" | "ready";
+type Gate = "phone" | "kyc" | "permis" | "age" | "age_phone" | "create_profile" | "ready";
 type StepStatus = "done" | "pending" | "rejected" | "required";
 
 interface Step {
@@ -28,28 +28,35 @@ interface Step {
 
 /* ── Helpers ─────────────────────────────────────────────── */
 function resolveGate(profile: ProfileResponse, ageMinimum?: number, userAge?: number): Gate {
-  // Si l'âge n'est pas requis, on passe directement aux autres vérifications
-  if (!ageMinimum || ageMinimum <= 0) {
-    if (!profile.hasUtilisateur) return "phone";
-    if (!profile.phoneVerified || !profile.phone) return "phone";
-    const kyc = profile.kycStatus;
-    if (!kyc || kyc === "NON_VERIFIE" || kyc === "REJETE") return "kyc";
-    if (!profile.hasPermis) return "permis";
-    return "ready";
+  // Pas d'utilisateur → formulaire de création complet (prénom + nom + date + tél)
+  if (!profile.hasUtilisateur) return "create_profile";
+
+  const phoneMissing = !profile.phoneVerified || !profile.phone;
+
+  // Vérification âge si requis
+  if (ageMinimum && ageMinimum > 0) {
+    const ageDateMissing = !profile.dateNaissance;
+    const ageInsuffisant = !ageDateMissing && userAge !== undefined && userAge < ageMinimum;
+
+    if (ageDateMissing) {
+      // Âge inconnu : combiner avec tél si aussi manquant
+      if (phoneMissing) return "age_phone"; // date + tél dans un seul formulaire
+      return "age"; // date uniquement
+    }
+
+    if (ageInsuffisant) return "age"; // bloquant — affiché comme AgeInsufficientBlock
   }
 
-  // Si l'âge est requis, on vérifie en priorité absolue
-  if (!profile.hasUtilisateur) return "phone";
-  if (!profile.phoneVerified || !profile.phone) return "phone";
-  
-  // Vérification âge obligatoire
-  if (!profile.dateNaissance) return "age";
-  if (userAge && userAge < ageMinimum) return "age";
-  
-  // Âge OK, on continue avec les autres vérifications
+  // Téléphone → flux OTP
+  if (phoneMissing) return "phone";
+
+  // KYC
   const kyc = profile.kycStatus;
   if (!kyc || kyc === "NON_VERIFIE" || kyc === "REJETE") return "kyc";
+
+  // Permis
   if (!profile.hasPermis) return "permis";
+
   return "ready";
 }
 
@@ -248,7 +255,7 @@ function PreGateOverlay({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-[2px] px-0 sm:px-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-[2px] px-0 sm:px-4 animate-in fade-in duration-200"
       onClick={onCancel}
     >
       <div
@@ -374,48 +381,131 @@ function AgeInsufficientBlock({ ageMinimum, userAge, onClose }: {
   );
 }
 
-/* ── Age Gate Component — Scénario 4 ─────────────────────── */
-function AgeGate({ 
-  onProceed, 
-  ageMinimum, 
-  currentAge,
-  hasDateNaissance 
-}: { 
-  onProceed: () => void; 
-  ageMinimum: number; 
-  currentAge?: number;
-  hasDateNaissance: boolean;
-}) {
-  const [dateNaissance, setDateNaissance] = useState('');
+/* ── CreateProfileGate — pas d'utilisateur, formulaire complet ─ */
+function CreateProfileGate({ onComplete }: { onComplete: () => void }) {
+  const [form, setForm] = useState({ prenom: '', nom: '', dateNaissance: '', phone: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const maxDate = new Date();
+  maxDate.setFullYear(maxDate.getFullYear() - 18);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!dateNaissance) {
-      setError('Veuillez sélectionner votre date de naissance');
-      return;
+    setLoading(true);
+    setError('');
+    try {
+      await apiFetch('/auth/complete-profile', {
+        method: 'POST',
+        body: {
+          prenom: form.prenom,
+          nom: form.nom,
+          telephone: form.phone,
+          dateNaissance: form.dateNaissance || undefined,
+        },
+      });
+      onComplete();
+    } catch {
+      setError('Erreur lors de la création du profil. Veuillez réessayer.');
+    } finally {
+      setLoading(false);
     }
+  };
 
+  const field = (label: string, inputProps: React.InputHTMLAttributes<HTMLInputElement>) => (
+    <div>
+      <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">{label}</label>
+      <input
+        {...inputProps}
+        className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3
+          text-[12.5px] font-medium text-slate-800 placeholder-slate-400
+          focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
+      />
+    </div>
+  );
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        {field('Prénom *', {
+          type: 'text', required: true, value: form.prenom,
+          onChange: e => setForm(p => ({ ...p, prenom: e.target.value })),
+        })}
+        {field('Nom *', {
+          type: 'text', required: true, value: form.nom,
+          onChange: e => setForm(p => ({ ...p, nom: e.target.value })),
+        })}
+      </div>
+      {field('Date de naissance', {
+        type: 'date', value: form.dateNaissance,
+        max: maxDate.toISOString().split('T')[0],
+        onChange: e => setForm(p => ({ ...p, dateNaissance: e.target.value })),
+      })}
+      {field('Numéro de téléphone *', {
+        type: 'tel', required: true, value: form.phone,
+        placeholder: '+221 77 000 00 00',
+        onChange: e => setForm(p => ({ ...p, phone: e.target.value })),
+      })}
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+          <p className="text-[11.5px] font-medium text-red-700">{error}</p>
+        </div>
+      )}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700
+          disabled:bg-slate-200 disabled:text-slate-400 text-white text-[13.5px] font-bold
+          py-3 px-5 transition-all duration-200"
+      >
+        {loading
+          ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Création...</>
+          : <>Créer mon profil<ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>}
+      </button>
+    </form>
+  );
+}
+
+/* ── AgePhoneGate — date + téléphone en un seul formulaire ─── */
+function AgePhoneGate({ ageMinimum, onComplete }: { ageMinimum: number; onComplete: () => void }) {
+  const [dateNaissance, setDateNaissance] = useState('');
+  const [phone, setPhone] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const maxDate = new Date();
+  maxDate.setFullYear(maxDate.getFullYear() - 18);
+  const minDate = new Date();
+  minDate.setFullYear(minDate.getFullYear() - 100);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validation âge côté client
     const birthDate = new Date(dateNaissance);
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-
     if (age < ageMinimum) {
-      setError(`Âge minimum requis : ${ageMinimum} ans. Vous avez ${age} ans.`);
+      setError(`Âge minimum requis : ${ageMinimum} ans. Vous avez ${age} ans.`);
       return;
     }
 
     setLoading(true);
+    setError('');
     try {
-      // ✅ Correct route: PATCH /users/me/profile
+      // 1. Enregistrer la date de naissance
       await apiFetch('/users/me/profile', {
         method: 'PATCH',
-        body: { dateNaissance: birthDate.toISOString().split('T')[0] }
+        body: { dateNaissance: birthDate.toISOString().split('T')[0] },
       });
-      onProceed();
+      // 2. Enregistrer le téléphone
+      await apiFetch('/auth/phone/update', {
+        method: 'POST',
+        body: { telephone: phone },
+      });
+      onComplete();
     } catch {
       setError('Erreur lors de la mise à jour. Veuillez réessayer.');
     } finally {
@@ -423,72 +513,56 @@ function AgeGate({
     }
   };
 
-  const maxDate = new Date();
-  maxDate.setFullYear(maxDate.getFullYear() - 18);
-  const minDate = new Date();
-  minDate.setFullYear(minDate.getFullYear() - 100);
-
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-        <div className="flex items-start gap-3">
-          <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <AlertCircle className="w-3.5 h-3.5 text-amber-600" strokeWidth={2} />
-          </div>
-          <div>
-            <p className="text-[12.5px] font-bold text-amber-800">Vérification de l'âge requise</p>
-            <p className="text-[11.5px] text-amber-700 mt-0.5 leading-relaxed">
-              Pour réserver ce véhicule, vous devez avoir au moins {ageMinimum} ans.
-            </p>
-          </div>
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div>
+        <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">
+          Date de naissance *
+        </label>
+        <input
+          type="date"
+          value={dateNaissance}
+          onChange={e => { setDateNaissance(e.target.value); setError(''); }}
+          max={maxDate.toISOString().split('T')[0]}
+          min={minDate.toISOString().split('T')[0]}
+          required
+          className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3
+            text-[12.5px] font-medium text-slate-800
+            focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
+        />
       </div>
-
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label className="block text-[12.5px] font-semibold text-slate-700 mb-2">
-            Date de naissance *
-          </label>
-          <input
-            type="date"
-            value={dateNaissance}
-            onChange={(e) => { setDateNaissance(e.target.value); setError(''); }}
-            max={maxDate.toISOString().split('T')[0]}
-            min={minDate.toISOString().split('T')[0]}
-            className="w-full h-11 rounded-lg border border-slate-200 bg-white px-4
-              text-[13px] font-medium text-slate-800 placeholder-slate-400
-              focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
-            required
-          />
+      <div>
+        <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">
+          Numéro de téléphone *
+        </label>
+        <input
+          type="tel"
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
+          placeholder="+221 77 000 00 00"
+          required
+          className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3
+            text-[12.5px] font-medium text-slate-800 placeholder-slate-400
+            focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
+        />
+      </div>
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+          <p className="text-[11.5px] font-medium text-red-700">{error}</p>
         </div>
-
-        {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-            <p className="text-[11.5px] font-medium text-red-700">{error}</p>
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading || !dateNaissance}
-          className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700
-            disabled:bg-slate-200 disabled:text-slate-400 text-white text-[13.5px] font-bold
-            py-3 px-5 transition-all duration-200"
-        >
-          {loading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Vérification...
-            </>
-          ) : (
-            <>
-              Confirmer mon âge
-              <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
-            </>
-          )}
-        </button>
-      </form>
-    </div>
+      )}
+      <button
+        type="submit"
+        disabled={loading || !dateNaissance || !phone}
+        className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700
+          disabled:bg-slate-200 disabled:text-slate-400 text-white text-[13.5px] font-bold
+          py-3 px-5 transition-all duration-200"
+      >
+        {loading
+          ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Enregistrement...</>
+          : <>Confirmer<ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>}
+      </button>
+    </form>
   );
 }
 
@@ -577,32 +651,51 @@ export function ReservationGateModal({
   return (
     <ModalShell
       title={
+        gate === "create_profile" ? "Créez votre profil" :
+        gate === "age_phone" ? "Informations requises" :
+        gate === "age" ? "Vérification de l'age" :
         gate === "phone" ? "Vérifiez votre téléphone" :
-          gate === "kyc" ? "Vérifiez votre identité" :
-            gate === "permis" ? "Permis de conduire requis" :
-              gate === "age" ? "Vérification de l'âge" :
-                "Complétez votre profil"
+        gate === "kyc" ? "Vérifiez votre identité" :
+        gate === "permis" ? "Permis de conduire requis" :
+        "Complétez votre profil"
       }
       subtitle={
+        gate === "create_profile" ? "Prénom, nom, date de naissance et téléphone." :
+        gate === "age_phone" ? `Ce véhicule nécessite ${ageMinimum} ans minimum — renseignez votre date de naissance et votre numéro.` :
+        gate === "age" ? `Ce véhicule nécessite un âge minimum de ${ageMinimum} ans.` :
         gate === "phone" ? "Étape requise pour sécuriser votre réservation." :
-          gate === "kyc" ? "Soumettez vos documents pour continuer — la validation se fait en parallèle." :
-            gate === "permis" ? "Une photo de votre permis est nécessaire." :
-              gate === "age" ? `Ce véhicule nécessite un âge minimum de ${ageMinimum} ans.` :
-                "Finalisez votre profil pour continuer."
+        gate === "kyc" ? "Soumettez vos documents pour continuer — la validation se fait en parallèle." :
+        gate === "permis" ? "Une photo de votre permis est nécessaire." :
+        "Finalisez votre profil pour continuer."
       }
       tag="Auto Loc · Locataire"
       onClose={() => onOpenChange(false)}
       contentClassName="px-6 pt-6 pb-6"
     >
-      {/* Scénario 4 : Âge manquant → simple champ date */}
+      {/* Pas d'utilisateur : formulaire complet (prénom + nom + date + tél) */}
+      {gate === "create_profile" && (
+        <CreateProfileGate onComplete={refreshProfile} />
+      )}
+
+      {/* Âge + téléphone manquants : date + tél dans un seul formulaire */}
+      {gate === "age_phone" && (
+        <AgePhoneGate
+          ageMinimum={ageMinimum || 18}
+          onComplete={refreshProfile}
+        />
+      )}
+
+      {/* Scénario 4 : Âge manquant uniquement → 1 seul input */}
       {gate === "age" && (
         <AgeGate
-          onProceed={() => { refreshProfile(); }}
+          onProceed={refreshProfile}
           ageMinimum={ageMinimum || 18}
           currentAge={userAge}
           hasDateNaissance={!!currentProfile.dateNaissance}
         />
       )}
+
+      {/* Téléphone seul manquant → flux OTP */}
       {gate === "phone" && (
         <PhoneVerifyGate
           profile={currentProfile}

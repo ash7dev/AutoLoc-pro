@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import {
   MapPin, Star, Shield, ChevronLeft, ChevronRight,
-  Car, Share2, Heart, Images, X,
+  Car, Images, X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Vehicle } from '@/lib/nestjs/vehicles';
@@ -279,21 +279,10 @@ export function VehicleDetailHero({ vehicle }: Props): React.ReactElement {
   const photos = vehicle.photos ?? [];
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [liked, setLiked] = useState(false);
   const { formatPrice } = useCurrency();
 
   const prev = () => setActiveIndex(i => (i > 0 ? i - 1 : photos.length - 1));
   const next = () => setActiveIndex(i => (i < photos.length - 1 ? i + 1 : 0));
-
-  const handleShare = async () => {
-    const url = window.location.href;
-    const title = `${vehicle.marque} ${vehicle.modele} — AutoLoc`;
-    if (navigator.share) {
-      await navigator.share({ title, url }).catch(() => {});
-    } else {
-      await navigator.clipboard.writeText(url).catch(() => {});
-    }
-  };
 
   return (
     <>
@@ -319,14 +308,7 @@ export function VehicleDetailHero({ vehicle }: Props): React.ReactElement {
               </span>
             )}
             <div className="ml-auto flex gap-1.5">
-              <button type="button" onClick={handleShare}
-                className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50 transition-colors">
-                <Share2 className="w-3.5 h-3.5 text-slate-600" strokeWidth={2} />
-              </button>
-              <button type="button" onClick={() => setLiked(l => !l)}
-                className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50 transition-colors">
-                <Heart className={cn('w-3.5 h-3.5 transition-colors', liked ? 'fill-red-500 text-red-500' : 'text-slate-600')} strokeWidth={2} />
-              </button>
+              {/* Bouton partage supprimé */}
             </div>
           </div>
 
@@ -357,16 +339,9 @@ export function VehicleDetailHero({ vehicle }: Props): React.ReactElement {
             )}
           </div>
 
-          {/* Overlay: action buttons */}
+          {/* Overlay: action buttons supprimées */}
           <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-            <button type="button" onClick={handleShare}
-              className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white hover:scale-105 transition-all duration-150">
-              <Share2 className="w-4 h-4 text-slate-700" strokeWidth={2} />
-            </button>
-            <button type="button" onClick={() => setLiked(l => !l)}
-              className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white hover:scale-105 transition-all duration-150">
-              <Heart className={cn('w-4 h-4 transition-colors', liked ? 'fill-red-500 text-red-500' : 'text-slate-700')} strokeWidth={2} />
-            </button>
+            {/* Espace vide */}
           </div>
 
         </div>
