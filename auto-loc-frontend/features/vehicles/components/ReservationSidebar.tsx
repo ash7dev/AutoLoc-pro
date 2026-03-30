@@ -14,7 +14,7 @@ import { useCurrency } from '@/providers/currency-provider';
 import { apiFetch, ApiError } from '@/lib/nestjs/api-client';
 import type { ProfileResponse } from '@/lib/nestjs/auth';
 import { ReservationCalendar } from '@/features/vehicles/components/ReservationCalendar';
-import { ReservationGateModal } from '@/features/reservations/components/ReservationGateModal';
+import { DirectGateModal } from "@/features/reservations/components/DirectGateModal";
 
 function calculateAge(dateStr: string): number {
   const birth = new Date(dateStr);
@@ -127,84 +127,8 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
     setGateLoading(true);
     try {
       const profile = await apiFetch<ProfileResponse>('/auth/me');
-
-      // Calcul de l'âge si date de naissance disponible
-      let userAge: number | undefined;
-      if (profile.dateNaissance) {
-        const birth = new Date(profile.dateNaissance);
-        const today = new Date();
-        let age = today.getFullYear() - birth.getFullYear();
-        const m = today.getMonth() - birth.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-        userAge = age;
-      }
-
-      // Optimisation : détection précoce et messages ciblés
-      if (ageMinimum && ageMinimum > 0) {
-        if (!profile.dateNaissance) {
-          setInlineError(
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
-              <div>
-                <p className="text-[12.5px] font-bold text-amber-800">Âge requis pour ce véhicule</p>
-                <p className="text-[11.5px] text-amber-700 mt-0.5 leading-relaxed">
-                  Ce véhicule nécessite <strong>{ageMinimum} ans minimum</strong>. 
-                  Veuillez{' '}
-                  <Link href="/dashboard/settings/profile" className="underline font-bold hover:text-amber-900">
-                    renseigner votre date de naissance
-                  </Link>{' '}
-                  pour continuer.
-                </p>
-              </div>
-            </div>
-          );
-          setGateLoading(false);
-          return;
-        }
-        
-        if (userAge && userAge < ageMinimum) {
-          setInlineError(
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
-              <div>
-                <p className="text-[12.5px] font-bold text-red-800">Âge insuffisant</p>
-                <p className="text-[11.5px] text-red-700 mt-0.5 leading-relaxed">
-                  Âge minimum requis : <strong>{ageMinimum} ans</strong>. 
-                  Vous avez <strong>{userAge} ans</strong>.
-                </p>
-              </div>
-            </div>
-          );
-          setGateLoading(false);
-          return;
-        }
-      }
-
-      // Si l'âge n'est pas requis, on vérifie les autres étapes
-      if (!ageMinimum || ageMinimum <= 0) {
-        const needsPhone = !profile.phoneVerified || !profile.phone;
-        const needsKyc = profile.kycStatus !== 'VERIFIE';
-        const needsPermis = !profile.hasPermis;
-        
-        if (needsPhone || needsKyc || needsPermis) {
-          setGateProfile(profile);
-          setGateOpen(true);
-          return;
-        }
-      } else {
-        // Si l'âge est requis et valide, on vérifie les autres étapes
-        const needsPhone = !profile.phoneVerified || !profile.phone;
-        const needsKyc = profile.kycStatus !== 'VERIFIE';
-        const needsPermis = !profile.hasPermis;
-        
-        if (needsPhone || needsKyc || needsPermis) {
-          setGateProfile(profile);
-          setGateOpen(true);
-          return;
-        }
-      }
-
-      router.push(`/vehicle/${vehicleId}/payment?${buildParams().toString()}`);
+      setGateProfile(profile);
+      setGateOpen(true);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         const redirect = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
@@ -219,7 +143,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
 
   return (
     <div className="sticky top-[76px] space-y-3">
-      <ReservationGateModal
+      <DirectGateModal
         open={gateOpen}
         onOpenChange={setGateOpen}
         profile={gateProfile}
