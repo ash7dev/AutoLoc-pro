@@ -102,6 +102,9 @@ export default async function VehicleDetailPage({ params }: PageProps) {
                 prixParJour={Number(vehicle.prixParJour)}
                 joursMinimum={vehicle.joursMinimum ?? 1}
                 ageMinimum={vehicle.ageMinimum ?? undefined}
+                fraisLivraison={vehicle.fraisLivraison != null ? Number(vehicle.fraisLivraison) : null}
+                autoriseHorsDakar={vehicle.autoriseHorsDakar ?? false}
+                supplementHorsDakarParJour={vehicle.supplementHorsDakarParJour != null ? Number(vehicle.supplementHorsDakarParJour) : null}
             />
 
             <Footer />

@@ -5,7 +5,7 @@ import {
   Fuel, Settings2, Users, CalendarDays, UserCheck,
   MapPinned, ShieldCheck, FileText,
   Snowflake, Navigation, Bluetooth, Camera, Baby, Disc3, Armchair, Gauge,
-  CheckCircle2,
+  CheckCircle2, Hash, Truck, Globe, Layers, Shield,
 } from 'lucide-react';
 
 import type { Vehicle } from '@/lib/nestjs/vehicles';
@@ -127,7 +127,41 @@ export function VehicleDetailSpecs({ vehicle }: Props): React.ReactElement {
         {transLabel && <QuickStat icon={Settings2} label="Boîte" value={transLabel} />}
         {vehicle.nombrePlaces && <QuickStat icon={Users} label="Places" value={`${vehicle.nombrePlaces}`} />}
         {vehicle.joursMinimum && <QuickStat icon={CalendarDays} label="Min." value={`${vehicle.joursMinimum}j`} />}
-        {vehicle.ageMinimum && <QuickStat icon={UserCheck} label="Âge min." value={`${vehicle.ageMinimum} ans`} />}
+        {vehicle.ageMinimum && <QuickStat icon={UserCheck} label="Âge min." value={`${vehicle.ageMinimum} ans}`} />}
+      </div>
+
+      {/* Important vehicle info */}
+      <div className="rounded-2xl border border-slate-100 bg-white px-4 pt-1 pb-1">
+        {vehicle.immatriculation && (
+          <SpecRow icon={Hash} label="Immatriculation" value={vehicle.immatriculation} />
+        )}
+        {vehicle.fraisLivraison && (
+          <SpecRow icon={Truck} label="Livraison disponible" value={`+${Number(vehicle.fraisLivraison).toLocaleString('fr-FR')} FCFA`} />
+        )}
+        {vehicle.autoriseHorsDakar && (
+          <SpecRow 
+            icon={Globe} 
+            label="Zone de circulation" 
+            value={vehicle.supplementHorsDakarParJour 
+              ? `Dakar + Hors Dakar (+${Number(vehicle.supplementHorsDakarParJour).toLocaleString('fr-FR')} FCFA/j)`
+              : 'Dakar + Hors Dakar'
+            } 
+          />
+        )}
+        {(vehicle.tarifsProgressifs?.length ?? 0) > 0 && (
+          <SpecRow 
+            icon={Layers} 
+            label="Tarification" 
+            value={`${vehicle.tarifsProgressifs?.length} palier${(vehicle.tarifsProgressifs?.length ?? 0) > 1 ? 's' : ''} dégressif${(vehicle.tarifsProgressifs?.length ?? 0) > 1 ? 's' : ''}`}
+          />
+        )}
+        {(vehicle.hasCarteGrise || vehicle.hasAssuranceDoc) && (
+          <SpecRow 
+            icon={Shield} 
+            label="Documents vérifiés" 
+            value={`${vehicle.hasCarteGrise ? 'Carte grise' : ''}${vehicle.hasCarteGrise && vehicle.hasAssuranceDoc ? ' + ' : ''}${vehicle.hasAssuranceDoc ? 'Assurance' : ''}`}
+          />
+        )}
       </div>
 
       {/* Equipment grid */}

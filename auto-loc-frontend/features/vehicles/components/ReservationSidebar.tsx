@@ -93,7 +93,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
     } finally {
       setLoadingPricing(false);
     }
-  }, [vehicleId, prixParJour]);
+  }, [vehicleId, prixParJour, horsDakar, autoriseHorsDakar, supplementHorsDakarParJour]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);

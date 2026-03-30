@@ -8,7 +8,7 @@
 import React, { useState } from 'react';
 import {
     ShieldCheck, Star, ChevronUp, CreditCard, ArrowRight,
-    Check,
+    Check, MapPin, Truck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Vehicle } from '@/lib/nestjs/vehicles';
@@ -75,11 +75,18 @@ interface MobileBarProps {
     prixParJour: number;
     joursMinimum: number;
     ageMinimum?: number;
+    fraisLivraison?: number | null;
+    autoriseHorsDakar?: boolean;
+    supplementHorsDakarParJour?: number | null;
 }
 
-export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum, ageMinimum }: MobileBarProps): React.ReactElement {
+export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum, ageMinimum, fraisLivraison, autoriseHorsDakar, supplementHorsDakarParJour }: MobileBarProps): React.ReactElement {
     const [sheetOpen, setSheetOpen] = useState(false);
     const { formatPrice: currencyFormat } = useCurrency();
+
+    // Calcul du prix par jour dynamique
+    const basePrice = Number(prixParJour);
+    const dynamicPrice = basePrice * 1.15; // avec commission
 
     return (
         <>
@@ -88,7 +95,7 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum, age
                 <div>
                     <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Dès</p>
                     <p className="text-[20px] font-black text-slate-900 tabular-nums leading-tight">
-                        {currencyFormat(Math.round(prixParJour * 1.15))}
+                        {currencyFormat(Math.round(dynamicPrice))}
                         <span className="text-[11px] font-semibold text-slate-400 ml-1">/j</span>
                     </p>
                 </div>
@@ -133,6 +140,9 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum, age
                             prixParJour={prixParJour}
                             joursMinimum={joursMinimum}
                             ageMinimum={ageMinimum}
+                            fraisLivraison={fraisLivraison}
+                            autoriseHorsDakar={autoriseHorsDakar}
+                            supplementHorsDakarParJour={supplementHorsDakarParJour}
                         />
                     </div>
                 </>
@@ -159,7 +169,7 @@ function calcAge(dateStr: string): number {
     return age;
 }
 
-function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum }: MobileBarProps) {
+function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum, fraisLivraison, autoriseHorsDakar, supplementHorsDakarParJour }: MobileBarProps) {
     const router = useRouter();
     const { formatPrice: currencyFormat } = useCurrency();
     const [dateDebut, setDateDebut] = useState('');
@@ -171,16 +181,33 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
     const [gateProfile, setGateProfile] = useState<ProfileResponse | null>(null);
     const [gateLoading, setGateLoading] = useState(false);
     const [inlineError, setInlineError] = useState<React.ReactNode | null>(null);
+    const [horsDakar, setHorsDakar] = useState(false);
+    const [wantsDelivery, setWantsDelivery] = useState(false);
+    const [deliveryAddress, setDeliveryAddress] = useState('');
     const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+    const deliveryAvailable = fraisLivraison != null && fraisLivraison > 0;
+    const deliveryFee = wantsDelivery && deliveryAvailable ? fraisLivraison : 0;
 
     const nbJours = dateDebut && dateFin
         ? Math.max(1, Math.round((new Date(dateFin).getTime() - new Date(dateDebut).getTime()) / 86_400_000) + 1)
         : 0;
 
     const datesValid = nbJours >= joursMinimum;
-    const canReserve = datesValid && contractAccepted && pricing && !loadingPricing;
+    const canReserve = datesValid && contractAccepted && pricing && !loadingPricing
+        && (!wantsDelivery || deliveryAddress.trim().length > 0);
 
-    const buildParams = () => new URLSearchParams({ dateDebut, dateFin, nbJours: String(nbJours) });
+    const buildParams = () => {
+        const params = new URLSearchParams({ dateDebut, dateFin, nbJours: String(nbJours) });
+        if (wantsDelivery && deliveryAddress.trim()) {
+            params.set('livraison', '1');
+            params.set('adresseLivraison', deliveryAddress.trim());
+        }
+        if (horsDakar) {
+            params.set('horsDakar', '1');
+        }
+        return params;
+    };
 
     async function handleReserve() {
         if (!canReserve || gateLoading) return;
@@ -228,19 +255,24 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
     const doFetch = useCallback(async (days: number) => {
         setLoadingPricing(true);
         try {
-            const r = await fetchVehiclePricing(vehicleId, days);
+            const r = await fetchVehiclePricing(vehicleId, days, horsDakar);
             setPricing(r);
         } catch {
+            // Fallback local avec supplément hors Dakar
+            const supp = horsDakar && autoriseHorsDakar ? (supplementHorsDakarParJour ?? 0) : 0;
             setPricing({
-                nbJours: days, prixParJour,
-                totalBase: prixParJour * days,
+                nbJours: days,
+                autoriseHorsDakar,
+                supplementHorsDakar: supp,
+                prixParJour,
+                totalBase: (prixParJour + supp) * days,
                 tauxCommission: 0.15,
-                montantCommission: Math.round(prixParJour * days * 0.15),
-                totalLocataire: Math.round(prixParJour * days * 1.15),
-                netProprietaire: prixParJour * days,
+                montantCommission: Math.round((prixParJour + supp) * days * 0.15),
+                totalLocataire: Math.round((prixParJour + supp) * days * 1.15),
+                netProprietaire: (prixParJour + supp) * days,
             });
         } finally { setLoadingPricing(false); }
-    }, [vehicleId, prixParJour]);
+    }, [vehicleId, prixParJour, horsDakar, autoriseHorsDakar, supplementHorsDakarParJour]);
 
     useEffect(() => {
         if (nbJours >= 1) {
@@ -248,7 +280,7 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
             debounceRef.current = setTimeout(() => doFetch(nbJours), 300);
         } else setPricing(null);
         return () => clearTimeout(debounceRef.current);
-    }, [nbJours, doFetch]);
+    }, [nbJours, horsDakar, doFetch]);
 
     return (
         <>
@@ -256,7 +288,17 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                 open={gateOpen}
                 onOpenChange={setGateOpen}
                 profile={gateProfile}
-                onProceed={() => router.push(`/vehicle/${vehicleId}/payment?${buildParams()}`)}
+                onProceed={() => {
+                    const params = new URLSearchParams({ dateDebut, dateFin, nbJours: String(nbJours) });
+                    if (wantsDelivery && deliveryAddress.trim()) {
+                        params.set('livraison', '1');
+                        params.set('adresseLivraison', deliveryAddress.trim());
+                    }
+                    if (horsDakar) {
+                        params.set('horsDakar', '1');
+                    }
+                    router.push(`/vehicle/${vehicleId}/payment?${params.toString()}`);
+                }}
             />
 
             {/* Scrollable content */}
@@ -276,15 +318,111 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                             <span className="text-slate-500">{currencyFormat(Math.round(pricing.totalLocataire / nbJours))} × {nbJours}j</span>
                             <span className="font-semibold text-slate-700 tabular-nums">{currencyFormat(pricing.totalLocataire)}</span>
                         </div>
+                        {deliveryFee > 0 && (
+                            <div className="flex justify-between text-[13px]">
+                                <span className="text-slate-500 flex items-center gap-1">
+                                    <Truck className="w-3 h-3" strokeWidth={2} />
+                                    Livraison
+                                </span>
+                                <span className="font-semibold text-slate-700 tabular-nums">{currencyFormat(deliveryFee)}</span>
+                            </div>
+                        )}
+                        {pricing.supplementHorsDakar != null && pricing.supplementHorsDakar > 0 && (
+                            <div className="flex justify-between text-[13px]">
+                                <span className="text-slate-500 flex items-center gap-1">
+                                    🗺️ Supplément Hors Dakar
+                                </span>
+                                <span className="font-semibold text-slate-700 tabular-nums">
+                                    {currencyFormat(pricing.supplementHorsDakar * nbJours)}
+                                </span>
+                            </div>
+                        )}
                         <div className="pt-2.5 border-t border-slate-200 flex justify-between items-center">
                             <span className="font-bold text-slate-900">Total</span>
-                            <span className="font-black text-emerald-600 text-[16px] tabular-nums">{currencyFormat(pricing.totalLocataire)}</span>
+                            <span className="font-black text-emerald-600 text-[16px] tabular-nums">{currencyFormat(pricing.totalLocataire + deliveryFee)}</span>
                         </div>
                     </div>
                 )}
                 {loadingPricing && (
                     <div className="flex justify-center py-3">
                         <ArrowRight className="w-4 h-4 animate-spin text-emerald-400" />
+                    </div>
+                )}
+
+                {/* Delivery toggle */}
+                {deliveryAvailable && (
+                    <div className="rounded-xl border border-slate-200 p-3.5 space-y-2.5">
+                        <label className="flex items-start gap-3 cursor-pointer group">
+                            <button
+                                type="button"
+                                onClick={() => setWantsDelivery(!wantsDelivery)}
+                                className={cn(
+                                    'mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                                    wantsDelivery
+                                        ? 'bg-emerald-500 border-emerald-500'
+                                        : 'border-slate-300 group-hover:border-slate-400 bg-white',
+                                )}
+                            >
+                                {wantsDelivery && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                            </button>
+                            <div>
+                                <span className="text-[12.5px] font-semibold text-slate-700 flex items-center gap-1.5">
+                                    <Truck className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
+                                    Se faire livrer le véhicule
+                                </span>
+                                <p className="text-[11px] text-slate-400 mt-0.5">
+                                    + {currencyFormat(fraisLivraison)} de frais de livraison
+                                </p>
+                            </div>
+                        </label>
+                        {wantsDelivery && (
+                            <div className="space-y-1.5 pl-8">
+                                <div className="relative">
+                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
+                                    <input
+                                        type="text"
+                                        value={deliveryAddress}
+                                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                                        placeholder="Votre adresse de livraison…"
+                                        className="w-full h-9 rounded-lg border border-slate-200 bg-white pl-9 pr-3
+                                            text-[12.5px] font-medium text-slate-800 placeholder-slate-400
+                                            focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
+                                    />
+                                </div>
+                                {wantsDelivery && !deliveryAddress.trim() && (
+                                    <p className="text-[10.5px] text-amber-600 font-medium">Adresse requise pour la livraison</p>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Hors Dakar toggle */}
+                {autoriseHorsDakar && supplementHorsDakarParJour != null && (
+                    <div className="rounded-xl border border-slate-200 p-3.5 space-y-2.5">
+                        <label className="flex items-start gap-3 cursor-pointer group">
+                            <button
+                                type="button"
+                                onClick={() => setHorsDakar(!horsDakar)}
+                                className={cn(
+                                    'mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                                    horsDakar
+                                        ? 'bg-emerald-500 border-emerald-500'
+                                        : 'border-slate-300 group-hover:border-slate-400 bg-white',
+                                )}
+                            >
+                                {horsDakar && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                            </button>
+                            <div>
+                                <span className="text-[12.5px] font-semibold text-slate-700 flex items-center gap-1.5">
+                                    <MapPin className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
+                                    Voyage Hors Dakar
+                                </span>
+                                <p className="text-[11px] text-slate-400 mt-0.5">
+                                    + {currencyFormat(supplementHorsDakarParJour)} / jour
+                                </p>
+                            </div>
+                        </label>
                     </div>
                 )}
             </div>
