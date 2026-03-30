@@ -88,6 +88,7 @@ export class VehiclesService {
 
   /**
    * POST /vehicles — Créer un véhicule pour le propriétaire connecté.
+   * Transaction unique : véhicule + documents uploadés directement.
    * Statut initial :
    * - BROUILLON si KYC non vérifié
    * - EN_ATTENTE_VALIDATION si KYC vérifié
@@ -105,6 +106,7 @@ export class VehiclesService {
     let result: Awaited<ReturnType<typeof this.prisma.vehicule.findUniqueOrThrow>>;
     try {
       result = await this.prisma.$transaction(async (tx) => {
+        // Création du véhicule avec tous les documents en une seule transaction
         const vehicle = await tx.vehicule.create({
           data: {
             proprietaireId: utilisateur.id,
@@ -124,12 +126,16 @@ export class VehiclesService {
             joursMinimum: dto.joursMinimum ?? 1,
             ageMinimum: dto.ageMinimum ?? 18,
             zoneConduite: dto.zoneConduite ?? null,
-            assurance: dto.assurance ?? null,
+            assurance: dto.assurance, // Maintenant obligatoire
             reglesSpecifiques: dto.reglesSpecifiques ?? null,
             fraisLivraison: dto.fraisLivraison ?? null,
             autoriseHorsDakar: dto.autoriseHorsDakar ?? false,
             supplementHorsDakarParJour: dto.supplementHorsDakarParJour ?? null,
             statut: statutInitial,
+            carteGriseUrl: dto.carteGriseUrl ?? null,
+            carteGrisePublicId: dto.carteGrisePublicId ?? null,
+            assuranceDocUrl: dto.assuranceDocUrl ?? null,
+            assuranceDocPublicId: dto.assuranceDocPublicId ?? null,
             tarifsProgressifs: dto.tiers?.length
               ? {
                 create: dto.tiers.map((t, i) => ({
@@ -155,7 +161,7 @@ export class VehiclesService {
           });
         }
 
-        // Save photos from direct upload (URLs already on Cloudinary)
+        // Photos uploadées directement
         if (dto.photos?.length) {
           await tx.photoVehicule.createMany({
             data: dto.photos.map((p, i) => ({
@@ -177,7 +183,7 @@ export class VehiclesService {
             equipements: { include: { equipement: true } },
           },
         });
-      }, { timeout: 15000 });
+      }, { timeout: 45000 }); // Optimisé : 45s pour uploads parallèles + compression
     } catch (err: unknown) {
       if ((err as { code?: string }).code === 'P2002') {
         const target = (err as { meta?: { target?: string[] } }).meta?.target ?? [];
@@ -195,6 +201,7 @@ export class VehiclesService {
         `🚗 <b>Nouveau véhicule soumis</b>\n` +
         `${dto.marque} ${dto.modele} (${dto.annee}) — ${dto.ville}\n` +
         `Prix : ${dto.prixParJour} FCFA/j\n` +
+        `Documents : ${dto.carteGriseUrl ? 'Carte grise' : ''}${dto.carteGriseUrl && dto.assuranceDocUrl ? ' + ' : ''}${dto.assuranceDocUrl ? 'Assurance' : ''}\n` +
         `<a href="https://autoloc.sn/dashboard/admin/vehicles">Valider →</a>`,
       ).catch(() => { });
     }
@@ -319,29 +326,8 @@ export class VehiclesService {
   }
 
   /**
-   * Génère une URL signée temporaire (10 min) pour consulter un document véhicule.
-   * L'ownership est vérifié en amont par ResourceOwnerGuard.
+   * Supprime le cache détail d'un véhicule spécifique.
    */
-  async getDocumentSignedUrl(
-    vehicleId: string,
-    docType: 'carte-grise' | 'assurance',
-  ): Promise<{ url: string }> {
-    const vehicle = await this.prisma.vehicule.findUnique({
-      where: { id: vehicleId },
-      select: { carteGrisePublicId: true, assuranceDocPublicId: true },
-    });
-    if (!vehicle) throw new NotFoundException('Véhicule introuvable');
-
-    const publicId = docType === 'carte-grise'
-      ? vehicle.carteGrisePublicId
-      : vehicle.assuranceDocPublicId;
-
-    if (!publicId) throw new NotFoundException('Document non disponible');
-
-    return { url: this.cloudinary.getSignedDocumentUrl(publicId) };
-  }
-
-  /** Supprime le cache détail d'un véhicule spécifique. */
   private async invalidateDetailCache(vehicleId: string): Promise<void> {
     await this.redis.del(`${DETAIL_CACHE_PREFIX}${vehicleId}`).catch(() => { });
   }
@@ -1165,83 +1151,4 @@ export class VehiclesService {
     return { deleted: true };
   }
 
-  // ── DOCUMENTS VÉHICULE ──────────────────────────────────────────────────
-
-  getDocumentUploadSignature(vehicleId: string, docType: 'carte-grise' | 'assurance') {
-    return this.cloudinary.getDocumentUploadSignature(vehicleId, docType);
   }
-
-  async linkCarteGrise(vehicleId: string, url: string, publicId: string) {
-    const vehicle = await this.prisma.vehicule.findUnique({
-      where: { id: vehicleId },
-      select: { carteGrisePublicId: true },
-    });
-    if (!vehicle) throw new NotFoundException('Véhicule non trouvé');
-    if (vehicle.carteGrisePublicId) {
-      await this.cloudinary.deleteDocumentByPublicId(vehicle.carteGrisePublicId);
-    }
-    await this.prisma.vehicule.update({
-      where: { id: vehicleId },
-      data: { carteGriseUrl: url, carteGrisePublicId: publicId },
-    });
-    return { url };
-  }
-
-  async linkAssurance(vehicleId: string, url: string, publicId: string) {
-    const vehicle = await this.prisma.vehicule.findUnique({
-      where: { id: vehicleId },
-      select: { assuranceDocPublicId: true },
-    });
-    if (!vehicle) throw new NotFoundException('Véhicule non trouvé');
-    if (vehicle.assuranceDocPublicId) {
-      await this.cloudinary.deleteDocumentByPublicId(vehicle.assuranceDocPublicId);
-    }
-    await this.prisma.vehicule.update({
-      where: { id: vehicleId },
-      data: { assuranceDocUrl: url, assuranceDocPublicId: publicId },
-    });
-    return { url };
-  }
-
-  async uploadCarteGrise(vehiculeId: string, file: Express.Multer.File) {
-    const vehicle = await this.prisma.vehicule.findUnique({
-      where: { id: vehiculeId },
-      select: { carteGrisePublicId: true },
-    });
-    if (!vehicle) throw new NotFoundException('Véhicule non trouvé');
-
-    if (vehicle.carteGrisePublicId) {
-      await this.cloudinary.deleteDocumentByPublicId(vehicle.carteGrisePublicId);
-    }
-
-    const upload = await this.cloudinary.uploadVehicleDocument(file.buffer, vehiculeId, 'carte-grise');
-
-    await this.prisma.vehicule.update({
-      where: { id: vehiculeId },
-      data: { carteGriseUrl: upload.url, carteGrisePublicId: upload.publicId },
-    });
-
-    return { url: upload.url };
-  }
-
-  async uploadAssuranceDoc(vehiculeId: string, file: Express.Multer.File) {
-    const vehicle = await this.prisma.vehicule.findUnique({
-      where: { id: vehiculeId },
-      select: { assuranceDocPublicId: true },
-    });
-    if (!vehicle) throw new NotFoundException('Véhicule non trouvé');
-
-    if (vehicle.assuranceDocPublicId) {
-      await this.cloudinary.deleteDocumentByPublicId(vehicle.assuranceDocPublicId);
-    }
-
-    const upload = await this.cloudinary.uploadVehicleDocument(file.buffer, vehiculeId, 'assurance');
-
-    await this.prisma.vehicule.update({
-      where: { id: vehiculeId },
-      data: { assuranceDocUrl: upload.url, assuranceDocPublicId: upload.publicId },
-    });
-
-    return { url: upload.url };
-  }
-}

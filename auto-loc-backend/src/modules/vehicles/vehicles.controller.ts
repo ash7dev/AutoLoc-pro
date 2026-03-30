@@ -83,46 +83,39 @@ export class VehiclesController {
   }
 
   /**
-   * GET /vehicles/:id/documents/upload-signature — Signature Cloudinary pour upload direct.
-   * Doit être AVANT GET :id pour éviter que "documents" soit capturé comme UUID.
+   * GET /vehicles/:id/documents/upload-signature — OBSOLÈTE
+   * Utiliser la création transaction unique avec documents inclus.
+   * Gardé pour compatibilité temporaire.
    */
   @Get(':id/documents/upload-signature')
   @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(RoleProfile.PROPRIETAIRE)
-  getDocumentUploadSignature(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Query('docType') docType: 'carte-grise' | 'assurance',
-  ) {
-    if (docType !== 'carte-grise' && docType !== 'assurance') {
-      throw new BadRequestException('docType doit être carte-grise ou assurance');
-    }
-    return this.vehiclesService.getDocumentUploadSignature(id, docType);
+  getDocumentUploadSignature() {
+    throw new BadRequestException('Endpoint obsolète. Utilisez POST /vehicles avec documents inclus.');
   }
 
   /**
-   * POST /vehicles/:id/documents/carte-grise/link — Lie une carte grise uploadée directement sur Cloudinary.
+   * POST /vehicles/:id/documents/carte-grise/link — OBSOLÈTE
+   * Utiliser la création transaction unique avec documents inclus.
+   * Gardé pour compatibilité temporaire.
    */
   @Post(':id/documents/carte-grise/link')
   @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(RoleProfile.PROPRIETAIRE)
-  linkCarteGrise(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: { url: string; publicId: string },
-  ) {
-    return this.vehiclesService.linkCarteGrise(id, dto.url, dto.publicId);
+  linkCarteGrise() {
+    throw new BadRequestException('Endpoint obsolète. Utilisez POST /vehicles avec documents inclus.');
   }
 
   /**
-   * POST /vehicles/:id/documents/assurance/link — Lie une assurance uploadée directement sur Cloudinary.
+   * POST /vehicles/:id/documents/assurance/link — OBSOLÈTE
+   * Utiliser la création transaction unique avec documents inclus.
+   * Gardé pour compatibilité temporaire.
    */
   @Post(':id/documents/assurance/link')
   @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(RoleProfile.PROPRIETAIRE)
-  linkAssurance(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: { url: string; publicId: string },
-  ) {
-    return this.vehiclesService.linkAssurance(id, dto.url, dto.publicId);
+  linkAssurance() {
+    throw new BadRequestException('Endpoint obsolète. Utilisez POST /vehicles avec documents inclus.');
   }
 
   /**
@@ -299,51 +292,42 @@ export class VehiclesController {
   // ── DOCUMENTS VÉHICULE ─────────────────────────────────────────────────
 
   /**
-   * GET /vehicles/:id/documents/:docType/view — URL signée temporaire (10 min).
-   * Ne jamais exposer l'URL Cloudinary brute au client.
+   * GET /vehicles/:id/documents/:docType/view — OBSOLÈTE
+   * Utiliser la création transaction unique avec documents inclus.
+   * Gardé pour compatibilité temporaire.
    */
   @Get(':id/documents/:docType/view')
   @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(RoleProfile.PROPRIETAIRE)
-  getDocumentSignedUrl(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Param('docType') docType: string,
-  ) {
-    if (docType !== 'carte-grise' && docType !== 'assurance') {
-      throw new BadRequestException('docType invalide (carte-grise ou assurance)');
-    }
-    return this.vehiclesService.getDocumentSignedUrl(id, docType);
+  getDocumentSignedUrl() {
+    throw new BadRequestException('Endpoint obsolète. Utilisez POST /vehicles avec documents inclus.');
   }
 
   /**
-   * POST /vehicles/:id/documents/carte-grise — Upload carte grise (multipart).
+   * POST /vehicles/:id/documents/carte-grise — OBSOLÈTE
+   * Utiliser la création transaction unique avec documents inclus.
+   * Gardé pour compatibilité temporaire.
    */
   @Post(':id/documents/carte-grise')
   @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(RoleProfile.PROPRIETAIRE)
   @UseFilters(MulterExceptionFilter)
   @UseInterceptors(FileInterceptor('file', VEHICLE_DOCUMENT_MULTER_OPTIONS))
-  async uploadCarteGrise(
-    @Param('id', ParseUUIDPipe) id: string,
-    @UploadedFile() file: Express.Multer.File | undefined,
-  ) {
-    if (!file?.buffer) throw new BadRequestException('Fichier requis');
-    return this.vehiclesService.uploadCarteGrise(id, file);
+  async uploadCarteGrise() {
+    throw new BadRequestException('Endpoint obsolète. Utilisez POST /vehicles avec documents inclus.');
   }
 
   /**
-   * POST /vehicles/:id/documents/assurance — Upload assurance (multipart).
+   * POST /vehicles/:id/documents/assurance — OBSOLÈTE
+   * Utiliser la création transaction unique avec documents inclus.
+   * Gardé pour compatibilité temporaire.
    */
   @Post(':id/documents/assurance')
   @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(RoleProfile.PROPRIETAIRE)
   @UseFilters(MulterExceptionFilter)
   @UseInterceptors(FileInterceptor('file', VEHICLE_DOCUMENT_MULTER_OPTIONS))
-  async uploadAssuranceDoc(
-    @Param('id', ParseUUIDPipe) id: string,
-    @UploadedFile() file: Express.Multer.File | undefined,
-  ) {
-    if (!file?.buffer) throw new BadRequestException('Fichier requis');
-    return this.vehiclesService.uploadAssuranceDoc(id, file);
+  async uploadAssuranceDoc() {
+    throw new BadRequestException('Endpoint obsolète. Utilisez POST /vehicles avec documents inclus.');
   }
 }

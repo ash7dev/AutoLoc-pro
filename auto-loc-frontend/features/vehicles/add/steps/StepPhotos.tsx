@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import {
   ArrowLeft, ArrowRight, X, Star, ImagePlus, Images,
-  Loader2, AlertCircle, RotateCcw,
+  Loader2, AlertCircle, RotateCcw, GripVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAddVehicleStore } from "../store";
@@ -17,10 +17,12 @@ interface Props {
 }
 
 export function StepPhotos({ onNext, onBack }: Props) {
-  const { photos, addPhotos, updatePhoto, removePhoto, movePhotoToFirst } = useAddVehicleStore();
+  const { photos, addPhotos, updatePhoto, removePhoto, movePhotoToFirst, movePhoto } = useAddVehicleStore();
   const galleryRef = useRef<HTMLInputElement>(null);
   const sigRef = useRef<CloudinarySignature | null>(null);
   const [sigError, setSigError] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // Pre-fetch a Cloudinary signature when the step mounts
   const loadSignature = useCallback(async () => {
@@ -77,6 +79,30 @@ export function StepPhotos({ onNext, onBack }: Props) {
     handleFiles(e.dataTransfer.files);
   };
 
+  // Drag & drop pour réorganiser
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
+      movePhoto(draggedIndex, dragOverIndex);
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   const isUploading = photos.some((p) => p.status === 'uploading');
   const hasError = photos.some((p) => p.status === 'error');
   const allDone = photos.length > 0 && !isUploading && !hasError;
@@ -129,6 +155,11 @@ export function StepPhotos({ onNext, onBack }: Props) {
             {photos.map((photo, i) => (
               <div
                 key={photo.id}
+                draggable={photo.status === 'done'}
+                onDragStart={() => handleDragStart(i)}
+                onDragOver={(e) => handleDragOver(e, i)}
+                onDragLeave={handleDragLeave}
+                onDragEnd={handleDragEnd}
                 className={cn(
                   "relative group rounded-xl overflow-hidden border-2 transition-all duration-200 aspect-[4/3]",
                   i === 0
@@ -136,6 +167,8 @@ export function StepPhotos({ onNext, onBack }: Props) {
                     : photo.status === 'error'
                     ? "border-red-300"
                     : "border-transparent hover:border-slate-300",
+                  draggedIndex === i && "opacity-50 scale-95",
+                  dragOverIndex === i && "border-emerald-400 scale-105"
                 )}
               >
                 {/* Preview */}
@@ -180,6 +213,16 @@ export function StepPhotos({ onNext, onBack }: Props) {
                   </div>
                 )}
 
+                {/* Drag handle */}
+                {photo.status === 'done' && (
+                  <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 rounded-lg bg-black/50 px-2 py-1 text-[9px] font-medium text-white">
+                      <GripVertical className="h-3 w-3" strokeWidth={2} />
+                      Glisser
+                    </div>
+                  </div>
+                )}
+
                 {/* Main badge (done only) */}
                 {i === 0 && photo.status === 'done' && (
                   <div className="absolute top-2 left-2 flex items-center gap-1 rounded-lg bg-emerald-500 px-2 py-1 text-[9px] font-black text-white shadow-sm uppercase tracking-wider">
@@ -188,9 +231,9 @@ export function StepPhotos({ onNext, onBack }: Props) {
                   </div>
                 )}
 
-                {/* Actions (done only) */}
+                {/* Actions - toujours visibles */}
                 {photo.status === 'done' && (
-                  <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-200">
+                  <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 backdrop-blur-[2px] opacity-0 sm:opacity-0 group-hover:opacity-100 transition-all duration-200">
                     {i !== 0 && (
                       <button
                         type="button"
@@ -208,6 +251,30 @@ export function StepPhotos({ onNext, onBack }: Props) {
                       title="Supprimer"
                     >
                       <X className="h-4 w-4" strokeWidth={2.5} />
+                    </button>
+                  </div>
+                )}
+
+                {/* Actions mobile - boutons permanents */}
+                {photo.status === 'done' && (
+                  <div className="sm:hidden absolute bottom-2 right-2 flex gap-1.5">
+                    {i !== 0 && (
+                      <button
+                        type="button"
+                        onClick={() => movePhotoToFirst(i)}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500 text-white shadow-lg"
+                        title="Définir comme principale"
+                      >
+                        <Star className="h-3 w-3 fill-white" strokeWidth={0} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(i)}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-500 text-white shadow-lg"
+                      title="Supprimer"
+                    >
+                      <X className="h-3 w-3" strokeWidth={2.5} />
                     </button>
                   </div>
                 )}
@@ -239,7 +306,8 @@ export function StepPhotos({ onNext, onBack }: Props) {
 
           {photos.length > 0 && !isUploading && !hasError && (
             <p className="text-[11px] font-medium text-slate-400 mt-3 text-center">
-              Survolez une photo pour la définir comme principale ou la supprimer
+              Survolez une photo pour la définir comme principale ou la supprimer. 
+              Glissez-déposez les photos pour réorganiser.
             </p>
           )}
           {isUploading && (

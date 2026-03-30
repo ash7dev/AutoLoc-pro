@@ -48,7 +48,7 @@ export interface Step2Data {
 export interface Step3Data {
   ageMinimum?: number;
   zoneConduite?: string;
-  assurance?: string;
+  assurance: string; // Maintenant obligatoire avec valeur par défaut
   reglesSpecifiques?: string;
 }
 
@@ -76,6 +76,7 @@ interface AddVehicleStore {
   updatePhoto: (id: string, patch: Partial<Pick<PhotoEntry, 'url' | 'publicId' | 'status'>>) => void;
   removePhoto: (index: number) => void;
   movePhotoToFirst: (index: number) => void;
+  movePhoto: (fromIndex: number, toIndex: number) => void;
   setDocument: (type: "carteGrise" | "assurance", file: File | null) => void;
   reset: () => void;
 }
@@ -114,6 +115,13 @@ export const useAddVehicleStore = create<AddVehicleStore>((set) => ({
       const photos = [...s.photos];
       const [moved] = photos.splice(index, 1);
       return { photos: [moved, ...photos] };
+    }),
+  movePhoto: (fromIndex: number, toIndex: number) =>
+    set((s) => {
+      const photos = [...s.photos];
+      const [moved] = photos.splice(fromIndex, 1);
+      photos.splice(toIndex, 0, moved);
+      return { photos };
     }),
   setDocument: (type, file) => set({ [type]: file }),
   reset: () =>

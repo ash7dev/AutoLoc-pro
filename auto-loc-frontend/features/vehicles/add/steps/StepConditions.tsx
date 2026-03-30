@@ -12,17 +12,11 @@ const ZONES = [
   { value: "Hors Dakar autorisé" },
 ];
 
-const ASSURANCES = [
-  { value: "Incluse (tous risques)", desc: "Protection maximale" },
-  { value: "Responsabilité civile uniquement", desc: "Couverture de base" },
-  { value: "Locataire responsable", desc: "Le locataire gère" },
-];
-
 const INPUT_CLASS =
-  "w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-medium text-slate-900 placeholder-slate-300 outline-none transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15";
+  "w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-[16px] font-medium text-slate-900 placeholder-slate-300 outline-none transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15";
 
 const SELECT_CLASS =
-  "w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-[13px] font-medium text-slate-900 outline-none appearance-none cursor-pointer transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15";
+  "w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-[16px] font-medium text-slate-900 outline-none appearance-none cursor-pointer transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15";
 
 const LABEL_CLASS = "text-[12px] font-bold text-slate-700 uppercase tracking-wide";
 
@@ -35,11 +29,13 @@ export function StepConditions({ onNext, onBack }: Props) {
   const { step3, setStep3 } = useAddVehicleStore();
 
   const { register, handleSubmit, watch } = useForm<Step3Data>({
-    defaultValues: step3 ?? { ageMinimum: 21 },
+    defaultValues: step3 ?? { 
+      ageMinimum: 21,
+      assurance: "Locataire responsable" // Valeur par défaut
+    },
   });
 
   const selectedZone = watch("zoneConduite");
-  const selectedAssurance = watch("assurance");
 
   const onSubmit = (data: Step3Data) => {
     setStep3(data);
@@ -87,32 +83,26 @@ export function StepConditions({ onNext, onBack }: Props) {
         </div>
       </SectionCard>
 
-      {/* ━━━ Section: Assurance ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <SectionCard icon={Shield} title="Couverture assurance" subtitle="Niveau de protection pour le locataire">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {ASSURANCES.map((a) => {
-            const active = selectedAssurance === a.value;
-            return (
-              <label
-                key={a.value}
-                className={cn(
-                  "flex flex-col items-center gap-2 px-4 py-4 rounded-xl border cursor-pointer transition-all duration-200 text-center",
-                  active
-                    ? "border-emerald-400 bg-emerald-50 shadow-sm ring-1 ring-emerald-400/30"
-                    : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
-                )}
-              >
-                <input type="radio" value={a.value} {...register("assurance")} className="sr-only" />
-                <span className={cn("text-[12px] font-bold leading-tight", active ? "text-emerald-700" : "text-slate-700")}>
-                  {a.value}
-                </span>
-                <span className={cn("text-[10px] font-medium", active ? "text-emerald-500" : "text-slate-400")}>
-                  {a.desc}
-                </span>
-              </label>
-            );
-          })}
+      {/* ━━━ Section: Politique dommages ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <SectionCard icon={Shield} title="Politique dommages" subtitle="Important">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl sm:text-xl">⚠️</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] sm:text-[13px] font-bold text-slate-700 leading-tight">
+                Locataire responsable
+              </p>
+              <p className="text-[11px] sm:text-[12px] text-slate-600 mt-1 leading-relaxed">
+                En cas de dommages, le locataire est responsable et paie les réparations.
+              </p>
+            </div>
+          </div>
         </div>
+        <input 
+          type="hidden" 
+          {...register("assurance")} 
+          value="Locataire responsable" 
+        />
       </SectionCard>
 
       {/* ━━━ Section: Règles spécifiques ━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
@@ -121,19 +111,23 @@ export function StepConditions({ onNext, onBack }: Props) {
           {...register("reglesSpecifiques")}
           rows={3}
           placeholder="Ex : Non-fumeur, pas d'animaux, restitution avec plein…"
-          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[13px] font-medium text-slate-900 placeholder-slate-300 outline-none resize-none transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
+          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[16px] font-medium text-slate-900 placeholder-slate-300 outline-none resize-none transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
         />
+        <p className="text-[11px] font-medium text-slate-400 mt-2 sm:mt-3">
+          ⚠️ Important : Le locataire est responsable en cas de dommages
+        </p>
       </SectionCard>
 
       {/* ━━━ Navigation ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="flex items-center justify-between pt-2">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
         <button type="button" onClick={onBack}
-          className="flex items-center gap-2 text-[13px] font-bold text-slate-500 hover:text-slate-700 px-5 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all duration-200">
+          className="w-full sm:w-auto flex items-center justify-center gap-2 text-[13px] font-bold text-slate-500 hover:text-slate-700 px-5 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all duration-200">
           <ArrowLeft className="w-4 h-4" strokeWidth={2.5} />
-          Retour
+          <span className="hidden sm:inline">Retour</span>
+          <span className="sm:hidden">Annuler</span>
         </button>
         <button type="submit"
-          className="group flex items-center gap-2.5 bg-slate-900 hover:bg-slate-800 text-white text-[13px] font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-slate-900/20 transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:shadow-md">
+          className="w-full sm:w-auto group flex items-center justify-center gap-2.5 bg-slate-900 hover:bg-slate-800 text-white text-[13px] font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-slate-900/20 transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:shadow-md">
           Suivant — Photos
           <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" strokeWidth={2.5} />
         </button>

@@ -28,12 +28,15 @@ export function StepReview({ onBack }: Props) {
     setLoading(true);
     setError(null);
 
-    let createdVehicleId: string | null = null;
-
-    // ── Étape 1 : créer l'annonce ─────────────────────────────────────
-    let vehicle: Vehicle;
     try {
-      vehicle = await authFetch<Vehicle, Record<string, unknown>>(VEHICLE_PATHS.create, {
+      // ── Uploads parallèles des documents ────────────────────────────────────────
+      const [carteGriseResult, assuranceResult] = await Promise.all([
+        carteGrise ? uploadDocumentToCloudinaryWithRetry(carteGrise, 'carte-grise') : null,
+        assurance ? uploadDocumentToCloudinaryWithRetry(assurance, 'assurance') : null,
+      ]);
+
+      // ── Transaction unique : créer véhicule avec tous les documents ─────────────────────
+      const vehicle = await authFetch<Vehicle, Record<string, unknown>>(VEHICLE_PATHS.create, {
         method: "POST",
         body: {
           marque: step1.marque,
@@ -60,63 +63,74 @@ export function StepReview({ onBack }: Props) {
           photos: photos
             .filter((p) => p.status === 'done' && p.url && p.publicId)
             .map((p) => ({ url: p.url!, publicId: p.publicId! })),
+          carteGriseUrl: carteGriseResult?.url,
+          carteGrisePublicId: carteGriseResult?.publicId,
+          assuranceDocUrl: assuranceResult?.url,
+          assuranceDocPublicId: assuranceResult?.publicId,
         },
       });
-    } catch (err) {
-      // La création elle-même a échoué (ex: immatriculation déjà enregistrée)
-      const message = err instanceof Error ? err.message : "Une erreur est survenue.";
-      setError(`La création de l'annonce a échoué : ${message}`);
-      setLoading(false);
-      return;
-    }
 
-    createdVehicleId = vehicle.id;
-    setVehicleId(vehicle.id);
-
-    // ── Étape 2 : uploader les documents directement sur Cloudinary ──
-    try {
-      if (carteGrise) {
-        const cgSig = await authFetch<{ signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string }>(
-          VEHICLE_PATHS.documentUploadSignature(vehicle.id, 'carte-grise'),
-        );
-        const { url: cgUrl, publicId: cgPublicId } = await uploadDocumentToCloudinary(carteGrise, cgSig);
-        await authFetch(VEHICLE_PATHS.linkCarteGrise(vehicle.id), {
-          method: "POST",
-          body: { url: cgUrl, publicId: cgPublicId },
-        });
-      }
-
-      if (assurance) {
-        const assSig = await authFetch<{ signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string }>(
-          VEHICLE_PATHS.documentUploadSignature(vehicle.id, 'assurance'),
-        );
-        const { url: assUrl, publicId: assPublicId } = await uploadDocumentToCloudinary(assurance, assSig);
-        await authFetch(VEHICLE_PATHS.linkAssurance(vehicle.id), {
-          method: "POST",
-          body: { url: assUrl, publicId: assPublicId },
-        });
-      }
-
+      setVehicleId(vehicle.id);
       reset();
       router.replace(`/dashboard/owner/vehicles/${vehicle.id}`);
     } catch (err) {
-      // L'upload des documents a échoué — on tente un rollback (purge du véhicule créé)
       const message = err instanceof Error ? err.message : "Une erreur est survenue.";
-      try {
-        await authFetch(VEHICLE_PATHS.purgeDraft(createdVehicleId!), { method: "DELETE" });
-        setError(`L'envoi des documents a échoué : ${message}. Aucune donnée n'a été enregistrée.`);
-      } catch {
-        // Le purge a échoué (cas exceptionnel) — le véhicule existe sans documents
-        setError(
-          `L'envoi des documents a échoué : ${message}. ` +
-          `Votre annonce a été créée mais les documents n'ont pas pu être uploadés. ` +
-          `Vous pouvez les ajouter depuis votre tableau de bord.`
-        );
-      }
-    } finally {
+      setError(`La création de l'annonce a échoué : ${message}`);
       setLoading(false);
     }
   };
+
+  // ── Helper : upload document avec retry ─────────────────────────────────────────────
+  async function compressImage(file: File): Promise<File> {
+    if (file.size < 500_000) return file; // < 500KB = pas de compression
+    
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+      const img = new Image();
+      
+      img.onload = () => {
+        canvas.width = img.width * 0.8; // -20% taille
+        canvas.height = img.height * 0.8;
+        ctx.drawImage(img, 0, 0);
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const optimizedFile = new File([blob], file.name, { type: 'image/jpeg' });
+            resolve(optimizedFile);
+          } else {
+            resolve(file);
+          }
+        }, 'image/jpeg', 0.8);
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  async function uploadDocumentToCloudinaryWithRetry(file: File, docType: 'carte-grise' | 'assurance'): Promise<{ url: string; publicId: string }> {
+    const MAX_RETRIES = 3;
+    let lastError: Error | null = null;
+
+    // Compresser l'image si c'est une image
+    const optimizedFile = file.type.startsWith('image/') ? await compressImage(file) : file;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const sig = await authFetch<{ signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string }>(
+          VEHICLE_PATHS.uploadSignature,
+        );
+        return await uploadDocumentToCloudinary(optimizedFile, sig);
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error('Upload failed');
+        if (attempt === MAX_RETRIES) {
+          throw lastError;
+        }
+        // Attendre avant de réessayer (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt - 1)));
+      }
+    }
+    throw lastError!;
+  }
 
   const fmtPrice = (n: number) =>
     new Intl.NumberFormat("fr-FR").format(n) + " FCFA";
@@ -178,7 +192,7 @@ export function StepReview({ onBack }: Props) {
       <ReviewSection icon={Shield} title="Conditions">
         <ReviewRow label="Âge minimum" value={step3?.ageMinimum ? `${step3.ageMinimum} ans` : "18 ans"} />
         <ReviewRow label="Zone conduite" value={step3?.zoneConduite ?? "Non définie"} />
-        <ReviewRow label="Assurance" value={step3?.assurance ?? "Non précisée"} />
+        <ReviewRow label="Assurance" value={step3?.assurance ?? "Locataire responsable"} />
         {step3?.reglesSpecifiques && <ReviewRow label="Règles" value={step3.reglesSpecifiques} />}
       </ReviewSection>
 

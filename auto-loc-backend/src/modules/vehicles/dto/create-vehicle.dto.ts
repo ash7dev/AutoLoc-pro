@@ -115,21 +115,21 @@ export class CreateVehicleDto {
   @Type(() => Number)
   ageMinimum?: number;
 
-  // ── Conditions de location ──────────────────────────────────────────────────
+  // ── Conditions de location ──────────────────────────────────────────
 
   @IsOptional()
   @IsString()
   zoneConduite?: string;
 
-  @IsOptional()
   @IsString()
-  assurance?: string;
+  @IsNotEmpty()
+  assurance!: string;
 
   @IsOptional()
   @IsString()
   reglesSpecifiques?: string;
 
-  // ── Tarification progressive ────────────────────────────────────────────────
+  // ── Tarification progressive ────────────────────────────────────────
 
   @IsOptional()
   @IsArray()
@@ -142,7 +142,7 @@ export class CreateVehicleDto {
   @IsString({ each: true })
   equipements?: string[];
 
-  // ── Livraison & Hors Dakar ──────────────────────────────────────────────────
+  // ── Livraison & Hors Dakar ──────────────────────────────────────────
 
   @IsOptional()
   @IsBoolean()
@@ -160,9 +160,23 @@ export class CreateVehicleDto {
   @Type(() => Number)
   fraisLivraison?: number;
 
+  // ── Documents (uploadés directement) ───────────────────────────
+
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => PhotoInputDto)
   photos?: PhotoInputDto[];
+
+  @IsOptional()
+  carteGriseUrl?: string;
+
+  @IsOptional()
+  carteGrisePublicId?: string;
+
+  @IsOptional()
+  assuranceDocUrl?: string;
+
+  @IsOptional()
+  assuranceDocPublicId?: string;
 }
