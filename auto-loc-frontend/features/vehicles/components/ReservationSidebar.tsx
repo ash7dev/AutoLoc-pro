@@ -14,7 +14,7 @@ import { useCurrency } from '@/providers/currency-provider';
 import { apiFetch, ApiError } from '@/lib/nestjs/api-client';
 import type { ProfileResponse } from '@/lib/nestjs/auth';
 import { ReservationCalendar } from '@/features/vehicles/components/ReservationCalendar';
-import { DirectGateModal } from "@/features/reservations/components/DirectGateModal";
+import { ReservationGateModal } from "@/features/reservations/components/ReservationGateModal";
 
 function calculateAge(dateStr: string): number {
   const birth = new Date(dateStr);
@@ -143,11 +143,12 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
 
   return (
     <div className="sticky top-[76px] space-y-3">
-      <DirectGateModal
+      <ReservationGateModal
         open={gateOpen}
         onOpenChange={setGateOpen}
         profile={gateProfile}
         ageMinimum={ageMinimum}
+        userAge={gateProfile?.dateNaissance ? calculateAge(gateProfile.dateNaissance) : undefined}
         onProceed={() => {
           const params = new URLSearchParams({ dateDebut, dateFin, nbJours: String(nbJours) });
           if (wantsDelivery && deliveryAddress.trim()) {

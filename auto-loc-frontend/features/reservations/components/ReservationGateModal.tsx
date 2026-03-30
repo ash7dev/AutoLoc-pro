@@ -327,7 +327,54 @@ function PreGateOverlay({
   );
 }
 
-/* ── Age Gate Component ─────────────────────────────────── */
+/* ── Age Insufficient — Scénario 3 ──────────────────────── */
+function AgeInsufficientBlock({ ageMinimum, userAge, onClose }: {
+  ageMinimum: number;
+  userAge: number;
+  onClose: () => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <AlertCircle className="w-3.5 h-3.5 text-red-600" strokeWidth={2} />
+          </div>
+          <div>
+            <p className="text-[12.5px] font-bold text-red-800">Âge minimum requis</p>
+            <p className="text-[11.5px] text-red-700 mt-0.5 leading-relaxed">
+              Ce véhicule nécessite <strong>{ageMinimum} ans minimum</strong>.
+              Vous avez actuellement <strong>{userAge} ans</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <CalendarDays className="w-3.5 h-3.5 text-amber-600" strokeWidth={2} />
+          </div>
+          <div>
+            <p className="text-[12.5px] font-bold text-amber-800">Suggestion</p>
+            <p className="text-[11.5px] text-amber-700 mt-0.5 leading-relaxed">
+              Découvrez nos véhicules disponibles pour les conducteurs de {userAge} ans.
+            </p>
+          </div>
+        </div>
+      </div>
+      <button
+        onClick={onClose}
+        className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800
+          text-white text-[13.5px] font-bold py-3 px-5 transition-all duration-200"
+      >
+        Retour à la recherche
+        <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+      </button>
+    </div>
+  );
+}
+
+/* ── Age Gate Component — Scénario 4 ─────────────────────── */
 function AgeGate({ 
   onProceed, 
   ageMinimum, 
@@ -363,19 +410,19 @@ function AgeGate({
 
     setLoading(true);
     try {
-      await apiFetch('/auth/profile', {
+      // ✅ Correct route: PATCH /users/me/profile
+      await apiFetch('/users/me/profile', {
         method: 'PATCH',
         body: { dateNaissance: birthDate.toISOString().split('T')[0] }
       });
       onProceed();
-    } catch (err) {
+    } catch {
       setError('Erreur lors de la mise à jour. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Calculer l'âge max (18-100 ans)
   const maxDate = new Date();
   maxDate.setFullYear(maxDate.getFullYear() - 18);
   const minDate = new Date();
@@ -383,90 +430,64 @@ function AgeGate({
 
   return (
     <div className="space-y-4">
-      {/* Message explicatif */}
       <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
         <div className="flex items-start gap-3">
           <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
             <AlertCircle className="w-3.5 h-3.5 text-amber-600" strokeWidth={2} />
           </div>
           <div>
-            <p className="text-[12.5px] font-bold text-amber-800">
-              {hasDateNaissance 
-                ? `Âge minimum requis : ${ageMinimum} ans`
-                : 'Vérification de l\'âge requise'
-              }
-            </p>
+            <p className="text-[12.5px] font-bold text-amber-800">Vérification de l'âge requise</p>
             <p className="text-[11.5px] text-amber-700 mt-0.5 leading-relaxed">
-              {hasDateNaissance
-                ? `Ce véhicule nécessite un âge minimum de ${ageMinimum} ans. Votre âge actuel : ${currentAge} ans.`
-                : `Pour réserver ce véhicule, vous devez avoir au moins ${ageMinimum} ans.`
-              }
+              Pour réserver ce véhicule, vous devez avoir au moins {ageMinimum} ans.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Formulaire de saisie */}
-      {!hasDateNaissance && (
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <label className="block text-[12.5px] font-semibold text-slate-700 mb-2">
-              Date de naissance *
-            </label>
-            <input
-              type="date"
-              value={dateNaissance}
-              onChange={(e) => {
-                setDateNaissance(e.target.value);
-                setError('');
-              }}
-              max={maxDate.toISOString().split('T')[0]}
-              min={minDate.toISOString().split('T')[0]}
-              className="w-full h-11 rounded-lg border border-slate-200 bg-white px-4
-                text-[13px] font-medium text-slate-800 placeholder-slate-400
-                focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
-              required
-            />
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div>
+          <label className="block text-[12.5px] font-semibold text-slate-700 mb-2">
+            Date de naissance *
+          </label>
+          <input
+            type="date"
+            value={dateNaissance}
+            onChange={(e) => { setDateNaissance(e.target.value); setError(''); }}
+            max={maxDate.toISOString().split('T')[0]}
+            min={minDate.toISOString().split('T')[0]}
+            className="w-full h-11 rounded-lg border border-slate-200 bg-white px-4
+              text-[13px] font-medium text-slate-800 placeholder-slate-400
+              focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
+            required
+          />
+        </div>
+
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+            <p className="text-[11.5px] font-medium text-red-700">{error}</p>
           </div>
+        )}
 
-          {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-              <p className="text-[11.5px] font-medium text-red-700">{error}</p>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading || !dateNaissance}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 
-              disabled:bg-slate-200 disabled:text-slate-400 text-white text-[13.5px] font-bold 
-              py-3 px-5 transition-all duration-200"
-          >
-            {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Vérification...
-              </>
-            ) : (
-              <>
-                Confirmer mon âge
-                <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
-              </>
-            )}
-          </button>
-        </form>
-      )}
-
-      {hasDateNaissance && currentAge && currentAge >= ageMinimum && (
         <button
-          onClick={onProceed}
-          className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 
-            text-white text-[13.5px] font-bold py-3 px-5 transition-all duration-200"
+          type="submit"
+          disabled={loading || !dateNaissance}
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700
+            disabled:bg-slate-200 disabled:text-slate-400 text-white text-[13.5px] font-bold
+            py-3 px-5 transition-all duration-200"
         >
-          Continuer
-          <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+          {loading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Vérification...
+            </>
+          ) : (
+            <>
+              Confirmer mon âge
+              <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+            </>
+          )}
         </button>
-      )}
+      </form>
     </div>
   );
 }
@@ -515,13 +536,33 @@ export function ReservationGateModal({
 
   const gate = resolveGate(currentProfile, ageMinimum, userAge);
 
+  // Scénario 5 : Profil parfait → pas de modal, redirection immédiate
   if (gate === "ready") {
     onProceed();
     onOpenChange(false);
     return null;
   }
 
-  // Show pre-gate overview first
+  // Scénario 3 : Âge insuffisant (profil complet, âge connu mais trop jeune)
+  if (gate === "age" && currentProfile.dateNaissance && userAge !== undefined && ageMinimum && userAge < ageMinimum) {
+    return (
+      <ModalShell
+        title="Âge minimum requis"
+        subtitle={`Ce véhicule nécessite ${ageMinimum} ans minimum.`}
+        tag="Auto Loc · Locataire"
+        onClose={() => onOpenChange(false)}
+        contentClassName="px-6 pt-6 pb-6"
+      >
+        <AgeInsufficientBlock
+          ageMinimum={ageMinimum}
+          userAge={userAge}
+          onClose={() => onOpenChange(false)}
+        />
+      </ModalShell>
+    );
+  }
+
+  // Scénarios 1, 2, 4 : Vue d'ensemble d'abord (PreGate)
   if (!preGateDismissed) {
     return (
       <PreGateOverlay
@@ -532,7 +573,7 @@ export function ReservationGateModal({
     );
   }
 
-  // Then show the actual gate
+  // Formulaire de la gate active (stepper)
   return (
     <ModalShell
       title={
@@ -553,9 +594,10 @@ export function ReservationGateModal({
       onClose={() => onOpenChange(false)}
       contentClassName="px-6 pt-6 pb-6"
     >
+      {/* Scénario 4 : Âge manquant → simple champ date */}
       {gate === "age" && (
         <AgeGate
-          onProceed={() => onOpenChange(false)}
+          onProceed={() => { refreshProfile(); }}
           ageMinimum={ageMinimum || 18}
           currentAge={userAge}
           hasDateNaissance={!!currentProfile.dateNaissance}
