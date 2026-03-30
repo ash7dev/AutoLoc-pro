@@ -294,7 +294,14 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
       const newPhotos = [...existingPhotos];
       const [moved] = newPhotos.splice(draggedIndex, 1);
       newPhotos.splice(dragOverIndex, 0, moved);
-      setExistingPhotos(newPhotos);
+      
+      // Mettre à jour estPrincipale : seulement la première photo est principale
+      const updatedPhotos = newPhotos.map((photo, index) => ({
+        ...photo,
+        estPrincipale: index === 0
+      }));
+      
+      setExistingPhotos(updatedPhotos);
     }
     setDraggedIndex(null);
     setDragOverIndex(null);
@@ -414,7 +421,17 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
         ),
       );
 
-      // 3. Link new photos (already uploaded to Cloudinary)
+      // 3. Update existing photos (position and estPrincipale)
+      await Promise.allSettled(
+        existingPhotos.map((photo, index) =>
+          authFetch(`/vehicles/${vehicle.id}/photos/${photo.id}`, {
+            method: 'PATCH',
+            body: { position: index, estPrincipale: index === 0 }
+          })
+        )
+      );
+
+      // 4. Link new photos (already uploaded to Cloudinary)
       const linked: VehiclePhoto[] = [];
       for (const photo of newPhotos) {
         try {
@@ -426,7 +443,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
         } catch { /* ignore individual failures */ }
       }
 
-      // Merge photos into updated vehicle (keep existing that weren't deleted + new uploads)
+      // 5. Merge photos into updated vehicle (keep existing that weren't deleted + new uploads)
       const finalVehicle: Vehicle = {
         ...updated,
         photos: [
