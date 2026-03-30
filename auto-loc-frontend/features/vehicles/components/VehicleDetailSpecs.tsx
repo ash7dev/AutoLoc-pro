@@ -155,11 +155,11 @@ export function VehicleDetailSpecs({ vehicle }: Props): React.ReactElement {
             value={`${vehicle.tarifsProgressifs?.length} palier${(vehicle.tarifsProgressifs?.length ?? 0) > 1 ? 's' : ''} dégressif${(vehicle.tarifsProgressifs?.length ?? 0) > 1 ? 's' : ''}`}
           />
         )}
-        {(vehicle.hasCarteGrise || vehicle.hasAssuranceDoc) && (
+        {(vehicle.carteGriseUrl || vehicle.assuranceDocUrl) && (
           <SpecRow 
             icon={Shield} 
             label="Documents vérifiés" 
-            value={`${vehicle.hasCarteGrise ? 'Carte grise' : ''}${vehicle.hasCarteGrise && vehicle.hasAssuranceDoc ? ' + ' : ''}${vehicle.hasAssuranceDoc ? 'Assurance' : ''}`}
+            value={`${vehicle.carteGriseUrl ? 'Carte grise' : ''}${vehicle.carteGriseUrl && vehicle.assuranceDocUrl ? ' + ' : ''}${vehicle.assuranceDocUrl ? 'Assurance' : ''}`}
           />
         )}
       </div>
