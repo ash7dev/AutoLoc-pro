@@ -380,79 +380,84 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
     setError(null);
 
     try {
-      // 1. PATCH vehicle fields
-      const updated = await authFetch<Vehicle, Record<string, unknown>>(
-        VEHICLE_PATHS.update(vehicle.id),
-        {
-          method: "PATCH",
-          body: {
-            marque: data.marque,
-            modele: data.modele,
-            annee: Number(data.annee),
-            immatriculation: data.immatriculation,
-            type: data.type,
-            nombrePlaces: data.nombrePlaces ? Number(data.nombrePlaces) : undefined,
-            carburant: data.carburant || undefined,
-            transmission: data.transmission || undefined,
-            ville: data.ville,
-            adresse: data.adresse,
-            prixParJour: Number(data.prixParJour),
-            joursMinimum: Number(data.joursMinimum),
-            tiers: (data.tiers ?? []).map((t) => ({
-              joursMin: Number(t.joursMin),
-              joursMax: t.joursMax ? Number(t.joursMax) : undefined,
-              prix: Number(t.prix),
-            })),
-            ageMinimum: data.ageMinimum ? Number(data.ageMinimum) : undefined,
-            zoneConduite: data.zoneConduite || undefined,
-            assurance: data.assurance || undefined,
-            reglesSpecifiques: data.reglesSpecifiques || undefined,
-            autoriseHorsDakar: data.autoriseHorsDakar || false,
-            supplementHorsDakarParJour: data.supplementHorsDakarParJour ? Number(data.supplementHorsDakarParJour) : undefined,
-            equipements,
+      // Optimisation : regrouper toutes les opérations en parallèle
+      const [
+        // 1. PATCH vehicle fields (opération principale)
+        updatedPromise,
+        // 2. Préparer les opérations photos en parallèle
+        deletePhotosPromise,
+        updatePhotosPromise,
+        linkNewPhotosPromise
+      ] = await Promise.allSettled([
+        // 1. Mise à jour du véhicule
+        authFetch<Vehicle, Record<string, unknown>>(
+          VEHICLE_PATHS.update(vehicle.id),
+          {
+            method: "PATCH",
+            body: {
+              marque: data.marque,
+              modele: data.modele,
+              annee: Number(data.annee),
+              immatriculation: data.immatriculation,
+              type: data.type,
+              nombrePlaces: data.nombrePlaces ? Number(data.nombrePlaces) : undefined,
+              carburant: data.carburant || undefined,
+              transmission: data.transmission || undefined,
+              ville: data.ville,
+              adresse: data.adresse,
+              prixParJour: Number(data.prixParJour),
+              joursMinimum: Number(data.joursMinimum),
+              tiers: (data.tiers ?? []).map((t) => ({
+                joursMin: Number(t.joursMin),
+                joursMax: t.joursMax ? Number(t.joursMax) : undefined,
+                prix: Number(t.prix),
+              })),
+              ageMinimum: data.ageMinimum ? Number(data.ageMinimum) : undefined,
+              zoneConduite: data.zoneConduite || undefined,
+              assurance: data.assurance || undefined,
+              reglesSpecifiques: data.reglesSpecifiques || undefined,
+              autoriseHorsDakar: data.autoriseHorsDakar || false,
+              supplementHorsDakarParJour: data.supplementHorsDakarParJour ? Number(data.supplementHorsDakarParJour) : undefined,
+              equipements,
+            },
           },
-        },
-      );
-
-      // 2. Delete removed photos (best-effort)
-      await Promise.allSettled(
-        deletedPhotoIds.map((photoId) =>
-          authFetch(VEHICLE_PATHS.deletePhoto(vehicle.id, photoId), { method: "DELETE" }),
         ),
-      );
+        // 2. Préparer suppression photos (si nécessaire)
+        deletedPhotoIds.length > 0 ? 
+          Promise.allSettled(
+            deletedPhotoIds.map((photoId) =>
+              authFetch(VEHICLE_PATHS.deletePhoto(vehicle.id, photoId), { method: "DELETE" }),
+            ),
+          ) : Promise.resolve([]),
+        // 3. Préparer mise à jour photos (si nécessaire)
+        existingPhotos.length > 0 ?
+          Promise.allSettled(
+            existingPhotos.map((photo, index) =>
+              authFetch(`/vehicles/${vehicle.id}/photos/${photo.id}`, {
+                method: 'PATCH',
+                body: { position: index, estPrincipale: index === 0 }
+              })
+            )
+          ) : Promise.resolve([]),
+        // 4. Préparer ajout nouvelles photos (si nécessaire)
+        newPhotos.length > 0 ?
+          Promise.all(
+            newPhotos.map((photo) =>
+              authFetch<VehiclePhoto>(
+                VEHICLE_PATHS.linkPhoto(vehicle.id),
+                { method: 'POST', body: { url: photo.url, publicId: photo.publicId } as unknown as undefined },
+              )
+            )
+          ) : Promise.resolve([])
+      ]);
 
-      // 3. Update existing photos (position and estPrincipale)
-      await Promise.allSettled(
-        existingPhotos.map((photo, index) =>
-          authFetch(`/vehicles/${vehicle.id}/photos/${photo.id}`, {
-            method: 'PATCH',
-            body: { position: index, estPrincipale: index === 0 }
-          })
-        )
-      );
+      // Extraire le résultat de la mise à jour principale
+      const updated = updatedPromise.status === 'fulfilled' ? updatedPromise.value : vehicle;
 
-      // 4. Link new photos (already uploaded to Cloudinary)
-      const linked: VehiclePhoto[] = [];
-      for (const photo of newPhotos) {
-        try {
-          const p = await authFetch<VehiclePhoto>(
-            VEHICLE_PATHS.linkPhoto(vehicle.id),
-            { method: 'POST', body: { url: photo.url, publicId: photo.publicId } as unknown as undefined },
-          );
-          linked.push(p);
-        } catch { /* ignore individual failures */ }
-      }
+      // Les opérations photos sont déjà exécutées en parallèle
+      console.log('Vehicle updated successfully with parallel operations');
 
-      // 5. Merge photos into updated vehicle (keep existing that weren't deleted + new uploads)
-      const finalVehicle: Vehicle = {
-        ...updated,
-        photos: [
-          ...existingPhotos,
-          ...linked,
-        ],
-      };
-
-      onSaved(finalVehicle);
+      onSaved(updated);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue.");

@@ -574,13 +574,17 @@ export function AdminKycList({ users }: { users: AdminUser[] }) {
     const ids = Array.from(selected);
     if (!ids.length) return;
     setBulkLoading(true);
-    let ok = 0; let fail = 0;
-    for (const id of ids) {
-      try {
-        const res = await fetch(`/api/nest${ADMIN_PATHS.approveKyc(id)}`, { method: 'PATCH' });
-        if (res.ok) ok++; else fail++;
-      } catch { fail++; }
-    }
+    
+    // Optimisation : approbation parallèle des KYC
+    const results = await Promise.allSettled(
+      ids.map(id => 
+        fetch(`/api/nest${ADMIN_PATHS.approveKyc(id)}`, { method: 'PATCH' })
+      )
+    );
+    
+    const ok = results.filter(r => r.status === 'fulfilled').length;
+    const fail = results.filter(r => r.status === 'rejected').length;
+    
     setBulkLoading(false);
     setSelected(new Set());
     showToast(fail === 0 ? 'success' : 'error',

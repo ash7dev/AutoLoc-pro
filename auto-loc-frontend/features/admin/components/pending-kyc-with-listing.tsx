@@ -583,10 +583,12 @@ export function PendingKycWithListingSection() {
       const kycRes = await fetch(`/api/nest${ADMIN_PATHS.approveKyc(userId)}`, { method: 'PATCH' });
       if (!kycRes.ok) throw new Error('KYC');
 
-      for (const vid of brouillonIds) {
-        setPendingId(vid);
-        await fetch(`/api/nest${ADMIN_PATHS.validateVehicle(vid)}`, { method: 'PATCH' });
-      }
+      // Optimisation : validation parallèle des véhicules
+      await Promise.allSettled(
+        brouillonIds.map(vid => 
+          fetch(`/api/nest${ADMIN_PATHS.validateVehicle(vid)}`, { method: 'PATCH' })
+        )
+      );
 
       showToast('success', 'KYC validé et annonces publiées avec succès.');
       router.refresh();

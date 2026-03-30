@@ -149,11 +149,8 @@ export function useVehiclePhotos(vehicleId: string, existingCount = 0) {
     setUploading(true);
     setUploadError(null);
 
-    let uploaded = 0;
-    const errors: string[] = [];
-    const uploadedIds = new Set<string>();
-
-    for (const photo of validPhotos) {
+    // Optimisation : upload parallèle des photos
+    const uploadPromises = validPhotos.map(async (photo) => {
       const formData = new FormData();
       formData.append('file', photo.file);
 
@@ -162,17 +159,27 @@ export function useVehiclePhotos(vehicleId: string, existingCount = 0) {
           `/vehicles/${vehicleId}/photos`,
           { method: 'POST', body: formData },
         );
-        if (data?.id) {
-          uploaded++;
-          uploadedIds.add(photo.id);
-          URL.revokeObjectURL(photo.previewUrl);
-        } else {
-          errors.push(
-            `Échec pour "${photo.file.name}"`,
-          );
-        }
+        return { photo: photo.id, success: !!data?.id, error: null };
       } catch {
-        errors.push(`Erreur réseau pour "${photo.file.name}"`);
+        return { photo: photo.id, success: false, error: `Erreur réseau pour "${photo.file.name}"` };
+      }
+    });
+
+    // Exécution parallèle de tous les uploads
+    const results = await Promise.all(uploadPromises);
+    
+    // Traitement des résultats
+    let uploaded = 0;
+    const errors: string[] = [];
+    const uploadedIds = new Set<string>();
+
+    for (const result of results) {
+      if (result.success) {
+        uploaded++;
+        uploadedIds.add(result.photo);
+        URL.revokeObjectURL(validPhotos.find(p => p.id === result.photo)?.previewUrl || '');
+      } else if (result.error) {
+        errors.push(result.error);
       }
     }
 
