@@ -42,8 +42,10 @@ export function DocumentViewButton({ vehicleId, docType, label = 'Voir' }: Props
     setLoadingView(true);
     setViewError(null);
     try {
-      const { url } = await authFetch<{ url: string }>(`/vehicles/${vehicleId}/documents/${docType}/view`);
-      setDocUrl(url);
+      // Récupère les détails du véhicule pour avoir l'URL du document
+      const vehicle = await authFetch<{ carteGriseUrl?: string; assuranceDocUrl?: string }>(`/vehicles/${vehicleId}`);
+      const url = isCarteGrise ? vehicle.carteGriseUrl : vehicle.assuranceDocUrl;
+      setDocUrl(url || null);
     } catch (err) {
       setViewError("Impossible de charger le document.");
     } finally {

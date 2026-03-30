@@ -8,6 +8,7 @@ import {
   Car, CircleDollarSign, FileText, Camera,
   Plus, Trash2, Info, X, Upload,
   Settings2, FileCheck2, ShieldCheck, FileUp,
+  GripVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -159,6 +160,10 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Drag & drop state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -266,6 +271,34 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
   }, [open]);
 
   // ── Photo handlers ──────────────────────────────────────────────────────────
+
+  // Drag & drop handlers
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
+      // Réorganiser les photos existantes
+      const newPhotos = [...existingPhotos];
+      const [moved] = newPhotos.splice(draggedIndex, 1);
+      newPhotos.splice(dragOverIndex, 0, moved);
+      setExistingPhotos(newPhotos);
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
 
   const handleRemoveExisting = (photoId: string) => {
     setExistingPhotos((prev) => prev.filter((p) => p.id !== photoId));
@@ -811,8 +844,20 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
               {/* Existing photos */}
               {(existingPhotos.length > 0 || newPhotos.length > 0) && (
                 <div className="grid grid-cols-3 gap-2">
-                  {existingPhotos.map((photo) => (
-                    <div key={photo.id} className="relative group aspect-[4/3] overflow-hidden rounded-lg border border-[hsl(var(--border))] bg-muted/40">
+                  {existingPhotos.map((photo, i) => (
+                    <div 
+                      key={photo.id} 
+                      draggable
+                      onDragStart={() => handleDragStart(i)}
+                      onDragOver={(e) => handleDragOver(e, i)}
+                      onDragLeave={handleDragLeave}
+                      onDragEnd={handleDragEnd}
+                      className={cn(
+                        "relative group aspect-[4/3] overflow-hidden rounded-lg border border-[hsl(var(--border))] bg-muted/40",
+                        draggedIndex === i && "opacity-50 scale-95",
+                        dragOverIndex === i && "border-emerald-400 scale-105"
+                      )}
+                    >
                       <Image
                         src={photo.url}
                         alt="photo"
@@ -820,6 +865,15 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                         className="object-cover"
                         sizes="120px"
                       />
+                      
+                      {/* Drag handle */}
+                      <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 rounded-lg bg-black/50 px-2 py-1 text-[9px] font-medium text-white">
+                          <GripVertical className="h-3 w-3" strokeWidth={2} />
+                          Glisser
+                        </div>
+                      </div>
+
                       {photo.estPrincipale && (
                         <div className="absolute bottom-1 left-1 rounded-full bg-amber-400 px-1.5 py-0.5 text-[9px] font-bold text-white">
                           Principale
@@ -867,6 +921,13 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   Upload en cours…
                 </div>
+              )}
+
+              {/* Instructions */}
+              {(existingPhotos.length > 0 || newPhotos.length > 0) && !uploadingPhotos && (
+                <p className="text-[10px] text-muted-foreground text-center mt-2">
+                  Glissez-déposez les photos pour réorganiser. Survolez pour voir les actions.
+                </p>
               )}
 
               {/* Add photos button */}
