@@ -62,15 +62,15 @@ function Lightbox({
 
       {/* Thumb strip */}
       {photos.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto px-5 py-4 scrollbar-none flex-shrink-0 justify-center"
-          onClick={e => e.stopPropagation()}>
+        <div className="flex gap-2 overflow-x-auto px-5 py-4 scrollbar-none flex-shrink-0 justify-center">
           {photos.map((p, i) => (
             <button key={p.id} type="button" onClick={() => onChange(i)}
               className={cn(
-                'relative flex-shrink-0 w-16 h-11 rounded-xl overflow-hidden border-2 transition-all duration-200',
-                i === index ? 'border-emerald-400 opacity-100' : 'border-transparent opacity-30 hover:opacity-60',
-              )}>
-              <Image src={p.url} alt="" fill sizes="64px" className="object-cover" />
+                'relative h-20 w-20 rounded-xl overflow-hidden transition-all duration-200',
+                i === index ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900' : 'ring-1 ring-white/40 hover:ring-white/60'
+              )}
+            >
+              <Image src={p.url} alt="" fill sizes="80px" className="object-cover" />
             </button>
           ))}
         </div>

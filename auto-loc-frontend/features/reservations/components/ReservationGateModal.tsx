@@ -566,6 +566,80 @@ function AgePhoneGate({ ageMinimum, onComplete }: { ageMinimum: number; onComple
   );
 }
 
+/* ── AgeGate — date de naissance uniquement (Scénario 4) ─── */
+function AgeGate({ onProceed, ageMinimum }: { onProceed: () => void; ageMinimum: number; currentAge?: number; hasDateNaissance?: boolean; }) {
+  const [dateNaissance, setDateNaissance] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const maxDate = new Date();
+  maxDate.setFullYear(maxDate.getFullYear() - 18);
+  const minDate = new Date();
+  minDate.setFullYear(minDate.getFullYear() - 100);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const birthDate = new Date(dateNaissance);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    if (age < ageMinimum) {
+      setError(`Âge minimum requis : ${ageMinimum} ans. Vous avez ${age} ans.`);
+      return;
+    }
+    setLoading(true);
+    try {
+      await apiFetch('/users/me/profile', {
+        method: 'PATCH',
+        body: { dateNaissance: birthDate.toISOString().split('T')[0] },
+      });
+      onProceed();
+    } catch {
+      setError('Erreur lors de la mise à jour. Veuillez réessayer.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div>
+        <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">
+          Date de naissance *
+        </label>
+        <input
+          type="date"
+          value={dateNaissance}
+          onChange={e => { setDateNaissance(e.target.value); setError(''); }}
+          max={maxDate.toISOString().split('T')[0]}
+          min={minDate.toISOString().split('T')[0]}
+          required
+          className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3
+            text-[12.5px] font-medium text-slate-800
+            focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
+        />
+      </div>
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+          <p className="text-[11.5px] font-medium text-red-700">{error}</p>
+        </div>
+      )}
+      <button
+        type="submit"
+        disabled={loading || !dateNaissance}
+        className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700
+          disabled:bg-slate-200 disabled:text-slate-400 text-white text-[13.5px] font-bold
+          py-3 px-5 transition-all duration-200"
+      >
+        {loading
+          ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Vérification...</>
+          : <>Confirmer mon âge<ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>}
+      </button>
+    </form>
+  );
+}
+
 /* ── Main export ─────────────────────────────────────────── */
 export function ReservationGateModal({
   open,
