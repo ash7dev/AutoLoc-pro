@@ -177,10 +177,22 @@ export class ConfirmPaymentUseCase {
                 .scheduleSignatureExpiry(reservationId)
                 .catch(() => { });
 
+            // Notification au locataire
             await this.queue
                 .scheduleNotification({
                     type: 'reservation.paid',
                     data: { reservationId },
+                })
+                .catch(() => { });
+
+            // Notification au propriétaire
+            await this.queue
+                .scheduleNotification({
+                    type: 'reservation.paid.owner',
+                    data: { 
+                        reservationId,
+                        userId: reservation.proprietaireId,
+                    },
                 })
                 .catch(() => { });
 

@@ -234,7 +234,7 @@ export default function PaymentPage() {
                 </div>
                 <div className="flex flex-col items-center gap-2 mt-1">
                     {isReservationCreated && (
-                        <Link href="/dashboard/reservations"
+                        <Link href="/reservations"
                             className="text-[13px] font-bold text-emerald-600 hover:text-emerald-700 underline decoration-dotted">
                             Voir mes réservations
                         </Link>
@@ -315,7 +315,7 @@ export default function PaymentPage() {
                             <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
                         </Link>
                         <Link
-                            href="/dashboard/reservations"
+                            href="/reservations"
                             className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-3.5 px-5 text-[14px] font-semibold text-slate-600 hover:bg-slate-50 transition-all"
                         >
                             Mes réservations

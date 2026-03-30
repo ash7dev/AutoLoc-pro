@@ -6,6 +6,7 @@ export type NotificationType =
     | 'reservation.created'
     | 'reservation.confirmed'
     | 'reservation.paid'
+    | 'reservation.paid.owner'
     | 'reservation.cancelled'
     | 'reservation.checkin'
     | 'reservation.checkin.owner_confirmed'
@@ -320,6 +321,40 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
                     { label: 'Statut', value: 'En attente de confirmation du propriétaire', icon: '⏳' },
                 ]),
                 alertBox('Votre paiement est <strong>bloqué en escrow</strong> — il ne sera libéré qu\'après confirmation du check-in. Si le propriétaire ne confirme pas sous 24h, vous êtes <strong>remboursé automatiquement</strong>.', 'info'),
+            ].join(''),
+        }),
+    },
+
+    // ── Paiement confirmé (Propriétaire) ───────────────────────────────────────
+
+    'reservation.paid.owner': {
+        subject: '💰 Nouvelle réservation payée — Action requise sous 24h',
+        body: (data) => baseLayout({
+            title: 'Félicitations ! Votre véhicule est réservé',
+            subtitle: 'Le paiement est sécurisé. Confirmez pour finaliser la location.',
+            badge: { text: 'Nouvelle réservation', color: EMERALD_DARK, bg: EMERALD_BG },
+            cta: { 
+                label: 'Confirmer la réservation →', 
+                href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` 
+            },
+            content: [
+                infoCard([
+                    { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
+                    { label: 'Statut paiement', value: 'Sécurisé en escrow', icon: '🔒' },
+                    { label: 'Délai de réponse', value: '24 heures', icon: '⏰' },
+                ]),
+                alertBox(
+                    '⏰ <strong>Important :</strong> Vous avez <strong>24 heures</strong> pour confirmer. ' +
+                    'Passé ce délai, la réservation sera annulée et le locataire remboursé automatiquement.',
+                    'warning'
+                ),
+                divider(),
+                p('<strong>Prochaines étapes :</strong>'),
+                `<ol style="margin:0 0 16px;padding-left:20px;color:#374151;font-size:15px;line-height:1.8;">
+                  <li>Confirmez la réservation</li>
+                  <li>Contactez le locataire si besoin</li>
+                  <li>Préparez le véhicule pour le check-in</li>
+                </ol>`,
             ].join(''),
         }),
     },
