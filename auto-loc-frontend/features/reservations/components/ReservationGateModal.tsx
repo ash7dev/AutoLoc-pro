@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Check, Clock, AlertCircle, Circle,
-  Phone, ShieldCheck, CreditCard, X, ArrowRight,
+  Phone, ShieldCheck, CreditCard, X, ArrowRight, CalendarDays,
 } from "lucide-react";
 import { PhoneVerifyGate } from "@/features/vehicles/add/PhoneVerifyGate";
 import { KycGate } from "@/features/vehicles/add/KycGate";
@@ -14,11 +14,11 @@ import { apiFetch } from "@/lib/nestjs/api-client";
 import { cn } from "@/lib/utils";
 
 /* ── Types ───────────────────────────────────────────────── */
-type Gate = "phone" | "kyc" | "permis" | "ready";
+type Gate = "phone" | "kyc" | "permis" | "age" | "ready";
 type StepStatus = "done" | "pending" | "rejected" | "required";
 
 interface Step {
-  key: "phone" | "kyc" | "permis";
+  key: "phone" | "kyc" | "permis" | "age";
   label: string;
   description: string;
   duration?: string;
@@ -27,16 +27,33 @@ interface Step {
 }
 
 /* ── Helpers ─────────────────────────────────────────────── */
-function resolveGate(profile: ProfileResponse): Gate {
+function resolveGate(profile: ProfileResponse, ageMinimum?: number, userAge?: number): Gate {
+  // Si l'âge n'est pas requis, on passe directement aux autres vérifications
+  if (!ageMinimum || ageMinimum <= 0) {
+    if (!profile.hasUtilisateur) return "phone";
+    if (!profile.phoneVerified || !profile.phone) return "phone";
+    const kyc = profile.kycStatus;
+    if (!kyc || kyc === "NON_VERIFIE" || kyc === "REJETE") return "kyc";
+    if (!profile.hasPermis) return "permis";
+    return "ready";
+  }
+
+  // Si l'âge est requis, on vérifie en priorité absolue
   if (!profile.hasUtilisateur) return "phone";
   if (!profile.phoneVerified || !profile.phone) return "phone";
+  
+  // Vérification âge obligatoire
+  if (!profile.dateNaissance) return "age";
+  if (userAge && userAge < ageMinimum) return "age";
+  
+  // Âge OK, on continue avec les autres vérifications
   const kyc = profile.kycStatus;
   if (!kyc || kyc === "NON_VERIFIE" || kyc === "REJETE") return "kyc";
   if (!profile.hasPermis) return "permis";
   return "ready";
 }
 
-function resolveSteps(profile: ProfileResponse): Step[] {
+function resolveSteps(profile: ProfileResponse, ageMinimum?: number, userAge?: number): Step[] {
   const phoneOk = profile.hasUtilisateur && profile.phoneVerified && !!profile.phone;
   const kyc = profile.kycStatus;
   const kycStatus: StepStatus =
@@ -45,9 +62,39 @@ function resolveSteps(profile: ProfileResponse): Step[] {
         : kyc === "REJETE" ? "rejected"
           : "required";
   const permisOk = profile.hasPermis;
+  
+  // Vérification statut âge (uniquement si requis)
+  let ageStatus: StepStatus = "done";
+  if (ageMinimum && ageMinimum > 0) {
+    if (!profile.dateNaissance) {
+      ageStatus = "required";
+    } else if (userAge && userAge < ageMinimum) {
+      ageStatus = "rejected";
+    }
+  }
 
-  return [
-    {
+  // Construction des étapes selon le contexte
+  const steps: Step[] = [];
+
+  // Étape âge (uniquement si requis)
+  if (ageMinimum && ageMinimum > 0) {
+    steps.push({
+      key: "age" as const,
+      label: "Âge minimum vérifié",
+      description: !profile.dateNaissance 
+        ? "Veuillez renseigner votre date de naissance"
+        : userAge && userAge < ageMinimum
+          ? `Âge minimum requis : ${ageMinimum} ans`
+          : "Âge vérifié avec succès",
+      duration: "~30 sec",
+      status: ageStatus,
+      icon: CalendarDays,
+    });
+  }
+
+  // Étapes téléphone (toujours affiché si profil incomplet)
+  if (!profile.hasUtilisateur || !phoneOk) {
+    steps.push({
       key: "phone",
       label: "Téléphone vérifié",
       description: profile.hasUtilisateur
@@ -56,24 +103,34 @@ function resolveSteps(profile: ProfileResponse): Step[] {
       duration: profile.hasUtilisateur ? "~1 min" : "~2 min",
       status: phoneOk ? "done" : "required",
       icon: Phone,
-    },
-    {
+    });
+  }
+
+  // Étapes KYC (uniquement si âge OK ou non requis)
+  if (!ageMinimum || ageMinimum <= 0 || (profile.dateNaissance && (!userAge || userAge >= ageMinimum))) {
+    steps.push({
       key: "kyc",
       label: "Vérification d'identité",
       description: "Pièce d'identité nationale ou passeport",
       duration: "~2 min",
       status: kycStatus,
       icon: ShieldCheck,
-    },
-    {
+    });
+  }
+
+  // Étapes permis (uniquement si âge OK ou non requis)
+  if (!ageMinimum || ageMinimum <= 0 || (profile.dateNaissance && (!userAge || userAge >= ageMinimum))) {
+    steps.push({
       key: "permis",
       label: "Permis de conduire",
       description: "Photo recto-verso de votre permis en cours de validité",
       duration: "~1 min",
       status: permisOk ? "done" : "required",
       icon: CreditCard,
-    },
-  ];
+    });
+  }
+
+  return steps;
 }
 
 /* ── Status config ───────────────────────────────────────── */
@@ -270,17 +327,165 @@ function PreGateOverlay({
   );
 }
 
+/* ── Age Gate Component ─────────────────────────────────── */
+function AgeGate({ 
+  onProceed, 
+  ageMinimum, 
+  currentAge,
+  hasDateNaissance 
+}: { 
+  onProceed: () => void; 
+  ageMinimum: number; 
+  currentAge?: number;
+  hasDateNaissance: boolean;
+}) {
+  const [dateNaissance, setDateNaissance] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!dateNaissance) {
+      setError('Veuillez sélectionner votre date de naissance');
+      return;
+    }
+
+    const birthDate = new Date(dateNaissance);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+
+    if (age < ageMinimum) {
+      setError(`Âge minimum requis : ${ageMinimum} ans. Vous avez ${age} ans.`);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await apiFetch('/auth/profile', {
+        method: 'PATCH',
+        body: { dateNaissance: birthDate.toISOString().split('T')[0] }
+      });
+      onProceed();
+    } catch (err) {
+      setError('Erreur lors de la mise à jour. Veuillez réessayer.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculer l'âge max (18-100 ans)
+  const maxDate = new Date();
+  maxDate.setFullYear(maxDate.getFullYear() - 18);
+  const minDate = new Date();
+  minDate.setFullYear(minDate.getFullYear() - 100);
+
+  return (
+    <div className="space-y-4">
+      {/* Message explicatif */}
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <AlertCircle className="w-3.5 h-3.5 text-amber-600" strokeWidth={2} />
+          </div>
+          <div>
+            <p className="text-[12.5px] font-bold text-amber-800">
+              {hasDateNaissance 
+                ? `Âge minimum requis : ${ageMinimum} ans`
+                : 'Vérification de l\'âge requise'
+              }
+            </p>
+            <p className="text-[11.5px] text-amber-700 mt-0.5 leading-relaxed">
+              {hasDateNaissance
+                ? `Ce véhicule nécessite un âge minimum de ${ageMinimum} ans. Votre âge actuel : ${currentAge} ans.`
+                : `Pour réserver ce véhicule, vous devez avoir au moins ${ageMinimum} ans.`
+              }
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Formulaire de saisie */}
+      {!hasDateNaissance && (
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div>
+            <label className="block text-[12.5px] font-semibold text-slate-700 mb-2">
+              Date de naissance *
+            </label>
+            <input
+              type="date"
+              value={dateNaissance}
+              onChange={(e) => {
+                setDateNaissance(e.target.value);
+                setError('');
+              }}
+              max={maxDate.toISOString().split('T')[0]}
+              min={minDate.toISOString().split('T')[0]}
+              className="w-full h-11 rounded-lg border border-slate-200 bg-white px-4
+                text-[13px] font-medium text-slate-800 placeholder-slate-400
+                focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
+              required
+            />
+          </div>
+
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-[11.5px] font-medium text-red-700">{error}</p>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading || !dateNaissance}
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 
+              disabled:bg-slate-200 disabled:text-slate-400 text-white text-[13.5px] font-bold 
+              py-3 px-5 transition-all duration-200"
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Vérification...
+              </>
+            ) : (
+              <>
+                Confirmer mon âge
+                <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+              </>
+            )}
+          </button>
+        </form>
+      )}
+
+      {hasDateNaissance && currentAge && currentAge >= ageMinimum && (
+        <button
+          onClick={onProceed}
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 
+            text-white text-[13.5px] font-bold py-3 px-5 transition-all duration-200"
+        >
+          Continuer
+          <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+        </button>
+      )}
+    </div>
+  );
+}
+
 /* ── Main export ─────────────────────────────────────────── */
 export function ReservationGateModal({
   open,
   onOpenChange,
   profile,
   onProceed,
+  ageMinimum,
+  userAge,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   profile: ProfileResponse | null;
   onProceed: () => void;
+  ageMinimum?: number;
+  userAge?: number;
 }) {
   const [currentProfile, setCurrentProfile] = useState<ProfileResponse | null>(profile);
   const [refreshing, setRefreshing] = useState(false);
@@ -308,7 +513,7 @@ export function ReservationGateModal({
 
   if (!open || !currentProfile) return null;
 
-  const gate = resolveGate(currentProfile);
+  const gate = resolveGate(currentProfile, ageMinimum, userAge);
 
   if (gate === "ready") {
     onProceed();
@@ -320,7 +525,7 @@ export function ReservationGateModal({
   if (!preGateDismissed) {
     return (
       <PreGateOverlay
-        steps={resolveSteps(currentProfile)}
+        steps={resolveSteps(currentProfile, ageMinimum, userAge)}
         onContinue={() => setPreGateDismissed(true)}
         onCancel={() => onOpenChange(false)}
       />
@@ -333,17 +538,29 @@ export function ReservationGateModal({
       title={
         gate === "phone" ? "Vérifiez votre téléphone" :
           gate === "kyc" ? "Vérifiez votre identité" :
-            "Permis de conduire requis"
+            gate === "permis" ? "Permis de conduire requis" :
+              gate === "age" ? "Vérification de l'âge" :
+                "Complétez votre profil"
       }
       subtitle={
         gate === "phone" ? "Étape requise pour sécuriser votre réservation." :
           gate === "kyc" ? "Soumettez vos documents pour continuer — la validation se fait en parallèle." :
-            "Une photo de votre permis est nécessaire."
+            gate === "permis" ? "Une photo de votre permis est nécessaire." :
+              gate === "age" ? `Ce véhicule nécessite un âge minimum de ${ageMinimum} ans.` :
+                "Finalisez votre profil pour continuer."
       }
       tag="Auto Loc · Locataire"
       onClose={() => onOpenChange(false)}
       contentClassName="px-6 pt-6 pb-6"
     >
+      {gate === "age" && (
+        <AgeGate
+          onProceed={() => onOpenChange(false)}
+          ageMinimum={ageMinimum || 18}
+          currentAge={userAge}
+          hasDateNaissance={!!currentProfile.dateNaissance}
+        />
+      )}
       {gate === "phone" && (
         <PhoneVerifyGate
           profile={currentProfile}

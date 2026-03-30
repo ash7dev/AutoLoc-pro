@@ -128,33 +128,80 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
     try {
       const profile = await apiFetch<ProfileResponse>('/auth/me');
 
-      // Vérification âge minimum avant tout
+      // Calcul de l'âge si date de naissance disponible
+      let userAge: number | undefined;
+      if (profile.dateNaissance) {
+        const birth = new Date(profile.dateNaissance);
+        const today = new Date();
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+        userAge = age;
+      }
+
+      // Optimisation : détection précoce et messages ciblés
       if (ageMinimum && ageMinimum > 0) {
         if (!profile.dateNaissance) {
           setInlineError(
-            <>
-              Date de naissance manquante.{' '}
-              <Link href="/dashboard/settings/profile" className="underline font-bold hover:text-red-900">
-                Complétez votre profil
-              </Link>{' '}
-              pour continuer.
-            </>,
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
+              <div>
+                <p className="text-[12.5px] font-bold text-amber-800">Âge requis pour ce véhicule</p>
+                <p className="text-[11.5px] text-amber-700 mt-0.5 leading-relaxed">
+                  Ce véhicule nécessite <strong>{ageMinimum} ans minimum</strong>. 
+                  Veuillez{' '}
+                  <Link href="/dashboard/settings/profile" className="underline font-bold hover:text-amber-900">
+                    renseigner votre date de naissance
+                  </Link>{' '}
+                  pour continuer.
+                </p>
+              </div>
+            </div>
           );
+          setGateLoading(false);
           return;
         }
-        const age = calculateAge(profile.dateNaissance);
-        if (age < ageMinimum) {
-          setInlineError(`Âge minimum requis : ${ageMinimum} ans. Vous avez ${age} ans.`);
+        
+        if (userAge && userAge < ageMinimum) {
+          setInlineError(
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
+              <div>
+                <p className="text-[12.5px] font-bold text-red-800">Âge insuffisant</p>
+                <p className="text-[11.5px] text-red-700 mt-0.5 leading-relaxed">
+                  Âge minimum requis : <strong>{ageMinimum} ans</strong>. 
+                  Vous avez <strong>{userAge} ans</strong>.
+                </p>
+              </div>
+            </div>
+          );
+          setGateLoading(false);
           return;
         }
       }
 
-      const needsPhone = !profile.phoneVerified || !profile.phone;
-      const needsKyc = profile.kycStatus !== 'VERIFIE';
-      if (needsPhone || needsKyc) {
-        setGateProfile(profile);
-        setGateOpen(true);
-        return;
+      // Si l'âge n'est pas requis, on vérifie les autres étapes
+      if (!ageMinimum || ageMinimum <= 0) {
+        const needsPhone = !profile.phoneVerified || !profile.phone;
+        const needsKyc = profile.kycStatus !== 'VERIFIE';
+        const needsPermis = !profile.hasPermis;
+        
+        if (needsPhone || needsKyc || needsPermis) {
+          setGateProfile(profile);
+          setGateOpen(true);
+          return;
+        }
+      } else {
+        // Si l'âge est requis et valide, on vérifie les autres étapes
+        const needsPhone = !profile.phoneVerified || !profile.phone;
+        const needsKyc = profile.kycStatus !== 'VERIFIE';
+        const needsPermis = !profile.hasPermis;
+        
+        if (needsPhone || needsKyc || needsPermis) {
+          setGateProfile(profile);
+          setGateOpen(true);
+          return;
+        }
       }
 
       router.push(`/vehicle/${vehicleId}/payment?${buildParams().toString()}`);
@@ -176,6 +223,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
         open={gateOpen}
         onOpenChange={setGateOpen}
         profile={gateProfile}
+        ageMinimum={ageMinimum}
         onProceed={() => {
           const params = new URLSearchParams({ dateDebut, dateFin, nbJours: String(nbJours) });
           if (wantsDelivery && deliveryAddress.trim()) {
