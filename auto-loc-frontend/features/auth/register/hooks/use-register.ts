@@ -50,8 +50,8 @@ export function useRegister() {
     const supaToken = data.session?.access_token ?? null;
     if (!error && supaToken && hasFullProfileInput) {
       try {
-        const session = await syncWithNestJS(supaToken);
-        await completeProfile(session.accessToken, {
+        await syncWithNestJS(supaToken);
+        await completeProfile(undefined, {
           prenom: input.prenom as string,
           nom: input.nom as string,
           telephone: input.telephone as string,

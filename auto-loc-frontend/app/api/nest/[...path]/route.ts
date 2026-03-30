@@ -32,6 +32,10 @@ interface NestSession {
   activeRole?: string;
 }
 
+function toClientSession(session: NestSession) {
+  return { activeRole: session.activeRole ?? null };
+}
+
 function setCookies(response: NextResponse, session: NestSession) {
   response.cookies.set('nest_access', session.accessToken, {
     ...COOKIE_BASE,
@@ -171,7 +175,7 @@ async function proxy(
     (path === '/auth/login' || path === '/auth/refresh')
   ) {
     const session = await res.json() as NestSession;
-    const nextRes = NextResponse.json(session, { status: res.status });
+    const nextRes = NextResponse.json(toClientSession(session), { status: res.status });
     setCookies(nextRes, session);
     return nextRes;
   }

@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useRef } from 'react';
 import { supabase } from '../../../lib/supabase/client';
 import { fetchMe, type ProfileResponse } from '../../../lib/nestjs/auth';
-import { ensureValidNestToken } from './use-nest-token';
+import { syncWithNestJS } from './use-nest-token';
 import { useRoleStore } from '../stores/role.store';
 
 export function useAuthFlow() {
@@ -38,42 +38,22 @@ export function useAuthFlow() {
     // eslint-disable-next-line no-console
     console.log('[AuthFlow] provider', provider);
 
-    let nestToken = await ensureValidNestToken();
-    if (!nestToken) {
-      // /api/auth/sync : échange le token Supabase contre un JWT NestJS,
-      // pose le cookie httpOnly (RSC) et retourne les tokens pour le Zustand store.
-      let syncOk = false;
-      for (let i = 0; i < 3 && !syncOk; i += 1) {
-        const syncRes = await fetch('/api/auth/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ supabaseToken: token }),
-        });
-        if (syncRes.ok) {
-          const session = await syncRes.json() as {
-            accessToken: string;
-            refreshToken: string;
-            activeRole: ProfileResponse['role'];
-          };
-          useRoleStore.getState().setSession(session);
-          nestToken = session.accessToken;
-          syncOk = true;
-        } else {
-          await wait(200);
-        }
-      }
-      if (!syncOk) {
-        inFlight.current = false;
-        return;
+    let syncOk = false;
+    for (let i = 0; i < 3 && !syncOk; i += 1) {
+      try {
+        const session = await syncWithNestJS(token);
+        useRoleStore.getState().setSession(session);
+        syncOk = true;
+      } catch {
+        await wait(200);
       }
     }
-
-    if (!nestToken) {
+    if (!syncOk) {
       inFlight.current = false;
       return;
     }
 
-    const profile = await fetchMe(nestToken);
+    const profile = await fetchMe();
     // eslint-disable-next-line no-console
     console.log('[AuthFlow] profile', profile);
 

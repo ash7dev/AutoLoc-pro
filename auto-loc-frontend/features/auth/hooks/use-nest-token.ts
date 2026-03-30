@@ -1,55 +1,33 @@
-import { loginWithSupabase, refreshNestToken, type NestAuthResponse } from '../../../lib/nestjs/auth';
+import type { NestAuthResponse } from '../../../lib/nestjs/auth';
 import { useRoleStore } from '../stores/role.store';
-
-function decodeJwtPayload(token: string): { exp?: number } | null {
-  const parts = token.split('.');
-  if (parts.length !== 3) return null;
-  try {
-    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const json = atob(base64);
-    return JSON.parse(json) as { exp?: number };
-  } catch {
-    return null;
-  }
-}
-
-function isExpired(token: string | null): boolean {
-  if (!token) return true;
-  const payload = decodeJwtPayload(token);
-  if (!payload?.exp) return true;
-  const now = Math.floor(Date.now() / 1000);
-  return payload.exp <= now + 10;
-}
 
 export async function syncWithNestJS(
   supabaseAccessToken: string,
 ): Promise<NestAuthResponse> {
-  const session = await loginWithSupabase(supabaseAccessToken);
+  const res = await fetch('/api/auth/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ supabaseToken: supabaseAccessToken }),
+  });
+  if (!res.ok) {
+    throw new Error('Echec de synchronisation NestJS');
+  }
+  const session = await res.json() as NestAuthResponse;
   useRoleStore.getState().setSession(session);
   return session;
 }
 
-export async function ensureValidNestToken(): Promise<string | null> {
-  const { accessToken, refreshToken, setSession, clearRole } = useRoleStore.getState();
-  if (!accessToken) return null;
-  if (!isExpired(accessToken)) return accessToken;
-  if (!refreshToken) {
-    clearRole();
-    return null;
-  }
+export async function ensureValidNestToken(): Promise<boolean> {
   try {
-    const next = await refreshNestToken(refreshToken);
-    setSession(next);
-    return next.accessToken;
+    await fetch('/api/nest/auth/me', { cache: 'no-store' });
+    return true;
   } catch {
-    clearRole();
-    return null;
+    return false;
   }
 }
 
 export function useNestToken() {
-  const accessToken = useRoleStore((s) => s.accessToken);
   const activeRole = useRoleStore((s) => s.activeRole);
   const clearRole = useRoleStore((s) => s.clearRole);
-  return { accessToken, activeRole, clearRole };
+  return { activeRole, clearRole };
 }

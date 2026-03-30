@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { CloudinaryService } from '../../infrastructure/cloudinary/cloudinary.service';
 import { assertValidImageBuffer } from '../../infrastructure/cloudinary/utils/file-validator';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -22,6 +23,7 @@ const OTP_TTL_SECONDS = 5 * 60;
 const OTP_KEY_PREFIX = 'auth:phone-otp:';
 const OTP_COOLDOWN_SECONDS = 60;
 const OTP_COOLDOWN_PREFIX = 'auth:phone-otp:cooldown:';
+const REFRESH_SESSION_PREFIX = 'auth:refresh-session:';
 
 @Injectable()
 export class AuthService {
@@ -373,6 +375,7 @@ export class AuthService {
       phone: user.phone,
       role: profile.role as RoleProfile,
     });
+    await this.storeRefreshSession(user.sub, refreshToken);
 
     return { accessToken, refreshToken, activeRole: profile.role as RoleProfile };
   }
@@ -406,6 +409,8 @@ export class AuthService {
       throw new UnauthorizedException('Type de jeton invalide');
     }
 
+    await this.assertRefreshSession(decoded.sub, refreshToken);
+
     const user: RequestUser = {
       sub: decoded.sub,
       email: decoded.email,
@@ -426,6 +431,7 @@ export class AuthService {
       phone: user.phone,
       role: profile.role as RoleProfile,
     });
+    await this.storeRefreshSession(user.sub, newRefreshToken);
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken, activeRole: profile.role as RoleProfile };
   }
@@ -476,6 +482,10 @@ export class AuthService {
 
   private getOtpCooldownKey(userId: string): string {
     return `${OTP_COOLDOWN_PREFIX}${userId}`;
+  }
+
+  private getRefreshSessionKey(userId: string): string {
+    return `${REFRESH_SESSION_PREFIX}${userId}`;
   }
 
   private generateOtp(): string {
@@ -572,8 +582,58 @@ export class AuthService {
         phone: input.phone,
         role: input.role,
         typ: 'refresh',
+        jti: randomUUID(),
       },
       { secret: this.getJwtSecret(), expiresIn: this.getRefreshTokenTtl() },
     );
+  }
+
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
+  private isSameHash(left: string, right: string): boolean {
+    const leftBuffer = Buffer.from(left);
+    const rightBuffer = Buffer.from(right);
+    if (leftBuffer.length !== rightBuffer.length) return false;
+    return timingSafeEqual(leftBuffer, rightBuffer);
+  }
+
+  private async storeRefreshSession(userId: string, refreshToken: string): Promise<void> {
+    const decoded = await this.jwtService.verifyAsync<{
+      exp?: number;
+    }>(refreshToken, { secret: this.getJwtSecret() });
+    const ttlSeconds = decoded.exp ? Math.max(decoded.exp - Math.floor(Date.now() / 1000), 1) : this.parseDurationToSeconds(this.getRefreshTokenTtl());
+    await this.redisService.set(
+      this.getRefreshSessionKey(userId),
+      this.hashToken(refreshToken),
+      ttlSeconds,
+    );
+  }
+
+  private async assertRefreshSession(userId: string, refreshToken: string): Promise<void> {
+    const storedHash = await this.redisService.get(this.getRefreshSessionKey(userId));
+    if (!storedHash) {
+      throw new UnauthorizedException('Session de rafraîchissement expirée ou révoquée');
+    }
+    const incomingHash = this.hashToken(refreshToken);
+    if (!this.isSameHash(storedHash, incomingHash)) {
+      throw new UnauthorizedException('Jeton de rafraîchissement révoqué');
+    }
+  }
+
+  private parseDurationToSeconds(value: string): number {
+    const normalized = value.trim();
+    const match = normalized.match(/^(\d+)([smhd])$/i);
+    if (!match) {
+      const raw = Number(normalized);
+      return Number.isFinite(raw) && raw > 0 ? raw : 30 * 24 * 60 * 60;
+    }
+    const amount = Number(match[1]);
+    const unit = match[2].toLowerCase();
+    if (unit === 's') return amount;
+    if (unit === 'm') return amount * 60;
+    if (unit === 'h') return amount * 60 * 60;
+    return amount * 24 * 60 * 60;
   }
 }

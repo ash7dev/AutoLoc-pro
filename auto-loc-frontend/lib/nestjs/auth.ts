@@ -26,8 +26,6 @@ export interface ProfileResponse {
 }
 
 export interface NestAuthResponse {
-  accessToken: string;
-  refreshToken: string;
   activeRole: ProfileResponse['role'];
 }
 
@@ -39,7 +37,7 @@ export interface CompleteProfileInput {
   avatarUrl?: string;
 }
 
-export async function fetchMe(accessToken: string): Promise<ProfileResponse> {
+export async function fetchMe(accessToken?: string): Promise<ProfileResponse> {
   return apiFetch<ProfileResponse>(AUTH_ENDPOINTS.me, { accessToken });
 }
 
@@ -62,7 +60,7 @@ export async function refreshNestToken(
 }
 
 export async function completeProfile(
-  accessToken: string,
+  accessToken: string | undefined,
   input: CompleteProfileInput,
 ): Promise<ProfileResponse> {
   return apiFetch<ProfileResponse, CompleteProfileInput>(
@@ -72,7 +70,7 @@ export async function completeProfile(
 }
 
 export async function switchRole(
-  accessToken: string,
+  accessToken: string | undefined,
   role: 'LOCATAIRE' | 'PROPRIETAIRE',
 ): Promise<{ role: ProfileResponse['role'] }> {
   return apiFetch(AUTH_ENDPOINTS.switchRole, {
@@ -113,7 +111,7 @@ export interface UserProfile {
 /**
  * Fetch the authenticated user's full profile.
  */
-export async function fetchUserProfile(accessToken: string): Promise<UserProfile> {
+export async function fetchUserProfile(accessToken?: string): Promise<UserProfile> {
   return apiFetch<UserProfile>('/users/me/profile', { accessToken });
 }
 

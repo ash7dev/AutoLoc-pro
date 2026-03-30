@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fetchUserProfile, updateUserProfile, type UserProfile } from '@/lib/nestjs/auth';
-import { useRoleStore } from '@/features/auth/stores/role.store';
 import { useSwitchToLocataire } from '@/features/owner/hooks/use-switch-to-locataire';
 import { Button } from '@/components/ui/button';
 
@@ -31,16 +30,15 @@ interface OwnerSettingsProps {
 export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
   const { switchToLocataire, loading: switchingRole } = useSwitchToLocataire();
   const queryClient = useQueryClient();
-  const accessToken = useRoleStore((state) => state.accessToken);
 
   const [activeTab, setActiveTab] = useState('profile');
   const [editingField, setEditingField] = useState<keyof typeof formData | null>(null);
   const [errorSync, setErrorSync] = useState<string | null>(null);
 
   const { data: profile, isLoading: loadingProfile } = useQuery({
-    queryKey: ['userProfile', accessToken],
-    queryFn: () => fetchUserProfile(accessToken!),
-    enabled: !!accessToken && !initialProfile,
+    queryKey: ['userProfile'],
+    queryFn: () => fetchUserProfile(),
+    enabled: !initialProfile,
     initialData: initialProfile || undefined,
   });
 
@@ -68,7 +66,7 @@ export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
     mutationFn: (payload: Partial<Pick<UserProfile, 'prenom' | 'nom' | 'dateNaissance'>>) => 
       updateUserProfile(payload),
     onSuccess: (_, variables) => {
-      queryClient.setQueryData(['userProfile', accessToken], (old: UserProfile | undefined) => {
+      queryClient.setQueryData(['userProfile'], (old: UserProfile | undefined) => {
         if (!old) return old;
         return { ...old, ...variables };
       });

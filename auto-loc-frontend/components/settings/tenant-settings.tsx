@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fetchUserProfile, updateUserProfile, type UserProfile } from '@/lib/nestjs/auth';
-import { useRoleStore } from '@/features/auth/stores/role.store';
 import { useSwitchToProprietaire } from '@/features/owner/hooks/use-switch-to-proprietaire';
 import { Button } from '@/components/ui/button';
 
@@ -53,11 +52,8 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
     if (!initialProfile) {
       const loadProfile = async () => {
         try {
-          const accessToken = useRoleStore.getState().accessToken;
-          if (accessToken) {
-            const userProfile = await fetchUserProfile(accessToken);
-            setProfile(userProfile);
-          }
+          const userProfile = await fetchUserProfile();
+          setProfile(userProfile);
         } catch (error) {
           console.error('Error loading profile:', error);
         } finally {

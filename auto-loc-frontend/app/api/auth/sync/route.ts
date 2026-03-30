@@ -49,8 +49,6 @@ export async function POST(request: NextRequest) {
   };
 
   const response = NextResponse.json({
-    accessToken: session.accessToken,
-    refreshToken: session.refreshToken,
     activeRole: session.activeRole,
   });
 

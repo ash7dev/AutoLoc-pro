@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { OwnerSettings } from '@/components/settings/owner-settings';
 import { fetchUserProfile, type UserProfile } from '@/lib/nestjs/auth';
-import { useRoleStore } from '@/features/auth/stores/role.store';
 
 export default function DashboardSettingsPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -12,11 +11,8 @@ export default function DashboardSettingsPage() {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const accessToken = useRoleStore.getState().accessToken;
-        if (accessToken) {
-          const userProfile = await fetchUserProfile(accessToken);
-          setProfile(userProfile);
-        }
+        const userProfile = await fetchUserProfile();
+        setProfile(userProfile);
       } catch (error) {
         console.error('Error loading profile:', error);
       } finally {

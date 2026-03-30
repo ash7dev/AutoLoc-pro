@@ -272,23 +272,11 @@ export function MarketplaceNavbar() {
   // Initialiser hasVehicles pour les utilisateurs déjà connectés
   useEffect(() => {
     if (loggedIn && hasVehicles === null) {
-      const accessToken = useRoleStore.getState().accessToken;
-      if (accessToken) {
-        fetchMe(accessToken).then(profile => {
-          useRoleStore.getState().setHasVehicles(Boolean(profile.hasVehicles));
-        }).catch(() => {
-          useRoleStore.getState().setHasVehicles(false);
-        });
-      } else {
-        fetch('/api/auth/me', { credentials: 'include' })
-          .then(res => res.ok ? res.json() : Promise.reject())
-          .then(profile => {
-            useRoleStore.getState().setHasVehicles(Boolean(profile.hasVehicles));
-          })
-          .catch(() => {
-            useRoleStore.getState().setHasVehicles(false);
-          });
-      }
+      fetchMe().then(profile => {
+        useRoleStore.getState().setHasVehicles(Boolean(profile.hasVehicles));
+      }).catch(() => {
+        useRoleStore.getState().setHasVehicles(false);
+      });
     }
   }, [loggedIn, hasVehicles]);
 

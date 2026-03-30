@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../../lib/supabase/client';
 import { completeProfile } from '../../../../lib/nestjs/auth';
-import { ensureValidNestToken, syncWithNestJS } from '../../hooks/use-nest-token';
+import { syncWithNestJS } from '../../hooks/use-nest-token';
 import { OnboardingInput } from '../schema';
 
 export function useOnboarding() {
@@ -40,12 +40,8 @@ export function useOnboarding() {
     }
 
     try {
-      let nestToken = await ensureValidNestToken();
-      if (!nestToken) {
-        const session = await syncWithNestJS(supaToken);
-        nestToken = session.accessToken;
-      }
-      await completeProfile(nestToken, input);
+      await syncWithNestJS(supaToken);
+      await completeProfile(undefined, input);
       setLoading(false);
       return true;
     } catch (err) {
