@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useSwitchToLocataire } from '../hooks/use-switch-to-locataire';
 import { useSignOut } from '../../auth/hooks/use-signout';
+import { useRoleStore } from '../../auth/stores/role.store';
 
 /* ── Navigation config ────────────────────────────────────────── */
 const DESKTOP_NAV_ITEMS = [
@@ -124,6 +125,8 @@ function SidebarDivider() {
 export function OwnerSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const activeRole = useRoleStore((s) => s.activeRole);
+  const isAdmin = activeRole === 'ADMIN' || activeRole === 'SUPPORT';
   const { switchToLocataire, loading: switching } = useSwitchToLocataire();
   const { signOut, loading: signingOut } = useSignOut();
 
@@ -149,9 +152,9 @@ const NavContent = ({ compact }: { compact: boolean }) => (
 
       {/* ── Logo ─────────────────────────────────────────────────── */}
       <div className="flex items-center justify-center px-3 py-5">
-        <button 
-          onClick={switchToLocataire} 
-          disabled={switching}
+        <button
+          onClick={isAdmin ? () => router.push('/dashboard/admin') : switchToLocataire}
+          disabled={!isAdmin && switching}
           className="group hover:opacity-80 disabled:opacity-50 transition-all duration-200"
         >
           <Image
@@ -200,32 +203,34 @@ const NavContent = ({ compact }: { compact: boolean }) => (
       <div className={cn('pb-5 space-y-0.5', compact ? 'px-2' : 'px-3')}>
         <SidebarDivider />
 
-        {/* Switch to locataire */}
-        <button
-          type="button"
-          onClick={switchToLocataire}
-          disabled={switching}
-          title={compact ? 'Mode locataire' : undefined}
-          className={cn(
-            'group relative w-full flex items-center gap-3 rounded-xl text-[14.5px] font-medium',
-            'text-black hover:bg-slate-50 hover:text-black',
-            'transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed',
-            compact ? 'px-0 py-3.5 justify-center' : 'px-3 py-2.5'
-          )}
-        >
-          {switching
-            ? <Loader2 className="w-[18px] h-[18px] animate-spin flex-shrink-0" />
-            : <UserRound className="w-[18px] h-[18px] flex-shrink-0" />
-          }
-          {!compact && <span className="tracking-tight flex-1 text-left">Mode locataire</span>}
-          {compact && (
-            <span className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs rounded-xl
-              opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap
-              transition-opacity duration-150 z-50 shadow-xl border border-slate-800">
-              Mode locataire
-            </span>
-          )}
-        </button>
+        {/* Switch to locataire — masqué pour les admins */}
+        {!isAdmin && (
+          <button
+            type="button"
+            onClick={switchToLocataire}
+            disabled={switching}
+            title={compact ? 'Mode locataire' : undefined}
+            className={cn(
+              'group relative w-full flex items-center gap-3 rounded-xl text-[14.5px] font-medium',
+              'text-black hover:bg-slate-50 hover:text-black',
+              'transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed',
+              compact ? 'px-0 py-3.5 justify-center' : 'px-3 py-2.5'
+            )}
+          >
+            {switching
+              ? <Loader2 className="w-[18px] h-[18px] animate-spin flex-shrink-0" />
+              : <UserRound className="w-[18px] h-[18px] flex-shrink-0" />
+            }
+            {!compact && <span className="tracking-tight flex-1 text-left">Mode locataire</span>}
+            {compact && (
+              <span className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs rounded-xl
+                opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap
+                transition-opacity duration-150 z-50 shadow-xl border border-slate-800">
+                Mode locataire
+              </span>
+            )}
+          </button>
+        )}
 
         {/* Sign out */}
         <button
@@ -262,9 +267,9 @@ const NavContent = ({ compact }: { compact: boolean }) => (
       {/* ══ MOBILE TOP BAR ══════════════════════════════════════════ */}
       <div className="lg:hidden fixed top-0 inset-x-0 z-40 flex items-center px-5 h-14
         bg-white/80 backdrop-blur-xl border-b border-slate-100 shadow-sm shadow-slate-100/80">
-        <button 
-          onClick={switchToLocataire} 
-          disabled={switching}
+        <button
+          onClick={isAdmin ? () => router.push('/dashboard/admin') : switchToLocataire}
+          disabled={!isAdmin && switching}
           className="hover:opacity-80 disabled:opacity-50 transition-opacity"
         >
           <Image

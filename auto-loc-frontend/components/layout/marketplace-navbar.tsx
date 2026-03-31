@@ -100,6 +100,8 @@ function ProfileDropdown({
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const activeRole = useRoleStore((s) => s.activeRole);
+  const isAdmin = activeRole === 'ADMIN' || activeRole === 'SUPPORT';
   const { switchToProprietaire, loading: switchingRole } = useSwitchToProprietaire();
 
   useEffect(() => {
@@ -175,7 +177,9 @@ function ProfileDropdown({
 
         {/* Items */}
         <div className="p-2 space-y-0.5">
-          {hasVehicles === true ? (
+          {isAdmin ? (
+            <DropdownItem href="/dashboard/admin" icon={LayoutDashboard} label="Dashboard Admin" badge="Admin" />
+          ) : hasVehicles === true ? (
             <DropdownItem onClick={() => { switchToProprietaire(); }} disabled={switchingRole} icon={switchingRole ? Loader2 : LayoutDashboard} label={switchingRole ? "Chargement..." : "Espace Propriétaire"} badge="Pro" />
           ) : hasVehicles === false ? (
             <DropdownItem href="/become-owner" icon={Building2} label="Devenir hôte" badge="Nouveau" />
@@ -265,6 +269,8 @@ export function MarketplaceNavbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const hasVehicles = useHasVehiclesFromStore();
+  const activeRole = useRoleStore((s) => s.activeRole);
+  const isAdmin = activeRole === 'ADMIN' || activeRole === 'SUPPORT';
   const pathname = usePathname();
   const router = useRouter();
   const { switchToProprietaire, loading: switchingRole } = useSwitchToProprietaire();
@@ -544,11 +550,24 @@ export function MarketplaceNavbar() {
           {hydrated && loggedIn && (
             <>
               <div className="my-2 border-t border-slate-100" />
-              {hasVehicles === true ? (
+              {isAdmin ? (
+                <Link
+                  href="/dashboard/admin"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-semibold tracking-tight text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all duration-150"
+                >
+                  <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-200">
+                    <LayoutDashboard className="h-4 w-4" strokeWidth={2.5} />
+                  </span>
+                  Dashboard Admin
+                  <span className="ml-auto px-2 py-0.5 bg-slate-700 text-[10px] font-bold rounded-full text-white">
+                    Admin
+                  </span>
+                </Link>
+              ) : hasVehicles === true ? (
                 <button
                   type="button"
                   onClick={() => {
-                    // Ne pas fermer le menu tout de suite pour laisser le temps de voir le loader
                     switchToProprietaire();
                   }}
                   disabled={switchingRole}

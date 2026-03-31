@@ -41,6 +41,7 @@ const BORDER       = '#e5e7eb';
 const WHITE        = '#ffffff';
 const FRONTEND_URL    = 'https://autoloc.sn';
 const LOGO_URL        = `${FRONTEND_URL}/logoAutoLoc.jpg`;
+const FOOTER_LOGO_URL = `${FRONTEND_URL}/footerlogo.jpg`;
 
 // ── Base layout ─────────────────────────────────────────────────────────────────
 
@@ -109,14 +110,14 @@ function baseLayout(opts: {
               <tr>
                 <td style="padding:40px 40px 0;">
 
-                  <!-- Logo centré dans panel glass -->
+                  <!-- Logo sur fond sombre — footerlogo.jpg (version claire) -->
                   <table width="100%" cellpadding="0" cellspacing="0" border="0"
                     style="background:linear-gradient(135deg,rgba(255,255,255,0.04) 0%,rgba(16,185,129,0.06) 100%);
                       border:1px solid rgba(16,185,129,0.18);border-radius:16px;padding:28px 24px;">
                     <tr>
                       <td align="center">
-                        <img src="${LOGO_URL}" alt="AutoLoc" width="205" height="82"
-                          style="display:block;object-fit:contain;max-width:205px;">
+                        <img src="${FOOTER_LOGO_URL}" alt="AutoLoc" width="160" height="64"
+                          style="display:block;object-fit:contain;max-width:160px;">
                       </td>
                     </tr>
                     <tr>
@@ -151,7 +152,7 @@ function baseLayout(opts: {
                     ${opts.title}
                   </h1>
                   ${opts.subtitle
-                      ? `<p style="margin:10px 0 0;font-size:14px;color:#94a3b8;line-height:1.6;font-weight:400;">${opts.subtitle}</p>`
+                      ? `<p style="margin:10px 0 0;font-size:14px;color:#ffffff;line-height:1.6;font-weight:400;">${opts.subtitle}</p>`
                       : ''}
                 </td>
               </tr>
@@ -333,14 +334,14 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
             title: 'Félicitations ! Votre véhicule est réservé',
             subtitle: 'Le paiement est sécurisé. Confirmez pour finaliser la location.',
             badge: { text: 'Nouvelle réservation', color: EMERALD_DARK, bg: EMERALD_BG },
-            cta: { 
-                label: 'Confirmer la réservation →', 
-                href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` 
+            cta: {
+                label: 'Confirmer la réservation →',
+                href: `${FRONTEND_URL}/login?next=${encodeURIComponent(`/dashboard/owner/reservations/${data.reservationId ?? ''}`)}&role=PROPRIETAIRE`,
             },
             content: [
                 infoCard([
                     { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
-                    { label: 'Statut paiement', value: 'Sécurisé en escrow', icon: '🔒' },
+                    { label: 'Paiement', value: 'Reçu et sécurisé', icon: '🔒' },
                     { label: 'Délai de réponse', value: '24 heures', icon: '⏰' },
                 ]),
                 alertBox(

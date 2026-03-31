@@ -68,18 +68,39 @@ export function useAuthFlow() {
       return;
     }
 
+    // Si un `next` est fourni (ex: depuis un lien email), on le respecte.
+    // Si un `role` est aussi demandé et diffère du rôle actuel, on switche d'abord.
+    const next = searchParams.get('next');
+    const requiredRole = searchParams.get('role') as 'PROPRIETAIRE' | 'LOCATAIRE' | null;
+
+    if (next && next.startsWith('/')) {
+      if (
+        requiredRole &&
+        requiredRole !== profile.role &&
+        (requiredRole === 'PROPRIETAIRE' || requiredRole === 'LOCATAIRE')
+      ) {
+        try {
+          await fetch('/api/nest/auth/switch-role', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: requiredRole }),
+          });
+          document.cookie = `role_switch_at=${Date.now()}; path=/; max-age=300`;
+        } catch {
+          // switch échoué — on continue quand même vers next
+        }
+      }
+      router.replace(next);
+      inFlight.current = false;
+      return;
+    }
+
     if (profile.role === 'PROPRIETAIRE') {
       router.replace('/dashboard/owner');
       inFlight.current = false;
       return;
     }
 
-    const next = searchParams.get('next');
-    if (next && next.startsWith('/')) {
-      router.replace(next);
-      inFlight.current = false;
-      return;
-    }
     router.replace('/');
     inFlight.current = false;
   };

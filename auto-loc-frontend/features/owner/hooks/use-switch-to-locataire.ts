@@ -9,10 +9,12 @@ export function useSwitchToLocataire() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const activeRole = useRoleStore((s) => s.activeRole);
   const setActiveRole = useRoleStore((s) => s.setActiveRole);
 
   const { authFetch } = useAuthFetch();
   const switchToLocataire = async () => {
+    if (activeRole === 'ADMIN' || activeRole === 'SUPPORT') return;
     setLoading(true);
     setError(null);
     try {

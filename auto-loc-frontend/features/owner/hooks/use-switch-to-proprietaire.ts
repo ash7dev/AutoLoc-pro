@@ -9,11 +9,13 @@ export function useSwitchToProprietaire() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const activeRole = useRoleStore((s) => s.activeRole);
   const setActiveRole = useRoleStore((s) => s.setActiveRole);
 
   const { authFetch } = useAuthFetch();
-  
+
   const switchToProprietaire = async () => {
+    if (activeRole === 'ADMIN' || activeRole === 'SUPPORT') return;
     setLoading(true);
     setError(null);
     try {
