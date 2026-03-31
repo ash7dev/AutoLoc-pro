@@ -124,7 +124,7 @@ export function ContractClient({
                                     Locataire
                                 </p>
                                 <p className="text-[12px] sm:text-[13px] font-bold text-slate-800 leading-snug">
-                                    {r.locataire.prenom} {r.locataire.nom}
+                                    {showPhone ? `${r.locataire.prenom} ${r.locataire.nom}` : 'Locataire'}
                                 </p>
                                 {showPhone ? (
                                     r.locataire.telephone && (
@@ -150,11 +150,28 @@ export function ContractClient({
                                     Propriétaire
                                 </p>
                                 <p className="text-[12px] sm:text-[13px] font-bold text-slate-800 leading-snug">
-                                    Propriétaire véhicule
+                                    {showPhone ? (
+                                        r.proprietaire ? `${r.proprietaire.prenom} ${r.proprietaire.nom}` : 'Propriétaire véhicule'
+                                    ) : 'Propriétaire'}
                                 </p>
-                                <p className="text-[11px] sm:text-[12px] text-slate-500 mt-0.5">
-                                    Réf. {r.proprietaireId?.slice(0, 8).toUpperCase() ?? '—'}
-                                </p>
+                                {showPhone ? (
+                                    r.proprietaire?.telephone && (
+                                        <p className="text-[11px] sm:text-[12px] text-slate-500 mt-0.5">
+                                            {r.proprietaire.telephone}
+                                        </p>
+                                    )
+                                ) : (
+                                    <div className="flex items-center justify-end gap-2 mt-0.5">
+                                        {!canPrint && (
+                                            <span className="text-[9px] text-amber-600 font-medium bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
+                                                Débloqué 24h avant
+                                            </span>
+                                        )}
+                                        <span className="text-[11px] sm:text-[12px] font-bold text-slate-400">
+                                            ••••••••
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -474,8 +491,16 @@ export function ContractClient({
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                             {[
-                                { role: 'LE LOCATAIRE', name: `${r.locataire.prenom} ${r.locataire.nom}` },
-                                { role: 'LE PROPRIÉTAIRE', name: 'Propriétaire véhicule' },
+                                { 
+                                    role: 'LE LOCATAIRE', 
+                                    name: showPhone ? `${r.locataire.prenom} ${r.locataire.nom}` : 'Locataire' 
+                                },
+                                { 
+                                    role: 'LE PROPRIÉTAIRE', 
+                                    name: showPhone ? (
+                                        r.proprietaire ? `${r.proprietaire.prenom} ${r.proprietaire.nom}` : 'Propriétaire véhicule'
+                                    ) : 'Propriétaire' 
+                                },
                             ].map(({ role, name }) => (
                                 <div key={role} className="rounded-xl border border-slate-200 overflow-hidden">
                                     <div className="h-1 bg-emerald-500 w-full" />
