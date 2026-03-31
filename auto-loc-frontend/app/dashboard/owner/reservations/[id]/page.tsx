@@ -8,10 +8,11 @@ import { fetchReservation } from "@/lib/nestjs/reservations";
 import { ReservationActions } from "@/features/reservations/components/reservation-actions";
 import { TenantDocsViewer } from "@/features/reservations/components/tenant-docs-viewer";
 import { PhotosEtatLieu } from "@/features/reservations/components/photos-etat-lieu";
+import { PhoneDisplay } from "@/features/reservations/components/phone-display";
 import {
     ArrowLeft, Car, FileText, Banknote, Clock, CheckCircle2,
     XCircle, LogIn, LogOut, Hash, AlertTriangle, ShieldCheck,
-    ShieldAlert, ShieldX, Phone, Lock, Star, MapPin, TrendingUp,
+    ShieldAlert, ShieldX, Lock, Star, MapPin, TrendingUp,
     Receipt, Percent, CalendarDays, ArrowRight, User, CreditCard,
     BadgeCheck, Wallet,
 } from "lucide-react";
@@ -94,11 +95,8 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
     const netPct  = NET_RATE;
 
     /* ── Privacy: sensitive info hidden before confirmation ── */
-    const revealed = ["CONFIRMEE", "EN_COURS", "TERMINEE", "LITIGE"].includes(r.statut);
     const initials  = `${r.locataire.prenom[0]}${r.locataire.nom[0]}`.toUpperCase();
-    const fullName  = revealed
-        ? `${r.locataire.prenom} ${r.locataire.nom}`
-        : `${r.locataire.prenom} ${r.locataire.nom[0]}.`;
+    const fullName  = `${r.locataire.prenom} ${r.locataire.nom}`;
 
     /* ── Vehicle photo ── */
     const photos = (r.vehicule as typeof r.vehicule & { photos?: { url: string; estPrincipale?: boolean }[] }).photos ?? [];
@@ -293,24 +291,13 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                                 </div>
                             </div>
 
-                            {/* Phone — masked before confirmation */}
-                            <div className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl border transition-all ${revealed ? "bg-slate-50 border-slate-200" : "bg-slate-50/40 border-dashed border-slate-200/70"}`}>
-                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${revealed ? "bg-emerald-50 border border-emerald-200" : "bg-slate-100"}`}>
-                                    {revealed
-                                        ? <Phone className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
-                                        : <Lock className="w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
-                                    }
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Téléphone</p>
-                                    {revealed && r.locataire.telephone
-                                        ? <p className="text-[13.5px] font-bold text-slate-800">{r.locataire.telephone}</p>
-                                        : <p className="text-[12px] font-semibold text-slate-400 italic">
-                                            {revealed ? "Non renseigné" : "Disponible après confirmation"}
-                                          </p>
-                                    }
-                                </div>
-                            </div>
+                            {/* Privacy note before 24h */}
+                            <PhoneDisplay 
+                                telephone={r.locataire.telephone} 
+                                dateDebut={r.dateDebut}
+                                className="mt-2"
+                                showLabel={false}
+                            />
 
                             {/* Note */}
                             {r.locataire.noteLocataire != null && (
@@ -320,16 +307,6 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                                         <span className="text-[11px] font-semibold text-slate-400 ml-1">/ 5</span>
                                     </span>
                                 </InfoRow>
-                            )}
-
-                            {/* Privacy note before confirmation */}
-                            {!revealed && (
-                                <div className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl bg-emerald-50/60 border border-emerald-100">
-                                    <BadgeCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" strokeWidth={2} />
-                                    <p className="text-[11px] text-emerald-700/70 font-medium leading-relaxed">
-                                        Les coordonnées complètes du locataire seront accessibles une fois la réservation confirmée.
-                                    </p>
-                                </div>
                             )}
 
                         </div>
