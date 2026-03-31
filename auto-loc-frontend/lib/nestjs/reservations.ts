@@ -72,6 +72,7 @@ export interface Reservation {
     contratUrl?: string;
     vehicule: ReservationVehicle;
     locataire: ReservationUser;
+    proprietaire: ReservationUser;
     proprietaireId: string;
     adresseLivraison?: string | null;
     fraisLivraison?: string | null;

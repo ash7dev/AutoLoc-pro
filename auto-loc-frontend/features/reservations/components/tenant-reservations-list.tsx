@@ -10,6 +10,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { Reservation } from '@/lib/nestjs/reservations';
 import { useCurrency } from '@/providers/currency-provider';
+import { PhoneDisplay } from './phone-display';
 
 interface Props {
     initialReservations: Reservation[];
@@ -190,10 +191,18 @@ function TenantReservationCard({ reservation }: { reservation: Reservation }) {
                                 ? formatPrice(Number(reservation.prixTotal))
                                 : '—'}
                         </p>
-                        <span className="flex items-center gap-1 text-[12px] font-medium text-black/30">
-                            <Clock className="w-3 h-3" />
-                            Réf: {reservation.id.slice(0, 8).toUpperCase()}
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <PhoneDisplay 
+                                telephone={reservation.proprietaire?.telephone} 
+                                dateDebut={reservation.dateDebut}
+                                className="text-[11px]"
+                                showLabel={false}
+                            />
+                            <span className="flex items-center gap-1 text-[12px] font-medium text-black/30">
+                                <Clock className="w-3 h-3" />
+                                Réf: {reservation.id.slice(0, 8).toUpperCase()}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ReservationStatusBadge } from "./reservation-status";
+import { PhoneDisplay } from "./phone-display";
 import type { Reservation } from "@/lib/nestjs/reservations";
 
 type LegacyAmounts = {
@@ -86,6 +87,14 @@ export function OwnerReservationCard({
                         {r.locataire.prenom} {r.locataire.nom}
                     </span>
                 </div>
+
+                {/* Phone number */}
+                <PhoneDisplay 
+                    telephone={r.locataire.telephone} 
+                    dateDebut={r.dateDebut}
+                    className="text-[12px]"
+                    showLabel={false}
+                />
 
                 {/* Delivery — inline, no badge */}
                 {hasDelivery && (
