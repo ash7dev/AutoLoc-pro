@@ -16,7 +16,7 @@ import {
     Receipt, Percent, CalendarDays, ArrowRight, User, CreditCard,
     BadgeCheck, Wallet, Info, Truck,
 } from "lucide-react";
-import { ContratActions } from "../../[id]/contrat-actions";
+import { ContratActions } from "../../../reservations/[id]/contrat-actions";
 
 /* ════════════════════════════════════════════════════════════════
    HELPERS
