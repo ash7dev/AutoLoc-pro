@@ -98,6 +98,12 @@ export class ContractGenerationService {
             (fin.getTime() - debut.getTime()) / (1000 * 60 * 60 * 24),
         );
 
+        // Vérifier si on est dans les 24h avant la date de début
+        const now = new Date();
+        const diffMs = debut.getTime() - now.getTime();
+        const diffHours = diffMs / (1000 * 60 * 60);
+        const isWithin24Hours = diffHours <= 24 && diffHours > 0;
+
         const contractData: ContractData = {
             reservationId: reservation.id,
             dateContrat: new Date().toLocaleDateString('fr-FR', {
@@ -111,13 +117,13 @@ export class ContractGenerationService {
             locataire: {
                 prenom: reservation.locataire.prenom,
                 nom: reservation.locataire.nom,
-                telephone: reservation.locataire.telephone,
+                telephone: isWithin24Hours ? reservation.locataire.telephone : '••••••••',
                 email: reservation.locataire.email,
             },
             proprietaire: {
                 prenom: reservation.proprietaire.prenom,
                 nom: reservation.proprietaire.nom,
-                telephone: reservation.proprietaire.telephone,
+                telephone: isWithin24Hours ? reservation.proprietaire.telephone : '••••••••',
                 email: reservation.proprietaire.email,
             },
             vehicule: {

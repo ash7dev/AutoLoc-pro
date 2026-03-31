@@ -38,6 +38,15 @@ function fmtMoney(n: number | string) {
     return Number(n).toLocaleString('fr-FR');
 }
 
+// Helper pour vérifier si on est dans les 24h avant la date de début
+function isWithin24Hours(dateDebut: string | Date): boolean {
+    const debut = new Date(dateDebut);
+    const now = new Date();
+    const diffMs = debut.getTime() - now.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    return diffHours <= 24 && diffHours > 0;
+}
+
 /* ── Status config ────────────────────────────────────────────── */
 const STATUS: Record<string, { label: string; text: string; bg: string; border: string; dot: string; pulse?: boolean }> = {
     INITIEE:             { label: 'Initiée',             text: 'text-slate-500',    bg: 'bg-slate-50',    border: 'border-slate-200',  dot: 'bg-slate-400' },
@@ -313,8 +322,93 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                 ══════════════════════════════════════════════════ */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-                    {/* ── Véhicule ──────────────────────────────── */}
-                    <Card icon={Car} title="Véhicule" accent="emerald">
+                    {/* ══════════════════════════════════════════════════
+                    COORDONNÉES
+                ══════════════════════════════════════════════════ */}
+                <Card icon={MapPin} title="Coordonnées" accent="emerald" className="lg:col-span-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Propriétaire */}
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
+                            <div className="px-3.5 py-2.5 bg-slate-100 border-b border-slate-200">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Propriétaire</p>
+                            </div>
+                            <div className="p-3.5 space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[12px] text-slate-500 font-medium">Nom</span>
+                                    <span className="text-[13px] font-bold text-slate-800">
+                                        {r.proprietaire?.prenom} {r.proprietaire?.nom}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[12px] text-slate-500 font-medium">Téléphone</span>
+                                    {isWithin24Hours(r.dateDebut) ? (
+                                        <span className="text-[13px] font-bold text-emerald-600">
+                                            {r.proprietaire?.telephone}
+                                        </span>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[13px] font-bold text-slate-400">
+                                                ••••••••
+                                            </span>
+                                            <span className="text-[10px] text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded">
+                                                Débloqué 24h avant
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[12px] text-slate-500 font-medium">Email</span>
+                                    <span className="text-[13px] font-mono text-slate-600 truncate max-w-[150px]">
+                                        {r.proprietaire?.email}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Locataire */}
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
+                            <div className="px-3.5 py-2.5 bg-slate-100 border-b border-slate-200">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Locataire</p>
+                            </div>
+                            <div className="p-3.5 space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[12px] text-slate-500 font-medium">Nom</span>
+                                    <span className="text-[13px] font-bold text-slate-800">
+                                        {r.locataire?.prenom} {r.locataire?.nom}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[12px] text-slate-500 font-medium">Téléphone</span>
+                                    {isWithin24Hours(r.dateDebut) ? (
+                                        <span className="text-[13px] font-bold text-emerald-600">
+                                            {r.locataire?.telephone}
+                                        </span>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[13px] font-bold text-slate-400">
+                                                ••••••••
+                                            </span>
+                                            <span className="text-[10px] text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded">
+                                                Débloqué 24h avant
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[12px] text-slate-500 font-medium">Email</span>
+                                    <span className="text-[13px] font-mono text-slate-600 truncate max-w-[150px]">
+                                        {r.locataire?.email}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                {/* ══════════════════════════════════════════════════
+                    VÉHICULE
+                ══════════════════════════════════════════════════ */}
+                <Card icon={Car} title="Véhicule" accent="emerald">
                         <div className="space-y-3.5">
 
                             {/* Photo */}
