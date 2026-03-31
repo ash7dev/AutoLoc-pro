@@ -14,8 +14,9 @@ import {
     XCircle, LogIn, LogOut, Hash, AlertTriangle, ShieldCheck,
     ShieldAlert, ShieldX, Lock, Star, MapPin, TrendingUp,
     Receipt, Percent, CalendarDays, ArrowRight, User, CreditCard,
-    BadgeCheck, Wallet, Info, Truck,
+    BadgeCheck, Wallet, Info, Truck, FileText,
 } from "lucide-react";
+import { ContratActions } from "../../[id]/contrat-actions";
 
 /* ════════════════════════════════════════════════════════════════
    HELPERS
@@ -36,6 +37,15 @@ function fmtDateTime(d: string | Date) {
 }
 function fmtMoney(n: number | string) {
     return Number(n).toLocaleString("fr-FR");
+}
+
+// Helper pour vérifier si on peut imprimer (moins de 24h avant le début ou déjà commencé)
+function canPrintContract(dateDebut: string | Date): boolean {
+    const debut = new Date(dateDebut);
+    const now = new Date();
+    const diffMs = debut.getTime() - now.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    return diffHours <= 24;
 }
 
 /* ── Status config ────────────────────────────────────────────── */
@@ -248,14 +258,13 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                             <p className="text-[13.5px] font-black text-slate-800">Contrat de location</p>
                             <p className="text-[11.5px] text-slate-400 mt-0.5">Généré automatiquement · Signé numériquement</p>
                         </div>
-                        <Link
-                            href={`/dashboard/reservations/${r.id}/contrat?from=owner`}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-[12px] font-bold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-sm flex-shrink-0"
-                        >
-                            <FileText className="w-3.5 h-3.5" strokeWidth={2.5} />
-                            Voir
-                            <ArrowRight className="w-3 h-3" strokeWidth={2.5} />
-                        </Link>
+                        <ContratActions 
+                            reservationId={r.id} 
+                            canPrint={canPrintContract(r.dateDebut)} 
+                            dateDebut={r.dateDebut} 
+                            from="owner"
+                            showPdf={false}
+                        />
                     </div>
                 )}
 
