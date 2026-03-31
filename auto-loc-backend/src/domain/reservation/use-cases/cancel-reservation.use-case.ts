@@ -126,7 +126,8 @@ export class CancelReservationUseCase {
 
         let policy: CancellationResult;
         if (isLocataire) {
-            policy = this.cancellationPolicy.calculateForTenant(reservationData, now);
+            const isConfirmed = reservation.statut === StatutReservation.CONFIRMEE;
+            policy = this.cancellationPolicy.calculateForTenant(reservationData, now, isConfirmed);
         } else if (reservation.statut === StatutReservation.PAYEE) {
             // Propriétaire n'a pas encore confirmé → refus de réservation.
             // Remboursement intégral, aucune pénalité.
@@ -137,7 +138,7 @@ export class CancelReservationUseCase {
                 commissionRetained: zero,
                 ownerPenaltyPercentage: 0,
                 ownerPenaltyAmount: zero,
-                warnings: [],
+                warnings: ['Propriétaire refuse la réservation : remboursement intégral au locataire'],
                 canCancel: true,
             };
         } else {

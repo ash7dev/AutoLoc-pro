@@ -11,11 +11,12 @@ import { TenantDisputeButton } from '@/features/reservations/components/tenant-d
 import { PhotosEtatLieu } from '@/features/reservations/components/photos-etat-lieu';
 import { ReviewForm } from '@/features/reviews/components/review-form';
 import {
-    ArrowLeft, Car, Banknote, Clock, CheckCircle2,
-    XCircle, LogIn, LogOut, Hash, AlertTriangle,
-    CalendarDays, ArrowRight, CreditCard, MapPin,
-    Truck, FileText, Wallet, Receipt, Star,
-} from 'lucide-react';
+    ArrowLeft, Car, FileText, Banknote, Clock, CheckCircle2,
+    XCircle, LogIn, LogOut, Hash, AlertTriangle, ShieldCheck,
+    ShieldAlert, ShieldX, Phone, Lock, Star, MapPin, TrendingUp,
+    Receipt, Percent, CalendarDays, ArrowRight, User, CreditCard,
+    BadgeCheck, Wallet, Info, Truck,
+} from "lucide-react";
 
 /* ════════════════════════════════════════════════════════════════
    HELPERS
@@ -536,6 +537,20 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                                     <span className="text-[15px] font-black text-emerald-600 tabular-nums">
                                         {fmtMoney(totalPaye)} FCFA
                                     </span>
+                                </div>
+
+                                {/* Service fee notice */}
+                                <div className="px-3.5 py-3 bg-blue-50/60 border border-blue-100 rounded-xl">
+                                    <div className="flex items-start gap-2.5">
+                                        <div className="w-5 h-5 rounded-lg bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <Info className="w-2.5 h-2.5 text-blue-600" strokeWidth={2.5} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[11px] font-medium text-blue-700 leading-relaxed">
+                                                Autoloc prélève des frais de service de 15% pour garantir le bon fonctionnement de la plateforme et la sécurité, incluant les frais de TVA.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

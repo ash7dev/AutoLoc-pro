@@ -48,19 +48,30 @@ export class CancellationPolicyService {
     /**
      * Calcule le remboursement pour une annulation par le locataire.
      * Politique modérée :
+     * AVANT confirmation (statut PAYEE) :
      * - > 5 jours  → 100% remb. (commission 15% retenue = locataire récupère totalBase)
      * - 2-5 jours  → 75% du totalLocataire (commission + 25% restant retenus)
+     * - < 24h      → 0%
+     * 
+     * APRÈS confirmation (statut CONFIRMEE) :
+     * - > 3 jours  → 100% remb. (commission 15% retenue = locataire récupère totalBase)
+     * - 1-3 jours  → 75% du totalLocataire (commission + 25% restant retenus)
      * - < 24h      → 0%
      */
     calculateForTenant(
         reservation: ReservationForCancellation,
         cancelDate: Date = new Date(),
+        isConfirmed: boolean = false,
     ): CancellationResult {
         const daysUntil = this.daysUntilStart(reservation.dateDebut, cancelDate);
         const zero = new Prisma.Decimal(0);
 
-        if (daysUntil > TENANT_FULL_REFUND_DAYS) {
-            // > 5 jours : remboursement intégral MOINS les frais de service (commission)
+        // Choisir le seuil selon que la réservation est confirmée ou non
+        const fullRefundDays = isConfirmed ? 3 : TENANT_FULL_REFUND_DAYS; // 3 jours après confirmation, 5 avant
+        const partialRefundDays = isConfirmed ? 1 : TENANT_PARTIAL_REFUND_DAYS; // 1 jour après confirmation, 2 avant
+
+        if (daysUntil > fullRefundDays) {
+            // > seuil : remboursement intégral MOINS les frais de service (commission)
             const refundAmount = reservation.totalBase; // totalLocataire - commission
             return {
                 refundPercentage: 100,
@@ -73,8 +84,8 @@ export class CancellationPolicyService {
             };
         }
 
-        if (daysUntil >= TENANT_PARTIAL_REFUND_DAYS) {
-            // 2-5 jours : 75% du totalLocataire
+        if (daysUntil >= partialRefundDays) {
+            // Entre seuil partiel et seuil complet : 75% du totalLocataire
             const refundAmount = reservation.totalLocataire
                 .mul(new Prisma.Decimal('0.75'))
                 .toDecimalPlaces(2);
@@ -87,7 +98,7 @@ export class CancellationPolicyService {
                 ownerPenaltyPercentage: 0,
                 ownerPenaltyAmount: zero,
                 warnings: [
-                    `Annulation entre 2 et 5 jours : 75% remboursé (${refundAmount} FCFA)`,
+                    `Annulation entre ${partialRefundDays} et ${fullRefundDays} jours : 75% remboursé (${refundAmount} FCFA)`,
                 ],
                 canCancel: true,
             };
