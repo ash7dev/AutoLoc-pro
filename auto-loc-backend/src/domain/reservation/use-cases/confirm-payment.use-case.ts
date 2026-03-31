@@ -81,6 +81,8 @@ export class ConfirmPaymentUseCase {
                     statut: true,
                     proprietaireId: true,
                     locataireId: true,
+                    proprietaire: { select: { email: true } },
+                    locataire: { select: { email: true } },
                     paiement: {
                         select: { id: true, statut: true },
                     },
@@ -181,7 +183,11 @@ export class ConfirmPaymentUseCase {
             await this.queue
                 .scheduleNotification({
                     type: 'reservation.paid',
-                    data: { reservationId },
+                    data: {
+                        reservationId,
+                        email: reservation.locataire?.email ?? undefined,
+                        userId: reservation.locataireId,
+                    },
                 })
                 .catch(() => { });
 
@@ -189,8 +195,9 @@ export class ConfirmPaymentUseCase {
             await this.queue
                 .scheduleNotification({
                     type: 'reservation.paid.owner',
-                    data: { 
+                    data: {
                         reservationId,
+                        email: reservation.proprietaire?.email ?? undefined,
                         userId: reservation.proprietaireId,
                     },
                 })

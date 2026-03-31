@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../../prisma/prisma.service';
 import { EMAIL_TEMPLATES, NotificationType } from './email-templates';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -30,7 +31,10 @@ export class NotificationService {
   private readonly resendApiKey: string;
   private readonly fromEmail: string;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
+  ) {
     this.resendApiKey = this.configService.get<string>('RESEND_API_KEY', '');
     this.fromEmail = this.configService.get<string>(
       'RESEND_FROM_EMAIL',
@@ -51,7 +55,18 @@ export class NotificationService {
       return { channel: 'log', success: false, error: 'Unknown type' };
     }
 
-    const toEmail = params.email ?? `user-${params.userId ?? 'unknown'}@stub.local`;
+    let toEmail = params.email;
+    if (!toEmail && params.userId) {
+      const user = await this.prisma.utilisateur.findUnique({
+        where: { id: params.userId },
+        select: { email: true },
+      });
+      toEmail = user?.email ?? undefined;
+    }
+    if (!toEmail) {
+      this.logger.warn(`No email resolved for type=${params.type} userId=${params.userId ?? 'unknown'} — skipping`);
+      return { channel: 'log', success: false, error: 'No recipient email' };
+    }
 
     // Mode stub si pas de clé API Resend
     if (!this.resendApiKey) {
