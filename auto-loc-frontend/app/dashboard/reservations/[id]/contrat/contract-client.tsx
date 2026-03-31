@@ -126,10 +126,23 @@ export function ContractClient({
                                 <p className="text-[12px] sm:text-[13px] font-bold text-slate-800 leading-snug">
                                     {r.locataire.prenom} {r.locataire.nom}
                                 </p>
-                                {showPhone && r.locataire.telephone && (
-                                    <p className="text-[11px] sm:text-[12px] text-slate-500 mt-0.5">
-                                        {r.locataire.telephone}
-                                    </p>
+                                {showPhone ? (
+                                    r.locataire.telephone && (
+                                        <p className="text-[11px] sm:text-[12px] text-slate-500 mt-0.5">
+                                            {r.locataire.telephone}
+                                        </p>
+                                    )
+                                ) : (
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <span className="text-[11px] sm:text-[12px] font-bold text-slate-400">
+                                            ••••••••
+                                        </span>
+                                        {!canPrint && (
+                                            <span className="text-[9px] text-amber-600 font-medium bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
+                                                Débloqué 24h avant
+                                            </span>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                             <div className="text-right">

@@ -17,6 +17,7 @@ import {
     Receipt, Percent, CalendarDays, ArrowRight, User, CreditCard,
     BadgeCheck, Wallet, Info, Truck,
 } from "lucide-react";
+import { ContratActions } from './contrat-actions';
 
 /* ════════════════════════════════════════════════════════════════
    HELPERS
@@ -39,7 +40,16 @@ function fmtMoney(n: number | string) {
     return Number(n).toLocaleString('fr-FR');
 }
 
-// Helper pour vérifier si on est dans les 24h avant la date de début
+// Helper pour vérifier si on est dans les 24h avant la date de début (ou si ça a commencé)
+function canPrintContract(dateDebut: string | Date): boolean {
+    const debut = new Date(dateDebut);
+    const now = new Date();
+    const diffMs = debut.getTime() - now.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    return diffHours <= 24;
+}
+
+// Helper pour les coordonnées (numéro de téléphone)
 function isWithin24Hours(dateDebut: string | Date): boolean {
     const debut = new Date(dateDebut);
     const now = new Date();
@@ -297,24 +307,11 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                             <p className="text-[13.5px] font-black text-slate-800">Contrat de location</p>
                             <p className="text-[11.5px] text-slate-400 mt-0.5">Généré automatiquement · Signé numériquement</p>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                            <a
-                                href={`/api/nest/reservations/${r.id}/contrat`}
-                                download={`contrat-${r.id.slice(0, 8)}.pdf`}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-bold text-slate-600 transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-sm"
-                            >
-                                <Banknote className="w-3.5 h-3.5" strokeWidth={2.5} />
-                                PDF
-                            </a>
-                            <Link
-                                href={`/dashboard/reservations/${r.id}/contrat`}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-[12px] font-bold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 shadow-sm"
-                            >
-                                <Receipt className="w-3.5 h-3.5" strokeWidth={2.5} />
-                                Voir
-                                <ArrowRight className="w-3 h-3" strokeWidth={2.5} />
-                            </Link>
-                        </div>
+                        <ContratActions 
+                            reservationId={r.id} 
+                            canPrint={canPrintContract(r.dateDebut)} 
+                            dateDebut={r.dateDebut} 
+                        />
                     </div>
                 )}
 

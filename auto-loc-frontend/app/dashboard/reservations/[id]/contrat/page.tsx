@@ -84,7 +84,6 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
     const prixParJour     = Number(r.prixParJour) || 0;
     const netProprietaire = Number(r.montantProprietaire ?? legacy.netProprietaire ?? 0) || 0;
 
-    const showPhone   = contractStatus !== 'EN_COURS';
     const contractRef  = r.id.slice(0, 8).toUpperCase();
     const contractDate = fmtDate(r.creeLe);
     const isOwner     = searchParams?.from === 'owner';
@@ -92,6 +91,10 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
     
     // On vérifie la restriction de 24h
     const canPrint    = canPrintContract(r.dateDebut);
+    
+    // Les infos de contact ne sont visibles que 24h avant (correspondant à canPrint) 
+    // et si le contrat n'est pas bloqué en attente de confirmation
+    const showPhone   = canPrint && contractStatus !== 'EN_COURS';
 
     return (
         <ContractClient 
