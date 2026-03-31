@@ -37,6 +37,7 @@ export interface ReservationUser {
     prenom: string;
     nom: string;
     telephone?: string;
+    email?: string;
     noteLocataire?: number;
     kycStatus?: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
 }
