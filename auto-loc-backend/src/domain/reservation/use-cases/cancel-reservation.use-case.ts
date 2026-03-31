@@ -89,8 +89,8 @@ export class CancelReservationUseCase {
                         montant: true,
                     },
                 },
-                locataire: { select: { telephone: true, prenom: true } },
-                proprietaire: { select: { telephone: true, prenom: true } },
+                locataire: { select: { telephone: true, prenom: true, email: true } },
+                proprietaire: { select: { telephone: true, prenom: true, email: true } },
             },
         });
         if (!reservation) throw new NotFoundException('Réservation introuvable');
