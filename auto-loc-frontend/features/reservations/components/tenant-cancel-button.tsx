@@ -7,9 +7,10 @@ import { CancelModal } from './cancel-modal';
 interface Props {
   reservationId: string;
   vehicleName?: string;
+  statut?: string;
 }
 
-export function TenantCancelButton({ reservationId, vehicleName }: Props) {
+export function TenantCancelButton({ reservationId, vehicleName, statut }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -26,6 +27,7 @@ export function TenantCancelButton({ reservationId, vehicleName }: Props) {
       <CancelModal
         reservationId={reservationId}
         vehicleName={vehicleName}
+        statut={statut}
         open={open}
         onClose={() => setOpen(false)}
       />

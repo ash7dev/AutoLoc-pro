@@ -147,9 +147,21 @@ export default function PaymentPage() {
     }
 
     async function handlePay() {
-        if (!contractAccepted || !vehicle || !pricing) return;
+        if (!contractAccepted || !vehicle || !pricing || step !== 'recap') return;
+        setErrorMsg('');
         setStep('processing');
         try {
+            // Re-vérifier le prix juste avant de payer (le prix peut avoir changé depuis le chargement)
+            const freshPricing = await fetchVehiclePricing(vehicleId, nbJours, horsDakar);
+            if (freshPricing.totalLocataire !== pricing.totalLocataire) {
+                setPricing(freshPricing);
+                setErrorMsg(
+                    `Le prix a changé : ${freshPricing.totalLocataire} FCFA au lieu de ${pricing.totalLocataire} FCFA. Veuillez vérifier le nouveau montant avant de payer.`,
+                );
+                setStep('recap');
+                return;
+            }
+
             if (activeRole === 'PROPRIETAIRE') {
                 await authFetch('/auth/switch-role', { method: 'PATCH', body: { role: 'LOCATAIRE' } });
                 setActiveRole('LOCATAIRE');
@@ -196,7 +208,16 @@ export default function PaymentPage() {
 
             setStep('success');
         } catch (err) {
-            setErrorMsg(err instanceof Error ? err.message : 'Erreur lors du paiement');
+            if (err instanceof ApiError && (err.status === 409 || err.status === 400)) {
+                const msg = err.message?.toLowerCase() ?? '';
+                if (msg.includes('disponible') || msg.includes('overlap') || msg.includes('conflit') || msg.includes('conflict')) {
+                    setErrorMsg('Ce véhicule n\'est plus disponible pour ces dates. Il vient d\'être réservé par quelqu\'un d\'autre.');
+                } else {
+                    setErrorMsg(err.message || 'Erreur lors du paiement');
+                }
+            } else {
+                setErrorMsg(err instanceof Error ? err.message : 'Erreur lors du paiement');
+            }
             setStep('error');
         }
     }
@@ -422,6 +443,14 @@ export default function PaymentPage() {
                     <p className="text-[10.5px] text-slate-300 mt-3 text-center">🔒 Simulation — Aucun vrai paiement ne sera effectué</p>
                 </div>
 
+                {/* ── Prix changé — avertissement ── */}
+                {step === 'recap' && errorMsg && (
+                    <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 mb-4">
+                        <Shield className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
+                        <p className="text-[12.5px] font-semibold text-amber-800 leading-relaxed">{errorMsg}</p>
+                    </div>
+                )}
+
                 {/* ── Contract checkbox ── */}
                 <label className={cn(
                     'flex items-start gap-3 cursor-pointer rounded-2xl border-2 p-4 mb-6 transition-all duration-200',
@@ -462,7 +491,7 @@ export default function PaymentPage() {
                 {/* ── Pay button ── */}
                 <button
                     type="button"
-                    disabled={!contractAccepted}
+                    disabled={!contractAccepted || step !== 'recap'}
                     onClick={handlePay}
                     className={cn(
                         'w-full relative flex items-center justify-center gap-3 rounded-2xl px-6 py-4 overflow-hidden',

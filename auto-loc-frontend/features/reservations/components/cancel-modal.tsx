@@ -13,6 +13,7 @@ import { translateError } from '@/lib/utils/api-error-fr';
 interface CancelModalProps {
   reservationId: string;
   vehicleName?: string;
+  statut?: string;
   open: boolean;
   onClose: () => void;
 }
@@ -20,7 +21,32 @@ interface CancelModalProps {
 /* ════════════════════════════════════════════════════════════════
    COMPONENT
 ════════════════════════════════════════════════════════════════ */
-export function CancelModal({ reservationId, vehicleName, open, onClose }: CancelModalProps) {
+function getCancelWarning(statut?: string): { text: string; color: 'amber' | 'red' } {
+  if (statut === 'EN_ATTENTE_PAIEMENT') {
+    return {
+      text: 'Votre paiement n\'est pas encore confirmé. L\'annulation est immédiate et aucun remboursement ne sera effectué.',
+      color: 'amber',
+    };
+  }
+  if (statut === 'PAYEE') {
+    return {
+      text: 'Paiement confirmé. Le remboursement dépend du délai restant avant le début de la location (de 0 % à 100 % hors frais de service). L\'annulation est définitive.',
+      color: 'amber',
+    };
+  }
+  if (statut === 'CONFIRMEE') {
+    return {
+      text: 'Le propriétaire a déjà confirmé cette réservation. Le remboursement peut être réduit ou nul selon le délai restant. L\'annulation est définitive.',
+      color: 'red',
+    };
+  }
+  return {
+    text: 'L\'annulation est définitive. Le remboursement dépend de la politique en vigueur.',
+    color: 'amber',
+  };
+}
+
+export function CancelModal({ reservationId, vehicleName, statut, open, onClose }: CancelModalProps) {
   const router = useRouter();
   const { authFetch } = useAuthFetch();
   const [reason, setReason] = useState('');
@@ -134,13 +160,25 @@ export function CancelModal({ reservationId, vehicleName, open, onClose }: Cance
             </div>
           ) : (
             <>
-              {/* Warning notice */}
-              <div className="flex items-start gap-3 px-3.5 py-3 rounded-xl bg-amber-50 border border-amber-200/80">
-                <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" strokeWidth={2} />
-                <p className="text-[12px] font-medium text-amber-800 leading-relaxed">
-                  L&apos;annulation est définitive. Le remboursement dépend de la politique en vigueur.
-                </p>
-              </div>
+              {/* Warning notice — contextuel selon le statut */}
+              {(() => {
+                const warning = getCancelWarning(statut);
+                const isRed = warning.color === 'red';
+                return (
+                  <div className={cn(
+                    'flex items-start gap-3 px-3.5 py-3 rounded-xl border',
+                    isRed ? 'bg-red-50 border-red-200/80' : 'bg-amber-50 border-amber-200/80',
+                  )}>
+                    <AlertTriangle
+                      className={cn('w-4 h-4 mt-0.5 flex-shrink-0', isRed ? 'text-red-500' : 'text-amber-500')}
+                      strokeWidth={2}
+                    />
+                    <p className={cn('text-[12px] font-medium leading-relaxed', isRed ? 'text-red-800' : 'text-amber-800')}>
+                      {warning.text}
+                    </p>
+                  </div>
+                );
+              })()}
 
               {/* Reason field */}
               <div className="space-y-1.5">

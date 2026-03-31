@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
     Upload, X, Loader2, CheckCircle2, AlertTriangle,
-    ImagePlus, Fuel, Gauge, Car, Info,
+    ImagePlus, Fuel, Gauge, Car, Info, Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
@@ -15,6 +15,8 @@ interface CheckinModalProps {
     reservationId: string;
     open: boolean;
     onClose: () => void;
+    /** ISO string — pour avertir si trop tôt (avant J-1) */
+    dateDebut?: string;
 }
 
 interface PhotoSlot {
@@ -31,16 +33,30 @@ interface UploadedPhoto {
 }
 
 const PHOTO_SLOTS: PhotoSlot[] = [
-    { key: "avant", label: "Avant", icon: Car, categorie: "AVANT" },
-    { key: "arriere", label: "Arrière", icon: Car, categorie: "ARRIERE" },
-    { key: "cote_gauche", label: "Côté gauche", icon: Car, categorie: "COTE_GAUCHE" },
-    { key: "cote_droit", label: "Côté droit", icon: Car, categorie: "COTE_DROIT" },
-    { key: "compteur", label: "Compteur km", icon: Gauge, categorie: "COMPTEUR_KM" },
-    { key: "carburant", label: "Carburant", icon: Fuel, categorie: "CARBURANT" },
+    { key: "avant",      label: "Avant",       icon: Car,   categorie: "AVANT" },
+    { key: "arriere",    label: "Arrière",      icon: Car,   categorie: "ARRIERE" },
+    { key: "cote_gauche",label: "Côté gauche",  icon: Car,   categorie: "COTE_GAUCHE" },
+    { key: "cote_droit", label: "Côté droit",   icon: Car,   categorie: "COTE_DROIT" },
+    { key: "compteur",   label: "Compteur km",  icon: Gauge, categorie: "COMPTEUR_KM" },
+    { key: "carburant",  label: "Carburant",    icon: Fuel,  categorie: "CARBURANT" },
 ];
 
+/** Même logique que le backend : check-in autorisé à partir de J-1 (24h avant dateDebut) */
+function isTooEarlyForCheckin(dateDebut?: string): boolean {
+    if (!dateDebut) return false;
+    const debut = new Date(dateDebut);
+    const oneDayBefore = new Date(debut.getTime() - 24 * 60 * 60 * 1000);
+    return new Date() < oneDayBefore;
+}
+
+function formatDateFr(d: string): string {
+    return new Date(d).toLocaleDateString("fr-FR", {
+        weekday: "long", day: "numeric", month: "long", year: "numeric",
+    });
+}
+
 /* ═════════════════════════════════════════════════════════════════ */
-export function CheckinModal({ reservationId, open, onClose }: CheckinModalProps) {
+export function CheckinModal({ reservationId, open, onClose, dateDebut }: CheckinModalProps) {
     const router = useRouter();
     const { authFetch } = useAuthFetch();
     const [photos, setPhotos] = useState<Record<string, UploadedPhoto>>({});
@@ -50,6 +66,7 @@ export function CheckinModal({ reservationId, open, onClose }: CheckinModalProps
     const [success, setSuccess] = useState(false);
 
     const photoCount = Object.keys(photos).length;
+    const tooEarly = isTooEarlyForCheckin(dateDebut);
 
     // Reset state when modal closes
     useEffect(() => {
@@ -78,13 +95,14 @@ export function CheckinModal({ reservationId, open, onClose }: CheckinModalProps
             const photo = await res.json();
             setPhotos(prev => ({ ...prev, [slot.key]: photo }));
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Erreur lors de l'upload");
+            setError(translateError(err));
         } finally {
             setUploading(null);
         }
     }, [reservationId]);
 
     const handleSubmit = useCallback(async () => {
+        if (submitting || success || photoCount === 0 || uploading !== null) return;
         setSubmitting(true);
         setError(null);
         try {
@@ -96,9 +114,11 @@ export function CheckinModal({ reservationId, open, onClose }: CheckinModalProps
         } finally {
             setSubmitting(false);
         }
-    }, [reservationId, authFetch, onClose, router]);
+    }, [reservationId, authFetch, onClose, router, submitting, success, photoCount, uploading]);
 
     if (!open) return null;
+
+    const canSubmit = !submitting && !success && photoCount > 0 && uploading === null && !tooEarly;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -114,14 +134,32 @@ export function CheckinModal({ reservationId, open, onClose }: CheckinModalProps
                         </p>
                     </div>
                     <button
-                        onClick={onClose}
-                        className="w-8 h-8 rounded-lg bg-white/6 border border-white/8 flex items-center justify-center hover:bg-white/12 transition-colors"
+                        onClick={() => !submitting && onClose()}
+                        disabled={submitting}
+                        className="w-8 h-8 rounded-lg bg-white/6 border border-white/8 flex items-center justify-center hover:bg-white/12 transition-colors disabled:opacity-40"
                     >
                         <X className="w-4 h-4 text-slate-400" strokeWidth={2} />
                     </button>
                 </div>
 
-                <div className="px-6 py-5 space-y-6">
+                <div className="px-6 py-5 space-y-5">
+
+                    {/* Avertissement trop tôt */}
+                    {tooEarly && dateDebut && (
+                        <div className="flex items-start gap-3 rounded-xl bg-amber-500/10 border border-amber-500/20 p-4">
+                            <Clock className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" strokeWidth={2} />
+                            <div>
+                                <p className="text-[12.5px] font-black text-amber-300">Check-in pas encore disponible</p>
+                                <p className="text-[11.5px] text-amber-400/80 mt-0.5 leading-relaxed">
+                                    Le check-in sera débloqué la veille de la location, soit à partir du{" "}
+                                    <span className="font-bold text-amber-300">
+                                        {formatDateFr(new Date(new Date(dateDebut).getTime() - 24 * 60 * 60 * 1000).toISOString())}
+                                    </span>.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Info */}
                     <div className="rounded-xl bg-blue-500/8 border border-blue-500/15 p-4 space-y-3">
                         <div className="flex items-center gap-2">
@@ -143,7 +181,7 @@ export function CheckinModal({ reservationId, open, onClose }: CheckinModalProps
                             </li>
                         </ul>
                         <p className="text-[10.5px] text-slate-500 border-t border-white/6 pt-2.5 font-medium">
-                            Vous devez obligatoirement uploader au moins 1 photo pour pouvoir confirmer le Check-in.
+                            Au moins 1 photo requise. Vous pouvez en ajouter jusqu&apos;à 6.
                         </p>
                     </div>
 
@@ -165,7 +203,7 @@ export function CheckinModal({ reservationId, open, onClose }: CheckinModalProps
                                             uploaded
                                                 ? "border-emerald-500/40 bg-emerald-500/5"
                                                 : "border-white/10 bg-white/3 hover:border-white/25 hover:bg-white/5",
-                                            isUploading && "pointer-events-none",
+                                            (isUploading || submitting) && "pointer-events-none",
                                         )}
                                     >
                                         {uploaded ? (
@@ -201,18 +239,28 @@ export function CheckinModal({ reservationId, open, onClose }: CheckinModalProps
                                 );
                             })}
                         </div>
+                        {/* Indicateur upload en cours */}
+                        {uploading && (
+                            <p className="text-[11px] text-slate-500 mt-2 flex items-center gap-1.5">
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                Upload en cours — attendez la fin avant de valider
+                            </p>
+                        )}
                     </div>
 
+                    {/* Erreur */}
                     {error && (
-                        <div className="flex items-center gap-2 text-[12px] font-semibold text-red-400">
-                            <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2} />{error}
+                        <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-xl bg-red-500/10 border border-red-500/20">
+                            <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" strokeWidth={2} />
+                            <p className="text-[12px] font-semibold text-red-400 leading-relaxed">{error}</p>
                         </div>
                     )}
 
+                    {/* Succès */}
                     {success && (
                         <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-[13px] font-bold text-emerald-400 animate-in fade-in duration-300">
                             <CheckCircle2 className="w-5 h-5" strokeWidth={2} />
-                            Check-in confirmé ! Redirection…
+                            Check-in confirmé ! Mise à jour en cours…
                         </div>
                     )}
                 </div>
@@ -222,22 +270,32 @@ export function CheckinModal({ reservationId, open, onClose }: CheckinModalProps
                     <button
                         onClick={() => !submitting && onClose()}
                         disabled={submitting}
-                        className="px-5 py-2.5 rounded-xl text-[13px] font-semibold text-slate-400 hover:text-white hover:bg-white/6 border border-white/8 transition-all"
+                        className="px-5 py-2.5 rounded-xl text-[13px] font-semibold text-slate-400 hover:text-white hover:bg-white/6 border border-white/8 transition-all disabled:opacity-40"
                     >
-                        Annuler
+                        Fermer
                     </button>
                     <button
                         onClick={handleSubmit}
-                        disabled={submitting || success || photoCount === 0}
+                        disabled={!canSubmit}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-200",
-                            submitting || success || photoCount === 0
-                                ? "bg-emerald-500/10 text-emerald-500/40 cursor-not-allowed border border-emerald-500/10"
-                                : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20",
+                            canSubmit
+                                ? "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20"
+                                : "bg-emerald-500/10 text-emerald-500/40 cursor-not-allowed border border-emerald-500/10",
                         )}
                     >
-                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" strokeWidth={2.5} />}
-                        Confirmer le check-in
+                        {submitting
+                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                            : <CheckCircle2 className="w-4 h-4" strokeWidth={2.5} />
+                        }
+                        {tooEarly
+                            ? "Check-in pas encore disponible"
+                            : uploading
+                                ? "Upload en cours…"
+                                : photoCount === 0
+                                    ? "Ajoutez au moins 1 photo"
+                                    : "Confirmer le check-in"
+                        }
                     </button>
                 </div>
             </div>

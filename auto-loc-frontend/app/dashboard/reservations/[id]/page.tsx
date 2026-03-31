@@ -291,6 +291,7 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                         <TenantCancelButton
                             reservationId={r.id}
                             vehicleName={v ? `${v.marque} ${v.modele}` : undefined}
+                            statut={r.statut}
                         />
                     )}
                 </div>

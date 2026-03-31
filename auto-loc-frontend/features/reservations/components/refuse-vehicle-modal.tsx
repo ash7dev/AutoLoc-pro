@@ -88,9 +88,9 @@ export function RefuseVehicleModal({ reservationId, open, onClose }: RefuseVehic
         setSubmitting(true);
         setError(null);
         try {
-            await authFetch(`/reservations/${reservationId}/refus-checkin`, { 
+            await authFetch(`/reservations/${reservationId}/refus-checkin`, {
                 method: "POST",
-                body: JSON.stringify({ raison: raison.trim() }),
+                body: { raison: raison.trim() },
             });
             setSuccess(true);
             setTimeout(() => { onClose(); router.refresh(); }, 2000);

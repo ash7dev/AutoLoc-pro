@@ -21,6 +21,7 @@ interface ReservationActionsProps {
     reservationId: string;
     statut: ReservationStatut;
     dateDebut?: string;
+    dateFin?: string;
     locataireKycStatus?: string;
     checkinProprietaireLe?: string;
     checkinLocataireLe?: string;
@@ -32,12 +33,14 @@ function getCancelPolicyNotice(statut: ReservationStatut, dateDebut?: string): {
     color: 'green' | 'amber' | 'red';
     title: string;
     body: string;
+    canCancel: boolean;
 } {
     if (statut === 'PAYEE') {
         return {
             color: 'green',
             title: 'Refus gratuit — aucune pénalité',
             body: 'Vous n\'avez pas encore accepté cette réservation. Refuser est gratuit : le locataire sera remboursé intégralement et automatiquement.',
+            canCancel: true,
         };
     }
     if (!dateDebut) {
@@ -45,6 +48,7 @@ function getCancelPolicyNotice(statut: ReservationStatut, dateDebut?: string): {
             color: 'amber',
             title: 'Politique d\'annulation',
             body: 'Le locataire sera remboursé intégralement. Une pénalité peut s\'appliquer selon le délai restant avant la location.',
+            canCancel: true,
         };
     }
     const daysUntil = Math.max(0, (new Date(dateDebut).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
@@ -53,6 +57,7 @@ function getCancelPolicyNotice(statut: ReservationStatut, dateDebut?: string): {
             color: 'green',
             title: 'Annulation sans pénalité',
             body: 'Il reste plus de 7 jours avant le début de la location. Aucune pénalité ne sera appliquée. Le locataire sera remboursé intégralement.',
+            canCancel: true,
         };
     }
     if (daysUntil >= 3) {
@@ -60,6 +65,7 @@ function getCancelPolicyNotice(statut: ReservationStatut, dateDebut?: string): {
             color: 'amber',
             title: 'Pénalité de 20%',
             body: 'Il reste entre 3 et 7 jours avant la location. Une pénalité de 20% du montant de la location sera déduite de vos prochains revenus. Le locataire sera remboursé intégralement.',
+            canCancel: true,
         };
     }
     if (daysUntil >= 1) {
@@ -67,12 +73,14 @@ function getCancelPolicyNotice(statut: ReservationStatut, dateDebut?: string): {
             color: 'red',
             title: 'Pénalité de 40%',
             body: 'Il reste moins de 3 jours avant la location. Une pénalité de 40% du montant de la location sera déduite de vos prochains revenus. Le locataire sera remboursé intégralement.',
+            canCancel: true,
         };
     }
     return {
         color: 'red',
-        title: 'Annulation le jour même',
-        body: 'L\'annulation le jour même de la location n\'est pas autorisée depuis la plateforme. Contactez le support si vous avez une urgence.',
+        title: 'Annulation le jour même impossible',
+        body: 'L\'annulation le jour même n\'est pas autorisée depuis la plateforme. Contactez directement le locataire ou le support si vous avez une urgence.',
+        canCancel: false,
     };
 }
 
@@ -251,7 +259,8 @@ function InlineConfirm({
     policyNotice?: ReturnType<typeof getCancelPolicyNotice>;
 }) {
     const isCancel = action.key === "cancel";
-    const canConfirm = !isCancel || (reason?.trim() ?? "").length >= 5;
+    const policyBlocked = isCancel && policyNotice?.canCancel === false;
+    const canConfirm = !isCancel || (!policyBlocked && (reason?.trim() ?? "").length >= 5);
 
     const noticeCls = {
         green: { wrap: 'bg-emerald-50 border-emerald-200', title: 'text-emerald-800', body: 'text-emerald-700' },
@@ -281,8 +290,8 @@ function InlineConfirm({
                 );
             })()}
 
-            {/* Raison d'annulation — uniquement pour cancel */}
-            {isCancel && onReasonChange !== undefined && (
+            {/* Raison d'annulation — uniquement pour cancel non bloqué */}
+            {isCancel && !policyBlocked && onReasonChange !== undefined && (
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
                         Raison <span className="text-red-400">*</span>
@@ -307,25 +316,27 @@ function InlineConfirm({
                     disabled={loading}
                     className="px-3.5 py-1.5 rounded-xl text-[12px] font-semibold text-slate-500 hover:text-slate-900 hover:bg-white border border-transparent hover:border-slate-200 transition-all"
                 >
-                    Annuler
+                    {policyBlocked ? 'Fermer' : 'Annuler'}
                 </button>
-                <button
-                    type="button"
-                    onClick={onConfirm}
-                    disabled={loading || !canConfirm}
-                    className={cn(
-                        "flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[12px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed",
-                        action.style === "danger"
-                            ? "bg-red-500 hover:bg-red-600 text-white shadow-sm shadow-red-500/20"
-                            : "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm",
-                    )}
-                >
-                    {loading
-                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        : <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2.5} />
-                    }
-                    {action.confirmLabel ?? "Confirmer"}
-                </button>
+                {!policyBlocked && (
+                    <button
+                        type="button"
+                        onClick={onConfirm}
+                        disabled={loading || !canConfirm}
+                        className={cn(
+                            "flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-[12px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed",
+                            action.style === "danger"
+                                ? "bg-red-500 hover:bg-red-600 text-white shadow-sm shadow-red-500/20"
+                                : "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm",
+                        )}
+                    >
+                        {loading
+                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            : <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2.5} />
+                        }
+                        {action.confirmLabel ?? "Confirmer"}
+                    </button>
+                )}
             </div>
         </div>
     );
@@ -450,7 +461,7 @@ function DisputeForm({
    MAIN
 ════════════════════════════════════════════════════════════════ */
 export function ReservationActions({
-    reservationId, statut, dateDebut, locataireKycStatus,
+    reservationId, statut, dateDebut, dateFin, locataireKycStatus,
     checkinProprietaireLe, checkinLocataireLe,
     tacitCheckinDeadlineLe,
     className,
@@ -675,11 +686,13 @@ export function ReservationActions({
                 reservationId={reservationId}
                 open={checkinOpen}
                 onClose={() => setCheckinOpen(false)}
+                dateDebut={dateDebut}
             />
             <CheckoutModal
                 reservationId={reservationId}
                 open={checkoutOpen}
                 onClose={() => setCheckoutOpen(false)}
+                dateFin={dateFin}
             />
         </div>
     );

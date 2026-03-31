@@ -12,6 +12,7 @@ const CODE_MAP: Record<string, string> = {
   CHECKIN_ALREADY_FINALIZED:       'Le check-in a déjà été finalisé pour cette réservation.',
   CHECKIN_ALREADY_CONFIRMED_OWNER: 'Vous avez déjà confirmé le check-in en tant que propriétaire.',
   CHECKIN_ALREADY_CONFIRMED_TENANT:'Vous avez déjà confirmé le check-in en tant que locataire.',
+  CHECKIN_OWNER_PHOTOS_REQUIRED:   'Au moins une photo d\'état des lieux est requise avant de valider le check-in.',
 
   // Check-out
   CHECKOUT_TOO_EARLY:              'Le check-out n\'est disponible qu\'à partir de la date de restitution.',
