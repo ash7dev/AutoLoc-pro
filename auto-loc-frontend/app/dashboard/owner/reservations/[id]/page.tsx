@@ -14,7 +14,7 @@ import {
     XCircle, LogIn, LogOut, Hash, AlertTriangle, ShieldCheck,
     ShieldAlert, ShieldX, Lock, Star, MapPin, TrendingUp,
     Receipt, Percent, CalendarDays, ArrowRight, User, CreditCard,
-    BadgeCheck, Wallet, Info, Truck, FileText,
+    BadgeCheck, Wallet, Info, Truck,
 } from "lucide-react";
 import { ContratActions } from "../../[id]/contrat-actions";
 
