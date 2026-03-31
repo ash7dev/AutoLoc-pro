@@ -34,6 +34,7 @@ const CODE_MAP: Record<string, string> = {
   // Annulation
   CANCELLATION_INVALID_STATUS:     'L\'annulation n\'est plus possible à ce stade de la réservation.',
   CANCELLATION_BLOCKED:            'L\'annulation est bloquée selon la politique en vigueur.',
+  CANCELLATION_SAME_DAY:           'Annulation le jour même impossible depuis la plateforme. Veuillez contacter directement l\'autre partie.',
 
   // Litige
   DISPUTE_ALREADY_EXISTS:          'Un litige existe déjà pour cette réservation.',
@@ -61,8 +62,8 @@ const MESSAGE_MAP: Record<string, string> = {
   // Réseau
   'Failed to fetch':                              'Impossible de joindre le serveur. Vérifiez votre connexion.',
   'Load failed':                                  'Impossible de joindre le serveur. Vérifiez votre connexion.',
-  'Network request failed':                       'Erreur réseau. Vérifiez votre connexion.',
   'Délai d\'attente dépassé':                     'La requête a pris trop de temps. Vérifiez votre connexion.',
+  'Annulation le jour même impossible depuis la plateforme, sauf accord avec le locataire': 'Annulation le jour même impossible. Veuillez contacter directement l\'autre partie.',
 
   // Serveur
   'Internal server error':                        'Erreur serveur. Veuillez réessayer.',
@@ -104,6 +105,11 @@ export function translateError(err: unknown): string {
       for (const [key, value] of Object.entries(MESSAGE_MAP)) {
         if (lc.includes(key.toLowerCase())) return value;
       }
+    }
+
+    // 3b. Code métier spécifique pour annulation jour même
+    if (err.message && err.message.includes('Annulation le jour même')) {
+      return 'Annulation le jour même impossible. Veuillez contacter directement l\'autre partie.';
     }
 
     // 4. Message backend déjà en français → on le passe tel quel
