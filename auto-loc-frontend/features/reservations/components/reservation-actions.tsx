@@ -20,11 +20,60 @@ import { CheckoutModal } from "./checkout-modal";
 interface ReservationActionsProps {
     reservationId: string;
     statut: ReservationStatut;
+    dateDebut?: string;
     locataireKycStatus?: string;
     checkinProprietaireLe?: string;
     checkinLocataireLe?: string;
     tacitCheckinDeadlineLe?: string | null;
     className?: string;
+}
+
+function getCancelPolicyNotice(statut: ReservationStatut, dateDebut?: string): {
+    color: 'green' | 'amber' | 'red';
+    title: string;
+    body: string;
+} {
+    if (statut === 'PAYEE') {
+        return {
+            color: 'green',
+            title: 'Refus gratuit — aucune pénalité',
+            body: 'Vous n\'avez pas encore accepté cette réservation. Refuser est gratuit : le locataire sera remboursé intégralement et automatiquement.',
+        };
+    }
+    if (!dateDebut) {
+        return {
+            color: 'amber',
+            title: 'Politique d\'annulation',
+            body: 'Le locataire sera remboursé intégralement. Une pénalité peut s\'appliquer selon le délai restant avant la location.',
+        };
+    }
+    const daysUntil = Math.max(0, (new Date(dateDebut).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    if (daysUntil > 7) {
+        return {
+            color: 'green',
+            title: 'Annulation sans pénalité',
+            body: 'Il reste plus de 7 jours avant le début de la location. Aucune pénalité ne sera appliquée. Le locataire sera remboursé intégralement.',
+        };
+    }
+    if (daysUntil >= 3) {
+        return {
+            color: 'amber',
+            title: 'Pénalité de 20%',
+            body: 'Il reste entre 3 et 7 jours avant la location. Une pénalité de 20% du montant de la location sera déduite de vos prochains revenus. Le locataire sera remboursé intégralement.',
+        };
+    }
+    if (daysUntil >= 1) {
+        return {
+            color: 'red',
+            title: 'Pénalité de 40%',
+            body: 'Il reste moins de 3 jours avant la location. Une pénalité de 40% du montant de la location sera déduite de vos prochains revenus. Le locataire sera remboursé intégralement.',
+        };
+    }
+    return {
+        color: 'red',
+        title: 'Annulation le jour même',
+        body: 'L\'annulation le jour même de la location n\'est pas autorisée depuis la plateforme. Contactez le support si vous avez une urgence.',
+    };
 }
 
 interface ActionConfig {
@@ -191,7 +240,7 @@ function ActionButton({
    INLINE CONFIRM  — clean white card, no dark hacks
 ════════════════════════════════════════════════════════════════ */
 function InlineConfirm({
-    action, onConfirm, onCancel, loading, reason, onReasonChange,
+    action, onConfirm, onCancel, loading, reason, onReasonChange, policyNotice,
 }: {
     action: ActionConfig;
     onConfirm: () => void;
@@ -199,9 +248,16 @@ function InlineConfirm({
     loading: boolean;
     reason?: string;
     onReasonChange?: (v: string) => void;
+    policyNotice?: ReturnType<typeof getCancelPolicyNotice>;
 }) {
     const isCancel = action.key === "cancel";
     const canConfirm = !isCancel || (reason?.trim() ?? "").length >= 5;
+
+    const noticeCls = {
+        green: { wrap: 'bg-emerald-50 border-emerald-200', title: 'text-emerald-800', body: 'text-emerald-700' },
+        amber: { wrap: 'bg-amber-50 border-amber-200', title: 'text-amber-800', body: 'text-amber-700' },
+        red:   { wrap: 'bg-red-50 border-red-200',     title: 'text-red-800',   body: 'text-red-700'   },
+    };
 
     return (
         <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 shadow-sm">
@@ -213,6 +269,17 @@ function InlineConfirm({
                     {action.description} — confirmer ?
                 </p>
             </div>
+
+            {/* Notice politique d'annulation */}
+            {isCancel && policyNotice && (() => {
+                const cls = noticeCls[policyNotice.color];
+                return (
+                    <div className={`rounded-xl border px-3.5 py-3 ${cls.wrap}`}>
+                        <p className={`text-[12px] font-black mb-0.5 ${cls.title}`}>{policyNotice.title}</p>
+                        <p className={`text-[11.5px] leading-relaxed ${cls.body}`}>{policyNotice.body}</p>
+                    </div>
+                );
+            })()}
 
             {/* Raison d'annulation — uniquement pour cancel */}
             {isCancel && onReasonChange !== undefined && (
@@ -383,7 +450,7 @@ function DisputeForm({
    MAIN
 ════════════════════════════════════════════════════════════════ */
 export function ReservationActions({
-    reservationId, statut, locataireKycStatus,
+    reservationId, statut, dateDebut, locataireKycStatus,
     checkinProprietaireLe, checkinLocataireLe,
     tacitCheckinDeadlineLe,
     className,
@@ -499,6 +566,9 @@ export function ReservationActions({
 
     const isLoading = loading !== null;
     const confirmingAction = actions.find(a => a.key === confirmKey);
+    const policyNotice = confirmingAction?.key === 'cancel'
+        ? getCancelPolicyNotice(statut, dateDebut)
+        : undefined;
 
     return (
         <div className={cn("space-y-3", className)}>
@@ -578,6 +648,7 @@ export function ReservationActions({
                     onCancel={() => { setConfirmKey(null); setCancelReason(''); }}
                     reason={cancelReason}
                     onReasonChange={setCancelReason}
+                    policyNotice={policyNotice}
                 />
             )}
 

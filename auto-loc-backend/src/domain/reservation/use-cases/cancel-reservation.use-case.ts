@@ -127,6 +127,19 @@ export class CancelReservationUseCase {
         let policy: CancellationResult;
         if (isLocataire) {
             policy = this.cancellationPolicy.calculateForTenant(reservationData, now);
+        } else if (reservation.statut === StatutReservation.PAYEE) {
+            // Propriétaire n'a pas encore confirmé → refus de réservation.
+            // Remboursement intégral, aucune pénalité.
+            const zero = new Prisma.Decimal(0);
+            policy = {
+                refundPercentage: 100,
+                refundAmount: reservationData.totalLocataire,
+                commissionRetained: zero,
+                ownerPenaltyPercentage: 0,
+                ownerPenaltyAmount: zero,
+                warnings: [],
+                canCancel: true,
+            };
         } else {
             policy = this.cancellationPolicy.calculateForOwner(reservationData, now);
         }
