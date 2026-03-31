@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { CloudinaryService } from '../../infrastructure/cloudinary/cloudinary.service';
 import { assertValidImageBuffer } from '../../infrastructure/cloudinary/utils/file-validator';
@@ -154,6 +154,15 @@ export class AuthService {
   async switchRole(user: RequestUser, dto: SwitchRoleDto): Promise<{ role: RoleProfile }> {
     if (!user.sub) {
       throw new BadRequestException('Utilisateur invalide');
+    }
+
+    const current = await this.prisma.profile.findUnique({
+      where: { userId: user.sub },
+      select: { role: true },
+    });
+
+    if (current?.role === RoleProfile.ADMIN || current?.role === RoleProfile.SUPPORT) {
+      throw new ForbiddenException('Les comptes admin/support ne peuvent pas changer de rôle');
     }
 
     await this.prisma.profile.update({
