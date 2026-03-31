@@ -259,21 +259,40 @@ export class CancelReservationUseCase {
             this.revalidate.revalidatePath(`/location/${encodeURIComponent(city)}`).catch(() => { });
         }
 
-        // 7c. Notify both parties
+        // 7c. Notify both parties separately
+        const notificationData = {
+            reservationId,
+            cancelledBy: isLocataire ? 'LOCATAIRE' : 'PROPRIETAIRE',
+            raison: input.raison,
+            refundAmount: policy.refundAmount.toString(),
+            refundPercentage: policy.refundPercentage,
+            ownerPenaltyAmount: policy.ownerPenaltyAmount.toString(),
+            locatairePhone: reservation.locataire?.telephone ?? null,
+            locatairePrenom: reservation.locataire?.prenom ?? null,
+            proprietairePhone: reservation.proprietaire?.telephone ?? null,
+            proprietairePrenom: reservation.proprietaire?.prenom ?? null,
+        };
+
+        // Email au locataire
         await this.queue
             .scheduleNotification({
                 type: 'reservation.cancelled',
                 data: {
-                    reservationId,
-                    cancelledBy: isLocataire ? 'LOCATAIRE' : 'PROPRIETAIRE',
-                    raison: input.raison,
-                    refundAmount: policy.refundAmount.toString(),
-                    refundPercentage: policy.refundPercentage,
-                    ownerPenaltyAmount: policy.ownerPenaltyAmount.toString(),
-                    locatairePhone: reservation.locataire?.telephone ?? null,
-                    locatairePrenom: reservation.locataire?.prenom ?? null,
-                    proprietairePhone: reservation.proprietaire?.telephone ?? null,
-                    proprietairePrenom: reservation.proprietaire?.prenom ?? null,
+                    ...notificationData,
+                    userId: reservation.locataireId,
+                    email: reservation.locataire?.email ?? undefined,
+                },
+            })
+            .catch(() => { });
+
+        // Email au propriétaire
+        await this.queue
+            .scheduleNotification({
+                type: 'reservation.cancelled',
+                data: {
+                    ...notificationData,
+                    userId: reservation.proprietaireId,
+                    email: reservation.proprietaire?.email ?? undefined,
                 },
             })
             .catch(() => { });
@@ -299,14 +318,17 @@ export class CancelReservationUseCase {
             ).catch(() => { });
         }
 
-        // 7e. Regenerate contract with ANNULÉ watermark
-        await this.contractGeneration
+        // 7e. Regenerate contract with ANNULÉ watermark — fire-and-forget.
+        // PDF generation + Cloudinary upload can take 10-30s : on ne bloque pas la réponse HTTP.
+        void this.contractGeneration
             .generateAndStore(reservationId, {
                 statutContrat: 'ANNULE',
                 raisonAnnulation: input.raison,
                 dateAnnulation: new Date().toLocaleDateString('fr-FR'),
             })
-            .catch(() => { });
+            .catch((err: Error) => {
+                this.logger.error(`Contract (ANNULE) generation failed for ${reservationId}: ${err.message}`);
+            });
 
         return {
             reservationId,
