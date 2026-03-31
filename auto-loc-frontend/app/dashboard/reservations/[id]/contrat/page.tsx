@@ -37,11 +37,11 @@ function getContractStatus(s: string): ContractStatus {
 }
 
 const STATUS_META: Record<ContractStatus, {
-    label: string; text: string; bg: string; border: string; dot: string; icon: typeof CheckCircle2;
+    label: string; text: string; bg: string; border: string; dot: string;
 }> = {
-    EN_COURS: { label: 'En cours', text: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200', dot: 'bg-amber-400 animate-pulse', icon: Clock },
-    ACTIF:    { label: 'Contrat actif', text: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200', dot: 'bg-emerald-500', icon: CheckCircle2 },
-    ANNULE:   { label: 'Contrat annulé', text: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200', dot: 'bg-red-500', icon: AlertTriangle },
+    EN_COURS: { label: 'En cours', text: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200', dot: 'bg-amber-400 animate-pulse' },
+    ACTIF:    { label: 'Contrat actif', text: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200', dot: 'bg-emerald-500' },
+    ANNULE:   { label: 'Contrat annulé', text: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200', dot: 'bg-red-500' },
 };
 
 /* ════════════════════════════════════════════════════════════════
