@@ -179,58 +179,58 @@ export function AdminReservationsList({ accessToken, initialData }: AdminReserva
               <Link
                 key={r.id}
                 href={`/dashboard/admin/reservations/${r.id}`}
-                className="group flex flex-col md:flex-row md:items-center gap-4 p-4 rounded-2xl border border-slate-100 bg-white hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300"
+                className={cn(
+                  "group flex flex-col sm:flex-row sm:items-stretch gap-0 rounded-2xl border bg-white overflow-hidden",
+                  "hover:shadow-lg hover:shadow-slate-100 hover:-translate-y-0.5 transition-all duration-300",
+                  r.statut === 'LITIGE' ? 'border-amber-200' : 'border-slate-100',
+                )}
               >
-                {/* ID & Date */}
-                <div className="flex flex-col gap-1 md:w-32">
-                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{r.id.split('-')[0]}</span>
-                  <span className="text-[13px] font-bold text-black">{new Date(r.creeLe).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
+                {/* Left accent bar + ID & Date */}
+                <div className={cn(
+                  "flex flex-col justify-center px-4 py-4 min-w-[100px] border-r border-slate-50",
+                  r.statut === 'EN_COURS' ? 'bg-emerald-50/50' :
+                  r.statut === 'LITIGE' ? 'bg-amber-50/60' :
+                  r.statut === 'ANNULEE' ? 'bg-red-50/40' : 'bg-slate-50/50',
+                )}>
+                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1">{r.id.split('-')[0]}</span>
+                  <span className="text-[13px] font-black text-black">{new Date(r.creeLe).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
                   <span className="text-[11px] font-medium text-slate-400">{new Date(r.creeLe).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
 
-                {/* Parties */}
-                <div className="flex flex-1 items-center gap-6">
-                  <div className="flex flex-col gap-1 min-w-0">
-                    <div className="flex items-center gap-1.5 text-[11px] font-black text-slate-300 uppercase tracking-widest mb-0.5">
-                      <User className="w-2.5 h-2.5" /> Locataire
-                    </div>
-                    <p className="text-[14px] font-black text-black truncate">{r.locataire.prenom} {r.locataire.nom}</p>
+                {/* Parties + véhicule */}
+                <div className="flex flex-1 flex-col sm:flex-row items-start sm:items-center gap-4 px-5 py-4 min-w-0">
+                  <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                    <span className="text-[9.5px] font-black text-slate-300 uppercase tracking-widest">Locataire</span>
+                    <p className="text-[13.5px] font-black text-black truncate">{r.locataire.prenom} {r.locataire.nom}</p>
                     <p className="text-[11px] font-medium text-slate-400 truncate">{r.locataire.email}</p>
                   </div>
 
-                  <div className="hidden sm:flex items-center text-slate-200">
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
+                  <ArrowRight className="hidden sm:block w-4 h-4 text-slate-200 flex-shrink-0" />
 
-                  <div className="flex flex-col gap-1 min-w-0">
-                    <div className="flex items-center gap-1.5 text-[11px] font-black text-slate-300 uppercase tracking-widest mb-0.5">
-                      <User className="w-2.5 h-2.5" /> Propriétaire
-                    </div>
-                    <p className="text-[14px] font-black text-black truncate">{r.proprietaire.prenom} {r.proprietaire.nom}</p>
+                  <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                    <span className="text-[9.5px] font-black text-slate-300 uppercase tracking-widest">Propriétaire</span>
+                    <p className="text-[13.5px] font-black text-black truncate">{r.proprietaire.prenom} {r.proprietaire.nom}</p>
                     <p className="text-[11px] font-medium text-slate-400 truncate">{r.proprietaire.email}</p>
                   </div>
-                </div>
 
-                {/* Vehicule */}
-                <div className="flex flex-col gap-1 md:w-48">
-                  <div className="flex items-center gap-1.5 text-[11px] font-black text-slate-300 uppercase tracking-widest mb-0.5">
-                    <Car className="w-2.5 h-2.5" /> Véhicule
+                  <div className="flex flex-col gap-0.5 min-w-0 sm:w-44">
+                    <span className="text-[9.5px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-1"><Car className="w-2.5 h-2.5"/>Véhicule</span>
+                    <p className="text-[13px] font-black text-black truncate">{r.vehicule.marque} {r.vehicule.modele}</p>
+                    <p className="text-[10.5px] font-bold text-emerald-500 uppercase tracking-wider">{r.vehicule.immatriculation}</p>
                   </div>
-                  <p className="text-[14px] font-black text-black truncate">{r.vehicule.marque} {r.vehicule.modele}</p>
-                  <p className="text-[11px] font-bold text-emerald-500 uppercase tracking-wider">{r.vehicule.immatriculation}</p>
                 </div>
 
                 {/* Status & Price */}
-                <div className="flex items-center justify-between md:flex-col md:items-end gap-2 md:w-40 border-t md:border-t-0 border-slate-50 pt-3 md:pt-0">
+                <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 px-5 py-4 border-t sm:border-t-0 sm:border-l border-slate-50 sm:min-w-[130px]">
                   <span className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border border-transparent transition-all",
-                    status.color
+                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold",
+                    status.color,
                   )}>
                     <StatusIcon className="w-3 h-3" />
                     {status.label}
                   </span>
-                  <p className="text-[16px] font-black text-black">
-                    {formatPrice(r.totalLocataire)} <span className="text-[10px] text-slate-400">FCFA</span>
+                  <p className="text-[17px] font-black text-black tabular-nums">
+                    {formatPrice(r.totalLocataire)}<span className="text-[10px] text-slate-400 ml-1">FCFA</span>
                   </p>
                 </div>
               </Link>

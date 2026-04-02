@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Users, Search, CheckCircle2, XCircle,
   BadgeCheck, ShieldOff, Shield, Loader2, AlertTriangle,
   Eye, Phone, Mail, Car, Calendar, X, CreditCard,
-  ExternalLink, Clock, Download,
+  ExternalLink, Clock, Download, ArrowUpRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminUser } from '../../../lib/nestjs/admin';
@@ -381,14 +382,13 @@ function UserRow({ user, pendingId, onBan, onUnban, onApproveKyc, onViewDetail }
 
   return (
     <tr className={cn(
-      'border-b border-slate-50 last:border-b-0 transition-colors',
-      user.isBanned ? 'bg-red-50/20 hover:bg-red-50/40' : 'hover:bg-slate-50/60',
+      'border-b border-slate-50 last:border-b-0 transition-colors group/row',
+      user.isBanned ? 'bg-red-50/25 hover:bg-red-50/50' : 'hover:bg-slate-50/70',
     )}>
 
       {/* Utilisateur */}
       <td className="px-5 py-3.5">
         <div className="flex items-center gap-3">
-          {/* Avatar initiales */}
           <div className="relative flex-shrink-0">
             <div className={cn(
               'flex items-center justify-center w-9 h-9 rounded-xl overflow-hidden text-[12px] font-black',
@@ -400,7 +400,6 @@ function UserRow({ user, pendingId, onBan, onUnban, onApproveKyc, onViewDetail }
                 getInitials(user)
               )}
             </div>
-            {/* Badge banni */}
             {user.isBanned && (
               <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full
                 bg-red-500 border-2 border-white flex items-center justify-center">
@@ -410,13 +409,17 @@ function UserRow({ user, pendingId, onBan, onUnban, onApproveKyc, onViewDetail }
           </div>
 
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <p className={cn(
-                'text-[13px] font-bold leading-tight truncate',
+            <Link
+              href={`/dashboard/admin/users/${user.id}`}
+              className={cn(
+                'flex items-center gap-1.5 group/name',
                 user.isBanned ? 'text-red-600' : 'text-black',
-              )}>
+              )}
+            >
+              <p className="text-[13px] font-bold leading-tight truncate group-hover/name:underline underline-offset-2">
                 {name}
               </p>
+              <ArrowUpRight className="w-3 h-3 opacity-0 group-hover/name:opacity-40 transition-opacity flex-shrink-0" strokeWidth={2.5} />
               {user.isBanned && (
                 <span className="flex-shrink-0 inline-flex items-center gap-1 rounded-full
                   bg-red-50 border border-red-200/60 px-1.5 py-0.5
@@ -424,7 +427,7 @@ function UserRow({ user, pendingId, onBan, onUnban, onApproveKyc, onViewDetail }
                   Banni
                 </span>
               )}
-            </div>
+            </Link>
             <p className="text-[11px] font-medium text-black/35 truncate">{user.email}</p>
           </div>
         </div>
@@ -450,8 +453,10 @@ function UserRow({ user, pendingId, onBan, onUnban, onApproveKyc, onViewDetail }
 
       {/* Véhicules */}
       <td className="px-5 py-3.5">
-        <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2
-          rounded-lg bg-slate-100 text-[12px] font-bold text-black/60">
+        <span className={cn(
+          'inline-flex items-center justify-center min-w-[24px] h-6 px-2 rounded-lg text-[12px] font-bold',
+          (user._count?.vehicles ?? 0) > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-black/40',
+        )}>
           {user._count?.vehicles ?? 0}
         </span>
       </td>
@@ -467,16 +472,17 @@ function UserRow({ user, pendingId, onBan, onUnban, onApproveKyc, onViewDetail }
 
       {/* Actions */}
       <td className="px-5 py-3.5">
-        <div className="flex items-center justify-end gap-2">
-          {/* Voir profil */}
-          <button
-            type="button"
-            onClick={() => onViewDetail(user)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-[11.5px] font-bold text-black/50 hover:bg-slate-50 hover:text-black hover:border-slate-300 transition-all"
+        <div className="flex items-center justify-end gap-1.5">
+          {/* Lien vers profil complet */}
+          <Link
+            href={`/dashboard/admin/users/${user.id}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200
+              text-[11.5px] font-bold text-black/50 hover:bg-slate-50 hover:text-black hover:border-slate-300
+              transition-all"
           >
             <Eye className="h-3.5 w-3.5" strokeWidth={1.75} />
-            Voir
-          </button>
+            Profil
+          </Link>
 
           {/* KYC approve */}
           {user.kycStatus === 'EN_ATTENTE' && (
@@ -724,16 +730,16 @@ export function AdminUsersList({ users }: { users: AdminUser[] }) {
       </div>
 
       {/* ── Table ── */}
-      <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
+      <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/60">
+              <tr className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-slate-50/60">
                 {['Utilisateur', 'Rôle', 'KYC', 'Véhicules', 'Inscrit', 'Actions'].map((h, i) => (
                   <th
                     key={h}
                     className={cn(
-                      'px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-black/30',
+                      'px-5 py-3.5 text-[10px] font-black uppercase tracking-widest text-black/25',
                       i === 5 ? 'text-right' : 'text-left',
                     )}
                   >

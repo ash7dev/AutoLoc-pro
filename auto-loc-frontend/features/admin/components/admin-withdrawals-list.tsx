@@ -357,17 +357,17 @@ export function AdminWithdrawalsList({ withdrawals }: AdminWithdrawalsListProps)
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+      <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/60">
-                <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-black/30 text-left">Propriétaire</th>
+              <tr className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-slate-50/40">
+                <th className="px-5 py-3.5 text-[10px] font-black uppercase tracking-widest text-black/25 text-left">Propriétaire</th>
                 <SortTh label="Montant" sortKey="amount" current={sort} onToggle={toggleSort} />
-                <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-black/30 text-left">Méthode</th>
+                <th className="px-5 py-3.5 text-[10px] font-black uppercase tracking-widest text-black/25 text-left">Méthode</th>
                 <SortTh label="Demandé le" sortKey="date" current={sort} onToggle={toggleSort} />
-                <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-black/30 text-left">Statut</th>
-                <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-black/30 text-right">Actions</th>
+                <th className="px-5 py-3.5 text-[10px] font-black uppercase tracking-widest text-black/25 text-left">Statut</th>
+                <th className="px-5 py-3.5 text-[10px] font-black uppercase tracking-widest text-black/25 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -386,7 +386,10 @@ export function AdminWithdrawalsList({ withdrawals }: AdminWithdrawalsListProps)
                 sorted.map((w) => {
                   const isLoading = pendingId === w.id;
                   return (
-                    <tr key={w.id} className="border-b border-slate-50 last:border-b-0 hover:bg-slate-50/50 transition-colors">
+                    <tr key={w.id} className={cn(
+                      "border-b border-slate-50 last:border-b-0 transition-colors",
+                      w.status === 'pending' ? 'hover:bg-amber-50/30' : 'hover:bg-slate-50/50',
+                    )}>
                       {/* Propriétaire */}
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">

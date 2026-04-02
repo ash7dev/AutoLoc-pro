@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { BadgeCheck, Car, Banknote, Scale, ArrowRight, TrendingUp, TrendingDown } from 'lucide-react';
+import { BadgeCheck, Car, Banknote, Scale, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface StatCardData {
@@ -21,28 +21,50 @@ interface AdminStatCardsProps {
 type Color = 'amber' | 'emerald' | 'blue' | 'red';
 
 const COLOR_MAP: Record<Color, {
-  bg: string; border: string; icon: string; dot: string; trendUp: string; trendDown: string;
+  bg: string; border: string; iconBg: string; iconText: string;
+  valuText: string; urgent: string; zeroBg: string;
 }> = {
-  amber:   { bg: 'bg-amber-50',   border: 'border-amber-200/60',   icon: 'bg-amber-100 text-amber-600',   dot: 'bg-amber-400',   trendUp: 'text-amber-600',   trendDown: 'text-emerald-600' },
-  emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200/60', icon: 'bg-emerald-100 text-emerald-600', dot: 'bg-emerald-400', trendUp: 'text-emerald-600', trendDown: 'text-emerald-600' },
-  blue:    { bg: 'bg-blue-50',    border: 'border-blue-200/60',    icon: 'bg-blue-100 text-blue-600',    dot: 'bg-blue-400',    trendUp: 'text-blue-600',    trendDown: 'text-emerald-600' },
-  red:     { bg: 'bg-red-50',     border: 'border-red-200/60',     icon: 'bg-red-100 text-red-600',     dot: 'bg-red-400',     trendUp: 'text-red-600',     trendDown: 'text-emerald-600' },
+  amber:   {
+    bg: 'bg-amber-50',   border: 'border-amber-200/70',
+    iconBg: 'bg-amber-100', iconText: 'text-amber-600',
+    valuText: 'text-amber-900', urgent: 'ring-amber-300/60',
+    zeroBg: 'bg-slate-50 border-slate-100',
+  },
+  emerald: {
+    bg: 'bg-emerald-50', border: 'border-emerald-200/70',
+    iconBg: 'bg-emerald-100', iconText: 'text-emerald-600',
+    valuText: 'text-emerald-900', urgent: 'ring-emerald-300/60',
+    zeroBg: 'bg-slate-50 border-slate-100',
+  },
+  blue:    {
+    bg: 'bg-blue-50',    border: 'border-blue-200/70',
+    iconBg: 'bg-blue-100',    iconText: 'text-blue-600',
+    valuText: 'text-blue-900',    urgent: 'ring-blue-300/60',
+    zeroBg: 'bg-slate-50 border-slate-100',
+  },
+  red:     {
+    bg: 'bg-red-50',     border: 'border-red-200/70',
+    iconBg: 'bg-red-100',     iconText: 'text-red-600',
+    valuText: 'text-red-900',     urgent: 'ring-red-300/60',
+    zeroBg: 'bg-slate-50 border-slate-100',
+  },
 };
 
 interface CardConfig {
   key: keyof AdminStatCardsProps;
   label: string;
   sub: string;
+  cta: string;
   href: string;
   icon: React.ElementType;
   color: Color;
 }
 
 const CARD_CONFIGS: CardConfig[] = [
-  { key: 'kyc',         label: 'KYC en attente',      sub: 'Vérifications identité',    href: '/dashboard/admin/kyc',         icon: BadgeCheck, color: 'amber'   },
-  { key: 'vehicles',    label: 'Véhicules à valider',  sub: 'En attente de validation',  href: '/dashboard/admin/vehicles',    icon: Car,        color: 'blue'    },
-  { key: 'withdrawals', label: 'Retraits demandés',    sub: 'FCFA à traiter',            href: '/dashboard/admin/withdrawals', icon: Banknote,   color: 'emerald' },
-  { key: 'disputes',    label: 'Litiges ouverts',      sub: 'À résoudre',                href: '/dashboard/admin/disputes',    icon: Scale,      color: 'red'     },
+  { key: 'kyc',         label: 'KYC en attente',     sub: 'vérifications identité',   cta: 'Examiner',  href: '/dashboard/admin/kyc',         icon: BadgeCheck, color: 'amber'   },
+  { key: 'vehicles',    label: 'Véhicules à valider', sub: 'en attente de validation', cta: 'Valider',   href: '/dashboard/admin/vehicles',    icon: Car,        color: 'blue'    },
+  { key: 'withdrawals', label: 'Retraits demandés',   sub: 'FCFA à traiter',           cta: 'Traiter',   href: '/dashboard/admin/withdrawals', icon: Banknote,   color: 'emerald' },
+  { key: 'disputes',    label: 'Litiges ouverts',     sub: 'à résoudre en priorité',   cta: 'Arbitrer',  href: '/dashboard/admin/disputes',    icon: Scale,      color: 'red'     },
 ];
 
 export function AdminStatCards({ kyc, vehicles, withdrawals, disputes }: AdminStatCardsProps) {
@@ -55,53 +77,81 @@ export function AdminStatCards({ kyc, vehicles, withdrawals, disputes }: AdminSt
         const Icon = cfg.icon;
         const override = data[cfg.key];
         const value = override?.value ?? 0;
-        const trend  = override?.trend;
+        const isUrgent = Number(value) > 0;
+        const isEmpty = Number(value) === 0;
 
         return (
           <Link
             key={cfg.key}
             href={cfg.href}
             className={cn(
-              'group relative flex flex-col gap-4 rounded-2xl border p-5',
-              'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md',
-              c.bg, c.border,
+              'group relative flex flex-col gap-3 rounded-2xl border p-5',
+              'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg',
+              isEmpty ? c.zeroBg : cn(c.bg, c.border),
+              isUrgent && 'ring-2 ring-offset-1',
+              isUrgent && c.urgent,
             )}
           >
-            {/* Icon + trend */}
-            <div className="flex items-center justify-between">
-              <div className={cn('flex items-center justify-center w-10 h-10 rounded-xl', c.icon)}>
-                <Icon className="w-5 h-5" strokeWidth={1.75} />
-              </div>
-              {trend && (
+            {/* Pulse indicator pour items urgents */}
+            {isUrgent && (
+              <span className="absolute top-4 right-4 flex h-2 w-2">
                 <span className={cn(
-                  'inline-flex items-center gap-1 text-[11px] font-semibold',
-                  trend.up ? c.trendUp : c.trendDown,
-                )}>
-                  {trend.up
-                    ? <TrendingUp className="h-3 w-3" strokeWidth={2} />
-                    : <TrendingDown className="h-3 w-3" strokeWidth={2} />
-                  }
-                  {trend.value}
-                </span>
-              )}
+                  'animate-ping absolute inline-flex h-full w-full rounded-full opacity-60',
+                  cfg.color === 'red' ? 'bg-red-400' :
+                  cfg.color === 'amber' ? 'bg-amber-400' :
+                  cfg.color === 'blue' ? 'bg-blue-400' : 'bg-emerald-400',
+                )} />
+                <span className={cn(
+                  'relative inline-flex rounded-full h-2 w-2',
+                  cfg.color === 'red' ? 'bg-red-500' :
+                  cfg.color === 'amber' ? 'bg-amber-500' :
+                  cfg.color === 'blue' ? 'bg-blue-500' : 'bg-emerald-500',
+                )} />
+              </span>
+            )}
+
+            {/* Icône */}
+            <div className={cn(
+              'flex items-center justify-center w-10 h-10 rounded-xl flex-shrink-0',
+              isEmpty ? 'bg-slate-100 text-slate-400' : cn(c.iconBg, c.iconText),
+            )}>
+              <Icon className="w-5 h-5" strokeWidth={1.75} />
             </div>
 
-            {/* Value */}
+            {/* Valeur + label */}
             <div>
-              <p className="text-[28px] font-black tracking-tight text-black leading-none">
+              <p className={cn(
+                'text-[32px] font-black leading-none tracking-tight tabular-nums',
+                isEmpty ? 'text-slate-300' : c.valuText,
+              )}>
                 {value}
               </p>
-              <p className="mt-1.5 text-[13px] font-bold text-black/70">{cfg.label}</p>
-              <p className="mt-0.5 text-[12px] font-medium text-black/35">{cfg.sub}</p>
+              <p className={cn(
+                'mt-1.5 text-[13px] font-bold leading-tight',
+                isEmpty ? 'text-slate-400' : 'text-black/70',
+              )}>
+                {cfg.label}
+              </p>
+              <p className={cn(
+                'mt-0.5 text-[11.5px] font-medium capitalize',
+                isEmpty ? 'text-slate-300' : 'text-black/35',
+              )}>
+                {isEmpty ? 'Tout est à jour ✓' : cfg.sub}
+              </p>
             </div>
 
-            {/* Arrow */}
-            <ArrowRight
-              className="absolute top-5 right-5 w-4 h-4 text-black/20
-                group-hover:text-black/50 group-hover:translate-x-0.5
-                transition-all duration-200"
-              strokeWidth={2.5}
-            />
+            {/* CTA */}
+            {isUrgent && (
+              <div className="flex items-center gap-1 mt-1">
+                <span className={cn('text-[12px] font-bold', c.iconText)}>
+                  {cfg.cta}
+                </span>
+                <ArrowRight
+                  className={cn('w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform duration-200', c.iconText)}
+                  strokeWidth={2.5}
+                />
+              </div>
+            )}
           </Link>
         );
       })}

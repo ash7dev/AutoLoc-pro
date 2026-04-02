@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   BadgeCheck, CheckCircle2, Search, Clock,
   FileText, Loader2, XCircle, X, Eye, ZoomIn,
-  Square, CheckSquare, Zap,
+  Square, CheckSquare, Zap, ArrowUpRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminUser } from '../../../lib/nestjs/admin';
@@ -425,7 +426,13 @@ function KycRow({ user, pendingId, onApprove, onReject, onViewKyc, selected, onT
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-[13px] font-bold text-black truncate leading-tight">{userName(user)}</p>
+            <Link
+              href={`/dashboard/admin/users/${user.id}`}
+              className="group/name flex items-center gap-1 text-[13px] font-bold text-black hover:underline underline-offset-2 truncate leading-tight"
+            >
+              {userName(user)}
+              <ArrowUpRight className="w-3 h-3 opacity-0 group-hover/name:opacity-40 transition-opacity flex-shrink-0" strokeWidth={2.5} />
+            </Link>
             <p className="text-[11px] font-medium text-black/35 truncate">{user.email}</p>
           </div>
         </div>
@@ -680,13 +687,13 @@ export function AdminKycList({ users }: { users: AdminUser[] }) {
       </div>
 
       {/* ── Table ── */}
-      <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
+      <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/60">
+              <tr className="border-b border-slate-100 bg-gradient-to-r from-amber-50/60 to-slate-50/40">
                 {/* Select-all */}
-                <th className="pl-4 pr-1 py-3 w-10">
+                <th className="pl-4 pr-1 py-3.5 w-10">
                   <button type="button" onClick={toggleSelectAll}
                     className="flex items-center justify-center">
                     {filtered.length > 0 && selected.size === filtered.length
@@ -699,7 +706,7 @@ export function AdminKycList({ users }: { users: AdminUser[] }) {
                   <th
                     key={h}
                     className={cn(
-                      'px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-black/30',
+                      'px-5 py-3.5 text-[10px] font-black uppercase tracking-widest text-black/25',
                       i === 4 ? 'text-right' : 'text-left',
                     )}
                   >

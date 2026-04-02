@@ -182,16 +182,31 @@ function DisputeCard({
 
   return (
     <div className={cn(
-      'rounded-2xl border bg-white transition-all duration-200',
-      isActive ? 'border-slate-200 hover:shadow-md' : 'border-slate-100 opacity-80',
+      'rounded-2xl border bg-white transition-all duration-200 overflow-hidden',
+      isActive
+        ? dispute.priority === 'high'
+          ? 'border-red-200/70 hover:shadow-md hover:shadow-red-100/50'
+          : dispute.priority === 'medium'
+          ? 'border-amber-200/60 hover:shadow-md hover:shadow-amber-100/50'
+          : 'border-slate-200 hover:shadow-md'
+        : 'border-slate-100 opacity-70',
     )}>
+      {/* Priority accent bar */}
+      {isActive && (
+        <div className={cn(
+          'h-1 w-full',
+          dispute.priority === 'high' ? 'bg-red-400' :
+          dispute.priority === 'medium' ? 'bg-amber-400' : 'bg-slate-200',
+        )} />
+      )}
+
       {/* Main row */}
       <div className="p-5">
         {/* Top */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className={cn(
-              'flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0',
+              'flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0',
               dispute.priority === 'high' ? 'bg-red-50' : dispute.priority === 'medium' ? 'bg-amber-50' : 'bg-slate-100',
             )}>
               <AlertTriangle className={cn(
@@ -258,9 +273,10 @@ function DisputeCard({
             </button>
             <Link
               href={`/dashboard/admin/disputes/${dispute.id}`}
-              className="inline-flex items-center gap-1 text-[11.5px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors ml-2"
+              className="inline-flex items-center gap-1 text-[11.5px] font-bold text-black/50 hover:text-black
+                border border-slate-200 hover:border-slate-300 rounded-lg px-2.5 py-1 transition-all ml-2 hover:bg-slate-50"
             >
-              Dossier complet &rarr;
+              Dossier complet →
             </Link>
           </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useTransition, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Car, CheckCircle2, XCircle, Search, Clock,
@@ -8,7 +9,7 @@ import {
   Eye, X, ChevronLeft, ChevronRight, Star,
   Key, Calendar, Users, Shield,
   Phone, Mail, Info, ZoomIn, FileText, ExternalLink, Truck,
-  Timer, ArrowUp, ArrowDown, ChevronsUpDown,
+  Timer, ArrowUp, ArrowDown, ChevronsUpDown, ArrowUpRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminVehicle } from '../../../lib/nestjs/admin';
@@ -546,33 +547,49 @@ function VehicleCard({ vehicle, pendingId, onValidate, onSuspend, onDetails }: {
   const isLoading = pendingId === vehicle.id;
 
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden
-      hover:shadow-lg hover:shadow-slate-200/80 hover:-translate-y-0.5 transition-all duration-300">
-      <div className="flex gap-4 p-4">
+    <div className={cn(
+      'rounded-2xl border bg-white overflow-hidden transition-all duration-300',
+      'hover:shadow-lg hover:shadow-slate-200/80 hover:-translate-y-0.5',
+      vehicle.statut === 'EN_ATTENTE_VALIDATION'
+        ? 'border-amber-200/70'
+        : vehicle.statut === 'SUSPENDU'
+        ? 'border-red-200/60'
+        : 'border-slate-100',
+    )}>
+      <div className="flex gap-0">
         {/* Photo */}
-        <div className="relative w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-slate-100 group">
+        <Link
+          href={`/dashboard/admin/vehicles/${vehicle.id}`}
+          className="relative w-32 h-32 flex-shrink-0 overflow-hidden bg-slate-100 group"
+        >
           {mainPhoto ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={mainPhoto.url} alt={`${vehicle.marque} ${vehicle.modele}`}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
           ) : (
             <div className="flex h-full items-center justify-center">
               <Car className="w-8 h-8 text-slate-300" strokeWidth={1.5} />
             </div>
           )}
           {vehicle.photos.length > 1 && (
-            <span className="absolute bottom-1.5 right-1.5 rounded-full bg-black/60 backdrop-blur-sm
-              px-1.5 py-0.5 text-[9px] font-bold text-white/90">{vehicle.photos.length}</span>
+            <span className="absolute bottom-2 right-2 rounded-full bg-black/65 backdrop-blur-sm
+              px-1.5 py-0.5 text-[9px] font-bold text-white/90">{vehicle.photos.length} 📷</span>
           )}
-        </div>
+        </Link>
 
         {/* Info */}
-        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+        <div className="flex-1 min-w-0 flex flex-col gap-1.5 p-4">
           <div className="flex items-start justify-between gap-2">
-            <div>
-              <h3 className="text-[14.5px] font-black tracking-tight text-black leading-tight">
-                {vehicle.marque} <span className="text-emerald-500">{vehicle.modele}</span>
-              </h3>
+            <div className="min-w-0">
+              <Link
+                href={`/dashboard/admin/vehicles/${vehicle.id}`}
+                className="group/title flex items-center gap-1"
+              >
+                <h3 className="text-[14.5px] font-black tracking-tight text-black leading-tight group-hover/title:underline underline-offset-2 truncate">
+                  {vehicle.marque} <span className="text-emerald-500">{vehicle.modele}</span>
+                </h3>
+                <ArrowUpRight className="w-3 h-3 text-black/30 opacity-0 group-hover/title:opacity-100 transition-opacity flex-shrink-0" strokeWidth={2.5} />
+              </Link>
               <p className="text-[11.5px] font-medium text-black/35">{vehicle.annee} · {vehicle.type}</p>
             </div>
             <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border flex-shrink-0',
@@ -590,30 +607,39 @@ function VehicleCard({ vehicle, pendingId, onValidate, onSuspend, onDetails }: {
                 <Fuel className="h-3 w-3" strokeWidth={1.75} />{vehicle.carburant}
               </span>
             )}
-            {ownerName && (
-              <span className="flex items-center gap-1.5 text-[11px] font-medium text-black/40">
-                <span className="inline-flex items-center justify-center w-4 h-4 rounded-md
-                  bg-black text-emerald-400 text-[8px] font-black flex-shrink-0">
-                  {getOwnerInitials(vehicle)}
-                </span>
-                {ownerName}
-              </span>
-            )}
           </div>
 
-          <div className="flex items-center justify-between mt-auto pt-1">
+          {/* Propriétaire */}
+          {ownerName && vehicle.proprietaire?.id && (
+            <Link
+              href={`/dashboard/admin/users/${vehicle.proprietaire.id}`}
+              className="group/owner flex items-center gap-1.5 w-fit"
+            >
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded-md
+                bg-black text-emerald-400 text-[8px] font-black flex-shrink-0">
+                {getOwnerInitials(vehicle)}
+              </span>
+              <span className="text-[11.5px] font-semibold text-black/50 group-hover/owner:text-black group-hover/owner:underline underline-offset-2 transition-colors truncate">
+                {ownerName}
+              </span>
+              <ArrowUpRight className="w-3 h-3 text-black/25 opacity-0 group-hover/owner:opacity-100 transition-opacity flex-shrink-0" strokeWidth={2.5} />
+            </Link>
+          )}
+
+          <div className="flex items-center justify-between mt-auto pt-0.5">
             <p className="text-[15px] font-black text-emerald-500 tabular-nums leading-none">
               {formatPrice(vehicle.prixParJour)}
               <span className="text-[10.5px] font-medium text-black/30 ml-1">FCFA/j</span>
             </p>
-            <span className="flex items-center gap-1 text-[10.5px] font-medium text-black/25">
-              <Clock className="h-3 w-3" strokeWidth={1.75} />
-              {new Date(vehicle.creeLe).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-            </span>
-            {vehicle.statut === 'EN_ATTENTE_VALIDATION' && (
+            {vehicle.statut === 'EN_ATTENTE_VALIDATION' ? (
               <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-amber-600">
                 <Timer className="h-3 w-3" strokeWidth={2} />
                 {ageLabel(vehicle.creeLe)}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-[10.5px] font-medium text-black/25">
+                <Clock className="h-3 w-3" strokeWidth={1.75} />
+                {new Date(vehicle.creeLe).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
               </span>
             )}
           </div>
@@ -621,13 +647,15 @@ function VehicleCard({ vehicle, pendingId, onValidate, onSuspend, onDetails }: {
       </div>
 
       {/* Actions bar */}
-      <div className="flex items-center gap-2 px-4 py-3 border-t border-slate-100 bg-slate-50/50">
-        <button type="button" onClick={() => onDetails(vehicle)}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl
+      <div className="flex items-center gap-2 px-4 py-2.5 border-t border-slate-100 bg-slate-50/60">
+        <Link
+          href={`/dashboard/admin/vehicles/${vehicle.id}`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl
             border border-slate-200 text-[12px] font-bold text-black/60
-            hover:bg-white hover:border-slate-300 hover:text-black transition-all duration-150">
+            hover:bg-white hover:border-slate-300 hover:text-black transition-all duration-150"
+        >
           <Eye className="h-3.5 w-3.5" strokeWidth={2} />Détails
-        </button>
+        </Link>
 
         {vehicle.statut === 'BROUILLON' ? (
           <div className="flex flex-1 items-center gap-1.5 rounded-xl border border-amber-200/60 bg-amber-50 px-2.5 py-2">

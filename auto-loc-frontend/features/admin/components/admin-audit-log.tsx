@@ -220,44 +220,41 @@ export function AdminAuditLog({ items = [] }: AdminAuditLogProps) {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-50">
+          <div className="px-5 py-4 space-y-0">
             {paginated.map((item, idx) => {
               const s = STATUS_CONFIG[item.status];
               const StatusIcon = s.icon;
+              const isLast = idx === paginated.length - 1;
+
               return (
                 <div
                   key={item.id ?? idx}
-                  className="group flex items-start gap-4 px-5 py-4 hover:bg-slate-50/70 transition-colors duration-150"
+                  className="group relative flex items-start gap-4 py-3.5 hover:bg-slate-50/60 -mx-5 px-5 rounded-xl transition-colors duration-150"
                 >
-                  {/* Status icon */}
-                  <div className={cn(
-                    'flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 mt-0.5 border',
-                    s.bg, s.border,
-                  )}>
-                    <StatusIcon className={cn('w-4 h-4', s.color)} strokeWidth={2} />
+                  {/* Timeline connector */}
+                  <div className="flex flex-col items-center flex-shrink-0 mt-0.5">
+                    <div className={cn(
+                      'flex items-center justify-center w-8 h-8 rounded-xl border z-10',
+                      s.bg, s.border,
+                    )}>
+                      <StatusIcon className={cn('w-3.5 h-3.5', s.color)} strokeWidth={2} />
+                    </div>
+                    {!isLast && (
+                      <div className="w-px flex-1 min-h-[16px] bg-slate-100 mt-1" />
+                    )}
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3 flex-wrap">
-                      <div className="min-w-0">
+                  <div className="flex-1 min-w-0 pb-2">
+                    <div className="flex items-start justify-between gap-2 flex-wrap">
+                      <div className="min-w-0 flex-1">
                         <p className="text-[13px] font-bold text-black leading-snug">{item.action}</p>
                         <p className="text-[12px] font-medium text-black/40 mt-0.5 leading-snug">{item.detail}</p>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {/* Type badge */}
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-slate-100 text-[10px] font-bold text-black/40 uppercase tracking-wide">
+                      <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-[9.5px] font-bold text-black/40 uppercase tracking-wide">
                           {TYPE_LABELS[item.type] ?? item.type}
                         </span>
-                        {/* Status badge */}
-                        <span className={cn(
-                          'inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold',
-                          s.bg, s.color,
-                        )}>
-                          <span className={cn('w-1.5 h-1.5 rounded-full', s.dot)} />
-                          {s.label}
-                        </span>
-                        {/* Time */}
                         <span className="text-[11px] font-medium text-black/25 whitespace-nowrap">
                           {item.time}
                         </span>
