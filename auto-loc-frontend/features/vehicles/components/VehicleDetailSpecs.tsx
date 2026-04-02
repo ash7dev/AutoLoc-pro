@@ -47,14 +47,14 @@ function SpecRow({
   value: string;
 }) {
   return (
-    <div className="flex items-center justify-between py-3.5 border-b border-slate-50 last:border-0 min-w-0">
-      <div className="flex items-center gap-3 overflow-hidden">
+    <div className="flex items-start justify-between gap-3 py-3.5 border-b border-slate-50 last:border-0 min-w-0">
+      <div className="flex items-center gap-3 shrink-0">
         <span className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
           <Icon className="w-3.5 h-3.5 text-emerald-600" strokeWidth={1.75} />
         </span>
-        <span className="text-[13.5px] font-semibold text-slate-700 truncate">{label}</span>
+        <span className="text-[13.5px] font-semibold text-slate-700 whitespace-nowrap">{label}</span>
       </div>
-      <span className="text-[13.5px] font-bold text-slate-900 text-right max-w-[55%] truncate">{value}</span>
+      <span className="text-[13.5px] font-bold text-slate-900 text-right break-words min-w-0">{value}</span>
     </div>
   );
 }
