@@ -115,6 +115,7 @@ model Vehicule {
   // Conditions de location
   zoneConduite      String?
   assurance         String?
+  carburantCondition String?
   reglesSpecifiques String?
 
   // Livraison (optionnel)
@@ -361,7 +362,7 @@ model Paiement {
 
   fournisseur        FournisseurPaiement
   idTransactionFournisseur String? @unique
-
+ 
   statut             StatutPaiement @default(EN_ATTENTE)
 
   creeLe             DateTime @default(now())
@@ -479,12 +480,13 @@ model Litige {
   id            String   @id @default(uuid())
   reservationId String   @unique
   reservation   Reservation @relation(fields: [reservationId], references: [id])
-
+ 
   description   String
   coutEstime    Decimal? @db.Decimal(10,2)
 
   statut        StatutLitige @default(EN_ATTENTE)
   montantCompensation Decimal? @db.Decimal(10,2)
+  resoluParAdminId    String?
 
   creeLe        DateTime @default(now())
   resoluLe      DateTime?

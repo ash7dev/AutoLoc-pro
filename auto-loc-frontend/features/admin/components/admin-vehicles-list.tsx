@@ -845,7 +845,7 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
             <VehicleCard key={v.id} vehicle={v} pendingId={pendingId}
               onValidate={handleValidate}
               onSuspend={(id, name) => openSuspend(id, name, v.statut === 'EN_ATTENTE_VALIDATION' || v.statut === 'BROUILLON')}
-              onDetails={setDetailVehicle} />
+              onDetails={() => router.push(`/dashboard/admin/vehicles/${v.id}`)} />
           ))}
         </div>
       )}

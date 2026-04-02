@@ -11,7 +11,7 @@ export class UsersService {
     private readonly notification: NotificationService,
   ) {}
 
-  // ── Admin list ──────────────────────────────────────────────────────────────
+  // ── Admin stats ─────────────────────────────────────────────────────────────
 
   async listAdminUsers(kycStatus?: StatutKyc, page = 1) {
     const where = kycStatus ? { statutKyc: kycStatus } : {};
@@ -90,6 +90,110 @@ export class UsersService {
     }));
 
     return { data, total, page, limit: take };
+  }
+
+  async getAdminUserDetail(userId: string) {
+    const u = await this.prisma.utilisateur.findUnique({
+      where: { id: userId },
+      include: {
+        profile: { select: { role: true, createdAt: true } },
+        vehicules: {
+          orderBy: { creeLe: 'desc' },
+          include: {
+            photos: { orderBy: { position: 'asc' } },
+            equipements: { include: { equipement: true } },
+          },
+        },
+        reservationsLocataire: {
+          orderBy: { creeLe: 'desc' },
+          take: 5,
+          include: { vehicule: { select: { marque: true, modele: true } } },
+        },
+        reservationsProprietaire: {
+          orderBy: { creeLe: 'desc' },
+          take: 5,
+          include: { 
+            vehicule: { select: { marque: true, modele: true } },
+            locataire: { select: { prenom: true, nom: true } }
+          },
+        },
+        _count: { select: { vehicules: true, reservationsLocataire: true, reservationsProprietaire: true } },
+      },
+    });
+
+    if (!u) throw new NotFoundException('Utilisateur introuvable');
+
+    const now = new Date();
+    return {
+      id: u.id,
+      userId: u.userId,
+      email: u.email,
+      role: u.profile?.role ?? 'LOCATAIRE',
+      createdAt: (u.profile?.createdAt ?? u.creeLe).toISOString(),
+      lastSeenAt: null, // Si present plus tard
+      isBanned: !u.actif || (!!u.bloqueJusqua && u.bloqueJusqua > now),
+      banRaison: null,
+      kycStatus: u.statutKyc,
+      kycRejectionReason: u.kycRejectionReason,
+      kyc: u.kycDocumentUrl || u.kycSelfieUrl || u.permisUrl ? {
+        documentUrl: u.kycDocumentUrl ?? null,
+        selfieUrl: u.kycSelfieUrl ?? null,
+        permisUrl: u.permisUrl ?? null,
+        soumisLe: u.misAJourLe.toISOString(),
+      } : undefined,
+      utilisateur: {
+        prenom: u.prenom,
+        nom: u.nom,
+        telephone: u.telephone,
+        avatarUrl: u.avatarUrl ?? null,
+      },
+      vehicles: u.vehicules.map((v) => ({
+        id: v.id,
+        marque: v.marque,
+        modele: v.modele,
+        annee: v.annee,
+        type: v.type,
+        transmission: v.transmission ?? null,
+        immatriculation: v.immatriculation,
+        carburant: v.carburant ?? null,
+        nombrePlaces: v.nombrePlaces ?? null,
+        prixParJour: Number(v.prixParJour),
+        ville: v.ville,
+        adresse: v.adresse,
+        joursMinimum: v.joursMinimum,
+        ageMinimum: v.ageMinimum,
+        zoneConduite: v.zoneConduite ?? null,
+        assurance: v.assurance ?? null,
+        reglesSpecifiques: v.reglesSpecifiques ?? null,
+        note: Number(v.note),
+        totalAvis: v.totalAvis,
+        totalLocations: v.totalLocations,
+        statut: v.statut,
+        creeLe: v.creeLe.toISOString(),
+        photos: v.photos.map((p) => ({ url: p.url, estPrincipale: p.estPrincipale })),
+        equipements: v.equipements.map((ve) => ve.equipement.nom),
+      })),
+      reservationsLocataire: u.reservationsLocataire.map((r) => ({
+        id: r.id,
+        statut: r.statut,
+        vehicule: `${r.vehicule.marque} ${r.vehicule.modele}`,
+        totalLocataire: Number(r.totalLocataire),
+        creeLe: r.creeLe,
+      })),
+      reservationsProprietaire: u.reservationsProprietaire.map((r) => ({
+        id: r.id,
+        statut: r.statut,
+        locataire: `${r.locataire?.prenom ?? ''} ${r.locataire?.nom ?? ''}`.trim(),
+        vehicule: `${r.vehicule.marque} ${r.vehicule.modele}`,
+        netProprietaire: Number(r.netProprietaire),
+        creeLe: r.creeLe,
+      })),
+      _count: { 
+        vehicles: u._count.vehicules,
+        reservationsLocataire: u._count.reservationsLocataire,
+        reservationsProprietaire: u._count.reservationsProprietaire
+      },
+    };
   }
 
   async setUserStatus(userId: string, dto: BanUserDto) {

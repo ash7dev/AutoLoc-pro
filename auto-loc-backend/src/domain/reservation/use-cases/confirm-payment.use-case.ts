@@ -138,7 +138,7 @@ export class ConfirmPaymentUseCase {
                             data: {
                                 statut: StatutPaiement.CONFIRME,
                                 ...(input.transactionId
-                                    ? { idTransactionFournisseur: input.transactionId }
+                                    ? { transactionId: input.transactionId }
                                     : {}),
                             },
                         });

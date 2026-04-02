@@ -774,7 +774,7 @@ export function AdminUsersList({ users }: { users: AdminUser[] }) {
                     onBan={(id, name) => setBanDialog({ open: true, userId: id, userName: name, raison: '' })}
                     onUnban={handleUnban}
                     onApproveKyc={handleApproveKyc}
-                    onViewDetail={setDetailUser}
+                    onViewDetail={(u) => router.push(`/dashboard/admin/users/${u.id}`)}
                   />
                 ))
               )}

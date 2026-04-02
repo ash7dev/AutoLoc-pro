@@ -62,7 +62,7 @@ export class DisputesService {
       // Locataire : peut déclarer uniquement si CONFIRMEE (non-conformité véhicule au check-in)
       if (reservation.statut !== StatutReservation.CONFIRMEE) {
         throw new BadRequestException(
-          'En tant que locataire, un litige pour non-conformité ne peut être déclaré que pendant le check-in (statut CONFIRMEE)',
+          'En tant que locataire, un litige for non-conformité ne peut être déclaré que pendant le check-in (statut CONFIRMEE)',
         );
       }
     } else if (isOwner) {
@@ -169,12 +169,7 @@ export class DisputesService {
   async adminList() {
     const litiges = await this.prisma.litige.findMany({
       orderBy: { creeLe: 'desc' },
-      select: {
-        id: true,
-        description: true,
-        coutEstime: true,
-        statut: true,
-        creeLe: true,
+      include: {
         reservation: {
           select: {
             id: true,
@@ -186,7 +181,7 @@ export class DisputesService {
       },
     });
 
-    return litiges.map((l) => ({
+    return litiges.map((l: any) => ({
       id: l.id,
       reservationId: l.reservation.id,
       renterName: [l.reservation.locataire?.prenom, l.reservation.locataire?.nom].filter(Boolean).join(' ') || '—',
@@ -206,22 +201,29 @@ export class DisputesService {
   async adminDetail(id: string) {
     const litige = await this.prisma.litige.findUnique({
       where: { id },
-      select: {
-        id: true,
-        description: true,
-        coutEstime: true,
-        statut: true,
-        creeLe: true,
+      include: {
         reservation: {
-          select: {
-            id: true,
-            statut: true,
-            totalLocataire: true,
-            netProprietaire: true,
+          include: {
             locataire: { select: { id: true, prenom: true, nom: true, email: true, telephone: true } },
             proprietaire: { select: { id: true, prenom: true, nom: true, email: true, telephone: true } },
-            vehicule: { select: { marque: true, modele: true, immatriculation: true } },
-            // On récupère les photos du check-in liées à cette réservation
+            vehicule: {
+              select: {
+                marque: true,
+                modele: true,
+                immatriculation: true,
+                annee: true,
+                type: true,
+                carburant: true,
+                transmission: true,
+                nombrePlaces: true,
+                photos: {
+                  select: {
+                    url: true,
+                    estPrincipale: true
+                  }
+                }
+              }
+            },
             photosEtatLieu: {
               where: { type: 'CHECKIN' },
               select: { url: true, creeLe: true, categorie: true }
@@ -233,6 +235,8 @@ export class DisputesService {
 
     if (!litige) throw new NotFoundException('Litige introuvable');
 
+    const res = litige.reservation as any;
+
     return {
       id: litige.id,
       description: litige.description,
@@ -240,14 +244,14 @@ export class DisputesService {
       statut: litige.statut,
       openedAt: litige.creeLe,
       reservation: {
-        id: litige.reservation.id,
-        statut: litige.reservation.statut,
-        totalLocataire: Number(litige.reservation.totalLocataire),
-        netProprietaire: Number(litige.reservation.netProprietaire),
-        locataire: litige.reservation.locataire,
-        proprietaire: litige.reservation.proprietaire,
-        vehicule: litige.reservation.vehicule,
-        photosCheckin: litige.reservation.photosEtatLieu,
+        id: res.id,
+        statut: res.statut,
+        totalLocataire: Number(res.totalLocataire),
+        netProprietaire: Number(res.netProprietaire),
+        locataire: res.locataire,
+        proprietaire: res.proprietaire,
+        vehicule: res.vehicule,
+        photosCheckin: res.photosEtatLieu,
       }
     };
   }

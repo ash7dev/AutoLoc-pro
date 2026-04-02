@@ -95,9 +95,11 @@ interface EditFormData {
   ageMinimum?: number;
   zoneConduite?: string;
   assurance?: string;
+  carburantCondition?: string;
   reglesSpecifiques?: string;
   autoriseHorsDakar?: boolean;
   supplementHorsDakarParJour?: number;
+  fraisLivraison?: number;
 }
 
 // ── Section header ─────────────────────────────────────────────────────────────
@@ -219,6 +221,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
       ageMinimum: vehicle.ageMinimum,
       zoneConduite: vehicle.zoneConduite ?? "",
       assurance: vehicle.assurance ?? "",
+      carburantCondition: vehicle.carburantCondition ?? "",
       reglesSpecifiques: vehicle.reglesSpecifiques ?? "",
       autoriseHorsDakar: vehicle.autoriseHorsDakar ?? false,
       supplementHorsDakarParJour: vehicle.supplementHorsDakarParJour ?? undefined,
@@ -415,7 +418,9 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
               ageMinimum: data.ageMinimum ? Number(data.ageMinimum) : undefined,
               zoneConduite: data.zoneConduite || undefined,
               assurance: data.assurance || undefined,
+              carburantCondition: data.carburantCondition || undefined,
               reglesSpecifiques: data.reglesSpecifiques || undefined,
+              fraisLivraison: data.fraisLivraison ? Number(data.fraisLivraison) : undefined,
               autoriseHorsDakar: data.autoriseHorsDakar || false,
               supplementHorsDakarParJour: data.supplementHorsDakarParJour ? Number(data.supplementHorsDakarParJour) : undefined,
               equipements,
@@ -799,6 +804,16 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                       {ASSURANCES.map((a) => (
                         <option key={a} value={a}>{a}</option>
                       ))}
+                    </select>
+                  </Field>
+                </div>
+ 
+                <div className="col-span-2">
+                  <Field label="Politique Carburant">
+                    <select {...register("carburantCondition")} disabled={locked} className={selectCls}>
+                      <option value="">— Sélectionner —</option>
+                      <option value="Plein à plein">Plein à plein (restitution avec le plein)</option>
+                      <option value="Niveau identique">Niveau identique (même niveau qu'au départ)</option>
                     </select>
                   </Field>
                 </div>

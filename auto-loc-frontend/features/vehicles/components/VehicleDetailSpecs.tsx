@@ -5,7 +5,7 @@ import {
   Fuel, Settings2, Users, CalendarDays, UserCheck,
   MapPinned, ShieldCheck, FileText,
   Snowflake, Navigation, Bluetooth, Camera, Baby, Disc3, Armchair, Gauge,
-  CheckCircle2, Hash, Truck, Globe, Layers, Shield,
+  CheckCircle2, Hash, Truck, Globe, MapPin, Layers, Shield,
 } from 'lucide-react';
 
 import type { Vehicle } from '@/lib/nestjs/vehicles';
@@ -47,20 +47,37 @@ function SpecRow({
   value: string;
 }) {
   return (
-    <div className="flex items-center justify-between py-3.5 border-b border-slate-50 last:border-0">
-      <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between py-3.5 border-b border-slate-50 last:border-0 min-w-0">
+      <div className="flex items-center gap-3 overflow-hidden">
         <span className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
           <Icon className="w-3.5 h-3.5 text-emerald-600" strokeWidth={1.75} />
         </span>
-        <span className="text-[13.5px] font-semibold text-slate-700">{label}</span>
+        <span className="text-[13.5px] font-semibold text-slate-700 truncate">{label}</span>
       </div>
       <span className="text-[13.5px] font-bold text-slate-900 text-right max-w-[55%] truncate">{value}</span>
     </div>
   );
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  CITADINE: 'Citadine', BERLINE: 'Berline', SUV: 'SUV', PICKUP: 'Pick-up', 
+  MINIVAN: 'Minivan', UTILITAIRE: 'Utilitaire', LUXE: 'Luxe', FOUR_X_FOUR: '4x4',
+  MONOSPACE: 'Monospace', MINIBUS: 'Minibus',
+};
+
 const FUEL_LABELS: Record<string, string> = {
   ESSENCE: 'Essence', DIESEL: 'Diesel', HYBRIDE: 'Hybride', ELECTRIQUE: 'Électrique',
+};
+
+const ZONES_LABELS: Record<string, string> = {
+  'almadies-ngor-mamelles': 'Almadies – Ngor – Mamelles',
+  'ouakam-yoff': 'Ouakam – Yoff',
+  'mermoz-sacrecoeur-ckg': 'Mermoz – Sacré-Cœur – CKG',
+  'plateau-medina-gueuletapee': 'Plateau – Médina',
+  'liberte-sicap-granddakar': 'Liberté – Sicap',
+  'parcelles-grandyoff': 'Parcelles Assainies – Grand Yoff',
+  'pikine-guediawaye': 'Pikine – Guédiawaye',
+  'keurmassar-rufisque': 'Keur Massar – Rufisque',
 };
 const TRANSMISSION_LABELS: Record<string, string> = {
   MANUELLE: 'Manuelle', AUTOMATIQUE: 'Automatique',
@@ -126,31 +143,40 @@ export function VehicleDetailSpecs({ vehicle }: Props): React.ReactElement {
         {fuelLabel && <QuickStat icon={Fuel} label="Carburant" value={fuelLabel} />}
         {transLabel && <QuickStat icon={Settings2} label="Boîte" value={transLabel} />}
         {vehicle.nombrePlaces && <QuickStat icon={Users} label="Places" value={`${vehicle.nombrePlaces}`} />}
-        {vehicle.joursMinimum && <QuickStat icon={CalendarDays} label="Min." value={`${vehicle.joursMinimum}j`} />}
-        {vehicle.ageMinimum && <QuickStat icon={UserCheck} label="Âge min." value={`${vehicle.ageMinimum} ans}`} />}
+        {vehicle.joursMinimum && <QuickStat icon={CalendarDays} label="Durée min." value={`${vehicle.joursMinimum}j`} />}
+        {vehicle.ageMinimum && <QuickStat icon={UserCheck} label="Âge min." value={`${vehicle.ageMinimum} ans`} />}
       </div>
 
       {/* Important vehicle info */}
       <div className="rounded-2xl border border-slate-100 bg-white px-4 pt-1 pb-1">
+        {vehicle.type && (
+          <SpecRow icon={Layers} label="Catégorie" value={TYPE_LABELS[vehicle.type] || vehicle.type} />
+        )}
+        {(vehicle.ville || vehicle.adresse) && (
+          <SpecRow 
+            icon={MapPin} 
+            label="Localisation" 
+            value={ZONES_LABELS[vehicle.ville as string] || vehicle.ville || "Dakar"} 
+          />
+        )}
         {vehicle.immatriculation && (
           <SpecRow icon={Hash} label="Immatriculation" value={vehicle.immatriculation} />
         )}
         {vehicle.fraisLivraison && (
           <SpecRow icon={Truck} label="Livraison disponible" value={`+${Number(vehicle.fraisLivraison).toLocaleString('fr-FR')} FCFA`} />
         )}
-        {vehicle.autoriseHorsDakar && (
-          <SpecRow 
-            icon={Globe} 
-            label="Zone de circulation" 
-            value={vehicle.supplementHorsDakarParJour 
-              ? `Dakar + Hors Dakar (+${Number(vehicle.supplementHorsDakarParJour).toLocaleString('fr-FR')} FCFA/j)`
-              : 'Dakar + Hors Dakar'
-            } 
-          />
-        )}
+        {/* Zone de conduite (toujours affichée) */}
+        <SpecRow 
+          icon={Globe} 
+          label="Zone de conduite" 
+          value={vehicle.autoriseHorsDakar 
+            ? `Hors Dakar autorisé${vehicle.supplementHorsDakarParJour ? ` (+${Number(vehicle.supplementHorsDakarParJour).toLocaleString('fr-FR')} FCFA/j)` : ''}`
+            : (vehicle.zoneConduite || "Dakar uniquement")
+          } 
+        />
         {(vehicle.tarifsProgressifs?.length ?? 0) > 0 && (
           <SpecRow 
-            icon={Layers} 
+            icon={CheckCircle2} 
             label="Tarification" 
             value={`${vehicle.tarifsProgressifs?.length} palier${(vehicle.tarifsProgressifs?.length ?? 0) > 1 ? 's' : ''} dégressif${(vehicle.tarifsProgressifs?.length ?? 0) > 1 ? 's' : ''}`}
           />
@@ -192,11 +218,20 @@ export function VehicleDetailSpecs({ vehicle }: Props): React.ReactElement {
         <div>
           <h3 className="text-[15px] font-bold text-slate-900 mb-3">Conditions de location</h3>
           <div className="rounded-2xl border border-slate-100 bg-white px-4 pt-1 pb-1">
-            {vehicle.zoneConduite && (
-              <SpecRow icon={MapPinned} label="Zone de conduite" value={vehicle.zoneConduite} />
-            )}
+            {/* Supprimé ici car affiché en haut pour plus de visibilité */}
             {vehicle.assurance && (
-              <SpecRow icon={ShieldCheck} label="Assurance incluse" value={vehicle.assurance} />
+              <SpecRow 
+                icon={ShieldCheck} 
+                label="Assurance" 
+                value={vehicle.assurance} 
+              />
+            )}
+            {vehicle.carburantCondition && (
+              <SpecRow 
+                icon={Fuel} 
+                label="Politique carburant" 
+                value={vehicle.carburantCondition} 
+              />
             )}
             {vehicle.reglesSpecifiques && (
               <SpecRow icon={FileText} label="Règles spécifiques" value={vehicle.reglesSpecifiques} />

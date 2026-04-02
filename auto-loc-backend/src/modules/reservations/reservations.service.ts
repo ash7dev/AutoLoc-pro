@@ -696,4 +696,157 @@ export class ReservationsService {
 
     return serializeReservation(reservation as Parameters<typeof serializeReservation>[0]);
   }
+
+  // ── ADMIN ──────────────────────────────────────────────────────────────────
+
+  async adminList(statut?: string, page = 1) {
+    const take = 20;
+    const skip = (page - 1) * take;
+
+    const where = statut ? { statut: statut as StatutReservation } : {};
+
+    const [reservations, total] = await Promise.all([
+      this.prisma.reservation.findMany({
+        where,
+        orderBy: { creeLe: 'desc' },
+        take,
+        skip,
+        include: {
+          vehicule: {
+            select: { id: true, marque: true, modele: true, immatriculation: true },
+          },
+          locataire: {
+            select: { prenom: true, nom: true, email: true, telephone: true },
+          },
+          proprietaire: {
+            select: { prenom: true, nom: true, email: true, telephone: true },
+          },
+          paiement: {
+            select: { statut: true, montant: true },
+          },
+        },
+      }),
+      this.prisma.reservation.count({ where }),
+    ]);
+
+    return {
+      data: reservations,
+      total,
+      page,
+      limit: take,
+    };
+  }
+
+  async adminGetDetail(id: string) {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id },
+      include: {
+        vehicule: {
+          select: {
+            id: true, marque: true, modele: true, immatriculation: true, ville: true,
+            photos: { take: 1, orderBy: { estPrincipale: 'desc' } }
+          },
+        },
+        locataire: {
+          select: { id: true, prenom: true, nom: true, email: true, telephone: true, statutKyc: true },
+        },
+        proprietaire: {
+          select: { id: true, prenom: true, nom: true, email: true, telephone: true, statutKyc: true },
+        },
+        paiement: {
+          select: { id: true, statut: true, montant: true, fournisseur: true, idTransactionFournisseur: true, creeLe: true },
+        },
+        litige: { select: { id: true, statut: true, description: true, resoluParAdminId: true } },
+        photosEtatLieu: true,
+      },
+    });
+
+    if (!reservation) throw new NotFoundException('Réservation introuvable');
+    return reservation;
+  }
+
+  async adminForceCancel(id: string) {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id },
+      include: { paiement: true },
+    });
+
+    if (!reservation) throw new NotFoundException('Réservation introuvable');
+
+    if (reservation.statut === StatutReservation.ANNULEE) {
+      throw new BadRequestException('Réservation déjà annulée');
+    }
+
+    const hasRefund =
+      reservation.paiement &&
+      reservation.paiement.statut === 'CONFIRME';
+
+    await this.prisma.$transaction(async (tx) => {
+      // Annulation
+      await tx.reservation.update({
+        where: { id },
+        data: {
+          statut: StatutReservation.ANNULEE,
+          raisonAnnulation: 'Annulation forcée par l\'administrateur. Remboursement 100%.',
+          annuleLe: new Date(),
+        },
+      });
+
+      // Remboursement
+      if (hasRefund && reservation.paiement) {
+        await tx.paiement.update({
+          where: { id: reservation.paiement.id },
+          data: {
+            statut: 'REMBOURSE',
+            rembourseLe: new Date(),
+            montantRembourse: reservation.totalLocataire,
+          },
+        });
+      }
+
+      await tx.reservationHistorique.create({
+        data: {
+          reservationId: id,
+          ancienStatut: reservation.statut,
+          nouveauStatut: StatutReservation.ANNULEE,
+          modifiePar: 'ADMIN',
+        },
+      });
+    });
+
+    return { success: true };
+  }
+
+  async adminForceComplete(id: string) {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id },
+    });
+
+    if (!reservation) throw new NotFoundException('Réservation introuvable');
+
+    if (reservation.statut === StatutReservation.TERMINEE) {
+      throw new BadRequestException('Réservation déjà terminée');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.reservation.update({
+        where: { id },
+        data: {
+          statut: StatutReservation.TERMINEE,
+          checkoutLe: new Date(),
+        },
+      });
+
+      await tx.reservationHistorique.create({
+        data: {
+          reservationId: id,
+          ancienStatut: reservation.statut,
+          nouveauStatut: StatutReservation.TERMINEE,
+          modifiePar: 'ADMIN',
+        },
+      });
+    });
+
+    return { success: true };
+  }
 }

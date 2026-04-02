@@ -17,6 +17,7 @@ import {
   Loader2,
   ShieldCheck,
   History,
+  Calendar,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSignOut } from '../../auth/hooks/use-signout';
@@ -26,6 +27,7 @@ import { useAdminBadges } from '../hooks/use-admin-badges';
 const NAV_ITEMS = [
   { href: '/dashboard/admin',             icon: LayoutDashboard, label: 'Vue d\'ensemble' },
   { href: '/dashboard/admin/vehicles',    icon: Car,             label: 'Véhicules'       },
+  { href: '/dashboard/admin/reservations',icon: Calendar,        label: 'Réservations'    },
   { href: '/dashboard/admin/kyc',         icon: BadgeCheck,      label: 'KYC'             },
   { href: '/dashboard/admin/withdrawals', icon: Banknote,        label: 'Retraits'        },
   { href: '/dashboard/admin/disputes',    icon: Scale,           label: 'Litiges'         },

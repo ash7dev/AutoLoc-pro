@@ -22,6 +22,11 @@ export class UsersController {
     return this.usersService.listAdminUsers(dto.kycStatus, dto.page ?? 1);
   }
 
+  @Get(':id')
+  async getAdminUserDetail(@Param('id') id: string) {
+    return this.usersService.getAdminUserDetail(id);
+  }
+
   @Patch(':id/status')
   async setUserStatus(@Param('id') id: string, @Body() dto: BanUserDto) {
     return this.usersService.setUserStatus(id, dto);

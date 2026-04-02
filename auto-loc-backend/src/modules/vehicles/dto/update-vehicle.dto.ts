@@ -100,6 +100,10 @@ export class UpdateVehicleDto {
 
   @IsOptional()
   @IsString()
+  carburantCondition?: string;
+
+  @IsOptional()
+  @IsString()
   reglesSpecifiques?: string;
 
   @IsOptional()

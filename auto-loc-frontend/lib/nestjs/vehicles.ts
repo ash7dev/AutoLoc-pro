@@ -67,6 +67,7 @@ export interface Vehicle {
   ageMinimum: number;
   zoneConduite: string | null;
   assurance: string | null;
+  carburantCondition: string | null;
   reglesSpecifiques: string | null;
   fraisLivraison: number | null;
   autoriseHorsDakar?: boolean;
@@ -106,6 +107,7 @@ export interface CreateVehicleInput {
   ageMinimum?: number;
   zoneConduite?: string;
   assurance?: string;
+  carburantCondition?: string;
   reglesSpecifiques?: string;
   fraisLivraison?: number;
   tiers?: Array<{

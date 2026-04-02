@@ -172,6 +172,24 @@ export interface AdminDispute {
   openedAt: string;
 }
 
+// ── Admin Reservations ──────────────────────────────────────────────────────────
+
+export interface AdminReservation {
+  id: string;
+  statut: string;
+  dateDebut: string;
+  dateFin: string;
+  prixParJour: string | number;
+  totalLocataire: string | number;
+  commission: string | number;
+  montantProprietaire: string | number;
+  creeLe: string;
+  locataire: { prenom: string; nom: string; email: string; telephone: string };
+  proprietaire: { prenom: string; nom: string; email: string; telephone: string };
+  vehicule: { marque: string; modele: string; immatriculation: string; ville: string };
+  paiement?: { statut: string; montant: number };
+}
+
 // ── Path helpers ──────────────────────────────────────────────────────────────
 
 export const ADMIN_PATHS = {
@@ -179,10 +197,12 @@ export const ADMIN_PATHS = {
   activity: '/admin/activity',
   vehicles: (statut?: AdminVehicleStatus) =>
     statut ? `/admin/vehicles?statut=${statut}` : '/admin/vehicles',
+  vehicle: (id: string) => `/admin/vehicles/${id}`,
   validateVehicle: (id: string) => `/admin/vehicles/${id}/validate`,
   suspendVehicle: (id: string) => `/admin/vehicles/${id}/suspend`,
   users: (kycStatus?: KycStatus) =>
     kycStatus ? `/admin/users?kycStatus=${kycStatus}` : '/admin/users',
+  user: (id: string) => `/admin/users/${id}`,
   banUser: (id: string) => `/admin/users/${id}/status`,
   approveKyc: (id: string) => `/admin/users/${id}/kyc/approve`,
   rejectKyc: (id: string) => `/admin/users/${id}/kyc/reject`,
@@ -191,6 +211,10 @@ export const ADMIN_PATHS = {
   rejectWithdrawal: (id: string) => `/admin/withdrawals/${id}/reject`,
   disputes: '/admin/disputes',
   updateDisputeStatus: (id: string) => `/admin/disputes/${id}/resolve`,
+  reservations: '/admin/reservations',
+  reservation: (id: string) => `/admin/reservations/${id}`,
+  forceCancelReservation: (id: string) => `/admin/reservations/${id}/force-cancel`,
+  forceCompleteReservation: (id: string) => `/admin/reservations/${id}/force-complete`,
   notificationsCount: '/admin/notifications/count',
 } as const;
 
@@ -271,6 +295,29 @@ export async function fetchAdminDisputes(accessToken: string): Promise<AdminDisp
 
 export async function fetchAdminDisputeDetail(accessToken: string, id: string): Promise<any> {
   return await apiFetch(`/admin/disputes/${id}`, { accessToken });
+}
+
+export async function fetchAdminUserDetail(accessToken: string, id: string): Promise<any> {
+  return await apiFetch(ADMIN_PATHS.user(id), { accessToken });
+}
+
+export async function fetchAdminVehicleDetail(accessToken: string, id: string): Promise<any> {
+  return await apiFetch(ADMIN_PATHS.vehicle(id), { accessToken });
+}
+
+export async function fetchAdminReservations(accessToken: string, statut?: string, page = 1): Promise<{ data: AdminReservation[]; total: number; page: number; limit: number }> {
+  try {
+    const url = statut ? `${ADMIN_PATHS.reservations}?statut=${statut}&page=${page}` : `${ADMIN_PATHS.reservations}?page=${page}`;
+    const res = await apiFetch<any>(url, { accessToken });
+    return res;
+  } catch (error) {
+    console.error('Failed to fetch admin reservations:', error);
+    return { data: [], total: 0, page: 1, limit: 20 };
+  }
+}
+
+export async function fetchAdminReservationDetail(accessToken: string, id: string): Promise<any> {
+  return await apiFetch(ADMIN_PATHS.reservation(id), { accessToken });
 }
 
 export interface AdminNotificationsCount {

@@ -121,9 +121,13 @@ export class CreateVehicleDto {
   @IsString()
   zoneConduite?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   assurance!: string;
+
+  @IsOptional()
+  @IsString()
+  carburantCondition?: string;
 
   @IsOptional()
   @IsString()

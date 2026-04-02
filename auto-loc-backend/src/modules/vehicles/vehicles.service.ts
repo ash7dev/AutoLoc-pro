@@ -127,6 +127,7 @@ export class VehiclesService {
             ageMinimum: dto.ageMinimum ?? 18,
             zoneConduite: dto.zoneConduite ?? null,
             assurance: dto.assurance, // Maintenant obligatoire
+            carburantCondition: dto.carburantCondition ?? null,
             reglesSpecifiques: dto.reglesSpecifiques ?? null,
             fraisLivraison: dto.fraisLivraison ?? null,
             autoriseHorsDakar: dto.autoriseHorsDakar ?? false,
@@ -426,6 +427,7 @@ export class VehiclesService {
             ageMinimum: dto.ageMinimum,
             zoneConduite: dto.zoneConduite,
             assurance: dto.assurance,
+            carburantCondition: dto.carburantCondition,
             reglesSpecifiques: dto.reglesSpecifiques,
             fraisLivraison: dto.fraisLivraison,
             autoriseHorsDakar: dto.autoriseHorsDakar,
@@ -939,6 +941,64 @@ export class VehiclesService {
     }));
 
     return { data, total, page, limit: take };
+  }
+
+  async adminGetVehicleDetail(id: string) {
+    const v = await this.prisma.vehicule.findUnique({
+      where: { id },
+      include: {
+        photos: { orderBy: { position: 'asc' } },
+        proprietaire: { select: { id: true, prenom: true, nom: true, email: true, telephone: true, avatarUrl: true } },
+        equipements: { include: { equipement: true } },
+        reservations: {
+          orderBy: { creeLe: 'desc' },
+          take: 10,
+          include: { locataire: { select: { id: true, prenom: true, nom: true } } },
+        },
+        _count: { select: { reservations: true } },
+      },
+    });
+
+    if (!v) throw new NotFoundException('Véhicule introuvable');
+
+    return {
+      id: v.id,
+      marque: v.marque,
+      modele: v.modele,
+      annee: v.annee,
+      type: v.type,
+      transmission: v.transmission ?? null,
+      immatriculation: v.immatriculation,
+      carburant: v.carburant ?? null,
+      nombrePlaces: v.nombrePlaces ?? null,
+      prixParJour: Number(v.prixParJour),
+      ville: v.ville,
+      adresse: v.adresse,
+      joursMinimum: v.joursMinimum,
+      ageMinimum: v.ageMinimum,
+      zoneConduite: v.zoneConduite ?? null,
+      assurance: v.assurance ?? null,
+      reglesSpecifiques: v.reglesSpecifiques ?? null,
+      note: Number(v.note),
+      totalAvis: v.totalAvis,
+      totalLocations: v.totalLocations,
+      statut: v.statut,
+      creeLe: v.creeLe.toISOString(),
+      photos: v.photos.map((p) => ({ id: p.id, url: p.url, estPrincipale: p.estPrincipale })),
+      equipements: v.equipements.map((ve) => ve.equipement.nom),
+      carteGriseUrl: v.carteGriseUrl ?? null,
+      assuranceDocUrl: v.assuranceDocUrl ?? null,
+      fraisLivraison: v.fraisLivraison ? Number(v.fraisLivraison) : null,
+      proprietaire: v.proprietaire,
+      reservations: v.reservations.map(r => ({
+        id: r.id,
+        statut: r.statut,
+        creeLe: r.creeLe,
+        locataire: r.locataire,
+        totalLocataire: Number(r.totalLocataire)
+      })),
+      _count: v._count
+    };
   }
 
   /**

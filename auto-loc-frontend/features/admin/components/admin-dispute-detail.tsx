@@ -200,31 +200,75 @@ export function AdminDisputeDetailView({ data }: { data: any }) {
           </div>
 
           {/* Reservation infos supplementaires */}
-          <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
-            <h3 className="text-[13px] font-bold text-black border-b border-black/5 pb-3 mb-4 flex items-center gap-2">
-              <Car className="w-4 h-4 text-black/40" /> Infos Réservation
+          <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm flex flex-col gap-5">
+            <h3 className="text-[13px] font-bold text-black border-b border-black/5 pb-3 flex items-center gap-2">
+              <Car className="w-4 h-4 text-black/40" /> Infos Véhicule & Réservation
             </h3>
+
+            {/* Photos du véhicule */}
+            {vehicule?.photos && vehicule.photos.length > 0 && (
+              <div className="space-y-2">
+                <div className="aspect-video rounded-xl overflow-hidden bg-slate-100 relative shadow-inner">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src={vehicule.photos[0].url} 
+                    alt={`${vehicule.marque} ${vehicule.modele}`} 
+                    className="w-full h-full object-cover"
+                  />
+                  {vehicule.photos.length > 1 && (
+                    <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full">
+                      +{vehicule.photos.length - 1} photo{vehicule.photos.length > 2 ? 's' : ''}
+                    </div>
+                  )}
+                </div>
+                {vehicule.photos.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    {vehicule.photos.slice(1).map((photo: any, idx: number) => (
+                      <div key={idx} className="w-16 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 relative shadow-sm border border-black/5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={photo.url} alt="vehicule" className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Caractéristiques (Pilulles) */}
+            <div className="flex flex-wrap gap-2">
+              {vehicule?.type && <span className="px-2 py-1 bg-slate-50 border border-slate-100 rounded-md text-[11px] font-medium text-slate-600">{vehicule.type}</span>}
+              {vehicule?.carburant && <span className="px-2 py-1 bg-slate-50 border border-slate-100 rounded-md text-[11px] font-medium text-slate-600">{vehicule.carburant}</span>}
+              {vehicule?.transmission && <span className="px-2 py-1 bg-slate-50 border border-slate-100 rounded-md text-[11px] font-medium text-slate-600">{vehicule.transmission}</span>}
+              {vehicule?.nombrePlaces && <span className="px-2 py-1 bg-slate-50 border border-slate-100 rounded-md text-[11px] font-medium text-slate-600">{vehicule.nombrePlaces} places</span>}
+              {vehicule?.couleur && (
+                <span className="px-2 py-1 bg-slate-50 border border-slate-100 rounded-md text-[11px] font-medium text-slate-600 flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: vehicule.couleur === 'Blanc' ? '#fff' : vehicule.couleur === 'Noir' ? '#000' : vehicule.couleur }}></span>
+                  {vehicule.couleur}
+                </span>
+              )}
+            </div>
+
             <div className="space-y-3 text-[13px]">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center border-b border-black/5 pb-2">
                 <span className="text-black/50 font-medium">Véhicule</span>
-                <span className="font-bold text-black">{vehicule?.marque} {vehicule?.modele}</span>
+                <span className="font-bold text-black text-right">{vehicule?.marque} {vehicule?.modele} {vehicule?.annee ? <span className="text-black/50 text-[11px] ml-1">({vehicule.annee})</span> : null}</span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center border-b border-black/5 pb-2">
                 <span className="text-black/50 font-medium">Immatriculation</span>
-                <span className="font-bold text-black text-[12px] tracking-widest">{vehicule?.immatriculation}</span>
+                <span className="font-bold text-black px-2 py-0.5 bg-slate-100 rounded-md text-[12px] tracking-widest">{vehicule?.immatriculation}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-black/50 font-medium">Statut Reservation</span>
+                <span className="text-black/50 font-medium">Statut Réservation</span>
                 <span className="font-bold text-black px-2 py-0.5 bg-slate-100 rounded-md text-[11px]">{reservation?.statut}</span>
               </div>
-              <div className="w-full h-px bg-black/5 my-2" />
+              <div className="w-full h-px bg-black/5 my-1" />
               <div className="flex justify-between items-center">
                 <span className="text-black/50 font-medium">Payé (Locataire)</span>
-                <span className="font-bold text-black">{reservation?.totalLocataire} FCFA</span>
+                <span className="font-bold text-emerald-600">{reservation?.totalLocataire?.toLocaleString('fr-FR')} FCFA</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-black/50 font-medium">Net (Propriétaire)</span>
-                <span className="font-bold text-black">{reservation?.netProprietaire} FCFA</span>
+                <span className="font-bold text-blue-600">{reservation?.netProprietaire?.toLocaleString('fr-FR')} FCFA</span>
               </div>
             </div>
           </div>

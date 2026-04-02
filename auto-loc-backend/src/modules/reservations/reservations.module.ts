@@ -9,10 +9,11 @@ import { DisputesModule } from '../disputes/disputes.module';
 import { CloudinaryModule } from '../../infrastructure/cloudinary/cloudinary.module';
 import { ContractModule } from '../../infrastructure/contract/contract.module';
 import { QueueModule } from '../../infrastructure/queue/queue.module';
+import { AdminReservationsController } from './admin-reservations.controller';
 
 @Module({
   imports: [ReservationDomainModule, DisputesModule, CloudinaryModule, ContractModule, QueueModule],
-  controllers: [ReservationsController],
+  controllers: [ReservationsController, AdminReservationsController],
   providers: [
     ReservationsService,
     JwtAuthGuard,

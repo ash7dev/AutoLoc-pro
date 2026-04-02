@@ -49,6 +49,7 @@ export interface Step3Data {
   ageMinimum?: number;
   zoneConduite?: string;
   assurance: string; // Maintenant obligatoire avec valeur par défaut
+  carburantCondition?: string;
   reglesSpecifiques?: string;
 }
 

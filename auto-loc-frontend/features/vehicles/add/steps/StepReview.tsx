@@ -6,6 +6,7 @@ import {
   ArrowLeft, CheckCircle2, Car, CircleDollarSign,
   FileText, Camera, FileCheck2, Loader2, AlertCircle,
   Shield, Sparkles, Truck, MapPin,
+  Fuel,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAddVehicleStore } from "../store";
@@ -55,6 +56,7 @@ export function StepReview({ onBack }: Props) {
           ageMinimum: step3?.ageMinimum,
           zoneConduite: step3?.zoneConduite || undefined,
           assurance: step3?.assurance || undefined,
+          carburantCondition: step3?.carburantCondition || undefined,
           reglesSpecifiques: step3?.reglesSpecifiques || undefined,
           equipements: step1.equipements?.length ? step1.equipements : undefined,
           fraisLivraison: step2.fraisLivraison || undefined,
@@ -83,17 +85,17 @@ export function StepReview({ onBack }: Props) {
   // ── Helper : upload document avec retry ─────────────────────────────────────────────
   async function compressImage(file: File): Promise<File> {
     if (file.size < 500_000) return file; // < 500KB = pas de compression
-    
+
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d')!;
       const img = new Image();
-      
+
       img.onload = () => {
         canvas.width = img.width * 0.8; // -20% taille
         canvas.height = img.height * 0.8;
         ctx.drawImage(img, 0, 0);
-        
+
         canvas.toBlob((blob) => {
           if (blob) {
             const optimizedFile = new File([blob], file.name, { type: 'image/jpeg' });
@@ -193,6 +195,7 @@ export function StepReview({ onBack }: Props) {
         <ReviewRow label="Âge minimum" value={step3?.ageMinimum ? `${step3.ageMinimum} ans` : "18 ans"} />
         <ReviewRow label="Zone conduite" value={step3?.zoneConduite ?? "Non définie"} />
         <ReviewRow label="Assurance" value={step3?.assurance ?? "Locataire responsable"} />
+        <ReviewRow label="Carburant" value={step3?.carburantCondition ?? "Non défini"} icon={Fuel} />
         {step3?.reglesSpecifiques && <ReviewRow label="Règles" value={step3.reglesSpecifiques} />}
       </ReviewSection>
 

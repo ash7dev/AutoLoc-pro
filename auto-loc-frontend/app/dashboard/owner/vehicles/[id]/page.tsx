@@ -175,7 +175,7 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
   const isActive = vehicle.statut === 'VERIFIE';
 
   const hasConditions = vehicle.reglesSpecifiques || vehicle.zoneConduite ||
-    vehicle.assurance || (vehicle.joursMinimum > 1) || (vehicle.ageMinimum > 18);
+    vehicle.assurance || vehicle.carburantCondition || (vehicle.joursMinimum > 1) || (vehicle.ageMinimum > 18);
 
   // Revenus générés (reservations TERMINEE uniquement)
   const revenusGeneres = reservations
@@ -561,6 +561,15 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
                   iconColor="text-amber-600"
                   label={vehicle.assurance}
                   sub="Type d'assurance incluse"
+                />
+              )}
+              {vehicle.carburantCondition && (
+                <ConditionItem
+                  icon={Fuel}
+                  iconBg="bg-indigo-50 border-indigo-100"
+                  iconColor="text-indigo-600"
+                  label={vehicle.carburantCondition}
+                  sub="Politique carburant"
                 />
               )}
               {vehicle.reglesSpecifiques && (

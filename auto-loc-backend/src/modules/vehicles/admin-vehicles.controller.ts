@@ -31,6 +31,11 @@ export class AdminVehiclesController {
     return this.vehiclesService.adminListVehicles(dto.statut, dto.page ?? 1);
   }
 
+  @Get(':id')
+  getAdminVehicleDetail(@Param('id', ParseUUIDPipe) id: string) {
+    return this.vehiclesService.adminGetVehicleDetail(id);
+  }
+
   /**
    * PATCH /admin/vehicles/:id/validate
    * Valide un véhicule (statut → VERIFIE) et notifie le propriétaire.
