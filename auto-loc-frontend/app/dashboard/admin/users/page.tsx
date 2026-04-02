@@ -2,8 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { ArrowLeft, Users } from 'lucide-react';
-import { fetchAdminUsers } from '../../../../lib/nestjs/admin';
-import { AdminUsersList } from '../../../../features/admin/components/admin-users-list';
+import { fetchAdminUsers } from '@/lib/nestjs/admin';
+import { AdminUsersList } from '@/features/admin/components/admin-users-list';
 
 export default async function AdminUsersPage(): Promise<React.ReactElement> {
   const cookieStore = cookies();

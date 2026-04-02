@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Scale, ArrowLeft } from 'lucide-react';
-import { AdminDisputesList, type Dispute } from '../../../../features/admin/components/admin-disputes-list';
-import { fetchAdminDisputes } from '../../../../lib/nestjs/admin';
+import { AdminDisputesList, type Dispute } from '@/features/admin/components/admin-disputes-list';
+import { fetchAdminDisputes } from '@/lib/nestjs/admin';
 
 function derivePriority(amount: number | null): Dispute['priority'] {
   if (amount === null) return 'medium';
@@ -41,7 +41,8 @@ export default async function AdminDisputesPage(): Promise<React.ReactElement> {
       status: STATUT_MAP[d.statut] ?? 'open',
       priority: derivePriority(d.amount),
     }));
-  } catch {
+  } catch (error) {
+    console.error('Failed to fetch disputes:', error);
     // Afficher liste vide si erreur
   }
 

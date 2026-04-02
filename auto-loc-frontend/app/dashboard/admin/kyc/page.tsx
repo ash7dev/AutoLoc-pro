@@ -2,8 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { ArrowLeft, BadgeCheck } from 'lucide-react';
-import { fetchAdminUsers } from '../../../../lib/nestjs/admin';
-import { AdminKycList } from '../../../../features/admin/components/admin-kyc-list';
+import { fetchAdminUsers } from '@/lib/nestjs/admin';
+import { AdminKycList } from '@/features/admin/components/admin-kyc-list';
 
 export default async function AdminKycPage(): Promise<React.ReactElement> {
   const cookieStore = cookies();

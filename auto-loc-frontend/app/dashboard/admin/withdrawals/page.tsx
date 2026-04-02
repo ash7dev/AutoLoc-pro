@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Banknote, ArrowLeft } from 'lucide-react';
-import { AdminWithdrawalsList, type Withdrawal } from '../../../../features/admin/components/admin-withdrawals-list';
-import { fetchAdminWithdrawals } from '../../../../lib/nestjs/admin';
+import { AdminWithdrawalsList, type Withdrawal } from '@/features/admin/components/admin-withdrawals-list';
+import { fetchAdminWithdrawals } from '@/lib/nestjs/admin';
 
 function formatPrice(n: number) { return new Intl.NumberFormat('fr-FR').format(n); }
 
@@ -39,7 +39,8 @@ export default async function AdminWithdrawalsPage(): Promise<React.ReactElement
       }),
       status: STATUT_MAP[w.statut] ?? 'pending',
     }));
-  } catch {
+  } catch (error) {
+    console.error('Failed to fetch withdrawals:', error);
     // Afficher liste vide si erreur
   }
 

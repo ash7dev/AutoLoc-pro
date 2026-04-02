@@ -1,15 +1,15 @@
 import React from 'react';
 import { cookies } from 'next/headers';
 import { Calendar } from 'lucide-react';
-import { fetchAdminStats, fetchAdminActivity } from '../../../lib/nestjs/admin';
-import type { AdminStats, AdminActivityItem } from '../../../lib/nestjs/admin';
-import { AdminPlatformMetrics } from '../../../features/admin/components/admin-platform-metrics';
-import type { PlatformMetric } from '../../../features/admin/components/admin-platform-metrics';
-import { AdminStatCards } from '../../../features/admin/components/admin-stat-cards';
-import { AdminActivityFeed } from '../../../features/admin/components/admin-activity-feed';
-import { AdminQuickActions } from '../../../features/admin/components/admin-quick-actions';
-import { PendingKycWithListingSection } from '../../../features/admin/components/pending-kyc-with-listing';
-import { AdminAutoRefresh } from '../../../features/admin/components/admin-auto-refresh';
+import { fetchAdminStats, fetchAdminActivity } from '@/lib/nestjs/admin';
+import type { AdminStats, AdminActivityItem } from '@/lib/nestjs/admin';
+import { AdminPlatformMetrics } from '@/features/admin/components/admin-platform-metrics';
+import type { PlatformMetric } from '@/features/admin/components/admin-platform-metrics';
+import { AdminStatCards } from '@/features/admin/components/admin-stat-cards';
+import { AdminActivityFeed } from '@/features/admin/components/admin-activity-feed';
+import { AdminQuickActions } from '@/features/admin/components/admin-quick-actions';
+import { PendingKycWithListingSection } from '@/features/admin/components/pending-kyc-with-listing';
+import { AdminAutoRefresh } from '@/features/admin/components/admin-auto-refresh';
 
 function buildMetrics(stats: AdminStats): PlatformMetric[] {
   const revenu = stats.revenuCeMois;

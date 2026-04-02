@@ -2,8 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { ArrowLeft, History } from 'lucide-react';
-import { fetchAdminActivity } from '../../../../lib/nestjs/admin';
-import { AdminAuditLog } from '../../../../features/admin/components/admin-audit-log';
+import { fetchAdminActivity } from '@/lib/nestjs/admin';
+import { AdminAuditLog } from '@/features/admin/components/admin-audit-log';
 
 export default async function AdminAuditPage(): Promise<React.ReactElement> {
   const cookieStore = cookies();

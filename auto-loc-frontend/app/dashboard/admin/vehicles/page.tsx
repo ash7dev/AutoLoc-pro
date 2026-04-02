@@ -2,9 +2,9 @@ import React from 'react';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { ArrowLeft, Car } from 'lucide-react';
-import { fetchAdminVehicles } from '../../../../lib/nestjs/admin';
-import { AdminVehiclesList, type TabValue } from '../../../../features/admin/components/admin-vehicles-list';
-import type { VehicleStatus } from '../../../../lib/nestjs/vehicles';
+import { fetchAdminVehicles } from '@/lib/nestjs/admin';
+import { AdminVehiclesList, type TabValue } from '@/features/admin/components/admin-vehicles-list';
+import type { VehicleStatus } from '@/lib/nestjs/vehicles';
 
 const VALID_STATUTS: VehicleStatus[] = [
   'EN_ATTENTE_VALIDATION', 'VERIFIE', 'SUSPENDU', 'BROUILLON', 'ARCHIVE',
