@@ -26,27 +26,37 @@ export default async function AdminDisputesPage(): Promise<React.ReactElement> {
   let disputes: Dispute[] = [];
   try {
     const data = await fetchAdminDisputes(token);
-    disputes = data.map((d) => ({
-      id: d.id,
-      reservationId: `#${d.reservationId.slice(0, 6).toUpperCase()}`,
-      renterName: d.renterName,
-      ownerName: d.ownerName,
-      vehicle: d.vehicle,
-      reason: d.description.length > 60 ? d.description.slice(0, 57) + '…' : d.description,
-      description: d.description,
-      amount: d.amount,
-      openedAt: new Date(d.openedAt).toLocaleDateString('fr-FR', {
-        day: 'numeric', month: 'short', year: 'numeric',
-      }),
-      status: STATUT_MAP[d.statut] ?? 'open',
-      priority: derivePriority(d.amount),
-    }));
+    console.log('Raw disputes data from API:', data);
+    
+    disputes = data.map((d) => {
+      const mappedStatus = STATUT_MAP[d.statut] ?? 'open';
+      console.log(`Dispute ${d.id}: statut="${d.statut}" -> mapped="${mappedStatus}"`);
+      
+      return {
+        id: d.id,
+        reservationId: `#${d.reservationId.slice(0, 6).toUpperCase()}`,
+        renterName: d.renterName,
+        ownerName: d.ownerName,
+        vehicle: d.vehicle,
+        reason: d.description.length > 60 ? d.description.slice(0, 57) + '…' : d.description,
+        description: d.description,
+        amount: d.amount,
+        openedAt: new Date(d.openedAt).toLocaleDateString('fr-FR', {
+          day: 'numeric', month: 'short', year: 'numeric',
+        }),
+        status: mappedStatus,
+        priority: derivePriority(d.amount),
+      };
+    });
+    
+    console.log('Final disputes array:', disputes);
   } catch (error) {
     console.error('Failed to fetch disputes:', error);
     // Afficher liste vide si erreur
   }
 
   const activeCount = disputes.filter((d) => d.status === 'open').length;
+  console.log('Final active disputes count:', activeCount);
 
   return (
     <div className="p-6 lg:p-8">

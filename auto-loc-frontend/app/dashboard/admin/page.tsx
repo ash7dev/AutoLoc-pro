@@ -1,8 +1,8 @@
 import React from 'react';
 import { cookies } from 'next/headers';
 import { Calendar } from 'lucide-react';
-import { fetchAdminStats, fetchAdminActivity } from '@/lib/nestjs/admin';
-import type { AdminStats, AdminActivityItem } from '@/lib/nestjs/admin';
+import { fetchAdminStats, fetchAdminActivity, fetchAdminUsers, fetchAdminVehicles } from '@/lib/nestjs/admin';
+import type { AdminStats, AdminActivityItem, AdminUser, AdminVehicle } from '@/lib/nestjs/admin';
 import { AdminPlatformMetrics } from '@/features/admin/components/admin-platform-metrics';
 import type { PlatformMetric } from '@/features/admin/components/admin-platform-metrics';
 import { AdminStatCards } from '@/features/admin/components/admin-stat-cards';
@@ -65,12 +65,50 @@ export default async function AdminOverviewPage(): Promise<React.ReactElement> {
   let stats: AdminStats | null = null;
   let activity: AdminActivityItem[] = [];
 
-  const [statsResult, activityResult] = await Promise.allSettled([
-    fetchAdminStats(token),
-    fetchAdminActivity(token),
-  ]);
-  if (statsResult.status === 'fulfilled')    stats    = statsResult.value;
-  if (activityResult.status === 'fulfilled') activity = activityResult.value;
+  // Try to get real-time stats from other endpoints if /admin/stats fails
+  try {
+    const [statsResult, activityResult, usersResult, vehiclesResult] = await Promise.allSettled([
+      fetchAdminStats(token),
+      fetchAdminActivity(token),
+      fetchAdminUsers(token),
+      fetchAdminVehicles(token),
+    ]);
+    
+    if (statsResult.status === 'fulfilled') {
+      stats = statsResult.value;
+      console.log('Admin stats loaded:', stats);
+    } else {
+      console.error('Failed to fetch admin stats:', statsResult.reason);
+      
+      // Fallback: calculate stats from other endpoints
+      if (usersResult.status === 'fulfilled' && vehiclesResult.status === 'fulfilled') {
+        const users: AdminUser[] = usersResult.value;
+        const vehicles: AdminVehicle[] = vehiclesResult.value;
+        
+        stats = {
+          utilisateursActifs: users.length,
+          locationsCeMois: 0, // Would need reservations endpoint
+          revenuCeMois: 0,    // Would need reservations endpoint
+          tauxSatisfaction: null, // Would need reviews endpoint
+          pending: {
+            kycEnAttente: users.filter((u: AdminUser) => u.kycStatus === 'EN_ATTENTE').length,
+            vehiculesAValider: vehicles.filter((v: AdminVehicle) => v.statut === 'EN_ATTENTE_VALIDATION' || v.statut === 'BROUILLON').length,
+            retraitsEnAttente: 0, // Would need withdrawals endpoint
+            litigesOuverts: 0,   // Would need disputes endpoint
+          },
+        };
+        console.log('Using fallback stats:', stats);
+      }
+    }
+    
+    if (activityResult.status === 'fulfilled') {
+      activity = activityResult.value;
+    } else {
+      console.error('Failed to fetch admin activity:', activityResult.reason);
+    }
+  } catch (error) {
+    console.error('Error in admin dashboard data fetching:', error);
+  }
 
   const metrics = stats ? buildMetrics(stats) : undefined;
 
