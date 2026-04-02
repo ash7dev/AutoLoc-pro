@@ -22,7 +22,6 @@ export default async function AdminVehiclesPage({
 
   // 'PENDING' is a virtual tab combining EN_ATTENTE_VALIDATION + BROUILLON
   const isPending =
-    !rawStatut ||
     rawStatut === 'PENDING' ||
     rawStatut === 'EN_ATTENTE_VALIDATION';
 
@@ -35,17 +34,18 @@ export default async function AdminVehiclesPage({
     } else if (VALID_STATUTS.includes(rawStatut as VehicleStatus)) {
       vehicles = await fetchAdminVehicles(token, rawStatut as VehicleStatus);
     } else {
+      // Par défaut, si aucun statut n'est spécifié, on considère que c'est "ALL"
       vehicles = await fetchAdminVehicles(token);
     }
   } catch {
     // API non disponible — affiche empty state
   }
 
-  const currentStatut: TabValue = isPending
-    ? 'PENDING'
-    : rawStatut === 'ALL'
+  const currentStatut: TabValue = rawStatut === 'ALL'
     ? 'ALL'
-    : (rawStatut as VehicleStatus) ?? 'PENDING';
+    : isPending
+    ? 'PENDING'
+    : (rawStatut as VehicleStatus) ?? 'ALL';
 
   const pendingCount = vehicles.filter(
     (v) => v.statut === 'EN_ATTENTE_VALIDATION' || v.statut === 'BROUILLON',

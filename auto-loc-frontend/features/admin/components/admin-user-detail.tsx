@@ -330,7 +330,7 @@ export function AdminUserDetail({ user }: { user: any }) {
                           <td className="px-4 py-3 text-[13px] font-medium text-black/60">{new Date(r.creeLe).toLocaleDateString()}</td>
                           <td className="px-4 py-3 text-[13px] font-black">{r.vehicule}</td>
                           <td className="px-4 py-3 text-[12px] font-bold text-emerald-500">{r.statut}</td>
-                          <td className="px-4 py-3 text-[13px] font-black text-right text-emerald-600">{formatPrice(r.totalLocataire)} FCFA</td>
+                          <td className="px-4 py-3 text-[13px] font-black text-right text-emerald-600">{formatPrice(Number(r.totalLocataire || r.prixTotal || 0))} FCFA</td>
                         </tr>
                       ))}
                     </tbody>
@@ -363,7 +363,7 @@ export function AdminUserDetail({ user }: { user: any }) {
                             <td className="px-4 py-3 text-[13px] font-medium">{r.locataire}</td>
                             <td className="px-4 py-3 text-[13px] font-black">{r.vehicule}</td>
                             <td className="px-4 py-3 text-[12px] font-bold text-emerald-500">{r.statut}</td>
-                            <td className="px-4 py-3 text-[13px] font-black text-right text-black">{formatPrice(r.netProprietaire)} FCFA</td>
+                            <td className="px-4 py-3 text-[13px] font-black text-right text-black">{formatPrice(Number(r.netProprietaire || r.montantProprietaire || 0))} FCFA</td>
                           </tr>
                         ))}
                       </tbody>

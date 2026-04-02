@@ -85,19 +85,15 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
     }
 
     const r = reservation;
-    const leg = r as typeof r & {
-        totalLocataire?: string; montantCommission?: string; netProprietaire?: string;
-        tauxCommission?: string; checkinLe?: string; checkoutLe?: string; annuleLe?: string;
-    };
 
     /* ── Computed ── */
     const nbJours = r.nbJours != null
         ? r.nbJours
         : Math.max(1, Math.round((new Date(r.dateFin).getTime() - new Date(r.dateDebut).getTime()) / 86_400_000));
 
-    const totalLocataire  = Number(r.prixTotal             ?? leg.totalLocataire    ?? 0) || 0;
-    const commissionAmt   = Number(r.commission            ?? leg.montantCommission  ?? 0) || 0;
-    const netAmt          = Number(r.montantProprietaire   ?? leg.netProprietaire    ?? 0) || 0;
+    const totalLocataire  = Number(r.prixTotal) || 0;
+    const commissionAmt   = Number(r.commission) || 0;
+    const netAmt          = Number(r.montantProprietaire) || 0;
     // Taux contractuel fixe selon la politique tarifaire AutoLoc
     const COMMISSION_RATE = 15;
     const NET_RATE        = 100 - COMMISSION_RATE; // 85
@@ -125,9 +121,9 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
     const timeline = [
         { label: "Réservation créée",  date: r.creeLe,                                     icon: Clock,         color: "emerald" },
         r.confirmeeLe && { label: "Confirmée",           date: r.confirmeeLe,              icon: CheckCircle2,  color: "emerald" },
-        (r.checkInLe ?? leg.checkinLe) && { label: "Check-in effectué", date: (r.checkInLe ?? leg.checkinLe)!, icon: LogIn, color: "emerald" },
-        (r.checkOutLe ?? leg.checkoutLe) && { label: "Check-out effectué", date: (r.checkOutLe ?? leg.checkoutLe)!, icon: LogOut, color: "emerald" },
-        (r.annuleeLe ?? leg.annuleLe) && { label: "Annulée", date: (r.annuleeLe ?? leg.annuleLe)!, icon: XCircle, color: "red" },
+        r.checkInLe && { label: "Check-in effectué", date: r.checkInLe, icon: LogIn, color: "emerald" },
+        r.checkOutLe && { label: "Check-out effectué", date: r.checkOutLe, icon: LogOut, color: "emerald" },
+        r.annuleeLe && { label: "Annulée", date: r.annuleeLe, icon: XCircle, color: "red" },
     ].filter(Boolean) as { label: string; date: string; icon: React.ElementType; color: string }[];
 
     const st = STATUS[r.statut] ?? STATUS.INITIEE;

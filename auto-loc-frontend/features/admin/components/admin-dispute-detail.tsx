@@ -264,11 +264,11 @@ export function AdminDisputeDetailView({ data }: { data: any }) {
               <div className="w-full h-px bg-black/5 my-1" />
               <div className="flex justify-between items-center">
                 <span className="text-black/50 font-medium">Payé (Locataire)</span>
-                <span className="font-bold text-emerald-600">{reservation?.totalLocataire?.toLocaleString('fr-FR')} FCFA</span>
+                <span className="font-bold text-emerald-600">{Number(reservation?.prixTotal || 0).toLocaleString('fr-FR')} FCFA</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-black/50 font-medium">Net (Propriétaire)</span>
-                <span className="font-bold text-blue-600">{reservation?.netProprietaire?.toLocaleString('fr-FR')} FCFA</span>
+                <span className="font-bold text-blue-600">{Number(reservation?.montantProprietaire || 0).toLocaleString('fr-FR')} FCFA</span>
               </div>
             </div>
           </div>

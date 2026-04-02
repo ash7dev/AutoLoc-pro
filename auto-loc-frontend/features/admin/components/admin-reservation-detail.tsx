@@ -145,7 +145,7 @@ export function AdminReservationDetail({ reservation, accessToken }: AdminReserv
 
                 <div className="text-right">
                    <p className="text-[12px] font-black uppercase tracking-widest text-emerald-400 mb-2">Total Locataire</p>
-                   <p className="text-[32px] font-black">{formatPrice(reservation.totalLocataire)} <span className="text-[14px] text-white/40">FCFA</span></p>
+                   <p className="text-[32px] font-black">{formatPrice(Number(reservation.totalLocataire || reservation.prixTotal || 0))} <span className="text-[14px] text-white/40">FCFA</span></p>
                 </div>
               </div>
 

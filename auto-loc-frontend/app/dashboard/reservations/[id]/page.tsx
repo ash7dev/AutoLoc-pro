@@ -95,20 +95,13 @@ export default async function TenantReservationDetailPage({ params }: { params: 
     }
 
     const r = reservation;
-    const legacy = r as typeof r & {
-        totalLocataire?: string;
-        montantCommission?: string;
-        checkinLe?: string;
-        checkoutLe?: string;
-        annuleLe?: string;
-    };
 
     /* ── Computed ── */
     const nbJours = r.nbJours != null
         ? r.nbJours
         : Math.max(1, Math.round((new Date(r.dateFin).getTime() - new Date(r.dateDebut).getTime()) / 86_400_000));
 
-    const totalPaye = Number(r.prixTotal ?? legacy.totalLocataire ?? 0) || 0;
+    const totalPaye = Number(r.prixTotal) || 0;
 
     /* ── Vehicle photo ── */
     const v = r.vehicule;
@@ -128,9 +121,9 @@ export default async function TenantReservationDetailPage({ params }: { params: 
     const timeline = [
         { label: 'Réservation créée',           date: r.creeLe,                                          icon: Clock,        color: 'emerald' },
         r.confirmeeLe && { label: 'Confirmée par le propriétaire', date: r.confirmeeLe,                  icon: CheckCircle2, color: 'emerald' },
-        (r.checkInLe ?? legacy.checkinLe) && { label: 'Check-in effectué',  date: (r.checkInLe ?? legacy.checkinLe)!,   icon: LogIn,  color: 'emerald' },
-        (r.checkOutLe ?? legacy.checkoutLe) && { label: 'Check-out effectué', date: (r.checkOutLe ?? legacy.checkoutLe)!, icon: LogOut, color: 'emerald' },
-        (r.annuleeLe ?? legacy.annuleLe) && { label: 'Annulée',              date: (r.annuleeLe ?? legacy.annuleLe)!,    icon: XCircle, color: 'red' },
+        r.checkInLe && { label: 'Check-in effectué',  date: r.checkInLe,   icon: LogIn,  color: 'emerald' },
+        r.checkOutLe && { label: 'Check-out effectué', date: r.checkOutLe, icon: LogOut, color: 'emerald' },
+        r.annuleeLe && { label: 'Annulée',              date: r.annuleeLe,    icon: XCircle, color: 'red' },
     ].filter(Boolean) as { label: string; date: string; icon: React.ElementType; color: string }[];
 
     const st = STATUS[r.statut] ?? STATUS.INITIEE;

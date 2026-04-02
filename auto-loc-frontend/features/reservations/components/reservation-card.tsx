@@ -7,11 +7,6 @@ import { ReservationStatusBadge } from "./reservation-status";
 import { PhoneDisplay } from "./phone-display";
 import type { Reservation } from "@/lib/nestjs/reservations";
 
-type LegacyAmounts = {
-    totalLocataire?: string;
-    netProprietaire?: string;
-};
-
 export function OwnerReservationCard({
     reservation: r,
     className,
@@ -19,8 +14,7 @@ export function OwnerReservationCard({
     reservation: Reservation;
     className?: string;
 }) {
-    const legacy = r as Reservation & LegacyAmounts;
-    const revenue = Number(r.montantProprietaire ?? legacy.netProprietaire ?? 0);
+    const revenue = Number(r.montantProprietaire) || 0;
     const isUrgent = r.statut === "PAYEE";
     const hasDelivery = !!r.adresseLivraison;
 

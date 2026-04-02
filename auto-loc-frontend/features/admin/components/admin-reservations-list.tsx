@@ -230,7 +230,7 @@ export function AdminReservationsList({ accessToken, initialData }: AdminReserva
                     {status.label}
                   </span>
                   <p className="text-[17px] font-black text-black tabular-nums">
-                    {formatPrice(r.totalLocataire)}<span className="text-[10px] text-slate-400 ml-1">FCFA</span>
+                    {formatPrice(Number(r.totalLocataire || 0))}<span className="text-[10px] text-slate-400 ml-1">FCFA</span>
                   </p>
                 </div>
               </Link>

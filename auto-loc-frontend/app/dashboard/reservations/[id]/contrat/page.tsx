@@ -72,17 +72,16 @@ export default async function ContractPage({ params, searchParams }: PageProps) 
     }
 
     const r = reservation;
-    const legacy = r as typeof r & { totalLocataire?: string; montantCommission?: string; netProprietaire?: string };
 
     const contractStatus = getContractStatus(r.statut);
     const meta = STATUS_META[contractStatus];
 
     const nbJours = r.nbJours ?? Math.max(1, Math.round((new Date(r.dateFin).getTime() - new Date(r.dateDebut).getTime()) / 86_400_000));
-    const totalLocataire  = Number(r.prixTotal ?? legacy.totalLocataire ?? 0) || 0;
-    const commissionAmount = Number(r.commission ?? legacy.montantCommission ?? 0) || 0;
+    const totalLocataire  = Number(r.prixTotal) || 0;
+    const commissionAmount = Number(r.commission) || 0;
     const totalBase       = totalLocataire - commissionAmount;
     const prixParJour     = Number(r.prixParJour) || 0;
-    const netProprietaire = Number(r.montantProprietaire ?? legacy.netProprietaire ?? 0) || 0;
+    const netProprietaire = Number(r.montantProprietaire) || 0;
 
     const contractRef  = r.id.slice(0, 8).toUpperCase();
     const contractDate = fmtDate(r.creeLe);
