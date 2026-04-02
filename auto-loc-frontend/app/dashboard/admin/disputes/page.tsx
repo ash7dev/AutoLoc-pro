@@ -46,7 +46,7 @@ export default async function AdminDisputesPage(): Promise<React.ReactElement> {
     // Afficher liste vide si erreur
   }
 
-  const activeCount = disputes.filter((d) => d.status === 'open' || d.status === 'investigating').length;
+  const activeCount = disputes.filter((d) => d.status === 'open').length;
 
   return (
     <div className="p-6 lg:p-8">

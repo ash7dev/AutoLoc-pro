@@ -21,13 +21,12 @@ export interface Dispute {
   description: string;
   amount: number | null;
   openedAt: string;
-  status: 'open' | 'investigating' | 'resolved' | 'dismissed';
+  status: 'open' | 'resolved' | 'dismissed';
   priority: 'low' | 'medium' | 'high';
 }
 
 const STATUS_CONFIG = {
   open:          { label: 'Ouvert',       bg: 'bg-red-50',     text: 'text-red-700',     dot: 'bg-red-400',     pulse: true },
-  investigating: { label: 'En cours',     bg: 'bg-amber-50',   text: 'text-amber-700',   dot: 'bg-amber-400',   pulse: true },
   resolved:      { label: 'Fondé',        bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-400', pulse: false },
   dismissed:     { label: 'Non fondé',    bg: 'bg-slate-100',  text: 'text-slate-600',   dot: 'bg-slate-400',   pulse: false },
 };
@@ -178,7 +177,7 @@ function DisputeCard({
   const isLoading = pendingId === dispute.id;
   const status   = STATUS_CONFIG[dispute.status];
   const priority = PRIORITY_CONFIG[dispute.priority];
-  const isActive = dispute.status === 'open' || dispute.status === 'investigating';
+  const isActive = dispute.status === 'open';
 
   return (
     <div className={cn(
@@ -341,7 +340,7 @@ interface AdminDisputesListProps {
 export function AdminDisputesList({ disputes }: AdminDisputesListProps) {
   const router = useRouter();
   const [search, setSearch]   = useState('');
-  const [filter, setFilter]   = useState<'all' | 'open' | 'investigating' | 'resolved' | 'dismissed'>('all');
+  const [filter, setFilter]   = useState<'all' | 'open' | 'resolved' | 'dismissed'>('all');
   const [sort, setSort]       = useState<{ key: SortKey; dir: 'asc' | 'desc' } | null>({ key: 'priority', dir: 'desc' });
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<{ dispute: Dispute; verdict: 'resolved' | 'dismissed' } | null>(null);
@@ -403,7 +402,7 @@ export function AdminDisputesList({ disputes }: AdminDisputesListProps) {
     }
   }
 
-  const activeCount = safeDisputes.filter((d) => d.status === 'open' || d.status === 'investigating').length;
+  const activeCount = safeDisputes.filter((d) => d.status === 'open').length;
 
   return (
     <>
@@ -431,7 +430,7 @@ export function AdminDisputesList({ disputes }: AdminDisputesListProps) {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5">
-            {(['all', 'open', 'investigating', 'resolved', 'dismissed'] as const).map((f) => (
+            {(['all', 'open', 'resolved', 'dismissed'] as const).map((f) => (
               <button key={f} type="button" onClick={() => setFilter(f)}
                 className={cn(
                   'px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all duration-200',
