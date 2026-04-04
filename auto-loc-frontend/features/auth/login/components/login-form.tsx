@@ -82,7 +82,9 @@ export default function LoginAutoLoc() {
     const ok = await sendCode(formattedPhone);
     if (ok) {
       setIsRedirecting(true);
-      router.push(`/verify?phone=${encodeURIComponent(formattedPhone)}&type=phone`);
+      const next = searchParams.get('next');
+      const nextParam = next ? `&next=${encodeURIComponent(next)}` : '';
+      router.push(`/verify?phone=${encodeURIComponent(formattedPhone)}&type=phone${nextParam}`);
     }
   };
 

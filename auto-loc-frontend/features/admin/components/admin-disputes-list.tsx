@@ -244,7 +244,7 @@ function DisputeCard({
           </div>
           <div className="flex items-center gap-1.5">
             <Calendar className="h-3.5 w-3.5 text-black/20 flex-shrink-0" strokeWidth={1.75} />
-            {dispute.openedAt}
+            {new Date(dispute.openedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
             {isActive && (
               <span className="inline-flex items-center gap-0.5 text-[10.5px] font-bold text-amber-600">
                 <Timer className="h-3 w-3" strokeWidth={2} />

@@ -131,8 +131,8 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
       setGateOpen(true);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        const redirect = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
-        router.push(`/login?redirect=${redirect}`);
+        const next = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+        router.push(`/login?next=${next}`);
         return;
       }
       router.push(`/vehicle/${vehicleId}/payment?${buildParams().toString()}`);

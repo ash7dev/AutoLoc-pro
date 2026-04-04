@@ -257,26 +257,17 @@ export async function fetchAdminUsers(
 }
 
 export async function fetchAdminStats(accessToken: string): Promise<AdminStats> {
-  try {
-    const result = await apiFetch<AdminStats>(ADMIN_PATHS.stats, { accessToken });
-    console.log('Raw API stats response:', result);
-    return result;
-  } catch (error) {
-    console.error('Error fetching admin stats:', error);
-    // Return default values to prevent UI from breaking
-    return {
-      utilisateursActifs: 0,
-      locationsCeMois: 0,
-      revenuCeMois: 0,
-      tauxSatisfaction: null,
-      pending: {
-        kycEnAttente: 0,
-        vehiculesAValider: 0,
-        retraitsEnAttente: 0,
-        litigesOuverts: 0,
-      },
-    };
+  const res = await apiFetch<unknown>(ADMIN_PATHS.stats, { accessToken });
+  if (res && typeof res === 'object') {
+    const obj = res as Record<string, unknown>;
+    // Direct shape: { utilisateursActifs, ... }
+    if ('utilisateursActifs' in obj) return obj as unknown as AdminStats;
+    // Wrapped shape: { data: { utilisateursActifs, ... } } or { stats: ... }
+    const inner = (obj.data ?? obj.stats ?? obj.result) as Record<string, unknown> | undefined;
+    if (inner && typeof inner === 'object' && 'utilisateursActifs' in inner)
+      return inner as unknown as AdminStats;
   }
+  throw new Error('Invalid stats response shape');
 }
 
 export async function fetchAdminActivity(accessToken: string): Promise<AdminActivityItem[]> {
@@ -304,24 +295,14 @@ export async function fetchAdminWithdrawals(accessToken: string): Promise<AdminW
 export async function fetchAdminDisputes(accessToken: string): Promise<AdminDispute[]> {
   try {
     const res = await apiFetch<unknown>(ADMIN_PATHS.disputes, { accessToken });
-    console.log('Raw API response for disputes:', res);
-    
-    if (Array.isArray(res)) {
-      console.log('Disputes response is array, length:', res.length);
-      return res as AdminDispute[];
-    }
+    if (Array.isArray(res)) return res as AdminDispute[];
     if (res && typeof res === 'object') {
       const obj = res as Record<string, unknown>;
       const inner = obj.data ?? obj.items ?? obj.disputes;
-      if (Array.isArray(inner)) {
-        console.log('Disputes found in nested property, length:', inner.length);
-        return inner as AdminDispute[];
-      }
+      if (Array.isArray(inner)) return inner as AdminDispute[];
     }
-    console.log('No disputes array found in response, returning empty array');
     return [];
-  } catch (error) {
-    console.error('Error fetching admin disputes:', error);
+  } catch {
     return [];
   }
 }
