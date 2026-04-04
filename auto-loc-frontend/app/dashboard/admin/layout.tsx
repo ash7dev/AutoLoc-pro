@@ -48,7 +48,7 @@ export default async function AdminLayout({
       <main className="flex-1 min-w-0 overflow-y-auto pt-14 lg:pt-0 lg:pb-0">
         {children}
       </main>
-      <AdminAutoRefresh intervalMs={15000} />
+      <AdminAutoRefresh intervalMs={60000} />
     </div>
   );
 }

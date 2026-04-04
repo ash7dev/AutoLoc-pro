@@ -1,5 +1,6 @@
 import React from 'react';
 import { cookies } from 'next/headers';
+import { unstable_cache } from 'next/cache';
 import { Calendar } from 'lucide-react';
 import { fetchAdminStats, fetchAdminActivity, fetchAdminUsers, fetchAdminVehicles } from '@/lib/nestjs/admin';
 import type { AdminStats, AdminActivityItem, AdminUser, AdminVehicle } from '@/lib/nestjs/admin';
@@ -9,7 +10,6 @@ import { AdminStatCards } from '@/features/admin/components/admin-stat-cards';
 import { AdminActivityFeed } from '@/features/admin/components/admin-activity-feed';
 import { AdminQuickActions } from '@/features/admin/components/admin-quick-actions';
 import { PendingKycWithListingSection } from '@/features/admin/components/pending-kyc-with-listing';
-import { AdminAutoRefresh } from '@/features/admin/components/admin-auto-refresh';
 
 function buildMetrics(stats: AdminStats): PlatformMetric[] {
   const revenu = stats.revenuCeMois;
@@ -65,13 +65,17 @@ export default async function AdminOverviewPage(): Promise<React.ReactElement> {
   let stats: AdminStats | null = null;
   let activity: AdminActivityItem[] = [];
 
-  // Try to get real-time stats from other endpoints if /admin/stats fails
+  const cachedStats    = unstable_cache(() => fetchAdminStats(token),    ['admin-stats',    token], { revalidate: 60 });
+  const cachedActivity = unstable_cache(() => fetchAdminActivity(token), ['admin-activity', token], { revalidate: 60 });
+  const cachedUsers    = unstable_cache(() => fetchAdminUsers(token),    ['admin-users',    token], { revalidate: 60 });
+  const cachedVehicles = unstable_cache(() => fetchAdminVehicles(token), ['admin-vehicles', token], { revalidate: 60 });
+
   try {
     const [statsResult, activityResult, usersResult, vehiclesResult] = await Promise.allSettled([
-      fetchAdminStats(token),
-      fetchAdminActivity(token),
-      fetchAdminUsers(token),
-      fetchAdminVehicles(token),
+      cachedStats(),
+      cachedActivity(),
+      cachedUsers(),
+      cachedVehicles(),
     ]);
     
     if (statsResult.status === 'fulfilled') {
@@ -107,7 +111,7 @@ export default async function AdminOverviewPage(): Promise<React.ReactElement> {
 
   return (
     <div className="p-6 lg:p-8">
-      <AdminAutoRefresh intervalMs={30_000} />
+      {/* Auto-refresh géré par le layout (60s) */}
 
       {/* ── Welcome header ── */}
       <div className="mb-8">
