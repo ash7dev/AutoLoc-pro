@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { Scale, ArrowLeft } from 'lucide-react';
 import { AdminDisputesList, type Dispute } from '@/features/admin/components/admin-disputes-list';
 import { fetchAdminDisputes } from '@/lib/nestjs/admin';
+import { ApiError } from '@/lib/nestjs/api-client';
 
 function derivePriority(amount: number | null): Dispute['priority'] {
   if (amount === null) return 'medium';
@@ -25,6 +26,8 @@ export default async function AdminDisputesPage(): Promise<React.ReactElement> {
   if (!token) redirect('/login');
 
   let disputes: Dispute[] = [];
+  let fetchError: { status: number; message: string } | null = null;
+
   try {
     const data = await fetchAdminDisputes(token);
     disputes = data.map((d) => ({
@@ -36,12 +39,19 @@ export default async function AdminDisputesPage(): Promise<React.ReactElement> {
       reason: d.description.length > 60 ? d.description.slice(0, 57) + '…' : d.description,
       description: d.description,
       amount: d.amount,
-      openedAt: d.openedAt, // raw ISO string — component handles formatting + age calc
+      openedAt: d.openedAt,
       status: STATUT_MAP[d.statut] ?? 'open',
       priority: derivePriority(d.amount),
     }));
   } catch (error) {
-    console.error('Failed to fetch disputes:', error);
+    if (error instanceof ApiError) {
+      if (error.status === 401 || error.status === 403) {
+        redirect('/login?next=/dashboard/admin/disputes');
+      }
+      fetchError = { status: error.status, message: error.message };
+    } else {
+      fetchError = { status: 0, message: 'Erreur réseau' };
+    }
   }
 
   const activeCount = disputes.filter((d) => d.status === 'open').length;
@@ -67,6 +77,14 @@ export default async function AdminDisputesPage(): Promise<React.ReactElement> {
           </div>
         </div>
       </div>
+
+      {fetchError && (
+        <div className="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <span className="text-[12.5px] font-semibold text-red-700">
+            Erreur {fetchError.status > 0 ? `${fetchError.status} — ` : ''}{fetchError.message}
+          </span>
+        </div>
+      )}
 
       <AdminDisputesList disputes={disputes} />
     </div>

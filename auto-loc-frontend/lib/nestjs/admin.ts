@@ -293,18 +293,14 @@ export async function fetchAdminWithdrawals(accessToken: string): Promise<AdminW
 }
 
 export async function fetchAdminDisputes(accessToken: string): Promise<AdminDispute[]> {
-  try {
-    const res = await apiFetch<unknown>(ADMIN_PATHS.disputes, { accessToken });
-    if (Array.isArray(res)) return res as AdminDispute[];
-    if (res && typeof res === 'object') {
-      const obj = res as Record<string, unknown>;
-      const inner = obj.data ?? obj.items ?? obj.disputes;
-      if (Array.isArray(inner)) return inner as AdminDispute[];
-    }
-    return [];
-  } catch {
-    return [];
+  const res = await apiFetch<unknown>(ADMIN_PATHS.disputes, { accessToken });
+  if (Array.isArray(res)) return res as AdminDispute[];
+  if (res && typeof res === 'object') {
+    const obj = res as Record<string, unknown>;
+    const inner = obj.data ?? obj.items ?? obj.disputes;
+    if (Array.isArray(inner)) return inner as AdminDispute[];
   }
+  return [];
 }
 
 export async function fetchAdminDisputeDetail(accessToken: string, id: string): Promise<any> {

@@ -382,34 +382,32 @@ export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header avec action rapide - Responsive */}
+    <div className="bg-slate-50 flex flex-col">
+      {/* Header — compact sur mobile */}
       <div className="bg-emerald-900 text-white border-b border-emerald-950">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 h-auto sm:h-20 py-4 sm:py-0">
+          <div className="flex items-center justify-between gap-3 h-14 sm:h-20">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Paramètres</h1>
-              <p className="text-sm text-emerald-200 mt-1">Gérez vos informations personnelles et votre sécurité.</p>
+              <h1 className="text-base sm:text-2xl font-bold tracking-tight">Paramètres</h1>
+              <p className="hidden sm:block text-sm text-emerald-200 mt-1">Gérez vos informations personnelles et votre sécurité.</p>
             </div>
-            <div className="flex items-center justify-center sm:justify-end">
-              <Button
-                onClick={switchToLocataire}
-                disabled={switchingRole}
-                variant="secondary"
-                className="bg-emerald-800 hover:bg-emerald-700 text-white border-none shadow-none w-full sm:w-auto"
-              >
-                {switchingRole ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-                Mode Locataire
-              </Button>
-            </div>
+            <Button
+              onClick={switchToLocataire}
+              disabled={switchingRole}
+              variant="secondary"
+              className="bg-emerald-800 hover:bg-emerald-700 text-white border-none shadow-none text-xs sm:text-sm px-3 sm:px-4"
+            >
+              {switchingRole ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 mr-1.5" />}
+              <span className="hidden xs:inline">Mode </span>Locataire
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Navigation Tabs (Epurée) - Responsive */}
-      <div className="bg-white shadow-sm sticky top-0 z-10">
+      {/* Navigation Tabs — sticky sous le top bar mobile */}
+      <div className="bg-white shadow-sm sticky top-14 lg:top-0 z-30 border-b border-slate-100">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto py-0">
+          <div className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -417,14 +415,14 @@ export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "flex items-center gap-2 px-1 py-4 border-b-2 transition-colors whitespace-nowrap text-sm sm:text-sm font-semibold tracking-tight min-w-0",
+                    "flex items-center gap-2 px-1 py-3.5 border-b-2 transition-colors whitespace-nowrap text-sm font-semibold tracking-tight",
                     activeTab === tab.id
                       ? "border-emerald-600 text-emerald-700"
                       : "border-transparent text-slate-500 hover:text-slate-900"
                   )}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" strokeWidth={2.5} />
-                  <span className="truncate">{tab.label}</span>
+                  {tab.label}
                 </button>
               );
             })}
@@ -432,8 +430,8 @@ export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
         </div>
       </div>
 
-      {/* Content - Responsive */}
-      <div className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      {/* Content */}
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
         {renderTabContent()}
       </div>
     </div>
