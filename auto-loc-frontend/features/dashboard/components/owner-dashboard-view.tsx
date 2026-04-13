@@ -185,14 +185,27 @@ export function OwnerDashboardView({
             // Get YYYY-MM-DD for current day
             const dateStr = new Date(year, month, day, 12).toISOString().split("T")[0];
 
-            const isReserved = reservations.some(r => {
-                if (!["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE"].includes(r.statut)) return false;
+            let isReserved = false;
+            let hasCheckIn = false;
+            let hasCheckOut = false;
+
+            reservations.forEach(r => {
+                if (!["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE"].includes(r.statut)) return;
                 const start = r.dateDebut.split("T")[0];
                 const end = r.dateFin.split("T")[0];
-                return dateStr >= start && dateStr <= end;
+
+                if (dateStr >= start && dateStr <= end) isReserved = true;
+                if (start === dateStr) hasCheckIn = true;
+                if (end === dateStr) hasCheckOut = true;
             });
 
-            return { day, status: isReserved ? ("reserved" as const) : null };
+            return { 
+                day, 
+                dateStr, 
+                status: isReserved ? ("reserved" as const) : null,
+                hasCheckIn,
+                hasCheckOut
+            };
         });
     }, [calendarDate, reservations]);
 
@@ -308,6 +321,7 @@ export function OwnerDashboardView({
                 <AttendanceCalendar
                     month={currentMonth}
                     days={calendarDays}
+                    reservations={reservations}
                     onPrev={handlePrevMonth}
                     onNext={handleNextMonth}
                 />
@@ -368,6 +382,7 @@ export function OwnerDashboardView({
                     <AttendanceCalendar
                         month={currentMonth}
                         days={calendarDays}
+                        reservations={reservations}
                         onPrev={handlePrevMonth}
                         onNext={handleNextMonth}
                     />

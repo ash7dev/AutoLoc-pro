@@ -56,17 +56,17 @@ function ReservationRow({ r }: { r: ReservationItem }) {
 
   const inner = (
     <div className={cn(
-      "group flex items-center gap-4 px-5 py-4 transition-all duration-200",
+      "group flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-3.5 sm:py-4 transition-all duration-200",
       r.href && "hover:bg-slate-50/80 cursor-pointer",
     )}>
 
       {/* Vehicle Photo or Icon */}
-      <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 group-hover:border-emerald-200 transition-colors">
+      <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 group-hover:border-emerald-200 transition-colors">
         {r.vehiclePhoto ? (
-          <img 
-            src={r.vehiclePhoto} 
-            alt={r.vehicle} 
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+          <img
+            src={r.vehiclePhoto}
+            alt={r.vehicle}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-slate-50">
@@ -77,40 +77,40 @@ function ReservationRow({ r }: { r: ReservationItem }) {
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <p className="text-[14px] font-bold text-slate-900 truncate tracking-tight">{r.vehicle}</p>
+        <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
+          <p className="text-[13px] sm:text-[14px] font-bold text-slate-900 truncate tracking-tight">{r.vehicle}</p>
           {r.duration && (
-            <span className="text-[10px] font-black px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded uppercase tracking-wider">
+            <span className="hidden sm:inline-block text-[10px] font-black px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded uppercase tracking-wider">
               {r.duration}
             </span>
           )}
         </div>
-        
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {r.tenantName && (
-            <span className="text-[12px] font-medium text-slate-500 truncate max-w-[120px]">
+            <span className="text-[11px] sm:text-[12px] font-medium text-slate-500 truncate max-w-[80px] sm:max-w-[120px]">
               {r.tenantName}
             </span>
           )}
           {r.tenantPhone && r.status === "EN_COURS" && (
-            <span className="text-[11px] font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 tabular-nums">
+            <span className="hidden xs:inline-block text-[10px] sm:text-[11px] font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 tabular-nums">
               {r.tenantPhone}
             </span>
           )}
-          <span className="text-slate-200 text-[10px]">|</span>
-          <span className="text-[12px] font-bold text-emerald-600 tabular-nums">
+          <span className="hidden sm:block text-slate-200 text-[10px]">|</span>
+          <span className="text-[11px] sm:text-[12px] font-bold text-emerald-600 tabular-nums">
             {r.amount}
           </span>
         </div>
       </div>
 
       {/* Status & Meta */}
-      <div className="flex flex-col items-end gap-1.5 shrink-0">
+      <div className="flex flex-col items-end gap-1 sm:gap-1.5 shrink-0">
         <span className={cn(
-          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10.5px] font-black uppercase tracking-tight",
+          "inline-flex items-center gap-1.2 sm:gap-1.5 px-2 sm:px-2.5 py-0.8 sm:py-1 rounded-full border text-[9.5px] sm:text-[10.5px] font-black uppercase tracking-tight",
           s.cls,
         )}>
-          <span className={cn("w-1.5 h-1.5 rounded-full", s.dot)} />
+          <span className={cn("w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full", s.dot)} />
           {s.label}
         </span>
         {r.dateRange && (
@@ -183,7 +183,7 @@ export function RecentReservations({
   title?: string;
   className?: string;
 }) {
-  const effectiveTitle = title ?? (mode === "pipeline" ? "Pipeline" : "Réservations récentes");
+  const effectiveTitle = title ?? (mode === "pipeline" ? "Réservations récentes" : "Réservations récentes");
 
   const groups = PIPELINE_ORDER
     .map(st => ({ st, items: reservations.filter(r => r.status === st) }))
