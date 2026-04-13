@@ -284,7 +284,7 @@ export function OwnerDashboardView({
                 {/* Fleet Performance - Mobile */}
                 <FleetPerformance 
                     vehicles={vehicles} 
-                    reviews={reviews?.avis} 
+                    reservations={reservations} 
                 />
 
                 {/* Quick Actions */}
@@ -333,37 +333,38 @@ export function OwnerDashboardView({
                             items={todoItems.length > 0 ? todoItems : [
                                 { id: 0, title: "Rien à signaler", description: "Tout est en ordre !", priority: "normal" as const, href: "/dashboard/owner" },
                             ]}
-                            allHref="/dashboard/owner/reservations"
+                                allHref="/dashboard/owner/reservations"
                         />
                     </div>
                     <div className="xl:col-span-1">
-                        <FleetPerformance 
-                            vehicles={vehicles} 
-                            reviews={reviews?.avis} 
-                        />
+                        <OwnerQuickActions reservations={reservations} />
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-6">
-                    <OwnerQuickActions reservations={reservations} />
-                </div>
-
-                {/* Row 4 — Reservations + Calendar */}
+                {/* Row 4 — Fleet + Reservations */}
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="xl:col-span-1">
+                        <FleetPerformance 
+                            vehicles={vehicles} 
+                            reservations={reservations}
+                        />
+                    </div>
                     <div className="xl:col-span-2">
                         <RecentReservations
                             mode="pipeline"
                             reservations={recentReservations}
                         />
                     </div>
-                    <div className="flex flex-col gap-4 sm:gap-6">
-                        <AttendanceCalendar
-                            month={currentMonth}
-                            days={calendarDays}
-                            onPrev={handlePrevMonth}
-                            onNext={handleNextMonth}
-                        />
-                    </div>
+                </div>
+
+                {/* Row 5 — Calendar */}
+                <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                    <AttendanceCalendar
+                        month={currentMonth}
+                        days={calendarDays}
+                        onPrev={handlePrevMonth}
+                        onNext={handleNextMonth}
+                    />
                 </div>
             </div>
         </div>

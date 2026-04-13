@@ -1,35 +1,75 @@
 "use client";
 
-import { Star, Trophy, MessageSquare, Car, ArrowRight, TrendingUp } from "lucide-react";
+import { Trophy, Car, ArrowRight, TrendingUp, BarChart3, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Vehicle } from "@/lib/nestjs/vehicles";
-import type { Review } from "@/lib/nestjs/reviews";
+import type { Reservation } from "@/lib/nestjs/reservations";
 import Link from "next/link";
+import { useMemo } from "react";
 
 interface FleetPerformanceProps {
   vehicles: Vehicle[];
-  reviews?: Review[] | null;
+  reservations?: Reservation[];
   loading?: boolean;
 }
 
-export function FleetPerformance({ vehicles, reviews, loading }: FleetPerformanceProps) {
-  // ── Logic ────────────────────────────────────────────────────────────────────
+export function FleetPerformance({ vehicles, reservations = [], loading }: FleetPerformanceProps) {
+  // ── Analytics Logic ─────────────────────────────────────────────────────────
   
-  // Rank top 3 vehicles by rentals
-  const topVehicles = [...vehicles]
-    .sort((a, b) => (b.totalLocations || 0) - (a.totalLocations || 0))
-    .slice(0, 3);
+  const fleetStats = useMemo(() => {
+    if (!vehicles.length) return { topVehicles: [], avgOccupancy: 0 };
 
-  // Calculate fleet average rating
-  const vehiclesWithRating = vehicles.filter(v => v.totalAvis > 0);
-  const avgRating = vehiclesWithRating.length > 0
-    ? vehiclesWithRating.reduce((sum, v) => sum + v.note, 0) / vehiclesWithRating.length
-    : 0;
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  // Filter only tenant reviews (LOCATAIRE_NOTE_PROPRIO)
-  const recentReviews = (reviews || [])
-    .filter(r => r.typeAvis === "LOCATAIRE_NOTE_PROPRIO")
-    .slice(0, 3); // Showing up to 3 for better fill
+    // 1. Map vehicles with their calculated stats
+    const stats = vehicles.map(v => {
+      // Filter reservations for this vehicle that are "money-making"
+      const vRes = reservations.filter(r => 
+        r.vehicule.id === v.id && 
+        ["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE"].includes(r.statut)
+      );
+
+      // Revenue: All-time for simplicity, OR could be month-to-date
+      const revenue = vRes.reduce((sum, r) => sum + parseFloat(r.montantProprietaire || "0"), 0);
+
+      // Occupancy: Days rented in the last 30 days
+      let daysRented = 0;
+      vRes.forEach(r => {
+        const start = new Date(r.dateDebut);
+        const end = new Date(r.dateFin);
+        
+        // Only count days within the last 30 days window
+        const effectiveStart = start < thirtyDaysAgo ? thirtyDaysAgo : start;
+        const effectiveEnd = end > now ? now : end;
+
+        if (effectiveEnd > effectiveStart) {
+          const diffTime = Math.abs(effectiveEnd.getTime() - effectiveStart.getTime());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          daysRented += diffDays;
+        }
+      });
+
+      const occupancyRate = Math.min(100, (daysRented / 30) * 100);
+
+      return {
+        ...v,
+        calculatedRevenue: revenue,
+        calculatedOccupancy: occupancyRate,
+      };
+    });
+
+    // 2. Sort by revenue descending
+    const sorted = stats.sort((a, b) => b.calculatedRevenue - a.calculatedRevenue);
+    
+    // 3. Overall fleet occupancy
+    const avgOccupancy = stats.reduce((sum, s) => sum + s.calculatedOccupancy, 0) / stats.length;
+
+    return {
+      topVehicles: sorted.slice(0, 4), // Show top 4 for better fill since reviews are gone
+      avgOccupancy,
+    };
+  }, [vehicles, reservations]);
 
   if (loading) {
     return (
@@ -50,134 +90,109 @@ export function FleetPerformance({ vehicles, reviews, loading }: FleetPerformanc
       <div className="p-6 border-b border-slate-50 flex items-center justify-between">
         <div>
           <h3 className="text-sm font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-amber-500" />
+            <Trophy className="w-4 h-4 text-emerald-500" />
             Performance de la flotte
           </h3>
           <p className="text-[12px] text-slate-400 mt-1 font-medium">
-            Analyse de rentabilité et satisfaction
+            Analyse de rentabilité et taux d'occupation
           </p>
         </div>
         
-        {avgRating > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-full border border-amber-100">
-            <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-            <span className="text-[13px] font-black text-amber-700">{avgRating.toFixed(1)}</span>
+        {fleetStats.avgOccupancy > 0 && (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-full border border-emerald-100">
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="text-[11px] font-black text-emerald-700 uppercase tracking-tight">
+              {Math.round(fleetStats.avgOccupancy)}% actifs
+            </span>
           </div>
         )}
       </div>
 
-      <div className="p-6 flex-1 flex flex-col gap-8">
+      <div className="p-6 flex-1 flex flex-col gap-6">
         
         {/* Top Vehicles Section */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
-              Top Véhicules
-            </h4>
-          </div>
-
-          <div className="space-y-3">
-            {topVehicles.length > 0 ? (
-              topVehicles.map((v, i) => (
-                <div key={v.id} className="group flex items-center gap-4">
-                  <div className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center text-[13px] font-black shrink-0 transition-colors",
-                    i === 0 ? "bg-amber-50 text-amber-600 border border-amber-100" :
-                    i === 1 ? "bg-slate-50 text-slate-600 border border-slate-100" :
-                    "bg-orange-50 text-orange-600 border border-orange-100"
-                  )}>
-                    {i + 1}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <p className="text-[13px] font-bold text-slate-700 truncate group-hover:text-emerald-600 transition-colors">
-                        {v.marque} {v.modele}
-                      </p>
-                      <span className="text-[11px] font-black text-slate-400">
-                        {v.totalLocations} loc.
-                      </span>
-                    </div>
-                    {/* Progress Bar */}
-                    <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100/50">
-                      <div 
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-1000"
-                        style={{ width: `${Math.min(100, (v.totalLocations / (topVehicles[0].totalLocations || 1)) * 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center py-6 px-4 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-                <Car className="w-8 h-8 text-slate-200 mb-3" />
-                <p className="text-[12px] font-bold text-slate-400 text-center">
-                  Aucun véhicule enregistré
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Recent Reviews Section */}
-        <section className="flex-1 min-h-0 overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
-              Derniers Avis
+        <section className="flex-1">
+          <div className="flex items-center justify-between mb-5">
+            <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <BarChart3 className="w-3.5 h-3.5" />
+              Classement Rentabilité
             </h4>
           </div>
 
           <div className="space-y-4">
-            {recentReviews.length > 0 ? (
-              recentReviews.map((rev) => (
-                <div key={rev.id} className="relative bg-slate-50/50 rounded-2xl p-4 border border-slate-100/80">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          className={cn(
-                            "w-2.5 h-2.5",
-                            i < Math.round(rev.note) ? "fill-amber-400 text-amber-400" : "text-slate-200"
-                          )} 
-                        />
-                      ))}
+            {fleetStats.topVehicles.length > 0 ? (
+              fleetStats.topVehicles.map((v, i) => (
+                <div key={v.id} className="group relative">
+                  <div className="flex items-center gap-4 mb-2">
+                    {/* Rank Badge */}
+                    <div className={cn(
+                      "w-7 h-7 rounded-lg flex items-center justify-center text-[12px] font-black shrink-0 shadow-sm",
+                      i === 0 ? "bg-emerald-500 text-white" :
+                      i === 1 ? "bg-slate-800 text-white" :
+                      i === 2 ? "bg-slate-400 text-white" :
+                      "bg-slate-100 text-slate-400"
+                    )}>
+                      {i + 1}
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">
-                      • {rev.auteur.prenom}
-                    </span>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-0.5">
+                        <p className="text-[13px] font-bold text-slate-800 truncate">
+                          {v.marque} {v.modele}
+                        </p>
+                        <span className="text-[13px] font-black text-emerald-600 tabular-nums">
+                          {v.calculatedRevenue.toLocaleString("fr-FR")} <span className="text-[10px] font-bold">FCFA</span>
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-[11px] font-medium text-slate-400">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          Occupation : {Math.round(v.calculatedOccupancy)}%
+                        </div>
+                        <span> {v.totalLocations} loc.</span>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-[12px] text-slate-600 leading-relaxed italic line-clamp-2">
-                    &ldquo;{rev.commentaire || "Excellent service, véhicule impeccable !"}&rdquo;
-                  </p>
-                  {rev.reservation?.vehicule && (
-                    <div className="mt-2 text-[10px] font-black text-emerald-600 flex items-center gap-1 uppercase tracking-wider">
-                      <TrendingUp className="w-3 h-3" />
-                      {rev.reservation.vehicule.marque} {rev.reservation.vehicule.modele}
-                    </div>
-                  )}
+
+                  {/* Progress Bar container */}
+                  <div className="ml-11 h-1.5 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100/50">
+                    <div 
+                      className={cn(
+                        "h-full rounded-full transition-all duration-1000 ease-out",
+                        i === 0 ? "bg-emerald-500" : "bg-slate-400"
+                      )}
+                      style={{ 
+                        width: `${Math.min(100, (v.calculatedRevenue / (fleetStats.topVehicles[0].calculatedRevenue || 1)) * 100)}%` 
+                      }}
+                    />
+                  </div>
                 </div>
               ))
             ) : (
-              <div className="flex flex-col items-center justify-center py-10 px-6 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 mb-4 scale-in-center">
-                   <MessageSquare className="w-6 h-6 text-slate-200" />
-                </div>
-                <h5 className="text-[13px] font-black text-slate-600 mb-1">Pas encore d'avis</h5>
-                <p className="text-[11px] text-slate-400 text-center leading-relaxed">
-                  La qualité de votre service sera bientôt récompensée par vos premiers locataires.
+              <div className="flex flex-col items-center justify-center py-10 px-4 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                <Car className="w-10 h-10 text-slate-200 mb-3" />
+                <p className="text-[13px] font-bold text-slate-400 text-center">
+                  Aucun véhicule enregistré ou actif
                 </p>
               </div>
             )}
           </div>
         </section>
 
+        {/* Info Box */}
+        <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+          <p className="text-[11.5px] text-slate-500 leading-relaxed">
+            <span className="font-bold text-slate-700">Conseil :</span> Optimisez vos tarifs sur les véhicules à faible taux d'occupation pour maximiser vos revenus mensuels.
+          </p>
+        </div>
+
         {/* Footer Link */}
         <Link 
           href="/dashboard/owner/vehicles"
-          className="mt-auto flex items-center justify-center gap-2 py-3 px-4 bg-slate-900 text-white rounded-xl text-[12px] font-black hover:bg-slate-800 transition-all group"
+          className="flex items-center justify-center gap-2 py-3.5 px-4 bg-slate-900 text-white rounded-xl text-[12px] font-black hover:bg-slate-800 transition-all group mt-auto"
         >
-          Gérer ma flotte
+          Voir le détail de ma flotte
           <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
