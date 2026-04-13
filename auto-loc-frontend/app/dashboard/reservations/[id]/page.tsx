@@ -640,6 +640,13 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                         text="Votre paiement a été reçu. Le propriétaire doit confirmer votre réservation avant que vous puissiez effectuer le check-in." />
                 )}
 
+                {/* Waiting for owner check-in */}
+                {r.statut === 'CONFIRMEE' && !r.checkinProprietaireLe && (
+                    <Alert icon={Clock} bg="bg-slate-50" border="border-slate-200" iconBg="bg-white border-slate-200" iconColor="text-slate-400"
+                        title="En attente du check-in du propriétaire"
+                        text="Le propriétaire prépare actuellement la remise du véhicule. Il doit certifier l'état de départ avant que vous ne puissiez valider votre trajet." />
+                )}
+
             </div>
         </div>
     );

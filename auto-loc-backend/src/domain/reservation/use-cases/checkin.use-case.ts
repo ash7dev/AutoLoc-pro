@@ -147,6 +147,16 @@ export class CheckInUseCase {
             }
         }
 
+        // ── 7c. Locataire : le propriétaire doit avoir confirmé ────────────
+        if (input.role === 'LOCATAIRE') {
+            if (!reservation.checkinProprietaireLe) {
+                throw new BusinessRuleException(
+                    "Le locataire ne peut valider le check-in qu'après la validation du propriétaire.",
+                    'CHECKIN_OWNER_NOT_CONFIRMED',
+                );
+            }
+        }
+
         // ── 8. Determine if this confirmation finalizes check-in ───────────
         const otherPartyConfirmed =
             input.role === 'PROPRIETAIRE'
