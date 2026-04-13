@@ -39,7 +39,7 @@ function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 z-[100] w-80 max-w-[calc(100vw-2rem)] max-h-[400px] rounded-2xl border border-white/10 bg-[#0a0a0a]/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 lg:right-0 lg:z-[100] sm:right-0 left-0 sm:left-auto">
+        <div className="absolute right-0 top-11 z-[60] w-80 max-w-[calc(100vw-2rem)] max-h-[400px] rounded-2xl border border-white/10 bg-[#0a0a0a]/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 lg:right-0 lg:z-50">
           {/* Header */}
           <div className="px-4 py-3 border-b border-white/[0.06]">
             <p className="text-xs font-semibold text-white/60 uppercase tracking-widest">Notifications</p>
@@ -139,25 +139,26 @@ export function OwnerHeader({
   }, []);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-black border border-white/[0.06] px-4 py-4 sm:px-8 sm:py-6">
-      {/* Ambient glows */}
-      <div className="pointer-events-none absolute inset-0">
+    <div className="relative rounded-2xl bg-black border border-white/[0.06] px-4 py-4 sm:px-8 sm:py-6">
+      {/* Background decoration layer - handles overflow for glows/grid only */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+        {/* Ambient glows */}
         <div className="absolute -top-20 -left-10 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
         <div className="absolute -top-10 right-20 h-48 w-48 rounded-full bg-blue-500/8 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-32 w-96 rounded-full bg-emerald-400/5 blur-2xl" />
+
+        {/* Subtle grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.015]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+          }}
+        />
       </div>
 
-      {/* Subtle grid overlay */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.015]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-      />
-
-      <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
         {/* Left */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2 mb-1">

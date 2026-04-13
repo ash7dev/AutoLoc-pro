@@ -54,6 +54,7 @@ export class ContractGenerationService {
                 totalLocataire: true,
                 netProprietaire: true,
                 contratPublicId: true,
+                confirmeeLe: true,
                 locataire: {
                     select: {
                         prenom: true,
@@ -92,28 +93,7 @@ export class ContractGenerationService {
                 .catch(() => { });
         }
 
-        // ── 3. Fetch confirmation date from ReservationHistorique ─────────
-        let dateConfirmation: string | undefined;
-        try {
-            const confirmationEntry = await this.prisma.reservationHistorique.findFirst({
-                where: {
-                    reservationId: reservation.id,
-                    nouveauStatut: 'CONFIRMEE',
-                },
-                orderBy: { modifieLe: 'asc' },
-            });
-            if (confirmationEntry) {
-                dateConfirmation = confirmationEntry.modifieLe.toLocaleDateString('fr-FR', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric',
-                });
-            }
-        } catch {
-            // If history lookup fails, leave undefined
-        }
-
-        // ── 4. Build contract data ─────────────────────────────────────────
+        // ── 3. Build contract data ─────────────────────────────────────────
         const debut = new Date(reservation.dateDebut);
         const fin = new Date(reservation.dateFin);
         const nbJours = Math.round(
@@ -172,7 +152,11 @@ export class ContractGenerationService {
                 month: 'long',
                 year: 'numeric',
             }),
-            dateConfirmation,
+            dateConfirmation: reservation.confirmeeLe ? reservation.confirmeeLe.toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+            }) : undefined,
         };
 
         // ── 4. Generate PDF ────────────────────────────────────────────────
