@@ -7,13 +7,13 @@ import { OwnerQuickActions } from "@/features/dashboard/components/owner-quick-a
 import { OwnerTodoCard } from "@/features/dashboard/components/owner-todo-card";
 import { WalletSnapshot } from "@/features/dashboard/components/wallet-snapshot";
 import { OwnerHeader } from "@/features/dashboard/components/owner-header";
-import { OverviewStats } from "@/features/dashboard/components/overview-stats";
-import { MobileQuickActions } from "@/features/dashboard/components/mobile-quick-actions";
 import { MobileRevenueCard } from "@/features/dashboard/components/mobile-revenue-card";
+import { FleetPerformance } from "@/features/dashboard/components/fleet-performance";
 import { useState, useMemo } from "react";
 import type { Reservation, OwnerStats } from "@/lib/nestjs/reservations";
 import type { Vehicle } from "@/lib/nestjs/vehicles";
 import type { WalletData } from "@/lib/nestjs/wallet";
+import type { ReviewsResponse } from "@/lib/nestjs/reviews";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -22,6 +22,7 @@ interface OwnerDashboardViewProps {
     vehicles?: Vehicle[];
     wallet: WalletData | null;
     stats?: OwnerStats | null;
+    reviews: ReviewsResponse | null;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -148,6 +149,7 @@ export function OwnerDashboardView({
     vehicles = [],
     wallet,
     stats,
+    reviews,
 }: OwnerDashboardViewProps) {
     const [calendarDate, setCalendarDate] = useState(() => new Date());
     const [revenuePeriod, setRevenuePeriod] = useState("current"); // "current", "last", "2months"
@@ -277,6 +279,12 @@ export function OwnerDashboardView({
                     />
                 </div>
 
+                {/* Fleet Performance - Mobile */}
+                <FleetPerformance 
+                    vehicles={vehicles} 
+                    reviews={reviews?.avis} 
+                />
+
                 {/* Quick Actions */}
                 <MobileQuickActions 
                     reservations={reservations}
@@ -327,8 +335,15 @@ export function OwnerDashboardView({
                         />
                     </div>
                     <div className="xl:col-span-1">
-                        <OwnerQuickActions reservations={reservations} />
+                        <FleetPerformance 
+                            vehicles={vehicles} 
+                            reviews={reviews?.avis} 
+                        />
                     </div>
+                </div>
+
+                <div className="flex flex-col gap-6">
+                    <OwnerQuickActions reservations={reservations} />
                 </div>
 
                 {/* Row 4 — Reservations + Calendar */}

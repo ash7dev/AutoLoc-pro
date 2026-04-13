@@ -8,8 +8,8 @@ import {
   type Reservation,
   type OwnerStats,
 } from "@/lib/nestjs/reservations";
-import { fetchMyVehicles, type Vehicle } from "@/lib/nestjs/vehicles";
-import { fetchWallet, type WalletData } from "@/lib/nestjs/wallet";
+import { fetchMe } from "@/lib/nestjs/auth";
+import { fetchUserReviews, type ReviewsResponse } from "@/lib/nestjs/reviews";
 import { OwnerDashboardView } from "@/features/dashboard/components/owner-dashboard-view";
 
 export default async function OwnerDashboardPage() {
@@ -27,20 +27,31 @@ export default async function OwnerDashboardPage() {
   let vehicles: Vehicle[] = [];
   let wallet: WalletData | null = null;
   let stats: OwnerStats | null = null;
+  let reviews: ReviewsResponse | null = null;
 
   try {
-    const [resResult, vehiclesResult, walletResult, statsResult] =
+    const [resResult, vehiclesResult, walletResult, statsResult, profileResult] =
       await Promise.allSettled([
         fetchOwnerReservations(token),
         fetchMyVehicles(token),
         fetchWallet(token),
         fetchOwnerStats(token),
+        fetchMe(token),
       ]);
 
     if (resResult.status === "fulfilled") reservations = resResult.value.data;
     if (vehiclesResult.status === "fulfilled") vehicles = vehiclesResult.value;
     if (walletResult.status === "fulfilled") wallet = walletResult.value;
     if (statsResult.status === "fulfilled") stats = statsResult.value;
+
+    // Fetch reviews if profile is available
+    if (profileResult.status === "fulfilled") {
+      try {
+        reviews = await fetchUserReviews(token, profileResult.value.id);
+      } catch (err) {
+        console.error("Failed to fetch reviews:", err);
+      }
+    }
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) redirect("/login?expired=1");
   }
@@ -51,6 +62,7 @@ export default async function OwnerDashboardPage() {
       vehicles={vehicles}
       wallet={wallet}
       stats={stats}
+      reviews={reviews}
     />
   );
 }
