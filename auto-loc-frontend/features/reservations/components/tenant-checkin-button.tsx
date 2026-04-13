@@ -42,24 +42,8 @@ export function TenantCheckinButton({ reservationId, alreadyConfirmed, ownerConf
         );
     }
 
-    /* Le propriétaire doit avoir confirmé en premier */
-    if (!ownerConfirmed && !confirmed) {
-        return (
-            <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 shadow-sm opacity-80 decoration-slate-400">
-                <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Clock className="w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
-                </div>
-                <div>
-                    <p className="text-[12.5px] font-black text-slate-800 leading-tight">Check-in bientôt disponible</p>
-                    <p className="text-[11.5px] text-slate-500 mt-1 leading-relaxed font-medium">
-                        Le propriétaire doit d'abord certifier l'état de départ du véhicule. Une fois fait, vous pourrez valider la prise en charge.
-                    </p>
-                </div>
-            </div>
-        );
-    }
-
     const handleConfirm = async () => {
+        if (!ownerConfirmed) return;
         if (!verifiedPhotos) {
             setError("Veuillez confirmer que vous avez vérifié l'état du véhicule.");
             return;
@@ -79,23 +63,33 @@ export function TenantCheckinButton({ reservationId, alreadyConfirmed, ownerConf
 
     return (
         <div className="space-y-3">
+            {!ownerConfirmed && (
+                <div className="flex items-start gap-2.5 px-3.5 py-3 rounded-xl bg-slate-50 border border-slate-200/60 shadow-sm animate-pulse">
+                    <Clock className="w-3.5 h-3.5 text-slate-400 mt-0.5" strokeWidth={2.5} />
+                    <p className="text-[11.5px] font-bold text-slate-500 leading-tight">
+                        Le propriétaire doit certifier l'état du véhicule avant que vous ne puissiez valider le départ.
+                    </p>
+                </div>
+            )}
+
             {!confirming ? (
                 <button
                     type="button"
-                    onClick={() => setConfirming(true)}
-                    className="flex items-center gap-3 rounded-2xl px-5 py-4 border text-left w-full sm:w-auto
-                        bg-slate-900 text-white border-slate-900
-                        hover:bg-emerald-600 hover:border-emerald-600
-                        shadow-md hover:shadow-lg hover:shadow-emerald-500/20
-                        hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 group"
+                    onClick={() => ownerConfirmed && setConfirming(true)}
+                    disabled={!ownerConfirmed}
+                    className={`flex items-center gap-3 rounded-2xl px-5 py-4 border text-left w-full sm:w-auto transition-all duration-300 group
+                        ${ownerConfirmed 
+                            ? 'bg-slate-900 text-white border-slate-900 hover:bg-emerald-600 hover:border-emerald-600 shadow-md hover:shadow-lg hover:shadow-emerald-500/20 hover:-translate-y-0.5 active:translate-y-0' 
+                            : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed grayscale-[0.5]'}`}
                 >
-                    <div className="w-8 h-8 rounded-xl bg-white/10 group-hover:bg-white/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors
+                        ${ownerConfirmed ? 'bg-white/10 group-hover:bg-white/20' : 'bg-slate-200 opacity-50'}`}>
                         <LogIn className="w-4 h-4" strokeWidth={2.5} />
                     </div>
                     <div className="flex flex-col gap-0.5">
-                        <span className="text-[14px] font-black leading-none text-white tracking-tight">Confirmer le trajet</span>
-                        <span className="text-[11px] font-bold leading-none text-white/40 tracking-wide uppercase">
-                            Prendre possession du véhicule
+                        <span className="text-[14px] font-black leading-none tracking-tight">Confirmer le trajet</span>
+                        <span className={`text-[11px] font-bold leading-none tracking-wide uppercase ${ownerConfirmed ? 'text-white/40' : 'text-slate-400/50'}`}>
+                            {ownerConfirmed ? 'Prendre possession du véhicule' : 'En attente du propriétaire'}
                         </span>
                     </div>
                 </button>
