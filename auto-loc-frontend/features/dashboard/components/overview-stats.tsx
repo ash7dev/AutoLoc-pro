@@ -131,7 +131,7 @@ function StatCard({ stat, loading }: { stat: StatItem; loading: boolean }) {
         <div className="flex-1 min-w-0">
 
           {/* Label */}
-          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-400 mb-3">
+          <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider sm:tracking-[0.12em] text-slate-400 mb-3 leading-tight pr-2">
             {stat.label}
           </p>
 
