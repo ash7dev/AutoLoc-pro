@@ -52,7 +52,7 @@ export function MobileQuickActions({ reservations = [], urgentCount = 0 }: Mobil
             href={action.href}
             className={cn(
               "flex flex-col items-center justify-center p-4 rounded-2xl",
-              "bg-white border border-slate-100",
+              "bg-white border border-black/[0.06] shadow-sm shadow-black/[0.02]",
               "transition-all duration-200",
               "hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
             )}

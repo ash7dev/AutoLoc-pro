@@ -27,7 +27,7 @@ export function WalletSnapshot({
   hideCta?: boolean;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-lg bg-foreground p-4 sm:p-6 shadow-lg h-full flex flex-col">
+    <div className="relative overflow-hidden rounded-2xl bg-black p-4 sm:p-6 shadow-xl h-full flex flex-col">
       {/* Subtle top highlight */}
       <div className="absolute top-0 left-6 right-6 h-px bg-white/10" />
 

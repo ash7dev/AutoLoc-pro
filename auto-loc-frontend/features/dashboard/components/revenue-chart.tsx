@@ -74,7 +74,7 @@ export function RevenueChart({
 
   return (
     <TooltipProvider>
-      <div className="rounded-lg border border-[hsl(var(--border))] bg-card p-4 sm:p-6 shadow-sm h-full flex flex-col min-h-[260px] sm:min-h-[320px]">
+      <div className="rounded-2xl border border-black/[0.06] bg-white p-4 sm:p-6 shadow-sm shadow-black/[0.02] h-full flex flex-col min-h-[260px] sm:min-h-[320px]">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4 sm:mb-6">
           <div className="space-y-1">
@@ -85,8 +85,8 @@ export function RevenueChart({
                 <span className="text-sm font-medium text-muted-foreground ml-1.5">FCFA</span>
               </span>
               {!loading && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-                  <TrendingUp className="h-3 w-3" />
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-600">
+                  <TrendingUp className="h-3 w-3" strokeWidth={2.5} />
                   {change}
                 </span>
               )}
@@ -111,12 +111,12 @@ export function RevenueChart({
         <div className="relative h-40 sm:h-56 flex-1 min-h-[160px] sm:min-h-[224px]">
           {isEmpty && !loading ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
-                <BarChart2 className="w-6 h-6 text-slate-300" strokeWidth={1.5} />
+              <div className="w-12 h-12 rounded-2xl bg-black/[0.04] flex items-center justify-center">
+                <BarChart2 className="w-6 h-6 text-black/20" strokeWidth={1.5} />
               </div>
               <div className="text-center">
-                <p className="text-[13px] font-semibold text-slate-500">Aucun revenu ce mois-ci</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Les données apparaîtront dès votre première location confirmée</p>
+                <p className="text-[13px] font-black uppercase tracking-tight text-black/40">Aucun revenu ce mois-ci</p>
+                <p className="text-[11px] font-medium text-black/20 mt-0.5">Les données apparaîtront dès votre première location confirmée</p>
               </div>
             </div>
           ) : (
@@ -177,12 +177,12 @@ export function RevenueChart({
                           side="top"
                           className="backdrop-blur-sm text-xs font-medium"
                         >
-                          <p className="font-semibold">{point.day}</p>
-                          <p className="text-muted-foreground">
+                          <p className="font-black text-[10px] uppercase tracking-widest">{point.day}</p>
+                          <p className="text-black/40 font-medium">
                             {point.value.toLocaleString("fr-FR")} FCFA cumulés
                           </p>
                           {point.highlight && (
-                            <p className="text-emerald-400 font-bold">Total du mois</p>
+                            <p className="text-emerald-500 font-black mt-0.5">Total du mois</p>
                           )}
                         </TooltipContent>
                       </Tooltip>

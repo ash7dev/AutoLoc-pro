@@ -91,7 +91,7 @@ function NavItem({ href, icon, label, active, collapsed, pending = false, subIte
         !subItem && active
           ? 'bg-black text-emerald-400'
           : !subItem
-            ? 'text-black hover:bg-slate-50 hover:text-black'
+            ? 'text-black hover:bg-black/5 hover:text-black'
             : '',
         pending && 'opacity-70 pointer-events-none',
       )}
@@ -106,9 +106,9 @@ function NavItem({ href, icon, label, active, collapsed, pending = false, subIte
 
       {/* Tooltip collapsed */}
       {collapsed && !subItem && (
-        <span className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs rounded-xl
+        <span className="absolute left-full ml-3 px-3 py-1.5 bg-black text-white text-xs rounded-xl
           opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap
-          transition-opacity duration-150 z-50 shadow-xl border border-slate-800">
+          transition-opacity duration-150 z-50 shadow-xl border border-white/10">
           {label}
         </span>
       )}
@@ -118,7 +118,7 @@ function NavItem({ href, icon, label, active, collapsed, pending = false, subIte
 
 /* ── Divider ─────────────────────────────────────────────────── */
 function SidebarDivider() {
-  return <div className="my-1 mx-3 border-t border-slate-100" />;
+  return <div className="my-1 mx-3 border-t border-black/[0.06]" />;
 }
 
 /* ── Main Sidebar ─────────────────────────────────────────────── */
@@ -171,7 +171,7 @@ const NavContent = ({ compact }: { compact: boolean }) => (
       {/* ── Section label ────────────────────────────────────────── */}
       {!compact && (
         <div className="px-4 mb-2">
-          <span className="text-[10.5px] font-semibold text-slate-400 uppercase tracking-widest">
+          <span className="text-[10.5px] font-semibold text-black/30 uppercase tracking-widest">
             Navigation
           </span>
         </div>
@@ -212,7 +212,7 @@ const NavContent = ({ compact }: { compact: boolean }) => (
             title={compact ? 'Mode locataire' : undefined}
             className={cn(
               'group relative w-full flex items-center gap-3 rounded-xl text-[14.5px] font-medium',
-              'text-black hover:bg-slate-50 hover:text-black',
+              'text-black hover:bg-black/5 hover:text-black',
               'transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed',
               compact ? 'px-0 py-3.5 justify-center' : 'px-3 py-2.5'
             )}
@@ -266,7 +266,7 @@ const NavContent = ({ compact }: { compact: boolean }) => (
     <>
       {/* ══ MOBILE TOP BAR ══════════════════════════════════════════ */}
       <div className="lg:hidden fixed top-0 inset-x-0 z-40 flex items-center px-5 h-14
-        bg-white/80 backdrop-blur-xl border-b border-slate-100 shadow-sm shadow-slate-100/80">
+        bg-white/80 backdrop-blur-xl border-b border-black/[0.06] shadow-sm shadow-black/[0.02]">
         <button
           onClick={isAdmin ? () => router.push('/dashboard/admin') : switchToLocataire}
           disabled={!isAdmin && switching}
@@ -285,7 +285,7 @@ const NavContent = ({ compact }: { compact: boolean }) => (
 
       {/* ══ MOBILE BOTTOM TAB BAR ══════════════════════════════════ */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex bg-white/80 backdrop-blur-xl pb-safe
-        border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        border-t border-black/[0.06] shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
         {MOBILE_NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
@@ -300,12 +300,12 @@ const NavContent = ({ compact }: { compact: boolean }) => (
               )}>
                 <item.icon className={cn(
                   'w-[18px] h-[18px] transition-colors duration-200',
-                  isActive ? 'text-emerald-400' : 'text-slate-400'
+                  isActive ? 'text-emerald-400' : 'text-black/30'
                 )} />
               </span>
               <span className={cn(
                 'text-[9.5px] font-semibold tracking-tight leading-none truncate max-w-full px-1 transition-colors duration-200',
-                isActive ? 'text-emerald-400' : 'text-slate-400'
+                isActive ? 'text-emerald-400' : 'text-black/40'
               )}>
                 {item.label}
               </span>
@@ -317,7 +317,7 @@ const NavContent = ({ compact }: { compact: boolean }) => (
       {/* ══ DESKTOP SIDEBAR ════════════════════════════════════════ */}
       <aside className={cn(
         'relative hidden lg:flex flex-col flex-shrink-0 min-h-screen',
-        'bg-white border-r border-slate-100',
+        'bg-white border-r border-black/[0.06]',
         'transition-all duration-300 ease-in-out',
         collapsed ? 'w-[65px]' : 'w-[230px]'
       )}>
@@ -336,8 +336,8 @@ const NavContent = ({ compact }: { compact: boolean }) => (
             transition-all duration-200"
         >
           {collapsed
-            ? <ChevronRight className="w-2.5 h-2.5 text-slate-400" />
-            : <ChevronLeft className="w-2.5 h-2.5 text-slate-400" />
+            ? <ChevronRight className="w-2.5 h-2.5 text-black/30" />
+            : <ChevronLeft className="w-2.5 h-2.5 text-black/30" />
           }
         </button>
       </aside>

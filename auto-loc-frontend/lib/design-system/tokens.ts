@@ -101,30 +101,30 @@ export const palette = {
     950: '#2e1065',
   },
   sand: {
-    50:  '#fafaf8',
-    100: '#f5f4ef',
-    200: '#eae9e0',
-    300: '#d4d2c7',
-    400: '#b3b1a3',
-    500: '#8e8c7e',
-    600: '#706e61',
-    700: '#57554a',
-    800: '#3c3a30',
-    900: '#27261e',
-    950: '#17160f',
+    50:  '#ffffff',
+    100: '#fafafa',
+    200: '#f5f5f5',
+    300: '#e5e5e5',
+    400: '#a3a3a3',
+    500: '#737373',
+    600: '#525252',
+    700: '#404040',
+    800: '#262626',
+    900: '#171717',
+    950: '#0a0a0a',
   },
   slate: {
-    50:  '#f8f7f4',
-    100: '#efeee9',
-    200: '#dedcd5',
-    300: '#c5c2b8',
-    400: '#a5a296',
-    500: '#86836f',
-    600: '#6b6858',
-    700: '#555245',
-    800: '#3b3930',
-    900: '#28261f',
-    950: '#191810',
+    50:  '#ffffff',
+    100: '#fafafa',
+    200: '#f5f5f5',
+    300: '#e5e5e5',
+    400: '#a3a3a3',
+    500: '#737373',
+    600: '#525252',
+    700: '#404040',
+    800: '#262626',
+    900: '#171717',
+    950: '#0a0a0a',
   },
   // Neutres purs pour dark mode
   zinc: {
@@ -208,21 +208,21 @@ export const hsl = {
 // ─────────────────────────────────────────────────────────────────
 
 export const colors = {
-  // ── Brand (ambre saffran) ──────────────────────────────────────
-  'brand-light':      palette.amber[400],
-  brand:              palette.amber[600],
-  'brand-dark':       palette.amber[700],
-  'brand-subtle':     palette.amber[50],
-  'brand-muted':      palette.amber[100],
-  'brand-border':     palette.amber[200],
-  'brand-text':       palette.amber[700],
+  // ── Brand (Emerald) ──────────────────────────────────────────
+  'brand-light':      palette.green[400],
+  brand:              palette.green[600],
+  'brand-dark':       palette.green[700],
+  'brand-subtle':     palette.green[50],
+  'brand-muted':      palette.green[100],
+  'brand-border':     palette.green[200],
+  'brand-text':       palette.green[700],
   'brand-foreground': palette.white,
 
   // ── Surfaces (light) ──────────────────────────────────────────
-  'bg-page':     palette.sand[50],
+  'bg-page':     palette.white,
   'bg-elevated': palette.white,
   'bg-sunken':   palette.sand[100],
-  'bg-overlay':  'rgba(23,22,15,0.55)',
+  'bg-overlay':  'rgba(0,0,0,0.55)',
 
   // ── Surfaces (dark) ───────────────────────────────────────────
   'bg-page-dark':     palette.zinc[950],
@@ -325,9 +325,9 @@ export type ColorToken = keyof typeof colors;
 
 export const typography = {
   fontFamily: {
-    display: ['var(--font-display)', 'system-ui', 'sans-serif'],
-    body:    ['var(--font-body)',    'system-ui', 'sans-serif'],
-    mono:    ['var(--font-mono)',    'monospace'],
+    display: ['Inter', 'system-ui', 'sans-serif'],
+    body:    ['Inter', 'system-ui', 'sans-serif'],
+    mono:    ['ui-monospace', 'monospace'],
   },
   fontSize: {
     '2xs': ['0.625rem',  { lineHeight: '1rem' }],
@@ -426,13 +426,13 @@ export const borderRadius = {
 
 export const boxShadow = {
   none:  'none',
-  xs:    '0 1px 2px 0 rgba(23,22,15,0.05)',
-  sm:    '0 1px 3px 0 rgba(23,22,15,0.08), 0 1px 2px -1px rgba(23,22,15,0.05)',
-  md:    '0 4px 6px -1px rgba(23,22,15,0.07), 0 2px 4px -2px rgba(23,22,15,0.05)',
-  lg:    '0 10px 15px -3px rgba(23,22,15,0.07), 0 4px 6px -4px rgba(23,22,15,0.04)',
-  xl:    '0 20px 25px -5px rgba(23,22,15,0.08), 0 8px 10px -6px rgba(23,22,15,0.04)',
-  '2xl': '0 25px 50px -12px rgba(23,22,15,0.15)',
-  inner: 'inset 0 2px 4px 0 rgba(23,22,15,0.05)',
+  xs:    '0 1px 2px 0 rgba(0,0,0,0.05)',
+  sm:    '0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.05)',
+  md:    '0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05)',
+  lg:    '0 10px 15px -3px rgba(0,0,0,0.07), 0 4px 6px -4px rgba(0,0,0,0.04)',
+  xl:    '0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04)',
+  '2xl': '0 25px 50px -12px rgba(0,0,0,0.15)',
+  inner: 'inset 0 2px 4px 0 rgba(0,0,0,0.05)',
   // Shadows colorées — usage sparingly
   brand:      '0 4px 14px 0 rgba(217,119,6,0.30)',
   'brand-lg': '0 8px 30px 0 rgba(217,119,6,0.25)',

@@ -22,17 +22,17 @@ export function MobileRevenueCard({
   const TrendIcon = isNeutral ? Minus : isPositive ? TrendingUp : TrendingDown;
 
   const trendCls = isNeutral
-    ? "bg-slate-100 text-slate-500 border-slate-200"
+    ? "bg-black/[0.04] text-black/40 border-black/[0.06]"
     : isPositive
-      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-      : "bg-red-50 text-red-600 border-red-200";
+      ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+      : "bg-red-500/10 text-red-600 border-red-500/20";
 
   return (
-    <div className="lg:hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-sm shadow-slate-100/60">
+    <div className="lg:hidden rounded-2xl border border-black/[0.06] bg-white p-5 shadow-sm shadow-black/[0.02]">
       <div className="flex items-start justify-between gap-3 mb-4">
 
         {/* Period label */}
-        <p className="text-[10.5px] font-black uppercase tracking-[0.14em] text-slate-400">
+        <p className="text-[10.5px] font-black uppercase tracking-[0.14em] text-black/40">
           {period}
         </p>
 
@@ -47,16 +47,16 @@ export function MobileRevenueCard({
       </div>
 
       {/* Revenue */}
-      <div>
-        <p className="text-[11px] font-semibold text-slate-400 mb-1">Revenus</p>
+      <div className="space-y-1">
+        <p className="text-[11px] font-bold text-black/40 mb-1">Revenus</p>
         {loading ? (
-          <div className="h-8 w-28 rounded-xl bg-slate-100 animate-pulse" />
+          <div className="h-8 w-28 rounded-xl bg-black/[0.04] animate-pulse" />
         ) : (
           <div className="flex items-baseline gap-2">
-            <span className="text-[28px] font-black text-slate-900 tabular-nums tracking-tight leading-none">
+            <span className="text-[28px] font-black text-black tabular-nums tracking-tighter leading-none">
               {total}
             </span>
-            <span className="text-[13px] font-semibold text-slate-400">FCFA</span>
+            <span className="text-[13px] font-bold text-black/30">FCFA</span>
           </div>
         )}
       </div>

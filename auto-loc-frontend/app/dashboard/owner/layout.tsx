@@ -53,7 +53,7 @@ export default async function OwnerLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-page">
       <OwnerSidebar />
       <main className="flex-1 min-w-0 overflow-y-auto pt-14 pb-[72px] lg:pt-0 lg:pb-0">
         {children}

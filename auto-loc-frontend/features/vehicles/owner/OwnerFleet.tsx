@@ -64,7 +64,7 @@ function VehicleActions({
           variant="ghost"
           size="icon"
           onClick={(e) => e.stopPropagation()}
-          className="h-8 w-8 shrink-0 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors duration-150"
+          className="h-8 w-8 shrink-0 rounded-full text-black/40 hover:text-black hover:bg-black/[0.05] transition-colors duration-150"
         >
           <MoreHorizontal className="h-4 w-4" strokeWidth={1.5} />
         </Button>
@@ -152,11 +152,11 @@ function VehicleCard({
   return (
     <div
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-[22px] bg-card cursor-pointer",
+        "group relative flex flex-col overflow-hidden rounded-[22px] bg-white cursor-pointer",
         "border transition-all duration-500 ease-out",
         isActive
-          ? "border-emerald-200/60 hover:border-emerald-300/80 hover:shadow-2xl hover:shadow-emerald-500/[0.08]"
-          : "border-border/50 hover:border-border hover:shadow-2xl hover:shadow-black/[0.06]",
+          ? "border-emerald-500/10 hover:border-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/[0.06]"
+          : "border-black/[0.06] hover:border-black/10 hover:shadow-2xl hover:shadow-black/[0.04]",
         "hover:-translate-y-1.5",
         archiving && "opacity-40 pointer-events-none",
       )}
@@ -171,7 +171,7 @@ function VehicleCard({
       )}
 
       {/* ── Photo area ── */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-100 to-slate-50" style={{ height: "11.5rem" }}>
+      <div className="relative overflow-hidden bg-black/[0.02]" style={{ height: "11.5rem" }}>
 
         {/* Active top accent bar */}
         {isActive && (
@@ -212,7 +212,7 @@ function VehicleCard({
           <StatusChip statut={vehicle.statut} />
           {isLocked && (
             <span className="inline-flex items-center gap-1 rounded-full
-              bg-amber-500/90 backdrop-blur-sm px-2 py-[3px]
+              bg-black/90 backdrop-blur-sm px-2 py-[3px]
               text-[9px] font-black uppercase tracking-widest text-white shadow-sm">
               <Lock className="h-2.5 w-2.5" strokeWidth={2.5} />
               Loué
@@ -243,11 +243,11 @@ function VehicleCard({
             </div>
 
             {/* Price pill — frosted glass */}
-            <div className="shrink-0 rounded-xl px-3 py-1.5 bg-white/95 backdrop-blur-xl shadow-lg shadow-black/20 border border-white/50">
-              <span className="text-[15px] font-black text-slate-900 tabular-nums leading-none tracking-tight">
+            <div className="shrink-0 rounded-xl px-3 py-1.5 bg-white/95 backdrop-blur-xl shadow-lg shadow-black/10 border border-white/50">
+              <span className="text-[15px] font-black text-black tabular-nums leading-none tracking-tight">
                 {formatPrice(vehicle.prixParJour)}
               </span>
-              <span className="text-[9px] text-slate-400 font-bold ml-0.5 leading-none"> / j</span>
+              <span className="text-[9px] text-black/40 font-bold ml-0.5 leading-none"> / j</span>
             </div>
           </div>
         )}
@@ -430,9 +430,9 @@ function VehicleRow({
         "group relative grid items-center gap-5 rounded-2xl border bg-card cursor-pointer",
         "px-5 py-3.5 transition-all duration-300 ease-out",
         isActive
-          ? "border-emerald-200/50 hover:border-emerald-300/70 hover:shadow-lg hover:shadow-emerald-500/[0.05]"
-          : "border-border/50 hover:shadow-lg hover:shadow-black/[0.04] hover:border-border",
-        "hover:bg-accent/20",
+          ? "border-emerald-500/10 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/[0.05]"
+          : "border-black/[0.06] hover:shadow-lg hover:shadow-black/[0.04] hover:border-black/10",
+        "hover:bg-black/[0.01]",
         archiving && "opacity-40 pointer-events-none",
       )}
       style={{ gridTemplateColumns: LIST_COLS }}
@@ -450,7 +450,7 @@ function VehicleRow({
       )}
 
       {/* Thumbnail */}
-      <div className="relative h-[52px] w-[72px] overflow-hidden rounded-xl bg-gradient-to-br from-muted/40 to-muted/20 shrink-0 border border-border/30">
+      <div className="relative h-[52px] w-[72px] overflow-hidden rounded-xl bg-black/[0.04] shrink-0 border border-black/[0.06]">
         {photo ? (
           <Image
             src={photo}
@@ -485,8 +485,8 @@ function VehicleRow({
       <div className="flex flex-col items-start gap-1">
         <StatusChip statut={vehicle.statut} />
         {vehicle.estVerrouille && (
-          <span className="flex items-center gap-1 text-[10px] font-bold text-amber-500">
-            <Lock className="h-2.5 w-2.5" strokeWidth={2} />
+          <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-black/40">
+            <Lock className="h-2.5 w-2.5" strokeWidth={2.5} />
             Loué
           </span>
         )}
@@ -578,10 +578,10 @@ function EmptyState({ filtered }: { filtered: boolean }) {
         }
       </div>
       <div className="space-y-1.5">
-        <p className="text-sm font-extrabold tracking-tight">
+        <p className="text-sm font-black tracking-tight uppercase">
           {filtered ? "Aucun véhicule dans ce filtre" : "Aucun véhicule pour l'instant"}
         </p>
-        <p className="text-xs text-muted-foreground/60 max-w-xs mx-auto leading-relaxed">
+        <p className="text-xs text-black/30 max-w-xs mx-auto leading-relaxed font-medium">
           {filtered
             ? "Essayez un autre filtre pour voir vos véhicules."
             : "Publiez votre premier véhicule pour commencer à générer des revenus."}
@@ -590,9 +590,8 @@ function EmptyState({ filtered }: { filtered: boolean }) {
       {!filtered && (
         <Link
           href="/dashboard/owner/vehicles/new"
-          className="group inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white
-            transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/25 hover:-translate-y-0.5"
-          style={{ background: "linear-gradient(135deg, #34D399 0%, #059669 100%)" }}
+          className="group inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white bg-black hover:bg-black/90
+            transition-all duration-200 hover:shadow-xl hover:shadow-black/20 hover:-translate-y-0.5"
         >
           Ajouter un véhicule
           <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 group-hover:translate-x-0.5" strokeWidth={2} />
@@ -673,10 +672,10 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                 key={f}
                 onClick={() => setFilter(f)}
                 className={cn(
-                  "flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-bold transition-all duration-200",
+                  "flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-bold transition-all duration-200 outline-none",
                   active
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-card/60",
+                    ? "bg-white text-black shadow-sm"
+                    : "text-black/40 hover:text-black hover:bg-white/60",
                 )}
               >
                 {FILTER_LABELS[f]}
@@ -700,9 +699,8 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
         {/* Add vehicle CTA */}
         <Link
           href="/dashboard/owner/vehicles/new"
-          className="group hidden sm:inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-bold text-white
-            transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/20 hover:-translate-y-0.5"
-          style={{ background: "linear-gradient(135deg, #34D399 0%, #059669 100%)" }}
+          className="group hidden sm:inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-bold text-white bg-black hover:bg-black/90
+            transition-all duration-200 hover:shadow-xl hover:shadow-black/20 hover:-translate-y-0.5"
         >
           <Zap className="h-3.5 w-3.5" strokeWidth={2.5} />
           Ajouter un véhicule
@@ -721,11 +719,11 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                 className={cn(
                   "flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200",
                   active
-                    ? "bg-card shadow-sm text-emerald-500"
-                    : "text-muted-foreground hover:text-foreground hover:bg-card/60",
+                    ? "bg-white shadow-sm text-black"
+                    : "text-black/30 hover:text-black hover:bg-white/60",
                 )}
               >
-                <Icon className="h-3.5 w-3.5" strokeWidth={1.5} />
+                <Icon className="h-3.5 w-3.5" strokeWidth={2} />
               </button>
             );
           })}

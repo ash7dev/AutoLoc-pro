@@ -106,11 +106,11 @@ interface EditFormData {
 
 function SectionHeader({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
   return (
-    <div className="flex items-center gap-2 pb-3 border-b border-[hsl(var(--border))]">
-      <div className="flex h-6 w-6 items-center justify-center rounded-md bg-muted/60">
-        <Icon className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
+    <div className="flex items-center gap-2 pb-3 border-b border-black/[0.06]">
+      <div className="flex h-6 w-6 items-center justify-center rounded-md bg-black/[0.04]">
+        <Icon className="h-3.5 w-3.5 text-black/40" strokeWidth={1.5} />
       </div>
-      <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">
         {title}
       </span>
     </div>
@@ -495,10 +495,10 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
         <div className="flex items-center justify-between border-b border-white/10 bg-foreground px-6 py-4 shrink-0">
           <div>
             <p className="text-xs uppercase tracking-widest text-white/40">Auto Loc · Propriétaire</p>
-            <h2 className="font-display tracking-tight text-base text-emerald-400">
+            <h2 className="font-black tracking-tight text-base text-white">
               {vehicle ? `${vehicle.marque} ${vehicle.modele}` : "Modifier le véhicule"}
             </h2>
-            <p className="text-xs text-emerald-300/90">
+            <p className="text-[11px] font-medium text-white/40">
               {locked
                 ? "Ce véhicule est verrouillé — il a une réservation active."
                 : "Modifiez les informations, la tarification, les conditions et les photos."}
@@ -678,9 +678,9 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                     id="autoriseHorsDakar"
                     {...register("autoriseHorsDakar")}
                     disabled={locked}
-                    className="h-4 w-4 rounded border-[hsl(var(--border))] text-emerald-500 focus:ring-emerald-500"
+                    className="h-4 w-4 rounded border-black/20 text-emerald-500 focus:ring-emerald-500"
                   />
-                  <label htmlFor="autoriseHorsDakar" className="text-sm font-medium">
+                  <label htmlFor="autoriseHorsDakar" className="text-sm font-bold">
                     Autoriser les locataires à sortir de la région de Dakar ?
                   </label>
                 </div>
@@ -722,8 +722,8 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                 </div>
 
                 {fields.length > 0 ? (
-                  <div className="rounded-lg border border-[hsl(var(--border))] overflow-hidden">
-                    <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 bg-muted/50 px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+                  <div className="rounded-lg border border-black/[0.06] overflow-hidden">
+                    <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 bg-black/[0.02] px-3 py-2 text-[10px] font-bold text-black/30 uppercase tracking-widest">
                       <span>À partir de (j)</span>
                       <span>Jusqu&apos;à (j)</span>
                       <span>Prix/j (FCFA)</span>
@@ -896,9 +896,9 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                       onDragLeave={handleDragLeave}
                       onDragEnd={handleDragEnd}
                       className={cn(
-                        "relative group aspect-[4/3] overflow-hidden rounded-lg border border-[hsl(var(--border))] bg-muted/40",
+                        "relative group aspect-[4/3] overflow-hidden rounded-lg border border-black/[0.06] bg-black/[0.02]",
                         draggedIndex === i && "opacity-50 scale-95",
-                        dragOverIndex === i && "border-emerald-400 scale-105"
+                        dragOverIndex === i && "border-emerald-500 scale-105"
                       )}
                     >
                       <Image
@@ -918,7 +918,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                       </div>
 
                       {photo.estPrincipale && (
-                        <div className="absolute bottom-1 left-1 rounded-full bg-amber-400 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                        <div className="absolute bottom-1 left-1 rounded-full bg-black px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-white">
                           Principale
                         </div>
                       )}
@@ -1028,14 +1028,14 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                     <p className="text-xs text-muted-foreground">Certificat d&apos;immatriculation</p>
                   </div>
                   {carteGriseUrl ? (
-                    <div className="flex items-center justify-between p-3 rounded-xl border border-emerald-200 bg-emerald-50">
+                    <div className="flex items-center justify-between p-3 rounded-xl border border-emerald-500/10 bg-emerald-500/5">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600">
                           <FileCheck2 className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-emerald-800">Document envoyé</p>
-                          <p className="text-xs text-emerald-600">✓ Carte grise téléversée</p>
+                          <p className="text-sm font-bold text-emerald-800">Document envoyé</p>
+                          <p className="text-[11px] font-medium text-emerald-600">✓ Carte grise téléversée</p>
                         </div>
                       </div>
                       {!locked && (
@@ -1092,14 +1092,14 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                     <p className="text-xs text-muted-foreground">En cours de validité</p>
                   </div>
                   {assuranceDocUrl ? (
-                    <div className="flex items-center justify-between p-3 rounded-xl border border-emerald-200 bg-emerald-50">
+                    <div className="flex items-center justify-between p-3 rounded-xl border border-emerald-500/10 bg-emerald-500/5">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600">
                           <ShieldCheck className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-emerald-800">Document envoyé</p>
-                          <p className="text-xs text-emerald-600">✓ Attestation téléversée</p>
+                          <p className="text-sm font-bold text-emerald-800">Document envoyé</p>
+                          <p className="text-[11px] font-medium text-emerald-600">✓ Attestation téléversée</p>
                         </div>
                       </div>
                       {!locked && (
@@ -1119,10 +1119,10 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                     <div
                       onClick={() => !locked && docInputAssRef.current?.click()}
                       className={cn(
-                        "flex flex-col items-center justify-center p-4 gap-2 rounded-xl border-2 border-dashed transition-colors h-28 text-center",
+                        "flex flex-col items-center justify-center p-4 gap-2 rounded-xl border-2 border-dashed transition-all h-28 text-center",
                         locked
-                          ? "border-muted bg-muted/20 cursor-not-allowed"
-                          : "border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100 hover:border-slate-300",
+                          ? "border-black/[0.04] bg-black/[0.02] cursor-not-allowed"
+                          : "border-black/[0.08] bg-black/[0.02] cursor-pointer hover:bg-black/[0.05] hover:border-black/20",
                       )}
                     >
                       {uploadingDoc === "assurance" ? (

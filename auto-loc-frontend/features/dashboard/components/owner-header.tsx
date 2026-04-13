@@ -59,8 +59,8 @@ function NotificationBell() {
                 href={`/dashboard/owner/reservations/${id}`}
                 className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.04] transition-colors"
               >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400/15">
-                  <CalendarCheck className="h-4 w-4 text-amber-400" />
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10">
+                  <CalendarCheck className="h-4 w-4 text-emerald-500" />
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white leading-tight">
@@ -139,7 +139,7 @@ export function OwnerHeader({
       <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
         {/* Ambient glows */}
         <div className="absolute -top-20 -left-10 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="absolute -top-10 right-20 h-48 w-48 rounded-full bg-blue-500/8 blur-3xl" />
+        <div className="absolute -top-10 right-20 h-48 w-48 rounded-full bg-emerald-500/5 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-32 w-96 rounded-full bg-emerald-400/5 blur-2xl" />
 
         {/* Subtle grid overlay */}
@@ -178,9 +178,9 @@ export function OwnerHeader({
           {/* Stat cards */}
           {showFleetStats && (
             <div className="hidden lg:flex flex-wrap items-center gap-2">
-              <div className="group flex items-center gap-4 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm transition-all hover:translate-y-[-2px] hover:bg-white/15">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/15">
-                  <Car className="h-4.5 w-4.5 text-emerald-300" />
+              <div className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 shadow-xl backdrop-blur-sm transition-all hover:translate-y-[-2px] hover:bg-white/10">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10">
+                  <Car className="h-4.5 w-4.5 text-emerald-400" />
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60">Total véhicules</p>
@@ -188,9 +188,9 @@ export function OwnerHeader({
                 </div>
               </div>
 
-              <div className="group flex items-center gap-4 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm transition-all hover:translate-y-[-2px] hover:bg-white/15">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/15">
-                  <Clock className="h-4.5 w-4.5 text-amber-300" />
+              <div className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 shadow-xl backdrop-blur-sm transition-all hover:translate-y-[-2px] hover:bg-white/10">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10">
+                  <Clock className="h-4.5 w-4.5 text-emerald-400" />
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60">En attente</p>
@@ -198,9 +198,9 @@ export function OwnerHeader({
                 </div>
               </div>
 
-              <div className="group flex items-center gap-4 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm transition-all hover:translate-y-[-2px] hover:bg-white/15">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/15">
-                  <CheckCircle2 className="h-4.5 w-4.5 text-emerald-300" />
+              <div className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 shadow-xl backdrop-blur-sm transition-all hover:translate-y-[-2px] hover:bg-white/10">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10">
+                  <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400" />
                 </div>
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60">Actifs</p>
@@ -209,9 +209,9 @@ export function OwnerHeader({
               </div>
 
               {fleetStats && fleetStats.drafts > 0 && (
-                <div className="group flex items-center gap-4 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.25)] backdrop-blur-sm transition-all hover:translate-y-[-2px] hover:bg-white/15">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-400/15">
-                    <FileText className="h-4.5 w-4.5 text-blue-300" />
+                <div className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 shadow-xl backdrop-blur-sm transition-all hover:translate-y-[-2px] hover:bg-white/10">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
+                    <FileText className="h-4.5 w-4.5 text-white/40" />
                   </div>
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60">En préparation</p>

@@ -68,9 +68,9 @@ export function OwnerQuickActions({ reservations }: QuickActionsProps) {
     };
 
     return (
-        <div className="rounded-lg border border-[hsl(var(--border))] bg-card shadow-sm flex flex-col h-full">
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[hsl(var(--border))]">
-                <h2 className="text-xl font-bold">Actions rapides</h2>
+        <div className="rounded-2xl border border-black/[0.06] bg-white shadow-sm flex flex-col h-full">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-black/[0.04]">
+                <h2 className="text-[14px] sm:text-[15px] font-bold tracking-tight text-black uppercase tracking-widest">Actions rapides</h2>
             </div>
 
             <div className="p-3 sm:p-4 grid grid-cols-1 gap-3 flex-1 content-start">
@@ -78,27 +78,27 @@ export function OwnerQuickActions({ reservations }: QuickActionsProps) {
                 {/* 1. Confirmer réservations */}
                 <Link
                     href="/dashboard/owner/reservations"
-                    className="group flex flex-col justify-center rounded-xl border border-[hsl(var(--border))] bg-muted/20 p-4 hover:border-emerald-400 hover:bg-emerald-50 transition-all duration-200"
+                    className="group flex flex-col justify-center rounded-xl border border-black/[0.06] bg-black/[0.02] p-4 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all duration-200"
                 >
                     <div className="flex items-center justify-between pointer-events-none">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
                                 <CalendarCheck className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="font-semibold text-sm group-hover:text-emerald-700 transition-colors">
+                                <p className="font-bold text-sm group-hover:text-emerald-700 transition-colors">
                                     Confirmer réservations
                                 </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
+                                <p className="text-xs text-black/30 mt-0.5">
                                     Accepter les demandes payées
                                 </p>
                             </div>
                         </div>
                         {pendingConfirmations > 0 && (
-                            <Badge variant="destructive" className="shrink-0">{pendingConfirmations}</Badge>
+                            <Badge variant="destructive" className="shrink-0 bg-red-500">{pendingConfirmations}</Badge>
                         )}
                         {pendingConfirmations === 0 && (
-                            <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50 group-hover:text-emerald-500 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                            <ChevronRight className="h-4 w-4 text-black/20 opacity-50 group-hover:text-emerald-500 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                         )}
                     </div>
                 </Link>
@@ -106,69 +106,69 @@ export function OwnerQuickActions({ reservations }: QuickActionsProps) {
                 {/* 2. Déclarer un litige */}
                 <button
                     onClick={() => setDisputeOpen(true)}
-                    className="group flex flex-col justify-center text-left rounded-xl border border-[hsl(var(--border))] bg-muted/20 p-4 hover:border-orange-400 hover:bg-orange-50 transition-all duration-200"
+                    className="group flex flex-col justify-center text-left rounded-xl border border-black/[0.06] bg-black/[0.02] p-4 hover:border-red-500/30 hover:bg-red-500/5 transition-all duration-200"
                 >
                     <div className="flex items-center justify-between pointer-events-none">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/10 text-red-500">
                                 <MessageSquareWarning className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="font-semibold text-sm group-hover:text-orange-700 transition-colors">
+                                <p className="font-bold text-sm group-hover:text-red-700 transition-colors">
                                     Déclarer un litige
                                 </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
+                                <p className="text-xs text-black/30 mt-0.5">
                                     Signaler un problème sur une location
                                 </p>
                             </div>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50 group-hover:text-orange-500 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                        <ChevronRight className="h-4 w-4 text-black/20 opacity-50 group-hover:text-red-500 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                     </div>
                 </button>
 
                 {/* 3. Ajouter un véhicule */}
                 <Link
                     href="/dashboard/owner/vehicles/new"
-                    className="group flex flex-col justify-center rounded-xl border border-[hsl(var(--border))] bg-muted/20 p-4 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
+                    className="group flex flex-col justify-center rounded-xl border border-black/[0.06] bg-black/[0.02] p-4 hover:border-black/20 hover:bg-black/5 transition-all duration-200"
                 >
                     <div className="flex items-center justify-between pointer-events-none">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-black text-white">
                                 <Plus className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="font-semibold text-sm group-hover:text-blue-700 transition-colors">
+                                <p className="font-bold text-sm transition-colors">
                                     Ajouter un véhicule
                                 </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
+                                <p className="text-xs text-black/30 mt-0.5">
                                     Mettre un nouveau véhicule en ligne
                                 </p>
                             </div>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50 group-hover:text-blue-500 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                        <ChevronRight className="h-4 w-4 text-black/20 opacity-50 group-hover:text-black group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                     </div>
                 </Link>
 
                 {/* 4. Retirer des fonds */}
                 <Link
                     href="/dashboard/owner/wallet"
-                    className="group flex flex-col justify-center rounded-xl border border-[hsl(var(--border))] bg-muted/20 p-4 hover:border-purple-400 hover:bg-purple-50 transition-all duration-200"
+                    className="group flex flex-col justify-center rounded-xl border border-black/[0.06] bg-black/[0.02] p-4 hover:border-black/20 hover:bg-black/5 transition-all duration-200"
                 >
                     <div className="flex items-center justify-between pointer-events-none">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-black/5 text-black">
                                 <Wallet className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="font-semibold text-sm group-hover:text-purple-700 transition-colors">
+                                <p className="font-bold text-sm transition-colors">
                                     Retirer des fonds
                                 </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
+                                <p className="text-xs text-black/30 mt-0.5">
                                     Accéder au portefeuille
                                 </p>
                             </div>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50 group-hover:text-purple-500 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                        <ChevronRight className="h-4 w-4 text-black/20 opacity-50 group-hover:text-black group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                     </div>
                 </Link>
             </div>

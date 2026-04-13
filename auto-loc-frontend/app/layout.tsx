@@ -1,9 +1,17 @@
-import React from 'react';
 import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 import { ThemeProvider, ColorSystemProvider, CurrencyProviderServer } from '../providers';
 import { CookieBanner } from '@/features/cookies/CookieBanner';
 import { Toaster } from 'sonner';
+import { cn } from '@/lib/utils';
 import './globals.css';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+});
 
 const BASE_URL = 'https://autoloc.sn';
 
@@ -104,7 +112,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body>
+      <body className={cn(inter.variable, "font-sans antialiased")}>
         <ThemeProvider defaultTheme="light" storageKey="autoloc-theme">
           <ColorSystemProvider>
             <CurrencyProviderServer>{children}</CurrencyProviderServer>

@@ -63,10 +63,10 @@ function Section({
     return (
         <div>
             <div className="mb-3 px-0.5">
-                <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">{title}</h3>
-                {subtitle && <p className="text-[12px] text-slate-400 mt-0.5">{subtitle}</p>}
+                <h3 className="text-[11px] font-black uppercase tracking-widest text-black/40">{title}</h3>
+                {subtitle && <p className="text-[12px] text-black/30 mt-0.5 font-medium">{subtitle}</p>}
             </div>
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden divide-y divide-slate-50">
+            <div className="bg-white rounded-2xl border border-black/[0.06] shadow-sm overflow-hidden divide-y divide-black/[0.02]">
                 {children}
             </div>
         </div>
@@ -138,18 +138,18 @@ function EditableRow({
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-3">
                         <div>
-                            <p className="text-[13.5px] font-semibold text-slate-800 leading-tight">{label}</p>
+                            <p className="text-[13.5px] font-bold text-black leading-tight">{label}</p>
                             {description && !editing && (
-                                <p className="text-[12px] text-slate-400 mt-0.5">{description}</p>
+                                <p className="text-[12px] text-black/40 mt-0.5 font-medium">{description}</p>
                             )}
                         </div>
                         {!editing && (
                             <button
                                 type="button"
                                 onClick={handleEdit}
-                                className="flex-shrink-0 flex items-center gap-1.5 text-[12px] font-semibold text-slate-500 hover:text-emerald-600 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 group"
+                                className="flex-shrink-0 flex items-center gap-1.5 text-[12px] font-bold text-black/40 hover:text-black transition-colors px-2.5 py-1.5 rounded-lg hover:bg-black/[0.04] group"
                             >
-                                <Pencil className="w-3 h-3 transition-transform group-hover:scale-110" strokeWidth={2} />
+                                <Pencil className="w-3 h-3 transition-transform group-hover:scale-110" strokeWidth={2.5} />
                                 <span className="hidden sm:inline">Modifier</span>
                             </button>
                         )}
@@ -158,11 +158,11 @@ function EditableRow({
                     {/* Current value */}
                     {!editing && (
                         <p className={cn(
-                            'text-[13px] font-medium mt-1.5',
-                            value ? 'text-slate-600' : 'text-slate-300 italic',
+                            'text-[13px] font-bold mt-1.5 tracking-tight',
+                            value ? 'text-black/60' : 'text-black/20 italic font-medium',
                         )}>
                             {flash
-                                ? <span className="flex items-center gap-1.5 text-emerald-600 font-semibold"><CheckCircle2 className="w-3.5 h-3.5" />Enregistré</span>
+                                ? <span className="flex items-center gap-1.5 text-emerald-600 font-bold"><CheckCircle2 className="w-3.5 h-3.5" />Enregistré</span>
                                 : (displayValue ?? (value || 'Non renseigné'))}
                         </p>
                     )}
@@ -180,7 +180,7 @@ function EditableRow({
                                     if (e.key === 'Enter') handleSave();
                                     if (e.key === 'Escape') handleCancel();
                                 }}
-                                className="flex-1 min-w-0 rounded-xl border border-emerald-300 bg-white px-3 py-2 text-[13.5px] font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition-all"
+                                className="flex-1 min-w-0 rounded-xl border border-black/10 bg-white px-3 py-2 text-[13.5px] font-bold text-black focus:outline-none focus:ring-2 focus:ring-black/10 transition-all placeholder:text-black/20"
                             />
                             <button
                                 type="button"
@@ -193,7 +193,7 @@ function EditableRow({
                             <button
                                 type="button"
                                 onClick={handleCancel}
-                                className="flex-shrink-0 w-8 h-8 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition-colors"
+                                className="flex-shrink-0 w-8 h-8 rounded-xl bg-black/[0.04] text-black/40 flex items-center justify-center hover:bg-black/[0.08] transition-colors"
                             >
                                 <X className="w-3.5 h-3.5" strokeWidth={2.5} />
                             </button>
@@ -228,13 +228,13 @@ function InfoRow({
                 </span>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                        <p className="text-[13.5px] font-semibold text-slate-800 leading-tight">{label}</p>
+                        <p className="text-[13.5px] font-bold text-black leading-tight">{label}</p>
                         {badge}
                     </div>
-                    <p className="text-[13px] font-medium text-slate-500 mt-1 truncate">{value || '—'}</p>
+                    <p className="text-[13px] font-bold text-black/40 mt-1 truncate tracking-tight">{value || '—'}</p>
                 </div>
                 {action && <div className="flex-shrink-0">{action}</div>}
-                {!action && <Lock className="w-3 h-3 text-slate-200 flex-shrink-0" />}
+                {!action && <Lock className="w-3 h-3 text-black/[0.1] flex-shrink-0" />}
             </div>
         </div>
     );
@@ -268,20 +268,20 @@ function CtaRow({
                     <Icon className={cn('w-3.5 h-3.5', iconColor)} strokeWidth={2} />
                 </span>
                 <div className="flex-1 min-w-0">
-                    <p className="text-[13.5px] font-semibold text-slate-800">{title}</p>
-                    <p className="text-[12px] text-slate-400 mt-0.5">{subtitle}</p>
+                    <p className="text-[13.5px] font-bold text-black">{title}</p>
+                    <p className="text-[12px] text-black/40 mt-0.5 font-medium">{subtitle}</p>
                 </div>
                 <Link
                     href={href}
                     className={cn(
-                        'flex-shrink-0 flex items-center gap-1 text-[12px] font-bold px-3 py-1.5 rounded-xl transition-all duration-150',
+                        'flex-shrink-0 flex items-center gap-1 text-[12px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl transition-all duration-150',
                         buttonVariant === 'warning' && 'bg-amber-100 text-amber-700 hover:bg-amber-200',
-                        buttonVariant === 'emerald' && 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-600',
-                        buttonVariant === 'default' && 'bg-slate-100 text-slate-700 hover:bg-slate-200',
+                        buttonVariant === 'emerald' && 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 hover:-translate-y-0.5',
+                        buttonVariant === 'default' && 'bg-black text-white hover:bg-black/90 shadow-lg shadow-black/10 hover:-translate-y-0.5',
                     )}
                 >
                     {buttonLabel}
-                    <ChevronRight className="w-3 h-3" />
+                    <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
                 </Link>
             </div>
         </div>
@@ -352,7 +352,7 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
             <ShieldAlert className="w-2.5 h-2.5" /> En attente
         </span>
     ) : (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-black/[0.04] text-black/40 border border-black/[0.06]">
             <ShieldAlert className="w-2.5 h-2.5" /> Non vérifié
         </span>
     );
@@ -377,7 +377,7 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
         <div className="space-y-6">
 
             {/* ── Avatar + Profile completion ───────────────────────── */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-6">
+            <div className="bg-white rounded-2xl border border-black/[0.06] shadow-sm p-5 sm:p-6 shadow-black/[0.02]">
                 <div className="flex items-center gap-4 sm:gap-5">
                     {/* Avatar */}
                     <div className="relative flex-shrink-0">
@@ -393,43 +393,43 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                         <button
                             type="button"
                             title="Changer la photo"
-                            className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-xl bg-white border border-slate-200 shadow-md flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all"
+                            className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-xl bg-white border border-black/[0.1] shadow-md flex items-center justify-center hover:bg-black/[0.02] active:scale-95 transition-all"
                         >
-                            <Camera className="w-3 h-3 text-slate-500" strokeWidth={2} />
+                            <Camera className="w-3 h-3 text-black/40" strokeWidth={2} />
                         </button>
                     </div>
 
                     {/* Name + completion */}
                     <div className="flex-1 min-w-0">
-                        <p className="text-[16px] sm:text-[18px] font-black text-slate-900 truncate leading-tight">
+                        <p className="text-[16px] sm:text-[18px] font-black text-black truncate leading-tight">
                             {prenom || nom ? `${prenom} ${nom}`.trim() : 'Votre profil'}
                         </p>
-                        <p className="text-[12px] text-slate-400 mt-0.5 truncate">{profile.email}</p>
+                        <p className="text-[12px] text-black/40 mt-0.5 font-medium truncate">{profile.email}</p>
 
                         {/* Completion */}
                         <div className="mt-3">
                             <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-[10.5px] font-bold uppercase tracking-widest text-slate-400">
+                                <span className="text-[10.5px] font-black uppercase tracking-widest text-black/40">
                                     Profil complété
                                 </span>
                                 <span className={cn(
-                                    'text-[11px] font-black',
-                                    percent === 100 ? 'text-emerald-600' : percent >= 70 ? 'text-amber-500' : 'text-slate-400',
+                                    'text-[11px] font-bold',
+                                    percent === 100 ? 'text-emerald-600' : percent >= 70 ? 'text-amber-500' : 'text-black/20',
                                 )}>
                                     {percent}%
                                 </span>
                             </div>
-                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-2 bg-black/[0.04] rounded-full overflow-hidden">
                                 <div
                                     className={cn(
                                         'h-full rounded-full transition-all duration-700',
-                                        percent === 100 ? 'bg-emerald-500' : percent >= 70 ? 'bg-amber-400' : 'bg-slate-300',
+                                        percent === 100 ? 'bg-emerald-500' : percent >= 70 ? 'bg-amber-400' : 'bg-black/20',
                                     )}
                                     style={{ width: `${percent}%` }}
                                 />
                             </div>
                             {missing.length > 0 && (
-                                <p className="text-[11px] text-slate-400 mt-1.5">
+                                <p className="text-[11px] text-black/30 mt-1.5 font-medium">
                                     Manquant : {missing.slice(0, 2).join(', ')}{missing.length > 2 ? ` +${missing.length - 2}` : ''}
                                 </p>
                             )}
@@ -439,20 +439,20 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
 
                 {/* Note / rating */}
                 {(profile.noteProprietaire > 0 || profile.totalAvis > 0) && (
-                    <div className="mt-5 pt-5 border-t border-slate-50 flex items-center gap-5">
+                    <div className="mt-5 pt-5 border-t border-black/[0.04] flex items-center gap-5">
                         <div className="flex items-center gap-2">
-                            <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                            <span className="text-[14px] font-black text-slate-800">
+                            <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                            <span className="text-[14px] font-black text-black">
                                 {profile.noteProprietaire.toFixed(1)}
                             </span>
-                            <span className="text-[12px] text-slate-400">/ 5</span>
+                            <span className="text-[12px] text-black/30">/ 5</span>
                         </div>
-                        <div className="w-px h-4 bg-slate-100" />
-                        <span className="text-[13px] text-slate-500 font-medium">
+                        <div className="w-px h-4 bg-black/[0.06]" />
+                        <span className="text-[13px] text-black/40 font-bold">
                             {profile.totalAvis} avis reçu{profile.totalAvis > 1 ? 's' : ''}
                         </span>
-                        <div className="w-px h-4 bg-slate-100" />
-                        <span className="text-[12px] font-semibold text-slate-500">
+                        <div className="w-px h-4 bg-black/[0.06]" />
+                        <span className="text-[11px] font-black uppercase tracking-widest text-black/30">
                             {roleLabel[profile.role] ?? profile.role}
                         </span>
                     </div>
@@ -506,9 +506,9 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                     action={
                         <a
                             href="mailto:support@autoloc.sn?subject=Modification email"
-                            className="flex items-center gap-1 text-[12px] font-semibold text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition-colors"
+                            className="flex items-center gap-1 text-[12px] font-bold text-black/40 hover:text-black bg-black/[0.04] hover:bg-black/[0.08] px-2.5 py-1.5 rounded-lg transition-colors"
                         >
-                            <Mail className="w-3 h-3" />
+                            <Mail className="w-3 h-3" strokeWidth={2.5} />
                             <span className="hidden sm:inline">Support</span>
                         </a>
                     }
@@ -562,7 +562,7 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                     value="Géré via votre fournisseur de connexion"
                     icon={Lock}
                     badge={
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-black/[0.04] text-black/30">
                             <Sparkles className="w-2.5 h-2.5" /> SSO
                         </span>
                     }
@@ -581,11 +581,11 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                                 type="button"
                                 onClick={switchToLocataire}
                                 disabled={switching}
-                                className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1.5 text-[12px] font-bold text-black/40 bg-black/[0.04] hover:bg-black/[0.08] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50"
                             >
                                 {switching
                                     ? <Loader2 className="w-3 h-3 animate-spin" />
-                                    : <UserRound className="w-3 h-3" />
+                                    : <UserRound className="w-3 h-3" strokeWidth={2.5} />
                                 }
                                 <span className="hidden sm:inline">Mode locataire</span>
                             </button>

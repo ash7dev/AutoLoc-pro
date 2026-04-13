@@ -10,12 +10,12 @@ export const STATUS_CONFIG: Record<VehicleStatus, {
   className: string;
   dot: string;
 }> = {
-  // BROUILLON → relabeled "En attente" so user isn't discouraged
-  BROUILLON:             { label: "En attente",  icon: Clock,        className: "bg-amber-100 text-amber-800 border-amber-300/80",          dot: "bg-amber-500" },
-  EN_ATTENTE_VALIDATION: { label: "En attente",  icon: Clock,        className: "bg-amber-100 text-amber-800 border-amber-300/80",          dot: "bg-amber-500" },
-  VERIFIE:               { label: "Actif",       icon: CheckCircle2, className: "bg-emerald-100 text-emerald-800 border-emerald-300/80",    dot: "bg-emerald-500" },
-  SUSPENDU:              { label: "Suspendu",    icon: ShieldOff,    className: "bg-red-100 text-red-700 border-red-300/80",                dot: "bg-red-500" },
-  ARCHIVE:               { label: "Archivé",     icon: Archive,      className: "bg-slate-100 text-slate-700 border-slate-300/70",          dot: "bg-slate-400" },
+  // BROUILLON & EN_ATTENTE → Ambre (Conservé selon demande utilisateur)
+  BROUILLON:             { label: "En attente",  icon: Clock,        className: "bg-amber-50 text-amber-600 border-amber-200/60",          dot: "bg-amber-500" },
+  EN_ATTENTE_VALIDATION: { label: "En attente",  icon: Clock,        className: "bg-amber-50 text-amber-600 border-amber-200/60",          dot: "bg-amber-500" },
+  VERIFIE:               { label: "Actif",       icon: CheckCircle2, className: "bg-emerald-50 text-emerald-600 border-emerald-200/60",    dot: "bg-emerald-500" },
+  SUSPENDU:              { label: "Suspendu",    icon: ShieldOff,    className: "bg-red-50 text-red-600 border-red-200/60",                dot: "bg-red-500" },
+  ARCHIVE:               { label: "Archivé",     icon: Archive,      className: "bg-black/[0.04] text-black/40 border-black/[0.06]",       dot: "bg-black/20" },
 };
 
 export const TYPE_LABELS: Record<string, string> = {

@@ -168,7 +168,7 @@ export function OwnerTodoCard({
   const hasMore = visible < sorted.length;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-foreground shadow-lg flex flex-col h-full">
+    <div className="relative overflow-hidden rounded-2xl bg-black shadow-xl flex flex-col h-full">
 
       {/* Top highlight */}
       <div className="absolute top-0 left-6 right-6 h-px bg-white/10" />
@@ -241,13 +241,13 @@ export function OwnerTodoCard({
 
         {/* Empty */}
         {!loading && items.length === 0 && (
-          <div className="flex items-center gap-4 mx-4 my-3 rounded-xl bg-emerald-400/8 border border-emerald-400/15 px-4 py-4">
-            <div className="w-9 h-9 rounded-xl bg-emerald-400/15 border border-emerald-400/20 flex items-center justify-center flex-shrink-0">
-              <CheckCircle className="w-4 h-4 text-emerald-400" strokeWidth={1.75} />
+          <div className="flex items-center gap-4 mx-4 my-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 px-4 py-4">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+              <CheckCircle className="w-4 h-4 text-emerald-500" strokeWidth={1.75} />
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-white/80">{emptyLabel}</p>
-              <p className="text-[11px] font-medium text-white/35 mt-0.5">Votre tableau de bord est à jour.</p>
+              <p className="text-[13px] font-bold text-black/80">{emptyLabel}</p>
+              <p className="text-[11px] font-medium text-black/30 mt-0.5">Votre tableau de bord est à jour.</p>
             </div>
           </div>
         )}

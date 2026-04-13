@@ -15,7 +15,7 @@ interface StatItem {
   delta: string;
   trend: "up" | "down" | "neutral";
   icon: LucideIcon;
-  accentColor: "emerald" | "blue" | "amber" | "red";
+  accentColor: "emerald" | "red";
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -48,7 +48,7 @@ function buildStats(data: OwnerStats | null | undefined): StatItem[] {
         : "Aucune active",
       trend: data.reservationsActives > 0 ? "up" : "neutral",
       icon: Car,
-      accentColor: "blue",
+      accentColor: "emerald",
     },
     {
       label: "Taux d'occupation",
@@ -61,7 +61,7 @@ function buildStats(data: OwnerStats | null | undefined): StatItem[] {
           : "Aucune réservation",
       trend: data.tauxOccupation >= 50 ? "up" : data.tauxOccupation > 0 ? "neutral" : "neutral",
       icon: Activity,
-      accentColor: "amber",
+      accentColor: "emerald",
     },
     {
       label: "Litiges ouverts",
@@ -77,35 +77,29 @@ function buildStats(data: OwnerStats | null | undefined): StatItem[] {
 
 const SKELETON_STATS: StatItem[] = [
   { label: "Revenus du mois", value: "—", unit: "FCFA", delta: "", trend: "neutral", icon: TrendingUp, accentColor: "emerald" },
-  { label: "Réservations actives", value: "—", unit: "en cours", delta: "", trend: "neutral", icon: Car, accentColor: "blue" },
-  { label: "Taux d'occupation", value: "—", unit: "%", delta: "", trend: "neutral", icon: Activity, accentColor: "amber" },
+  { label: "Réservations actives", value: "—", unit: "en cours", delta: "", trend: "neutral", icon: Car, accentColor: "emerald" },
+  { label: "Taux d'occupation", value: "—", unit: "%", delta: "", trend: "neutral", icon: Activity, accentColor: "emerald" },
   { label: "Litiges ouverts", value: "—", unit: "litige", delta: "", trend: "neutral", icon: Shield, accentColor: "emerald" },
 ];
 
 /* ── Accent token maps ──────────────────────────────────────── */
 const ICON_BG: Record<StatItem["accentColor"], string> = {
-  emerald: "bg-emerald-50 border-emerald-100",
-  blue: "bg-blue-50 border-blue-100",
-  amber: "bg-amber-50 border-amber-100",
-  red: "bg-red-50 border-red-100",
+  emerald: "bg-emerald-500/10 border-emerald-500/10",
+  red: "bg-red-500/10 border-red-500/10",
 };
 const ICON_COLOR: Record<StatItem["accentColor"], string> = {
-  emerald: "text-emerald-600",
-  blue: "text-blue-600",
-  amber: "text-amber-600",
+  emerald: "text-emerald-500",
   red: "text-red-500",
 };
 const VALUE_COLOR: Record<StatItem["accentColor"], string> = {
-  emerald: "text-emerald-700",
-  blue: "text-slate-900",
-  amber: "text-slate-900",
+  emerald: "text-black",
   red: "text-red-600",
 };
 
 const TREND_CONFIG = {
-  up: { icon: ArrowUpRight, cls: "text-emerald-600 bg-emerald-50" },
-  down: { icon: ArrowDownRight, cls: "text-red-500 bg-red-50" },
-  neutral: { icon: Minus, cls: "text-slate-400 bg-slate-100" },
+  up: { icon: ArrowUpRight, cls: "text-emerald-500 bg-emerald-500/10" },
+  down: { icon: ArrowDownRight, cls: "text-red-600 bg-red-500/10" },
+  neutral: { icon: Minus, cls: "text-black/30 bg-black/5" },
 };
 
 /* ════════════════════════════════════════════════════════════════
@@ -116,37 +110,35 @@ function StatCard({ stat, loading }: { stat: StatItem; loading: boolean }) {
   const TrendIcon = TREND_CONFIG[stat.trend].icon;
 
   return (
-    <div className="relative bg-white rounded-2xl border border-slate-100 p-5 shadow-sm shadow-slate-100/60 hover:shadow-md hover:shadow-slate-200/60 hover:border-slate-200 transition-all duration-200 overflow-hidden group">
+    <div className="relative bg-white rounded-2xl border border-black/[0.06] p-5 shadow-sm shadow-black/[0.02] hover:shadow-md hover:border-black/[0.1] transition-all duration-200 overflow-hidden group">
 
       {/* Subtle top accent line */}
       <div className={cn(
         "absolute top-0 left-5 right-5 h-[2px] rounded-b-full opacity-0 group-hover:opacity-100 transition-opacity duration-300",
-        stat.accentColor === "emerald" && "bg-emerald-400",
-        stat.accentColor === "blue" && "bg-blue-400",
-        stat.accentColor === "amber" && "bg-amber-400",
-        stat.accentColor === "red" && "bg-red-400",
+        stat.accentColor === "emerald" && "bg-emerald-500",
+        stat.accentColor === "red" && "bg-red-500",
       )} />
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
 
           {/* Label */}
-          <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider sm:tracking-[0.12em] text-slate-400 mb-3 leading-tight pr-2">
+          <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-black/40 mb-3 leading-tight pr-2">
             {stat.label}
           </p>
 
           {/* Value */}
           {loading ? (
-            <div className="h-8 w-20 rounded-xl bg-slate-100 animate-pulse mb-2" />
+            <div className="h-8 w-20 rounded-xl bg-black/5 animate-pulse mb-2" />
           ) : (
             <div className="flex items-baseline gap-1.5 mb-2">
               <span className={cn(
-                "text-[30px] font-black tabular-nums tracking-tight leading-none",
+                "text-[30px] font-black tabular-nums tracking-tighter leading-none",
                 VALUE_COLOR[stat.accentColor],
               )}>
                 {stat.value}
               </span>
-              <span className="text-[12px] font-semibold text-slate-400">
+              <span className="text-[12px] font-bold text-black/30">
                 {stat.unit}
               </span>
             </div>
@@ -154,7 +146,7 @@ function StatCard({ stat, loading }: { stat: StatItem; loading: boolean }) {
 
           {/* Delta */}
           {loading ? (
-            <div className="h-3.5 w-24 rounded-lg bg-slate-100 animate-pulse" />
+            <div className="h-3.5 w-24 rounded-lg bg-black/5 animate-pulse" />
           ) : stat.delta ? (
             <div className={cn(
               "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold",

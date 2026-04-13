@@ -15,7 +15,7 @@ export function MobileWalletCard({
   loading = false 
 }: MobileWalletCardProps) {
   return (
-    <div className="lg:hidden bg-white rounded-2xl border border-slate-100 p-4">
+    <div className="lg:hidden bg-white rounded-2xl border border-black/[0.06] p-4 shadow-sm shadow-black/[0.02]">
       <div className="flex items-center gap-2 mb-3">
         <Wallet className="w-4 h-4 text-black/40" />
         <span className="text-[11px] font-medium text-black/40 uppercase tracking-wider">
@@ -30,7 +30,7 @@ export function MobileWalletCard({
             <span className="text-[11px] text-black/40">Disponible</span>
           </div>
           {loading ? (
-            <div className="h-5 w-16 bg-slate-100 rounded animate-pulse" />
+            <div className="h-5 w-16 bg-black/[0.04] rounded animate-pulse" />
           ) : (
             <span className="text-sm font-semibold text-black">{available}</span>
           )}
@@ -42,7 +42,7 @@ export function MobileWalletCard({
             <span className="text-[11px] text-black/40">En attente</span>
           </div>
           {loading ? (
-            <div className="h-5 w-16 bg-slate-100 rounded animate-pulse" />
+            <div className="h-5 w-16 bg-black/[0.04] rounded animate-pulse" />
           ) : (
             <span className="text-sm font-semibold text-black">{pending}</span>
           )}
