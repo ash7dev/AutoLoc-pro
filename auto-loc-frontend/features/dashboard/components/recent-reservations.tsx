@@ -15,6 +15,11 @@ export type ReservationStatus =
 export interface ReservationItem {
   id: string | number;
   vehicle: string;
+  vehiclePhoto?: string;
+  tenantName?: string;
+  tenantPhone?: string;
+  duration?: string;
+  dateRange?: string;
   amount: string;
   status: ReservationStatus;
   meta?: string;
@@ -51,41 +56,75 @@ function ReservationRow({ r }: { r: ReservationItem }) {
 
   const inner = (
     <div className={cn(
-      "group flex items-center gap-4 px-5 py-3.5 transition-colors duration-150",
-      r.href && "hover:bg-slate-50 cursor-pointer",
+      "group flex items-center gap-4 px-5 py-4 transition-all duration-200",
+      r.href && "hover:bg-slate-50/80 cursor-pointer",
     )}>
 
-      {/* Vehicle icon */}
-      <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-50 group-hover:border-emerald-100 transition-colors">
-        <Car className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-500 transition-colors" strokeWidth={1.75} />
+      {/* Vehicle Photo or Icon */}
+      <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 group-hover:border-emerald-200 transition-colors">
+        {r.vehiclePhoto ? (
+          <img 
+            src={r.vehiclePhoto} 
+            alt={r.vehicle} 
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-slate-50">
+            <Car className="w-5 h-5 text-slate-300" strokeWidth={1.5} />
+          </div>
+        )}
       </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-bold text-slate-900 truncate leading-none">{r.vehicle}</p>
-        <div className="flex items-center gap-1.5 mt-1">
-          <span className="text-[12px] font-semibold text-emerald-600 tabular-nums">{r.amount}</span>
-          {r.meta && (
-            <>
-              <span className="text-slate-300">·</span>
-              <span className="text-[11.5px] font-medium text-slate-400">{r.meta}</span>
-            </>
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-[14px] font-bold text-slate-900 truncate tracking-tight">{r.vehicle}</p>
+          {r.duration && (
+            <span className="text-[10px] font-black px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded uppercase tracking-wider">
+              {r.duration}
+            </span>
           )}
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {r.tenantName && (
+            <span className="text-[12px] font-medium text-slate-500 truncate max-w-[120px]">
+              {r.tenantName}
+            </span>
+          )}
+          {r.tenantPhone && r.status === "EN_COURS" && (
+            <span className="text-[11px] font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 tabular-nums">
+              {r.tenantPhone}
+            </span>
+          )}
+          <span className="text-slate-200 text-[10px]">|</span>
+          <span className="text-[12px] font-bold text-emerald-600 tabular-nums">
+            {r.amount}
+          </span>
         </div>
       </div>
 
-      {/* Status badge */}
-      <span className={cn(
-        "flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold",
-        s.cls,
-      )}>
-        <span className={cn("w-1.5 h-1.5 rounded-full", s.dot)} />
-        {s.label}
-      </span>
+      {/* Status & Meta */}
+      <div className="flex flex-col items-end gap-1.5 shrink-0">
+        <span className={cn(
+          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10.5px] font-black uppercase tracking-tight",
+          s.cls,
+        )}>
+          <span className={cn("w-1.5 h-1.5 rounded-full", s.dot)} />
+          {s.label}
+        </span>
+        {r.dateRange && (
+          <span className="text-[10px] font-medium text-slate-400">
+            {r.dateRange}
+          </span>
+        )}
+      </div>
 
-      {/* Arrow */}
+      {/* Arrow if clickable */}
       {r.href && (
-        <ChevronRight className="w-4 h-4 text-slate-300 flex-shrink-0 group-hover:text-slate-500 group-hover:translate-x-0.5 transition-all" strokeWidth={2} />
+        <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 ml-1">
+          <ChevronRight className="w-4 h-4 text-slate-400" strokeWidth={2.5} />
+        </div>
       )}
     </div>
   );
@@ -117,10 +156,13 @@ function RowSkeleton() {
 function PipelineHeader({ status, count }: { status: ReservationStatus; count: number }) {
   const s = STATUS[status];
   return (
-    <div className="flex items-center gap-2.5 px-5 py-2 bg-slate-50/60 border-y border-slate-100">
-      <span className={cn("w-1.5 h-1.5 rounded-full", s.dot)} />
-      <span className="text-[10.5px] font-black uppercase tracking-[0.14em] text-slate-500">{s.label}</span>
-      <span className="ml-auto text-[10.5px] font-bold text-slate-400">{count}</span>
+    <div className="flex items-center gap-2.5 px-5 py-2.5 bg-slate-50/80 border-y border-slate-100/50">
+      <div className={cn("w-2 h-2 rounded-full", s.dot)} />
+      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">{s.label}</span>
+      <div className="ml-auto flex items-center gap-1">
+        <span className="text-[10px] font-black text-slate-400">{count}</span>
+        <span className="text-[9px] font-bold text-slate-300 uppercase leading-none">items</span>
+      </div>
     </div>
   );
 }
@@ -133,11 +175,13 @@ export function RecentReservations({
   mode = "recent",
   loading = false,
   title,
+  className,
 }: {
   reservations?: ReservationItem[];
   mode?: "recent" | "pipeline";
   loading?: boolean;
   title?: string;
+  className?: string;
 }) {
   const effectiveTitle = title ?? (mode === "pipeline" ? "Pipeline" : "Réservations récentes");
 
@@ -146,7 +190,10 @@ export function RecentReservations({
     .filter(g => g.items.length > 0);
 
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm shadow-slate-100/60">
+    <div className={cn(
+      "rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm shadow-slate-100/60 flex flex-col",
+      className
+    )}>
 
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">

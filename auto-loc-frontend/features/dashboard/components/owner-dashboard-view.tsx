@@ -131,6 +131,11 @@ function buildRecentReservations(reservations: Reservation[] = []) {
         .map((r) => ({
             id: r.id,
             vehicle: `${r.vehicule.marque} ${r.vehicule.modele}`,
+            vehiclePhoto: r.vehicule.photoUrl || r.vehicule.photos?.find(p => p.estPrincipale)?.url || r.vehicule.photos?.[0]?.url,
+            tenantName: `${r.locataire.prenom} ${r.locataire.nom}`,
+            tenantPhone: r.locataire.telephone,
+            duration: `${r.nbJours} j.`,
+            dateRange: `${fmtDate(r.dateDebut)} — ${fmtDate(r.dateFin)}`,
             amount: `${r.montantProprietaire} FCFA`,
             status: r.statut as any,
             meta: r.statut === "PAYEE"
@@ -341,18 +346,19 @@ export function OwnerDashboardView({
                     </div>
                 </div>
 
-                {/* Row 4 — Fleet + Reservations */}
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
-                    <div className="xl:col-span-1">
-                        <FleetPerformance 
-                            vehicles={vehicles} 
-                            reservations={reservations}
-                        />
-                    </div>
-                    <div className="xl:col-span-2">
+                {/* Row 4 — Pipeline + Fleet */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 items-stretch">
+                    <div className="xl:col-span-2 h-full">
                         <RecentReservations
                             mode="pipeline"
                             reservations={recentReservations}
+                            className="h-full"
+                        />
+                    </div>
+                    <div className="xl:col-span-1 h-full">
+                        <FleetPerformance 
+                            vehicles={vehicles} 
+                            reservations={reservations}
                         />
                     </div>
                 </div>
