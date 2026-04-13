@@ -39,7 +39,7 @@ function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 z-[60] w-80 max-w-[calc(100vw-2rem)] max-h-[400px] rounded-2xl border border-white/10 bg-[#0a0a0a]/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 lg:right-0 lg:z-50">
+        <div className="absolute left-0 sm:left-auto sm:right-0 top-11 z-[60] w-80 max-w-[calc(100vw-2rem)] max-h-[400px] rounded-2xl border border-white/10 bg-[#0a0a0a]/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 lg:z-50">
           {/* Header */}
           <div className="px-4 py-3 border-b border-white/[0.06]">
             <p className="text-xs font-semibold text-white/60 uppercase tracking-widest">Notifications</p>

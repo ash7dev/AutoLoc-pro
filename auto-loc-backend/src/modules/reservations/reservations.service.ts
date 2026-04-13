@@ -69,6 +69,7 @@ function serializeReservation(r: Record<string, unknown> & {
   contratUrl?: string | null;
   proprietaireId: string;
   locataire?: unknown;
+  proprietaire?: unknown;
   vehicule?: unknown;
   paiement?: unknown;
 }) {
@@ -112,6 +113,17 @@ function serializeReservation(r: Record<string, unknown> & {
             telephone: l.telephone ?? undefined,
             noteLocataire: l.noteLocataire ?? undefined,
             kycStatus: l.statutKyc ?? undefined,
+          };
+        })()
+      : undefined,
+    proprietaire: r.proprietaire
+      ? (() => {
+          const p = r.proprietaire as Record<string, unknown>;
+          return {
+            id: p.id,
+            prenom: p.prenom,
+            nom: p.nom,
+            telephone: p.telephone ?? undefined,
           };
         })()
       : undefined,
@@ -230,6 +242,8 @@ export class ReservationsService {
         netProprietaire: true,
         annuleLe: true,
         raisonAnnulation: true,
+        creeLe: true,
+        confirmeeLe: true,
         locataire: { select: { prenom: true, nom: true, telephone: true, email: true } },
         proprietaire: { select: { prenom: true, nom: true, telephone: true, email: true } },
         vehicule: { select: { marque: true, modele: true, annee: true, type: true, immatriculation: true, ville: true } },
@@ -294,6 +308,10 @@ export class ReservationsService {
         totalLocataire: String(reservation.totalLocataire),
         netProprietaire: String(reservation.netProprietaire),
       },
+      dateReservation: new Date(reservation.creeLe).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }),
+      dateConfirmation: reservation.confirmeeLe
+        ? new Date(reservation.confirmeeLe).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+        : undefined,
     };
 
     const buffer = await this.contractPdfService.generate(contractData);
