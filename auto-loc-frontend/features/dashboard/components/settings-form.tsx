@@ -62,9 +62,9 @@ function Section({
 }) {
     return (
         <div>
-            <div className="mb-3 px-0.5">
-                <h3 className="text-[11px] font-black uppercase tracking-widest text-black/40">{title}</h3>
-                {subtitle && <p className="text-[12px] text-black/30 mt-0.5 font-medium">{subtitle}</p>}
+            <div className="mb-4 px-0.5">
+                <h3 className="text-[16px] sm:text-[18px] font-bold tracking-tight text-black">{title}</h3>
+                {subtitle && <p className="text-[13px] sm:text-[14px] text-black/30 mt-1 font-medium tracking-tight">{subtitle}</p>}
             </div>
             <div className="bg-white rounded-2xl border border-black/[0.06] shadow-sm overflow-hidden divide-y divide-black/[0.02]">
                 {children}

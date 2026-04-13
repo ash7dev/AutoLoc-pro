@@ -83,7 +83,7 @@ function TodoItem({ item }: { item: OwnerTodoItem }) {
 
         <div className="flex items-center gap-2 mt-1 flex-wrap">
           {item.meta && (
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/20">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">
               {item.meta}
             </p>
           )}
@@ -176,9 +176,9 @@ export function OwnerTodoCard({
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
         <div className="flex items-center gap-3">
-          <p className="text-xs font-semibold uppercase tracking-widest text-white/40">
+          <h3 className="text-lg font-bold tracking-tight text-white">
             {title}
-          </p>
+          </h3>
 
           {urgentItems.length > 0 && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-500/15 border border-red-500/25 text-[9px] font-black text-red-400 uppercase tracking-wider">
@@ -212,7 +212,7 @@ export function OwnerTodoCard({
           <div className="mx-5 h-px bg-white/10" />
           <div className="grid grid-cols-2 divide-x divide-white/10 mx-0 mt-0">
             <div className="px-5 py-3">
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1">Urgents</p>
+              <p className="text-[9.5px] font-black uppercase tracking-[0.2em] text-white/20 mb-1">Urgents</p>
               <p className={cn(
                 "text-[22px] font-black leading-none tracking-tight",
                 urgentItems.length > 0 ? "text-red-400" : "text-white/20",
@@ -221,7 +221,7 @@ export function OwnerTodoCard({
               </p>
             </div>
             <div className="px-5 py-3">
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1">À traiter</p>
+              <p className="text-[9.5px] font-black uppercase tracking-[0.2em] text-white/20 mb-1">À traiter</p>
               <p className="text-[22px] font-black leading-none tracking-tight text-white/70">
                 {normalItems.length}
               </p>

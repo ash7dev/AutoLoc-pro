@@ -123,7 +123,7 @@ function StatCard({ stat, loading }: { stat: StatItem; loading: boolean }) {
         <div className="flex-1 min-w-0">
 
           {/* Label */}
-          <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-black/40 mb-3 leading-tight pr-2">
+          <p className="text-[9.5px] font-black uppercase tracking-[0.2em] text-black/30 mb-3 leading-tight pr-2">
             {stat.label}
           </p>
 
@@ -133,12 +133,12 @@ function StatCard({ stat, loading }: { stat: StatItem; loading: boolean }) {
           ) : (
             <div className="flex items-baseline gap-1.5 mb-2">
               <span className={cn(
-                "text-[30px] font-black tabular-nums tracking-tighter leading-none",
+                "text-[34px] sm:text-[40px] font-black tabular-nums tracking-tighter leading-none",
                 VALUE_COLOR[stat.accentColor],
               )}>
                 {stat.value}
               </span>
-              <span className="text-[12px] font-bold text-black/30">
+              <span className="text-[12px] font-bold text-black/20 uppercase tracking-widest">
                 {stat.unit}
               </span>
             </div>

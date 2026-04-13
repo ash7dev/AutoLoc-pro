@@ -89,11 +89,11 @@ export function FleetPerformance({ vehicles, reservations = [], loading }: Fleet
       {/* Header */}
       <div className="p-4 sm:p-6 border-b border-black/[0.04] flex items-center justify-between">
         <div>
-          <h3 className="text-[13px] sm:text-[14px] font-bold uppercase tracking-widest text-black flex items-center gap-2">
-            <Trophy className="w-3.5 h-3.5 sm:w-4 h-4 text-emerald-500" />
+          <h3 className="text-lg font-bold tracking-tight text-black flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-emerald-500" />
             Performance de la flotte
           </h3>
-          <p className="text-[11px] sm:text-[12px] text-black/40 mt-1 font-medium">
+          <p className="text-[12px] text-black/30 mt-0.5 font-medium tracking-tight">
             Analyse de rentabilité et taux d'occupation
           </p>
         </div>
@@ -113,8 +113,8 @@ export function FleetPerformance({ vehicles, reservations = [], loading }: Fleet
         {/* Top Vehicles Section */}
         <section className="flex-1">
           <div className="flex items-center justify-between mb-4 sm:mb-5">
-            <h4 className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-black/40 flex items-center gap-2">
-              <BarChart3 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+            <h4 className="text-[9.5px] font-black uppercase tracking-[0.2em] text-black/30 flex items-center gap-2">
+              <BarChart3 className="w-3.5 h-3.5" />
               Classement Rentabilité
             </h4>
           </div>
@@ -172,8 +172,8 @@ export function FleetPerformance({ vehicles, reservations = [], loading }: Fleet
             ) : (
               <div className="flex flex-col items-center justify-center py-10 px-4 bg-black/[0.02] rounded-2xl border border-dashed border-black/10">
                 <Car className="w-8 h-8 sm:w-10 sm:h-10 text-black/10 mb-3" />
-                <p className="text-[12px] sm:text-[13px] font-bold text-black/30 text-center">
-                  Aucun véhicule enregistré ou actif
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-black/20 text-center">
+                  Aucun véhicule enregistré
                 </p>
               </div>
             )}

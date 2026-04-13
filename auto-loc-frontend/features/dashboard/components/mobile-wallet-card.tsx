@@ -18,7 +18,7 @@ export function MobileWalletCard({
     <div className="lg:hidden bg-white rounded-2xl border border-black/[0.06] p-4 shadow-sm shadow-black/[0.02]">
       <div className="flex items-center gap-2 mb-3">
         <Wallet className="w-4 h-4 text-black/40" />
-        <span className="text-[11px] font-medium text-black/40 uppercase tracking-wider">
+        <span className="text-[9.5px] font-black uppercase tracking-[0.2em] text-black/30">
           Portefeuille
         </span>
       </div>

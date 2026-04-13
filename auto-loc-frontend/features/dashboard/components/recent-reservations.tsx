@@ -157,11 +157,11 @@ function PipelineHeader({ status, count }: { status: ReservationStatus; count: n
   const s = STATUS[status];
   return (
     <div className="flex items-center gap-2.5 px-5 py-2.5 bg-black/[0.02] border-y border-black/[0.04]">
-      <div className={cn("w-2 h-2 rounded-full", s.dot)} />
-      <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">{s.label}</span>
+      <div className={cn("w-1.5 h-1.5 rounded-full", s.dot)} />
+      <span className="text-[9.5px] font-black uppercase tracking-[0.2em] text-black/30">{s.label}</span>
       <div className="ml-auto flex items-center gap-1">
         <span className="text-[10px] font-bold text-black/30">{count}</span>
-        <span className="text-[9px] font-bold text-black/20 uppercase leading-none">items</span>
+        <span className="text-[9px] font-bold text-black/20 uppercase tracking-widest leading-none">items</span>
       </div>
     </div>
   );
@@ -198,7 +198,7 @@ export function RecentReservations({
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-black/[0.06]">
         <div className="flex items-center gap-3">
-          <h3 className="text-[14px] font-bold tracking-tight text-black">
+          <h3 className="text-lg font-bold tracking-tight text-black">
             {effectiveTitle}
           </h3>
           {!loading && reservations.length > 0 && (
@@ -228,7 +228,7 @@ export function RecentReservations({
             <div className="w-10 h-10 rounded-2xl bg-black/5 flex items-center justify-center">
               <Car className="w-4.5 h-4.5 text-black/20" strokeWidth={1.5} />
             </div>
-            <p className="text-[13px] font-bold text-black/30">Aucune réservation</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-black/20">Aucune réservation</p>
           </div>
         )}
 

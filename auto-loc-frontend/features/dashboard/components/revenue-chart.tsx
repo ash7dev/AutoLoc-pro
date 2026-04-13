@@ -78,11 +78,11 @@ export function RevenueChart({
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4 sm:mb-6">
           <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Aperçu des revenus</p>
+            <h3 className="text-lg font-bold tracking-tight text-black">Revenus cumulés</h3>
             <div className="flex items-center gap-3">
-              <span className="text-xl sm:text-2xl font-bold tracking-tight">
+              <span className="text-[28px] sm:text-[32px] font-black text-black tabular-nums tracking-tighter leading-none">
                 {loading ? "—" : total}
-                <span className="text-sm font-medium text-muted-foreground ml-1.5">FCFA</span>
+                <span className="text-xs font-bold text-black/20 uppercase tracking-widest ml-1.5">FCFA</span>
               </span>
               {!loading && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-600">
@@ -115,7 +115,7 @@ export function RevenueChart({
                 <BarChart2 className="w-6 h-6 text-black/20" strokeWidth={1.5} />
               </div>
               <div className="text-center">
-                <p className="text-[13px] font-black uppercase tracking-tight text-black/40">Aucun revenu ce mois-ci</p>
+                <p className="text-[9.5px] font-black uppercase tracking-[0.2em] text-black/20">Aucun revenu ce mois-ci</p>
                 <p className="text-[11px] font-medium text-black/20 mt-0.5">Les données apparaîtront dès votre première location confirmée</p>
               </div>
             </div>

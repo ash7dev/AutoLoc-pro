@@ -65,9 +65,9 @@ export function AttendanceCalendar({
       <div className="flex-1 p-4 sm:p-6 border-b lg:border-b-0 lg:border-r border-black/[0.04]">
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div>
-            <h3 className="text-[14px] sm:text-[15px] font-bold tracking-tight text-black">Agenda Logistique</h3>
+            <h3 className="text-lg font-bold tracking-tight text-black">Agenda Logistique</h3>
             {!loading && (
-              <p className="text-[11px] sm:text-[12px] text-black/40 font-medium">
+              <p className="text-[12px] text-black/30 font-medium tracking-tight mt-0.5">
                 {reservedCount} jour{reservedCount > 1 ? "s" : ""} occupé{reservedCount > 1 ? "s" : ""} ce mois
               </p>
             )}
@@ -88,7 +88,7 @@ export function AttendanceCalendar({
         {/* Day labels */}
         <div className="grid grid-cols-7 mb-2 sm:mb-3">
           {daysOfWeek.map((d) => (
-            <div key={d} className="text-center text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-black/20 py-1.5 sm:py-2">
+            <div key={d} className="text-center text-[9.5px] font-black uppercase tracking-[0.2em] text-black/20 py-2">
               {d}
             </div>
           ))}
@@ -150,7 +150,7 @@ export function AttendanceCalendar({
       {/* ── Right Side: Agenda for Selected Day ──────────────── */}
       <div className="lg:w-[320px] bg-black/[0.02] p-4 sm:p-6 flex flex-col">
         <div className="mb-4 sm:mb-6">
-          <h4 className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-black/40 mb-0.5 sm:mb-1">
+          <h4 className="text-[9.5px] font-black uppercase tracking-[0.2em] text-black/30 mb-1">
             Agenda du jour
           </h4>
           <p className="text-[13px] sm:text-[14px] font-bold text-black">

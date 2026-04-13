@@ -32,7 +32,7 @@ export function MobileRevenueCard({
       <div className="flex items-start justify-between gap-3 mb-4">
 
         {/* Period label */}
-        <p className="text-[10.5px] font-black uppercase tracking-[0.14em] text-black/40">
+        <p className="text-[9.5px] font-black uppercase tracking-[0.2em] text-black/30">
           {period}
         </p>
 
@@ -48,7 +48,7 @@ export function MobileRevenueCard({
 
       {/* Revenue */}
       <div className="space-y-1">
-        <p className="text-[11px] font-bold text-black/40 mb-1">Revenus</p>
+        <p className="text-[9.5px] font-black uppercase tracking-[0.2em] text-black/30 mb-1">Revenus</p>
         {loading ? (
           <div className="h-8 w-28 rounded-xl bg-black/[0.04] animate-pulse" />
         ) : (

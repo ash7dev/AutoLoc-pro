@@ -164,13 +164,13 @@ export function OwnerHeader({
             <span className="text-xs text-white/30 tabular-nums">{time}</span>
           </div>
 
-          <h1 className="font-display text-xl sm:text-3xl font-bold tracking-tight text-white">
+          <h1 className="font-display text-2xl sm:text-4xl font-black tracking-tighter text-white">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-300">
               {title}
             </span>
           </h1>
 
-          <p className="font-body text-sm text-white/40 tracking-normal">{subtitle}</p>
+          <p className="font-body text-[13px] sm:text-[14px] text-white/30 tracking-tight leading-relaxed">{subtitle}</p>
         </div>
 
         {/* Right */}
