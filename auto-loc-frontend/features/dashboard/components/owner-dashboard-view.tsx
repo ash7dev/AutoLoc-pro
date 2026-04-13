@@ -7,6 +7,8 @@ import { OwnerQuickActions } from "@/features/dashboard/components/owner-quick-a
 import { OwnerTodoCard } from "@/features/dashboard/components/owner-todo-card";
 import { WalletSnapshot } from "@/features/dashboard/components/wallet-snapshot";
 import { OwnerHeader } from "@/features/dashboard/components/owner-header";
+import { OverviewStats } from "@/features/dashboard/components/overview-stats";
+import { MobileQuickActions } from "@/features/dashboard/components/mobile-quick-actions";
 import { MobileRevenueCard } from "@/features/dashboard/components/mobile-revenue-card";
 import { FleetPerformance } from "@/features/dashboard/components/fleet-performance";
 import { useState, useMemo } from "react";

@@ -10,6 +10,8 @@ import {
 } from "@/lib/nestjs/reservations";
 import { fetchMe } from "@/lib/nestjs/auth";
 import { fetchUserReviews, type ReviewsResponse } from "@/lib/nestjs/reviews";
+import { fetchMyVehicles, type Vehicle } from "@/lib/nestjs/vehicles";
+import { fetchWallet, type WalletData } from "@/lib/nestjs/wallet";
 import { OwnerDashboardView } from "@/features/dashboard/components/owner-dashboard-view";
 
 export default async function OwnerDashboardPage() {
