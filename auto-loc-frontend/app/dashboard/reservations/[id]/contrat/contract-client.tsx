@@ -491,15 +491,17 @@ export function ContractClient({
                             {[
                                 { 
                                     role: 'LE LOCATAIRE', 
-                                    name: showPhone ? `${r.locataire.prenom} ${r.locataire.nom}` : 'Locataire' 
+                                    name: `${r.locataire.prenom} ${r.locataire.nom}`,
+                                    initials: `${r.locataire.prenom?.[0] || ''}${r.locataire.nom?.[0] || ''}`,
+                                    date: fmtDate(r.creeLe, { day: '2-digit', month: 'long', year: 'numeric' })
                                 },
                                 { 
                                     role: 'LE PROPRIÉTAIRE', 
-                                    name: showPhone ? (
-                                        r.proprietaire ? `${r.proprietaire.prenom} ${r.proprietaire.nom}` : 'Propriétaire véhicule'
-                                    ) : 'Propriétaire' 
+                                    name: r.proprietaire ? `${r.proprietaire.prenom} ${r.proprietaire.nom}` : 'Propriétaire véhicule',
+                                    initials: r.proprietaire ? `${r.proprietaire.prenom?.[0] || ''}${r.proprietaire.nom?.[0] || ''}` : '',
+                                    date: r.dateConfirmation ? fmtDate(r.dateConfirmation, { day: '2-digit', month: 'long', year: 'numeric' }) : 'En attente'
                                 },
-                            ].map(({ role, name }) => (
+                            ].map(({ role, name, initials, date }) => (
                                 <div key={role} className="rounded-xl border border-slate-200 overflow-hidden">
                                     <div className="h-1 bg-emerald-500 w-full" />
                                     <div className="p-3.5 sm:p-4">
@@ -507,11 +509,11 @@ export function ContractClient({
                                         <p className="text-[12px] sm:text-[13px] font-bold text-slate-800">{name}</p>
                                         <p className="text-[9px] sm:text-[10px] text-slate-400 mt-0.5 mb-3">Lu et approuvé — Bon pour accord</p>
                                         <div className="flex gap-2.5 sm:gap-3">
-                                            <div className="flex-1 border border-dashed border-slate-300 rounded-lg bg-slate-50 h-10 sm:h-12 flex items-end p-2">
-                                                <span className="text-[9px] sm:text-[10px] text-slate-400">Signature</span>
+                                            <div className="flex-1 border border-dashed border-slate-300 rounded-lg bg-slate-50 h-10 sm:h-12 flex items-center justify-center p-2">
+                                                <span className="text-[11px] sm:text-[12px] font-bold text-slate-600">{initials}</span>
                                             </div>
-                                            <div className="w-24 sm:w-28 border border-dashed border-slate-300 rounded-lg bg-slate-50 h-10 sm:h-12 flex items-end p-2">
-                                                <span className="text-[9px] sm:text-[10px] text-slate-400">Date</span>
+                                            <div className="w-24 sm:w-28 border border-dashed border-slate-300 rounded-lg bg-slate-50 h-10 sm:h-12 flex items-center justify-center p-2">
+                                                <span className="text-[10px] sm:text-[11px] font-semibold text-slate-600">{date}</span>
                                             </div>
                                         </div>
                                     </div>

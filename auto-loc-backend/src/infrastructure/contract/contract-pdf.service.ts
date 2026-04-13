@@ -492,18 +492,20 @@ export class ContractPdfService {
             {
                 label: 'LE LOCATAIRE',
                 name: `${data.locataire.prenom} ${data.locataire.nom}`,
+                initials: `${data.locataire.prenom?.[0] || ''}${data.locataire.nom?.[0] || ''}`,
                 signatureDate: data.dateReservation,
                 x: M
             },
             {
                 label: 'LE PROPRIÉTAIRE',
                 name: `${data.proprietaire.prenom} ${data.proprietaire.nom}`,
+                initials: `${data.proprietaire.prenom?.[0] || ''}${data.proprietaire.nom?.[0] || ''}`,
                 signatureDate: data.dateConfirmation,
                 x: M + colW + 16
             },
         ];
 
-        parties.forEach(({ label, name, signatureDate, x }) => {
+        parties.forEach(({ label, name, initials, signatureDate, x }) => {
             // Card background + border
             doc.roundedRect(x, startY, colW, boxH, 6)
                 .fillColor('#FFFFFF').fill();
@@ -533,9 +535,9 @@ export class ContractPdfService {
                 .strokeColor(C.border).lineWidth(0.5)
                 .dash(3, { space: 3 }).stroke();
             doc.undash();
-            // Pre-fill with name
-            doc.fontSize(8).fillColor(C.body).font('Helvetica')
-                .text(name, szX + 6, szY + 8, { width: szW - 12 });
+            // Pre-fill with initials
+            doc.fontSize(10).fillColor(C.body).font('Helvetica-Bold')
+                .text(initials, szX + 6, szY + 12, { width: szW - 12, align: 'center' });
             doc.fontSize(7).fillColor(C.muted).font('Helvetica')
                 .text('Signature', szX + 4, szY + sigZoneH - 11, { width: 50 });
 
