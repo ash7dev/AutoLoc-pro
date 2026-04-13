@@ -362,10 +362,16 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
         VEHICLE_PATHS.documentUploadSignature(vehicle.id, type),
       );
       const { url, publicId } = await uploadDocumentToCloudinary(file, sig);
-      const linkPath = type === "carte-grise"
-        ? VEHICLE_PATHS.linkCarteGrise(vehicle.id)
-        : VEHICLE_PATHS.linkAssurance(vehicle.id);
-      await authFetch(linkPath, { method: "POST", body: { url, publicId } });
+      
+      const body = type === "carte-grise"
+        ? { carteGriseUrl: url, carteGrisePublicId: publicId }
+        : { assuranceDocUrl: url, assuranceDocPublicId: publicId };
+
+      await authFetch(VEHICLE_PATHS.update(vehicle.id), { 
+        method: "PATCH", 
+        body: body as unknown as undefined 
+      });
+
       if (type === "carte-grise") setCarteGriseUrl(url);
       else setAssuranceDocUrl(url);
     } catch (err) {

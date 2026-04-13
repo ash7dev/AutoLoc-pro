@@ -119,7 +119,7 @@ export function WizardProgress({
         </div>
 
         {/* Scrollable dots */}
-        <div className="flex gap-1 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-1">
+        <div className="flex gap-2 overflow-x-auto scrollbar-none snap-x snap-mandatory pb-1 px-1 -mx-1">
           {STEPS.map((step, i) => {
             const num = i + 1;
             const done = num < currentStep;
@@ -133,16 +133,16 @@ export function WizardProgress({
                 onClick={() => done && onStepClick?.(num)}
                 disabled={!done}
                 className={cn(
-                  "flex-shrink-0 snap-center flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-bold border transition-all",
+                  "flex-shrink-0 snap-center flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] sm:text-[11px] font-bold border transition-all whitespace-nowrap",
                   done && "bg-emerald-50 border-emerald-200 text-emerald-700",
                   active && "bg-slate-900 border-slate-900 text-white shadow-md shadow-slate-900/20",
                   !done && !active && "bg-slate-50 border-slate-100 text-slate-400",
                 )}
               >
                 {done ? (
-                  <Check className="w-3 h-3 text-emerald-500" strokeWidth={3} />
+                  <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-500" strokeWidth={3} />
                 ) : (
-                  <Icon className="w-3 h-3" strokeWidth={2} />
+                  <Icon className="w-2.5 h-2.5 sm:w-3 sm:h-3" strokeWidth={2} />
                 )}
                 {step.shortLabel}
               </button>

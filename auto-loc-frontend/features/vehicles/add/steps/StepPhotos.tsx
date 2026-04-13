@@ -131,25 +131,25 @@ export function StepPhotos({ onNext, onBack }: Props) {
       {/* ━━━ Section Card ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
-          <span className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
-            <Images className="w-4 h-4 text-emerald-400" strokeWidth={2} />
+        <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
+          <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
+            <Images className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" strokeWidth={2} />
           </span>
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-bold text-slate-900 tracking-tight">Photos du véhicule</p>
-            <p className="text-[11px] font-medium text-slate-400 mt-0.5">
-              Jusqu&apos;à {MAX_PHOTOS} photos · la première sera l&apos;image principale
+            <p className="text-[13px] sm:text-[14px] font-bold text-slate-900 tracking-tight">Photos du véhicule</p>
+            <p className="text-[10px] sm:text-[11px] font-medium text-slate-400 mt-0.5">
+              Jusqu&apos;à {MAX_PHOTOS} photos
             </p>
           </div>
           {photos.length > 0 && (
-            <span className="text-[11px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
+            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">
               {photos.length}/{MAX_PHOTOS}
             </span>
           )}
         </div>
 
         {/* Body */}
-        <div className="p-5">
+        <div className="p-4 sm:p-5">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {/* Photo tiles */}
             {photos.map((photo, i) => (

@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ExternalLink, Loader2, Upload, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ExternalLink, Loader2, Upload, FileText, CheckCircle2, AlertCircle, Image as ImageIcon, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ModalShell } from '@/features/shared/ModalShell';
 import { useAuthFetch } from '@/features/auth/hooks/use-auth-fetch';
@@ -76,12 +76,15 @@ export function DocumentViewButton({ vehicleId, docType, label = 'Voir' }: Props
       // 2. Upload vers Cloudinary
       const { url, publicId } = await uploadDocumentToCloudinary(file, sig);
       
-      // 3. Attache au véhicule
-      const linkPath = isCarteGrise 
-        ? VEHICLE_PATHS.linkCarteGrise(vehicleId)
-        : VEHICLE_PATHS.linkAssurance(vehicleId);
+      // 3. Attache au véhicule via PATCH général
+      const body = isCarteGrise 
+        ? { carteGriseUrl: url, carteGrisePublicId: publicId }
+        : { assuranceDocUrl: url, assuranceDocPublicId: publicId };
         
-      await authFetch(linkPath, { method: "POST", body: { url, publicId } as unknown as undefined });
+      await authFetch(`/vehicles/${vehicleId}`, { 
+        method: "PATCH", 
+        body: body as unknown as undefined 
+      });
 
       // Succès ! On ferme, on reset, et on demande un refresh (pour MAJ la date "misAJourLe")
       setDocUrl(null); // Force reload next time
@@ -95,7 +98,8 @@ export function DocumentViewButton({ vehicleId, docType, label = 'Voir' }: Props
     }
   }
 
-  const isPdf = docUrl?.toLowerCase().endsWith('.pdf');
+  // Détection robuste du type de fichier (tenant compte des paramètres de requête Cloudinary)
+  const isPdf = docUrl?.toLowerCase().split('?')[0].endsWith('.pdf');
 
   return (
     <>
@@ -154,7 +158,7 @@ export function DocumentViewButton({ vehicleId, docType, label = 'Voir' }: Props
                       {isPdf ? (
                         <FileText className="w-6 h-6 text-slate-600" strokeWidth={2} />
                       ) : (
-                        <img src="/icon-image.svg" alt="Image" className="w-6 h-6" />
+                        <ImageIcon className="w-6 h-6 text-slate-600" strokeWidth={2} />
                       )}
                     </div>
                     <div>
@@ -198,6 +202,16 @@ export function DocumentViewButton({ vehicleId, docType, label = 'Voir' }: Props
                   />
                 )}
               </div>
+              
+              {/* Mobile PDF Warning */}
+              {isPdf && (
+                <div className="sm:hidden -mt-4 p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3">
+                  <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-amber-700 leading-relaxed">
+                    Sur mobile, le PDF peut ne pas s'afficher directement. Utilisez le bouton <strong>"Ouvrir"</strong> ci-dessus pour le visualiser.
+                  </p>
+                </div>
+              )}
 
               {/* Upload section */}
               {uploading ? (
@@ -251,7 +265,45 @@ export function DocumentViewButton({ vehicleId, docType, label = 'Voir' }: Props
                 </div>
               )}
             </div>
-          ) : null}
+          ) : (
+            <div className="space-y-8">
+              {/* État vide élégant */}
+              <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
+                <div className="w-20 h-20 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center mb-6 relative">
+                  <div className="absolute inset-0 bg-emerald-500/5 rounded-2xl animate-pulse" />
+                  <FileText className="w-10 h-10 text-slate-300" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Document manquant</h3>
+                <p className="text-sm text-slate-500 max-w-sm mx-auto mb-8">
+                  Aucun fichier n'a encore été associé à cette section. Veuillez téléverser un document pour continuer.
+                </p>
+                
+                {/* Upload section intégrée directement pour l'état vide */}
+                {uploading ? (
+                  <div className="flex flex-col items-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mb-2" />
+                    <span className="text-sm font-medium text-slate-600">Envoi du document...</span>
+                  </div>
+                ) : (
+                  <Button 
+                    onClick={handleTriggerUpload}
+                    className="bg-emerald-600 hover:bg-emerald-700 h-12 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all"
+                  >
+                    <Upload className="w-4 h-4 mr-2" strokeWidth={2.2} />
+                    Ajouter le document
+                  </Button>
+                )}
+              </div>
+              
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                onChange={handleFileSelected}
+              />
+            </div>
+          )}
         </ModalShell>
       )}
     </>

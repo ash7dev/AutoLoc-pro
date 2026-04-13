@@ -378,16 +378,16 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
         <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
 
           {/* ── Stepper ─────────────────────────────────────────── */}
-          <div data-tour="wizard-progress" className="px-2 sm:px-0">
+          <div data-tour="wizard-progress" className="px-1 sm:px-0">
             <WizardProgress currentStep={currentStep} onStepClick={goToStep} />
           </div>
 
           {/* ── Step title ──────────────────────────────────────── */}
-          <div className="text-center space-y-1">
-            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-500">
+          <div className="text-center space-y-1 px-4">
+            <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-emerald-500">
               Étape {currentStep} sur {STEP_TITLES.length}
             </p>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
               {STEP_TITLES[currentStep - 1]}
             </h2>
           </div>
@@ -397,7 +397,7 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
             data-tour="step-form"
             className="rounded-2xl border border-slate-200 bg-white shadow-sm
               hover:shadow-md transition-shadow duration-300
-              p-5 sm:p-8 max-w-3xl mx-auto"
+              p-4 sm:p-8 max-w-3xl mx-auto"
           >
             {currentStep === 1 && <StepVehicleInfo onNext={goNext} />}
             {currentStep === 2 && <StepPricing onNext={goNext} onBack={goBack} />}
@@ -449,7 +449,7 @@ function PageShell({
       </header>
 
       {/* Content */}
-      <main className="px-4 sm:px-6 py-6 sm:py-10">
+      <main className="px-3 sm:px-6 py-4 sm:py-10">
         {children}
       </main>
     </div>

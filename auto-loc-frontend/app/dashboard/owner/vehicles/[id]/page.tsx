@@ -180,7 +180,7 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
   // Revenus générés (reservations TERMINEE uniquement)
   const revenusGeneres = reservations
     .filter((r: any) => r.statut === 'TERMINEE')
-    .reduce((sum: number, r: any) => sum + Number(r.netProprietaire ?? 0), 0);
+    .reduce((sum: number, r: any) => sum + Number(r.montantProprietaire ?? 0), 0);
 
   // Equipements
   const equipements: string[] = (vehicle.equipements ?? []).map((e: any) =>

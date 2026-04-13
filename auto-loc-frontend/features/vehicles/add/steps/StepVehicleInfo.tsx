@@ -241,7 +241,7 @@ export function StepVehicleInfo({ onNext }: Props) {
         title="Équipements"
         subtitle="Cochez les options disponibles — plus vous en avez, plus votre annonce attire"
       >
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {EQUIPMENTS.map((eq) => {
             const active = equipements.includes(eq.value);
             return (
@@ -250,21 +250,21 @@ export function StepVehicleInfo({ onNext }: Props) {
                 type="button"
                 onClick={() => toggleEquipment(eq.value)}
                 className={cn(
-                  "flex items-center gap-2.5 px-3.5 py-3 rounded-xl border text-left transition-all duration-200",
+                  "flex items-center gap-2 px-2.5 sm:px-3.5 py-2.5 sm:py-3 rounded-xl border text-left transition-all duration-200",
                   active
                     ? "border-emerald-400 bg-emerald-50 shadow-sm shadow-emerald-500/10 ring-1 ring-emerald-400/30"
                     : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
                 )}
               >
                 <eq.Icon
-                  className={cn("w-4 h-4 flex-shrink-0", active ? "text-emerald-500" : "text-slate-400")}
+                  className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0", active ? "text-emerald-500" : "text-slate-400")}
                   strokeWidth={2}
                 />
-                <span className={cn("text-[12px] font-bold leading-tight", active ? "text-emerald-700" : "text-slate-600")}>
+                <span className={cn("text-[11px] sm:text-[12px] font-bold leading-tight", active ? "text-emerald-700" : "text-slate-600")}>
                   {eq.label}
                 </span>
                 {active && (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 ml-auto flex-shrink-0" strokeWidth={2.5} />
+                  <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-500 ml-auto flex-shrink-0" strokeWidth={2.5} />
                 )}
               </button>
             );
@@ -310,17 +310,17 @@ function SectionCard({
   return (
     <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
-        <span className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
-          <Icon className="w-4 h-4 text-emerald-400" strokeWidth={2} />
+      <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
+        <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
+          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" strokeWidth={2} />
         </span>
         <div>
-          <p className="text-[14px] font-bold text-slate-900 tracking-tight">{title}</p>
-          <p className="text-[11px] font-medium text-slate-400 mt-0.5">{subtitle}</p>
+          <p className="text-[13px] sm:text-[14px] font-bold text-slate-900 tracking-tight">{title}</p>
+          <p className="text-[10px] sm:text-[11px] font-medium text-slate-400 mt-0.5">{subtitle}</p>
         </div>
       </div>
       {/* Body */}
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         {children}
       </div>
     </div>

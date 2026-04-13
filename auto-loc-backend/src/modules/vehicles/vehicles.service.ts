@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, StatutVehicule, StatutKyc } from '@prisma/client';
+import { Prisma, StatutVehicule, StatutKyc, RoleProfile } from '@prisma/client';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CloudinaryService } from '../../infrastructure/cloudinary/cloudinary.service';
@@ -298,13 +298,30 @@ export class VehiclesService {
       throw new NotFoundException('Véhicule introuvable');
     }
 
-    // Le propriétaire peut voir son véhicule quel que soit son statut.
-    const utilisateur = await this.prisma.utilisateur.findUnique({
+    // Le propriétaire ou l'admin peut voir les documents via des URLs signées.
+    const profile = await this.prisma.profile.findUnique({
       where: { userId: user.sub },
-      select: { id: true },
+      select: { role: true, utilisateur: { select: { id: true } } },
     });
 
-    // Masque les URLs brutes des documents — seul l'endpoint sécurisé /documents/:type/view y accède.
+    const isOwner = profile?.utilisateur?.id === vehicle.proprietaireId;
+    const isAdmin = profile?.role === RoleProfile.ADMIN;
+
+    if (isOwner || isAdmin) {
+      return {
+        ...vehicle,
+        carteGriseUrl: vehicle.carteGrisePublicId
+          ? this.cloudinary.getSignedDocumentUrl(vehicle.carteGrisePublicId)
+          : vehicle.carteGriseUrl, // Fallback vers l'URL brute si pas de PublicId
+        assuranceDocUrl: vehicle.assuranceDocPublicId
+          ? this.cloudinary.getSignedDocumentUrl(vehicle.assuranceDocPublicId)
+          : vehicle.assuranceDocUrl,
+        hasCarteGrise: !!vehicle.carteGriseUrl,
+        hasAssuranceDoc: !!vehicle.assuranceDocUrl,
+      };
+    }
+
+    // Pour les autres, on masque les URLs sensibles.
     const safeVehicle = {
       ...vehicle,
       carteGriseUrl: undefined,
@@ -314,10 +331,6 @@ export class VehiclesService {
       hasCarteGrise: !!vehicle.carteGriseUrl,
       hasAssuranceDoc: !!vehicle.assuranceDocUrl,
     };
-
-    if (utilisateur?.id === vehicle.proprietaireId) {
-      return safeVehicle;
-    }
 
     if (vehicle.statut !== StatutVehicule.VERIFIE) {
       throw new NotFoundException('Véhicule introuvable');
@@ -432,6 +445,10 @@ export class VehiclesService {
             fraisLivraison: dto.fraisLivraison,
             autoriseHorsDakar: dto.autoriseHorsDakar,
             supplementHorsDakarParJour: dto.supplementHorsDakarParJour,
+            carteGriseUrl: dto.carteGriseUrl,
+            carteGrisePublicId: dto.carteGrisePublicId,
+            assuranceDocUrl: dto.assuranceDocUrl,
+            assuranceDocPublicId: dto.assuranceDocPublicId,
             tarifsProgressifs: dto.tiers?.length
               ? {
                 create: dto.tiers.map((t, i) => ({

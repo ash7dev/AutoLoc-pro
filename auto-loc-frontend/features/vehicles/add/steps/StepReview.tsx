@@ -201,7 +201,7 @@ export function StepReview({ onBack }: Props) {
 
       {/* ━━━ Fichiers ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <ReviewSection icon={FileCheck2} title="Fichiers">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <FileStatus label={`${photos.filter(p => p.status === 'done').length} photo(s)`} ok={photos.some(p => p.status === 'done')} icon={Camera} />
           <FileStatus label="Carte Grise" ok={!!carteGrise} icon={FileCheck2} />
           <FileStatus label="Assurance" ok={!!assurance} icon={Shield} />
@@ -264,13 +264,13 @@ function ReviewSection({ icon: Icon, title, children }: {
 }) {
   return (
     <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
-      <div className="flex items-center gap-3 px-5 py-3.5 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
-        <span className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
-          <Icon className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+      <div className="flex items-center gap-2.5 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
+        <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
+          <Icon className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-emerald-400" strokeWidth={2} />
         </span>
-        <p className="text-[13px] font-bold text-slate-900 tracking-tight">{title}</p>
+        <p className="text-[12px] sm:text-[13px] font-bold text-slate-900 tracking-tight">{title}</p>
       </div>
-      <div className="px-5 py-4 space-y-2.5">{children}</div>
+      <div className="px-4 sm:px-5 py-3 sm:py-4 space-y-2 sm:space-y-2.5">{children}</div>
     </div>
   );
 }
@@ -300,13 +300,13 @@ function FileStatus({ label, ok, icon: Icon }: {
 }) {
   return (
     <div className={cn(
-      "flex items-center gap-2.5 rounded-xl border px-3.5 py-3",
+      "flex items-center gap-2 rounded-xl border px-3 py-2.5 sm:px-3.5 sm:py-3 transition-colors",
       ok
-        ? "border-emerald-200 bg-emerald-50"
-        : "border-red-200 bg-red-50",
+        ? "border-emerald-200 bg-emerald-50/50"
+        : "border-red-100 bg-red-50/50",
     )}>
       <span className={cn(
-        "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0",
+        "w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0",
         ok ? "bg-emerald-100" : "bg-red-100",
       )}>
         {ok
@@ -314,9 +314,9 @@ function FileStatus({ label, ok, icon: Icon }: {
           : <AlertCircle className="w-3.5 h-3.5 text-red-500" strokeWidth={2.5} />
         }
       </span>
-      <div>
-        <p className={cn("text-[11px] font-bold", ok ? "text-emerald-700" : "text-red-600")}>{label}</p>
-        <p className={cn("text-[9px] font-medium", ok ? "text-emerald-500" : "text-red-400")}>
+      <div className="flex-1 min-w-0">
+        <p className={cn("text-[10px] sm:text-[11px] font-bold truncate", ok ? "text-emerald-700" : "text-red-600")}>{label}</p>
+        <p className={cn("text-[8.5px] sm:text-[9px] font-medium", ok ? "text-emerald-500" : "text-red-400")}>
           {ok ? "✓ Prêt" : "Manquant"}
         </p>
       </div>

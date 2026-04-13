@@ -31,20 +31,20 @@ export function StepDocuments({ onNext, onBack }: Props) {
             {/* ━━━ Section Card ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
             <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
-                    <span className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
-                        <FileCheck2 className="w-4 h-4 text-emerald-400" strokeWidth={2} />
+                <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
+                    <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
+                        <FileCheck2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" strokeWidth={2} />
                     </span>
                     <div>
-                        <p className="text-[14px] font-bold text-slate-900 tracking-tight">Documents obligatoires</p>
-                        <p className="text-[11px] font-medium text-slate-400 mt-0.5">
-                            Carte grise et attestation d&apos;assurance requis
+                        <p className="text-[13px] sm:text-[14px] font-bold text-slate-900 tracking-tight">Documents obligatoires</p>
+                        <p className="text-[10px] sm:text-[11px] font-medium text-slate-400 mt-0.5">
+                            Carte grise et assurance requis
                         </p>
                     </div>
                 </div>
 
                 {/* Body */}
-                <div className="p-5">
+                <div className="p-4 sm:p-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <DocumentZone
                             title="Carte Grise"

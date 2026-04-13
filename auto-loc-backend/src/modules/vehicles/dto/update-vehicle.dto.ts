@@ -134,4 +134,22 @@ export class UpdateVehicleDto {
   @Min(0)
   @Type(() => Number)
   fraisLivraison?: number;
+
+  // ── Documents (niveaux de mise à jour) ───────────────────────────
+
+  @IsOptional()
+  @IsString()
+  carteGriseUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  carteGrisePublicId?: string;
+
+  @IsOptional()
+  @IsString()
+  assuranceDocUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  assuranceDocPublicId?: string;
 }
