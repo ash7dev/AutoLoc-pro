@@ -10,7 +10,7 @@ import { useAddVehicleStore, Step2Data } from "../store";
 
 /* ── Shared premium constants ──────────────────────────────────── */
 const INPUT_CLASS =
-  "w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-medium text-slate-900 placeholder-slate-300 outline-none transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15";
+  "w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-base lg:text-[13px] font-medium text-slate-900 placeholder-slate-300 outline-none transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15";
 
 const LABEL_CLASS = "text-[12px] font-bold text-slate-700 uppercase tracking-wide";
 
@@ -125,7 +125,7 @@ export function StepPricing({ onNext, onBack }: Props) {
                     type="number"
                     {...register(`tiers.${i}.joursMin` as const, { required: true, min: 1, valueAsNumber: true })}
                     placeholder="1"
-                    className="w-full h-10 sm:h-9 rounded-lg border border-slate-200 bg-white px-3 text-[13px] sm:text-[12px] font-medium outline-none transition-all focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
+                    className="w-full h-10 sm:h-9 rounded-lg border border-slate-200 bg-white px-3 text-base sm:text-[12px] font-medium outline-none transition-all focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
                   />
                 </div>
 
@@ -136,7 +136,7 @@ export function StepPricing({ onNext, onBack }: Props) {
                     type="number"
                     {...register(`tiers.${i}.joursMax` as const, { min: 1, valueAsNumber: true })}
                     placeholder="∞"
-                    className="w-full h-10 sm:h-9 rounded-lg border border-slate-200 bg-white px-3 text-[13px] sm:text-[12px] font-medium outline-none transition-all focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
+                    className="w-full h-10 sm:h-9 rounded-lg border border-slate-200 bg-white px-3 text-base sm:text-[12px] font-medium outline-none transition-all focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
                   />
                 </div>
 
@@ -148,7 +148,7 @@ export function StepPricing({ onNext, onBack }: Props) {
                       type="number"
                       {...register(`tiers.${i}.prix` as const, { required: true, min: 1, valueAsNumber: true })}
                       placeholder="20 000"
-                      className="w-full h-10 sm:h-9 rounded-lg border border-slate-200 bg-white px-3 pr-14 sm:pr-3 text-[13px] sm:text-[12px] font-medium outline-none transition-all focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
+                      className="w-full h-10 sm:h-9 rounded-lg border border-slate-200 bg-white px-3 pr-14 sm:pr-3 text-base sm:text-[12px] font-medium outline-none transition-all focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
                     />
                     <span className="sm:hidden absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">FCFA</span>
                   </div>

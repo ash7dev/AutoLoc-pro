@@ -9,95 +9,90 @@ import { useOwnerNotifications } from "../hooks/use-owner-notifications";
 import { cn } from "@/lib/utils";
 
 /* ── Notification Bell ───────────────────────────────────────────────── */
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+/* ── Notification Bell ───────────────────────────────────────────────── */
 function NotificationBell() {
   const counts = useOwnerNotifications();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
   const total = counts?.total ?? 0;
 
-  // Close on outside click
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
   return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-white/50 hover:text-white hover:bg-white/[0.08] transition-all"
-      >
-        <Bell className={cn("h-4 w-4 transition-colors", open && "text-white")} />
-        {total > 0 && (
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-400 ring-1 ring-black animate-pulse" />
-        )}
-      </button>
-
-      {open && (
-        <div className="absolute left-0 sm:left-auto sm:right-0 top-11 z-[60] w-80 max-w-[calc(100vw-2rem)] max-h-[400px] rounded-2xl border border-white/10 bg-[#0a0a0a]/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 lg:z-50">
-          {/* Header */}
-          <div className="px-4 py-3 border-b border-white/[0.06]">
-            <p className="text-xs font-semibold text-white/60 uppercase tracking-widest">Notifications</p>
-          </div>
-
-          {total === 0 ? (
-            <div className="px-6 py-12 text-center">
-              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-emerald-500/10">
-                <CheckCircle2 className="h-6 w-6 text-emerald-400" />
-              </div>
-              <p className="text-sm font-medium text-white/60 mb-1">Tout est à jour</p>
-              <p className="text-xs text-white/30">Aucune action requise</p>
-            </div>
-          ) : (
-            <div className="max-h-[340px] overflow-y-auto divide-y divide-white/[0.05]">
-              {counts?.pendingConfirmationsIds.map((id) => (
-                <Link
-                  key={id}
-                  href={`/dashboard/owner/reservations/${id}`}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.04] transition-colors"
-                >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400/15">
-                    <CalendarCheck className="h-4 w-4 text-amber-400" />
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white leading-tight">
-                      Réservation à confirmer
-                    </p>
-                    <p className="text-xs text-white/40 mt-0.5">Paiement reçu — action requise</p>
-                  </div>
-                  <ArrowUpRight className="h-3.5 w-3.5 text-white/30 shrink-0" />
-                </Link>
-              ))}
-              {counts?.pendingLitigesIds.map((id) => (
-                <Link
-                  key={id}
-                  href={`/dashboard/owner/reservations/${id}`}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.04] transition-colors"
-                >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-400/15">
-                    <ShieldAlert className="h-4 w-4 text-red-400" />
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white leading-tight">
-                      Litige en cours
-                    </p>
-                    <p className="text-xs text-white/40 mt-0.5">Intervention requise</p>
-                  </div>
-                  <ArrowUpRight className="h-3.5 w-3.5 text-white/30 shrink-0" />
-                </Link>
-              ))}
-            </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-white/50 hover:text-white hover:bg-white/[0.08] transition-all outline-none"
+        >
+          <Bell className="h-4 w-4" />
+          {total > 0 && (
+            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-400 ring-1 ring-black animate-pulse" />
           )}
+        </button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent 
+        align="end" 
+        sideOffset={12}
+        className="w-80 p-0 rounded-2xl border border-white/10 bg-[#0a0a0a]/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      >
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-white/[0.06]">
+          <p className="text-xs font-semibold text-white/60 uppercase tracking-widest">Notifications</p>
         </div>
-      )}
-    </div>
+
+        {total === 0 ? (
+          <div className="px-6 py-12 text-center">
+            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-emerald-500/10">
+              <CheckCircle2 className="h-6 w-6 text-emerald-400" />
+            </div>
+            <p className="text-sm font-medium text-white/60 mb-1">Tout est à jour</p>
+            <p className="text-xs text-white/30">Aucune action requise</p>
+          </div>
+        ) : (
+          <div className="max-h-[340px] overflow-y-auto divide-y divide-white/[0.05]">
+            {counts?.pendingConfirmationsIds.map((id) => (
+              <Link
+                key={id}
+                href={`/dashboard/owner/reservations/${id}`}
+                className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.04] transition-colors"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400/15">
+                  <CalendarCheck className="h-4 w-4 text-amber-400" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white leading-tight">
+                    Réservation à confirmer
+                  </p>
+                  <p className="text-xs text-white/40 mt-0.5">Paiement reçu — action requise</p>
+                </div>
+                <ArrowUpRight className="h-3.5 w-3.5 text-white/30 shrink-0" />
+              </Link>
+            ))}
+            {counts?.pendingLitigesIds.map((id) => (
+              <Link
+                key={id}
+                href={`/dashboard/owner/reservations/${id}`}
+                className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.04] transition-colors"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-400/15">
+                  <ShieldAlert className="h-4 w-4 text-red-400" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white leading-tight">
+                    Litige en cours
+                  </p>
+                  <p className="text-xs text-white/40 mt-0.5">Intervention requise</p>
+                </div>
+                <ArrowUpRight className="h-3.5 w-3.5 text-white/30 shrink-0" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

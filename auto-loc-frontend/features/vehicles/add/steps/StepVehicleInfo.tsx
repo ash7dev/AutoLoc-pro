@@ -64,10 +64,10 @@ const ZONES_DAKAR = [
 
 /* ── Shared premium input class ─────────────────────────────────── */
 const INPUT_CLASS =
-  "w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-medium text-slate-900 placeholder-slate-300 outline-none transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15";
+  "w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-base lg:text-[13px] font-medium text-slate-900 placeholder-slate-300 outline-none transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15";
 
 const SELECT_CLASS =
-  "w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-[13px] font-medium text-slate-900 outline-none appearance-none cursor-pointer transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15";
+  "w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-base lg:text-[13px] font-medium text-slate-900 outline-none appearance-none cursor-pointer transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15";
 
 const LABEL_CLASS = "text-[12px] font-bold text-slate-700 uppercase tracking-wide";
 

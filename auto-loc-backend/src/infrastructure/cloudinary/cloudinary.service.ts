@@ -117,7 +117,7 @@ export class CloudinaryService implements OnModuleInit {
     return cloudinary.url(publicId, {
       sign_url: true,
       expires_at: expiresAt,
-      resource_type: 'auto',
+      resource_type: 'image',
       secure: true,
     });
   }
