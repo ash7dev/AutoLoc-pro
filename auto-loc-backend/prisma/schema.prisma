@@ -75,6 +75,7 @@ model Utilisateur {
   wallet          Wallet?
   avisEnvoyes     Avis[] @relation("auteur")
   avisRecus       Avis[] @relation("cible")
+  pushSubscriptions PushSubscription[]
 
   @@index([userId])
 }
@@ -619,4 +620,26 @@ model IndisponibiliteVehicule {
   creeLe     DateTime @default(now())
 
   @@index([vehiculeId, dateDebut, dateFin])
+}
+
+// ─── 17. NOTIFICATIONS PUSH ───────────────────────────────────
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  // On lie au userId (sub Supabase) pour la cohérence avec Profile/Utilisateur
+  userId    String
+  utilisateur Utilisateur @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  
+  userAgent String?
+  deviceType String?
+
+  creeLe    DateTime @default(now()) @map("created_at")
+  misAJourLe DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }

@@ -67,6 +67,16 @@ export const metadata: Metadata = {
     shortcut: '/logoAutoLoc.jpg',
     apple: '/logoAutoLoc.jpg',
   },
+  manifest: '/manifest.json',
+  themeColor: '#16a34a',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'AutoLoc',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 const jsonLd = {

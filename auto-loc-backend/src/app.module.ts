@@ -20,6 +20,8 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { RevalidateModule } from './infrastructure/revalidate/revalidate.module';
 import { WalletModule } from './modules/wallet/wallet.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+
 
 // Sentry (optional — active only if SENTRY_DSN is set)
 const SENTRY_DSN = process.env.SENTRY_DSN;
@@ -76,6 +78,7 @@ if (SENTRY_DSN) {
     ReviewsModule,
     RevalidateModule,
     WalletModule,
+    NotificationsModule,
   ],
   providers: [
     // Global rate limiter guard

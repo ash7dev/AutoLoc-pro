@@ -1,0 +1,32 @@
+{
+  "name": "AutoLoc — Location de véhicules au Sénégal",
+  "short_name": "AutoLoc",
+  "description": "Louez un véhicule vérifié au Sénégal en quelques clics. SUV, berlines, pick-ups et utilitaires disponibles à Dakar et partout au Sénégal.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["travel", "business"],
+  "shortcuts": [
+    {
+      "name": "Mes réservations",
+      "url": "/dashboard",
+      "description": "Voir mes réservations en cours",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

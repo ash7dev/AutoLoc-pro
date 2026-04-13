@@ -22,11 +22,13 @@ import {
     Lock,
     Star,
     UserRound,
+    Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { UserProfile } from '@/lib/nestjs/auth';
 import { updateUserProfile } from '@/lib/nestjs/auth';
 import { useSwitchToLocataire } from '@/features/owner/hooks/use-switch-to-locataire';
+import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 
@@ -284,6 +286,85 @@ function CtaRow({
                     <ChevronRight className="w-3 h-3" strokeWidth={2.5} />
                 </Link>
             </div>
+        </div>
+    );
+}
+
+/* ── Notification row ────────────────────────────────────────────── */
+
+function NotificationRow() {
+    const { subscription, subscribe, unsubscribe, isSupported, permission, loading } = usePushNotifications();
+
+    if (!isSupported) {
+        return (
+            <div className="px-4 py-4 sm:px-5 bg-black/[0.01]">
+                <div className="flex items-center gap-3 opacity-50">
+                    <span className="w-8 h-8 rounded-xl bg-black/[0.04] flex items-center justify-center flex-shrink-0">
+                        <Bell className="w-3.5 h-3.5 text-black/40" strokeWidth={2} />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[13.5px] font-bold text-black">Notifications Push</p>
+                        <p className="text-[12px] text-black/40 mt-0.5 font-medium">Non supportées sur ce navigateur.</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const isDenied = permission === 'denied';
+
+    return (
+        <div className="px-4 py-4 sm:px-5">
+            <div className="flex items-center gap-3">
+                <span className={cn(
+                    'w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-300',
+                    subscription ? 'bg-emerald-50' : 'bg-black/[0.04]'
+                )}>
+                    <Bell className={cn('w-3.5 h-3.5 transition-colors duration-300', subscription ? 'text-emerald-500' : 'text-black/40')} strokeWidth={2} />
+                </span>
+                <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-bold text-black">Notifications Push</p>
+                    <p className="text-[12px] text-black/40 mt-0.5 font-medium">
+                        {isDenied
+                            ? "L'accès est bloqué dans votre navigateur."
+                            : subscription
+                                ? 'Activées — vous recevrez des alertes en temps réel.'
+                                : 'Recevez des alertes pour vos réservations.'
+                        }
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    onClick={subscription ? unsubscribe : subscribe}
+                    disabled={loading || isDenied}
+                    className={cn(
+                        'flex-shrink-0 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all duration-200',
+                        subscription
+                            ? 'bg-black text-white hover:bg-black/80 shadow-lg shadow-black/10'
+                            : 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 hover:-translate-y-0.5',
+                        (loading || isDenied) && 'opacity-50 cursor-not-allowed transform-none'
+                    )}
+                >
+                    {loading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                        <>
+                            {subscription ? 'Désactiver' : 'Activer'}
+                            {!subscription && !isDenied && <Sparkles className="w-3 h-3 ml-0.5" />}
+                        </>
+                    )}
+                </button>
+            </div>
+
+            {isDenied && (
+                <div className="mt-3 flex items-start gap-2 p-2.5 rounded-lg bg-red-50/50 border border-red-100">
+                    <ShieldAlert className="w-3.5 h-3.5 text-red-500 mt-0.5 flex-shrink-0" />
+                    <p className="text-[11px] text-red-700 font-medium leading-relaxed">
+                        Les notifications sont désactivées. Pour les activer, vous devez autoriser ce site dans les réglages de votre navigateur.
+                    </p>
+                </div>
+            )}
         </div>
     );
 }
@@ -567,6 +648,11 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                         </span>
                     }
                 />
+            </Section>
+
+            {/* ── Notifications ────────────────────────────────────────── */}
+            <Section title="Préférences" subtitle="Configurez vos moyens de communication.">
+                <NotificationRow />
             </Section>
 
             {/* ── Compte ────────────────────────────────────────────── */}
