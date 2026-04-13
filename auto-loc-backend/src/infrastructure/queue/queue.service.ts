@@ -12,6 +12,8 @@ import {
   RESERVATION_TACIT_CHECKIN_REMINDER_JOB,
   NOTIFICATION_QUEUE_NAME,
   NOTIFICATION_JOB_NAME,
+  VEHICLE_QUEUE_NAME,
+  VEHICLE_ARCHIVE_CLEANUP_JOB,
 } from './queue.config';
 import { getCheckoutAutoCloseDelayMs } from '../../domain/reservation/reservation-checkin.constants';
 
@@ -32,6 +34,8 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     private readonly reservationQueue: Queue,
     @InjectQueue(NOTIFICATION_QUEUE_NAME)
     private readonly notificationQueue: Queue,
+    @InjectQueue(VEHICLE_QUEUE_NAME)
+    private readonly vehicleQueue: Queue,
   ) { }
 
   async onModuleInit(): Promise<void> {
@@ -43,11 +47,36 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       .catch((err: Error) => {
         process.stdout.write(`[Bull] queue connection error: ${err.message}\n`);
       });
+
+    // Schedule daily vehicle archive cleanup job
+    await this.scheduleVehicleArchiveCleanup();
   }
 
   async areQueuesReady(): Promise<void> {
     await this.reservationQueue.isReady();
     await this.notificationQueue.isReady();
+    await this.vehicleQueue.isReady();
+  }
+
+  // Schedule daily vehicle archive cleanup at 2 AM UTC
+  async scheduleVehicleArchiveCleanup(): Promise<void> {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setUTCHours(2, 0, 0, 0);
+
+    const delayMs = tomorrow.getTime() - now.getTime();
+
+    await this.vehicleQueue.add(
+      VEHICLE_ARCHIVE_CLEANUP_JOB,
+      {},
+      {
+        delay: delayMs,
+        repeat: {
+          every: ONE_DAY_MS,
+        },
+      },
+    );
   }
 
   // Annule si paiement non reçu après 15 minutes.

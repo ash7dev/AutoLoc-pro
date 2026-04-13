@@ -136,6 +136,7 @@ model Vehicule {
   totalAvis        Int      @default(0)
   totalLocations   Int      @default(0)
 
+  archiveLe        DateTime?
   creeLe           DateTime @default(now())
   misAJourLe       DateTime @updatedAt
 

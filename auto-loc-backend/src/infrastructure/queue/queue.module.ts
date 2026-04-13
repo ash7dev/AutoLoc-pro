@@ -6,9 +6,11 @@ import {
   getBullModuleOptions,
   RESERVATION_QUEUE_NAME,
   NOTIFICATION_QUEUE_NAME,
+  VEHICLE_QUEUE_NAME,
 } from './queue.config';
 import { ReservationExpiryProcessor } from './jobs/reservation-expiry.job';
 import { NotificationProcessor } from './jobs/notification.processor';
+import { VehicleArchiveCleanupProcessor } from './jobs/vehicle-archive-cleanup.job';
 import { ReservationDomainModule } from '../../domain/reservation/reservation.domain.module';
 
 @Module({
@@ -23,10 +25,11 @@ import { ReservationDomainModule } from '../../domain/reservation/reservation.do
     BullModule.registerQueue(
       { name: RESERVATION_QUEUE_NAME },
       { name: NOTIFICATION_QUEUE_NAME },
+      { name: VEHICLE_QUEUE_NAME },
     ),
     forwardRef(() => ReservationDomainModule),
   ],
-  providers: [QueueService, ReservationExpiryProcessor, NotificationProcessor],
+  providers: [QueueService, ReservationExpiryProcessor, NotificationProcessor, VehicleArchiveCleanupProcessor],
   exports: [QueueService],
 })
 export class QueueModule { }

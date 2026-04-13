@@ -275,7 +275,7 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
             title: `Bienvenue${data.prenom ? `, ${data.prenom}` : ''} !`,
             subtitle: 'Vérifiez votre identité en 2 minutes et accédez à tout.',
             badge: { text: 'Nouveau membre', color: EMERALD, bg: EMERALD_BG },
-            cta: { label: 'Vérifier mon identité →', href: `${FRONTEND_URL}/dashboard/owner/kyc` },
+            cta: { label: 'Vérifier mon identité →', href: `${FRONTEND_URL}/login?next=${encodeURIComponent('/dashboard/owner/kyc')}&role=PROPRIETAIRE` },
             content: [
                 infoCard([
                     { label: 'Étape 1 — Maintenant', value: 'Vérifier votre identité (2 min)', icon: '🪪' },
@@ -685,7 +685,7 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
             title: 'Revenu crédité !',
             subtitle: 'Le check-in est validé. Vos fonds sont disponibles maintenant.',
             badge: { text: 'Wallet crédité', color: EMERALD_DARK, bg: EMERALD_BG },
-            cta: { label: 'Voir mon wallet →', href: `${FRONTEND_URL}/dashboard/owner/wallet` },
+            cta: { label: 'Voir mon wallet →', href: `${FRONTEND_URL}/login?next=${encodeURIComponent('/dashboard/owner/wallet')}&role=PROPRIETAIRE` },
             content: [
                 infoCard([
                     { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },

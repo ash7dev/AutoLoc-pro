@@ -46,6 +46,8 @@ export interface ContractData {
     proprietaire: ContractParty;
     vehicule: ContractVehicle;
     tarifs: ContractPricing;
+    dateReservation?: string;
+    dateConfirmation?: string;
 }
 
 // ── Layout constants ───────────────────────────────────────────────────────────
@@ -487,11 +489,21 @@ export class ContractPdfService {
         const sigZoneTop = 50; // y offset inside the card
 
         const parties = [
-            { label: 'LE LOCATAIRE', name: `${data.locataire.prenom} ${data.locataire.nom}`, x: M },
-            { label: 'LE PROPRIÉTAIRE', name: `${data.proprietaire.prenom} ${data.proprietaire.nom}`, x: M + colW + 16 },
+            {
+                label: 'LE LOCATAIRE',
+                name: `${data.locataire.prenom} ${data.locataire.nom}`,
+                signatureDate: data.dateReservation,
+                x: M
+            },
+            {
+                label: 'LE PROPRIÉTAIRE',
+                name: `${data.proprietaire.prenom} ${data.proprietaire.nom}`,
+                signatureDate: data.dateConfirmation,
+                x: M + colW + 16
+            },
         ];
 
-        parties.forEach(({ label, name, x }) => {
+        parties.forEach(({ label, name, signatureDate, x }) => {
             // Card background + border
             doc.roundedRect(x, startY, colW, boxH, 6)
                 .fillColor('#FFFFFF').fill();
@@ -521,6 +533,9 @@ export class ContractPdfService {
                 .strokeColor(C.border).lineWidth(0.5)
                 .dash(3, { space: 3 }).stroke();
             doc.undash();
+            // Pre-fill with name
+            doc.fontSize(8).fillColor(C.body).font('Helvetica')
+                .text(name, szX + 6, szY + 8, { width: szW - 12 });
             doc.fontSize(7).fillColor(C.muted).font('Helvetica')
                 .text('Signature', szX + 4, szY + sigZoneH - 11, { width: 50 });
 
@@ -533,6 +548,11 @@ export class ContractPdfService {
                 .strokeColor(C.border).lineWidth(0.5)
                 .dash(3, { space: 3 }).stroke();
             doc.undash();
+            // Pre-fill with date if available
+            if (signatureDate) {
+                doc.fontSize(9).fillColor(C.body).font('Helvetica-Bold')
+                    .text(signatureDate, dzX + 6, szY + 10, { width: dzW - 12 });
+            }
             doc.fontSize(7).fillColor(C.muted).font('Helvetica')
                 .text('Date', dzX + 4, szY + sigZoneH - 11, { width: dzW - 8 });
         });

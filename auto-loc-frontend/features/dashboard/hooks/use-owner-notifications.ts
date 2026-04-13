@@ -4,7 +4,9 @@ import { useEffect, useState, useCallback } from 'react';
 
 export interface OwnerNotificationsCount {
     pendingConfirmations: number;
+    pendingConfirmationsIds: string[];
     pendingLitiges: number;
+    pendingLitigesIds: string[];
     total: number;
 }
 

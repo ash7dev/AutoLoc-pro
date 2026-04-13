@@ -39,22 +39,26 @@ function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 z-50 w-72 rounded-2xl border border-white/10 bg-[#111] shadow-2xl shadow-black/50 overflow-hidden">
+        <div className="absolute right-0 top-11 z-[60] w-80 max-w-[calc(100vw-2rem)] max-h-[400px] rounded-2xl border border-white/10 bg-[#0a0a0a]/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 lg:right-0 lg:z-50">
           {/* Header */}
           <div className="px-4 py-3 border-b border-white/[0.06]">
             <p className="text-xs font-semibold text-white/60 uppercase tracking-widest">Notifications</p>
           </div>
 
           {total === 0 ? (
-            <div className="px-4 py-6 text-center">
-              <CheckCircle2 className="h-6 w-6 text-emerald-400/50 mx-auto mb-2" />
-              <p className="text-sm text-white/40">Tout est à jour ✓</p>
+            <div className="px-6 py-12 text-center">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-emerald-500/10">
+                <CheckCircle2 className="h-6 w-6 text-emerald-400" />
+              </div>
+              <p className="text-sm font-medium text-white/60 mb-1">Tout est à jour</p>
+              <p className="text-xs text-white/30">Aucune action requise</p>
             </div>
           ) : (
-            <div className="divide-y divide-white/[0.05]">
-              {(counts?.pendingConfirmations ?? 0) > 0 && (
+            <div className="max-h-[340px] overflow-y-auto divide-y divide-white/[0.05]">
+              {counts?.pendingConfirmationsIds.map((id) => (
                 <Link
-                  href="/dashboard/reservations?statut=PAYEE"
+                  key={id}
+                  href={`/dashboard/owner/reservations/${id}`}
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.04] transition-colors"
                 >
@@ -63,16 +67,17 @@ function NotificationBell() {
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-white leading-tight">
-                      {counts!.pendingConfirmations} réservation{counts!.pendingConfirmations > 1 ? 's' : ''} à confirmer
+                      Réservation à confirmer
                     </p>
                     <p className="text-xs text-white/40 mt-0.5">Paiement reçu — action requise</p>
                   </div>
                   <ArrowUpRight className="h-3.5 w-3.5 text-white/30 shrink-0" />
                 </Link>
-              )}
-              {(counts?.pendingLitiges ?? 0) > 0 && (
+              ))}
+              {counts?.pendingLitigesIds.map((id) => (
                 <Link
-                  href="/dashboard/reservations?statut=LITIGE"
+                  key={id}
+                  href={`/dashboard/owner/reservations/${id}`}
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.04] transition-colors"
                 >
@@ -81,13 +86,13 @@ function NotificationBell() {
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-white leading-tight">
-                      {counts!.pendingLitiges} litige{counts!.pendingLitiges > 1 ? 's' : ''} en cours
+                      Litige en cours
                     </p>
                     <p className="text-xs text-white/40 mt-0.5">Intervention requise</p>
                   </div>
                   <ArrowUpRight className="h-3.5 w-3.5 text-white/30 shrink-0" />
                 </Link>
-              )}
+              ))}
             </div>
           )}
         </div>

@@ -500,33 +500,22 @@ export class VehiclesService {
   /**
    * DELETE /vehicles/:id — Archiver un véhicule (statut → ARCHIVE, pas de suppression).
    * Interdit si une location est EN_COURS.
+   * Les données sont conservées pendant 30 jours avant suppression automatique.
    */
   async archive(vehicleId: string) {
     await this.assertNotActiveRental(vehicleId);
 
-    const photos = await this.prisma.photoVehicule.findMany({
-      where: { vehiculeId: vehicleId },
-      select: { publicId: true },
-    });
-
-    const result = await this.prisma.$transaction(async (tx) => {
-      await tx.photoVehicule.deleteMany({ where: { vehiculeId: vehicleId } });
-      const updated = await tx.vehicule.update({
-        where: { id: vehicleId },
-        data: { statut: StatutVehicule.ARCHIVE },
-        select: { id: true, statut: true },
-      });
-      const publicIds = photos.map((p) => p.publicId).filter(Boolean) as string[];
-      if (publicIds.length > 0) {
-        await Promise.all(
-          publicIds.map((id) => this.cloudinary.deleteByPublicId(id).catch(() => { })),
-        );
-      }
-      return updated;
+    const updated = await this.prisma.vehicule.update({
+      where: { id: vehicleId },
+      data: {
+        statut: StatutVehicule.ARCHIVE,
+        archiveLe: new Date(),
+      },
+      select: { id: true, statut: true, archiveLe: true },
     });
 
     await this.invalidateDetailCache(vehicleId);
-    return result;
+    return updated;
   }
 
   // ── Recherche ────────────────────────────────────────────────────────────────

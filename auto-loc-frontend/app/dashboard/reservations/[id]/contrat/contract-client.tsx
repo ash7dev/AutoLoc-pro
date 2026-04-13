@@ -124,7 +124,7 @@ export function ContractClient({
                                     Locataire
                                 </p>
                                 <p className="text-[12px] sm:text-[13px] font-bold text-slate-800 leading-snug">
-                                    {showPhone ? `${r.locataire.prenom} ${r.locataire.nom}` : 'Locataire'}
+                                    {r.locataire.prenom} {r.locataire.nom}
                                 </p>
                                 {showPhone ? (
                                     r.locataire.telephone && (
@@ -150,9 +150,7 @@ export function ContractClient({
                                     Propriétaire
                                 </p>
                                 <p className="text-[12px] sm:text-[13px] font-bold text-slate-800 leading-snug">
-                                    {showPhone ? (
-                                        r.proprietaire ? `${r.proprietaire.prenom} ${r.proprietaire.nom}` : 'Propriétaire véhicule'
-                                    ) : 'Propriétaire'}
+                                    {r.proprietaire ? `${r.proprietaire.prenom} ${r.proprietaire.nom}` : 'Propriétaire véhicule'}
                                 </p>
                                 {showPhone ? (
                                     r.proprietaire?.telephone && (

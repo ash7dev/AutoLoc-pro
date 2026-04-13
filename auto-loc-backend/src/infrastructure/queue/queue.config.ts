@@ -22,6 +22,9 @@ export const RESERVATION_EXPIRY_JOB_NAME = RESERVATION_PAYMENT_EXPIRY_JOB;
 export const NOTIFICATION_QUEUE_NAME = 'notification-jobs';
 export const NOTIFICATION_JOB_NAME = 'notification-dispatch';
 
+export const VEHICLE_QUEUE_NAME = 'vehicle-jobs';
+export const VEHICLE_ARCHIVE_CLEANUP_JOB = 'vehicle-archive-cleanup';
+
 export function getBullModuleOptions(redisUrl: string): BullModuleOptions {
   const url = redisUrl.trim();
   if (!url) {

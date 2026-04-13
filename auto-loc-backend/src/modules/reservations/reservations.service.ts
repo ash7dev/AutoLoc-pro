@@ -438,25 +438,33 @@ export class ReservationsService {
 
     const [pendingConfirmations, pendingLitiges] = await Promise.all([
       // Réservations payées en attente de confirmation du propriétaire
-      this.prisma.reservation.count({
+      this.prisma.reservation.findMany({
         where: {
           proprietaireId: proprietaire.id,
           statut: StatutReservation.PAYEE,
         },
+        select: { id: true },
+        take: 5,
+        orderBy: { creeLe: 'desc' },
       }),
       // Litiges ouverts sur les réservations du propriétaire
-      this.prisma.litige.count({
+      this.prisma.litige.findMany({
         where: {
           statut: StatutLitige.EN_ATTENTE,
           reservation: { proprietaireId: proprietaire.id },
         },
+        select: { reservationId: true },
+        take: 5,
+        orderBy: { creeLe: 'desc' },
       }),
     ]);
 
     return {
-      pendingConfirmations,
-      pendingLitiges,
-      total: pendingConfirmations + pendingLitiges,
+      pendingConfirmations: pendingConfirmations.length,
+      pendingConfirmationsIds: pendingConfirmations.map(r => r.id),
+      pendingLitiges: pendingLitiges.length,
+      pendingLitigesIds: pendingLitiges.map(l => l.reservationId),
+      total: pendingConfirmations.length + pendingLitiges.length,
     };
   }
 
