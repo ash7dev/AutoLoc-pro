@@ -100,6 +100,10 @@ export class AuthController {
    * Multipart : champ "documentFront" (recto) + champ "documentBack" (verso).
    * Uploadé sur Cloudinary → statutKyc passe à EN_ATTENTE.
    */
+  /**
+   * POST /auth/kyc/submit — Soumet les documents KYC (pièce recto/verso).
+   * @deprecated Utilisez l'upload direct via kyc/upload-signature et kyc/submit-links pour plus de rapidité.
+   */
   @Post('kyc/submit')
   @UseGuards(JwtAuthGuard)
   @UseFilters(MulterExceptionFilter)
@@ -121,8 +125,30 @@ export class AuthController {
   }
 
   /**
+   * GET /auth/kyc/upload-signature — Signature Cloudinary pour upload direct KYC.
+   */
+  @Get('kyc/upload-signature')
+  @UseGuards(JwtAuthGuard)
+  async getKycUploadSignature() {
+    return this.authService.getKycUploadSignature();
+  }
+
+  /**
+   * POST /auth/kyc/submit-links — Valide le KYC avec les liens Cloudinary déjà uploadés.
+   * Beaucoup plus rapide car pas de transfert de gros fichiers vers le serveur métier.
+   */
+  @Post('kyc/submit-links')
+  @UseGuards(JwtAuthGuard)
+  async submitKycLinks(
+    @CurrentUser() user: RequestUser,
+    @Body() body: { documentFrontUrl: string; documentBackUrl: string },
+  ) {
+    return this.authService.submitKycLinks(user, body);
+  }
+
+  /**
    * POST /auth/permis/upload — Upload permis de conduire.
-   * Multipart : champ "file" (image du permis).
+   * @deprecated Utilisez l'upload direct vers Cloudinary + /auth/permis/link.
    */
   @Post('permis/upload')
   @UseGuards(JwtAuthGuard)
@@ -139,5 +165,18 @@ export class AuthController {
   ) {
     if (!file?.buffer) throw new BadRequestException('Le fichier "file" est requis.');
     return this.authService.uploadPermis(user, file.buffer);
+  }
+
+  /**
+   * POST /auth/permis/link — Valide le permis avec un lien Cloudinary déjà uploadé en direct.
+   * Standard pour les mobiles (plus rapide et évite les limites de payload).
+   */
+  @Post('permis/link')
+  @UseGuards(JwtAuthGuard)
+  async linkPermis(
+    @CurrentUser() user: RequestUser,
+    @Body() body: { url: string; publicId: string },
+  ) {
+    return this.authService.linkPermis(user, body);
   }
 }

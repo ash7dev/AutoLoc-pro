@@ -7,6 +7,9 @@ const AUTH_ENDPOINTS = {
   completeProfile: '/auth/complete-profile',
   switchRole: '/auth/switch-role',
   submitKyc: '/auth/kyc/submit',
+  submitKycLinks: '/auth/kyc/submit-links',
+  kycUploadSignature: '/auth/kyc/upload-signature',
+  linkPermis: '/auth/permis/link',
 } as const;
 
 export interface ProfileResponse {
@@ -87,6 +90,30 @@ export async function submitKyc(formData: FormData): Promise<ProfileResponse> {
   });
 }
 
+export async function fetchKycUploadSignature(): Promise<any> {
+  return apiFetch(AUTH_ENDPOINTS.kycUploadSignature);
+}
+
+export async function submitKycLinks(body: {
+  documentFrontUrl: string;
+  documentBackUrl: string;
+}): Promise<ProfileResponse> {
+  return apiFetch<ProfileResponse, any>(AUTH_ENDPOINTS.submitKycLinks, {
+    method: 'POST',
+    body,
+  });
+}
+
+export async function submitPermisLink(body: {
+  url: string;
+  publicId: string;
+}): Promise<{ url: string }> {
+  return apiFetch(AUTH_ENDPOINTS.linkPermis, {
+    method: 'POST',
+    body,
+  });
+}
+
 // ── User Profile ──────────────────────────────────────────────────────────────
 
 export interface UserProfile {
@@ -120,7 +147,7 @@ export async function fetchUserProfile(accessToken?: string): Promise<UserProfil
  */
 export async function updateUserProfile(
   data: Partial<Pick<UserProfile, 'prenom' | 'nom' | 'avatarUrl' | 'dateNaissance'>>,
-): Promise<{ kycReset?: boolean; [key: string]: any }> {
+): Promise<{ kycReset?: boolean;[key: string]: any }> {
   return apiFetch('/users/me/profile', {
     method: 'PATCH',
     body: data,

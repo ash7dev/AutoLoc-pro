@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
+import { fetchPhotosUploadSignature, linkReservationPhoto, type PhotoEtatLieu } from "@/lib/nestjs/reservations";
+import { uploadDocumentToCloudinary } from "@/lib/nestjs/vehicles";
 import { translateError } from "@/lib/utils/api-error-fr";
 
 /* ═════════════════════════════════════════════════════════════════ */
@@ -82,18 +84,21 @@ export function CheckoutModal({ reservationId, open, onClose, dateFin }: Checkou
         setUploading(slot.key);
         setError(null);
         try {
-            const formData = new FormData();
-            formData.append("file", file);
-            const res = await fetch(
-                `/api/nest/reservations/${reservationId}/photos-etat?type=CHECKOUT&categorie=${slot.categorie}`,
-                { method: "POST", body: formData, credentials: "include" }
-            );
-            if (!res.ok) {
-                const data = await res.json().catch(() => ({}));
-                throw new Error(data.message ?? "Upload échoué");
-            }
-            const photo = await res.json();
-            setPhotos(prev => ({ ...prev, [slot.key]: photo }));
+            // 1. Signature
+            const sig = await fetchPhotosUploadSignature();
+
+            // 2. Upload direct (compression gérée en interne par vehicles.ts)
+            const uploadRes = await uploadDocumentToCloudinary(file, sig);
+
+            // 3. Enregistrer le lien dans la DB
+            const photo = await linkReservationPhoto(reservationId, {
+                url: uploadRes.url,
+                publicId: uploadRes.publicId,
+                type: 'CHECKOUT',
+                categorie: slot.categorie,
+            });
+
+            setPhotos(prev => ({ ...prev, [slot.key]: photo as any }));
         } catch (err) {
             setError(translateError(err));
         } finally {

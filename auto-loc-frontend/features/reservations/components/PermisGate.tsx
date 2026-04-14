@@ -2,7 +2,8 @@
 
 import { useState, useRef } from "react";
 import { FileUp, Loader2, CheckCircle2, ShieldCheck, FileCheck2, X, ArrowRight } from "lucide-react";
-import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
+import { fetchKycUploadSignature, submitPermisLink } from "@/lib/nestjs/auth";
+import { uploadDocumentToCloudinary } from "@/lib/nestjs/vehicles";
 import { cn } from "@/lib/utils";
 
 interface PermisGateProps {
@@ -11,13 +12,45 @@ interface PermisGateProps {
 }
 
 export function PermisGate({ onSubmitted, onProceed }: PermisGateProps) {
-    const { authFetch } = useAuthFetch();
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [done, setDone] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [dragging, setDragging] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const compressImage = async (file: File): Promise<File> => {
+        if (file.size < 1024 * 1024) return file;
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const MAX_SIZE = 1600;
+                if (width > height) {
+                    if (width > MAX_SIZE) {
+                        height *= MAX_SIZE / width;
+                        width = MAX_SIZE;
+                    }
+                } else {
+                    if (height > MAX_SIZE) {
+                        width *= MAX_SIZE / height;
+                        height = MAX_SIZE;
+                    }
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                    if (blob) resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                    else resolve(file);
+                }, 'image/jpeg', 0.8);
+            };
+            img.src = URL.createObjectURL(file);
+        });
+    };
 
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
@@ -42,12 +75,21 @@ export function PermisGate({ onSubmitted, onProceed }: PermisGateProps) {
         setLoading(true);
         setError(null);
         try {
-            const formData = new FormData();
-            formData.append("file", file);
-            await authFetch("/auth/permis/upload", {
-                method: "POST",
-                body: formData as unknown as Record<string, unknown>,
+            // 1. Compression
+            const compressed = await compressImage(file);
+
+            // 2. Signature
+            const sig = await fetchKycUploadSignature();
+
+            // 3. Upload DIRECT Cloudinary
+            const res = await uploadDocumentToCloudinary(compressed, sig);
+
+            // 4. Link sur le serveur métier
+            await submitPermisLink({
+                url: res.url,
+                publicId: res.publicId,
             });
+
             setDone(true);
             setTimeout(onSubmitted, 1200);
         } catch (err) {

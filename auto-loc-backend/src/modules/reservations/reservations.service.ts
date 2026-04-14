@@ -364,6 +364,8 @@ export class ReservationsService {
 
   // ── POST /reservations/:id/photos-etat ──────────────────────────────────────
 
+  // ── POST /reservations/:id/photos-etat ──────────────────────────────────────
+  // Ancienne méthode multipart (à déprécier au profit de linkPhotoEtatLieu)
   async uploadPhotoEtatLieu(
     user: RequestUser,
     reservationId: string,
@@ -412,6 +414,43 @@ export class ReservationsService {
       type,
     );
 
+    return this.applyPhotoEtatLieuRecord(reservationId, type, upload.url, upload.publicId, categorie);
+  }
+
+  async getEtatLieuUploadSignature() {
+    return this.cloudinaryService.getUploadSignature('reservation-photos');
+  }
+
+  async linkPhotoEtatLieu(
+    user: RequestUser,
+    reservationId: string,
+    body: { url: string; publicId: string; type: 'CHECKIN' | 'CHECKOUT'; categorie?: string },
+  ) {
+    const utilisateur = await this.prisma.utilisateur.findUnique({
+      where: { userId: user.sub },
+      select: { id: true },
+    });
+    if (!utilisateur) throw new ForbiddenException('Profil incomplet');
+
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: reservationId },
+      select: { id: true, locataireId: true, proprietaireId: true, statut: true },
+    });
+    if (!reservation) throw new NotFoundException('Réservation introuvable');
+
+    const isParty = reservation.locataireId === utilisateur.id || reservation.proprietaireId === utilisateur.id;
+    if (!isParty) throw new ForbiddenException('Accès refusé');
+
+    return this.applyPhotoEtatLieuRecord(reservationId, body.type, body.url, body.publicId, body.categorie);
+  }
+
+  private async applyPhotoEtatLieuRecord(
+    reservationId: string,
+    type: 'CHECKIN' | 'CHECKOUT',
+    url: string,
+    publicId: string,
+    categorie?: string,
+  ) {
     // Validate categorie enum
     const validCategories = Object.values(CategoriePhoto);
     const cat = categorie && validCategories.includes(categorie as CategoriePhoto)
@@ -424,12 +463,12 @@ export class ReservationsService {
     });
 
     // Create DB record
-    const photo = await this.prisma.photoEtatLieu.create({
+    return this.prisma.photoEtatLieu.create({
       data: {
         reservationId,
         type: type as TypeEtatLieu,
-        url: upload.url,
-        publicId: upload.publicId,
+        url,
+        publicId,
         categorie: cat,
         position: count,
       },
@@ -442,8 +481,6 @@ export class ReservationsService {
         creeLe: true,
       },
     });
-
-    return photo;
   }
 
   // ── GET /reservations/owner/notifications ────────────────────────────────────

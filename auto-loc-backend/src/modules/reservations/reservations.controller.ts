@@ -164,9 +164,8 @@ export class ReservationsController {
   }
 
   /**
-   * POST /reservations/:id/photos-etat
-   * Upload une photo d'état des lieux (check-in ou check-out).
    * Query param: ?type=CHECKIN|CHECKOUT&categorie=AVANT|ARRIERE|...
+   * @deprecated Utilisez l'upload direct vers Cloudinary + /reservations/:id/photos-etat/link.
    */
   @Post(':id/photos-etat')
   @UseFilters(MulterExceptionFilter)
@@ -190,6 +189,35 @@ export class ReservationsController {
       (type?.toUpperCase() ?? 'CHECKIN') as 'CHECKIN' | 'CHECKOUT',
       categorie?.toUpperCase(),
     );
+  }
+
+  /**
+   * GET /reservations/photos-etat/upload-signature
+   * Signature Cloudinary pour upload direct des photos d'état des lieux.
+   */
+  @Get('photos-etat/upload-signature')
+  @HttpCode(HttpStatus.OK)
+  async getPhotosSignature() {
+    return this.reservationsService.getEtatLieuUploadSignature();
+  }
+
+  /**
+   * POST /reservations/:id/photos-etat/link
+   * Enregistre une photo d'état des lieux déjà uploadée sur Cloudinary.
+   */
+  @Post(':id/photos-etat/link')
+  @HttpCode(HttpStatus.CREATED)
+  async linkPhotoEtatLieu(
+    @Req() req: Request & { user?: RequestUser },
+    @Param('id', ParseUUIDPipe) reservationId: string,
+    @Body() body: { url: string; publicId: string; type: string; categorie?: string },
+  ) {
+    const user = req.user!;
+    return this.reservationsService.linkPhotoEtatLieu(user, reservationId, {
+      ...body,
+      type: (body.type?.toUpperCase() ?? 'CHECKIN') as 'CHECKIN' | 'CHECKOUT',
+      categorie: body.categorie?.toUpperCase(),
+    });
   }
 
   /**

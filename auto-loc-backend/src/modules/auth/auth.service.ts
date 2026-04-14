@@ -293,12 +293,34 @@ export class AuthService {
       this.cloudinary.uploadKycDocument(documentBackBuffer),
     ]);
 
+    return this.applyKycUpdate(user, frontResult.url, backResult.url);
+  }
+
+  async submitKycLinks(
+    user: RequestUser,
+    body: { documentFrontUrl: string; documentBackUrl: string },
+  ): Promise<ProfileResponse> {
+    if (!user.sub) throw new BadRequestException('Utilisateur invalide');
+    await this.ensureUtilisateurExists(user.sub);
+
+    if (!body.documentFrontUrl || !body.documentBackUrl) {
+      throw new BadRequestException('Les URLs des documents sont requises');
+    }
+
+    return this.applyKycUpdate(user, body.documentFrontUrl, body.documentBackUrl);
+  }
+
+  private async applyKycUpdate(
+    user: RequestUser,
+    frontUrl: string,
+    backUrl: string,
+  ): Promise<ProfileResponse> {
     const updated = await this.prisma.utilisateur.update({
       where: { userId: user.sub },
       data: {
         statutKyc: StatutKyc.EN_ATTENTE,
-        kycDocumentUrl: frontResult.url,
-        kycSelfieUrl: backResult.url,
+        kycDocumentUrl: frontUrl,
+        kycSelfieUrl: backUrl,
         kycRejectionReason: null,
       },
     });
@@ -320,6 +342,10 @@ export class AuthService {
       phoneVerified: updated.phoneVerified,
       kycStatus: updated.statutKyc as ProfileResponse['kycStatus'],
     });
+  }
+
+  async getKycUploadSignature() {
+    return this.cloudinary.getUploadSignature('kyc-documents');
   }
 
   async uploadPermis(
@@ -346,12 +372,43 @@ export class AuthService {
 
     const upload = await this.cloudinary.uploadPermisDocument(fileBuffer, user.sub);
 
-    await this.prisma.utilisateur.update({
+    return this.applyPermisUpdate(user.sub, upload.url, upload.publicId);
+  }
+
+  async linkPermis(
+    user: RequestUser,
+    body: { url: string; publicId: string },
+  ): Promise<{ url: string }> {
+    if (!user.sub) throw new BadRequestException('Utilisateur invalide');
+    await this.ensureUtilisateurExists(user.sub);
+
+    if (!body.url || !body.publicId) {
+      throw new BadRequestException('URL et publicId requis');
+    }
+
+    // Delete old permis if exists
+    const existing = await this.prisma.utilisateur.findUnique({
       where: { userId: user.sub },
-      data: { permisUrl: upload.url, permisPublicId: upload.publicId },
+      select: { permisPublicId: true },
+    });
+    if (existing?.permisPublicId && existing.permisPublicId !== body.publicId) {
+      await this.cloudinary.deleteByPublicId(existing.permisPublicId).catch(() => { });
+    }
+
+    return this.applyPermisUpdate(user.sub, body.url, body.publicId);
+  }
+
+  private async applyPermisUpdate(
+    userId: string,
+    url: string,
+    publicId: string,
+  ): Promise<{ url: string }> {
+    await this.prisma.utilisateur.update({
+      where: { userId },
+      data: { permisUrl: url, permisPublicId: publicId },
     });
 
-    return { url: upload.url };
+    return { url };
   }
 
   /**

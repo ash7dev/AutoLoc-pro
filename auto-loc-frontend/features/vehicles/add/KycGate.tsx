@@ -7,6 +7,9 @@ import {
 } from "lucide-react";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import { cn } from "@/lib/utils";
+import { fetchKycUploadSignature, submitKycLinks } from "@/lib/nestjs/auth";
+import { uploadDocumentToCloudinary } from "@/lib/nestjs/vehicles";
+import { toast } from "sonner";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -65,16 +68,29 @@ export function KycGate({
     setSubmitting(true);
     setError(null);
     try {
-      const form = new FormData();
-      form.append("documentFront", frontFile);
-      form.append("documentBack", backFile);
-      await authFetch("/auth/kyc/submit", { method: "POST", body: form });
+      // 1. Récupérer la signature d'upload
+      const sig = await fetchKycUploadSignature();
+
+      // 2. Upload des deux faces en parallèle (la compression est gérée par uploadDocumentToCloudinary)
+      const [frontRes, backRes] = await Promise.all([
+        uploadDocumentToCloudinary(frontFile, sig),
+        uploadDocumentToCloudinary(backFile, sig)
+      ]);
+
+      // 3. Soumettre les liens au backend
+      await submitKycLinks({
+        documentFrontUrl: frontRes.url,
+        documentBackUrl: backRes.url
+      });
+
       clearSubStep();
       setSubmitted(true);
       setStatus("EN_ATTENTE");
+      toast.success("Documents envoyés avec succès");
       onSubmitted?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Une erreur est survenue. Réessayez.");
+      setError(e instanceof Error ? e.message : "Une erreur est survenue lors de l'envoi. Réessayez.");
+      toast.error("Échec de l'envoi des documents");
     } finally {
       setSubmitting(false);
     }

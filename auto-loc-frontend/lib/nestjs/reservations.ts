@@ -282,3 +282,19 @@ export async function declareDispute(
         { method: 'POST', body: dto },
     );
 }
+
+// ── Photos État des Lieux ──────────────────────────────────────────────────────
+
+export async function fetchPhotosUploadSignature(): Promise<any> {
+    return apiFetch('/reservations/photos-etat/upload-signature');
+}
+
+export async function linkReservationPhoto(
+    reservationId: string,
+    body: { url: string; publicId: string; type: 'CHECKIN' | 'CHECKOUT'; categorie?: string },
+): Promise<PhotoEtatLieu> {
+    return apiFetch<PhotoEtatLieu, any>(`/reservations/${reservationId}/photos-etat/link`, {
+        method: 'POST',
+        body,
+    });
+}

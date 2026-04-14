@@ -2,8 +2,9 @@
 
 import { useMemo, useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { submitKyc, type ProfileResponse } from "@/lib/nestjs/auth";
+import { submitKycLinks, fetchKycUploadSignature, type ProfileResponse } from "@/lib/nestjs/auth";
 import { ApiError } from "@/lib/nestjs/api-client";
+import { uploadDocumentToCloudinary } from "@/lib/nestjs/vehicles";
 import { cn } from "@/lib/utils";
 import { 
   ShieldCheck, 
@@ -135,10 +136,25 @@ export function KycSubmitForm({
         documentBackSlot.file ? compressImage(documentBackSlot.file) : null,
       ]);
 
-      if (compressedFront) formData.append("documentFront", compressedFront);
-      if (compressedBack) formData.append("documentBack", compressedBack);
+      // 1. Obtenir la signature Cloudinary
+      const sig = await fetchKycUploadSignature();
 
-      const profile = await submitKyc(formData);
+      // 2. Upload DIRECT vers Cloudinary (beaucoup plus rapide !)
+      const [frontResult, backResult] = await Promise.all([
+        compressedFront ? uploadDocumentToCloudinary(compressedFront, sig) : Promise.resolve(null),
+        compressedBack ? uploadDocumentToCloudinary(compressedBack, sig) : Promise.resolve(null),
+      ]);
+
+      if (!frontResult || !backResult) {
+        throw new Error("Échec de l'upload des images");
+      }
+
+      // 3. Envoyer uniquement les liens au serveur métier
+      const profile = await submitKycLinks({
+        documentFrontUrl: frontResult.url,
+        documentBackUrl: backResult.url,
+      });
+
       setStatus(profile.kycStatus);
       setSubmitted(true);
     } catch (err: any) {

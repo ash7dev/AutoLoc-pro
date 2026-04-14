@@ -9,7 +9,6 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { QueueService } from '../../../infrastructure/queue/queue.service';
 import { RequestUser } from '../../../common/types/auth.types';
 import { ReservationStateMachine } from '../reservation.state-machine';
-import { ContractGenerationService } from '../contract-generation.service';
 import { BusinessRuleException } from '../../../common/exceptions/business-rule.exception';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -28,7 +27,6 @@ export class ConfirmReservationUseCase {
     constructor(
         private readonly prisma: PrismaService,
         private readonly queue: QueueService,
-        private readonly contractGeneration: ContractGenerationService,
     ) { }
 
     async execute(
@@ -139,10 +137,11 @@ export class ConfirmReservationUseCase {
             .catch(() => { });
 
         // 7. Regenerate contract PDF with ACTIF status (EN_COURS → ACTIF)
-        await this.contractGeneration
-            .generateAndStore(reservationId, { statutContrat: 'ACTIF' })
+        // DÉLÉGUÉ À LA QUEUE pour rendre la réponse instantanée (Playwright + Cloudinary = LENT)
+        await this.queue
+            .scheduleContractGeneration(reservationId, { statutContrat: 'ACTIF' })
             .catch((err) => {
-                this.logger.warn(`Contract regeneration failed for ${reservationId}: ${err.message}`);
+                this.logger.warn(`Failed to schedule contract regeneration for ${reservationId}: ${err.message}`);
             });
 
         return { reservationId: updated.id, statut: updated.statut };

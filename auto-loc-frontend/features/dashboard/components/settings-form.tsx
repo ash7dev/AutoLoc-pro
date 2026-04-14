@@ -711,21 +711,21 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                     >
                         <X className="w-4 h-4 text-white/50" />
                     </button>
-                    
+
                     <div className="relative pt-10 pb-8 px-7">
                         <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-                        
+
                         <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-5">
                             <ShieldAlert className="w-6 h-6 text-amber-500" />
                         </div>
-                        
+
                         <h3 className="text-[18px] font-black leading-tight text-white mb-2 tracking-tight">
                             Vérification requise
                         </h3>
                         <p className="text-[13px] font-medium text-white/60 leading-relaxed mb-6">
                             Pour des raisons de sécurité, suite à la modification de votre identité, vous devez soumettre à nouveau vos documents pour confirmer ces changements.
                         </p>
-                        
+
                         <div className="space-y-2">
                             <button
                                 type="button"

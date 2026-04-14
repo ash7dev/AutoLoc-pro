@@ -12,10 +12,12 @@ import {
   RESERVATION_AUTOCLOSE_JOB,
   RESERVATION_POST_CHECKOUT_JOB,
   RESERVATION_TACIT_CHECKIN_REMINDER_JOB,
+  RESERVATION_CONTRACT_GENERATION_JOB,
 } from '../queue.config';
 import { StatutReservation, StatutPaiement } from '@prisma/client';
 import { QueueService } from '../queue.service';
 import { isPastCheckoutInspectionWindow } from '../../../domain/reservation/reservation-checkin.constants';
+import { ContractGenerationService } from '../../../domain/reservation/contract-generation.service';
 
 const DEFAULT_COUNTRY_CODE = '+221';
 const SYSTEM_SIGNATURE_REMINDER = 'SYSTEM_SIGNATURE_REMINDER';
@@ -30,7 +32,20 @@ export class ReservationExpiryProcessor {
     private readonly notification: NotificationService,
     private readonly expireUseCase: ExpireReservationUseCase,
     private readonly queue: QueueService,
+    private readonly contractGeneration: ContractGenerationService,
   ) { }
+
+  @Process(RESERVATION_CONTRACT_GENERATION_JOB)
+  async handleContractGeneration(
+    job: Job<{ reservationId: string, options: any }>,
+  ): Promise<void> {
+    try {
+      await this.contractGeneration.generateAndStore(job.data.reservationId, job.data.options);
+    } catch (err) {
+      console.error(`[Queue] Contract generation failed for ${job.data.reservationId}:`, err);
+      throw err; // Permet à Bull de réessayer selon la config
+    }
+  }
 
   @Process(RESERVATION_PAYMENT_EXPIRY_JOB)
   async handlePaymentExpiry(

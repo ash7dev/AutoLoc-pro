@@ -83,45 +83,17 @@ export function StepReview({ onBack }: Props) {
   };
 
   // ── Helper : upload document avec retry ─────────────────────────────────────────────
-  async function compressImage(file: File): Promise<File> {
-    if (file.size < 500_000) return file; // < 500KB = pas de compression
-
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
-      const img = new Image();
-
-      img.onload = () => {
-        canvas.width = img.width * 0.8; // -20% taille
-        canvas.height = img.height * 0.8;
-        ctx.drawImage(img, 0, 0);
-
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const optimizedFile = new File([blob], file.name, { type: 'image/jpeg' });
-            resolve(optimizedFile);
-          } else {
-            resolve(file);
-          }
-        }, 'image/jpeg', 0.8);
-      };
-      img.src = URL.createObjectURL(file);
-    });
-  }
-
   async function uploadDocumentToCloudinaryWithRetry(file: File, docType: 'carte-grise' | 'assurance'): Promise<{ url: string; publicId: string }> {
     const MAX_RETRIES = 3;
     let lastError: Error | null = null;
-
-    // Compresser l'image si c'est une image
-    const optimizedFile = file.type.startsWith('image/') ? await compressImage(file) : file;
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         const sig = await authFetch<{ signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string }>(
           VEHICLE_PATHS.uploadSignature,
         );
-        return await uploadDocumentToCloudinary(optimizedFile, sig);
+        // uploadDocumentToCloudinary gère maintenant la compression client-side en interne
+        return await uploadDocumentToCloudinary(file, sig);
       } catch (err) {
         lastError = err instanceof Error ? err : new Error('Upload failed');
         if (attempt === MAX_RETRIES) {

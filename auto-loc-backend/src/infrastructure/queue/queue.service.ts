@@ -10,6 +10,7 @@ import {
   RESERVATION_AUTOCLOSE_JOB,
   RESERVATION_POST_CHECKOUT_JOB,
   RESERVATION_TACIT_CHECKIN_REMINDER_JOB,
+  RESERVATION_CONTRACT_GENERATION_JOB,
   NOTIFICATION_QUEUE_NAME,
   NOTIFICATION_JOB_NAME,
   VEHICLE_QUEUE_NAME,
@@ -178,6 +179,18 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     const job = await this.reservationQueue.add(
       RESERVATION_POST_CHECKOUT_JOB,
       { reservationId },
+    );
+    return String(job.id);
+  }
+
+  async scheduleContractGeneration(
+    reservationId: string,
+    options: { statutContrat: 'ACTIF' | 'ANNULE' | 'TERMINE' | 'EN_COURS' }
+  ): Promise<string> {
+    const job = await this.reservationQueue.add(
+      RESERVATION_CONTRACT_GENERATION_JOB,
+      { reservationId, options },
+      { priority: 1 } // Haute priorité car l'utilisateur attend de voir son contrat mis à jour
     );
     return String(job.id);
   }
