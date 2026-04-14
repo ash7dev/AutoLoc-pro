@@ -173,8 +173,9 @@ export class ReservationsService {
   async confirm(
     user: RequestUser,
     reservationId: string,
+    body: { heureDebut: string }
   ): Promise<ConfirmReservationResult> {
-    return this.confirmUseCase.execute(user, reservationId);
+    return this.confirmUseCase.execute(user, reservationId, body);
   }
 
   // ── PATCH /reservations/:id/confirm-payment ───────────────────────────────

@@ -327,9 +327,7 @@ export class ContractPdfService {
         const tableY = doc.y;
         const rows: Array<{ label: string; value: string; bold?: boolean; accent?: boolean; bg?: string; large?: boolean }> = [
             { label: `Prix journalier (${Number(t.prixParJour).toLocaleString('fr-FR')} FCFA) × ${t.nbJours} jour${t.nbJours > 1 ? 's' : ''}`, value: `${Number(t.totalBase).toLocaleString('fr-FR')} FCFA` },
-            { label: 'Frais de service AutoLoc (15 %)', value: `${Number(t.commission).toLocaleString('fr-FR')} FCFA` },
-            { label: 'Total réglé par le locataire', value: `${Number(t.totalLocataire).toLocaleString('fr-FR')} FCFA`, bold: true, bg: C.surface, large: true },
-            { label: 'Revenu net du propriétaire', value: `${Number(t.netProprietaire).toLocaleString('fr-FR')} FCFA`, bold: true, accent: true, bg: C.emeraldBg, large: true },
+            { label: 'Total réglé par le locataire', value: `${Number(t.totalLocataire).toLocaleString('fr-FR')} FCFA`, bold: true, accent: true, bg: C.emeraldBg, large: true },
         ];
 
         rows.forEach((row, i) => {
@@ -443,6 +441,12 @@ export class ContractPdfService {
                 items: [
                     'En cas d\'accident, de vol ou de dommages survenus pendant la location, le locataire informe immédiatement le propriétaire et AutoLoc, et remplit un constat amiable.',
                     'Le locataire est tenu responsable des dommages causés au véhicule, sous réserve des franchises d\'assurance applicables. Tout litige est soumis à la médiation d\'AutoLoc avant toute action judiciaire. Le présent contrat est régi par le droit sénégalais.',
+                ],
+            },
+            {
+                label: 'Article 5 — Frais de service',
+                items: [
+                    'Les tarifs affichés sur la plateforme AutoLoc incluent les frais de service destinés à couvrir le fonctionnement de la plateforme, la sécurisation des transactions, l\'assurance de médiation et les obligations fiscales applicables.',
                 ],
             },
         ];

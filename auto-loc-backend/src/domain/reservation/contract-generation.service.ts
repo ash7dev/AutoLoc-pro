@@ -138,8 +138,8 @@ export class ContractGenerationService {
                 zoneConduite: reservation.vehicule.zoneConduite ?? null,
             },
             tarifs: {
-                dateDebut: debut.toLocaleDateString('fr-FR'),
-                dateFin: fin.toLocaleDateString('fr-FR'),
+                dateDebut: debut.toLocaleString('fr-FR', { day: '2-digit', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' à'),
+                dateFin: fin.toLocaleString('fr-FR', { day: '2-digit', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' à'),
                 nbJours,
                 prixParJour: reservation.prixParJour.toString(),
                 totalBase: reservation.totalBase.toString(),

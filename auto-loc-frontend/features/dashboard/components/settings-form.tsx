@@ -2,6 +2,8 @@
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
     User,
     Loader2,
@@ -389,7 +391,9 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
         profile.dateNaissance ? profile.dateNaissance.split('T')[0] : '',
     );
     const [globalError, setGlobalError] = useState('');
+    const [showKycAlert, setShowKycAlert] = useState(false);
     const { switchToLocataire, loading: switching } = useSwitchToLocataire();
+    const router = useRouter();
 
     const { percent, missing } = completionPercent({
         ...profile,
@@ -410,24 +414,27 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
     async function savePrenom(v: string) {
         setGlobalError('');
         try {
-            await updateUserProfile({ prenom: v, nom, dateNaissance: dateNaissance || undefined });
+            const res = await updateUserProfile({ prenom: v, nom, dateNaissance: dateNaissance || undefined });
             setPrenom(v);
+            if (res.kycReset) setShowKycAlert(true);
         } catch { setGlobalError('Erreur lors de la mise à jour du prénom'); }
     }
 
     async function saveNom(v: string) {
         setGlobalError('');
         try {
-            await updateUserProfile({ prenom, nom: v, dateNaissance: dateNaissance || undefined });
+            const res = await updateUserProfile({ prenom, nom: v, dateNaissance: dateNaissance || undefined });
             setNom(v);
+            if (res.kycReset) setShowKycAlert(true);
         } catch { setGlobalError('Erreur lors de la mise à jour du nom'); }
     }
 
     async function saveDateNaissance(v: string) {
         setGlobalError('');
         try {
-            await updateUserProfile({ prenom, nom, dateNaissance: v || undefined });
+            const res = await updateUserProfile({ prenom, nom, dateNaissance: v || undefined });
             setDateNaissance(v);
+            if (res.kycReset) setShowKycAlert(true);
         } catch { setGlobalError('Erreur lors de la mise à jour de la date'); }
     }
 
@@ -691,6 +698,54 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                     icon={Calendar}
                 />
             </Section>
+
+            {/* KYC Reset Alert */}
+            <Dialog open={showKycAlert} onOpenChange={setShowKycAlert}>
+                <DialogContent
+                    className="p-0 overflow-hidden bg-slate-950 border border-white/8 max-w-sm w-full rounded-3xl shadow-2xl shadow-black/80"
+                >
+                    <button
+                        type="button"
+                        onClick={() => setShowKycAlert(false)}
+                        className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
+                    >
+                        <X className="w-4 h-4 text-white/50" />
+                    </button>
+                    
+                    <div className="relative pt-10 pb-8 px-7">
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                        
+                        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-5">
+                            <ShieldAlert className="w-6 h-6 text-amber-500" />
+                        </div>
+                        
+                        <h3 className="text-[18px] font-black leading-tight text-white mb-2 tracking-tight">
+                            Vérification requise
+                        </h3>
+                        <p className="text-[13px] font-medium text-white/60 leading-relaxed mb-6">
+                            Pour des raisons de sécurité, suite à la modification de votre identité, vous devez soumettre à nouveau vos documents pour confirmer ces changements.
+                        </p>
+                        
+                        <div className="space-y-2">
+                            <button
+                                type="button"
+                                onClick={() => router.push('/dashboard/owner/kyc')}
+                                className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[13px] py-3.5 rounded-2xl transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                            >
+                                <BadgeCheck className="w-4 h-4" />
+                                Mettre à jour mon KYC
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowKycAlert(false)}
+                                className="w-full bg-transparent hover:bg-white/5 text-white/40 hover:text-white font-semibold text-[13px] py-3 rounded-2xl transition-all"
+                            >
+                                Plus tard
+                            </button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
         </div>
     );

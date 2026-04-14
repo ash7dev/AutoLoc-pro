@@ -120,7 +120,7 @@ export async function fetchUserProfile(accessToken?: string): Promise<UserProfil
  */
 export async function updateUserProfile(
   data: Partial<Pick<UserProfile, 'prenom' | 'nom' | 'avatarUrl' | 'dateNaissance'>>,
-): Promise<unknown> {
+): Promise<{ kycReset?: boolean; [key: string]: any }> {
   return apiFetch('/users/me/profile', {
     method: 'PATCH',
     body: data,

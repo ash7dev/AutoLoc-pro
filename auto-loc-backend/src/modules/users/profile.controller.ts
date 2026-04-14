@@ -87,7 +87,7 @@ export class ProfileController {
         const user = req.user!;
         const utilisateur = await this.prisma.utilisateur.findUnique({
             where: { userId: user.sub },
-            select: { id: true },
+            select: { id: true, prenom: true, nom: true, dateNaissance: true, statutKyc: true },
         });
         if (!utilisateur) throw new ForbiddenException('Profil incomplet');
 
@@ -97,6 +97,23 @@ export class ProfileController {
         if (dto.avatarUrl !== undefined) data.avatarUrl = dto.avatarUrl;
         if (dto.dateNaissance !== undefined) {
             data.dateNaissance = new Date(dto.dateNaissance);
+        }
+
+        let kycResetMsg = false;
+        const prenomChanged = dto.prenom !== undefined && dto.prenom !== utilisateur.prenom;
+        const nomChanged = dto.nom !== undefined && dto.nom !== utilisateur.nom;
+        const currentDbDate = utilisateur.dateNaissance ? utilisateur.dateNaissance.getTime() : null;
+        const newDbDate = dto.dateNaissance ? new Date(dto.dateNaissance).getTime() : null;
+        const dateChanged = dto.dateNaissance !== undefined && newDbDate !== currentDbDate;
+
+        if (prenomChanged || nomChanged || dateChanged) {
+            if (utilisateur.statutKyc !== 'NON_VERIFIE') {
+                data.statutKyc = 'NON_VERIFIE';
+                data.kycDocumentUrl = null;
+                data.kycSelfieUrl = null;
+                data.kycRejectionReason = null;
+                kycResetMsg = true;
+            }
         }
 
         const updated = await this.prisma.utilisateur.update({
@@ -116,6 +133,7 @@ export class ProfileController {
             ...updated,
             dateNaissance: updated.dateNaissance?.toISOString() ?? null,
             misAJourLe: updated.misAJourLe.toISOString(),
+            kycReset: kycResetMsg,
         };
     }
 }

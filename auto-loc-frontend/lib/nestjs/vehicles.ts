@@ -158,11 +158,13 @@ export interface SearchVehiclesParams {
   longitude?: number;
   rayon?: number;
   equipements?: string[];
+  q?: string;
 }
 
 export interface SearchVehiclesResponse {
   data: VehicleSearchResult[];
   page: number;
+  total: number;
 }
 
 // ── Client cache (public search) ──────────────────────────────────────────────
@@ -322,6 +324,7 @@ export async function searchVehicles(
   if (params.longitude != null) qs.set('longitude', String(params.longitude));
   if (params.rayon != null) qs.set('rayon', String(params.rayon));
   if (params.equipements?.length) params.equipements.forEach(e => qs.append('equipements', e));
+  if (params.q) qs.set('q', params.q);
 
   const key = qs.toString() || 'all';
   if (typeof window !== 'undefined') {

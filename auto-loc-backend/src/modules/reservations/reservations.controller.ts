@@ -73,9 +73,10 @@ export class ReservationsController {
   async confirm(
     @Req() req: Request & { user?: RequestUser },
     @Param('id', ParseUUIDPipe) reservationId: string,
+    @Body() body: { heureDebut: string }
   ) {
     const user = req.user!;
-    return this.reservationsService.confirm(user, reservationId);
+    return this.reservationsService.confirm(user, reservationId, body);
   }
 
   /**

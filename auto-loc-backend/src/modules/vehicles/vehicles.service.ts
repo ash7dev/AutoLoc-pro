@@ -564,6 +564,7 @@ export class VehiclesService {
       }>;
     }[];
     page: number;
+    total: number;
   }> {
     const page = dto.page ?? 1;
     const offset = (page - 1) * SEARCH_PAGE_SIZE;
@@ -587,6 +588,7 @@ export class VehiclesService {
       longitude: dto.longitude ?? null,
       rayon: dto.rayon ?? null,
       equipements: dto.equipements ?? null,
+      q: dto.q ?? null,
       page,
     });
     const cacheKey =
@@ -629,6 +631,14 @@ export class VehiclesService {
 
     const noteCondition = dto.noteMin != null
       ? Prisma.sql`AND v.note >= ${dto.noteMin}`
+      : Prisma.empty;
+
+    const searchCondition = dto.q
+      ? Prisma.sql`AND (
+          v.marque ILIKE ${'%' + dto.q + '%'} OR
+          v.modele ILIKE ${'%' + dto.q + '%'} OR
+          v.ville ILIKE ${'%' + dto.q + '%'}
+        )`
       : Prisma.empty;
 
     const dateCondition =
@@ -681,6 +691,26 @@ export class VehiclesService {
     const orderField = dto.sortBy ? orderFieldMap[dto.sortBy] : 'v.note';
     const orderDir = dto.sortOrder === 'asc' ? 'ASC' : 'DESC';
 
+    // Separate queries for total count and paginated data
+    const totalQuery = await this.prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*)::bigint as count
+      FROM "Vehicule" v
+      WHERE v.statut::text = 'VERIFIE'
+        ${villeCondition}
+        ${prixMinCondition}
+        ${prixMaxCondition}
+        ${typeCondition}
+        ${transmissionCondition}
+        ${carburantCondition}
+        ${placesCondition}
+        ${noteCondition}
+        ${dateCondition}
+        ${geoCondition}
+        ${equipementCondition}
+        ${searchCondition}
+    `;
+    const total = Number(totalQuery[0]?.count ?? 0);
+
     const rows = await this.prisma.$queryRaw<VehicleSearchRow[]>`
       SELECT
         v.id,
@@ -716,6 +746,7 @@ export class VehiclesService {
         ${dateCondition}
         ${geoCondition}
         ${equipementCondition}
+        ${searchCondition}
       ORDER BY ${Prisma.raw(orderField)} ${Prisma.raw(orderDir)}
       LIMIT ${Prisma.raw(String(SEARCH_PAGE_SIZE))} OFFSET ${Prisma.raw(String(offset))}
     `;
@@ -766,6 +797,7 @@ export class VehiclesService {
         })),
       })),
       page,
+      total,
     };
 
     await this.redis.set(cacheKey, JSON.stringify(result), SEARCH_CACHE_TTL);

@@ -248,7 +248,7 @@ function ActionButton({
    INLINE CONFIRM  — clean white card, no dark hacks
 ════════════════════════════════════════════════════════════════ */
 function InlineConfirm({
-    action, onConfirm, onCancel, loading, reason, onReasonChange, policyNotice,
+    action, onConfirm, onCancel, loading, reason, onReasonChange, policyNotice, heureDebut, onHeureDebutChange,
 }: {
     action: ActionConfig;
     onConfirm: () => void;
@@ -257,16 +257,82 @@ function InlineConfirm({
     reason?: string;
     onReasonChange?: (v: string) => void;
     policyNotice?: ReturnType<typeof getCancelPolicyNotice>;
+    heureDebut?: string;
+    onHeureDebutChange?: (v: string) => void;
 }) {
     const isCancel = action.key === "cancel";
+    const isConfirm = action.key === "confirm";
     const policyBlocked = isCancel && policyNotice?.canCancel === false;
-    const canConfirm = !isCancel || (!policyBlocked && (reason?.trim() ?? "").length >= 5);
+    const canConfirmAction = !isConfirm || (heureDebut && heureDebut.length === 5);
+    const canConfirm = (!isCancel || (!policyBlocked && (reason?.trim() ?? "").length >= 5)) && canConfirmAction;
 
     const noticeCls = {
         green: { wrap: 'bg-emerald-50 border-emerald-200', title: 'text-emerald-800', body: 'text-emerald-700' },
         amber: { wrap: 'bg-amber-50 border-amber-200', title: 'text-amber-800', body: 'text-amber-700' },
         red:   { wrap: 'bg-red-50 border-red-200',     title: 'text-red-800',   body: 'text-red-700'   },
     };
+
+    if (isConfirm) {
+        return (
+            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-50/50 p-4 sm:p-5 shadow-sm shadow-emerald-500/5 mt-1 overflow-hidden relative">
+                <div className="absolute -top-4 -right-4 p-4 opacity-[0.03] pointer-events-none">
+                    <Clock className="w-32 h-32 text-emerald-900" />
+                </div>
+                <div className="relative z-10">
+                    <div className="flex items-start gap-3.5 mb-4">
+                        <div className="w-9 h-9 rounded-[10px] bg-emerald-100 border border-emerald-200/60 flex items-center justify-center flex-shrink-0 text-emerald-600 mt-0.5">
+                            <Clock className="w-4.5 h-4.5" strokeWidth={2.5} />
+                        </div>
+                        <div>
+                            <h4 className="text-[14.5px] font-black tracking-tight text-emerald-950">Heure de remise des clés</h4>
+                            <p className="text-[11.5px] font-medium text-emerald-800/80 mt-1 leading-snug">
+                                À quelle heure le véhicule sera-t-il disponible pour le locataire ?
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="mb-5 space-y-3">
+                        <div className="relative">
+                            <input
+                                type="time"
+                                value={heureDebut ?? ""}
+                                onChange={e => onHeureDebutChange?.(e.target.value)}
+                                className="w-full text-center text-[28px] tracking-tight font-black rounded-xl border border-emerald-200/70 bg-white/80 backdrop-blur-sm px-4 py-4 text-emerald-950 shadow-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 transition-all hover:bg-white"
+                            />
+                        </div>
+                        <div className="flex items-start gap-2.5 px-2 bg-emerald-100/40 rounded-lg p-2.5 border border-emerald-200/30">
+                            <div className="mt-0.5 text-emerald-600">
+                                <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            </div>
+                            <p className="text-[11px] font-semibold text-emerald-800/80 leading-relaxed">
+                                L'heure de retour sera automatiquement ajustée à <span className="font-bold text-emerald-900">l'heure de remise + 1h de courtoisie</span>. Le locataire sera notifié de vos disponibilités.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 justify-end pt-4 border-t border-emerald-500/10">
+                        <button
+                            type="button"
+                            onClick={onCancel}
+                            disabled={loading}
+                            className="px-4 py-2 rounded-xl text-[12.5px] font-bold text-emerald-700 hover:bg-emerald-100/80 hover:text-emerald-900 transition-all border border-transparent"
+                        >
+                            Annuler
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onConfirm}
+                            disabled={loading || !canConfirm}
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-[13px] font-black shadow-md shadow-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5 transition-all"
+                        >
+                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" strokeWidth={3} />}
+                            Confirmer la location
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 shadow-sm">
@@ -309,7 +375,7 @@ function InlineConfirm({
                 </div>
             )}
 
-            <div className="flex items-center gap-2 justify-end">
+            <div className="flex items-center gap-2 justify-end mt-2">
                 <button
                     type="button"
                     onClick={onCancel}
@@ -471,6 +537,7 @@ export function ReservationActions({
     const [error, setError] = useState<string | null>(null);
     const [confirmKey, setConfirmKey] = useState<string | null>(null);
     const [cancelReason, setCancelReason] = useState('');
+    const [heureDebut, setHeureDebut] = useState('');
     const [disputeOpen, setDisputeOpen] = useState(false);
     const [checkinOpen, setCheckinOpen] = useState(false);
     const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -525,7 +592,7 @@ export function ReservationActions({
                     : null;
 
     const apiMap: Record<string, () => Promise<void>> = {
-        confirm: () => authFetch(`/reservations/${reservationId}/confirm`, { method: "PATCH" }),
+        confirm: () => authFetch(`/reservations/${reservationId}/confirm`, { method: "PATCH", body: { heureDebut } }),
         cancel: () => authFetch(`/reservations/${reservationId}/cancel`, { method: "PATCH", body: { raison: cancelReason.trim() } }),
         checkin: () => authFetch(`/reservations/${reservationId}/checkin?role=PROPRIETAIRE`, { method: "PATCH" }),
         checkout: () => authFetch(`/reservations/${reservationId}/checkout`, { method: "PATCH" }),
@@ -536,7 +603,7 @@ export function ReservationActions({
         if (action.key === "checkin") { setCheckinOpen(true); return; }
         if (action.key === "checkout") { setCheckoutOpen(true); return; }
         if (action.requireConfirm && confirmKey !== action.key) { setConfirmKey(action.key); return; }
-        setError(null); setLoading(action.key); setConfirmKey(null); setCancelReason('');
+        setError(null); setLoading(action.key); setConfirmKey(null); setCancelReason(''); // Keep heureDebut to send it
         try {
             await apiMap[action.key]();
             router.refresh();
@@ -656,10 +723,12 @@ export function ReservationActions({
                     action={confirmingAction}
                     loading={isLoading}
                     onConfirm={() => handleAction(confirmingAction)}
-                    onCancel={() => { setConfirmKey(null); setCancelReason(''); }}
+                    onCancel={() => { setConfirmKey(null); setCancelReason(''); setHeureDebut(''); }}
                     reason={cancelReason}
                     onReasonChange={setCancelReason}
                     policyNotice={policyNotice}
+                    heureDebut={heureDebut}
+                    onHeureDebutChange={setHeureDebut}
                 />
             )}
 

@@ -41,14 +41,29 @@ export default function LoginAutoLoc() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Après retour OAuth Google (?from=oauth), déclenche la redirection automatique.
+  // Si déjà connecté et qu'on a un ?next=, ou retour OAuth Google, on redirige
   useEffect(() => {
-    if (searchParams.get('from') === 'oauth') {
-      setIsRedirecting(true);
-      startTransition(() => redirectAfterAuth());
+    const checkAndRedirect = async () => {
+      const next = searchParams.get('next');
+      const fromOAuth = searchParams.get('from') === 'oauth';
+      
+      if (fromOAuth || next) {
+        // Pour oauth on redirige direct. 
+        // Pour next, on vérifie d'abord si on a une session pour éviter un flash inutile si pas connecté.
+        const { data } = await (await import('@/lib/supabase/client')).supabase.auth.getSession();
+        
+        if (fromOAuth || data.session) {
+          setIsRedirecting(true);
+          startTransition(() => redirectAfterAuth());
+        }
+      }
+    };
+    
+    if (isMounted) {
+      checkAndRedirect();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isMounted]);
 
   // Mappe les erreurs des hooks vers l'état d'erreur du composant.
   useEffect(() => {

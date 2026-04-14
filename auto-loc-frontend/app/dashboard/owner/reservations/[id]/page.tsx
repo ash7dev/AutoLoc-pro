@@ -211,8 +211,8 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                         {/* Dates strip */}
                         <div className="mt-6 pt-5 border-t border-white/[0.06] flex flex-wrap gap-4 sm:gap-8">
                             {[
-                                { icon: LogIn,       label: "Prise en charge", value: fmtShort(r.dateDebut) },
-                                { icon: LogOut,      label: "Restitution",     value: fmtShort(r.dateFin) },
+                                { icon: LogIn,       label: "Prise en charge", value: fmtDateTime(r.dateDebut) },
+                                { icon: LogOut,      label: "Restitution",     value: fmtDateTime(r.dateFin) },
                                 { icon: CalendarDays,label: "Durée",           value: `${nbJours} jour${nbJours > 1 ? "s" : ""}` },
                             ].map(item => (
                                 <div key={item.label} className="flex items-center gap-2.5">

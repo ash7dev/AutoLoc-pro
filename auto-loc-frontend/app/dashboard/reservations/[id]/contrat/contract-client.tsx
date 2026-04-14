@@ -227,7 +227,7 @@ export function ContractClient({
                                         <p className="text-[10px] font-mono text-slate-400 mt-0.5">{r.vehicule.immatriculation}</p>
                                     )}
                                     <p className="text-[10px] text-slate-500 mt-1">
-                                        du {fmtDate(r.dateDebut, { day: 'numeric', month: 'short' })} au {fmtDate(r.dateFin, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        du {fmtDate(r.dateDebut, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} au {fmtDate(r.dateFin, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                     </p>
                                 </div>
                                 <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100">
@@ -264,7 +264,7 @@ export function ContractClient({
                                         <td className="px-4 py-3 text-[12px] text-slate-600 font-medium">
                                             Location véhicule
                                             <span className="block text-[11px] text-slate-400 mt-0.5">
-                                                du {fmtDate(r.dateDebut, { day: 'numeric', month: 'short', year: 'numeric' })} au {fmtDate(r.dateFin, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                du {fmtDate(r.dateDebut, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} au {fmtDate(r.dateFin, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 text-[12px] font-bold text-slate-700">
@@ -293,79 +293,85 @@ export function ContractClient({
                     </div>
 
                     {/* ══════════════════════════════════════════════
-                        FRAIS DE SERVICE — carte mobile / tableau desktop
+                        RÉCAPITULATIF — owner voit le détail, tenant voit juste le total
                     ══════════════════════════════════════════════ */}
-                    <div className="px-4 sm:px-6 lg:px-8 py-2">
-
-                        {/* ── Mobile card ── */}
-                        <div className="sm:hidden rounded-xl border border-slate-200 overflow-hidden">
-                            <div className="bg-emerald-700 px-4 py-2">
-                                <p className="text-[11px] font-bold text-white uppercase tracking-wide">Frais de service</p>
+                    {isOwner ? (
+                        /* ── Owner: détail complet de la commission ── */
+                        <>
+                            <div className="px-4 sm:px-6 lg:px-8 py-2">
+                                {/* Mobile card */}
+                                <div className="sm:hidden rounded-xl border border-slate-200 overflow-hidden">
+                                    <div className="bg-emerald-700 px-4 py-2">
+                                        <p className="text-[11px] font-bold text-white uppercase tracking-wide">Frais de service</p>
+                                    </div>
+                                    <div className="divide-y divide-slate-100">
+                                        <div className="flex items-center justify-between px-4 py-3">
+                                            <span className="text-[11px] text-slate-600">Commission AutoLoc</span>
+                                            <span className="text-[11px] font-bold text-slate-700 tabular-nums">15 % — {fmtMoney(commissionAmount)} FCFA</span>
+                                        </div>
+                                        <div className="flex items-center justify-between px-4 py-3 bg-emerald-50">
+                                            <span className="text-[12px] font-black text-emerald-700">Total locataire</span>
+                                            <span className="text-[15px] font-black text-emerald-700 tabular-nums">{fmtMoney(totalLocataire)} FCFA</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {/* Desktop table */}
+                                <div className="hidden sm:block overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="bg-emerald-700 text-white print:bg-emerald-100 print:text-emerald-800">
+                                                <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-tl-lg" colSpan={3}>Frais de service</th>
+                                                <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-center">Taux</th>
+                                                <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-right rounded-tr-lg">Montant</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr className="border-b border-slate-100">
+                                                <td colSpan={3} className="px-4 py-3 text-[12px] text-slate-600 font-medium">Commission plateforme AutoLoc</td>
+                                                <td className="px-4 py-3 text-[12px] font-bold text-slate-700 text-center">15 %</td>
+                                                <td className="px-4 py-3 text-[12px] font-bold text-slate-700 text-right tabular-nums">{fmtMoney(commissionAmount)} FCFA</td>
+                                            </tr>
+                                            <tr className="bg-emerald-50 border-t-2 border-emerald-200">
+                                                <td colSpan={4} className="px-4 py-3 text-right text-[12px] font-black uppercase tracking-widest text-emerald-700">Total réglé par le locataire</td>
+                                                <td className="px-4 py-3 text-[16px] font-black text-emerald-700 text-right tabular-nums">{fmtMoney(totalLocataire)} FCFA</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                            <div className="divide-y divide-slate-100">
-                                <div className="flex items-center justify-between px-4 py-3">
-                                    <span className="text-[11px] text-slate-600">Commission AutoLoc</span>
-                                    <span className="text-[11px] font-bold text-slate-700 tabular-nums">15 % — {fmtMoney(commissionAmount)} FCFA</span>
-                                </div>
-                                <div className="flex items-center justify-between px-4 py-3 bg-emerald-50">
-                                    <span className="text-[12px] font-black text-emerald-700">Total locataire</span>
-                                    <span className="text-[15px] font-black text-emerald-700 tabular-nums">{fmtMoney(totalLocataire)} FCFA</span>
+                            {/* Revenu net propriétaire */}
+                            <div className="px-4 sm:px-6 lg:px-8 py-3">
+                                <div className="flex items-center justify-between px-4 py-3 sm:py-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
+                                    <span className="text-[11px] sm:text-[12px] font-bold text-emerald-700">
+                                        Revenu net propriétaire
+                                    </span>
+                                    <span className="text-[15px] sm:text-[16px] font-black text-emerald-700 tabular-nums">
+                                        {fmtMoney(netProprietaire)} FCFA
+                                    </span>
                                 </div>
                             </div>
-                        </div>
-
-                        {/* ── Desktop table ── */}
-                        <div className="hidden sm:block overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="bg-emerald-700 text-white print:bg-emerald-100 print:text-emerald-800">
-                                        <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-tl-lg" colSpan={3}>Frais de service</th>
-                                        <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-center">Taux</th>
-                                        <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest text-right rounded-tr-lg">Montant</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr className="border-b border-slate-100">
-                                        <td colSpan={3} className="px-4 py-3 text-[12px] text-slate-600 font-medium">Commission plateforme AutoLoc</td>
-                                        <td className="px-4 py-3 text-[12px] font-bold text-slate-700 text-center">15 %</td>
-                                        <td className="px-4 py-3 text-[12px] font-bold text-slate-700 text-right tabular-nums">{fmtMoney(commissionAmount)} FCFA</td>
-                                    </tr>
-                                    <tr className="bg-emerald-50 border-t-2 border-emerald-200">
-                                        <td colSpan={4} className="px-4 py-3 text-right text-[12px] font-black uppercase tracking-widest text-emerald-700">Total réglé par le locataire</td>
-                                        <td className="px-4 py-3 text-[16px] font-black text-emerald-700 text-right tabular-nums">{fmtMoney(totalLocataire)} FCFA</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* ── Revenu propriétaire ───────────────────────── */}
-                    <div className="px-4 sm:px-6 lg:px-8 py-3">
-                        <div className="flex items-center justify-between px-4 py-3 sm:py-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
-                            <span className="text-[11px] sm:text-[12px] font-bold text-emerald-700">
-                                Revenu net propriétaire
-                            </span>
-                            <span className="text-[15px] sm:text-[16px] font-black text-emerald-700 tabular-nums">
-                                {fmtMoney(netProprietaire)} FCFA
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* ── Notice frais de service ───────────────────── */}
-                    <div className="px-4 sm:px-6 lg:px-8 py-3">
-                        <div className="px-4 py-3 bg-blue-50/60 border border-blue-100 rounded-xl">
-                            <div className="flex items-start gap-2.5">
-                                <div className="w-5 h-5 rounded-lg bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <Info className="w-2.5 h-2.5 text-blue-600" strokeWidth={2.5} />
-                                </div>
-                                <div>
-                                    <p className="text-[11px] font-medium text-blue-700 leading-relaxed">
-                                        Autoloc prélève des frais de service de 15% pour garantir le bon fonctionnement de la plateforme et la sécurité, incluant les frais de TVA.
+                        </>
+                    ) : (
+                        /* ── Tenant: juste le total payé, propre et clair ── */
+                        <div className="px-4 sm:px-6 lg:px-8 py-3">
+                            <div className="rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-emerald-50/30 overflow-hidden">
+                                <div className="flex items-center justify-between px-5 py-4 sm:py-5">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center">
+                                            <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600" strokeWidth={2.5} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600/60">Montant total</p>
+                                            <p className="text-[12px] sm:text-[13px] font-bold text-emerald-800 mt-0.5">Réglé par le locataire</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-[20px] sm:text-[24px] font-black text-emerald-700 tabular-nums">
+                                        {fmtMoney(totalLocataire)} <span className="text-[12px] font-bold text-emerald-500">FCFA</span>
                                     </p>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* ── Politique d'annulation ────────────────────── */}
                     <div className="px-4 sm:px-6 lg:px-8 py-5 border-t border-slate-100">
@@ -477,6 +483,16 @@ export function ContractClient({
                                 </p>
                                 <p className="text-[10px] sm:text-[11px] text-slate-600 leading-relaxed">
                                     Pour garantir la sécurité et la vie privée des utilisateurs, les coordonnées téléphoniques (numéros de téléphone) ne sont accessibles que 24 heures avant le début de la location. Cette mesure permet d&apos;assurer une communication sécurisée tout en protégeant les données personnelles des parties.
+                                </p>
+                            </div>
+
+                            {/* Art. 11 — Frais de service */}
+                            <div className="rounded-xl bg-slate-50 border border-slate-100 p-3 sm:p-4 sm:col-span-2">
+                                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wide text-slate-500 mb-2">
+                                    Art. 11 — Frais de service
+                                </p>
+                                <p className="text-[10px] sm:text-[11px] text-slate-600 leading-relaxed">
+                                    Les tarifs affichés sur la plateforme AutoLoc incluent les frais de service destinés à couvrir le fonctionnement de la plateforme, la sécurisation des transactions, l&apos;assurance de médiation et les obligations fiscales applicables.
                                 </p>
                             </div>
                         </div>

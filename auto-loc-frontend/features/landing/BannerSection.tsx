@@ -187,10 +187,10 @@ export function BannerSection(): React.ReactElement {
     if (filters.q) params.set('q', filters.q);
     if (filters.ville) params.set('zone', filters.ville);
     if (filters.type) params.set('type', filters.type);
-    if (filters.prixMax) params.set('prixMax', filters.prixMax);
+    if (filters.prixMax) params.set('budget', filters.prixMax);
     if (filters.dateReservation) params.set('debut', filters.dateReservation);
     if (filters.dateRetour) params.set('fin', filters.dateRetour);
-    router.push(`/vehicle?${params.toString()}`);
+    router.push(`/explorer?${params.toString()}`);
   }
 
   const today = new Date();

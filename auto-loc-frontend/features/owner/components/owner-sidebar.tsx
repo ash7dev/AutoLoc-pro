@@ -36,7 +36,7 @@ const MOBILE_NAV_ITEMS = [
   { href: '/dashboard/owner/reservations', icon: CalendarRange, label: 'Réservations' },
   { href: '/dashboard/owner/wallet', icon: Banknote, label: 'Portefeuille' },
   {
-    href: '/dashboard/settings',
+    href: '/dashboard/settings/profile',
     icon: SlidersHorizontal,
     label: 'Paramètres',
     submenu: [

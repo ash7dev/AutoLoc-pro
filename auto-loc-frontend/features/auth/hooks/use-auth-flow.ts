@@ -2,8 +2,8 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRef } from 'react';
-import { supabase } from '../../../lib/supabase/client';
-import { fetchMe, type ProfileResponse } from '../../../lib/nestjs/auth';
+import { supabase } from '@/lib/supabase/client';
+import { fetchMe, type ProfileResponse } from '@/lib/nestjs/auth';
 import { syncWithNestJS } from './use-nest-token';
 import { useRoleStore } from '../stores/role.store';
 

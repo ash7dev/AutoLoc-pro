@@ -151,7 +151,7 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum, age
     );
 }
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef } from 'react';
 import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles';
@@ -171,9 +171,10 @@ function calcAge(dateStr: string): number {
 
 function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum, fraisLivraison, autoriseHorsDakar, supplementHorsDakarParJour }: MobileBarProps) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { formatPrice: currencyFormat } = useCurrency();
-    const [dateDebut, setDateDebut] = useState('');
-    const [dateFin, setDateFin] = useState('');
+    const [dateDebut, setDateDebut] = useState(searchParams.get('dateDebut') ?? '');
+    const [dateFin, setDateFin] = useState(searchParams.get('dateFin') ?? '');
     const [pricing, setPricing] = useState<PricingResponse | null>(null);
     const [loadingPricing, setLoadingPricing] = useState(false);
     const [contractAccepted, setContractAccepted] = useState(false);
@@ -242,7 +243,9 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
             router.push(`/vehicle/${vehicleId}/payment?${buildParams()}`);
         } catch (err) {
             if (err instanceof ApiError && err.status === 401) {
-                const next = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+                const queryParams = buildParams().toString();
+                const nextPath = `${window.location.pathname}${queryParams ? '?' + queryParams : ''}`;
+                const next = encodeURIComponent(nextPath);
                 router.push(`/login?next=${next}`);
                 return;
             }

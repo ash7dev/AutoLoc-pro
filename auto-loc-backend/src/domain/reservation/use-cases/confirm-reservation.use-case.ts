@@ -34,6 +34,7 @@ export class ConfirmReservationUseCase {
     async execute(
         user: RequestUser,
         reservationId: string,
+        input: { heureDebut: string }
     ): Promise<ConfirmReservationResult> {
         // 1. Resolve proprietaire
         const proprietaire = await this.prisma.utilisateur.findUnique({
@@ -50,6 +51,7 @@ export class ConfirmReservationUseCase {
                 statut: true,
                 proprietaireId: true,
                 dateDebut: true,
+                dateFin: true,
                 locataire: { select: { telephone: true, prenom: true, statutKyc: true } },
             },
         });
@@ -79,6 +81,22 @@ export class ConfirmReservationUseCase {
             StatutReservation.CONFIRMEE,
         );
 
+        // 4.5. Calculer les nouvelles dates avec heure fixe
+        const [hours, minutes] = input.heureDebut.split(':').map(Number);
+        if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+            throw new BusinessRuleException(
+                "L'heure de début doit être au format HH:mm valide",
+                'INVALID_TIME_FORMAT'
+            );
+        }
+
+        const newDateDebut = new Date(reservation.dateDebut);
+        newDateDebut.setUTCHours(hours, minutes, 0, 0);
+
+        const newDateFin = new Date(reservation.dateFin);
+        // Heure de fin = heure de début + 1 heure de courtoisie
+        newDateFin.setUTCHours(hours + 1, minutes, 0, 0);
+
         // 5. Transactional update
         const updated = await this.prisma.$transaction(async (tx) => {
             const res = await tx.reservation.update({
@@ -86,6 +104,8 @@ export class ConfirmReservationUseCase {
                 data: {
                     statut: StatutReservation.CONFIRMEE,
                     confirmeeLe: new Date(),
+                    dateDebut: newDateDebut,
+                    dateFin: newDateFin,
                 },
                 select: { id: true, statut: true },
             });

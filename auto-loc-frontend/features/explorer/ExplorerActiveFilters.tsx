@@ -96,6 +96,22 @@ function getFilterPills(filters: ExplorerFiltersState, currencyFormat: (n: numbe
             resetValue: false,
         });
     }
+    if (filters.dateDebut) {
+        pills.push({
+            key: 'dateDebut',
+            label: `Dès le ${new Date(filters.dateDebut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`,
+            field: 'dateDebut',
+            resetValue: undefined,
+        });
+    }
+    if (filters.dateFin) {
+        pills.push({
+            key: 'dateFin',
+            label: `Jusqu'au ${new Date(filters.dateFin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`,
+            field: 'dateFin',
+            resetValue: undefined,
+        });
+    }
 
     return pills;
 }

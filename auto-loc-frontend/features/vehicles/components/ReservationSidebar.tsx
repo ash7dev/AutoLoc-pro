@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Clock, CreditCard, CheckCircle2,
@@ -38,8 +38,9 @@ interface Props {
 export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMinimum, fraisLivraison, autoriseHorsDakar, supplementHorsDakarParJour }: Props): React.ReactElement {
   const router = useRouter();
   const { formatPrice } = useCurrency();
-  const [dateDebut, setDateDebut] = useState('');
-  const [dateFin, setDateFin] = useState('');
+  const params = useSearchParams();
+  const [dateDebut, setDateDebut] = useState(params.get('dateDebut') ?? '');
+  const [dateFin, setDateFin] = useState(params.get('dateFin') ?? '');
   const [pricing, setPricing] = useState<PricingResponse | null>(null);
   const [loadingPricing, setLoadingPricing] = useState(false);
   const [pricingError, setPricingError] = useState(false);
@@ -131,7 +132,9 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
       setGateOpen(true);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        const next = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+        const queryParams = buildParams().toString();
+        const nextPath = `${window.location.pathname}${queryParams ? '?' + queryParams : ''}`;
+        const next = encodeURIComponent(nextPath);
         router.push(`/login?next=${next}`);
         return;
       }

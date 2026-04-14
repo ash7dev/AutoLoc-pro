@@ -52,6 +52,8 @@ export interface ExplorerFiltersState {
   noteMin: number | null;
   equipements: string[];
   nearMe: boolean;
+  dateDebut?: string;
+  dateFin?: string;
 }
 
 export const DEFAULT_FILTERS: ExplorerFiltersState = {
@@ -300,10 +302,15 @@ export function ExplorerGrid(): React.ReactElement {
   const [filters, setFilters] = useState<ExplorerFiltersState>(() => ({
     ...DEFAULT_FILTERS,
     zone: searchParams.get('zone') ?? '',
+    type: searchParams.get('type') ?? '',
+    budgetMax: searchParams.has('budget') ? Number(searchParams.get('budget')) : null,
+    dateDebut: searchParams.get('debut') ?? undefined,
+    dateFin: searchParams.get('fin') ?? undefined,
   }));
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') ?? '');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [vehicles, setVehicles] = useState<VehicleGridItem[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [kycStatus, setKycStatus] = useState<ProfileResponse['kycStatus']>(undefined);
@@ -328,6 +335,13 @@ export function ExplorerGrid(): React.ReactElement {
       });
     return () => { active = false; };
   }, []);
+
+  /* Debounced search to avoid too many API calls */
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   /* API fetch */
   const fetchVehicles = useCallback(async () => {
@@ -365,6 +379,8 @@ export function ExplorerGrid(): React.ReactElement {
         ville: filters.zone || undefined,
         prixMin: filters.budgetMin || undefined,
         prixMax: filters.budgetMax || undefined,
+        dateDebut: filters.dateDebut || undefined,
+        dateFin: filters.dateFin || undefined,
         carburant: (filters.fuel as FuelType) || undefined,
         transmission: (filters.transmission as Transmission) || undefined,
         placesMin: filters.places || undefined,
@@ -372,27 +388,26 @@ export function ExplorerGrid(): React.ReactElement {
         equipements: filters.equipements.length ? filters.equipements : undefined,
         sortBy: by as any,
         sortOrder: order,
+        q: debouncedSearch.trim() || undefined,
         ...geoParams,
       });
       setVehicles(result.data ?? []);
+      setTotal(result.total ?? result.data?.length ?? 0);
     } catch {
       setError(true);
       setVehicles([]);
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, debouncedSearch]);
 
   useEffect(() => { fetchVehicles(); }, [fetchVehicles]);
 
-  /* Client-side text search */
-  const filteredVehicles = useMemo(() => {
-    if (!searchQuery.trim()) return vehicles;
-    const q = searchQuery.toLowerCase();
-    return vehicles.filter(
-      v => v.marque.toLowerCase().includes(q) || v.modele.toLowerCase().includes(q) || v.ville.toLowerCase().includes(q),
-    );
-  }, [vehicles, searchQuery]);
+  /* 
+     With backend search implemented, vehicles are already filtered.
+     We keep the memo to avoid re-renders but don't need local filtering logic anymore.
+  */
+  const filteredVehicles = useMemo(() => vehicles, [vehicles]);
 
   /* Strategy */
   const strategy = pickStrategy(filteredVehicles.length);
@@ -411,7 +426,7 @@ export function ExplorerGrid(): React.ReactElement {
       <KycNudgeModal kycStatus={kycStatus} />
       {/* ── Hero ─────────────────────────────────────────────── */}
       <ExplorerHero
-        totalResults={filteredVehicles.length}
+        totalResults={total}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         activeFilterCount={activeFilterCount}
@@ -442,14 +457,14 @@ export function ExplorerGrid(): React.ReactElement {
             onReset={handleReset}
             isMobileOpen={mobileFiltersOpen}
             onCloseMobile={() => setMobileFiltersOpen(false)}
-            filteredCount={filteredVehicles.length}
+            filteredCount={total}
           />
 
           {/* ── Results ───────────────────────────────────────── */}
           <div className="flex-1 min-w-0">
 
             <ResultsHeader
-              count={filteredVehicles.length}
+              count={total}
               loading={loading}
               sort={filters.sort}
               onSortChange={sort => handleFiltersChange({ ...filters, sort })}

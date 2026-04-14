@@ -41,6 +41,10 @@ export class SearchVehiclesDto {
   ville?: string;
 
   @IsOptional()
+  @IsString()
+  q?: string;
+
+  @IsOptional()
   @IsDateString()
   dateDebut?: string;
 

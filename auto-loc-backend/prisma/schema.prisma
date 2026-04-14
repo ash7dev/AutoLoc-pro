@@ -251,8 +251,8 @@ model Reservation {
   proprietaireId  String
   proprietaire    Utilisateur @relation("proprietaire_res", fields: [proprietaireId], references: [id])
 
-  dateDebut       DateTime @db.Date
-  dateFin         DateTime @db.Date
+  dateDebut       DateTime
+  dateFin         DateTime
 
   prixParJour     Decimal  @db.Decimal(10,2)
   totalBase       Decimal  @db.Decimal(10,2)
