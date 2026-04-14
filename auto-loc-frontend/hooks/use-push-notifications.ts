@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import { apiFetch } from '@/lib/nestjs/api-client';
+import { toast } from 'sonner';
 
 /**
  * Utilitaire pour convertir la clé VAPID publique (Base64) en Uint8Array
@@ -87,8 +88,10 @@ export function usePushNotifications() {
       });
       
       return sub;
-    } catch (error) {
+    } catch (error: any) {
+      const message = error.message || 'Erreur inconnue';
       console.error('Échec de l\'abonnement aux notifications:', error);
+      toast.error(`Échec des notifications : ${message}`);
       throw error;
     } finally {
       setLoading(false);

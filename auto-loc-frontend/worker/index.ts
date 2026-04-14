@@ -8,31 +8,30 @@ declare const self: ServiceWorkerGlobalScope;
 self.addEventListener('push', (event: PushEvent) => {
   if (!event.data) return;
 
+  let data: any = {};
   try {
-    const data = event.data.json();
-    const title = data.title || 'AutoLoc';
-    
-    const options: any = {
-      body: data.body || 'Une nouvelle mise à jour est disponible.',
-      icon: '/icon-192x192.png',
-      badge: '/icon-192x192.png',
-      vibrate: [100, 50, 100],
-      data: {
-        url: data.url || '/dashboard',
-      },
-      actions: [
-        {
-          action: 'open',
-          title: 'Voir les détails',
-        },
-        {
-          action: 'close',
-          title: 'Fermer',
-        },
-      ],
-    };
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    // Si ce n'est pas du JSON, on traite comme du texte simple
+    data = { body: event.data ? event.data.text() : '' };
+  }
 
-    event.waitUntil(self.registration.showNotification(title, options));
+  const title = data.title || 'AutoLoc';
+  const options: any = {
+    body: data.body || 'Une nouvelle notification est arrivée.',
+    icon: '/icon-192x192.png',
+    badge: '/icon-192x192.png',
+    vibrate: [100, 50, 100],
+    data: {
+      url: data.url || '/dashboard',
+    },
+    actions: [
+      { action: 'open', title: 'Ouvrir' },
+      { action: 'close', title: 'Ignorer' },
+    ],
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
   } catch (error) {
     console.error('Erreur Push:', error);
   }

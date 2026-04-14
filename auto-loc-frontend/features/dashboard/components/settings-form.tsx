@@ -294,6 +294,13 @@ function CtaRow({
 
 function NotificationRow() {
     const { subscription, subscribe, unsubscribe, isSupported, permission, loading } = usePushNotifications();
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) return null;
 
     if (!isSupported) {
         return (
