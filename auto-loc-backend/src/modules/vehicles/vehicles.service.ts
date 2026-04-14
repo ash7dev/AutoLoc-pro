@@ -633,13 +633,15 @@ export class VehiclesService {
       ? Prisma.sql`AND v.note >= ${dto.noteMin}`
       : Prisma.empty;
 
-    const searchCondition = dto.q
-      ? Prisma.sql`AND (
-          v.marque ILIKE ${'%' + dto.q + '%'} OR
-          v.modele ILIKE ${'%' + dto.q + '%'} OR
-          v.ville ILIKE ${'%' + dto.q + '%'}
-        )`
-      : Prisma.empty;
+    let searchCondition = Prisma.empty;
+    if (dto.q && dto.q.trim()) {
+      const terms = dto.q.trim().split(/\s+/);
+      const conditions = terms.map(term => {
+        const pattern = `%${term}%`;
+        return Prisma.sql`(v.marque ILIKE ${pattern} OR v.modele ILIKE ${pattern} OR v.ville ILIKE ${pattern})`;
+      });
+      searchCondition = Prisma.sql`AND ${Prisma.join(conditions, ' AND ')}`;
+    }
 
     const dateCondition =
       dto.dateDebut && dto.dateFin
