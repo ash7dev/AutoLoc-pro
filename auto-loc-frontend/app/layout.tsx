@@ -72,10 +72,15 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'default',
     title: 'AutoLoc',
+    startupImage: [],
   },
   formatDetection: {
     telephone: false,
   },
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-title': 'AutoLoc',
+  }
 };
 
 export const viewport: Viewport = {

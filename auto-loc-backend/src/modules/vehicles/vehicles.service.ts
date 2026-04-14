@@ -480,38 +480,58 @@ export class VehiclesService {
   }
 
   /**
-   * DELETE /vehicles/:id/purge — Suppression définitive d'un véhicule BROUILLON ou ARCHIVE.
-   * Utilisé comme rollback quand la création échoue après la sauvegarde du véhicule.
-   * Supprime les photos Cloudinary et la ligne DB (les relations cascadent).
+   * DELETE /vehicles/:id/permanent — Suppression définitive par le propriétaire.
+   * Uniquement si ARCHIVE ou BROUILLON.
    */
-  async purgeDraft(vehicleId: string) {
+  async deletePermanently(user: RequestUser, vehicleId: string) {
     const vehicle = await this.prisma.vehicule.findUnique({
       where: { id: vehicleId },
-      select: { statut: true },
+      select: { id: true, statut: true, proprietaire: { select: { userId: true } } },
     });
-    if (!vehicle) return;
 
-    const purgeable: StatutVehicule[] = [StatutVehicule.BROUILLON, StatutVehicule.EN_ATTENTE_VALIDATION, StatutVehicule.ARCHIVE];
-    if (!purgeable.includes(vehicle.statut)) {
+    if (!vehicle) throw new NotFoundException('Véhicule introuvable');
+
+    // Sécurité : seul le propriétaire peut supprimer définitivement
+    if (vehicle.proprietaire.userId !== user.sub) {
+      throw new ForbiddenException('Vous n\'êtes pas autorisé à supprimer ce véhicule');
+    }
+
+    const deletable: StatutVehicule[] = [StatutVehicule.BROUILLON, StatutVehicule.ARCHIVE];
+    if (!deletable.includes(vehicle.statut)) {
       throw new BadRequestException(
-        'Seuls les véhicules en brouillon, en attente de validation ou archivés peuvent être supprimés définitivement.',
+        'Seuls les véhicules en brouillon ou archivés peuvent être supprimés définitivement.',
       );
     }
 
-    // Supprimer les photos Cloudinary en parallèle (fire-and-forget, non bloquant)
+    // On vérifie qu'il n'y a pas de réservations EN_COURS ou CONFIRMEE (sécurité supplémentaire)
+    await this.assertNotActiveRental(vehicleId);
+
+    // Supprimer les photos Cloudinary en parallèle
     const photos = await this.prisma.photoVehicule.findMany({
       where: { vehiculeId: vehicleId },
       select: { publicId: true },
     });
     const publicIds = photos.map((p) => p.publicId).filter(Boolean) as string[];
+    
+    // Supprimer aussi le document de carte grise et assurance du cloud
+    const vehicleDocs = await this.prisma.vehicule.findUnique({
+        where: { id: vehicleId },
+        select: { carteGrisePublicId: true, assuranceDocPublicId: true }
+    });
+    if (vehicleDocs?.carteGrisePublicId) publicIds.push(vehicleDocs.carteGrisePublicId);
+    if (vehicleDocs?.assuranceDocPublicId) publicIds.push(vehicleDocs.assuranceDocPublicId);
+
     if (publicIds.length > 0) {
       await Promise.all(
         publicIds.map((id) => this.cloudinary.deleteByPublicId(id).catch(() => {})),
       );
     }
 
-    // Suppression dure — les relations (photos, tiers, équipements, indispos) cascadent
+    // Suppression en cascade (Photos, Tiers, Equipements, Indispos sont supprimés par Prisma grâce au onDelete: Cascade)
     await this.prisma.vehicule.delete({ where: { id: vehicleId } });
+    
+    // Invalider le cache
+    await this.invalidateDetailCache(vehicleId);
   }
 
   /**

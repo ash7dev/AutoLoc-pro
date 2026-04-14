@@ -30,21 +30,24 @@ export function useAuthFetch() {
       options: AuthFetchOptions<TBody> = {},
     ): Promise<TResponse> => {
       const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+      const isSafeToRetry = !options.method || options.method === 'GET';
+      
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
           return await apiFetch<TResponse, TBody>(path, options);
         } catch (err) {
-          if (err instanceof ApiError && err.status === 401) {
+          // On ne re-tente QUE si c'est un GET et une erreur de session (401)
+          if (isSafeToRetry && err instanceof ApiError && err.status === 401) {
             if (attempt < 2) {
               await wait(200);
               continue;
             }
             window.location.href = '/login?expired=1';
           }
+          // Pour un POST, PATCH, etc., on lance l'erreur direct après la première tentative
           throw err;
         }
       }
-      // unreachable, but satisfies TS
       throw new Error('Auth fetch failed');
     },
     [],

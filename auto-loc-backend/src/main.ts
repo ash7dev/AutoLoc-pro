@@ -11,6 +11,11 @@ async function bootstrap(): Promise<void> {
   const configService = app.get(ConfigService);
 
   app.use(helmet());
+  
+  // Augmentation de la limite de taille pour les photos haute résolution (KYC, Véhicules)
+  const { json, urlencoded } = require('body-parser');
+  app.use(json({ limit: '20mb' }));
+  app.use(urlencoded({ limit: '20mb', extended: true }));
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',

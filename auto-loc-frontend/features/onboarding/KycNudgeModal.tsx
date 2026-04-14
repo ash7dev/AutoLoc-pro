@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BadgeCheck, ShieldCheck, Star, Zap, X, AlertTriangle } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import type { ProfileResponse } from '@/lib/nestjs/auth';
 import { KycSubmitForm } from '@/features/kyc/KycSubmitForm';
@@ -105,6 +105,10 @@ export function KycNudgeModal({ kycStatus }: { kycStatus: KycStatus }) {
           'max-h-[85vh] overflow-y-auto',
         )}
       >
+        <DialogTitle className="sr-only">Vérification de l'identité</DialogTitle>
+        <DialogDescription className="sr-only">
+          Veuillez soumettre vos documents d'identité pour certifier votre profil.
+        </DialogDescription>
         <button
           type="button"
           onClick={() => dismiss(false)}

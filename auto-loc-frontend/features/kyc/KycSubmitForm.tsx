@@ -57,13 +57,6 @@ export function KycSubmitForm({
   const frontInputRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    return () => {
-      if (documentFrontSlot.previewUrl) URL.revokeObjectURL(documentFrontSlot.previewUrl);
-      if (documentBackSlot.previewUrl) URL.revokeObjectURL(documentBackSlot.previewUrl);
-    };
-  }, [documentFrontSlot.previewUrl, documentBackSlot.previewUrl]);
-
   const canSubmit = useMemo(() => {
     return Boolean(documentFrontSlot.file && documentBackSlot.file);
   }, [documentFrontSlot.file, documentBackSlot.file]);
@@ -99,11 +92,20 @@ export function KycSubmitForm({
       const profile = await submitKyc(formData);
       setStatus(profile.kycStatus);
       setSubmitted(true);
-    } catch (err) {
+    } catch (err: any) {
+      console.error("KYC Submit error:", err);
+      
+      // Traduction des erreurs techniques en messages "Pro"
       if (err instanceof ApiError) {
-        setSubmitError(err.message);
+        if (err.status === 413) {
+          setSubmitError("Vos photos sont trop volumineuses pour être envoyées (max recommandé 10Mo par fichier).");
+        } else {
+          setSubmitError(err.message);
+        }
+      } else if (err.message?.includes("PAYLOAD_TOO_LARGE") || err.message?.includes("too large")) {
+        setSubmitError("La taille totale des photos dépasse la limite autorisée. Essayez des fichiers plus légers.");
       } else {
-        setSubmitError("Une erreur est survenue lors de l'envoi.");
+        setSubmitError("Une erreur est survenue lors de l'envoi sécurisé. Veuillez réessayer.");
       }
     } finally {
       setSubmitting(false);

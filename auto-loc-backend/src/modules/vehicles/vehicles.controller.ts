@@ -194,13 +194,16 @@ export class VehiclesController {
 
   /**
    * DELETE /vehicles/:id/purge — Suppression définitive (BROUILLON / ARCHIVE uniquement).
-   * Utilisé comme rollback côté front quand l'upload de documents échoue après la création.
+   * Appelé par le propriétaire pour vider son garage ou en cas d'erreur de création.
    */
   @Delete(':id/purge')
   @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
   @Roles(RoleProfile.PROPRIETAIRE)
-  purgeDraft(@Param('id', ParseUUIDPipe) id: string) {
-    return this.vehiclesService.purgeDraft(id);
+  deletePermanently(
+    @CurrentUser() user: RequestUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.vehiclesService.deletePermanently(user, id);
   }
 
   // ── INDISPONIBILITÉS (Calendrier de disponibilité) ───────────────────

@@ -8,6 +8,7 @@ import { fetchVehicle } from '@/lib/nestjs/vehicles';
 import { fetchVehicleReservations } from '@/lib/nestjs/reservations';
 import { AvailabilityCalendar } from '@/features/vehicles/components/availability-calendar';
 import { EditVehicleButton } from '@/features/vehicles/owner/EditVehicleButton';
+import { DeleteVehicleButton } from '@/features/vehicles/owner/DeleteVehicleButton';
 import { DocumentViewButton } from '@/features/vehicles/owner/DocumentViewButton';
 import { ReservationStatusBadge } from '@/features/reservations/components/reservation-status';
 import {
@@ -217,6 +218,7 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
                 Voir l&apos;annonce
               </Link>
             )}
+            <DeleteVehicleButton vehicleId={vehicle.id} statut={vehicle.statut} />
             <EditVehicleButton vehicle={vehicle} />
           </div>
         </div>
