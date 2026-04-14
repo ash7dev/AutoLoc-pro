@@ -87,8 +87,57 @@ export function KycSubmitForm({
     setSubmitError(null);
     try {
       const formData = new FormData();
-      if (documentFrontSlot.file) formData.append("documentFront", documentFrontSlot.file);
-      if (documentBackSlot.file) formData.append("documentBack", documentBackSlot.file);
+      
+      // Compression des images avant envoi pour passer la limite Vercel de 4.5Mo
+      const compressImage = async (file: File): Promise<File> => {
+        if (file.size < 1024 * 1024) return file; // Moins de 1Mo, on ne touche à rien
+        
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            // Max 1600px de large/haut pour garder une super qualité tout en étant léger
+            const MAX_SIZE = 1600;
+            if (width > height) {
+              if (width > MAX_SIZE) {
+                height *= MAX_SIZE / width;
+                width = MAX_SIZE;
+              }
+            } else {
+              if (height > MAX_SIZE) {
+                width *= MAX_SIZE / height;
+                height = MAX_SIZE;
+              }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            canvas.toBlob((blob) => {
+              if (blob) {
+                resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+              } else {
+                resolve(file);
+              }
+            }, 'image/jpeg', 0.8); // 80% de qualité
+          };
+          img.src = URL.createObjectURL(file);
+        });
+      };
+
+      const [compressedFront, compressedBack] = await Promise.all([
+        documentFrontSlot.file ? compressImage(documentFrontSlot.file) : null,
+        documentBackSlot.file ? compressImage(documentBackSlot.file) : null,
+      ]);
+
+      if (compressedFront) formData.append("documentFront", compressedFront);
+      if (compressedBack) formData.append("documentBack", compressedBack);
+
       const profile = await submitKyc(formData);
       setStatus(profile.kycStatus);
       setSubmitted(true);
