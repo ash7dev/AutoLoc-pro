@@ -103,61 +103,7 @@ const SECTIONS: SectionConfig[] = [
     },
 ];
 
-// ── Fleet summary strip ────────────────────────────────────────────────────────
-
-function FleetSummary({ vehicles }: { vehicles: Vehicle[] }) {
-    const active = vehicles.filter(v => v.statut === "VERIFIE").length;
-    const pending = vehicles.filter(v => ["BROUILLON", "EN_ATTENTE_VALIDATION"].includes(v.statut)).length;
-    const totalRevenue = vehicles.reduce((acc, v) => {
-        const res = v._count?.reservations ?? v.totalLocations ?? 0;
-        return acc + v.prixParJour * res;
-    }, 0);
-    if (vehicles.length === 0) return null;
-
-    return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {/* Active */}
-            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/70 backdrop-blur-sm border border-emerald-100 shadow-sm">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200 flex items-center justify-center flex-shrink-0">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600" strokeWidth={2} />
-                </div>
-                <div>
-                    <p className="text-[20px] font-black text-emerald-700 tabular-nums leading-none">{active}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">Actifs</p>
-                </div>
-            </div>
-
-            {/* Pending */}
-            {pending > 0 && (
-                <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/70 backdrop-blur-sm border border-amber-100 shadow-sm">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 border border-amber-200 flex items-center justify-center flex-shrink-0">
-                        <Clock className="w-4 h-4 text-amber-600" strokeWidth={2} />
-                    </div>
-                    <div>
-                        <p className="text-[20px] font-black text-amber-700 tabular-nums leading-none">{pending}</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">En attente</p>
-                    </div>
-                </div>
-            )}
-
-            {/* Revenue */}
-            {totalRevenue > 0 && (
-                <div className="col-span-2 sm:col-span-1 flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/70 backdrop-blur-sm border border-slate-100 shadow-sm">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center flex-shrink-0">
-                        <Banknote className="w-4 h-4 text-slate-600" strokeWidth={2} />
-                    </div>
-                    <div>
-                        <p className="text-[14px] font-black text-slate-800 tabular-nums leading-none">
-                            {new Intl.NumberFormat("fr-FR", { notation: "compact", maximumFractionDigits: 1 }).format(totalRevenue)}
-                            <span className="text-[9px] font-semibold text-slate-400 ml-1">FCFA</span>
-                        </p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">Revenu estimé</p>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
+// Removed FleetSummary
 
 // ── Section header ─────────────────────────────────────────────────────────────
 
@@ -460,21 +406,21 @@ function VehicleCard({
                     </span>
 
                     {vehicle.carburant && (
-                        <span className="inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-100 px-2 py-[3px] text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-100 px-2 py-[3px] text-[10px] font-bold uppercase tracking-wide text-slate-900">
                             <Fuel className="h-2.5 w-2.5" strokeWidth={2} />
                             {FUEL_LABELS[vehicle.carburant] ?? vehicle.carburant}
                         </span>
                     )}
 
                     {vehicle.transmission && (
-                        <span className="inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-100 px-2 py-[3px] text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-100 px-2 py-[3px] text-[10px] font-bold uppercase tracking-wide text-slate-900">
                             <Settings2 className="h-2.5 w-2.5" strokeWidth={2} />
                             {vehicle.transmission === "AUTOMATIQUE" ? "Auto" : "Manuel"}
                         </span>
                     )}
 
                     {vehicle.nombrePlaces && (
-                        <span className="inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-100 px-2 py-[3px] text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-100 px-2 py-[3px] text-[10px] font-bold uppercase tracking-wide text-slate-900">
                             <Users className="h-2.5 w-2.5" strokeWidth={2} />
                             {vehicle.nombrePlaces} pl.
                         </span>
@@ -489,17 +435,17 @@ function VehicleCard({
                             ? "bg-emerald-50/70 border-emerald-100"
                             : "bg-slate-50/60 border-slate-100",
                     )}>
-                        <CalendarCheck className={cn("h-3.5 w-3.5 mb-0.5", isActive ? "text-emerald-500" : "text-slate-300")} strokeWidth={2} />
-                        <span className={cn("text-[14px] font-black tabular-nums leading-none", isActive ? "text-emerald-700" : "text-slate-600")}>{reservations}</span>
-                        <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wide">Loc.</span>
+                        <CalendarCheck className={cn("h-3.5 w-3.5 mb-0.5", isActive ? "text-emerald-500" : "text-slate-800")} strokeWidth={2} />
+                        <span className={cn("text-[16px] font-black tabular-nums leading-none", isActive ? "text-emerald-700" : "text-slate-900")}>{reservations}</span>
+                        <span className="text-[10.5px] font-bold text-slate-800 uppercase tracking-wide">Loc.</span>
                     </div>
 
                     <div className="flex flex-col items-center justify-center rounded-xl py-2.5 gap-0.5 bg-slate-50/60 border border-slate-100">
                         <Star className="h-3.5 w-3.5 mb-0.5 fill-amber-400 text-amber-400" strokeWidth={0} />
-                        <span className="text-[14px] font-black tabular-nums leading-none text-slate-700">
+                        <span className="text-[16px] font-black tabular-nums leading-none text-slate-900">
                             {vehicle.note > 0 ? Number(vehicle.note).toFixed(1) : "—"}
                         </span>
-                        <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wide">Note</span>
+                        <span className="text-[10.5px] font-bold text-slate-800 uppercase tracking-wide">Note</span>
                     </div>
 
                     <div className={cn(
@@ -508,13 +454,13 @@ function VehicleCard({
                             ? "bg-emerald-50/70 border-emerald-100"
                             : "bg-slate-50/60 border-slate-100",
                     )}>
-                        <TrendingUp className={cn("h-3.5 w-3.5 mb-0.5", isActive && estimatedRevenue > 0 ? "text-emerald-500" : "text-slate-300")} strokeWidth={2} />
-                        <span className={cn("text-[11px] font-black tabular-nums leading-none", isActive && estimatedRevenue > 0 ? "text-emerald-700" : "text-slate-600")}>
+                        <TrendingUp className={cn("h-3.5 w-3.5 mb-0.5", isActive && estimatedRevenue > 0 ? "text-emerald-500" : "text-slate-800")} strokeWidth={2} />
+                        <span className={cn("text-[13px] font-black tabular-nums leading-none", isActive && estimatedRevenue > 0 ? "text-emerald-700" : "text-slate-900")}>
                             {estimatedRevenue > 0
                                 ? new Intl.NumberFormat("fr-FR", { notation: "compact", maximumFractionDigits: 1 }).format(estimatedRevenue)
                                 : "—"}
                         </span>
-                        <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wide">Revenu</span>
+                        <span className="text-[10.5px] font-bold text-slate-800 uppercase tracking-wide">Revenu</span>
                     </div>
                 </div>
 
@@ -523,8 +469,8 @@ function VehicleCard({
 
                 {/* Footer: city + quick actions */}
                 <div className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium min-w-0">
-                        <MapPin className="h-3 w-3 shrink-0 text-slate-300" strokeWidth={1.5} />
+                    <span className="flex items-center gap-1.5 text-[11px] text-slate-800 font-bold min-w-0">
+                        <MapPin className="h-3 w-3 shrink-0 text-slate-800" strokeWidth={2} />
                         <span className="truncate">{vehicle.ville}</span>
                     </span>
 
@@ -533,7 +479,7 @@ function VehicleCard({
                             <Link
                                 href={`/vehicle/${vehicle.id}`}
                                 target="_blank"
-                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold text-slate-900 hover:text-emerald-700 transition-colors"
                                 title="Voir l'annonce"
                             >
                                 <Eye className="h-3 w-3" strokeWidth={2} />
@@ -840,9 +786,6 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
     return (
         <div className="space-y-6">
 
-            {/* ── Fleet summary ──────────────────────────── */}
-            <FleetSummary vehicles={vehicles} />
-
             {/* ── Toolbar ────────────────────────────────── */}
             <div className="flex flex-wrap items-center gap-3">
                 {/* Filter tabs */}
@@ -876,15 +819,6 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                 </div>
 
                 <div className="flex-1" />
-
-                {/* Add vehicle CTA */}
-                <Link
-                    href="/dashboard/owner/vehicles/new"
-                    className="hidden sm:inline-flex group items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-bold text-emerald-400 bg-slate-900 hover:bg-slate-800 transition-all hover:shadow-xl hover:shadow-slate-900/20 hover:-translate-y-0.5"
-                >
-                    <Zap className="h-3.5 w-3.5" strokeWidth={2.5} />
-                    Ajouter un véhicule
-                </Link>
 
                 {/* View toggle */}
                 <div className="flex items-center gap-0.5 rounded-xl border border-slate-200/60 bg-white/60 backdrop-blur-sm p-1">

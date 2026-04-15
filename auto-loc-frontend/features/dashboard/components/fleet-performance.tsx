@@ -8,194 +8,205 @@ import Link from "next/link";
 import { useMemo } from "react";
 
 interface FleetPerformanceProps {
-  vehicles: Vehicle[];
-  reservations?: Reservation[];
-  loading?: boolean;
+    vehicles: Vehicle[];
+    reservations?: Reservation[];
+    loading?: boolean;
 }
 
 export function FleetPerformance({ vehicles, reservations = [], loading }: FleetPerformanceProps) {
-  // ── Analytics Logic ─────────────────────────────────────────────────────────
-  
-  const fleetStats = useMemo(() => {
-    if (!vehicles.length) return { topVehicles: [], avgOccupancy: 0 };
+    // ── Analytics Logic ─────────────────────────────────────────────────────────
 
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const fleetStats = useMemo(() => {
+        if (!vehicles.length) return { topVehicles: [], avgOccupancy: 0 };
 
-    // 1. Map vehicles with their calculated stats
-    const stats = vehicles.map(v => {
-      // Filter reservations for this vehicle that are "money-making"
-      const vRes = reservations.filter(r => 
-        r.vehicule.id === v.id && 
-        ["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE"].includes(r.statut)
-      );
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-      // Revenue: All-time for simplicity, OR could be month-to-date
-      const revenue = vRes.reduce((sum, r) => sum + parseFloat(r.montantProprietaire || "0"), 0);
+        // 1. Map vehicles with their calculated stats
+        const stats = vehicles.map(v => {
+            // Filter reservations for this vehicle that are "money-making"
+            const vRes = reservations.filter(r =>
+                r.vehicule.id === v.id &&
+                ["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE"].includes(r.statut)
+            );
 
-      // Occupancy: Days rented in the last 30 days
-      let daysRented = 0;
-      vRes.forEach(r => {
-        const start = new Date(r.dateDebut);
-        const end = new Date(r.dateFin);
-        
-        // Only count days within the last 30 days window
-        const effectiveStart = start < thirtyDaysAgo ? thirtyDaysAgo : start;
-        const effectiveEnd = end > now ? now : end;
+            // Revenue: All-time for simplicity, OR could be month-to-date
+            const revenue = vRes.reduce((sum, r) => sum + parseFloat(r.montantProprietaire || "0"), 0);
 
-        if (effectiveEnd > effectiveStart) {
-          const diffTime = Math.abs(effectiveEnd.getTime() - effectiveStart.getTime());
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          daysRented += diffDays;
-        }
-      });
+            // Occupancy: Days rented in the last 30 days
+            let daysRented = 0;
+            vRes.forEach(r => {
+                const start = new Date(r.dateDebut);
+                const end = new Date(r.dateFin);
 
-      const occupancyRate = Math.min(100, (daysRented / 30) * 100);
+                // Only count days within the last 30 days window
+                const effectiveStart = start < thirtyDaysAgo ? thirtyDaysAgo : start;
+                const effectiveEnd = end > now ? now : end;
 
-      return {
-        ...v,
-        calculatedRevenue: revenue,
-        calculatedOccupancy: occupancyRate,
-      };
-    });
+                if (effectiveEnd > effectiveStart) {
+                    const diffTime = Math.abs(effectiveEnd.getTime() - effectiveStart.getTime());
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    daysRented += diffDays;
+                }
+            });
 
-    // 2. Sort by revenue descending
-    const sorted = stats.sort((a, b) => b.calculatedRevenue - a.calculatedRevenue);
-    
-    // 3. Overall fleet occupancy
-    const avgOccupancy = stats.reduce((sum, s) => sum + s.calculatedOccupancy, 0) / stats.length;
+            const occupancyRate = Math.min(100, (daysRented / 30) * 100);
 
-    return {
-      topVehicles: sorted.slice(0, 4), // Show top 4 for better fill since reviews are gone
-      avgOccupancy,
-    };
-  }, [vehicles, reservations]);
+            return {
+                ...v,
+                calculatedRevenue: revenue,
+                calculatedOccupancy: occupancyRate,
+            };
+        });
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-2xl border border-black/[0.06] p-6 shadow-sm animate-pulse h-full">
-        <div className="h-6 w-48 bg-black/5 rounded-lg mb-8" />
-        <div className="space-y-4">
-          <div className="h-20 bg-black/[0.02] rounded-xl" />
-          <div className="h-20 bg-black/[0.02] rounded-xl" />
-        </div>
-      </div>
-    );
-  }
+        // 2. Sort by revenue descending
+        const sorted = stats.sort((a, b) => b.calculatedRevenue - a.calculatedRevenue);
 
-  return (
-    <div className="bg-white rounded-2xl border border-black/[0.06] shadow-sm shadow-black/[0.02] flex flex-col h-full overflow-hidden">
-      
-      {/* Header */}
-      <div className="p-4 sm:p-6 border-b border-black/[0.04] flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-bold tracking-tight text-black flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-emerald-500" />
-            Performance de la flotte
-          </h3>
-          <p className="text-[12px] text-black/30 mt-0.5 font-medium tracking-tight">
-            Analyse de rentabilité et taux d'occupation
-          </p>
-        </div>
-        
-        {fleetStats.avgOccupancy > 0 && (
-          <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-emerald-500/10 rounded-full border border-emerald-500/10">
-            <TrendingUp className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-emerald-600" />
-            <span className="text-[10px] sm:text-[11px] font-bold text-emerald-600 uppercase tracking-tight">
-              {Math.round(fleetStats.avgOccupancy)}% actifs
-            </span>
-          </div>
-        )}
-      </div>
+        // 3. Overall fleet occupancy
+        const avgOccupancy = stats.reduce((sum, s) => sum + s.calculatedOccupancy, 0) / stats.length;
 
-      <div className="p-4 sm:p-6 flex-1 flex flex-col gap-6">
-        
-        {/* Top Vehicles Section */}
-        <section className="flex-1">
-          <div className="flex items-center justify-between mb-4 sm:mb-5">
-            <h4 className="text-[9.5px] font-black uppercase tracking-[0.2em] text-black/30 flex items-center gap-2">
-              <BarChart3 className="w-3.5 h-3.5" />
-              Classement Rentabilité
-            </h4>
-          </div>
+        return {
+            topVehicles: sorted.slice(0, 4), // Show top 4 for better fill since reviews are gone
+            avgOccupancy,
+        };
+    }, [vehicles, reservations]);
 
-          <div className="space-y-4">
-            {fleetStats.topVehicles.length > 0 ? (
-              fleetStats.topVehicles.map((v, i) => (
-                <div key={v.id} className="group relative">
-                  <div className="flex items-center gap-3 sm:gap-4 mb-2">
-                    {/* Rank Badge */}
-                    <div className={cn(
-                      "w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center text-[11px] sm:text-[12px] font-bold shrink-0 shadow-sm",
-                      i === 0 ? "bg-emerald-500 text-white" :
-                      i === 1 ? "bg-black text-white" :
-                      i === 2 ? "bg-black/60 text-white" :
-                      "bg-black/5 text-black/30"
-                    )}>
-                      {i + 1}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <p className="text-[12px] sm:text-[13px] font-bold text-black truncate">
-                          {v.marque} {v.modele}
-                        </p>
-                        <span className="text-[12px] sm:text-[13px] font-bold text-emerald-500 tabular-nums">
-                          {Math.round(v.calculatedRevenue).toLocaleString("fr-FR")} <span className="hidden xs:inline text-[9px] font-bold">FCFA</span>
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-black/30">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-2.5 h-2.5 sm:w-3 h-3" />
-                          <span className="hidden xs:inline">Occupation :</span> {Math.round(v.calculatedOccupancy)}%
-                        </div>
-                        <span> {v.totalLocations} loc.</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Progress Bar container */}
-                  <div className="ml-9 sm:ml-11 h-1 w-full bg-black/5 rounded-full overflow-hidden">
-                    <div 
-                      className={cn(
-                        "h-full rounded-full transition-all duration-1000 ease-out",
-                        i === 0 ? "bg-emerald-500" : "bg-black/20"
-                      )}
-                      style={{ 
-                        width: `${Math.min(100, (v.calculatedRevenue / (fleetStats.topVehicles[0].calculatedRevenue || 1)) * 100)}%` 
-                      }}
-                    />
-                  </div>
+    if (loading) {
+        return (
+            <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/70 border-l-[3px] border-l-blue-500 p-6 shadow-sm animate-pulse h-full">
+                <div className="h-6 w-48 bg-slate-100 rounded-lg mb-8" />
+                <div className="space-y-4">
+                    <div className="h-20 bg-slate-50 rounded-xl" />
+                    <div className="h-20 bg-slate-50 rounded-xl" />
                 </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center py-10 px-4 bg-black/[0.02] rounded-2xl border border-dashed border-black/10">
-                <Car className="w-8 h-8 sm:w-10 sm:h-10 text-black/10 mb-3" />
-                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-black/20 text-center">
-                  Aucun véhicule enregistré
-                </p>
-              </div>
-            )}
-          </div>
-        </section>
+            </div>
+        );
+    }
 
-        {/* Info Box */}
-        <div className="bg-black/[0.02] rounded-2xl p-3 sm:p-4 border border-black/[0.06]">
-          <p className="text-[10.5px] sm:text-[11.5px] text-black/50 leading-relaxed">
-            <span className="font-bold text-black">Conseil :</span> Optimisez vos tarifs sur les véhicules à faible taux d'occupation.
-          </p>
+    return (
+        <div className={cn(
+            "relative overflow-hidden rounded-2xl flex flex-col h-full",
+            "border border-l-[3px] border-white/70 border-l-blue-500",
+            "bg-white/70 backdrop-blur-xl",
+            "shadow-sm hover:shadow-xl hover:shadow-blue-500/5",
+            "transition-all duration-300",
+        )}>
+
+            {/* Decorative gradient orb */}
+            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br from-blue-400 to-indigo-400 opacity-[0.04] pointer-events-none blur-3xl" />
+            
+            {/* Header */}
+            <div className="relative z-10 p-4 sm:p-6 pb-4 flex items-center justify-between border-b border-white/40">
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 border border-blue-200 flex items-center justify-center shadow-sm">
+                        <Trophy className="w-4.5 h-4.5 text-blue-600" strokeWidth={1.75} />
+                    </div>
+                    <div>
+                        <h3 className="text-[15px] font-black tracking-tight text-slate-800 leading-tight">
+                            Performance
+                        </h3>
+                        <p className="text-[11px] font-bold text-slate-400 tracking-wide mt-0.5">
+                            Classement flotte
+                        </p>
+                    </div>
+                </div>
+
+                {fleetStats.avgOccupancy > 0 && (
+                    <div className="flex flex-col items-end">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-lg border border-emerald-100">
+                            <TrendingUp className="w-3 h-3 text-emerald-600" strokeWidth={2.5} />
+                            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest tabular-nums">
+                                {Math.round(fleetStats.avgOccupancy)}% actifs
+                            </span>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <div className="relative z-10 p-4 sm:p-6 pt-4 flex-1 flex flex-col gap-5">
+
+                {/* Top Vehicles Section */}
+                <section className="flex-1">
+                    <h4 className="text-[9.5px] font-black uppercase tracking-[0.18em] text-slate-400 flex items-center gap-2 mb-4">
+                        <BarChart3 className="w-3.5 h-3.5" strokeWidth={2} />
+                        Rentabilité
+                    </h4>
+
+                    <div className="space-y-4">
+                        {fleetStats.topVehicles.length > 0 ? (
+                            fleetStats.topVehicles.map((v, i) => (
+                                <div key={v.id} className="group relative">
+                                    <div className="flex items-center gap-3 sm:gap-4 mb-2.5">
+                                        {/* Rank Badge */}
+                                        <div className={cn(
+                                            "w-7 h-7 rounded-xl flex items-center justify-center text-[12px] font-black shrink-0 shadow-sm transition-all duration-300",
+                                            i === 0 ? "bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-blue-500/20 group-hover:scale-110" :
+                                                i === 1 ? "bg-slate-800 text-white group-hover:scale-105" :
+                                                    i === 2 ? "bg-slate-600 text-white group-hover:scale-105" :
+                                                        "bg-white border border-slate-200 text-slate-400 group-hover:bg-slate-50"
+                                        )}>
+                                            {i + 1}
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between gap-2 mb-0.5">
+                                                <p className="text-[13px] font-black text-slate-800 truncate">
+                                                    {v.marque} <span className="text-blue-600">{v.modele}</span>
+                                                </p>
+                                                <span className="text-[13px] font-black text-slate-900 tabular-nums">
+                                                    {Math.round(v.calculatedRevenue).toLocaleString("fr-FR")} <span className="text-[9px] font-bold text-slate-400 ml-0.5">FCFA</span>
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                                                <div className="flex items-center gap-1">
+                                                    <Clock className="w-3 h-3" strokeWidth={2} />
+                                                    <span>Occupation: <span className="text-slate-600 tabular-nums">{Math.round(v.calculatedOccupancy)}%</span></span>
+                                                </div>
+                                                <span className="text-[10px] font-bold text-slate-400 tabular-nums">{v.totalLocations} loc.</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Progress Bar container */}
+                                    <div className="ml-10 sm:ml-11 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner flex">
+                                        <div
+                                            className={cn(
+                                                "h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden",
+                                                i === 0 ? "bg-gradient-to-r from-blue-400 to-indigo-500" : "bg-gradient-to-r from-slate-300 to-slate-400"
+                                            )}
+                                            style={{
+                                                width: `${Math.max(2, (v.calculatedRevenue / (fleetStats.topVehicles[0]?.calculatedRevenue || 1)) * 100)}%`
+                                            }}
+                                        >
+                                            {/* Micro-shimmer effect */}
+                                            {i === 0 && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]" />}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-10 px-4 bg-white/50 rounded-2xl border border-dashed border-slate-200">
+                                <Car className="w-10 h-10 text-slate-200 mb-3" />
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">
+                                    Aucun véhicule enregistré
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </section>
+
+                {/* Footer Link */}
+                <div className="mt-auto pt-2">
+                    <Link
+                        href="/dashboard/owner/vehicles"
+                        className="flex items-center justify-center gap-2 py-3 px-4 bg-white border border-slate-200/60 hover:bg-slate-50 text-slate-700 rounded-xl text-[12px] font-bold shadow-sm transition-all group"
+                    >
+                        Voir le détail de ma flotte
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" strokeWidth={2.5} />
+                    </Link>
+                </div>
+            </div>
         </div>
-
-        {/* Footer Link */}
-        <Link 
-          href="/dashboard/owner/vehicles"
-          className="flex items-center justify-center gap-2 py-3.5 px-4 bg-black text-white rounded-xl text-[12px] font-bold hover:bg-black/90 transition-all group mt-auto"
-        >
-          Voir le détail de ma flotte
-          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-        </Link>
-      </div>
-    </div>
-  );
+    );
 }
