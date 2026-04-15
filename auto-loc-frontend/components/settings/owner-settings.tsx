@@ -386,7 +386,7 @@ export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
       {/* Header — compact sur mobile */}
       <div className="bg-emerald-900 text-white border-b border-emerald-950">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-3 h-14 sm:h-20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 h-auto sm:h-20 py-4 sm:py-0">
             <div>
               <h1 className="text-base sm:text-2xl font-bold tracking-tight">Paramètres</h1>
               <p className="hidden sm:block text-sm text-emerald-200 mt-1">Gérez vos informations personnelles et votre sécurité.</p>
@@ -395,10 +395,10 @@ export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
               onClick={switchToLocataire}
               disabled={switchingRole}
               variant="secondary"
-              className="bg-emerald-800 hover:bg-emerald-700 text-white border-none shadow-none text-xs sm:text-sm px-3 sm:px-4"
+              className="bg-emerald-800 hover:bg-emerald-700 text-white border-none shadow-none w-full sm:w-auto"
             >
-              {switchingRole ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 mr-1.5" />}
-              <span className="hidden xs:inline">Mode </span>Locataire
+              {switchingRole ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2 text-emerald-200" />}
+              Mode Locataire
             </Button>
           </div>
         </div>
