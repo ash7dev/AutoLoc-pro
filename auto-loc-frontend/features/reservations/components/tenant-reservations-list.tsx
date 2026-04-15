@@ -5,7 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
     CalendarDays, MapPin, Clock, Car,
-    ChevronRight, Search, Filter,
+    ChevronRight, Search, Zap, CheckCircle2,
+    Timer, Archive, AlertTriangle, XCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Reservation } from '@/lib/nestjs/reservations';
@@ -16,103 +17,114 @@ interface Props {
     initialReservations: Reservation[];
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-    EN_ATTENTE_PAIEMENT: { label: 'En attente', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-100' },
-    PAYEE: { label: 'Payée', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-100' },
-    CONFIRMEE: { label: 'Confirmée', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-100' },
-    EN_COURS: { label: 'En cours', color: 'text-violet-700', bg: 'bg-violet-50 border-violet-100' },
-    TERMINEE: { label: 'Terminée', color: 'text-slate-600', bg: 'bg-slate-50 border-slate-200' },
-    ANNULEE: { label: 'Annulée', color: 'text-red-600', bg: 'bg-red-50 border-red-100' },
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
+    PAYEE: { label: 'En attente validation', color: 'text-black', bg: 'bg-white border-black', dot: 'bg-amber-500' },
+    CONFIRMEE: { label: 'Confirmée', color: 'text-emerald-500', bg: 'bg-white border-emerald-500', dot: 'bg-emerald-500' },
+    EN_COURS: { label: 'En cours', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-500', dot: 'bg-emerald-500' },
+    TERMINEE: { label: 'Terminée', color: 'text-black/40', bg: 'bg-white border-black/10', dot: 'bg-black/20' },
+    ANNULEE: { label: 'Annulée', color: 'text-red-600', bg: 'bg-white border-red-200', dot: 'bg-red-500' },
+    LITIGE: { label: 'Litige', color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200', dot: 'bg-orange-500' },
 };
 
-const TABS = [
-    { key: 'all', label: 'Tout' },
-    { key: 'active', label: 'Actives' },
-    { key: 'completed', label: 'Terminées' },
-    { key: 'cancelled', label: 'Annulées' },
+const SECTIONS = [
+    {
+        id: 'upcoming',
+        title: 'Prochaines étapes',
+        subtitle: 'Vos locations en cours ou à venir',
+        icon: Zap,
+        statuses: ['PAYEE', 'CONFIRMEE', 'EN_COURS'],
+    },
+    {
+        id: 'history',
+        title: 'Historique & Suivi',
+        subtitle: 'Réservations terminées, annulées ou en litige',
+        icon: Archive,
+        statuses: ['TERMINEE', 'ANNULEE', 'LITIGE'],
+    },
 ];
 
-const ACTIVE_STATUSES = new Set(['EN_ATTENTE_PAIEMENT', 'PAYEE', 'CONFIRMEE', 'EN_COURS']);
-
 export function TenantReservationsList({ initialReservations }: Props): React.ReactElement {
-    const [tab, setTab] = useState('all');
     const [search, setSearch] = useState('');
 
     const filtered = useMemo(() => {
-        let result = initialReservations;
-        if (tab === 'active') result = result.filter((r) => ACTIVE_STATUSES.has(r.statut));
-        else if (tab === 'completed') result = result.filter((r) => r.statut === 'TERMINEE');
-        else if (tab === 'cancelled') result = result.filter((r) => r.statut === 'ANNULEE');
+        if (!search.trim()) return initialReservations;
+        const q = search.toLowerCase();
+        return initialReservations.filter(
+            (r) =>
+                r.vehicule?.marque?.toLowerCase().includes(q) ||
+                r.vehicule?.modele?.toLowerCase().includes(q) ||
+                r.vehicule?.ville?.toLowerCase().includes(q),
+        );
+    }, [initialReservations, search]);
 
-        if (search.trim()) {
-            const q = search.toLowerCase();
-            result = result.filter(
-                (r) =>
-                    r.vehicule?.marque?.toLowerCase().includes(q) ||
-                    r.vehicule?.modele?.toLowerCase().includes(q) ||
-                    r.vehicule?.ville?.toLowerCase().includes(q),
-            );
-        }
-        return result;
-    }, [initialReservations, tab, search]);
+    const grouped = useMemo(() => {
+        return SECTIONS.map(section => ({
+            ...section,
+            reservations: filtered.filter(r => section.statuses.includes(r.statut)),
+        })).filter(g => g.reservations.length > 0);
+    }, [filtered]);
 
     return (
-        <div className="space-y-6">
-            {/* Tabs + search */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <div className="flex items-center gap-1 bg-slate-50 border border-slate-100 rounded-xl p-1">
-                    {TABS.map((t) => (
-                        <button
-                            key={t.key}
-                            type="button"
-                            onClick={() => setTab(t.key)}
-                            className={cn(
-                                'px-4 py-2 text-[12px] font-semibold rounded-lg transition-all duration-200',
-                                tab === t.key
-                                    ? 'bg-black text-emerald-400 shadow-sm'
-                                    : 'text-black/50 hover:text-black',
-                            )}
-                        >
-                            {t.label}
-                        </button>
-                    ))}
-                </div>
-                <div className="relative flex-1 max-w-xs">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30" strokeWidth={2} />
-                    <input
-                        type="text"
-                        placeholder="Rechercher..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 py-2.5 text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-400 transition-all"
-                    />
-                </div>
+        <div className="space-y-8 font-inter">
+            {/* Search bar - Premium Style */}
+            <div className="relative max-w-md">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40" strokeWidth={2.5} />
+                <input
+                    type="text"
+                    placeholder="Chercher une marque, un modèle, une ville..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full rounded-2xl border-2 border-black/5 bg-white pl-12 pr-4 py-3 text-[14px] font-medium focus:outline-none focus:border-black transition-all placeholder:text-black/20 text-black"
+                />
             </div>
 
             {/* Results */}
             {filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-4 py-20 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
-                    <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center">
-                        <Car className="w-6 h-6 text-slate-300" strokeWidth={1.5} />
+                <div className="flex flex-col items-center justify-center gap-6 py-24 rounded-[2.5rem] border-2 border-dashed border-black/5 bg-white">
+                    <div className="w-20 h-20 rounded-3xl bg-black/5 flex items-center justify-center">
+                        <Car className="w-10 h-10 text-black/10" strokeWidth={1} />
                     </div>
-                    <p className="text-[14px] font-bold text-black/40">
-                        Aucune réservation
-                    </p>
+                    <div className="text-center space-y-2">
+                        <p className="text-xl font-bold text-black">Aucune réservation trouvée</p>
+                        <p className="text-black/40 text-sm max-w-xs mx-auto">
+                            Commencez par explorer nos véhicules disponibles pour votre prochain trajet.
+                        </p>
+                    </div>
                     <Link
                         href="/explorer"
-                        className="inline-flex items-center gap-2 rounded-xl bg-black text-emerald-400 px-5 py-2.5 text-[13px] font-semibold hover:bg-emerald-400 hover:text-black transition-all"
+                        className="inline-flex items-center gap-2 rounded-2xl bg-black text-emerald-400 px-8 py-4 text-[14px] font-black hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/10"
                     >
                         Explorer les véhicules
                         <ChevronRight className="w-4 h-4" />
                     </Link>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 gap-4">
-                    {filtered.map((reservation) => (
-                        <TenantReservationCard
-                            key={reservation.id}
-                            reservation={reservation}
-                        />
+                <div className="space-y-12">
+                    {grouped.map((group) => (
+                        <section key={group.id} className="space-y-6">
+                            <div className="flex items-center gap-4 border-b border-black/5 pb-4">
+                                <div className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center flex-shrink-0">
+                                    <group.icon className="w-6 h-6 text-emerald-400" strokeWidth={2} />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-black text-black tracking-tight leading-none">
+                                        {group.title}
+                                    </h2>
+                                    <p className="text-[13px] text-black/40 mt-1 font-medium">
+                                        {group.subtitle} • {group.reservations.length}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
+                                {group.reservations.map((reservation) => (
+                                    <TenantReservationCard
+                                        key={reservation.id}
+                                        reservation={reservation}
+                                    />
+                                ))}
+                            </div>
+                        </section>
                     ))}
                 </div>
             )}
@@ -120,16 +132,17 @@ export function TenantReservationsList({ initialReservations }: Props): React.Re
     );
 }
 
-// ── Reservation Card ──────────────────────────────────────────────────────────
+// ── Reservation Card (Premium Style) ──────────────────────────────────────────
 
 function TenantReservationCard({ reservation }: { reservation: Reservation }) {
     const { formatPrice } = useCurrency();
     const { vehicule } = reservation;
     const mainPhoto = vehicule?.photos?.[0]?.url ?? null;
-    const statusCfg = STATUS_CONFIG[reservation.statut] ?? {
+    const statusCfg = STATUS_CONFIG[reservation.statut] || {
         label: reservation.statut,
-        color: 'text-slate-600',
-        bg: 'bg-slate-50 border-slate-200',
+        color: 'text-black',
+        bg: 'bg-white border-black/10',
+        dot: 'bg-black/20',
     };
 
     const dateDebut = new Date(reservation.dateDebut).toLocaleDateString('fr-FR', {
@@ -144,65 +157,93 @@ function TenantReservationCard({ reservation }: { reservation: Reservation }) {
     });
 
     return (
-        <Link href={`/dashboard/reservations/${reservation.id}`} className="block">
-            <div className="group flex flex-col sm:flex-row gap-4 rounded-2xl border border-slate-100 bg-white p-4 hover:border-slate-200 hover:shadow-md transition-all duration-200">
-                {/* Photo */}
-                <div className="relative w-full sm:w-36 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100">
+        <Link href={`/dashboard/reservations/${reservation.id}`} className="block group">
+            <div className="flex flex-col lg:flex-row gap-6 p-5 rounded-[2rem] border-2 border-black/5 bg-white transition-all duration-300 hover:border-black hover:shadow-2xl hover:shadow-black/5 relative overflow-hidden">
+                
+                {/* Image Section */}
+                <div className="relative w-full lg:w-48 h-40 rounded-2xl overflow-hidden flex-shrink-0 bg-black/5">
                     {mainPhoto ? (
-                        <Image src={mainPhoto} alt="" fill sizes="144px" className="object-cover" />
+                        <Image 
+                            src={mainPhoto} 
+                            alt="" 
+                            fill 
+                            sizes="(max-width: 1024px) 100vw, 192px" 
+                            className="object-cover transition-transform duration-500 group-hover:scale-110" 
+                        />
                     ) : (
                         <div className="flex h-full items-center justify-center">
-                            <Car className="w-8 h-8 text-slate-300" strokeWidth={1.2} />
+                            <Car className="w-10 h-10 text-black/10" strokeWidth={1} />
                         </div>
                     )}
+                    {/* Floating status on mobile image */}
+                    <div className="absolute top-3 right-3 lg:hidden">
+                        <span className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider border backdrop-blur-md",
+                            statusCfg.bg,
+                            statusCfg.color
+                        )}>
+                            <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", statusCfg.dot)} />
+                            {statusCfg.label}
+                        </span>
+                    </div>
                 </div>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0 flex flex-col justify-between">
-                    <div>
-                        <div className="flex items-center justify-between gap-3">
-                            <p className="text-[15px] font-bold text-black truncate">
-                                {vehicule?.marque ?? '—'} {vehicule?.modele ?? ''}
-                            </p>
-                            <span
-                                className={cn(
-                                    'inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold border flex-shrink-0',
+                {/* Content Section */}
+                <div className="flex-1 flex flex-col justify-between min-w-0 py-1">
+                    <div className="space-y-4">
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0">
+                                <h3 className="text-xl font-black text-black truncate uppercase tracking-tighter italic">
+                                    {vehicule?.marque ?? '—'} {vehicule?.modele ?? ''}
+                                </h3>
+                                <div className="flex items-center gap-4 mt-2">
+                                    <div className="flex items-center gap-1.5 text-[13px] font-bold text-black/60">
+                                        <MapPin className="w-4 h-4 text-emerald-500" strokeWidth={2.5} />
+                                        {vehicule?.ville ?? '—'}
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-[13px] font-bold text-black/60">
+                                        <CalendarDays className="w-4 h-4 text-emerald-500" strokeWidth={2.5} />
+                                        {dateDebut} — {dateFin}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Status badge - Desktop only */}
+                            <div className="hidden lg:block">
+                                <span className={cn(
+                                    "flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest border",
                                     statusCfg.bg,
-                                    statusCfg.color,
-                                )}
-                            >
-                                {statusCfg.label}
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-3 mt-1.5">
-                            <span className="flex items-center gap-1 text-[12px] text-black/40">
-                                <MapPin className="w-3 h-3" strokeWidth={2} />
-                                {vehicule?.ville ?? '—'}
-                            </span>
-                            <span className="flex items-center gap-1 text-[12px] text-black/40">
-                                <CalendarDays className="w-3 h-3" strokeWidth={2} />
-                                {dateDebut} → {dateFin}
-                            </span>
+                                    statusCfg.color
+                                )}>
+                                    <span className={cn("w-2 h-2 rounded-full", statusCfg.dot)} />
+                                    {statusCfg.label}
+                                </span>
+                            </div>
                         </div>
                     </div>
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
-                        <p className="text-[15px] font-black text-emerald-600 tabular-nums">
-                            {Number.isFinite(Number(reservation.prixTotal))
-                                ? formatPrice(Number(reservation.prixTotal))
-                                : '—'}
-                        </p>
-                        <div className="flex items-center gap-2">
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-5 border-t border-black/5">
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-[11px] font-black text-black/20 uppercase tracking-widest">Total</span>
+                            <p className="text-2xl font-black text-black tracking-tighter">
+                                {Number.isFinite(Number(reservation.prixTotal))
+                                    ? formatPrice(Number(reservation.prixTotal))
+                                    : '—'}
+                            </p>
+                        </div>
+
+                        <div className="flex items-center justify-between sm:justify-end gap-6">
                             <PhoneDisplay 
                                 telephone={reservation.proprietaire?.telephone} 
                                 dateDebut={reservation.dateDebut}
                                 statut={reservation.statut}
-                                className="text-[11px]"
-                                showLabel={false}
+                                className="text-[12px] font-black"
+                                showLabel={true}
                             />
-                            <span className="flex items-center gap-1 text-[12px] font-medium text-black/30">
-                                <Clock className="w-3 h-3" />
-                                Réf: {reservation.id.slice(0, 8).toUpperCase()}
-                            </span>
+                            <div className="flex items-center gap-2 text-[11px] font-black text-black/20 uppercase">
+                                <Clock className="w-3.5 h-3.5" />
+                                REF: {reservation.id.slice(0, 8)}
+                            </div>
                         </div>
                     </div>
                 </div>
