@@ -284,14 +284,6 @@ export function OwnerDashboardView({
 
             {/* Mobile Layout */}
             <div className="lg:hidden space-y-4">
-                {/* Todo List - High priority on mobile */}
-                <OwnerTodoCard
-                    items={todoItems.length > 0 ? todoItems : [
-                        { id: 0, title: "Rien à signaler", description: "Tout est en ordre !", priority: "normal" as const, href: "/dashboard/owner" },
-                    ]}
-                    allHref="/dashboard/owner/reservations"
-                />
-
                 {/* Revenue + Wallet Cards */}
                 <div className="grid grid-cols-1 gap-3">
                     <RevenueChart
@@ -307,6 +299,14 @@ export function OwnerDashboardView({
                         ctaLabel="Gérer le wallet"
                     />
                 </div>
+
+                {/* Todo List - Just before Fleet Performance */}
+                <OwnerTodoCard
+                    items={todoItems.length > 0 ? todoItems : [
+                        { id: 0, title: "Rien à signaler", description: "Tout est en ordre !", priority: "normal" as const, href: "/dashboard/owner" },
+                    ]}
+                    allHref="/dashboard/owner/reservations"
+                />
 
                 {/* Fleet Performance - Mobile */}
                 <FleetPerformance 
