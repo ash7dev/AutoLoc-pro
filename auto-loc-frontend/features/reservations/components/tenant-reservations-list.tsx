@@ -103,23 +103,43 @@ const DEFAULT_STATUS = {
 
 const SECTIONS = [
     {
-        id: 'upcoming',
-        title: 'Prochaines étapes',
-        subtitle: 'Vos locations en cours ou à venir',
+        id: 'urgent',
+        title: 'Action requise',
+        subtitle: 'Ces réservations nécessitent votre validation',
         icon: Zap,
-        statuses: ['PAYEE', 'CONFIRMEE', 'EN_COURS'],
+        statuses: ['PAYEE'],
+    },
+    {
+        id: 'active',
+        title: 'Réservations actives',
+        subtitle: 'Confirmées et en cours de location',
+        icon: Timer,
+        statuses: ['CONFIRMEE', 'EN_COURS'],
+    },
+    {
+        id: 'disputes',
+        title: 'Litiges',
+        subtitle: 'Réservations nécessitant un suivi',
+        icon: AlertTriangle,
+        statuses: ['LITIGE'],
     },
     {
         id: 'history',
-        title: 'Historique & Suivi',
-        subtitle: 'Réservations terminées, annulées ou en litige',
+        title: 'Historique',
+        subtitle: 'Réservations terminées et annulées',
         icon: Archive,
-        statuses: ['TERMINEE', 'ANNULEE', 'LITIGE'],
+        statuses: ['TERMINEE', 'ANNULEE'],
     },
 ];
 
 export function TenantReservationsList({ initialReservations }: Props): React.ReactElement {
     const [search, setSearch] = useState('');
+    const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
+        Object.fromEntries(SECTIONS.map(s => [s.id, s.id === 'urgent' || s.id === 'active' || s.id === 'disputes'])),
+    );
+
+    const toggleSection = (id: string) =>
+        setOpenSections(prev => ({ ...prev, [id]: !prev[id] }));
 
     const filtered = useMemo(() => {
         if (!search.trim()) return initialReservations;
@@ -139,68 +159,130 @@ export function TenantReservationsList({ initialReservations }: Props): React.Re
         })).filter(g => g.reservations.length > 0);
     }, [filtered]);
 
+    const urgent = filtered.filter(r => r.statut === 'PAYEE').length;
+    const active = filtered.filter(r => ['CONFIRMEE', 'EN_COURS'].includes(r.statut)).length;
+    const litiges = filtered.filter(r => r.statut === 'LITIGE').length;
+
     return (
-        <div className="space-y-8 font-inter">
-            {/* Search bar - Premium Style */}
+        <div className="space-y-5">
+            {/* Stats strip */}
+            {filtered.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                    {urgent > 0 && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-[11.5px] font-bold text-white shadow-md shadow-amber-500/20">
+                            <Zap className="w-3 h-3" strokeWidth={2.5} />
+                            {urgent} à valider
+                        </span>
+                    )}
+                    {active > 0 && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[11.5px] font-bold text-emerald-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            {active} active{active > 1 ? "s" : ""}
+                        </span>
+                    )}
+                    {litiges > 0 && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-200 text-[11.5px] font-bold text-orange-700">
+                            <AlertTriangle className="w-3 h-3" strokeWidth={2.5} />
+                            {litiges} litige{litiges > 1 ? "s" : ""}
+                        </span>
+                    )}
+                    <span className="ml-auto text-[12px] font-medium text-slate-400 tabular-nums">
+                        {filtered.length} réservation{filtered.length > 1 ? "s" : ""}
+                    </span>
+                </div>
+            )}
+
+            {/* Search bar */}
             <div className="relative max-w-md">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40" strokeWidth={2.5} />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" strokeWidth={2.5} />
                 <input
                     type="text"
                     placeholder="Chercher une marque, un modèle, une ville..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full rounded-2xl border-2 border-black/5 bg-white pl-12 pr-4 py-3 text-[14px] font-medium focus:outline-none focus:border-black transition-all placeholder:text-black/20 text-black"
+                    className="w-full rounded-2xl border border-slate-200/60 bg-white/70 backdrop-blur-sm pl-12 pr-4 py-3 text-[14px] font-medium focus:outline-none focus:border-slate-300 transition-all placeholder:text-slate-400 text-slate-900"
                 />
             </div>
 
             {/* Results */}
             {filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-6 py-24 rounded-[2.5rem] border-2 border-dashed border-black/5 bg-white">
-                    <div className="w-20 h-20 rounded-3xl bg-black/5 flex items-center justify-center">
-                        <Car className="w-10 h-10 text-black/10" strokeWidth={1} />
+                <div className="flex flex-col items-center justify-center gap-6 py-24 rounded-2xl border border-dashed border-slate-200 bg-white/60 backdrop-blur-sm">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 flex items-center justify-center shadow-sm">
+                        <Archive className="w-6 h-6 text-slate-300" strokeWidth={1.5} />
                     </div>
-                    <div className="text-center space-y-2">
-                        <p className="text-xl font-bold text-black">Aucune réservation trouvée</p>
-                        <p className="text-black/40 text-sm max-w-xs mx-auto">
-                            Commencez par explorer nos véhicules disponibles pour votre prochain trajet.
+                    <div className="text-center">
+                        <p className="text-[13.5px] font-bold text-slate-500">Aucune réservation trouvée</p>
+                        <p className="text-[12px] text-slate-400 mt-1 max-w-xs mx-auto">
+                            Essayez de chercher avec d'autres critères.
                         </p>
                     </div>
-                    <Link
-                        href="/explorer"
-                        className="inline-flex items-center gap-2 rounded-2xl bg-black text-emerald-400 px-8 py-4 text-[14px] font-black hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-black/10"
-                    >
-                        Explorer les véhicules
-                        <ChevronRight className="w-4 h-4" />
-                    </Link>
                 </div>
             ) : (
-                <div className="space-y-12">
-                    {grouped.map((group) => (
-                        <section key={group.id} className="space-y-6">
-                            <div className="flex items-center gap-4 border-b border-black/5 pb-4">
-                                <div className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center flex-shrink-0">
-                                    <group.icon className="w-6 h-6 text-emerald-400" strokeWidth={2} />
-                                </div>
-                                <div>
-                                    <h2 className="text-lg font-black text-black tracking-tight leading-none">
-                                        {group.title}
-                                    </h2>
-                                    <p className="text-[13px] text-black/40 mt-1 font-medium">
-                                        {group.subtitle} • {group.reservations.length}
-                                    </p>
-                                </div>
-                            </div>
+                <div className="space-y-6">
+                    {grouped.map((group) => {
+                        const isOpen = openSections[group.id] ?? true;
+                        const Icon = group.icon;
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
-                                {group.reservations.map((reservation) => (
-                                    <TenantReservationCard
-                                        key={reservation.id}
-                                        reservation={reservation}
-                                    />
-                                ))}
-                            </div>
-                        </section>
-                    ))}
+                        return (
+                            <section key={group.id}>
+                                {/* Section header */}
+                                <button
+                                    type="button"
+                                    onClick={() => toggleSection(group.id)}
+                                    className="flex items-center gap-3 w-full py-3 group cursor-pointer"
+                                >
+                                    <div className={cn(
+                                        "w-8 h-8 rounded-xl border flex items-center justify-center flex-shrink-0",
+                                        group.id === 'urgent' ? "bg-gradient-to-br from-amber-100 to-orange-100 border-amber-200" :
+                                        group.id === 'active' ? "bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200" :
+                                        group.id === 'disputes' ? "bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200" :
+                                        "bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200",
+                                    group.id === 'urgent' ? "text-amber-600" :
+                                        group.id === 'active' ? "text-emerald-600" :
+                                        group.id === 'disputes' ? "text-orange-600" :
+                                        "text-slate-500",
+                                    )}>
+                                        <Icon className="w-4 h-4" strokeWidth={2} />
+                                    </div>
+                                    <div className="flex-1 min-w-0 text-left">
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="text-[13px] font-black text-slate-800 tracking-tight">
+                                                {group.title}
+                                            </h3>
+                                            <span className="text-[10px] font-bold tabular-nums text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">
+                                                {group.reservations.length}
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-400 font-medium mt-0.5 hidden sm:block">
+                                            {group.subtitle}
+                                        </p>
+                                    </div>
+                                    <ChevronDown className={cn(
+                                        "w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0",
+                                        isOpen && "rotate-180",
+                                    )} strokeWidth={2} />
+                                </button>
+
+                                {/* Animated content area */}
+                                <div className={cn(
+                                    "transition-all duration-300 ease-out overflow-hidden",
+                                    isOpen ? "max-h-[5000px] opacity-100" : "max-h-0 opacity-0",
+                                )}>
+                                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 pt-1">
+                                        {group.reservations.map((reservation) => (
+                                            <TenantReservationCard
+                                                key={reservation.id}
+                                                reservation={reservation}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Section divider */}
+                                <div className="mt-5 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+                            </section>
+                        );
+                    })}
                 </div>
             )}
         </div>
