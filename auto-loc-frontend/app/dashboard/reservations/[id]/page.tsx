@@ -9,6 +9,7 @@ import { TenantCancelButton } from '@/features/reservations/components/tenant-ca
 import { TenantCheckinButton } from '@/features/reservations/components/tenant-checkin-button';
 import { TenantDisputeButton } from '@/features/reservations/components/tenant-dispute-button';
 import { PhotosEtatLieu } from '@/features/reservations/components/photos-etat-lieu';
+import { PhoneDisplay } from '@/features/reservations/components/phone-display';
 import { ReviewForm } from '@/features/reviews/components/review-form';
 import {
     ArrowLeft, Car, FileText, Banknote, Clock, CheckCircle2,
@@ -102,6 +103,20 @@ export default async function TenantReservationDetailPage({ params }: { params: 
         : Math.max(1, Math.round((new Date(r.dateFin).getTime() - new Date(r.dateDebut).getTime()) / 86_400_000));
 
     const totalPaye = Number(r.prixTotal) || 0;
+
+    // Logique de visibilité pour l'adresse (identique à PhoneDisplay)
+    const canShowAddress = (() => {
+        if (r.statut === 'ANNULEE' || r.statut === 'TERMINEE') return false;
+        if (r.statut === 'EN_COURS' || r.statut === 'LITIGE') return true;
+        if (r.statut === 'CONFIRMEE') {
+            const debut = new Date(r.dateDebut);
+            const now = new Date();
+            const diffMs = debut.getTime() - now.getTime();
+            const diffHours = diffMs / (1000 * 60 * 60);
+            return diffHours <= 24;
+        }
+        return false;
+    })();
 
     /* ── Vehicle photo ── */
     const v = r.vehicule;
@@ -333,20 +348,12 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-[12px] text-slate-500 font-medium">Téléphone</span>
-                                    {isWithin24Hours(r.dateDebut) ? (
-                                        <span className="text-[13px] font-bold text-emerald-600">
-                                            {r.proprietaire?.telephone}
-                                        </span>
-                                    ) : (
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[13px] font-bold text-slate-400">
-                                                ••••••••
-                                            </span>
-                                            <span className="text-[10px] text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded">
-                                                Débloqué 24h avant
-                                            </span>
-                                        </div>
-                                    )}
+                                    <PhoneDisplay 
+                                        telephone={r.proprietaire?.telephone} 
+                                        dateDebut={r.dateDebut}
+                                        statut={r.statut}
+                                        showLabel={false}
+                                    />
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-[12px] text-slate-500 font-medium">Email</span>
@@ -371,20 +378,12 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-[12px] text-slate-500 font-medium">Téléphone</span>
-                                    {isWithin24Hours(r.dateDebut) ? (
-                                        <span className="text-[13px] font-bold text-emerald-600">
-                                            {r.locataire?.telephone}
-                                        </span>
-                                    ) : (
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[13px] font-bold text-slate-400">
-                                                ••••••••
-                                            </span>
-                                            <span className="text-[10px] text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded">
-                                                Débloqué 24h avant
-                                            </span>
-                                        </div>
-                                    )}
+                                    <PhoneDisplay 
+                                        telephone={r.locataire?.telephone} 
+                                        dateDebut={r.dateDebut}
+                                        statut={r.statut}
+                                        showLabel={false}
+                                    />
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-[12px] text-slate-500 font-medium">Email</span>
@@ -443,7 +442,19 @@ export default async function TenantReservationDetailPage({ params }: { params: 
 
                             {v?.ville && (
                                 <InfoRow icon={MapPin} label={r.adresseLivraison ? "Lieu du véhicule" : "Adresse de récupération"}>
-                                    <span className="capitalize text-slate-800">{v.ville}</span>
+                                    <div className="flex flex-col">
+                                        <span className="capitalize text-slate-800">{v.ville}</span>
+                                        {canShowAddress && (v as any).adresse && (
+                                            <span className="text-[12px] text-slate-500 mt-0.5 font-medium">
+                                                {(v as any).adresse}
+                                            </span>
+                                        )}
+                                        {!canShowAddress && r.statut === 'CONFIRMEE' && (
+                                            <p className="text-[10px] text-amber-600 font-medium mt-1">
+                                                Adresse précise disponible 24h avant
+                                            </p>
+                                        )}
+                                    </div>
                                 </InfoRow>
                             )}
 

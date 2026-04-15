@@ -301,6 +301,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                             <PhoneDisplay 
                                 telephone={r.locataire.telephone} 
                                 dateDebut={r.dateDebut}
+                                statut={r.statut}
                                 className="mt-2"
                                 showLabel={false}
                             />

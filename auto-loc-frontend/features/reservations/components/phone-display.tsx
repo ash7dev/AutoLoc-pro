@@ -5,6 +5,7 @@ import { Phone, Clock } from 'lucide-react';
 interface Props {
     telephone?: string;
     dateDebut: string | Date;
+    statut: string;
     className?: string;
     showLabel?: boolean;
 }
@@ -16,16 +17,26 @@ interface Props {
 export function PhoneDisplay({ 
     telephone, 
     dateDebut, 
+    statut,
     className = '',
     showLabel = true 
 }: Props) {
-    // Vérifier si on est dans les 24h avant la date de début
-    const isWithin24Hours = (() => {
-        const debut = new Date(dateDebut);
-        const now = new Date();
-        const diffMs = debut.getTime() - now.getTime();
-        const diffHours = diffMs / (1000 * 60 * 60);
-        return diffHours <= 24 && diffHours > 0;
+    // Nouvelle logique de visibilité basée sur le statut et le temps
+    const canShow = (() => {
+        if (statut === 'ANNULEE' || statut === 'TERMINEE') return false;
+        
+        if (statut === 'EN_COURS' || statut === 'LITIGE') return true;
+
+        if (statut === 'CONFIRMEE') {
+            const debut = new Date(dateDebut);
+            const now = new Date();
+            const diffMs = debut.getTime() - now.getTime();
+            const diffHours = diffMs / (1000 * 60 * 60);
+            // On affiche si on est à moins de 24h du début (ou après)
+            return diffHours <= 24;
+        }
+
+        return false;
     })();
 
     if (!telephone) {
@@ -36,7 +47,7 @@ export function PhoneDisplay({
         );
     }
 
-    if (isWithin24Hours) {
+    if (canShow) {
         return (
             <div className={`flex items-center gap-2 ${className}`}>
                 {showLabel && (
@@ -67,7 +78,7 @@ export function PhoneDisplay({
                 <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded">
                     <Clock className="w-3 h-3 text-amber-600" strokeWidth={2} />
                     <span className="text-[10px] text-amber-600 font-medium">
-                        24h avant
+                        {statut === 'CONFIRMEE' ? '24h avant' : 'Masqué'}
                     </span>
                 </div>
             </div>

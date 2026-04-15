@@ -195,6 +195,7 @@ function TenantReservationCard({ reservation }: { reservation: Reservation }) {
                             <PhoneDisplay 
                                 telephone={reservation.proprietaire?.telephone} 
                                 dateDebut={reservation.dateDebut}
+                                statut={reservation.statut}
                                 className="text-[11px]"
                                 showLabel={false}
                             />
