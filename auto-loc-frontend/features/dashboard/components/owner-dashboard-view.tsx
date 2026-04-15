@@ -9,7 +9,6 @@ import { WalletSnapshot } from "@/features/dashboard/components/wallet-snapshot"
 import { OwnerHeader } from "@/features/dashboard/components/owner-header";
 import { OverviewStats } from "@/features/dashboard/components/overview-stats";
 import { MobileQuickActions } from "@/features/dashboard/components/mobile-quick-actions";
-import { MobileRevenueCard } from "@/features/dashboard/components/mobile-revenue-card";
 import { FleetPerformance } from "@/features/dashboard/components/fleet-performance";
 import { useState, useMemo } from "react";
 import type { Reservation, OwnerStats } from "@/lib/nestjs/reservations";
@@ -287,10 +286,12 @@ export function OwnerDashboardView({
             <div className="lg:hidden space-y-4">
                 {/* Revenue + Wallet Cards */}
                 <div className="grid grid-cols-1 gap-3">
-                    <MobileRevenueCard
+                    <RevenueChart
+                        data={revenueData.points}
                         total={revenueData.totalRev.toLocaleString("fr-FR")}
                         change="0%"
-                        period="Ce mois"
+                        selectedMonth={revenuePeriod}
+                        onMonthChange={setRevenuePeriod}
                     />
                     <WalletSnapshot
                         data={walletSnapshot}
