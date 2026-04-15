@@ -218,10 +218,10 @@ export function BannerSection(): React.ReactElement {
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center"
+            className="object-cover object-center contrast-[1.08] brightness-[1.05] saturate-[1.05]"
           />
 
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/90" />
 
           <div className="relative z-10 flex min-h-[65vh] lg:min-h-[82vh] flex-col justify-end px-8 pb-20 pt-16 lg:px-16 lg:pb-24 lg:pt-20">
             <div className="max-w-2xl mb-10">
@@ -257,11 +257,11 @@ export function BannerSection(): React.ReactElement {
           onSubmit={handleSubmit}
           className={cn(
             // Mobile : carte en flux normal, juste sous le banner
-            'w-full rounded-2xl border border-white/10 bg-slate-950 mt-3',
+            'w-full rounded-2xl border border-white/10 bg-white/[0.03] mt-3',
             // Desktop : flottant centré qui déborde sur le contenu suivant
             'lg:absolute lg:left-1/2 lg:-translate-x-1/2 lg:bottom-0 lg:translate-y-1/2 lg:z-20',
-            'lg:w-[calc(100%-3rem)] lg:max-w-5xl lg:bg-black/80 lg:mt-0',
-            'shadow-2xl shadow-black/40 backdrop-blur-xl',
+            'lg:w-[calc(100%-3rem)] lg:max-w-5xl lg:bg-white/[0.04] lg:mt-0',
+            'shadow-2xl shadow-black/60 backdrop-blur-2xl border-white/10',
           )}
         >
 

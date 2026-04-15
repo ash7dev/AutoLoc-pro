@@ -30,6 +30,8 @@ export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
   private readonly resendApiKey: string;
   private readonly fromEmail: string;
+  private readonly supportEmail: string;
+  private readonly adminEmail: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -38,7 +40,15 @@ export class NotificationService {
     this.resendApiKey = this.configService.get<string>('RESEND_API_KEY', '');
     this.fromEmail = this.configService.get<string>(
       'RESEND_FROM_EMAIL',
-      'noreply@autoloc.sn',
+      'AutoLoc <noreply@autoloc.sn>',
+    );
+    this.supportEmail = this.configService.get<string>(
+      'SUPPORT_EMAIL',
+      'support@autoloc.sn',
+    );
+    this.adminEmail = this.configService.get<string>(
+      'ADMIN_EMAIL',
+      'support@autoloc.sn', // Fallback to support if admin not created
     );
   }
 
@@ -91,6 +101,7 @@ export class NotificationService {
         body: JSON.stringify({
           from: this.fromEmail,
           to: [toEmail],
+          reply_to: this.supportEmail,
           subject: template.subject,
           html: htmlBody,
         }),
@@ -154,5 +165,33 @@ export class NotificationService {
     this.logger.log(
       `📱 [SMS:stub] to=${message.to} body="${message.body}"`,
     );
+  }
+
+  /**
+   * Envoie une alerte interne à l'administrateur (via Resend ou log).
+   */
+  async sendInternalAlert(subject: string, body: string): Promise<void> {
+    if (!this.resendApiKey) {
+      this.logger.log(`🚨 [ALERT:stub] subject="${subject}" body="${body}"`);
+      return;
+    }
+
+    try {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: this.fromEmail,
+          to: [this.adminEmail],
+          subject: `🚨 ALERT: ${subject}`,
+          text: body,
+        }),
+      });
+    } catch (err) {
+      this.logger.error(`Failed to send internal alert: ${err}`);
+    }
   }
 }
