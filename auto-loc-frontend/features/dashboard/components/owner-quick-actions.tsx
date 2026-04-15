@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, CalendarCheck, CarFront, ChevronRight, MessageSquareWarning, Plus, Wallet } from "lucide-react";
+import { AlertTriangle, CalendarCheck, CarFront, ChevronRight, MessageSquareWarning, Plus, Wallet, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import type { Reservation } from "@/lib/nestjs/reservations";
 
 // ── Types & Constants ─────────────────────────────────────────────
@@ -25,6 +26,64 @@ const DISPUTE_REASONS = [
 
 interface QuickActionsProps {
     reservations: Reservation[];
+}
+
+// ── Action Item ────────────────────────────────────────────────────
+
+function ActionItem({
+    href,
+    onClick,
+    icon: Icon,
+    iconBg,
+    iconColor,
+    label,
+    description,
+    hoverAccent,
+    badge,
+    children,
+}: {
+    href?: string;
+    onClick?: () => void;
+    icon: React.ElementType;
+    iconBg: string;
+    iconColor: string;
+    label: string;
+    description: string;
+    hoverAccent: string;
+    badge?: React.ReactNode;
+    children?: React.ReactNode;
+}) {
+    const content = (
+        <div className={cn(
+            "group flex items-center gap-3.5 rounded-xl p-3.5 transition-all duration-200 cursor-pointer",
+            "bg-white/60 backdrop-blur-sm border border-slate-100/80",
+            "hover:shadow-md hover:-translate-y-[1px]",
+            hoverAccent,
+        )}>
+            <div className={cn(
+                "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm border",
+                iconBg,
+            )}>
+                <Icon className={cn("w-4.5 h-4.5", iconColor)} strokeWidth={1.75} />
+            </div>
+            <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-bold text-slate-800 group-hover:text-slate-900 transition-colors">
+                    {label}
+                </p>
+                <p className="text-[11px] font-medium text-slate-500 mt-0.5">
+                    {description}
+                </p>
+            </div>
+            {badge}
+            {!badge && (
+                <ChevronRight className="h-4 w-4 text-slate-300 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" strokeWidth={2} />
+            )}
+        </div>
+    );
+
+    if (href) return <Link href={href} className="block">{content}</Link>;
+    if (onClick) return <button type="button" onClick={onClick} className="block w-full text-left">{content}</button>;
+    return content;
 }
 
 // ── Component ───────────────────────────────────────────────────
@@ -68,120 +127,85 @@ export function OwnerQuickActions({ reservations }: QuickActionsProps) {
     };
 
     return (
-        <div className="rounded-2xl border border-black/[0.06] bg-white shadow-sm flex flex-col h-full">
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-black/[0.04]">
-                <h2 className="text-[14px] sm:text-[15px] font-bold tracking-tight text-black uppercase tracking-widest">Actions rapides</h2>
+        <div className={cn(
+            "relative overflow-hidden rounded-2xl flex flex-col h-full",
+            "border border-l-[3px] border-white/70 border-l-slate-800",
+            "bg-white/70 backdrop-blur-xl",
+            "shadow-sm",
+        )}>
+            {/* Decorative orb */}
+            <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 opacity-[0.04] pointer-events-none blur-3xl" />
+
+            <div className="relative z-10 flex items-center justify-between px-5 py-4 border-b border-slate-100/80">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center shadow-sm">
+                        <Zap className="w-4 h-4 text-slate-700" strokeWidth={1.75} />
+                    </div>
+                    <h2 className="text-[15px] font-black tracking-tight text-slate-800">Actions rapides</h2>
+                </div>
             </div>
 
-            <div className="p-3 sm:p-4 grid grid-cols-1 gap-3 flex-1 content-start">
+            <div className="relative z-10 p-3 sm:p-4 grid grid-cols-1 gap-2.5 flex-1 content-start">
 
                 {/* 1. Confirmer réservations */}
-                <Link
+                <ActionItem
                     href="/dashboard/owner/reservations"
-                    className="group flex flex-col justify-center rounded-xl border border-black/[0.06] bg-black/[0.02] p-4 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all duration-200"
-                >
-                    <div className="flex items-center justify-between pointer-events-none">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
-                                <CalendarCheck className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <p className="font-bold text-sm group-hover:text-emerald-700 transition-colors">
-                                    Confirmer réservations
-                                </p>
-                                <p className="text-xs text-black/30 mt-0.5">
-                                    Accepter les demandes payées
-                                </p>
-                            </div>
-                        </div>
-                        {pendingConfirmations > 0 && (
-                            <Badge variant="destructive" className="shrink-0 bg-red-500">{pendingConfirmations}</Badge>
-                        )}
-                        {pendingConfirmations === 0 && (
-                            <ChevronRight className="h-4 w-4 text-black/20 opacity-50 group-hover:text-emerald-500 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                        )}
-                    </div>
-                </Link>
+                    icon={CalendarCheck}
+                    iconBg="bg-gradient-to-br from-emerald-100 to-teal-100 border-emerald-200"
+                    iconColor="text-emerald-600"
+                    label="Confirmer réservations"
+                    description="Accepter les demandes payées"
+                    hoverAccent="hover:border-emerald-200 hover:bg-emerald-50/50"
+                    badge={pendingConfirmations > 0 ? (
+                        <span className="shrink-0 inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-lg bg-gradient-to-br from-red-500 to-rose-500 text-[10px] font-black text-white shadow-md shadow-red-500/20">
+                            {pendingConfirmations}
+                        </span>
+                    ) : undefined}
+                />
 
                 {/* 2. Déclarer un litige */}
-                <button
+                <ActionItem
                     onClick={() => setDisputeOpen(true)}
-                    className="group flex flex-col justify-center text-left rounded-xl border border-black/[0.06] bg-black/[0.02] p-4 hover:border-red-500/30 hover:bg-red-500/5 transition-all duration-200"
-                >
-                    <div className="flex items-center justify-between pointer-events-none">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/10 text-red-500">
-                                <MessageSquareWarning className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <p className="font-bold text-sm group-hover:text-red-700 transition-colors">
-                                    Déclarer un litige
-                                </p>
-                                <p className="text-xs text-black/30 mt-0.5">
-                                    Signaler un problème sur une location
-                                </p>
-                            </div>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-black/20 opacity-50 group-hover:text-red-500 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                    </div>
-                </button>
+                    icon={MessageSquareWarning}
+                    iconBg="bg-gradient-to-br from-red-100 to-rose-100 border-red-200"
+                    iconColor="text-red-600"
+                    label="Déclarer un litige"
+                    description="Signaler un problème sur une location"
+                    hoverAccent="hover:border-red-200 hover:bg-red-50/50"
+                />
 
                 {/* 3. Ajouter un véhicule */}
-                <Link
+                <ActionItem
                     href="/dashboard/owner/vehicles/new"
-                    className="group flex flex-col justify-center rounded-xl border border-black/[0.06] bg-black/[0.02] p-4 hover:border-black/20 hover:bg-black/5 transition-all duration-200"
-                >
-                    <div className="flex items-center justify-between pointer-events-none">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-black text-white">
-                                <Plus className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <p className="font-bold text-sm transition-colors">
-                                    Ajouter un véhicule
-                                </p>
-                                <p className="text-xs text-black/30 mt-0.5">
-                                    Mettre un nouveau véhicule en ligne
-                                </p>
-                            </div>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-black/20 opacity-50 group-hover:text-black group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                    </div>
-                </Link>
+                    icon={Plus}
+                    iconBg="bg-slate-900 border-slate-900"
+                    iconColor="text-white"
+                    label="Ajouter un véhicule"
+                    description="Mettre un nouveau véhicule en ligne"
+                    hoverAccent="hover:border-slate-300 hover:bg-slate-50/50"
+                />
 
                 {/* 4. Retirer des fonds */}
-                <Link
+                <ActionItem
                     href="/dashboard/owner/wallet"
-                    className="group flex flex-col justify-center rounded-xl border border-black/[0.06] bg-black/[0.02] p-4 hover:border-black/20 hover:bg-black/5 transition-all duration-200"
-                >
-                    <div className="flex items-center justify-between pointer-events-none">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-black/5 text-black">
-                                <Wallet className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <p className="font-bold text-sm transition-colors">
-                                    Retirer des fonds
-                                </p>
-                                <p className="text-xs text-black/30 mt-0.5">
-                                    Accéder au portefeuille
-                                </p>
-                            </div>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-black/20 opacity-50 group-hover:text-black group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                    </div>
-                </Link>
+                    icon={Wallet}
+                    iconBg="bg-gradient-to-br from-amber-100 to-orange-100 border-amber-200"
+                    iconColor="text-amber-700"
+                    label="Retirer des fonds"
+                    description="Accéder au portefeuille"
+                    hoverAccent="hover:border-amber-200 hover:bg-amber-50/50"
+                />
             </div>
 
             {/* ── Modal Déclarer un Litige ── */}
             <Dialog open={disputeOpen} onOpenChange={setDisputeOpen}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-md rounded-2xl border border-slate-100 shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
+                        <DialogTitle className="flex items-center gap-2 text-[16px] font-black">
                             <AlertTriangle className="h-5 w-5 text-orange-500" />
                             Déclarer un litige
                         </DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className="text-[13px] text-slate-500">
                             Signalez un incident lié à une location. Notre équipe interviendra pour résoudre la situation avec le locataire.
                         </DialogDescription>
                     </DialogHeader>
@@ -191,15 +215,15 @@ export function OwnerQuickActions({ reservations }: QuickActionsProps) {
                         <div className="space-y-2">
                             <Label htmlFor="reservation">Réservation concernée <span className="text-destructive">*</span></Label>
                             {eligibleForDispute.length === 0 ? (
-                                <div className="p-3 text-sm rounded border bg-muted/50 text-muted-foreground text-center">
+                                <div className="p-3 text-sm rounded-xl border bg-slate-50 text-slate-500 text-center">
                                     Aucune réservation éligible à un litige (En cours ou terminée récemment).
                                 </div>
                             ) : (
                                 <Select value={selectedResId} onValueChange={setSelectedResId} required>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="rounded-xl">
                                         <SelectValue placeholder="Sélectionnez la réservation" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="rounded-xl">
                                         {eligibleForDispute.map((r) => (
                                             <SelectItem key={r.id} value={r.id}>
                                                 {r.vehicule.marque} {r.vehicule.modele} — Loc : {r.locataire.prenom} {r.locataire.nom}
@@ -214,10 +238,10 @@ export function OwnerQuickActions({ reservations }: QuickActionsProps) {
                         <div className="space-y-2">
                             <Label htmlFor="reason">Motif du litige <span className="text-destructive">*</span></Label>
                             <Select value={disputeReason} onValueChange={setDisputeReason} required disabled={eligibleForDispute.length === 0}>
-                                <SelectTrigger>
+                                <SelectTrigger className="rounded-xl">
                                     <SelectValue placeholder="Sélectionnez le type de litige" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="rounded-xl">
                                     {DISPUTE_REASONS.map((reason) => (
                                         <SelectItem key={reason.value} value={reason.value}>
                                             {reason.label}
@@ -236,18 +260,19 @@ export function OwnerQuickActions({ reservations }: QuickActionsProps) {
                                 value={disputeDetails}
                                 onChange={(e) => setDisputeDetails(e.target.value)}
                                 rows={3}
+                                className="rounded-xl"
                                 disabled={eligibleForDispute.length === 0}
                             />
                         </div>
 
                         <DialogFooter className="pt-4">
-                            <Button type="button" variant="ghost" onClick={() => setDisputeOpen(false)}>
+                            <Button type="button" variant="ghost" onClick={() => setDisputeOpen(false)} className="rounded-xl">
                                 Annuler
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={isSubmitting || eligibleForDispute.length === 0 || !selectedResId || !disputeReason}
-                                className="bg-orange-600 hover:bg-orange-700 text-white"
+                                className="rounded-xl bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-600/20"
                             >
                                 {isSubmitting ? "Envoi..." : "Déclarer"}
                             </Button>
