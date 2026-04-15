@@ -213,15 +213,16 @@ export function BannerSection(): React.ReactElement {
         <div className="relative min-h-[65vh] lg:min-h-[82vh] overflow-hidden rounded-[2rem]">
 
           <Image
-            src="/banner.JPG"
-            alt="Location de véhicules au Sénégal — AutoLoc"
+            src="/banner-dark.png"
+            alt="Location de véhicules de prestige au Sénégal — AutoLoc"
             fill
             priority
+            quality={100}
             sizes="100vw"
-            className="object-cover object-center"
+            className="object-cover object-center contrast-[1.1] brightness-[1.1] saturate-[1.1]"
           />
 
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/90" />
 
           <div className="relative z-10 flex min-h-[65vh] lg:min-h-[82vh] flex-col justify-end px-8 pb-20 pt-16 lg:px-16 lg:pb-24 lg:pt-20">
             <div className="max-w-2xl mb-10">
