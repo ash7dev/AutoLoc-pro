@@ -106,8 +106,10 @@ export async function apiFetch<TResponse, TBody = undefined>(
       const isTimeout = (err as { name?: string }).name === 'AbortError';
       lastError = isTimeout ? new ApiError('Délai d\'attente dépassé', 408) : err;
 
-      // Erreur réseau (serveur jamais atteint) : on retry sur toutes les méthodes.
-      if (attempt < maxRetries) {
+      // Retry uniquement les méthodes idempotentes (GET, PUT, DELETE, HEAD).
+      // Un POST/PATCH peut avoir été traité côté serveur même si la réponse
+      // n'est pas revenue (timeout, coupure réseau) → retry = doublon.
+      if (attempt < maxRetries && SAFE_METHODS.has(method)) {
         await wait(backoffMs(attempt));
         continue;
       }

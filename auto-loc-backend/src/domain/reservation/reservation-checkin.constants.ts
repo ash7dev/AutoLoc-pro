@@ -1,5 +1,5 @@
-/** Fenêtre validation tacite locataire après check-in proprio (photos OK). */
-export const TACIT_CHECKIN_MS = 24 * 60 * 60 * 1000;
+/** Fenêtre validation tacite locataire après check-in proprio (photos OK). Fixé à 2h pour éviter les chevauchements sur les locations courtes. */
+export const TACIT_CHECKIN_MS = 4 * 60 * 60 * 1000;
 
 /** Délai inspection proprio / clôture auto après fin de location (dateFin). */
 export const CHECKOUT_INSPECTION_MS = 48 * 60 * 60 * 1000;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, CheckCircle2, Car, CircleDollarSign,
@@ -23,9 +23,14 @@ export function StepReview({ onBack }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { authFetch } = useAuthFetch();
+  // Verrou atomique anti double-submit : useState a un cycle de rendu de délai
+  // entre le 1er clic et le disabled du bouton, laissant une fenêtre pour un 2ème POST.
+  const submittingRef = useRef(false);
 
   const handlePublish = async () => {
     if (!step1 || !step2) return;
+    if (submittingRef.current) return; // Verrou synchrone
+    submittingRef.current = true;
     setLoading(true);
     setError(null);
 
@@ -75,7 +80,9 @@ export function StepReview({ onBack }: Props) {
       setVehicleId(vehicle.id);
       reset();
       router.replace(`/dashboard/owner/vehicles/${vehicle.id}`);
+      return; // Navigation démarrée — on ne touche plus à l'état du composant
     } catch (err) {
+      submittingRef.current = false; // Libérer le verrou pour permettre une nouvelle tentative
       const message = err instanceof Error ? err.message : "Une erreur est survenue.";
       setError(`La création de l'annonce a échoué : ${message}`);
       setLoading(false);
