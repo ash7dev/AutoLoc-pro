@@ -175,16 +175,9 @@ export class VehiclesService {
           });
         }
 
-        // Return with all relations populated
-        return tx.vehicule.findUniqueOrThrow({
-          where: { id: vehicle.id },
-          include: {
-            photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
-            tarifsProgressifs: { orderBy: { position: 'asc' } },
-            equipements: { include: { equipement: true } },
-          },
-        });
-      }, { timeout: 45000 }); // Optimisé : 45s pour uploads parallèles + compression
+        // Return the created vehicle directly (no refetch needed)
+        return vehicle;
+      }, { timeout: 20000 }); // Optimisé : 25s suffisant pour transaction sans refetch
     } catch (err: unknown) {
       if ((err as { code?: string }).code === 'P2002') {
         const target = (err as { meta?: { target?: string[] } }).meta?.target ?? [];

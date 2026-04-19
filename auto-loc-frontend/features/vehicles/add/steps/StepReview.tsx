@@ -44,7 +44,7 @@ export function StepReview({ onBack }: Props) {
       // ── Transaction unique : créer véhicule avec tous les documents ─────────────────────
       const vehicle = await authFetch<Vehicle, Record<string, unknown>>(VEHICLE_PATHS.create, {
         method: "POST",
-        timeoutMs: 45000,
+        timeoutMs: 25000,
         body: {
           marque: step1.marque,
           modele: step1.modele,

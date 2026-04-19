@@ -70,7 +70,7 @@ export async function apiFetch<TResponse, TBody = undefined>(
   const url = `${BASE_URL}${path}`;
   const method = options.method ?? 'GET';
   const maxRetries = options.maxRetries ?? 2;
-  const timeoutMs = options.timeoutMs ?? 12_000;
+  const timeoutMs = options.timeoutMs ?? 60_000;
 
   if (process.env.NODE_ENV === 'development') {
     // eslint-disable-next-line no-console
