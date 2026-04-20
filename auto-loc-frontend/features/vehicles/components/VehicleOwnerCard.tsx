@@ -152,13 +152,13 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum, age
 }
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { useCallback, useEffect, useRef } from 'react';
 import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles';
 import { ReservationCalendar } from '@/features/vehicles/components/ReservationCalendar';
 import { apiFetch, ApiError } from '@/lib/nestjs/api-client';
 import type { ProfileResponse } from '@/lib/nestjs/auth';
 import { ReservationGateModal } from '@/features/reservations/components/ReservationGateModal';
+import { AgeRestrictionModal } from '@/features/reservations/components/AgeRestrictionModal';
 
 function calcAge(dateStr: string): number {
     const birth = new Date(dateStr);
@@ -182,6 +182,8 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
     const [gateProfile, setGateProfile] = useState<ProfileResponse | null>(null);
     const [gateLoading, setGateLoading] = useState(false);
     const [inlineError, setInlineError] = useState<React.ReactNode | null>(null);
+    const [ageBlockOpen, setAgeBlockOpen] = useState(false);
+    const [ageBlockData, setAgeBlockData] = useState<{ userAge: number } | null>(null);
     const [horsDakar, setHorsDakar] = useState(false);
     const [wantsDelivery, setWantsDelivery] = useState(false);
     const [deliveryAddress, setDeliveryAddress] = useState('');
@@ -216,31 +218,26 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
         setGateLoading(true);
         try {
             const profile = await apiFetch<ProfileResponse>('/auth/me');
-            if (ageMinimum && ageMinimum > 0) {
-                if (!profile.dateNaissance) {
-                    setInlineError(
-                        <>
-                            Date de naissance manquante.{' '}
-                            <Link href="/dashboard/settings/profile" className="underline font-bold hover:text-red-900">
-                                Complétez votre profil
-                            </Link>{' '}
-                            pour continuer.
-                        </>,
-                    );
-                    return;
-                }
-                const age = calcAge(profile.dateNaissance);
+
+            // ── Age Block (independent from Gate) ──────────────────────────────
+            // Only fires when: user is logged in + birth date KNOWN + age < minimum.
+            // Hard restriction — NOT a completable step — do NOT open Gate.
+            if (ageMinimum && ageMinimum > 0 && profile.dateNaissance) {
+                const birth = new Date(profile.dateNaissance);
+                const today = new Date();
+                let age = today.getFullYear() - birth.getFullYear();
+                const m = today.getMonth() - birth.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
                 if (age < ageMinimum) {
-                    setInlineError(`Âge minimum requis : ${ageMinimum} ans. Vous avez ${age} ans.`);
-                    return;
+                    setAgeBlockData({ userAge: age });
+                    setAgeBlockOpen(true);
+                    return; // Stop here — do NOT open the Gate
                 }
             }
-            if (!profile.phoneVerified || !profile.phone || profile.kycStatus !== 'VERIFIE') {
-                setGateProfile(profile);
-                setGateOpen(true);
-                return;
-            }
-            router.push(`/vehicle/${vehicleId}/payment?${buildParams()}`);
+
+            // ── Gate (profile completion) ──────────────────────────────────────
+            setGateProfile(profile);
+            setGateOpen(true);
         } catch (err) {
             if (err instanceof ApiError && err.status === 401) {
                 const queryParams = buildParams().toString();
@@ -287,6 +284,17 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
 
     return (
         <>
+            {/* ── Age Restriction Block (hard stop — independent of Gate) ── */}
+            {ageBlockData && (
+                <AgeRestrictionModal
+                    open={ageBlockOpen}
+                    onClose={() => setAgeBlockOpen(false)}
+                    ageMinimum={ageMinimum!}
+                    userAge={ageBlockData.userAge}
+                />
+            )}
+
+            {/* ── Profile completion Gate ───────────────────────────────── */}
             <ReservationGateModal
                 open={gateOpen}
                 onOpenChange={setGateOpen}

@@ -15,6 +15,7 @@ import { apiFetch, ApiError } from '@/lib/nestjs/api-client';
 import type { ProfileResponse } from '@/lib/nestjs/auth';
 import { ReservationCalendar } from '@/features/vehicles/components/ReservationCalendar';
 import { ReservationGateModal } from "@/features/reservations/components/ReservationGateModal";
+import { AgeRestrictionModal } from "@/features/reservations/components/AgeRestrictionModal";
 
 function calculateAge(dateStr: string): number {
   const birth = new Date(dateStr);
@@ -49,6 +50,8 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
   const [gateProfile, setGateProfile] = useState<ProfileResponse | null>(null);
   const [gateLoading, setGateLoading] = useState(false);
   const [inlineError, setInlineError] = useState<React.ReactNode | null>(null);
+  const [ageBlockOpen, setAgeBlockOpen] = useState(false);
+  const [ageBlockData, setAgeBlockData] = useState<{ userAge: number } | null>(null);
   const [horsDakar, setHorsDakar] = useState(false);
   const [wantsDelivery, setWantsDelivery] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState('');
@@ -128,6 +131,24 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
     setGateLoading(true);
     try {
       const profile = await apiFetch<ProfileResponse>('/auth/me');
+
+      // ── Age Block (independent from Gate) ──────────────────────────────
+      // Only fires when: user is logged in + birth date is known + age < minimum.
+      // This is NOT a completable step — it's a hard restriction.
+      if (ageMinimum && ageMinimum > 0 && profile.dateNaissance) {
+        const birth = new Date(profile.dateNaissance);
+        const today = new Date();
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+        if (age < ageMinimum) {
+          setAgeBlockData({ userAge: age });
+          setAgeBlockOpen(true);
+          return; // Stop here — do NOT open the Gate
+        }
+      }
+
+      // ── Gate (profile completion) ───────────────────────────────────────
       setGateProfile(profile);
       setGateOpen(true);
     } catch (err) {
@@ -146,6 +167,17 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
 
   return (
     <div className="sticky top-[76px] space-y-3">
+      {/* ── Age Restriction Block (hard stop — independent of Gate) ── */}
+      {ageBlockData && (
+        <AgeRestrictionModal
+          open={ageBlockOpen}
+          onClose={() => setAgeBlockOpen(false)}
+          ageMinimum={ageMinimum!}
+          userAge={ageBlockData.userAge}
+        />
+      )}
+
+      {/* ── Profile completion Gate ───────────────────────────────── */}
       <ReservationGateModal
         open={gateOpen}
         onOpenChange={setGateOpen}
