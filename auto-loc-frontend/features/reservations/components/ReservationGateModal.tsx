@@ -12,6 +12,7 @@ import type { ProfileResponse } from "@/lib/nestjs/auth";
 import { ModalShell } from "@/features/shared/ModalShell";
 import { apiFetch } from "@/lib/nestjs/api-client";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 /* ── Types ───────────────────────────────────────────────── */
 type Gate = "phone" | "kyc" | "permis" | "age" | "age_phone" | "create_profile" | "ready";
@@ -454,12 +455,15 @@ function CreateProfileGate({ onComplete }: { onComplete: () => void }) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700
-          disabled:bg-slate-200 disabled:text-slate-400 text-white text-[13.5px] font-bold
-          py-3 px-5 transition-all duration-200"
+        className={cn(
+          "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[13.5px] font-bold transition-all duration-200 mt-2",
+          !loading
+            ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20 hover:-translate-y-px active:translate-y-0"
+            : "bg-slate-100 text-slate-400 cursor-not-allowed"
+        )}
       >
         {loading
-          ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Création...</>
+          ? <><Loader2 className="w-4 h-4 animate-spin" />Création…</>
           : <>Créer mon profil<ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>}
       </button>
     </form>
@@ -554,12 +558,15 @@ function AgePhoneGate({ ageMinimum, onComplete }: { ageMinimum: number; onComple
       <button
         type="submit"
         disabled={loading || !dateNaissance || !phone}
-        className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700
-          disabled:bg-slate-200 disabled:text-slate-400 text-white text-[13.5px] font-bold
-          py-3 px-5 transition-all duration-200"
+        className={cn(
+          "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[13.5px] font-bold transition-all duration-200 mt-2",
+          (!loading && dateNaissance && phone)
+            ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20 hover:-translate-y-px active:translate-y-0"
+            : "bg-slate-100 text-slate-400 cursor-not-allowed"
+        )}
       >
         {loading
-          ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Enregistrement...</>
+          ? <><Loader2 className="w-4 h-4 animate-spin" />Enregistrement…</>
           : <>Confirmer<ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>}
       </button>
     </form>
@@ -628,12 +635,15 @@ function AgeGate({ onProceed, ageMinimum }: { onProceed: () => void; ageMinimum:
       <button
         type="submit"
         disabled={loading || !dateNaissance}
-        className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700
-          disabled:bg-slate-200 disabled:text-slate-400 text-white text-[13.5px] font-bold
-          py-3 px-5 transition-all duration-200"
+        className={cn(
+          "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[13.5px] font-bold transition-all duration-200 mt-2",
+          (!loading && dateNaissance)
+            ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20 hover:-translate-y-px active:translate-y-0"
+            : "bg-slate-100 text-slate-400 cursor-not-allowed"
+        )}
       >
         {loading
-          ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Vérification...</>
+          ? <><Loader2 className="w-4 h-4 animate-spin" />Vérification…</>
           : <>Confirmer mon âge<ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>}
       </button>
     </form>

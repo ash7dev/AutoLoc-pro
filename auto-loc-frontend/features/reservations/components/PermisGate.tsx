@@ -215,7 +215,7 @@ export function PermisGate({ onSubmitted, onProceed }: PermisGateProps) {
                         type="button"
                         onClick={onProceed}
                         disabled={loading}
-                        className="w-full h-10 rounded-xl text-[13px] font-semibold text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all"
+                        className="w-full h-12 rounded-xl text-[13px] font-semibold text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all mt-1"
                     >
                         Annuler
                     </button>

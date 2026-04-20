@@ -131,7 +131,7 @@ export function KycGate({
             <button
               type="button"
               onClick={onProceed}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-[13.5px] font-bold text-white shadow-md shadow-emerald-500/25 hover:bg-emerald-600 transition-all"
+              className="w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-slate-900 px-5 text-[13.5px] font-bold text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20 hover:-translate-y-px active:translate-y-0 transition-all"
             >
               Continuer vers le formulaire
               <ArrowRight className="h-4 w-4" />
@@ -257,10 +257,10 @@ export function KycGate({
       {/* Navigation */}
       <div className="flex items-center justify-between">
         {subStep > 1 ? (
-          <button
+            <button
             type="button"
             onClick={() => goTo((subStep - 1) as SubStep)}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 transition-all"
+            className="flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-[13.5px] font-semibold text-slate-600 hover:bg-slate-50 transition-all"
           >
             Retour
           </button>
@@ -271,7 +271,7 @@ export function KycGate({
             type="button"
             onClick={() => goTo((subStep + 1) as SubStep)}
             disabled={(subStep === 1 && !frontFile) || (subStep === 2 && !backFile)}
-            className="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-[13px] font-bold text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-[13.5px] font-bold text-white shadow-sm hover:bg-emerald-500 hover:shadow-md hover:shadow-emerald-500/20 hover:-translate-y-px active:translate-y-0 transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none disabled:hover:translate-y-0 disabled:cursor-not-allowed"
           >
             Suivant <ArrowRight className="h-4 w-4" />
           </button>
@@ -280,7 +280,7 @@ export function KycGate({
             type="button"
             onClick={handleSubmit}
             disabled={submitting || !frontFile || !backFile}
-            className="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-[13px] font-bold text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-[13.5px] font-bold text-white shadow-sm hover:bg-emerald-500 hover:shadow-md hover:shadow-emerald-500/20 hover:-translate-y-px active:translate-y-0 transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none disabled:hover:translate-y-0 disabled:cursor-not-allowed"
           >
             {submitting
               ? <><Loader2 className="h-4 w-4 animate-spin" />Envoi…</>
