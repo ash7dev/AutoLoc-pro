@@ -129,7 +129,7 @@ export class AuthService {
         data: {
           userId: user.sub,
           email: user.email ? this.normalizeEmail(user.email) : null,
-          phone: user.phone ?? null,
+          phone: user.phone ? this.normalizePhone(user.phone) : null,
           role: DEFAULT_ROLE,
         },
       });
