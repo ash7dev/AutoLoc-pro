@@ -26,11 +26,27 @@ export function useRegister() {
     setLoading(true);
     setError(null);
 
-    // 1. Pré-vérification pour bloquer les doublons proprement
-    const isAvailable = await checkIsAvailable(input.email, input.telephone);
-    if (!isAvailable) {
-      setLoading(false);
-      return { success: false, unconfirmed: false, requiresVerification: false };
+    // 1. Pré-vérification via NOTRE base de données (Source de vérité)
+    try {
+      const res = await checkAvailability({ email: input.email, phone: input.telephone });
+      
+      // Si l'utilisateur existe déjà COMPLÈTEMENT dans notre base
+      if (!res.available && res.hasUtilisateur) {
+        setError(res.message ?? 'Ce compte existe déjà. Veuillez vous connecter.');
+        setLoading(false);
+        return { success: false, unconfirmed: false, requiresVerification: false };
+      }
+
+      // Si l'utilisateur existe dans notre Profile mais sans Utilisateur (Onboarding interrompu)
+      if (!res.available && !res.hasUtilisateur) {
+        console.log('[Register] Compte partiel détecté, redirection vers vérification/onboarding');
+        // On tente quand même un resend au cas où l'email n'est pas confirmé côté Supabase
+        await supabase.auth.resend({ type: 'signup', email: input.email });
+        setLoading(false);
+        return { success: false, unconfirmed: true, requiresVerification: true };
+      }
+    } catch (err) {
+      console.error('[Register] Availability check failed, continuing with Supabase...', err);
     }
 
     // 2. Sign up Supabase
@@ -46,15 +62,13 @@ export function useRegister() {
       },
     });
 
-    if (supaError) {
-      setError(mapSupabaseError(supaError.message));
-      setLoading(false);
-      return { success: false, unconfirmed: false, requiresVerification: false };
-    }
+    // Cas spécifique : Utilisateur existe dans Supabase mais pas dans notre DB (non-confirmé)
+    // Supabase renvoie souvent un utilisateur sans identités dans ce cas.
+    const isUnconfirmed = (data.user && !data.session && (data.user.identities?.length ?? 0) === 0) ||
+                         supaError?.message?.includes('already registered');
 
-    // Cas particulier : email déjà dans Supabase mais pas encore confirmé.
-    if (data.user && !data.session && (data.user.identities?.length ?? 0) === 0) {
-      // Déclencher le renvoi d'OTP pour débloquer l'utilisateur
+    if (isUnconfirmed) {
+      console.log('[Register] User exists in Supabase but unconfirmed. Resending code...');
       await supabase.auth.resend({
           type: 'signup',
           email: input.email,
@@ -62,6 +76,13 @@ export function useRegister() {
       setLoading(false);
       return { success: false, unconfirmed: true, requiresVerification: true };
     }
+
+    if (supaError) {
+      setError(mapSupabaseError(supaError.message));
+      setLoading(false);
+      return { success: false, unconfirmed: false, requiresVerification: false };
+    }
+
 
     // Si on a déjà une session (email confirmation OFF ou auto-confirm activé), on synchronise.
     if (data.session?.user) {

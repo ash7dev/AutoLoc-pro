@@ -23,9 +23,11 @@ export default async function OwnerReservationsPage() {
   } catch (err) {
     if (err instanceof ApiError) {
       if (err.status === 401) redirect("/login?expired=1");
-      if (err.status === 403) redirect("/become-owner");
-      console.error("[owner/reservations] API error", err.status, err.message, err.details);
-    } else {
+      // On retire la redirection vers /become-owner sur 403 car elle cause une boucle.
+      // Le OwnerLayout se charge désormais de rediriger vers /complete-profile si besoin.
+      console.error("[owner/reservations] API error", err.status, err.message);
+    }
+ else {
       console.error("[owner/reservations] Unexpected error", err);
     }
     reservations = [];

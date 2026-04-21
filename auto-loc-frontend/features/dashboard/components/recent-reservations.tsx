@@ -175,12 +175,14 @@ export function RecentReservations({
   loading = false,
   title,
   className,
+  cta,
 }: {
   reservations?: ReservationItem[];
   mode?: "recent" | "pipeline";
   loading?: boolean;
   title?: string;
   className?: string;
+  cta?: { label: string; href: string };
 }) {
   const effectiveTitle = title ?? "Réservations récentes";
 
@@ -232,11 +234,21 @@ export function RecentReservations({
 
         {/* Empty */}
         {!loading && reservations.length === 0 && (
-          <div className="flex flex-col items-center gap-3 py-14">
+          <div className="flex flex-col items-center gap-4 py-14">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 flex items-center justify-center shadow-sm">
               <Car className="w-5 h-5 text-slate-300" strokeWidth={1.5} />
             </div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Aucune réservation</p>
+            <div className="text-center space-y-1">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Aucune réservation</p>
+              <p className="text-[10px] text-slate-300 font-medium">Les locations apparaîtront ici.</p>
+            </div>
+            <Link
+              href="/dashboard/owner/vehicles/add"
+              className="mt-2 px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg text-[11px] font-bold hover:bg-emerald-100 transition-colors flex items-center gap-2"
+            >
+              Ajouter mon premier véhicule
+              <ArrowRight className="w-3 h-3" strokeWidth={2.5} />
+            </Link>
           </div>
         )}
 

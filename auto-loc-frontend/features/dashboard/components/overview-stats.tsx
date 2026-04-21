@@ -39,7 +39,7 @@ function buildStats(data: OwnerStats | null | undefined): StatItem[] {
             label: "Revenus du mois",
             value: formatRevenu(data.revenusMois),
             unit: "FCFA",
-            delta: data.revenusMois > 0 ? "Ce mois-ci" : "Aucun revenu",
+            delta: data.revenusMois > 0 ? "Ce mois-ci" : "En attente de revenus",
             trend: data.revenusMois > 0 ? "up" : "neutral",
             icon: Banknote,
             accent: "emerald",
@@ -51,7 +51,7 @@ function buildStats(data: OwnerStats | null | undefined): StatItem[] {
             unit: "en cours",
             delta: data.reservationsActives > 0
                 ? `${data.reservationsActives} location${data.reservationsActives > 1 ? "s" : ""}`
-                : "Aucune active",
+                : "Prêt à louer",
             trend: data.reservationsActives > 0 ? "up" : "neutral",
             icon: Car,
             accent: "blue",
@@ -65,7 +65,7 @@ function buildStats(data: OwnerStats | null | undefined): StatItem[] {
                 ? "Très bon taux"
                 : data.tauxOccupation > 0
                     ? "En activité"
-                    : "Aucune réservation",
+                    : "Catalogue disponible",
             trend: data.tauxOccupation >= 50 ? "up" : "neutral",
             icon: Gauge,
             accent: "amber",
@@ -75,7 +75,7 @@ function buildStats(data: OwnerStats | null | undefined): StatItem[] {
             label: "Litiges ouverts",
             value: String(data.litigesOuverts),
             unit: data.litigesOuverts !== 1 ? "litiges" : "litige",
-            delta: data.litigesOuverts === 0 ? "Aucun problème" : "Nécessite attention",
+            delta: data.litigesOuverts === 0 ? "Sain et sécurisé" : "Nécessite attention",
             trend: data.litigesOuverts === 0 ? "neutral" : "down",
             icon: data.litigesOuverts === 0 ? Shield : AlertTriangle,
             accent: data.litigesOuverts === 0 ? "emerald" : "red",

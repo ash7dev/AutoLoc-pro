@@ -37,18 +37,18 @@ export class AuthService {
     private readonly telegram: TelegramService,
   ) { }
 
-  /**
-   * Vérifie si un email ou un numéro de téléphone est déjà utilisé.
-   * Public (pas de guard).
-   */
-  async checkAvailability(email?: string, phone?: string): Promise<{ available: boolean; message?: string }> {
+  async checkAvailability(email?: string, phone?: string): Promise<{
+    available: boolean;
+    message?: string;
+    exists?: boolean;
+    hasUtilisateur?: boolean;
+  }> {
     if (!email && !phone) {
       throw new BadRequestException('Email ou téléphone requis');
     }
 
     if (email) {
       const normalizedEmail = this.normalizeEmail(email);
-      // On regarde PARTOUT : Utilisateur (profil métier) ET Profile (identité auth).
       const [existingUtilisateurEmail, existingProfileEmail] = await Promise.all([
         this.prisma.utilisateur.findUnique({
           where: { email: normalizedEmail },
@@ -59,14 +59,19 @@ export class AuthService {
           select: { id: true },
         }),
       ]);
+
       if (existingUtilisateurEmail || existingProfileEmail) {
-        return { available: false, message: 'Cet email est déjà associé à un compte' };
+        return {
+          available: false,
+          message: 'Cet email est déjà associé à un compte',
+          exists: true,
+          hasUtilisateur: !!existingUtilisateurEmail,
+        };
       }
     }
 
     if (phone) {
       const normalizedPhone = this.normalizePhone(phone);
-      // On regarde PARTOUT : Utilisateur (profil métier) ET Profile (identité auth).
       const [existingUtilisateurPhone, existingProfilePhone] = await Promise.all([
         this.prisma.utilisateur.findUnique({
           where: { telephone: normalizedPhone },
@@ -77,13 +82,20 @@ export class AuthService {
           select: { id: true },
         }),
       ]);
+
       if (existingUtilisateurPhone || existingProfilePhone) {
-        return { available: false, message: 'Ce numéro de téléphone est déjà associé à un compte' };
+        return {
+          available: false,
+          message: 'Ce numéro de téléphone est déjà associé à un compte',
+          exists: true,
+          hasUtilisateur: !!existingUtilisateurPhone,
+        };
       }
     }
 
     return { available: true };
   }
+
 
   /**
    * Récupère le profil par user_id (sub JWT), ou le crée en transaction.

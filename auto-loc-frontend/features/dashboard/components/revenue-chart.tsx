@@ -141,17 +141,17 @@ export function RevenueChart({
                 {/* ── Chart ─────────────────────────────────── */}
                 <div className="relative flex-1 min-h-[140px] sm:min-h-[200px] z-10">
                     {isEmpty && !loading ? (
-                        /* Empty state */
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 flex items-center justify-center shadow-sm">
-                                <BarChart2 className="w-6 h-6 text-slate-300" strokeWidth={1.5} />
+                        /* Empty state — Harmonized with other cards */
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 flex items-center justify-center shadow-sm">
+                                <BarChart2 className="w-7 h-7 text-slate-300" strokeWidth={1.25} />
                             </div>
-                            <div className="text-center">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                    Aucun revenu ce mois-ci
+                            <div className="text-center space-y-1">
+                                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
+                                    Aucun revenu
                                 </p>
-                                <p className="text-[11px] font-medium text-slate-300 mt-1 max-w-[220px]">
-                                    Les données apparaîtront dès votre première location confirmée
+                                <p className="text-[10px] font-bold text-slate-300 mt-1 max-w-[220px] mx-auto leading-tight">
+                                    Les graphiques s'activeront dès vos premières locations confirmées.
                                 </p>
                             </div>
                         </div>

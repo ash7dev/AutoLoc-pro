@@ -119,7 +119,12 @@ export async function submitPermisLink(body: {
 export async function checkAvailability(params: {
   email?: string;
   phone?: string;
-}): Promise<{ available: boolean; message?: string }> {
+}): Promise<{
+  available: boolean;
+  message?: string;
+  exists?: boolean;
+  hasUtilisateur?: boolean;
+}> {
   const query = new URLSearchParams();
   if (params.email) query.set('email', params.email);
   if (params.phone) query.set('phone', params.phone);
