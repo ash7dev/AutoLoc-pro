@@ -5,6 +5,42 @@ import { mapSupabaseError } from '../../utils/supabase-errors';
 import { completeProfile, checkAvailability } from '../../../../lib/nestjs/auth';
 import { syncWithNestJS } from '../../hooks/use-nest-token';
 
+const PENDING_OTP_KEY = 'autoloc:pending_otp';
+const OTP_VALIDITY_MS = 55 * 60 * 1000; // 55 minutes (< TTL Supabase 3600s)
+
+interface PendingOtp {
+  email: string;
+  sentAt: number;
+}
+
+/** Sauvegarde qu'un code a été envoyé pour cet email. */
+function savePendingOtp(email: string) {
+  try {
+    const payload: PendingOtp = { email: email.toLowerCase().trim(), sentAt: Date.now() };
+    sessionStorage.setItem(PENDING_OTP_KEY, JSON.stringify(payload));
+  } catch { /* sessionStorage indisponible */ }
+}
+
+/** Retourne true si un code non expiré a déjà été envoyé pour cet email. */
+function hasPendingOtp(email: string): boolean {
+  try {
+    const raw = sessionStorage.getItem(PENDING_OTP_KEY);
+    if (!raw) return false;
+    const { email: savedEmail, sentAt } = JSON.parse(raw) as PendingOtp;
+    return (
+      savedEmail === email.toLowerCase().trim() &&
+      Date.now() - sentAt < OTP_VALIDITY_MS
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Supprime l'entrée (après vérification réussie ou changement d'email). */
+export function clearPendingOtp() {
+  try { sessionStorage.removeItem(PENDING_OTP_KEY); } catch { /* noop */ }
+}
+
 export function useRegister() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +61,16 @@ export function useRegister() {
   const signUp = async (input: RegisterInput) => {
     setLoading(true);
     setError(null);
+
+    // ── GUARD : si un code a déjà été envoyé pour cet email et n'est pas encore
+    // expiré, on redirige SANS appeler signUp() à nouveau.
+    // Chaque appel supplémentaire à signUp() génère un NOUVEAU code Supabase et
+    // invalide IMMÉDIATEMENT le code précédent — même s'il vient d'être reçu.
+    if (hasPendingOtp(input.email)) {
+      console.log('[Register] Code déjà envoyé pour cet email, redirection vers vérification sans re-signUp');
+      setLoading(false);
+      return { success: false, unconfirmed: true, requiresVerification: true };
+    }
 
     // 1. Pré-vérification via NOTRE base de données (Source de vérité)
     try {
@@ -82,7 +128,12 @@ export function useRegister() {
     // Ici, signUp a réussi et a envoyé un code (ou a connecté l'utilisateur).
     // On ne fait PAS de resend ici pour éviter d'invalider le code qui vient d'être envoyé.
 
-
+    // ── VERROU : marquer cet email comme ayant un code en attente.
+    // Tout nouvel appel à signUp() pour cet email dans les 55 prochaines minutes
+    // sera bloqué par le guard hasPendingOtp() en début de fonction.
+    if (!data.session?.user) {
+      savePendingOtp(input.email);
+    }
 
     // Si on a déjà une session (email confirmation OFF ou auto-confirm activé), on synchronise.
     if (data.session?.user) {

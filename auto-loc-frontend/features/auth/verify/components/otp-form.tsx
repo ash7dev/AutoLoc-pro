@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { useOtp } from '../hooks/use-otp';
 import { useAuthFlow } from '../../hooks/use-auth-flow';
+import { clearPendingOtp } from '../../register/hooks/use-register';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -34,6 +35,7 @@ export function OtpForm({
     isSubmittingRef.current = false;
 
     if (ok) {
+      clearPendingOtp(); // Lever le verrou : l'utilisateur est maintenant confirmé.
       await redirectAfterAuth();
     }
   }, [email, phone, type, slots, verifyOtp, redirectAfterAuth]);

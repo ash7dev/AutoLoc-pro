@@ -1,5 +1,5 @@
 import { OtpForm } from '../../../features/auth/verify/components/otp-form';
-import { Mail, Smartphone, ShieldCheck } from 'lucide-react';
+import { Mail, Smartphone, ShieldCheck, AlertTriangle } from 'lucide-react';
 
 export default function VerifyPage({
   searchParams,
@@ -29,7 +29,20 @@ export default function VerifyPage({
           </p>
         </div>
       </div>
-      
+
+      {/* Avertissement spam — affiché uniquement pour le flow email */}
+      {type === 'email' && (
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-left">
+          <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+          <div className="text-[12px] text-amber-800 leading-relaxed">
+            <span className="font-bold">Email non reçu ?</span> Vérifiez vos{' '}
+            <span className="font-bold">spams / courriers indésirables</span>.
+            Si vous avez plusieurs emails d&apos;AutoLoc, utilisez uniquement le{' '}
+            <span className="font-bold">dernier reçu</span> — les précédents sont invalides.
+          </div>
+        </div>
+      )}
+
       <div className="bg-white">
         <OtpForm email={email} phone={phone} type={type} />
       </div>
@@ -41,3 +54,4 @@ export default function VerifyPage({
     </div>
   );
 }
+
