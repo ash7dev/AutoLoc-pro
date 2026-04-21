@@ -10,8 +10,10 @@ import {
   User,
   Loader2,
   Car,
+  LayoutDashboard,
 } from 'lucide-react';
 import { useSignOut } from '../../features/auth/hooks/use-signout';
+import { useRoleStore } from '../../features/auth/stores/role.store';
 
 interface UserMenuProps {
   hasVehicles: boolean | null;
@@ -21,6 +23,7 @@ export function UserMenu({ hasVehicles }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { signOut, loading: signingOut } = useSignOut();
+  const activeRole = useRoleStore((s) => s.activeRole);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -35,14 +38,22 @@ export function UserMenu({ hasVehicles }: UserMenuProps) {
   return (
     <div className="flex items-center gap-3">
 
-      {/* CTA contextuel — basé uniquement sur le rôle */}
-      {hasVehicles === true ? (
+      {/* CTA contextuel — priorité au rôle */}
+      {activeRole === 'PROPRIETAIRE' ? (
         <Link
           href="/dashboard/owner"
           className="autoloc-body text-sm font-semibold bg-gray-900 text-white px-4 py-2 rounded-xl hover:bg-gray-700 transition-all duration-150 flex items-center gap-1.5"
         >
           <Car className="w-3.5 h-3.5 text-emerald-400" />
-          Espace hôte
+          {hasVehicles ? "Espace propriétaire" : "Espace hôte"}
+        </Link>
+      ) : activeRole === 'ADMIN' || activeRole === 'SUPPORT' ? (
+        <Link
+          href="/dashboard/admin"
+          className="autoloc-body text-sm font-semibold bg-gray-900 text-white px-4 py-2 rounded-xl hover:bg-gray-700 transition-all duration-150 flex items-center gap-1.5"
+        >
+          <LayoutDashboard className="w-3.5 h-3.5 text-blue-400" />
+          Espace Admin
         </Link>
       ) : (
         <Link
@@ -52,6 +63,7 @@ export function UserMenu({ hasVehicles }: UserMenuProps) {
           Devenir hôte
         </Link>
       )}
+
 
       {/* Avatar + dropdown */}
       <div className="relative" ref={ref}>

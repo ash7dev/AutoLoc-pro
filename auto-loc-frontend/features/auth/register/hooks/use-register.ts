@@ -37,11 +37,10 @@ export function useRegister() {
         return { success: false, unconfirmed: false, requiresVerification: false };
       }
 
-      // Si l'utilisateur existe dans notre Profile mais sans Utilisateur (Onboarding interrompu)
+      // Si l'utilisateur existe dans notre Profile mais sans Utilisateur (compte partiel),
+      // on l'envoie vers l'écran de vérification sans invalider un éventuel code déjà reçu.
       if (!res.available && !res.hasUtilisateur) {
-        console.log('[Register] Compte partiel détecté, redirection vers vérification/onboarding');
-        // On tente quand même un resend au cas où l'email n'est pas confirmé côté Supabase
-        await supabase.auth.resend({ type: 'signup', email: input.email });
+        console.log('[Register] Compte partiel détecté, redirection vers vérification');
         setLoading(false);
         return { success: false, unconfirmed: true, requiresVerification: true };
       }
@@ -62,23 +61,13 @@ export function useRegister() {
       },
     });
 
-    // Cas spécifique : Utilisateur existe déjà dans Supabase mais n'est pas encore confirmé.
-    // Si supaError dit "already registered", on déclenche le resend pour "toujours avoir un code".
+    // Cas spécifique : utilisateur déjà présent dans Supabase mais non confirmé.
+    // On redirige vers la vérification sans renvoyer automatiquement un nouveau code,
+    // pour éviter d'invalider l'OTP potentiellement déjà reçu.
     const isAlreadyRegistered = supaError?.message?.includes('already registered');
 
     if (isAlreadyRegistered) {
-      console.log('[Register] User already exists in Supabase. Triggering resend...');
-      const { error: resendError } = await supabase.auth.resend({
-          type: 'signup',
-          email: input.email,
-      });
-
-      if (resendError) {
-        setError(mapSupabaseError(resendError.message));
-        setLoading(false);
-        return { success: false, unconfirmed: false, requiresVerification: false };
-      }
-
+      console.log('[Register] User already exists in Supabase. Redirecting to verify without resend.');
       setLoading(false);
       return { success: false, unconfirmed: true, requiresVerification: true };
     }

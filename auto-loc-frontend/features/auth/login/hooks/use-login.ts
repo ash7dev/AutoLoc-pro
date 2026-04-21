@@ -20,11 +20,6 @@ export function useLogin() {
       const isUnconfirmed = error.message.toLowerCase().includes('email not confirmed');
       
       if (isUnconfirmed) {
-        // Déclencher automatiquement le renvoi de l'OTP pour débloquer l'user
-        await supabase.auth.resend({
-          type: 'signup',
-          email: input.email,
-        });
         setLoading(false);
         return { success: false, unconfirmed: true };
       }
@@ -40,4 +35,3 @@ export function useLogin() {
 
   return { signIn, loading, error };
 }
-

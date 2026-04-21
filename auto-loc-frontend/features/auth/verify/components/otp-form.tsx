@@ -146,6 +146,10 @@ export function OtpForm({
             </div>
         )}
 
+        <div className="rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-center text-[11px] font-semibold text-amber-800">
+          Seul le dernier code recu est valide.
+        </div>
+
         <div className="space-y-3">
             <Button
                 type="submit"
