@@ -490,7 +490,15 @@ export class ReservationsService {
       where: { userId: user.sub },
       select: { id: true },
     });
-    if (!proprietaire) throw new ForbiddenException('Profil incomplet');
+    if (!proprietaire) {
+      return {
+        pendingConfirmations: 0,
+        pendingConfirmationsIds: [],
+        pendingLitiges: 0,
+        pendingLitigesIds: [],
+        total: 0,
+      };
+    }
 
     const [pendingConfirmations, pendingLitiges] = await Promise.all([
       // Réservations payées en attente de confirmation du propriétaire
@@ -531,7 +539,9 @@ export class ReservationsService {
       where: { userId: user.sub },
       select: { id: true },
     });
-    if (!proprietaire) throw new ForbiddenException('Profil incomplet');
+    if (!proprietaire) {
+      return { data: [], total: 0, page, limit: 20 };
+    }
 
     const where: Record<string, unknown> = { proprietaireId: proprietaire.id };
     if (vehiculeId) where.vehiculeId = vehiculeId;
@@ -652,7 +662,9 @@ export class ReservationsService {
       where: { userId: user.sub },
       select: { id: true },
     });
-    if (!proprietaire) throw new ForbiddenException('Profil incomplet');
+    if (!proprietaire) {
+      return { revenusMois: 0, reservationsActives: 0, tauxOccupation: 0, litigesOuverts: 0 };
+    }
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);

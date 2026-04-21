@@ -59,8 +59,6 @@ export function useAuthFlow() {
 
     let syncOk = false;
     try {
-      // On tente une synchro directe. Si ça échoue une fois, on peut logger, 
-      // mais on évite les boucles de 3 x 200ms qui créent du lag.
       const sessionNest = await syncWithNestJS(token);
       useRoleStore.getState().setSession(sessionNest);
       syncOk = true;
@@ -71,7 +69,7 @@ export function useAuthFlow() {
 
     if (!syncOk) {
       inFlight.current = false;
-      return;
+      return false;
     }
 
     let profile = await fetchMe();
@@ -102,7 +100,7 @@ export function useAuthFlow() {
     if (profile.role === 'ADMIN') {
       router.replace('/dashboard/admin');
       inFlight.current = false;
-      return;
+      return true;
     }
 
     // Si un `next` est fourni (ex: depuis un lien email), on le respecte.
@@ -129,17 +127,18 @@ export function useAuthFlow() {
       }
       router.replace(next);
       inFlight.current = false;
-      return;
+      return true;
     }
 
     if (profile.role === 'PROPRIETAIRE') {
       router.replace('/dashboard/owner');
       inFlight.current = false;
-      return;
+      return true;
     }
 
     router.replace('/');
     inFlight.current = false;
+    return true;
   };
 
   return { redirectAfterAuth };

@@ -10,7 +10,8 @@ export async function syncWithNestJS(
     body: JSON.stringify({ supabaseToken: supabaseAccessToken }),
   });
   if (!res.ok) {
-    throw new Error('Echec de synchronisation NestJS');
+    const errorText = await res.text().catch(() => 'Unknown error');
+    throw new Error(`Echec de synchronisation NestJS: ${res.status} - ${errorText}`);
   }
   const session = await res.json() as NestAuthResponse;
   useRoleStore.getState().setSession(session);

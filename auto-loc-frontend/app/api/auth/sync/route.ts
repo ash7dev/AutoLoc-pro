@@ -40,8 +40,7 @@ export async function POST(request: NextRequest) {
     if (!nestRes.ok) {
       const err = await nestRes.text();
       console.error('[Auth Sync] Backend login failed:', { status: nestRes.status, error: err });
-      // On ne bloque pas l'auth si le backend échoue
-      return NextResponse.json({ activeRole: 'LOCATAIRE', synced: false });
+      return NextResponse.json({ error: 'Backend login failed', details: err }, { status: 502 });
     }
 
     const session = await nestRes.json() as {
@@ -65,9 +64,8 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-  } catch (error) {
-    console.error('[Auth Sync] Backend error:', error);
-    // On ne bloque pas l'auth si le backend échoue
-    return NextResponse.json({ activeRole: 'LOCATAIRE', synced: false });
-  }
+    } catch (error) {
+      console.error('[Auth Sync] Backend error:', error);
+      return NextResponse.json({ error: 'Backend connection error' }, { status: 502 });
+    }
 }

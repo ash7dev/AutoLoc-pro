@@ -515,7 +515,14 @@ export class AuthService {
       throw new BadRequestException('accessToken manquant');
     }
 
-    const payload = await this.jwksService.verify(supabaseAccessToken);
+    let payload;
+    try {
+      payload = await this.jwksService.verify(supabaseAccessToken);
+    } catch (err) {
+      console.error('[loginWithSupabase] JWKS Verify failed:', err);
+      throw new UnauthorizedException(`Token verification failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
     const user: RequestUser = {
       sub: payload.sub,
       email: payload.email,

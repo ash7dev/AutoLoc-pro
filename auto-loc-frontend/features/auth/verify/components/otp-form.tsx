@@ -36,7 +36,14 @@ export function OtpForm({
 
     if (ok) {
       clearPendingOtp(); // Lever le verrou : l'utilisateur est maintenant confirmé.
-      await redirectAfterAuth();
+      try {
+        const success = await redirectAfterAuth();
+        if (success === false) {
+          setError("Erreur de connexion au serveur. Veuillez réessayer.");
+        }
+      } catch (err) {
+        setError("Erreur de synchronisation avec le serveur. Veuillez réessayer.");
+      }
     }
   }, [email, phone, type, slots, verifyOtp, redirectAfterAuth]);
 
@@ -50,7 +57,7 @@ export function OtpForm({
           newValues[i] = digits[i];
         }
         setOtpValues(newValues);
-        
+
         // Focus sur le dernier champ rempli ou le suivant
         const nextFocus = Math.min(digits.length, slots - 1);
         inputRefs.current[nextFocus]?.focus();
@@ -134,8 +141,8 @@ export function OtpForm({
               className={cn(
                 "w-full h-12 sm:h-14 text-center text-xl font-black rounded-2xl border-2 transition-all outline-none",
                 value
-                    ? "border-emerald-500 bg-emerald-50/30 text-emerald-700 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
-                    : "border-slate-100 bg-slate-50 text-slate-900 focus:border-slate-300 focus:bg-white",
+                  ? "border-emerald-500 bg-emerald-50/30 text-emerald-700 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+                  : "border-slate-100 bg-slate-50 text-slate-900 focus:border-slate-300 focus:bg-white",
                 error && "border-red-200 bg-red-50 text-red-600"
               )}
             />
@@ -143,9 +150,9 @@ export function OtpForm({
         </div>
 
         {error && (
-            <div className="bg-red-50 border border-red-100 text-red-600 text-xs font-bold p-3 rounded-xl text-center">
-                {error}
-            </div>
+          <div className="bg-red-50 border border-red-100 text-red-600 text-xs font-bold p-3 rounded-xl text-center">
+            {error}
+          </div>
         )}
 
         <div className="rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-center text-[11px] font-semibold text-amber-800">
@@ -153,40 +160,44 @@ export function OtpForm({
         </div>
 
         <div className="space-y-3">
-            <Button
-                type="submit"
-                disabled={loading || !isFilled}
-                className="w-full h-12 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[13px] shadow-lg shadow-slate-200 transition-all active:scale-[0.98]"
-            >
-                {loading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                    'Confirmer le compte'
-                )}
-            </Button>
+          <Button
+            type="submit"
+            disabled={loading || !isFilled}
+            className="w-full h-12 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[13px] shadow-lg shadow-slate-200 transition-all active:scale-[0.98]"
+          >
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              'Confirmer le compte'
+            )}
+          </Button>
 
-            <button
-                type="button"
-                onClick={() => {
-                  if (!canResend || loading) return;
-                  const confirmed = window.confirm(
-                    'Attention : renvoyer un code invalide automatiquement le code précédent.\n\n' +
-                    'Avez-vous vérifié vos spams / courriers indésirables ?\n\n' +
-                    'Cliquez OK pour recevoir un nouveau code.'
-                  );
-                  if (confirmed) resendOtp({ email, phone, type });
-                }}
-                disabled={!canResend || loading}
-                className={cn(
-                    "w-full py-2 flex items-center justify-center gap-2 text-[12px] font-bold transition-colors",
-                    canResend ? "text-emerald-600 hover:text-emerald-700 underline underline-offset-4" : "text-slate-300 pointer-events-none"
-                )}
-            >
-                <RefreshCw className="w-3.5 h-3.5" />
-                {canResend ? 'Renvoyer un nouveau code' : `Renvoyer dans ${counter}s`}
-            </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (!canResend || loading) return;
+              const confirmed = window.confirm(
+                'Attention : renvoyer un code invalide automatiquement le code précédent.\n\n' +
+                'Avez-vous vérifié vos spams / courriers indésirables ?\n\n' +
+                'Cliquez OK pour recevoir un nouveau code.'
+              );
+              if (confirmed) resendOtp({ email, phone, type });
+            }}
+            disabled={!canResend || loading}
+            className={cn(
+              "w-full py-2 flex items-center justify-center gap-2 text-[12px] font-bold transition-colors",
+              canResend ? "text-emerald-600 hover:text-emerald-700 underline underline-offset-4" : "text-slate-300 pointer-events-none"
+            )}
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            {canResend ? 'Renvoyer un nouveau code' : `Renvoyer dans ${counter}s`}
+          </button>
         </div>
       </form>
     </div>
   );
 }
+function setError(arg0: string) {
+  throw new Error('Function not implemented.');
+}
+
