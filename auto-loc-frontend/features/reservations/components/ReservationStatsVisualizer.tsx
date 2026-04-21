@@ -324,7 +324,8 @@ export function ReservationStatsVisualizer({
                       paddingAngle={4}
                       cornerRadius={6}
                       strokeWidth={0}
-                      activeIndex={activeIndex ?? undefined}
+                      // @ts-ignore
+                      activeIndex={activeIndex as any}
                       activeShape={renderActiveShape}
                       onMouseEnter={(_, index) => setActiveIndex(index)}
                       onMouseLeave={() => setActiveIndex(null)}

@@ -11,9 +11,10 @@ interface FleetPerformanceProps {
     vehicles: Vehicle[];
     reservations?: Reservation[];
     loading?: boolean;
+    className?: string;
 }
 
-export function FleetPerformance({ vehicles, reservations = [], loading }: FleetPerformanceProps) {
+export function FleetPerformance({ vehicles, reservations = [], loading, className }: FleetPerformanceProps) {
     // ── Analytics Logic ─────────────────────────────────────────────────────────
 
     const fleetStats = useMemo(() => {
@@ -90,6 +91,7 @@ export function FleetPerformance({ vehicles, reservations = [], loading }: Fleet
             "bg-white/70 backdrop-blur-xl",
             "shadow-sm hover:shadow-xl hover:shadow-blue-500/5",
             "transition-all duration-300",
+            className,
         )}>
 
             {/* Decorative gradient orb */}
