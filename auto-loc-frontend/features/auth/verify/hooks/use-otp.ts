@@ -22,7 +22,10 @@ export function useOtp() {
     const payload =
       target.type === 'phone'
         ? { phone: target.phone ?? '', token, type: 'sms' as const }
-        : { email: target.email ?? '', token, type: 'email' as const };
+        // 'signup' est le type correct pour la vérification post-inscription (signUp()).
+        // 'email' est réservé au flow magic link — utiliser 'email' ici provoque
+        // une erreur "Token expiré" car Supabase cherche dans la mauvaise bucket.
+        : { email: target.email ?? '', token, type: 'signup' as const };
 
     const { error } = await supabase.auth.verifyOtp(payload);
 

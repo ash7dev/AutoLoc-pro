@@ -78,7 +78,7 @@ export function RegisterForm() {
   const onSubmit = async (data: RegisterInput) => {
     const ok = await signUp(data);
     if (ok) {
-      router.push(`/verify?email=${encodeURIComponent(data.email)}`);
+      router.push(`/verify?email=${encodeURIComponent(data.email)}&type=email`);
     }
   };
 

@@ -22,7 +22,8 @@ export function OtpForm({
   const { verifyOtp, resendOtp, loading, error, counter, canResend } = useOtp();
   const { redirectAfterAuth } = useAuthFlow();
   
-  const [otpValues, setOtpValues] = useState(['', '', '', '', '', '']);
+  const slots = type === 'email' ? 8 : 6;
+  const [otpValues, setOtpValues] = useState<string[]>(Array(slots).fill(''));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const {
@@ -48,7 +49,7 @@ export function OtpForm({
     setOtpValues(newOtpValues);
 
     // Focus suivant
-    if (value && index < 5) {
+    if (value && index < slots - 1) {
       inputRefs.current[index + 1]?.focus();
     }
   };
