@@ -62,26 +62,37 @@ export function useRegister() {
       },
     });
 
-    // Cas spécifique : Utilisateur existe dans Supabase mais pas dans notre DB (non-confirmé)
-    // Supabase renvoie souvent un utilisateur sans identités dans ce cas.
-    const isUnconfirmed = (data.user && !data.session && (data.user.identities?.length ?? 0) === 0) ||
-                         supaError?.message?.includes('already registered');
+    // Cas spécifique : Utilisateur existe déjà dans Supabase mais n'est pas encore confirmé.
+    // Si supaError dit "already registered", on déclenche le resend pour "toujours avoir un code".
+    const isAlreadyRegistered = supaError?.message?.includes('already registered');
 
-    if (isUnconfirmed) {
-      console.log('[Register] User exists in Supabase but unconfirmed. Resending code...');
-      await supabase.auth.resend({
+    if (isAlreadyRegistered) {
+      console.log('[Register] User already exists in Supabase. Triggering resend...');
+      const { error: resendError } = await supabase.auth.resend({
           type: 'signup',
           email: input.email,
       });
+
+      if (resendError) {
+        setError(mapSupabaseError(resendError.message));
+        setLoading(false);
+        return { success: false, unconfirmed: false, requiresVerification: false };
+      }
+
       setLoading(false);
       return { success: false, unconfirmed: true, requiresVerification: true };
     }
 
+    // Si on a une autre erreur, on l'affiche
     if (supaError) {
       setError(mapSupabaseError(supaError.message));
       setLoading(false);
       return { success: false, unconfirmed: false, requiresVerification: false };
     }
+
+    // Ici, signUp a réussi et a envoyé un code (ou a connecté l'utilisateur).
+    // On ne fait PAS de resend ici pour éviter d'invalider le code qui vient d'être envoyé.
+
 
 
     // Si on a déjà une session (email confirmation OFF ou auto-confirm activé), on synchronise.
