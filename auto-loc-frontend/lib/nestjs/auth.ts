@@ -32,7 +32,9 @@ export interface ProfileResponse {
 
 export interface NestAuthResponse {
   activeRole: ProfileResponse['role'];
+  profile?: ProfileResponse;
 }
+
 
 export interface CompleteProfileInput {
   prenom: string;

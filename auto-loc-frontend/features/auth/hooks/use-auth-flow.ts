@@ -57,24 +57,27 @@ export function useAuthFlow() {
     // eslint-disable-next-line no-console
     console.log('[AuthFlow] provider', provider);
 
-    let syncOk = false;
+    let profile: ProfileResponse;
     try {
       const sessionNest = await syncWithNestJS(token);
       useRoleStore.getState().setSession(sessionNest);
-      syncOk = true;
+      
+      if (sessionNest.profile) {
+        profile = sessionNest.profile;
+        // eslint-disable-next-line no-console
+        console.log('[AuthFlow] profile from sync', profile);
+      } else {
+        profile = await fetchMe();
+        // eslint-disable-next-line no-console
+        console.log('[AuthFlow] profile from fetchMe', profile);
+      }
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.error('[AuthFlow] Sync failed', err);
-    }
-
-    if (!syncOk) {
+      console.error('[AuthFlow] Sync or fetchMe failed', err);
       inFlight.current = false;
       return false;
     }
 
-    let profile = await fetchMe();
-    // eslint-disable-next-line no-console
-    console.log('[AuthFlow] profile', profile);
 
     if (!profile.hasUtilisateur) {
       const seededProfile = extractCompleteProfileInput(session);

@@ -49,10 +49,24 @@ export async function POST(request: NextRequest) {
       activeRole: string;
     };
 
+    // OPTIMISATION : On récupère le profil immédiatement pour éviter un appel supplémentaire côté client
+    const profileRes = await fetch(`${NEST_API}/auth/me`, {
+      headers: {
+        'Authorization': `Bearer ${session.accessToken}`,
+      },
+    });
+
+    let profile = null;
+    if (profileRes.ok) {
+      profile = await profileRes.json();
+    }
+
     const response = NextResponse.json({
       activeRole: session.activeRole,
+      profile: profile,
       synced: true,
     });
+
 
     response.cookies.set('nest_access', session.accessToken, {
       ...NEST_COOKIE_BASE,

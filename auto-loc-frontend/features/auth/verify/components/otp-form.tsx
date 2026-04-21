@@ -176,12 +176,13 @@ export function OtpForm({
             {loading || syncing ? (
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                {syncing ? 'Synchronisation...' : ''}
+                {syncing ? 'Synchronisation...' : 'Vérification...'}
               </div>
             ) : (
               'Confirmer le compte'
             )}
           </Button>
+
 
           <button
             type="button"
