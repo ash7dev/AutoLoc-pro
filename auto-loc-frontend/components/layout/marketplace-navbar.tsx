@@ -178,17 +178,17 @@ function ProfileDropdown({
         <div className="p-2 space-y-0.5">
           {isAdmin ? (
             <DropdownItem href="/dashboard/admin" icon={LayoutDashboard} label="Dashboard Admin" badge="Admin" />
-          ) : activeRole === 'PROPRIETAIRE' ? (
+          ) : hasVehicles === true ? (
             <DropdownItem 
               onClick={() => { switchToProprietaire(); }} 
               disabled={switchingRole} 
               icon={switchingRole ? Loader2 : LayoutDashboard} 
-              label={switchingRole ? "Chargement..." : (hasVehicles ? "Espace Propriétaire" : "Espace hôte")} 
-              badge={hasVehicles ? "Pro" : "Nouveau"} 
+              label={switchingRole ? "Chargement..." : "Espace Propriétaire"} 
+              badge="Pro" 
             />
-          ) : (
+          ) : hasVehicles === false ? (
             <DropdownItem href="/become-owner" icon={Building2} label="Devenir hôte" badge="Nouveau" />
-          )}
+          ) : null}
           <DropdownItem href="/reservations" icon={CalendarRange} label="Mes réservations" />
           <DropdownItem href="/notifications" icon={Bell} label="Notifications" />
           <DropdownItem href="/settings" icon={Settings} label="Paramètres" />
@@ -583,9 +583,9 @@ export function MarketplaceNavbar() {
                       <Car className="h-4 w-4" strokeWidth={2.5} />
                     )}
                   </span>
-                  {switchingRole ? "Chargement..." : (hasVehicles ? "Espace Propriétaire" : "Espace hôte")}
+                  {switchingRole ? "Chargement..." : "Espace Propriétaire"}
                   <span className="ml-auto px-2 py-0.5 bg-emerald-600 text-[10px] font-bold rounded-full text-emerald-50">
-                    {hasVehicles ? "Pro" : "Nouveau"}
+                    Pro
                   </span>
                 </button>
 

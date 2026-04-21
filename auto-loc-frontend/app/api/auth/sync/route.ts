@@ -25,13 +25,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'supabaseToken requis' }, { status: 400 });
     }
 
-  // Si le backend n'est pas configuré, on retourne succès sans synchronisation
-  if (!NEST_API) {
-    console.warn('[Auth Sync] Backend API non configuré, synchronisation ignorée');
-    return NextResponse.json({ activeRole: 'LOCATAIRE', synced: false });
-  }
+    // Si le backend n'est pas configuré, on retourne succès sans synchronisation
+    if (!NEST_API) {
+      console.warn('[Auth Sync] Backend API non configuré, synchronisation ignorée');
+      return NextResponse.json({ activeRole: 'LOCATAIRE', synced: false });
+    }
 
-  try {
     const nestRes = await fetch(`${NEST_API}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
