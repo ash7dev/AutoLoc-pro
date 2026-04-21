@@ -511,40 +511,48 @@ export class AuthService {
   async loginWithSupabase(
     supabaseAccessToken: string,
   ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile }> {
-    if (!supabaseAccessToken?.trim()) {
-      throw new BadRequestException('accessToken manquant');
-    }
-
-    let payload;
     try {
-      payload = await this.jwksService.verify(supabaseAccessToken);
+      if (!supabaseAccessToken?.trim()) {
+        throw new BadRequestException('accessToken manquant');
+      }
+
+      let payload;
+      try {
+        payload = await this.jwksService.verify(supabaseAccessToken);
+      } catch (err) {
+        console.error('[loginWithSupabase] JWKS Verify failed:', err);
+        throw new UnauthorizedException(`Token verification failed: ${err instanceof Error ? err.message : String(err)}`);
+      }
+
+      const user: RequestUser = {
+        sub: payload.sub,
+        email: payload.email,
+        phone: payload.phone,
+      };
+      const profile = await this.getOrCreateProfile(user);
+
+      const accessToken = await this.signAccessToken({
+        sub: user.sub,
+        email: user.email,
+        phone: user.phone,
+        role: profile.role as RoleProfile,
+      });
+      const refreshToken = await this.signRefreshToken({
+        sub: user.sub,
+        email: user.email,
+        phone: user.phone,
+        role: profile.role as RoleProfile,
+      });
+      await this.storeRefreshSession(user.sub, refreshToken);
+
+      return { accessToken, refreshToken, activeRole: profile.role as RoleProfile };
     } catch (err) {
-      console.error('[loginWithSupabase] JWKS Verify failed:', err);
-      throw new UnauthorizedException(`Token verification failed: ${err instanceof Error ? err.message : String(err)}`);
+      console.error('[loginWithSupabase] FATAL ERROR:', err);
+      if (err instanceof BadRequestException || err instanceof UnauthorizedException || err instanceof ForbiddenException) {
+        throw err;
+      }
+      throw new BadRequestException(`Login failed: ${err instanceof Error ? err.message : String(err)} - Stack: ${err instanceof Error ? err.stack : ''}`);
     }
-
-    const user: RequestUser = {
-      sub: payload.sub,
-      email: payload.email,
-      phone: payload.phone,
-    };
-    const profile = await this.getOrCreateProfile(user);
-
-    const accessToken = await this.signAccessToken({
-      sub: user.sub,
-      email: user.email,
-      phone: user.phone,
-      role: profile.role as RoleProfile,
-    });
-    const refreshToken = await this.signRefreshToken({
-      sub: user.sub,
-      email: user.email,
-      phone: user.phone,
-      role: profile.role as RoleProfile,
-    });
-    await this.storeRefreshSession(user.sub, refreshToken);
-
-    return { accessToken, refreshToken, activeRole: profile.role as RoleProfile };
   }
 
   /**
