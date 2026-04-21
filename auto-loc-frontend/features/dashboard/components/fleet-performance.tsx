@@ -123,7 +123,7 @@ export function FleetPerformance({ vehicles, reservations = [], loading }: Fleet
                 )}
             </div>
 
-            <div className="relative z-10 p-4 sm:p-6 pt-4 flex-1 flex flex-col gap-5">
+            <div className="relative z-10 p-4 sm:p-6 pt-4 flex-1 flex flex-col justify-center gap-5">
 
                 {/* Top Vehicles Section */}
                 <section className="flex-1">

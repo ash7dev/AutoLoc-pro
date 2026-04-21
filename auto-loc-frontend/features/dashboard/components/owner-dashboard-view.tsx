@@ -10,6 +10,7 @@ import { OwnerHeader } from "@/features/dashboard/components/owner-header";
 import { OverviewStats } from "@/features/dashboard/components/overview-stats";
 import { MobileQuickActions } from "@/features/dashboard/components/mobile-quick-actions";
 import { FleetPerformance } from "@/features/dashboard/components/fleet-performance";
+import { ReservationStatsVisualizer } from "@/features/reservations/components/ReservationStatsVisualizer";
 import { useState, useMemo } from "react";
 import type { Reservation, OwnerStats } from "@/lib/nestjs/reservations";
 import type { Vehicle } from "@/lib/nestjs/vehicles";
@@ -314,6 +315,11 @@ export function OwnerDashboardView({
                     reservations={reservations} 
                 />
 
+                {/* Reservation Stats - Mobile */}
+                <ReservationStatsVisualizer 
+                    reservations={reservations} 
+                />
+
                 {/* Quick Actions */}
                 <MobileQuickActions 
                     reservations={reservations}
@@ -369,7 +375,7 @@ export function OwnerDashboardView({
                     </div>
                 </div>
 
-                {/* Row 4 — Pipeline + Fleet */}
+                {/* Row 4 — Pipeline + Analytics */}
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 items-stretch">
                     <div className="xl:col-span-2 h-full">
                         <RecentReservations
@@ -378,10 +384,15 @@ export function OwnerDashboardView({
                             className="h-full"
                         />
                     </div>
-                    <div className="xl:col-span-1 h-full">
+                    <div className="xl:col-span-1 flex flex-col gap-4 sm:gap-6">
+                        <ReservationStatsVisualizer 
+                            reservations={reservations}
+                            className="flex-1"
+                        />
                         <FleetPerformance 
                             vehicles={vehicles} 
                             reservations={reservations}
+                            className="flex-1"
                         />
                     </div>
                 </div>
