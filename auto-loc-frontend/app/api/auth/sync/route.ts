@@ -24,42 +24,50 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'supabaseToken requis' }, { status: 400 });
   }
 
+  // Si le backend n'est pas configuré, on retourne succès sans synchronisation
   if (!NEST_API) {
-    return NextResponse.json({ error: 'API URL non configurée' }, { status: 500 });
+    console.warn('[Auth Sync] Backend API non configuré, synchronisation ignorée');
+    return NextResponse.json({ activeRole: 'LOCATAIRE', synced: false });
   }
 
-  const nestRes = await fetch(`${NEST_API}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ accessToken: supabaseToken }),
-  });
+  try {
+    const nestRes = await fetch(`${NEST_API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken: supabaseToken }),
+    });
 
-  if (!nestRes.ok) {
-    const err = await nestRes.text();
-    return NextResponse.json(
-      { error: 'Échec login NestJS', detail: err },
-      { status: nestRes.status },
-    );
+    if (!nestRes.ok) {
+      const err = await nestRes.text();
+      console.error('[Auth Sync] Backend login failed:', { status: nestRes.status, error: err });
+      // On ne bloque pas l'auth si le backend échoue
+      return NextResponse.json({ activeRole: 'LOCATAIRE', synced: false });
+    }
+
+    const session = await nestRes.json() as {
+      accessToken: string;
+      refreshToken: string;
+      activeRole: string;
+    };
+
+    const response = NextResponse.json({
+      activeRole: session.activeRole,
+      synced: true,
+    });
+
+    response.cookies.set('nest_access', session.accessToken, {
+      ...NEST_COOKIE_BASE,
+      maxAge: 60 * 60 * 24,
+    });
+    response.cookies.set('nest_refresh', session.refreshToken, {
+      ...NEST_COOKIE_BASE,
+      maxAge: 60 * 60 * 24 * 30,
+    });
+
+    return response;
+  } catch (error) {
+    console.error('[Auth Sync] Backend error:', error);
+    // On ne bloque pas l'auth si le backend échoue
+    return NextResponse.json({ activeRole: 'LOCATAIRE', synced: false });
   }
-
-  const session = await nestRes.json() as {
-    accessToken: string;
-    refreshToken: string;
-    activeRole: string;
-  };
-
-  const response = NextResponse.json({
-    activeRole: session.activeRole,
-  });
-
-  response.cookies.set('nest_access', session.accessToken, {
-    ...NEST_COOKIE_BASE,
-    maxAge: 60 * 60 * 24,
-  });
-  response.cookies.set('nest_refresh', session.refreshToken, {
-    ...NEST_COOKIE_BASE,
-    maxAge: 60 * 60 * 24 * 30,
-  });
-
-  return response;
 }

@@ -1,5 +1,5 @@
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createSupabaseServerClient } from '../../../lib/supabase/server';
 import { fetchMe } from '../../../lib/nestjs/auth';
 import { BecomeOwnerForm } from '../../../features/owner/become-owner/components/become-owner-form';
 
@@ -11,9 +11,7 @@ import { BecomeOwnerForm } from '../../../features/owner/become-owner/components
  * - LOCATAIRE → affiche le flow de transition
  */
 export default async function BecomeOwnerPage() {
-  const supabase = createSupabaseServerClient();
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token ?? null;
+  const token = cookies().get('nest_access')?.value;
 
   if (!token) {
     redirect('/login?next=/become-owner');
