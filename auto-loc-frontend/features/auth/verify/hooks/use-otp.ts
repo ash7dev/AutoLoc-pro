@@ -5,7 +5,7 @@ import { mapSupabaseError } from '../../utils/supabase-errors';
 export function useOtp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [counter, setCounter] = useState(60);
+  const [counter, setCounter] = useState(120);
 
   useEffect(() => {
     if (counter <= 0) return;
@@ -51,7 +51,7 @@ export function useOtp() {
     if (error) {
       setError(mapSupabaseError(error.message));
     } else {
-      setCounter(60);
+      setCounter(120);
     }
 
     setLoading(false);

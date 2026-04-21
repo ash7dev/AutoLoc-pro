@@ -167,7 +167,15 @@ export function OtpForm({
 
             <button
                 type="button"
-                onClick={() => resendOtp({ email, phone, type })}
+                onClick={() => {
+                  if (!canResend || loading) return;
+                  const confirmed = window.confirm(
+                    'Attention : renvoyer un code invalide automatiquement le code précédent.\n\n' +
+                    'Avez-vous vérifié vos spams / courriers indésirables ?\n\n' +
+                    'Cliquez OK pour recevoir un nouveau code.'
+                  );
+                  if (confirmed) resendOtp({ email, phone, type });
+                }}
                 disabled={!canResend || loading}
                 className={cn(
                     "w-full py-2 flex items-center justify-center gap-2 text-[12px] font-bold transition-colors",
