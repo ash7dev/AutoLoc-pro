@@ -45,8 +45,10 @@ function validateFile(file: File): string | null {
 
 export function KycSubmitForm({
   initialStatus,
+  onSubmitted,
 }: {
   initialStatus?: KycStatus;
+  onSubmitted?: (profile: ProfileResponse) => void;
 }) {
   const [status, setStatus] = useState<KycStatus>(initialStatus);
   const [documentFrontSlot, setDocumentFrontSlot] = useState<FileSlot>(buildEmptySlot);
@@ -157,6 +159,7 @@ export function KycSubmitForm({
 
       setStatus(profile.kycStatus);
       setSubmitted(true);
+      onSubmitted?.(profile);
     } catch (err: any) {
       console.error("KYC Submit error:", err);
       

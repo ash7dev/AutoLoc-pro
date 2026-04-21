@@ -217,7 +217,12 @@ export function KycNudgeModal({ kycStatus }: { kycStatus: KycStatus }) {
         {step === 'form' && (
           <div className="px-7 pb-7">
             <div className="rounded-2xl bg-white p-4">
-              <KycSubmitForm initialStatus={kycStatus} />
+              <KycSubmitForm 
+                initialStatus={kycStatus} 
+                onSubmitted={() => {
+                  setTimeout(() => dismiss(true), 2000);
+                }}
+              />
             </div>
           </div>
         )}

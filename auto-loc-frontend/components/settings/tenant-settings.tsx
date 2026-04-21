@@ -190,7 +190,7 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
               <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
               <div className="min-w-0">
                 <p className="font-medium text-emerald-900 text-sm sm:text-base truncate">Identité KYC</p>
-                <p className="text-xs sm:text-sm text-emerald-700">{profile?.statutKyc === 'APPROVED' ? 'Vérifiée avec succès' : profile?.statutKyc}</p>
+                <p className="text-xs sm:text-sm text-emerald-700">{profile?.statutKyc === 'VERIFIE' ? 'Vérifiée avec succès' : profile?.statutKyc}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 sm:p-4 bg-blue-50/50 rounded-xl border border-blue-100 hover:bg-blue-50 transition-colors">
