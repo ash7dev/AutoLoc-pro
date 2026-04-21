@@ -54,7 +54,9 @@ export default function LoginAutoLoc() {
         
         if (fromOAuth || data.session) {
           setIsRedirecting(true);
-          startTransition(() => redirectAfterAuth());
+          startTransition(() => {
+            void redirectAfterAuth();
+          });
         }
       }
     };
@@ -94,7 +96,9 @@ export default function LoginAutoLoc() {
 
     if (res.success) {
       setIsRedirecting(true);
-      startTransition(() => redirectAfterAuth());
+      startTransition(() => {
+        void redirectAfterAuth();
+      });
     }
   };
 

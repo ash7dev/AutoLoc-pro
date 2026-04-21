@@ -24,6 +24,7 @@ export function OtpForm({
   const [otpValues, setOtpValues] = useState<string[]>(Array(slots).fill(''));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const isSubmittingRef = useRef(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   // ── Auto-submit dès que tous les champs sont remplis ──
   const submitCode = useCallback(async (code: string) => {
@@ -39,10 +40,10 @@ export function OtpForm({
       try {
         const success = await redirectAfterAuth();
         if (success === false) {
-          setError("Erreur de connexion au serveur. Veuillez réessayer.");
+          setSyncError("Erreur de connexion au serveur. Veuillez réessayer.");
         }
       } catch (err) {
-        setError("Erreur de synchronisation avec le serveur. Veuillez réessayer.");
+        setSyncError("Erreur de synchronisation avec le serveur. Veuillez réessayer.");
       }
     }
   }, [email, phone, type, slots, verifyOtp, redirectAfterAuth]);
@@ -149,9 +150,9 @@ export function OtpForm({
           ))}
         </div>
 
-        {error && (
+        {(error || syncError) && (
           <div className="bg-red-50 border border-red-100 text-red-600 text-xs font-bold p-3 rounded-xl text-center">
-            {error}
+            {syncError || error}
           </div>
         )}
 
@@ -197,7 +198,3 @@ export function OtpForm({
     </div>
   );
 }
-function setError(arg0: string) {
-  throw new Error('Function not implemented.');
-}
-
