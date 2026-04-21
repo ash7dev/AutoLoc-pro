@@ -26,16 +26,18 @@ export function OtpForm({
   const isSubmittingRef = useRef(false);
   const [syncError, setSyncError] = useState<string | null>(null);
 
+  const [syncing, setSyncing] = useState(false);
+
   // ── Auto-submit dès que tous les champs sont remplis ──
   const submitCode = useCallback(async (code: string) => {
-    if (isSubmittingRef.current) return;
+    if (isSubmittingRef.current || syncing) return;
     if (code.length !== slots) return;
 
     isSubmittingRef.current = true;
     const ok = await verifyOtp({ email, phone, type }, code);
-    isSubmittingRef.current = false;
-
+    
     if (ok) {
+      setSyncing(true);
       clearPendingOtp(); // Lever le verrou : l'utilisateur est maintenant confirmé.
       try {
         const success = await redirectAfterAuth();
@@ -44,9 +46,14 @@ export function OtpForm({
         }
       } catch (err) {
         setSyncError("Erreur de synchronisation avec le serveur. Veuillez réessayer.");
+      } finally {
+        setSyncing(false);
+        isSubmittingRef.current = false;
       }
+    } else {
+      isSubmittingRef.current = false;
     }
-  }, [email, phone, type, slots, verifyOtp, redirectAfterAuth]);
+  }, [email, phone, type, slots, verifyOtp, redirectAfterAuth, syncing]);
 
   const handleInputChange = (index: number, value: string) => {
     // Gérer le collage d'un code complet
@@ -163,11 +170,14 @@ export function OtpForm({
         <div className="space-y-3">
           <Button
             type="submit"
-            disabled={loading || !isFilled}
+            disabled={loading || syncing || !isFilled}
             className="w-full h-12 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[13px] shadow-lg shadow-slate-200 transition-all active:scale-[0.98]"
           >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+            {loading || syncing ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {syncing ? 'Synchronisation...' : ''}
+              </div>
             ) : (
               'Confirmer le compte'
             )}
