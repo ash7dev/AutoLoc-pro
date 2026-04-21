@@ -29,6 +29,7 @@ import { useHasVehiclesFromStore } from '../../features/auth/hooks/use-has-vehic
 import { fetchMe } from '../../lib/nestjs/auth';
 import { useRoleStore } from '../../features/auth/stores/role.store';
 import { useSwitchToProprietaire } from '../../features/owner/hooks/use-switch-to-proprietaire';
+import { useSignOut } from '../../features/auth/hooks/use-signout';
 import { CurrencySelector } from './CurrencyConverter';
 
 /* ── Nav links ───────────────────────────────────────────────── */
@@ -98,11 +99,11 @@ function ProfileDropdown({
   hasVehicles: boolean | null;
 }) {
   const [open, setOpen] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const activeRole = useRoleStore((s) => s.activeRole);
   const isAdmin = activeRole === 'ADMIN' || activeRole === 'SUPPORT';
   const { switchToProprietaire, loading: switchingRole } = useSwitchToProprietaire();
+  const { signOut, loading: signingOut } = useSignOut();
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -113,10 +114,8 @@ function ProfileDropdown({
   }, []);
 
   const handleSignOut = async () => {
-    setSigningOut(true);
-    await supabase.auth.signOut();
-    setSigningOut(false);
     setOpen(false);
+    await signOut();
   };
 
   return (
@@ -267,13 +266,13 @@ export function MarketplaceNavbar() {
   const [mobileSearchVisible, setMobileSearchVisible] = useState(false);
   const [mobileSearch, setMobileSearch] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
   const hasVehicles = useHasVehiclesFromStore();
   const activeRole = useRoleStore((s) => s.activeRole);
   const isAdmin = activeRole === 'ADMIN' || activeRole === 'SUPPORT';
   const pathname = usePathname();
   const router = useRouter();
   const { switchToProprietaire, loading: switchingRole } = useSwitchToProprietaire();
+  const { signOut, loading: signingOut } = useSignOut();
 
   // Initialiser hasVehicles pour les utilisateurs déjà connectés
   useEffect(() => {
@@ -294,10 +293,8 @@ export function MarketplaceNavbar() {
   }
 
   const handleSignOut = async () => {
-    setSigningOut(true);
-    await supabase.auth.signOut();
-    setSigningOut(false);
     setMenuOpen(false);
+    await signOut();
   };
 
   useEffect(() => {

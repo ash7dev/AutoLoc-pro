@@ -82,8 +82,17 @@ export default function LoginAutoLoc() {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    const ok = await signIn({ email, password });
-    if (ok) {
+    const res = await signIn({ email, password });
+    
+    if (res.unconfirmed) {
+      setIsRedirecting(true);
+      const next = searchParams.get('next');
+      const nextParam = next ? `&next=${encodeURIComponent(next)}` : '';
+      router.push(`/verify?email=${encodeURIComponent(email)}&type=email${nextParam}`);
+      return;
+    }
+
+    if (res.success) {
       setIsRedirecting(true);
       startTransition(() => redirectAfterAuth());
     }

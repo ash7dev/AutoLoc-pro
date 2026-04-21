@@ -9,6 +9,8 @@ import { registerSchema, RegisterInput } from '../schema';
 import { useRegister } from '../hooks/use-register';
 import { useOAuth } from '../../login/hooks/use-oauth';
 import { useRouter } from 'next/navigation';
+import { checkAvailability } from '@/lib/nestjs/auth';
+import { useAuthFlow } from '../../hooks/use-auth-flow';
 
 // ─── Calcul de la force du mot de passe ───────────────────────────────────────
 function getPasswordStrength(password: string): number {
@@ -52,9 +54,11 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isMounted, setIsMounted]       = useState(false);
   const [passwordValue, setPasswordValue] = useState('');
+  const [availabilityErrors, setAvailabilityErrors] = useState<{ email?: string; phone?: string }>({});
 
-  const { signUp, loading, error }                        = useRegister();
+  const { signUp, loading, error: registerError }         = useRegister();
   const { signInWithGoogle, loading: oauthLoading, error: oauthError } = useOAuth();
+  const { redirectAfterAuth } = useAuthFlow();
   const router = useRouter();
 
   const {
@@ -76,10 +80,31 @@ export function RegisterForm() {
   }, [watchedPassword]);
 
   const onSubmit = async (data: RegisterInput) => {
-    const ok = await signUp(data);
-    if (ok) {
+    const res = await signUp(data);
+    if (res.requiresVerification || res.unconfirmed) {
       router.push(`/verify?email=${encodeURIComponent(data.email)}&type=email`);
+      return;
     }
+
+    if (res.success) {
+      await redirectAfterAuth();
+    }
+  };
+
+  const handleBlurCheck = async (field: 'email' | 'phone', value: string) => {
+    if (!value) return;
+    if (field === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return;
+    if (field === 'phone' && value.length < 8) return;
+
+    const params = field === 'email' ? { email: value } : { phone: value };
+    try {
+      const res = await checkAvailability(params);
+      if (!res.available) {
+        setAvailabilityErrors(prev => ({ ...prev, [field]: res.message }));
+      } else {
+        setAvailabilityErrors(prev => ({ ...prev, [field]: undefined }));
+      }
+    } catch {}
   };
 
   if (!isMounted) {
@@ -200,12 +225,12 @@ export function RegisterForm() {
             </div>
 
             {/* Erreur globale */}
-            {(error || oauthError) && (
+            {(registerError || oauthError) && (
               <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
                 <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
-                <p className="autoloc-body text-sm text-red-700">{error ?? oauthError}</p>
+                <p className="autoloc-body text-sm text-red-700">{registerError ?? oauthError}</p>
               </div>
             )}
 
@@ -251,13 +276,18 @@ export function RegisterForm() {
                     <input
                       type="tel"
                       {...register('telephone')}
+                      onBlur={(e) => handleBlurCheck('phone', e.target.value)}
                       placeholder="77 000 00 00"
                       disabled={isLoading}
                       className="autoloc-body w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all bg-white text-gray-900 placeholder-gray-300 text-sm disabled:opacity-50"
                     />
                   </div>
                 </div>
-                {errors.telephone && <p className="autoloc-body text-xs text-red-500 mt-1">{errors.telephone.message}</p>}
+                {(errors.telephone || availabilityErrors.phone) && (
+                  <p className="autoloc-body text-xs text-red-500 mt-1">
+                    {errors.telephone?.message ?? availabilityErrors.phone}
+                  </p>
+                )}
               </div>
 
               {/* Email */}
@@ -270,12 +300,17 @@ export function RegisterForm() {
                   <input
                     type="email"
                     {...register('email')}
+                    onBlur={(e) => handleBlurCheck('email', e.target.value)}
                     placeholder="vous@autoloc.sn"
                     disabled={isLoading}
                     className="autoloc-body w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-400 focus:border-transparent transition-all bg-white text-gray-900 placeholder-gray-300 text-sm disabled:opacity-50"
                   />
                 </div>
-                {errors.email && <p className="autoloc-body text-xs text-red-500 mt-1">{errors.email.message}</p>}
+                {(errors.email || availabilityErrors.email) && (
+                  <p className="autoloc-body text-xs text-red-500 mt-1">
+                    {errors.email?.message ?? availabilityErrors.email}
+                  </p>
+                )}
               </div>
 
               {/* Mot de passe */}

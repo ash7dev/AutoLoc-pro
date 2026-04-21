@@ -12,17 +12,25 @@ export function useSignOut() {
 
   const signOut = async () => {
     setLoading(true);
-    // Efface les cookies NestJS httpOnly avant de déconnecter Supabase.
-    await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {});
-    await supabase.auth.signOut();
-    
-    // Invalide le cache Next.js puis redirige sans laisser de trace dans l'historique
-    router.refresh();
-    router.replace('/');
-    
+
+    // 1. Vider le store IMMÉDIATEMENT avant tout le reste.
+    //    Évite le flash de rôle si Next.js re-rend un composant pendant le signout.
     clearRole();
+
+    // 2. Appeler l'API Next.js qui : révoque la session Redis NestJS (via nest_access cookie
+    //    httpOnly) ET expire les cookies nest_access / nest_refresh.
+    await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {});
+
+    // 3. Déconnecter Supabase (invalide le token Supabase côté client).
+    await supabase.auth.signOut();
+
+    // 4. Rediriger vers /login (pas /) pour que l'UI soit explicite.
+    //    Pas de router.refresh() : inutile puisqu'on change de route.
+    router.replace('/login');
+
     setLoading(false);
   };
 
   return { signOut, loading };
 }
+

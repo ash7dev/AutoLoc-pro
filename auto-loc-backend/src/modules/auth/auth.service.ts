@@ -15,7 +15,6 @@ import { RedisService } from '../../infrastructure/redis/redis.service';
 import { ALLOWED_MIMES } from '../upload/upload.config';
 import { NotificationService } from '../../infrastructure/notifications/notification.service';
 import { TelegramService } from '../../infrastructure/telegram/telegram.service';
-
 const DEFAULT_ROLE = 'LOCATAIRE';
 const ACCESS_TOKEN_TTL_DEFAULT = '15m';
 const REFRESH_TOKEN_TTL_DEFAULT = '30d';
@@ -39,6 +38,54 @@ export class AuthService {
   ) { }
 
   /**
+   * Vérifie si un email ou un numéro de téléphone est déjà utilisé.
+   * Public (pas de guard).
+   */
+  async checkAvailability(email?: string, phone?: string): Promise<{ available: boolean; message?: string }> {
+    if (!email && !phone) {
+      throw new BadRequestException('Email ou téléphone requis');
+    }
+
+    if (email) {
+      const normalizedEmail = this.normalizeEmail(email);
+      // On regarde PARTOUT : Utilisateur (profil métier) ET Profile (identité auth).
+      const [existingUtilisateurEmail, existingProfileEmail] = await Promise.all([
+        this.prisma.utilisateur.findUnique({
+          where: { email: normalizedEmail },
+          select: { id: true },
+        }),
+        this.prisma.profile.findFirst({
+          where: { email: normalizedEmail },
+          select: { id: true },
+        }),
+      ]);
+      if (existingUtilisateurEmail || existingProfileEmail) {
+        return { available: false, message: 'Cet email est déjà associé à un compte' };
+      }
+    }
+
+    if (phone) {
+      const normalizedPhone = this.normalizePhone(phone);
+      // On regarde PARTOUT : Utilisateur (profil métier) ET Profile (identité auth).
+      const [existingUtilisateurPhone, existingProfilePhone] = await Promise.all([
+        this.prisma.utilisateur.findUnique({
+          where: { telephone: normalizedPhone },
+          select: { id: true },
+        }),
+        this.prisma.profile.findFirst({
+          where: { phone: normalizedPhone },
+          select: { id: true },
+        }),
+      ]);
+      if (existingUtilisateurPhone || existingProfilePhone) {
+        return { available: false, message: 'Ce numéro de téléphone est déjà associé à un compte' };
+      }
+    }
+
+    return { available: true };
+  }
+
+  /**
    * Récupère le profil par user_id (sub JWT), ou le crée en transaction.
    * Idempotent : pas de crash si l'utilisateur se reconnecte.
    */
@@ -46,8 +93,18 @@ export class AuthService {
     const existing = await this.prisma.profile.findUnique({
       where: { userId: user.sub },
     });
+
     if (existing) {
+      const normalizedEmail = user.email ? this.normalizeEmail(user.email) : null;
+      if (normalizedEmail && existing.email !== normalizedEmail) {
+        await this.prisma.profile.update({
+          where: { userId: user.sub },
+          data: { email: normalizedEmail },
+        });
+        existing.email = normalizedEmail;
+      }
       const flags = await this.getUtilisateurFlags(user.sub);
+      this.assertAccountIsAllowed(flags);
       return this.toResponse(existing, flags);
     }
 
@@ -59,7 +116,7 @@ export class AuthService {
       return tx.profile.create({
         data: {
           userId: user.sub,
-          email: user.email ?? null,
+          email: user.email ? this.normalizeEmail(user.email) : null,
           phone: user.phone ?? null,
           role: DEFAULT_ROLE,
         },
@@ -67,8 +124,10 @@ export class AuthService {
     });
 
     const flags = await this.getUtilisateurFlags(user.sub);
+    this.assertAccountIsAllowed(flags);
     return this.toResponse(created, flags);
   }
+
 
   /**
    * Crée le profil métier (Utilisateur) si absent.
@@ -94,20 +153,26 @@ export class AuthService {
     }
 
     const normalizedPhone = this.normalizePhone(dto.telephone);
+    const normalizedEmail = this.normalizeEmail(user.email ?? `${user.sub}@autoloc.local`);
 
-    const phoneTaken = await this.prisma.utilisateur.findFirst({
-      where: { telephone: normalizedPhone },
-      select: { id: true },
-    });
+    const [phoneTaken, emailTaken] = await Promise.all([
+      this.prisma.utilisateur.findFirst({
+        where: { telephone: normalizedPhone },
+        select: { id: true },
+      }),
+      this.prisma.utilisateur.findFirst({
+        where: {
+          email: {
+            equals: normalizedEmail,
+            mode: 'insensitive',
+          },
+        },
+        select: { id: true },
+      }),
+    ]);
     if (phoneTaken) {
       throw new BadRequestException('Ce numéro de téléphone est déjà utilisé');
     }
-
-    const emailToCheck = user.email ?? `${user.sub}@autoloc.local`;
-    const emailTaken = await this.prisma.utilisateur.findFirst({
-      where: { email: emailToCheck },
-      select: { id: true },
-    });
     if (emailTaken) {
       throw new BadRequestException('Cet email est déjà utilisé');
     }
@@ -118,9 +183,9 @@ export class AuthService {
         prenom: dto.prenom,
         nom: dto.nom,
         telephone: normalizedPhone,
-        email: emailToCheck,
+        email: normalizedEmail,
         profileCompleted: true,
-        phoneVerified: true,
+        phoneVerified: false,
         avatarUrl: dto.avatarUrl ?? null,
         dateNaissance: dto.dateNaissance ? new Date(dto.dateNaissance) : null,
       },
@@ -132,7 +197,7 @@ export class AuthService {
     });
 
     this.notification.send({
-      email: emailToCheck,
+      email: normalizedEmail,
       type: 'user.welcome',
       data: { prenom: dto.prenom },
     }).catch(() => { });
@@ -152,7 +217,7 @@ export class AuthService {
    * au moment de publier ou recevoir un paiement.
    */
   async switchRole(user: RequestUser, dto: SwitchRoleDto): Promise<{ role: RoleProfile }> {
-    if (!user.sub) {
+      if(!user.sub) {
       throw new BadRequestException('Utilisateur invalide');
     }
 
@@ -217,12 +282,11 @@ export class AuthService {
     });
 
     if (existing) {
-      // Simulation mode (pas de provider OTP) : phoneVerified → true directement.
       const updated = await this.prisma.utilisateur.update({
         where: { userId: user.sub },
         data: {
           telephone: normalizedPhone,
-          phoneVerified: true,
+          phoneVerified: false,
         },
       });
 
@@ -253,15 +317,25 @@ export class AuthService {
     }
     await this.ensureUtilisateurExists(user.sub);
 
+    if (!/^\d{6}$/.test(code)) {
+      throw new BadRequestException('Format de code invalide (6 chiffres attendus)');
+    }
+
     const key = this.getOtpKey(user.sub);
     const stored = await this.redisService.get(key);
-    // Simulation mode: accept any 6-digit code (provider not configured yet).
-    if (!/^\d{6}$/.test(code)) {
-      throw new BadRequestException('Code invalide ou expiré');
+
+    if (!stored) {
+      throw new BadRequestException('Code expiré ou introuvable');
     }
-    if (stored) {
-      await this.redisService.del(key);
+
+    // Code Redis disponible : comparaison timing-safe stricte.
+    const storedBuf = Buffer.from(stored);
+    const incomingBuf = Buffer.from(code);
+    const lengthMatch = storedBuf.length === incomingBuf.length;
+    if (!lengthMatch || !timingSafeEqual(storedBuf, incomingBuf)) {
+      throw new BadRequestException('Code incorrect');
     }
+    await this.redisService.del(key);
 
     await this.prisma.utilisateur.update({
       where: { userId: user.sub },
@@ -346,6 +420,14 @@ export class AuthService {
 
   async getKycUploadSignature() {
     return this.cloudinary.getUploadSignature('kyc-documents');
+  }
+
+  /**
+   * Révoque la session de rafraîchissement dans Redis.
+   * Appelé lors de la déconnexion pour invalider le refresh token côté serveur.
+   */
+  async logout(userId: string): Promise<void> {
+    await this.redisService.del(this.getRefreshSessionKey(userId));
   }
 
   async uploadPermis(
@@ -504,31 +586,37 @@ export class AuthService {
 
   private async getUtilisateurFlags(userId: string): Promise<{
     id?: string;
+    actif?: boolean;
     phoneVerified?: boolean;
     kycStatus?: ProfileResponse['kycStatus'];
     hasVehicles?: boolean;
     hasPermis?: boolean;
     dateNaissance?: string | null;
+    bloqueJusqua?: string | null;
   }> {
     const found = await this.prisma.utilisateur.findUnique({
       where: { userId },
       select: {
         id: true,
+        actif: true,
         phoneVerified: true,
         statutKyc: true,
         permisUrl: true,
         dateNaissance: true,
+        bloqueJusqua: true,
         _count: { select: { vehicules: true } },
       },
     });
     if (!found) return {};
     return {
       id: found.id,
+      actif: found.actif,
       phoneVerified: found.phoneVerified,
       kycStatus: found.statutKyc as ProfileResponse['kycStatus'],
       hasVehicles: found._count.vehicules > 0,
       hasPermis: !!found.permisUrl,
       dateNaissance: found.dateNaissance ? found.dateNaissance.toISOString() : null,
+      bloqueJusqua: found.bloqueJusqua ? found.bloqueJusqua.toISOString() : null,
     };
   }
 
@@ -566,6 +654,12 @@ export class AuthService {
     return `+221${trimmed}`;
   }
 
+  private normalizeEmail(raw: string): string {
+    return raw.trim().toLowerCase();
+  }
+
+
+
   private toResponse(
     p: {
       id: string;
@@ -577,11 +671,13 @@ export class AuthService {
     },
     flags: {
       id?: string;
+      actif?: boolean;
       phoneVerified?: boolean;
       kycStatus?: ProfileResponse['kycStatus'];
       hasVehicles?: boolean;
       hasPermis?: boolean;
       dateNaissance?: string | null;
+      bloqueJusqua?: string | null;
     } = {},
   ): ProfileResponse {
     return {
@@ -598,6 +694,7 @@ export class AuthService {
       hasVehicles: flags.hasVehicles,
       hasPermis: flags.hasPermis,
       dateNaissance: flags.dateNaissance,
+      bloqueJusqua: flags.bloqueJusqua,
     };
   }
 
@@ -685,6 +782,20 @@ export class AuthService {
     const incomingHash = this.hashToken(refreshToken);
     if (!this.isSameHash(storedHash, incomingHash)) {
       throw new UnauthorizedException('Jeton de rafraîchissement révoqué');
+    }
+  }
+
+  private assertAccountIsAllowed(flags: {
+    actif?: boolean;
+    bloqueJusqua?: string | null;
+  }): void {
+    if (flags.actif === false) {
+      throw new ForbiddenException('Votre compte a été désactivé. Veuillez contacter le support.');
+    }
+    if (flags.bloqueJusqua && new Date(flags.bloqueJusqua) > new Date()) {
+      throw new ForbiddenException(
+        `Votre compte est suspendu jusqu'au ${new Date(flags.bloqueJusqua).toLocaleDateString()}`,
+      );
     }
   }
 

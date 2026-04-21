@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -8,6 +9,7 @@ import { Request } from 'express';
 import { RequestUser } from '../../common/types/auth.types';
 import { JwtService } from '@nestjs/jwt';
 import { JwksService } from '../../infrastructure/jwt/jwks.service';
+import { PrismaService } from '../../prisma/prisma.service';
 
 export const BEARER_PREFIX = 'Bearer ';
 
@@ -17,6 +19,7 @@ export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly jwksService: JwksService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -32,8 +35,31 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const user = await this.resolveUser(token);
+    await this.assertAccountIsAllowed(user.sub);
     (request as Request & { user?: RequestUser }).user = user;
     return true;
+  }
+
+  private async assertAccountIsAllowed(userId: string): Promise<void> {
+    if (!userId) {
+      throw new UnauthorizedException('Utilisateur invalide');
+    }
+
+    const utilisateur = await this.prisma.utilisateur.findUnique({
+      where: { userId },
+      select: { actif: true, bloqueJusqua: true },
+    });
+
+    // Pas encore de profil métier: on laisse passer l'onboarding.
+    if (!utilisateur) return;
+
+    if (!utilisateur.actif) {
+      throw new ForbiddenException('Compte suspendu');
+    }
+
+    if (utilisateur.bloqueJusqua && utilisateur.bloqueJusqua > new Date()) {
+      throw new ForbiddenException('Compte temporairement bloqué');
+    }
   }
 
   private async resolveUser(token: string): Promise<RequestUser> {

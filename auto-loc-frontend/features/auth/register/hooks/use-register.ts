@@ -2,18 +2,23 @@ import { useState } from 'react';
 import { supabase } from '../../../../lib/supabase/client';
 import { RegisterInput } from '../schema';
 import { mapSupabaseError } from '../../utils/supabase-errors';
-import { completeProfile } from '../../../../lib/nestjs/auth';
+import { completeProfile, checkAvailability } from '../../../../lib/nestjs/auth';
 import { syncWithNestJS } from '../../hooks/use-nest-token';
 
 export function useRegister() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const markJustSignedUp = () => {
+  const checkIsAvailable = async (email: string, phone: string) => {
     try {
-      localStorage.setItem('autoloc_signup_at', String(Date.now()));
+      const res = await checkAvailability({ email, phone });
+      if (!res.available) {
+        setError(res.message ?? 'Email ou téléphone déjà utilisé');
+        return false;
+      }
+      return true;
     } catch {
-      // ignore storage errors
+      return true; // En cas d'erreur API check, on laisse Supabase gérer
     }
   };
 
@@ -21,7 +26,15 @@ export function useRegister() {
     setLoading(true);
     setError(null);
 
-    const { data, error } = await supabase.auth.signUp({
+    // 1. Pré-vérification pour bloquer les doublons proprement
+    const isAvailable = await checkIsAvailable(input.email, input.telephone);
+    if (!isAvailable) {
+      setLoading(false);
+      return { success: false, unconfirmed: false, requiresVerification: false };
+    }
+
+    // 2. Sign up Supabase
+    const { data, error: supaError } = await supabase.auth.signUp({
       email: input.email,
       password: input.password,
       options: {
@@ -33,37 +46,44 @@ export function useRegister() {
       },
     });
 
-    if (error) {
-      setError(mapSupabaseError(error.message));
+    if (supaError) {
+      setError(mapSupabaseError(supaError.message));
+      setLoading(false);
+      return { success: false, unconfirmed: false, requiresVerification: false };
     }
 
-    if (!error && data.session?.user) {
-      markJustSignedUp();
+    // Cas particulier : email déjà dans Supabase mais pas encore confirmé.
+    if (data.user && !data.session && (data.user.identities?.length ?? 0) === 0) {
+      // Déclencher le renvoi d'OTP pour débloquer l'utilisateur
+      await supabase.auth.resend({
+          type: 'signup',
+          email: input.email,
+      });
+      setLoading(false);
+      return { success: false, unconfirmed: true, requiresVerification: true };
     }
 
-    const hasFullProfileInput = Boolean(
-      input.prenom && input.prenom.trim() &&
-      input.nom && input.nom.trim() &&
-      input.telephone && input.telephone.trim(),
-    );
-
-    const supaToken = data.session?.access_token ?? null;
-    if (!error && supaToken && hasFullProfileInput) {
+    // Si on a déjà une session (email confirmation OFF ou auto-confirm activé), on synchronise.
+    if (data.session?.user) {
       try {
+        const supaToken = data.session.access_token;
         await syncWithNestJS(supaToken);
-        await completeProfile(undefined, {
-          prenom: input.prenom as string,
-          nom: input.nom as string,
-          telephone: input.telephone as string,
+        await completeProfile(supaToken, {
+          prenom: input.prenom,
+          nom: input.nom,
+          telephone: input.telephone,
         });
       } catch (err) {
-        // Non bloquant: l'onboarding pourra compléter plus tard
-        setError('Profil partiellement enregistré. Tu pourras compléter plus tard.');
+        console.error('[Register] Post-signup sync failed', err);
       }
     }
 
     setLoading(false);
-    return !error;
+    return {
+      success: true,
+      unconfirmed: false,
+      requiresVerification: !data.session?.user,
+    };
   };
 
   return { signUp, loading, error };

@@ -130,7 +130,6 @@ export function PermisGate({ onSubmitted, onProceed }: PermisGateProps) {
                 type="file"
                 ref={inputRef}
                 accept="image/*"
-                capture="environment"
                 className="hidden"
                 onChange={handleSelect}
             />

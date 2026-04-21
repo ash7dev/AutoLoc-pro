@@ -362,15 +362,30 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
         run={runTour}
         continuous
         showSkipButton
-        showProgress
+        showProgress={false} // On masque le "X of Y" natif de Joyride car on a notre propre stepper
         callback={handleJoyrideCallback}
-        styles={{ options: { primaryColor: "#000000", zIndex: 1000 } }}
+        styles={{ 
+            options: { 
+                primaryColor: "#10b981", 
+                zIndex: 1000 
+            },
+            buttonNext: {
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontWeight: 'bold'
+            },
+            buttonBack: {
+                marginRight: '10px',
+                fontSize: '13px',
+                fontWeight: 'bold'
+            }
+        }}
         locale={{
-          back: "Retour",
+          back: "Précédent",
           close: "Fermer",
           last: "Terminer",
           next: "Suivant",
-          skip: "Passer",
+          skip: "Passer le guide",
         }}
       />
 

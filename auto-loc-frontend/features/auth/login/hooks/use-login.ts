@@ -17,12 +17,27 @@ export function useLogin() {
     });
 
     if (error) {
+      const isUnconfirmed = error.message.toLowerCase().includes('email not confirmed');
+      
+      if (isUnconfirmed) {
+        // Déclencher automatiquement le renvoi de l'OTP pour débloquer l'user
+        await supabase.auth.resend({
+          type: 'signup',
+          email: input.email,
+        });
+        setLoading(false);
+        return { success: false, unconfirmed: true };
+      }
+
       setError(mapSupabaseError(error.message));
+      setLoading(false);
+      return { success: false, unconfirmed: false };
     }
 
     setLoading(false);
-    return !error;
+    return { success: true, unconfirmed: false };
   };
 
   return { signIn, loading, error };
 }
+

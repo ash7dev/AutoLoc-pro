@@ -1,5 +1,3 @@
-// Stack : PostgreSQL + Prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,143 +7,97 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Profils auth (Supabase = Identity only, rôles côté backend)
 model Profile {
-  id        String   @id @default(uuid())
-  userId    String   @unique @map("user_id")
-  email     String?
-  phone     String?
-  role      RoleProfile @default(LOCATAIRE)
-  createdAt DateTime @default(now()) @map("created_at")
-
-  // Liaison vers le profil métier (Utilisateur).
+  id          String       @id @default(uuid())
+  userId      String       @unique @map("user_id")
+  email       String?      @unique
+  phone       String?      @unique
+  createdAt   DateTime     @default(now()) @map("created_at")
+  role        RoleProfile  @default(LOCATAIRE)
   utilisateur Utilisateur?
 
   @@index([userId])
   @@map("profiles")
 }
 
-enum RoleProfile {
-  LOCATAIRE
-  PROPRIETAIRE
-  ADMIN
-  SUPPORT
-}
-
-// 1️⃣ UTILISATEURS
-
 model Utilisateur {
-  id              String   @id @default(uuid())
-  // Lien obligatoire vers l'identité Supabase (sub JWT).
-  userId          String   @unique
-  profile         Profile  @relation(fields: [userId], references: [userId])
-
-  email           String   @unique
-  telephone       String   @unique
-
-  prenom          String
-  nom             String
-  avatarUrl       String?
-  dateNaissance   DateTime?
-
-  phoneVerified   Boolean  @default(false)
-  profileCompleted Boolean @default(false)
-
-  statutKyc          StatutKyc @default(NON_VERIFIE)
-  kycDocumentUrl     String?
-  kycSelfieUrl       String?
-  kycRejectionReason String?
-
-  permisUrl          String?
-  permisPublicId     String?
-  actif           Boolean   @default(true)
-  bloqueJusqua    DateTime?
-
-  noteLocataire    Decimal  @default(0) @db.Decimal(3,2)
-  noteProprietaire Decimal  @default(0) @db.Decimal(3,2)
-  totalAvis        Int      @default(0)
-
-  creeLe          DateTime @default(now())
-  misAJourLe      DateTime @updatedAt
-
-  vehicules       Vehicule[]
-  reservationsLocataire  Reservation[] @relation("locataire")
-  reservationsProprietaire Reservation[] @relation("proprietaire_res")
-
-  wallet          Wallet?
-  avisEnvoyes     Avis[] @relation("auteur")
-  avisRecus       Avis[] @relation("cible")
-  pushSubscriptions PushSubscription[]
+  id                       String             @id @default(uuid())
+  email                    String             @unique
+  telephone                String             @unique
+  prenom                   String
+  nom                      String
+  avatarUrl                String?
+  dateNaissance            DateTime?
+  statutKyc                StatutKyc          @default(NON_VERIFIE)
+  actif                    Boolean            @default(true)
+  bloqueJusqua             DateTime?
+  noteLocataire            Decimal            @default(0) @db.Decimal(3, 2)
+  noteProprietaire         Decimal            @default(0) @db.Decimal(3, 2)
+  totalAvis                Int                @default(0)
+  creeLe                   DateTime           @default(now())
+  misAJourLe               DateTime           @updatedAt
+  userId                   String             @unique
+  phoneVerified            Boolean            @default(false)
+  profileCompleted         Boolean            @default(false)
+  kycDocumentUrl           String?
+  kycSelfieUrl             String?
+  kycRejectionReason       String?
+  permisPublicId           String?
+  permisUrl                String?
+  avisEnvoyes              Avis[]             @relation("auteur")
+  avisRecus                Avis[]             @relation("cible")
+  reservationsLocataire    Reservation[]      @relation("locataire")
+  reservationsProprietaire Reservation[]      @relation("proprietaire_res")
+  profile                  Profile            @relation(fields: [userId], references: [userId])
+  vehicules                Vehicule[]
+  wallet                   Wallet?
+  pushSubscriptions        PushSubscription[]
 
   @@index([userId])
 }
 
-enum StatutKyc {
-  NON_VERIFIE
-  EN_ATTENTE
-  VERIFIE
-  REJETE
-}
-
-// 2️⃣ VÉHICULES
-
 model Vehicule {
-  id               String   @id @default(uuid())
-  proprietaireId   String
-  proprietaire     Utilisateur @relation(fields: [proprietaireId], references: [id])
-
-  marque           String
-  modele           String
-  annee            Int
-  type             TypeVehicule
-  carburant        Carburant?
-  transmission     Transmission?
-  nombrePlaces     Int?
-
-  immatriculation  String   @unique
-  prixParJour      Decimal  @db.Decimal(10,2)
-
-  ville            String
-  adresse          String
-  latitude         Decimal? @db.Decimal(10,7)
-  longitude        Decimal? @db.Decimal(10,7)
-
-  joursMinimum      Int      @default(1)
-  ageMinimum        Int      @default(18)
-
-  // Conditions de location
-  zoneConduite      String?
-  assurance         String?
-  carburantCondition String?
-  reglesSpecifiques String?
-
-  // Livraison (optionnel)
-  fraisLivraison    Decimal? @db.Decimal(10,2)
-
-  // Hors Dakar
-  autoriseHorsDakar            Boolean  @default(false)
-  supplementHorsDakarParJour   Decimal? @db.Decimal(10,2)
-
-  // Documents obligatoires
-  carteGriseUrl      String?
-  carteGrisePublicId String?
-  assuranceDocUrl    String?
-  assuranceDocPublicId String?
-
-  statut           StatutVehicule @default(EN_ATTENTE_VALIDATION)
-  note             Decimal  @default(0) @db.Decimal(3,2)
-  totalAvis        Int      @default(0)
-  totalLocations   Int      @default(0)
-
-  archiveLe        DateTime?
-  creeLe           DateTime @default(now())
-  misAJourLe       DateTime @updatedAt
-
-  photos              PhotoVehicule[]
-  equipements         VehiculeEquipement[]
-  reservations        Reservation[]
-  tarifsProgressifs   TarifTier[]
-  indisponibilites    IndisponibiliteVehicule[]
+  id                         String                    @id @default(uuid())
+  proprietaireId             String
+  marque                     String
+  modele                     String
+  annee                      Int
+  type                       TypeVehicule
+  carburant                  Carburant?
+  transmission               Transmission?
+  nombrePlaces               Int?
+  immatriculation            String                    @unique
+  prixParJour                Decimal                   @db.Decimal(10, 2)
+  ville                      String
+  adresse                    String
+  latitude                   Decimal?                  @db.Decimal(10, 7)
+  longitude                  Decimal?                  @db.Decimal(10, 7)
+  joursMinimum               Int                       @default(1)
+  ageMinimum                 Int                       @default(18)
+  statut                     StatutVehicule            @default(EN_ATTENTE_VALIDATION)
+  note                       Decimal                   @default(0) @db.Decimal(3, 2)
+  totalAvis                  Int                       @default(0)
+  totalLocations             Int                       @default(0)
+  creeLe                     DateTime                  @default(now())
+  misAJourLe                 DateTime                  @updatedAt
+  assurance                  String?
+  reglesSpecifiques          String?
+  zoneConduite               String?
+  assuranceDocPublicId       String?
+  assuranceDocUrl            String?
+  carteGrisePublicId         String?
+  carteGriseUrl              String?
+  fraisLivraison             Decimal?                  @db.Decimal(10, 2)
+  autoriseHorsDakar          Boolean                   @default(false)
+  supplementHorsDakarParJour Decimal?                  @db.Decimal(10, 2)
+  carburantCondition         String?
+  archiveLe                  DateTime?
+  indisponibilites           IndisponibiliteVehicule[]
+  photos                     PhotoVehicule[]
+  reservations               Reservation[]
+  tarifsProgressifs          TarifTier[]
+  proprietaire               Utilisateur               @relation(fields: [proprietaireId], references: [id])
+  equipements                VehiculeEquipement[]
 
   @@index([proprietaireId])
   @@index([statut])
@@ -157,14 +109,290 @@ model Vehicule {
 model TarifTier {
   id         String   @id @default(uuid())
   vehiculeId String
-  vehicule   Vehicule @relation(fields: [vehiculeId], references: [id], onDelete: Cascade)
-
   joursMin   Int
   joursMax   Int?
-  prix       Decimal  @db.Decimal(10,2)
+  prix       Decimal  @db.Decimal(10, 2)
   position   Int      @default(0)
+  vehicule   Vehicule @relation(fields: [vehiculeId], references: [id], onDelete: Cascade)
 
   @@index([vehiculeId])
+}
+
+model Equipement {
+  id        String               @id @default(uuid())
+  nom       String               @unique
+  vehicules VehiculeEquipement[]
+}
+
+model VehiculeEquipement {
+  vehiculeId   String
+  equipementId String
+  equipement   Equipement @relation(fields: [equipementId], references: [id], onDelete: Cascade)
+  vehicule     Vehicule   @relation(fields: [vehiculeId], references: [id], onDelete: Cascade)
+
+  @@id([vehiculeId, equipementId])
+}
+
+model PhotoVehicule {
+  id            String   @id @default(uuid())
+  vehiculeId    String
+  url           String
+  position      Int      @default(0)
+  estPrincipale Boolean  @default(false)
+  creeLe        DateTime @default(now())
+  publicId      String?
+  vehicule      Vehicule @relation(fields: [vehiculeId], references: [id], onDelete: Cascade)
+
+  @@index([vehiculeId])
+  @@index([vehiculeId, estPrincipale])
+}
+
+model Reservation {
+  id                     String                  @id @default(uuid())
+  vehiculeId             String
+  locataireId            String
+  proprietaireId         String
+  dateDebut              DateTime
+  dateFin                DateTime
+  prixParJour            Decimal                 @db.Decimal(10, 2)
+  totalBase              Decimal                 @db.Decimal(10, 2)
+  tauxCommission         Decimal                 @db.Decimal(5, 4)
+  montantCommission      Decimal                 @db.Decimal(10, 2)
+  totalLocataire         Decimal                 @db.Decimal(10, 2)
+  netProprietaire        Decimal                 @db.Decimal(10, 2)
+  statut                 StatutReservation       @default(EN_ATTENTE_PAIEMENT)
+  paymentUrl             String?
+  delaiSignature         DateTime
+  annuleParId            String?
+  annuleLe               DateTime?
+  raisonAnnulation       String?
+  confirmeeLe            DateTime?
+  checkinLe              DateTime?
+  checkoutLe             DateTime?
+  closeLe                DateTime?
+  updatedBySystem        Boolean                 @default(false)
+  creeLe                 DateTime                @default(now())
+  misAJourLe             DateTime                @updatedAt
+  contratPublicId        String?
+  contratUrl             String?
+  checkinLocataireLe     DateTime?
+  checkinProprietaireLe  DateTime?
+  adresseLivraison       String?
+  fraisLivraison         Decimal?                @db.Decimal(10, 2)
+  horsDakar              Boolean                 @default(false)
+  supplementHorsDakar    Decimal?                @db.Decimal(10, 2)
+  tacitCheckinDeadlineLe DateTime?
+  checkinLocataireSource CheckinLocataireSource?
+  avis                   Avis[]
+  idempotencyKey         IdempotencyKey?
+  litige                 Litige?
+  paiement               Paiement?
+  photosEtatLieu         PhotoEtatLieu[]
+  locataire              Utilisateur             @relation("locataire", fields: [locataireId], references: [id])
+  proprietaire           Utilisateur             @relation("proprietaire_res", fields: [proprietaireId], references: [id])
+  vehicule               Vehicule                @relation(fields: [vehiculeId], references: [id])
+  historique             ReservationHistorique[]
+
+  @@index([vehiculeId, statut])
+  @@index([vehiculeId, statut, dateDebut, dateFin])
+  @@index([locataireId])
+  @@index([proprietaireId])
+  @@index([proprietaireId, statut])
+  @@index([statut])
+  @@index([delaiSignature, statut])
+  @@index([statut, tacitCheckinDeadlineLe])
+}
+
+model ReservationHistorique {
+  id            String             @id @default(uuid())
+  reservationId String
+  ancienStatut  StatutReservation?
+  nouveauStatut StatutReservation
+  modifiePar    String?
+  modifieLe     DateTime           @default(now())
+  reservation   Reservation        @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([reservationId])
+}
+
+model Paiement {
+  id                       String              @id @default(uuid())
+  reservationId            String              @unique
+  montant                  Decimal             @db.Decimal(10, 2)
+  devise                   Devise              @default(XOF)
+  fournisseur              FournisseurPaiement
+  idTransactionFournisseur String?             @unique
+  statut                   StatutPaiement      @default(EN_ATTENTE)
+  creeLe                   DateTime            @default(now())
+  rembourseLe              DateTime?
+  montantRembourse         Decimal?            @db.Decimal(10, 2)
+  reservation              Reservation         @relation(fields: [reservationId], references: [id])
+
+  @@index([statut])
+}
+
+model Wallet {
+  id              String              @id @default(uuid())
+  utilisateurId   String              @unique
+  soldeDisponible Decimal             @default(0) @db.Decimal(10, 2)
+  creeLe          DateTime            @default(now())
+  misAJourLe      DateTime            @updatedAt
+  retraits        Retrait[]
+  transactions    TransactionWallet[]
+  utilisateur     Utilisateur         @relation(fields: [utilisateurId], references: [id])
+
+  @@index([utilisateurId])
+}
+
+model TransactionWallet {
+  id            String                @id @default(uuid())
+  walletId      String
+  reservationId String?
+  type          TypeTransactionWallet
+  montant       Decimal               @db.Decimal(10, 2)
+  sens          SensTransaction
+  soldeApres    Decimal               @db.Decimal(10, 2)
+  creeLe        DateTime              @default(now())
+  wallet        Wallet                @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@unique([reservationId, type])
+  @@index([walletId])
+  @@index([walletId, creeLe(sort: Desc)])
+}
+
+model Retrait {
+  id           String         @id @default(uuid())
+  walletId     String
+  montant      Decimal        @db.Decimal(10, 2)
+  methode      MethodeRetrait
+  destinataire String
+  statut       StatutRetrait  @default(EN_ATTENTE)
+  raisonRejet  String?
+  demandeeLe   DateTime       @default(now())
+  traiteLe     DateTime?
+  wallet       Wallet         @relation(fields: [walletId], references: [id])
+
+  @@index([statut])
+}
+
+model Litige {
+  id                  String       @id @default(uuid())
+  reservationId       String       @unique
+  description         String
+  coutEstime          Decimal?     @db.Decimal(10, 2)
+  statut              StatutLitige @default(EN_ATTENTE)
+  montantCompensation Decimal?     @db.Decimal(10, 2)
+  creeLe              DateTime     @default(now())
+  resoluLe            DateTime?
+  resoluParAdminId    String?
+  reservation         Reservation  @relation(fields: [reservationId], references: [id])
+
+  @@index([statut])
+}
+
+model Avis {
+  id            String      @id @default(uuid())
+  reservationId String
+  auteurId      String
+  cibleId       String
+  note          Int
+  commentaire   String?
+  typeAvis      TypeAvis
+  creeLe        DateTime    @default(now())
+  auteur        Utilisateur @relation("auteur", fields: [auteurId], references: [id])
+  cible         Utilisateur @relation("cible", fields: [cibleId], references: [id])
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@unique([reservationId, auteurId])
+  @@index([cibleId])
+}
+
+model IdempotencyKey {
+  id            String      @id @default(uuid())
+  key           String      @unique
+  reservationId String      @unique
+  expiresAt     DateTime
+  creeLe        DateTime    @default(now())
+  paymentRef    String?
+  paymentUrl    String?
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model WebhookLog {
+  id                       String              @id @default(uuid())
+  provider                 FournisseurPaiement
+  payloadRaw               String
+  signatureReceived        String
+  signatureCalculated      String
+  isValid                  Boolean
+  statusCode               Int?
+  errorMessage             String?
+  durationMs               Int?
+  idTransactionFournisseur String?
+  reservationId            String?
+  creeLe                   DateTime            @default(now())
+
+  @@index([provider, creeLe])
+  @@index([idTransactionFournisseur])
+  @@index([reservationId])
+}
+
+model PhotoEtatLieu {
+  id            String          @id @default(uuid())
+  reservationId String
+  type          TypeEtatLieu
+  url           String
+  publicId      String?
+  categorie     CategoriePhoto?
+  position      Int             @default(0)
+  creeLe        DateTime        @default(now())
+  reservation   Reservation     @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([reservationId, type])
+}
+
+model IndisponibiliteVehicule {
+  id         String   @id @default(uuid())
+  vehiculeId String
+  dateDebut  DateTime @db.Date
+  dateFin    DateTime @db.Date
+  motif      String?
+  creeLe     DateTime @default(now())
+  vehicule   Vehicule @relation(fields: [vehiculeId], references: [id], onDelete: Cascade)
+
+  @@index([vehiculeId, dateDebut, dateFin])
+}
+
+model PushSubscription {
+  id          String      @id @default(uuid())
+  userId      String
+  endpoint    String      @unique
+  p256dh      String
+  auth        String
+  userAgent   String?
+  deviceType  String?
+  creeLe      DateTime    @default(now()) @map("created_at")
+  misAJourLe  DateTime    @updatedAt @map("updated_at")
+  utilisateur Utilisateur @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+enum RoleProfile {
+  LOCATAIRE
+  PROPRIETAIRE
+  ADMIN
+  SUPPORT
+}
+
+enum StatutKyc {
+  NON_VERIFIE
+  EN_ATTENTE
+  VERIFIE
+  REJETE
 }
 
 enum TypeVehicule {
@@ -181,11 +409,11 @@ enum TypeVehicule {
 }
 
 enum StatutVehicule {
-  BROUILLON
   EN_ATTENTE_VALIDATION
   VERIFIE
   SUSPENDU
   ARCHIVE
+  BROUILLON
 }
 
 enum Carburant {
@@ -200,178 +428,20 @@ enum Transmission {
   AUTOMATIQUE
 }
 
-// 3️⃣ ÉQUIPEMENTS (remplacement JSON)
-
-model Equipement {
-  id   String @id @default(uuid())
-  nom  String @unique
-
-  vehicules VehiculeEquipement[]
-}
-
-model VehiculeEquipement {
-  vehiculeId   String
-  equipementId String
-
-  vehicule     Vehicule   @relation(fields: [vehiculeId], references: [id], onDelete: Cascade)
-  equipement   Equipement @relation(fields: [equipementId], references: [id], onDelete: Cascade)
-
-  @@id([vehiculeId, equipementId])
-}
-
-// 4️⃣ PHOTOS
-
-model PhotoVehicule {
-  id            String   @id @default(uuid())
-  vehiculeId    String
-  vehicule      Vehicule @relation(fields: [vehiculeId], references: [id], onDelete: Cascade)
-
-  url           String
-  publicId      String?
-  position      Int      @default(0)
-  estPrincipale Boolean  @default(false)
-
-  creeLe        DateTime @default(now())
-
-  @@index([vehiculeId])
-  @@index([vehiculeId, estPrincipale])
-}
-
-// 5️⃣ RÉSERVATIONS (TABLE CRITIQUE)
-
-model Reservation {
-  id              String   @id @default(uuid())
-
-  vehiculeId      String
-  vehicule        Vehicule @relation(fields: [vehiculeId], references: [id])
-
-  locataireId     String
-  locataire       Utilisateur @relation("locataire", fields: [locataireId], references: [id])
-
-  proprietaireId  String
-  proprietaire    Utilisateur @relation("proprietaire_res", fields: [proprietaireId], references: [id])
-
-  dateDebut       DateTime
-  dateFin         DateTime
-
-  prixParJour     Decimal  @db.Decimal(10,2)
-  totalBase       Decimal  @db.Decimal(10,2)
-  tauxCommission  Decimal  @db.Decimal(5,4)
-  montantCommission Decimal @db.Decimal(10,2)
-  totalLocataire  Decimal  @db.Decimal(10,2)
-  netProprietaire Decimal  @db.Decimal(10,2)
-
-  statut          StatutReservation @default(EN_ATTENTE_PAIEMENT)
-  paymentUrl      String?  // URL de redirection Wave/Orange Money
-
-  delaiSignature  DateTime
-
-  annuleParId     String?
-  annuleLe        DateTime?
-  raisonAnnulation String?
-
-  confirmeeLe     DateTime?
-  checkinProprietaireLe DateTime?
-  checkinLocataireLe    DateTime?
-  // Fin fenêtre 24h après check-in proprio (photos OK) — validation tacite locataire
-  tacitCheckinDeadlineLe DateTime?
-  // Locataire : USER (manuel) ou SYSTEM_TACIT (cron)
-  checkinLocataireSource CheckinLocataireSource?
-  checkinLe       DateTime?
-  checkoutLe      DateTime?
-  closeLe         DateTime?
-
-  updatedBySystem Boolean @default(false)
-
-  contratUrl      String?
-  contratPublicId String?
-
-  // Livraison (optionnel par réservation)
-  adresseLivraison   String?
-  fraisLivraison     Decimal? @db.Decimal(10,2)
-
-  // Hors Dakar (optionnel par réservation)
-  horsDakar          Boolean  @default(false)
-  supplementHorsDakar Decimal? @db.Decimal(10,2)
-
-  creeLe          DateTime @default(now())
-  misAJourLe      DateTime @updatedAt
-
-  paiement        Paiement?
-  litige          Litige?
-  avis            Avis[]
-  historique      ReservationHistorique[]
-  photosEtatLieu  PhotoEtatLieu[]
-  idempotencyKey  IdempotencyKey?
-
-  @@index([vehiculeId, statut])
-  @@index([vehiculeId, statut, dateDebut, dateFin])
-  @@index([locataireId])
-  @@index([proprietaireId])
-  @@index([proprietaireId, statut])
-  @@index([statut])
-  @@index([delaiSignature, statut])
-  @@index([statut, tacitCheckinDeadlineLe])
-  // 🔴 ANTI DOUBLE BOOKING : ajouter en migration SQL manuelle :
-  // CREATE EXTENSION IF NOT EXISTS btree_gist;
-  // ALTER TABLE "Reservation" ADD CONSTRAINT no_double_booking
-  // EXCLUDE USING GIST (
-  //   "vehiculeId" WITH =,
-  //   daterange("dateDebut", "dateFin", '[]') WITH &&
-  // ) WHERE (statut NOT IN ('ANNULEE'));
-}
-
 enum CheckinLocataireSource {
   USER
   SYSTEM_TACIT
 }
 
 enum StatutReservation {
-  INITIEE              // Réservation créée, paiement pas encore initié (rarement utilisé)
-  EN_ATTENTE_PAIEMENT  // Paiement initié, en attente confirmation webhook
-  PAYEE                // Paiement confirmé, en attente validation propriétaire
-  CONFIRMEE            // Propriétaire a accepté
-  EN_COURS             // Location démarrée (check-in effectué)
-  TERMINEE             // Location terminée (check-out effectué)
-  ANNULEE              // Annulée par locataire, propriétaire ou système
-  LITIGE               // Litige ouvert
-}
-
-// 6️⃣ HISTORIQUE RÉSERVATION
-
-model ReservationHistorique {
-  id              String @id @default(uuid())
-  reservationId   String
-  reservation     Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
-
-  ancienStatut    StatutReservation?
-  nouveauStatut   StatutReservation
-  modifiePar      String?
-  modifieLe       DateTime @default(now())
-
-  @@index([reservationId])
-}
-
-// 7️⃣ PAIEMENTS
-
-model Paiement {
-  id                 String   @id @default(uuid())
-  reservationId      String   @unique
-  reservation        Reservation @relation(fields: [reservationId], references: [id])
-
-  montant            Decimal  @db.Decimal(10,2)
-  devise             Devise   @default(XOF)
-
-  fournisseur        FournisseurPaiement
-  idTransactionFournisseur String? @unique
- 
-  statut             StatutPaiement @default(EN_ATTENTE)
-
-  creeLe             DateTime @default(now())
-  rembourseLe        DateTime?
-  montantRembourse   Decimal? @db.Decimal(10,2)
-
-  @@index([statut])
+  INITIEE
+  EN_ATTENTE_PAIEMENT
+  PAYEE
+  CONFIRMEE
+  EN_COURS
+  TERMINEE
+  ANNULEE
+  LITIGE
 }
 
 enum Devise {
@@ -393,45 +463,6 @@ enum StatutPaiement {
   REMBOURSE
 }
 
-// 8️⃣ WALLET
-
-model Wallet {
-  id              String   @id @default(uuid())
-  utilisateurId   String   @unique
-  utilisateur     Utilisateur @relation(fields: [utilisateurId], references: [id])
-
-  soldeDisponible Decimal  @default(0) @db.Decimal(10,2)
-
-  creeLe          DateTime @default(now())
-  misAJourLe      DateTime @updatedAt
-
-  transactions    TransactionWallet[]
-  retraits        Retrait[]
-
-  @@index([utilisateurId])
-}
-
-// 9️⃣ TRANSACTIONS WALLET
-
-model TransactionWallet {
-  id            String   @id @default(uuid())
-  walletId      String
-  wallet        Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
-
-  reservationId String?
-
-  type          TypeTransactionWallet
-  montant       Decimal  @db.Decimal(10,2)
-  sens          SensTransaction
-  soldeApres    Decimal  @db.Decimal(10,2)
-
-  creeLe        DateTime @default(now())
-
-  @@unique([reservationId, type])  // 🔴 CRITIQUE : Empêche double crédit pour même réservation
-  @@index([walletId])
-  @@index([walletId, creeLe(sort: Desc)])
-}
-
 enum TypeTransactionWallet {
   CREDIT_LOCATION
   DEBIT_PENALITE
@@ -441,26 +472,6 @@ enum TypeTransactionWallet {
 enum SensTransaction {
   CREDIT
   DEBIT
-}
-
-// 🔟 RETRAITS
-
-model Retrait {
-  id            String   @id @default(uuid())
-  walletId      String
-  wallet        Wallet   @relation(fields: [walletId], references: [id])
-
-  montant       Decimal  @db.Decimal(10,2)
-  methode       MethodeRetrait
-  destinataire  String
-
-  statut        StatutRetrait @default(EN_ATTENTE)
-  raisonRejet   String?
-
-  demandeeLe    DateTime @default(now())
-  traiteLe      DateTime?
-
-  @@index([statut])
 }
 
 enum MethodeRetrait {
@@ -476,118 +487,15 @@ enum StatutRetrait {
   REJETE
 }
 
-// 1️⃣1️⃣ LITIGES
-
-model Litige {
-  id            String   @id @default(uuid())
-  reservationId String   @unique
-  reservation   Reservation @relation(fields: [reservationId], references: [id])
- 
-  description   String
-  coutEstime    Decimal? @db.Decimal(10,2)
-
-  statut        StatutLitige @default(EN_ATTENTE)
-  montantCompensation Decimal? @db.Decimal(10,2)
-  resoluParAdminId    String?
-
-  creeLe        DateTime @default(now())
-  resoluLe      DateTime?
-
-  @@index([statut])
-}
-
 enum StatutLitige {
   EN_ATTENTE
   FONDE
   NON_FONDE
 }
 
-// 1️⃣2️⃣ AVIS
-
-model Avis {
-  id            String   @id @default(uuid())
-  reservationId String
-  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
-
-  auteurId      String
-  auteur        Utilisateur @relation("auteur", fields: [auteurId], references: [id])
-
-  cibleId       String
-  cible         Utilisateur @relation("cible", fields: [cibleId], references: [id])
-
-  note          Int
-  commentaire   String?
-
-  typeAvis      TypeAvis
-
-  creeLe        DateTime @default(now())
-
-  @@unique([reservationId, auteurId])
-  @@index([cibleId])
-  // ⚠️ VALIDATION MÉTIER à enforcer côté backend :
-  // - typeAvis = LOCATAIRE_NOTE_PROPRIO  → vérifier que auteurId === reservation.locataireId
-  // - typeAvis = PROPRIO_NOTE_LOCATAIRE  → vérifier que auteurId === reservation.proprietaireId
-}
-
 enum TypeAvis {
   LOCATAIRE_NOTE_PROPRIO
   PROPRIO_NOTE_LOCATAIRE
-}
-
-// 1️⃣3️⃣ IDEMPOTENCE (Protection double-submit frontend)
-
-model IdempotencyKey {
-  id            String      @id @default(uuid())
-  key           String      @unique
-  reservationId String      @unique
-  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
-  paymentUrl    String?
-  paymentRef    String?
-  expiresAt     DateTime
-  creeLe        DateTime    @default(now())
-
-  @@index([expiresAt])
-}
-
-// 1️⃣4️⃣ WEBHOOK LOGS (Traçabilité complète des paiements)
-
-model WebhookLog {
-  id                  String   @id @default(uuid())
-  provider            FournisseurPaiement
-  payloadRaw          String   @db.Text  // JSON stringifié
-  signatureReceived   String
-  signatureCalculated String
-  isValid             Boolean
-  statusCode          Int?     // 200, 401, 500, etc.
-  errorMessage        String?
-  durationMs          Int?
-  
-  idTransactionFournisseur String?
-  reservationId            String?
-  
-  creeLe              DateTime @default(now())
-  
-  @@index([provider, creeLe])
-  @@index([idTransactionFournisseur])
-  @@index([reservationId])
-}
-
-// 1️⃣5️⃣ PHOTOS ÉTAT DES LIEUX (Check-in / Check-out)
-
-model PhotoEtatLieu {
-  id            String         @id @default(uuid())
-  reservationId String
-  reservation   Reservation    @relation(fields: [reservationId], references: [id], onDelete: Cascade)
-
-  type          TypeEtatLieu
-  url           String
-  publicId      String?
-  categorie     CategoriePhoto?
-  position      Int            @default(0)
-
-  creeLe        DateTime       @default(now())
-
-  @@index([reservationId, type])
 }
 
 enum TypeEtatLieu {
@@ -604,42 +512,4 @@ enum CategoriePhoto {
   COMPTEUR_KM
   CARBURANT
   AUTRE
-}
-
-// 1️⃣6️⃣ INDISPONIBILITÉS VÉHICULE (Blocage dates propriétaire)
-
-model IndisponibiliteVehicule {
-  id         String   @id @default(uuid())
-  vehiculeId String
-  vehicule   Vehicule @relation(fields: [vehiculeId], references: [id], onDelete: Cascade)
-
-  dateDebut  DateTime @db.Date
-  dateFin    DateTime @db.Date
-  motif      String?
-
-  creeLe     DateTime @default(now())
-
-  @@index([vehiculeId, dateDebut, dateFin])
-}
-
-// ─── 17. NOTIFICATIONS PUSH ───────────────────────────────────
-
-model PushSubscription {
-  id        String   @id @default(uuid())
-  // On lie au userId (sub Supabase) pour la cohérence avec Profile/Utilisateur
-  userId    String
-  utilisateur Utilisateur @relation(fields: [userId], references: [userId], onDelete: Cascade)
-
-  endpoint  String   @unique
-  p256dh    String
-  auth      String
-  
-  userAgent String?
-  deviceType String?
-
-  creeLe    DateTime @default(now()) @map("created_at")
-  misAJourLe DateTime @updatedAt @map("updated_at")
-
-  @@index([userId])
-  @@map("push_subscriptions")
 }

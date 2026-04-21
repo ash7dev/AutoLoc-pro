@@ -10,6 +10,7 @@ const AUTH_ENDPOINTS = {
   submitKycLinks: '/auth/kyc/submit-links',
   kycUploadSignature: '/auth/kyc/upload-signature',
   linkPermis: '/auth/permis/link',
+  checkAvailability: '/auth/check-availability',
 } as const;
 
 export interface ProfileResponse {
@@ -26,6 +27,7 @@ export interface ProfileResponse {
   hasVehicles?: boolean;
   hasPermis?: boolean;
   dateNaissance?: string | null;
+  bloqueJusqua?: string | null;
 }
 
 export interface NestAuthResponse {
@@ -112,6 +114,16 @@ export async function submitPermisLink(body: {
     method: 'POST',
     body,
   });
+}
+
+export async function checkAvailability(params: {
+  email?: string;
+  phone?: string;
+}): Promise<{ available: boolean; message?: string }> {
+  const query = new URLSearchParams();
+  if (params.email) query.set('email', params.email);
+  if (params.phone) query.set('phone', params.phone);
+  return apiFetch(`${AUTH_ENDPOINTS.checkAvailability}?${query.toString()}`);
 }
 
 // ── User Profile ──────────────────────────────────────────────────────────────

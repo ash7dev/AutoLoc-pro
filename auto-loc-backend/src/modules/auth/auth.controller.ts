@@ -1,6 +1,6 @@
 import {
   BadRequestException,
-  Body, Controller, Get, Patch, Post,
+  Body, Controller, Get, Patch, Post, Query,
   UploadedFile, UploadedFiles, UseFilters, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
@@ -9,6 +9,7 @@ import { MulterExceptionFilter } from '../upload/multer-exception.filter';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthService } from './auth.service';
+import { AccountStatusGuard } from '../../shared/guards/account-status.guard';
 import { RequestUser } from '../../common/types/auth.types';
 import { ProfileResponse } from '../../common/types/auth.types';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
@@ -23,8 +24,16 @@ import { UpdatePhoneDto } from './dto/update-phone.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
+  @Get('check-availability')
+  async checkAvailability(
+    @Query('email') email?: string,
+    @Query('phone') phone?: string,
+  ): Promise<{ available: boolean; message?: string }> {
+    return this.authService.checkAvailability(email, phone);
+  }
+
   @Get('me')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AccountStatusGuard)
   async me(@CurrentUser() user: RequestUser): Promise<ProfileResponse> {
     const profile = await this.authService.getOrCreateProfile(user);
     // Debug local
@@ -35,6 +44,13 @@ export class AuthController {
       hasUtilisateur: profile.hasUtilisateur,
     });
     return profile;
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(@CurrentUser() user: RequestUser): Promise<{ ok: boolean }> {
+    await this.authService.logout(user.sub);
+    return { ok: true };
   }
 
   @Post('login')
@@ -52,7 +68,7 @@ export class AuthController {
   }
 
   @Post('complete-profile')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AccountStatusGuard)
   async completeProfile(
     @CurrentUser() user: RequestUser,
     @Body() dto: CompleteProfileDto,
@@ -61,7 +77,7 @@ export class AuthController {
   }
 
   @Patch('switch-role')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AccountStatusGuard)
   async switchRole(
     @CurrentUser() user: RequestUser,
     @Body() dto: SwitchRoleDto,
@@ -70,7 +86,7 @@ export class AuthController {
   }
 
   @Post('phone/send-otp')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AccountStatusGuard)
   async sendPhoneOtp(
     @CurrentUser() user: RequestUser,
   ): Promise<{ expiresIn: number }> {
@@ -78,7 +94,7 @@ export class AuthController {
   }
 
   @Post('phone/update')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AccountStatusGuard)
   async updatePhone(
     @CurrentUser() user: RequestUser,
     @Body() dto: UpdatePhoneDto,
@@ -87,7 +103,7 @@ export class AuthController {
   }
 
   @Post('phone/verify-otp')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AccountStatusGuard)
   async verifyPhoneOtp(
     @CurrentUser() user: RequestUser,
     @Body() dto: VerifyPhoneOtpDto,
@@ -128,7 +144,7 @@ export class AuthController {
    * GET /auth/kyc/upload-signature — Signature Cloudinary pour upload direct KYC.
    */
   @Get('kyc/upload-signature')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AccountStatusGuard)
   async getKycUploadSignature() {
     return this.authService.getKycUploadSignature();
   }
@@ -138,7 +154,7 @@ export class AuthController {
    * Beaucoup plus rapide car pas de transfert de gros fichiers vers le serveur métier.
    */
   @Post('kyc/submit-links')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AccountStatusGuard)
   async submitKycLinks(
     @CurrentUser() user: RequestUser,
     @Body() body: { documentFrontUrl: string; documentBackUrl: string },
@@ -172,7 +188,7 @@ export class AuthController {
    * Standard pour les mobiles (plus rapide et évite les limites de payload).
    */
   @Post('permis/link')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AccountStatusGuard)
   async linkPermis(
     @CurrentUser() user: RequestUser,
     @Body() body: { url: string; publicId: string },

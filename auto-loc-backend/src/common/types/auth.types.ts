@@ -45,4 +45,5 @@ export interface ProfileResponse {
   hasVehicles?: boolean;
   hasPermis?: boolean;
   dateNaissance?: string | null;
+  bloqueJusqua?: string | null;
 }

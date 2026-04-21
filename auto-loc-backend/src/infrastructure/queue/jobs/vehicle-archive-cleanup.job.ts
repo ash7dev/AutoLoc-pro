@@ -1,5 +1,4 @@
 import { Processor, Process } from '@nestjs/bull';
-import { Job } from 'bull';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CloudinaryService } from '../../cloudinary/cloudinary.service';
 import { StatutVehicule } from '@prisma/client';
