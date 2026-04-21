@@ -57,42 +57,26 @@ export function useAuthFlow() {
     // eslint-disable-next-line no-console
     console.log('[AuthFlow] provider', provider);
 
-    // Désactivation temporaire de la synchronisation pour isoler le problème
-    // let syncOk = false;
-    // try {
-    //   const sessionNest = await syncWithNestJS(token);
-    //   useRoleStore.getState().setSession(sessionNest);
-    //   syncOk = true;
-    // } catch (err) {
-    //   console.error('[AuthFlow] Sync failed', err);
-    // }
-
-    let profile: ProfileResponse;
+    let syncOk = false;
     try {
-      profile = await fetchMe();
-      // eslint-disable-next-line no-console
-      console.log('[AuthFlow] profile', profile);
+      // On tente une synchro directe. Si ça échoue une fois, on peut logger, 
+      // mais on évite les boucles de 3 x 200ms qui créent du lag.
+      const sessionNest = await syncWithNestJS(token);
+      useRoleStore.getState().setSession(sessionNest);
+      syncOk = true;
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.error('[AuthFlow] Fetch profile failed, using Supabase fallback', err);
-      // Fallback : utiliser les métadonnées Supabase
-      const user = session?.user;
-      profile = {
-        id: user?.id ?? '',
-        userId: user?.id ?? '',
-        email: user?.email ?? null,
-        phone: user?.phone ?? null,
-        role: 'LOCATAIRE',
-        createdAt: new Date().toISOString(),
-        hasUtilisateur: false,
-        phoneVerified: false,
-        kycStatus: 'NON_VERIFIE',
-        hasVehicles: false,
-        hasPermis: false,
-        dateNaissance: null,
-        bloqueJusqua: null,
-      };
+      console.error('[AuthFlow] Sync failed', err);
     }
+
+    if (!syncOk) {
+      inFlight.current = false;
+      return;
+    }
+
+    let profile = await fetchMe();
+    // eslint-disable-next-line no-console
+    console.log('[AuthFlow] profile', profile);
 
     if (!profile.hasUtilisateur) {
       const seededProfile = extractCompleteProfileInput(session);
@@ -100,11 +84,7 @@ export function useAuthFlow() {
       if (seededProfile) {
         try {
           await completeProfile(token, seededProfile);
-          try {
-            profile = await fetchMe();
-          } catch {
-            // Si fetchMe échoue, on garde le profil existant
-          }
+          profile = await fetchMe();
           // eslint-disable-next-line no-console
           console.log('[AuthFlow] profile auto-completed from auth metadata');
         } catch (err) {
