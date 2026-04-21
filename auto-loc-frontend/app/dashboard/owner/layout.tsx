@@ -52,13 +52,8 @@ export default async function OwnerLayout({
     redirect('/become-owner');
   }
 
-  // Si le rôle est OK mais que le profil métier (Utilisateur) est manquant
-  // cela arrive si l'onboarding a été interrompu. 
-  // On redirige vers la finalisation du profil pour éviter les 403 en cascade.
-  if (!profile.hasUtilisateur) {
-    console.log('[OwnerLayout] Profil incomplet détecté pour propriétaire, redirection...');
-    redirect('/dashboard/settings/profile?incomplete=1');
-  }
+  // Note: La redirection vers le profil incomplet a été supprimée car des "gates"
+  // sont déjà présentes lors de la création d'annonce.
 
 
   return (

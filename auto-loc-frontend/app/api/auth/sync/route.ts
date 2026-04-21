@@ -17,12 +17,13 @@ const NEST_COOKIE_BASE = {
 };
 
 export async function POST(request: NextRequest) {
-  const body = await request.json() as { supabaseToken?: string };
-  const { supabaseToken } = body;
+  try {
+    const body = await request.json() as { supabaseToken?: string };
+    const { supabaseToken } = body;
 
-  if (!supabaseToken) {
-    return NextResponse.json({ error: 'supabaseToken requis' }, { status: 400 });
-  }
+    if (!supabaseToken) {
+      return NextResponse.json({ error: 'supabaseToken requis' }, { status: 400 });
+    }
 
   // Si le backend n'est pas configuré, on retourne succès sans synchronisation
   if (!NEST_API) {
