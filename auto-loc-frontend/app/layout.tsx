@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { ThemeProvider, ColorSystemProvider, CurrencyProviderServer } from '../providers';
-import { CookieBanner } from '@/features/cookies/CookieBanner';
+import { GlobalModals } from '@/features/pwa/GlobalModals';
 import { Toaster } from 'sonner';
 import { cn } from '@/lib/utils';
 import './globals.css';
@@ -139,7 +139,7 @@ export default function RootLayout({
           <ColorSystemProvider>
             <CurrencyProviderServer>{children}</CurrencyProviderServer>
           </ColorSystemProvider>
-          <CookieBanner />
+          <GlobalModals />
           <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
       </body>
