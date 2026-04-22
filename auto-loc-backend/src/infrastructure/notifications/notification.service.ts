@@ -33,6 +33,9 @@ export class NotificationService {
   private readonly supportEmail: string;
   private readonly adminEmail: string;
 
+  private twilioClient: any;
+  private readonly twilioWhatsappFrom: string;
+
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
@@ -50,6 +53,27 @@ export class NotificationService {
       'ADMIN_EMAIL',
       'support@autoloc.sn', // Fallback to support if admin not created
     );
+
+    // Initialisation Twilio
+    const twilioSid = this.configService.get<string>('TWILIO_ACCOUNT_SID');
+    const twilioToken = this.configService.get<string>('TWILIO_AUTH_TOKEN');
+    this.twilioWhatsappFrom = this.configService.get<string>(
+      'TWILIO_WHATSAPP_FROM',
+      'whatsapp:+221711194969',
+    );
+
+    if (twilioSid && twilioToken) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const twilio = require('twilio');
+        this.twilioClient = twilio(twilioSid, twilioToken);
+        this.logger.log('Twilio client initialized');
+      } catch (err) {
+        this.logger.error(`Failed to initialize Twilio client: ${err}`);
+      }
+    } else {
+      this.logger.warn('Twilio credentials missing. SMS/WhatsApp will run in stub mode.');
+    }
   }
 
   /**
@@ -146,25 +170,54 @@ export class NotificationService {
   }
 
   /**
-   * Backward-compatible wrapper — existing callers use sendWhatsApp.
-   * Routes through logging for now; will be replaced by a real WhatsApp provider.
+   * Envoie un message WhatsApp via Twilio.
    */
   async sendWhatsApp(message: { to: string; body: string }): Promise<void> {
-    this.logger.log(
-      `📨 [WhatsApp:stub] to=${message.to} body="${message.body}"`,
-    );
+    if (!this.twilioClient) {
+      this.logger.log(`📨 [WhatsApp:stub] to=${message.to} body="${message.body}"`);
+      return;
+    }
+
+    try {
+      // S'assurer que le format du numéro de destination est correct
+      const to = message.to.startsWith('whatsapp:') ? message.to : `whatsapp:${message.to.startsWith('+') ? message.to : '+' + message.to}`;
+      
+      const response = await this.twilioClient.messages.create({
+        from: this.twilioWhatsappFrom,
+        to,
+        body: message.body,
+      });
+      this.logger.log(`📨 [WhatsApp:sent] sid=${response.sid} to=${to}`);
+    } catch (error) {
+      this.logger.error(`❌ [WhatsApp:error] Failed to send to ${message.to}: ${error}`);
+    }
   }
+
   /**
-   * Send an SMS notification (stub — ready for Twilio integration).
-   * To integrate:
-   *   npm install twilio
-   *   const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
-   *   await client.messages.create({ from: process.env.TWILIO_SMS_FROM, to, body });
+   * Envoie un SMS classique via Twilio.
    */
   async sendSms(message: { to: string; body: string }): Promise<void> {
-    this.logger.log(
-      `📱 [SMS:stub] to=${message.to} body="${message.body}"`,
-    );
+    if (!this.twilioClient) {
+      this.logger.log(`📱 [SMS:stub] to=${message.to} body="${message.body}"`);
+      return;
+    }
+
+    try {
+      // Enlever le préfixe whatsapp s'il y est, pour s'assurer que c'est un SMS
+      const to = message.to.replace('whatsapp:', '');
+      const cleanTo = to.startsWith('+') ? to : `+${to}`;
+
+      const response = await this.twilioClient.messages.create({
+        // Pour les SMS, Twilio utilise un Messaging Service SID ou un numéro classique.
+        // On réutilise le numéro de base en enlevant 'whatsapp:'
+        from: this.twilioWhatsappFrom.replace('whatsapp:', ''), 
+        to: cleanTo,
+        body: message.body,
+      });
+      this.logger.log(`📱 [SMS:sent] sid=${response.sid} to=${cleanTo}`);
+    } catch (error) {
+      this.logger.error(`❌ [SMS:error] Failed to send to ${message.to}: ${error}`);
+    }
   }
 
   /**

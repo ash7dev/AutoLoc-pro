@@ -56,16 +56,17 @@ export class AuthController {
   @Post('login')
   async loginWithSupabase(
     @Body() dto: LoginWithSupabaseDto,
-  ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile }> {
+  ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile; profile: ProfileResponse }> {
     return this.authService.loginWithSupabase(dto.accessToken);
   }
 
   @Post('refresh')
   async refresh(
     @Body() dto: RefreshDto,
-  ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile }> {
+  ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile; profile: ProfileResponse }> {
     return this.authService.refresh(dto.refreshToken);
   }
+
 
   @Post('complete-profile')
   @UseGuards(JwtAuthGuard, AccountStatusGuard)

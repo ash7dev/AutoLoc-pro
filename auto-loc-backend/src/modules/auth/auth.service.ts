@@ -510,7 +510,8 @@ export class AuthService {
    */
   async loginWithSupabase(
     supabaseAccessToken: string,
-  ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile }> {
+  ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile; profile: ProfileResponse }> {
+
     try {
       if (!supabaseAccessToken?.trim()) {
         throw new BadRequestException('accessToken manquant');
@@ -545,7 +546,8 @@ export class AuthService {
       });
       await this.storeRefreshSession(user.sub, refreshToken);
 
-      return { accessToken, refreshToken, activeRole: profile.role as RoleProfile };
+      return { accessToken, refreshToken, activeRole: profile.role as RoleProfile, profile };
+
     } catch (err) {
       console.error('[loginWithSupabase] FATAL ERROR:', err);
       if (err instanceof BadRequestException || err instanceof UnauthorizedException || err instanceof ForbiddenException) {
@@ -560,7 +562,8 @@ export class AuthService {
    */
   async refresh(
     refreshToken: string,
-  ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile }> {
+  ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile; profile: ProfileResponse }> {
+
     if (!refreshToken?.trim()) {
       throw new BadRequestException('refreshToken manquant');
     }
@@ -608,7 +611,8 @@ export class AuthService {
     });
     await this.storeRefreshSession(user.sub, newRefreshToken);
 
-    return { accessToken: newAccessToken, refreshToken: newRefreshToken, activeRole: profile.role as RoleProfile };
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken, activeRole: profile.role as RoleProfile, profile };
+
   }
 
   private async getUtilisateurFlags(userId: string): Promise<{

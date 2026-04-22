@@ -112,7 +112,11 @@ export function StepVehicleInfo({ onNext }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <FormField label="Marque" required error={errors.marque?.message}>
             <input
-              {...register("marque", { required: "Requis" })}
+              {...register("marque", {
+                required: "Requis",
+                pattern: { value: /^[a-zA-ZÀ-ÿ0-9\s\-]+$/, message: "Caractères spéciaux interdits" },
+                minLength: { value: 2, message: "Trop court" }
+              })}
               placeholder="Toyota, BMW, Peugeot…"
               className={INPUT_CLASS}
             />
@@ -120,7 +124,11 @@ export function StepVehicleInfo({ onNext }: Props) {
 
           <FormField label="Modèle" required error={errors.modele?.message}>
             <input
-              {...register("modele", { required: "Requis" })}
+              {...register("modele", {
+                required: "Requis",
+                pattern: { value: /^[a-zA-ZÀ-ÿ0-9\s\-]+$/, message: "Caractères spéciaux interdits" },
+                minLength: { value: 2, message: "Trop court" }
+              })}
               placeholder="Corolla, X5, 3008…"
               className={INPUT_CLASS}
             />
@@ -136,7 +144,11 @@ export function StepVehicleInfo({ onNext }: Props) {
 
           <FormField label="Immatriculation" required error={errors.immatriculation?.message}>
             <input
-              {...register("immatriculation", { required: "Requis" })}
+              {...register("immatriculation", {
+                required: "Requis",
+                pattern: { value: /^[a-zA-Z0-9\s\-]+$/, message: "Format invalide (ex: DK 1234 AB)" },
+                minLength: { value: 4, message: "Trop court" }
+              })}
               placeholder="DK 1234 AB"
               className={cn(INPUT_CLASS, "font-mono uppercase tracking-wider")}
             />
@@ -227,7 +239,10 @@ export function StepVehicleInfo({ onNext }: Props) {
 
           <FormField label="Adresse de récupération" required error={errors.adresse?.message}>
             <input
-              {...register("adresse", { required: "Requis" })}
+              {...register("adresse", {
+                required: "Requis",
+                minLength: { value: 5, message: "L'adresse est trop courte" }
+              })}
               placeholder="Rue, quartier…"
               className={INPUT_CLASS}
             />

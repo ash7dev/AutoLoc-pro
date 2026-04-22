@@ -30,67 +30,58 @@ export function useAuthFlow() {
   const inFlight = useRef(false);
 
   // Reset le guard anti-double-appel si le composant est démonté
-  // (ex: déconnexion → navigation vers une autre page → reconnexion).
   useEffect(() => {
     return () => { inFlight.current = false; };
   }, []);
 
-  const redirectAfterAuth = async () => {
+  const redirectAfterAuth = async (explicitSession?: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session'] | null) => {
     if (inFlight.current) return;
     inFlight.current = true;
-    // eslint-disable-next-line no-console
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token ?? null;
-    
-    // eslint-disable-next-line no-console
-    console.log('[AuthFlow] token present', Boolean(token));
-    
+
+    let currentSession = explicitSession ?? null;
+
+    if (!currentSession) {
+      const { data } = await supabase.auth.getSession();
+      currentSession = data.session;
+    }
+
+    const token = currentSession?.access_token;
+
     if (!token) {
-      // Si vraiment pas de token (ex: logout entre temps), on s'arrête
       inFlight.current = false;
       return;
     }
 
     const provider =
-      session?.user?.app_metadata?.provider ??
-      (session?.user?.app_metadata as { providers?: string[] })?.providers?.[0];
-    // eslint-disable-next-line no-console
-    console.log('[AuthFlow] provider', provider);
+      currentSession?.user?.app_metadata?.provider ??
+      (currentSession?.user?.app_metadata as { providers?: string[] })?.providers?.[0];
+
 
     let profile: ProfileResponse;
+
     try {
       const sessionNest = await syncWithNestJS(token);
       useRoleStore.getState().setSession(sessionNest);
       
       if (sessionNest.profile) {
         profile = sessionNest.profile;
-        // eslint-disable-next-line no-console
-        console.log('[AuthFlow] profile from sync', profile);
       } else {
         profile = await fetchMe();
-        // eslint-disable-next-line no-console
-        console.log('[AuthFlow] profile from fetchMe', profile);
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[AuthFlow] Sync or fetchMe failed', err);
       inFlight.current = false;
       return false;
     }
 
-
     if (!profile.hasUtilisateur) {
-      const seededProfile = extractCompleteProfileInput(session);
+      const seededProfile = extractCompleteProfileInput(currentSession);
 
       if (seededProfile) {
         try {
           await completeProfile(token, seededProfile);
           profile = await fetchMe();
-          // eslint-disable-next-line no-console
-          console.log('[AuthFlow] profile auto-completed from auth metadata');
         } catch (err) {
-          // eslint-disable-next-line no-console
-          console.error('[AuthFlow] Auto-complete profile failed', err);
+          // ignore error, will redirect anyway
         }
       }
     }
@@ -100,14 +91,12 @@ export function useAuthFlow() {
       useRoleStore.getState().setHasVehicles(profile.hasVehicles);
     }
 
-    if (profile.role === 'ADMIN') {
+    if (profile.role === 'ADMIN' || profile.role === 'SUPPORT') {
       router.replace('/dashboard/admin');
       inFlight.current = false;
       return true;
     }
 
-    // Si un `next` est fourni (ex: depuis un lien email), on le respecte.
-    // Si un `role` est aussi demandé et diffère du rôle actuel, on switche d'abord.
     const next = searchParams.get('next');
     const requiredRole = searchParams.get('role') as 'PROPRIETAIRE' | 'LOCATAIRE' | null;
 
@@ -125,7 +114,7 @@ export function useAuthFlow() {
           });
           document.cookie = `role_switch_at=${Date.now()}; path=/; max-age=300`;
         } catch {
-          // switch échoué — on continue quand même vers next
+          // ignore switch error
         }
       }
       router.replace(next);

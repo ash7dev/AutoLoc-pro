@@ -24,15 +24,16 @@ export function useOtp() {
         ? { phone: target.phone ?? '', token, type: 'sms' as const }
         : { email: target.email ?? '', token, type: 'signup' as const };
 
-    const { error } = await supabase.auth.verifyOtp(payload);
-
+    const { data, error } = await supabase.auth.verifyOtp(payload);
+    
     if (error) {
       setError(mapSupabaseError(error.message));
     }
 
     setLoading(false);
-    return !error;
+    return { session: data.session, error };
   };
+
 
   const resendOtp = async (target: { email?: string; phone?: string; type: 'email' | 'phone' }) => {
     setLoading(true);

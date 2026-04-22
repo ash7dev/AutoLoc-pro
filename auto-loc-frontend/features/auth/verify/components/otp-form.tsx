@@ -34,14 +34,15 @@ export function OtpForm({
     if (code.length !== slots) return;
 
     isSubmittingRef.current = true;
-    const ok = await verifyOtp({ email, phone, type }, code);
+    const { session, error: verifyError } = await verifyOtp({ email, phone, type }, code);
     
-    if (ok) {
+    if (!verifyError && session) {
       setSyncing(true);
       clearPendingOtp(); // Lever le verrou : l'utilisateur est maintenant confirmé.
       try {
-        const success = await redirectAfterAuth();
+        const success = await redirectAfterAuth(session);
         if (success === false) {
+
           setSyncError("Erreur de connexion au serveur. Veuillez réessayer.");
         }
       } catch (err) {
@@ -53,6 +54,7 @@ export function OtpForm({
     } else {
       isSubmittingRef.current = false;
     }
+
   }, [email, phone, type, slots, verifyOtp, redirectAfterAuth, syncing]);
 
   const handleInputChange = (index: number, value: string) => {
