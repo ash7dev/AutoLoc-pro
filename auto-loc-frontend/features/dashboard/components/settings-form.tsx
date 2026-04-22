@@ -27,6 +27,7 @@ import {
     Bell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { DateInput } from '@/features/shared/DateInput';
 import type { UserProfile } from '@/lib/nestjs/auth';
 import { updateUserProfile } from '@/lib/nestjs/auth';
 import { useSwitchToLocataire } from '@/features/owner/hooks/use-switch-to-locataire';
@@ -174,22 +175,30 @@ function EditableRow({
                     {/* Inline edit form */}
                     {editing && (
                         <div className="mt-2 flex items-center gap-2">
-                            <input
-                                ref={inputRef}
-                                type={type}
-                                value={draft}
-                                placeholder={placeholder}
-                                onChange={(e) => setDraft(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') handleSave();
-                                    if (e.key === 'Escape') handleCancel();
-                                }}
-                                className="flex-1 min-w-0 rounded-xl border border-black/10 bg-white px-3 py-2 text-[13.5px] font-bold text-black focus:outline-none focus:ring-2 focus:ring-black/10 transition-all placeholder:text-black/20"
-                            />
+                            {type === 'date' ? (
+                                <DateInput
+                                    value={draft}
+                                    onChange={(v) => setDraft(v)}
+                                    className="flex-1"
+                                />
+                            ) : (
+                                <input
+                                    ref={inputRef}
+                                    type={type}
+                                    value={draft}
+                                    placeholder={placeholder}
+                                    onChange={(e) => setDraft(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleSave();
+                                        if (e.key === 'Escape') handleCancel();
+                                    }}
+                                    className="flex-1 min-w-0 rounded-xl border border-black/10 bg-white px-3 py-2 text-[13.5px] font-bold text-black focus:outline-none focus:ring-2 focus:ring-black/10 transition-all placeholder:text-black/20"
+                                />
+                            )}
                             <button
                                 type="button"
                                 onClick={handleSave}
-                                disabled={saving}
+                                disabled={saving || (type === 'date' && draft.length < 10 && draft !== '')}
                                 className="flex-shrink-0 w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 transition-colors shadow-md shadow-emerald-500/20 disabled:opacity-60"
                             >
                                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" strokeWidth={2.5} />}

@@ -114,8 +114,10 @@ export function StepReview({ onBack }: Props) {
     throw lastError!;
   }
 
-  const fmtPrice = (n: number) =>
-    new Intl.NumberFormat("fr-FR").format(n) + " FCFA";
+  const fmtPrice = (n: number | undefined | null) => {
+    if (n === null || n === undefined || isNaN(n)) return "—";
+    return new Intl.NumberFormat("fr-FR").format(n) + " FCFA";
+  };
 
   const allValid = !!step1 && !!step2 && photos.some((p) => p.status === 'done') && !!carteGrise && !!assurance;
 
@@ -149,23 +151,25 @@ export function StepReview({ onBack }: Props) {
       <ReviewSection icon={CircleDollarSign} title="Tarification">
         <ReviewRow label="Prix par jour" value={step2 ? fmtPrice(step2.prixParJour) : "—"} highlight />
         <ReviewRow label="Durée minimum" value={step2?.joursMinimum ? `${step2.joursMinimum} jour(s)` : "1 jour"} />
-        {(step2?.tiers ?? []).length > 0 && (
+        {(step2?.tiers ?? []).filter(t => !isNaN(t.joursMin) && !isNaN(t.prix)).length > 0 && (
           <div className="pt-2 mt-2 border-t border-slate-100">
             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Paliers dégressifs</p>
-            {step2!.tiers.map((t, i) => (
-              <div key={i} className="flex justify-between text-[12px] py-1">
-                <span className="text-slate-500 font-medium">
-                  {t.joursMin}+ j{t.joursMax ? ` — ${t.joursMax} j` : ""}
-                </span>
-                <span className="font-bold text-slate-800">{fmtPrice(t.prix)}/j</span>
-              </div>
-            ))}
+            {step2!.tiers
+              .filter(t => !isNaN(t.joursMin) && !isNaN(t.prix))
+              .map((t, i) => (
+                <div key={i} className="flex justify-between text-[12px] py-1">
+                  <span className="text-slate-500 font-medium">
+                    {t.joursMin}+ j{t.joursMax ? ` — ${t.joursMax} j` : ""}
+                  </span>
+                  <span className="font-bold text-slate-800">{fmtPrice(t.prix)}/j</span>
+                </div>
+              ))}
           </div>
         )}
-        {step2?.fraisLivraison && step2.fraisLivraison > 0 && (
+        {typeof step2?.fraisLivraison === 'number' && !isNaN(step2.fraisLivraison) && step2.fraisLivraison > 0 && (
           <ReviewRow label="Frais de livraison" value={fmtPrice(step2.fraisLivraison)} icon={Truck} />
         )}
-        {step2?.autoriseHorsDakar && step2.supplementHorsDakarParJour != null && (
+        {step2?.autoriseHorsDakar && typeof step2.supplementHorsDakarParJour === 'number' && !isNaN(step2.supplementHorsDakarParJour) && (
           <ReviewRow label="Supplément Hors Dakar" value={`${fmtPrice(step2.supplementHorsDakarParJour)} / j`} icon={MapPin} />
         )}
       </ReviewSection>

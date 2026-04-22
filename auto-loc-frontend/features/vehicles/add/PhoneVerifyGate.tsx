@@ -3,12 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { CheckCircle2, Loader2, ArrowRight, ChevronDown, Search, Calendar as CalendarIcon } from "lucide-react";
+import { DateInput } from "@/features/shared/DateInput";
 import { ApiError } from "@/lib/nestjs/api-client";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import type { ProfileResponse } from "@/lib/nestjs/auth";
 import { cn } from "@/lib/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    COUNTRY LIST  (Sénégal en premier, puis ordre alphabétique)
@@ -337,7 +336,7 @@ function Field({
 const INPUT_CLS = (hasError: boolean) => cn(
   "w-full h-12 rounded-xl border bg-white px-4 text-[13.5px] text-slate-800 outline-none transition-all",
   "placeholder:text-slate-400",
-  "focus:ring-2 focus:ring-emerald-400/20 focus:border-emerald-400",
+  "focus:ring-4 focus:ring-emerald-400/5 focus:border-emerald-400",
   hasError ? "border-red-300" : "border-slate-200 hover:border-slate-300",
 );
 
@@ -448,46 +447,13 @@ export function PhoneVerifyGate({
 
       {/* Date de naissance */}
       {needsProfile && (
-        <Field label="Date de naissance" required>
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                className={cn(
-                  "w-full h-12 rounded-xl border bg-white px-4 text-[13.5px] outline-none transition-all flex items-center justify-between gap-2",
-                  "hover:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 focus:border-emerald-400",
-                  error && !dateNaissance ? "border-red-300" : "border-slate-200",
-                  dateNaissance ? "text-slate-800 font-medium" : "text-slate-400",
-                )}
-              >
-                <span>
-                  {dateNaissance
-                    ? new Date(dateNaissance).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
-                    : "jj/mm/aaaa"}
-                </span>
-                <CalendarIcon className={cn("w-4 h-4 flex-shrink-0", dateNaissance ? "text-emerald-500" : "text-slate-300")} strokeWidth={1.75} />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 z-[9999] border border-slate-100 bg-white shadow-xl rounded-2xl" align="start">
-              <Calendar
-                mode="single"
-                selected={dateNaissance ? new Date(dateNaissance) : undefined}
-                onSelect={(d) => {
-                  if (d) {
-                    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-                    setDateNaissance(iso);
-                    setError(null);
-                  }
-                }}
-                disabled={(d) => d > new Date() || d < new Date("1900-01-01")}
-                initialFocus
-                captionLayout="dropdown"
-                fromYear={1940}
-                toYear={new Date().getFullYear() - 16}
-              />
-            </PopoverContent>
-          </Popover>
-        </Field>
+        <DateInput 
+          label="Date de naissance"
+          required
+          value={dateNaissance}
+          onChange={v => { setDateNaissance(v); setError(null); }}
+          error={!!error && !dateNaissance}
+        />
       )}
 
       {/* Téléphone */}

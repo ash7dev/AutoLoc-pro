@@ -13,6 +13,7 @@ import { ModalShell } from "@/features/shared/ModalShell";
 import { apiFetch } from "@/lib/nestjs/api-client";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
+import { DateInput } from "@/features/shared/DateInput";
 
 /* ── Types ───────────────────────────────────────────────── */
 type Gate = "phone" | "kyc" | "permis" | "age" | "age_phone" | "create_profile" | "ready";
@@ -388,9 +389,6 @@ function CreateProfileGate({ onComplete }: { onComplete: () => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const maxDate = new Date();
-  maxDate.setFullYear(maxDate.getFullYear() - 18);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -414,51 +412,59 @@ function CreateProfileGate({ onComplete }: { onComplete: () => void }) {
   };
 
   const field = (label: string, inputProps: React.InputHTMLAttributes<HTMLInputElement>) => (
-    <div>
-      <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">{label}</label>
+    <div className="space-y-1.5">
+      <label className="block text-[12px] font-bold text-slate-700 ml-1">{label}</label>
       <input
         {...inputProps}
-        className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3
-          text-[12.5px] font-medium text-slate-800 placeholder-slate-400
-          focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
+        className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4
+          text-[13px] font-medium text-slate-800 placeholder-slate-300
+          focus:border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-400/5 transition-all"
       />
     </div>
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         {field('Prénom *', {
           type: 'text', required: true, value: form.prenom,
+          placeholder: 'Ex: Amadou',
           onChange: e => setForm(p => ({ ...p, prenom: e.target.value })),
         })}
         {field('Nom *', {
           type: 'text', required: true, value: form.nom,
+          placeholder: 'Ex: Diop',
           onChange: e => setForm(p => ({ ...p, nom: e.target.value })),
         })}
       </div>
-      {field('Date de naissance', {
-        type: 'date', value: form.dateNaissance,
-        max: maxDate.toISOString().split('T')[0],
-        onChange: e => setForm(p => ({ ...p, dateNaissance: e.target.value })),
-      })}
+      
+      <DateInput 
+        label="Date de naissance *"
+        required
+        value={form.dateNaissance}
+        onChange={v => setForm(p => ({ ...p, dateNaissance: v }))}
+        error={!!error && !form.dateNaissance}
+      />
+
       {field('Numéro de téléphone *', {
         type: 'tel', required: true, value: form.phone,
         placeholder: '+221 77 000 00 00',
         onChange: e => setForm(p => ({ ...p, phone: e.target.value })),
       })}
+      
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-          <p className="text-[11.5px] font-medium text-red-700">{error}</p>
+        <div className="rounded-xl border border-red-100 bg-red-50/50 p-3">
+          <p className="text-[11.5px] font-medium text-red-600">{error}</p>
         </div>
       )}
+
       <button
         type="submit"
         disabled={loading}
         className={cn(
-          "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[13.5px] font-bold transition-all duration-200 mt-2",
+          "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[14px] font-bold transition-all duration-200 mt-2",
           !loading
-            ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20 hover:-translate-y-px active:translate-y-0"
+            ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20"
             : "bg-slate-100 text-slate-400 cursor-not-allowed"
         )}
       >
@@ -477,11 +483,6 @@ function AgePhoneGate({ ageMinimum, onComplete }: { ageMinimum: number; onComple
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const maxDate = new Date();
-  maxDate.setFullYear(maxDate.getFullYear() - 18);
-  const minDate = new Date();
-  minDate.setFullYear(minDate.getFullYear() - 100);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -499,12 +500,10 @@ function AgePhoneGate({ ageMinimum, onComplete }: { ageMinimum: number; onComple
     setLoading(true);
     setError('');
     try {
-      // 1. Enregistrer la date de naissance
       await apiFetch('/users/me/profile', {
         method: 'PATCH',
         body: { dateNaissance: birthDate.toISOString().split('T')[0] },
       });
-      // 2. Enregistrer le téléphone
       await apiFetch('/auth/phone/update', {
         method: 'POST',
         body: { telephone: phone },
@@ -518,25 +517,17 @@ function AgePhoneGate({ ageMinimum, onComplete }: { ageMinimum: number; onComple
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div>
-        <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">
-          Date de naissance *
-        </label>
-        <input
-          type="date"
-          value={dateNaissance}
-          onChange={e => { setDateNaissance(e.target.value); setError(''); }}
-          max={maxDate.toISOString().split('T')[0]}
-          min={minDate.toISOString().split('T')[0]}
-          required
-          className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3
-            text-[12.5px] font-medium text-slate-800
-            focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
-        />
-      </div>
-      <div>
-        <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <DateInput 
+        label="Date de naissance *"
+        required
+        value={dateNaissance}
+        onChange={v => { setDateNaissance(v); setError(''); }}
+        error={!!error}
+      />
+
+      <div className="space-y-1.5">
+        <label className="block text-[12px] font-bold text-slate-700 ml-1">
           Numéro de téléphone *
         </label>
         <input
@@ -545,23 +536,25 @@ function AgePhoneGate({ ageMinimum, onComplete }: { ageMinimum: number; onComple
           onChange={e => setPhone(e.target.value)}
           placeholder="+221 77 000 00 00"
           required
-          className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3
-            text-[12.5px] font-medium text-slate-800 placeholder-slate-400
-            focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
+          className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4
+            text-[13px] font-medium text-slate-800 placeholder-slate-300
+            focus:border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-400/5 transition-all"
         />
       </div>
+
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-          <p className="text-[11.5px] font-medium text-red-700">{error}</p>
+        <div className="rounded-xl border border-red-100 bg-red-50/50 p-3">
+          <p className="text-[11.5px] font-medium text-red-600">{error}</p>
         </div>
       )}
+
       <button
         type="submit"
         disabled={loading || !dateNaissance || !phone}
         className={cn(
-          "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[13.5px] font-bold transition-all duration-200 mt-2",
+          "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[14px] font-bold transition-all duration-200 mt-2",
           (!loading && dateNaissance && phone)
-            ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20 hover:-translate-y-px active:translate-y-0"
+            ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20"
             : "bg-slate-100 text-slate-400 cursor-not-allowed"
         )}
       >
@@ -574,15 +567,10 @@ function AgePhoneGate({ ageMinimum, onComplete }: { ageMinimum: number; onComple
 }
 
 /* ── AgeGate — date de naissance uniquement (Scénario 4) ─── */
-function AgeGate({ onProceed, ageMinimum }: { onProceed: () => void; ageMinimum: number; currentAge?: number; hasDateNaissance?: boolean; }) {
+function AgeGate({ onProceed, ageMinimum }: { onProceed: () => void; ageMinimum: number; }) {
   const [dateNaissance, setDateNaissance] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const maxDate = new Date();
-  maxDate.setFullYear(maxDate.getFullYear() - 18);
-  const minDate = new Date();
-  minDate.setFullYear(minDate.getFullYear() - 100);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -610,35 +598,28 @@ function AgeGate({ onProceed, ageMinimum }: { onProceed: () => void; ageMinimum:
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div>
-        <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">
-          Date de naissance *
-        </label>
-        <input
-          type="date"
-          value={dateNaissance}
-          onChange={e => { setDateNaissance(e.target.value); setError(''); }}
-          max={maxDate.toISOString().split('T')[0]}
-          min={minDate.toISOString().split('T')[0]}
-          required
-          className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3
-            text-[12.5px] font-medium text-slate-800
-            focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
-        />
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <DateInput 
+        label="Date de naissance *"
+        required
+        value={dateNaissance}
+        onChange={v => { setDateNaissance(v); setError(''); }}
+        error={!!error}
+      />
+
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-          <p className="text-[11.5px] font-medium text-red-700">{error}</p>
+        <div className="rounded-xl border border-red-100 bg-red-50/50 p-3">
+          <p className="text-[11.5px] font-medium text-red-600">{error}</p>
         </div>
       )}
+
       <button
         type="submit"
         disabled={loading || !dateNaissance}
         className={cn(
-          "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[13.5px] font-bold transition-all duration-200 mt-2",
+          "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[14px] font-bold transition-all duration-200 mt-2",
           (!loading && dateNaissance)
-            ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20 hover:-translate-y-px active:translate-y-0"
+            ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20"
             : "bg-slate-100 text-slate-400 cursor-not-allowed"
         )}
       >
@@ -774,8 +755,6 @@ export function ReservationGateModal({
         <AgeGate
           onProceed={refreshProfile}
           ageMinimum={ageMinimum || 18}
-          currentAge={userAge}
-          hasDateNaissance={!!currentProfile.dateNaissance}
         />
       )}
 

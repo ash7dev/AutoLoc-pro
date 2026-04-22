@@ -285,20 +285,22 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
 
   const goNext = useCallback(() => {
     setCurrentStep((s) => Math.min(s + 1, 6));
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   const goBack = useCallback(() => {
     setCurrentStep((s) => Math.max(s - 1, 1));
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   const goToStep = useCallback((step: number) => {
     if (step >= 1 && step <= 6) {
       setCurrentStep(step);
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, []);
+
+  // Remonter en haut de page à chaque changement d'étape
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [currentStep]);
 
   const onPhoneVerified = useCallback(() => setPhoneVerified(true), []);
   const onKycSubmitted = useCallback(() => setKycStatus("EN_ATTENTE"), []);
