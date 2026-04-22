@@ -32,28 +32,25 @@ export default async function OwnerDashboardPage() {
   let reviews: ReviewsResponse | null = null;
 
   try {
-    const [resResult, vehiclesResult, walletResult, statsResult, profileResult] =
+    // Étape 1 : Récupérer le profil d'abord car l'ID est nécessaire pour les avis
+    const profile = await fetchMe(token).catch(() => null);
+
+    // Étape 2 : Lancer TOUT le reste en parallèle
+    const [resResult, vehiclesResult, walletResult, statsResult, reviewsResult] =
       await Promise.allSettled([
         fetchOwnerReservations(token),
         fetchMyVehicles(token),
         fetchWallet(token),
         fetchOwnerStats(token),
-        fetchMe(token),
+        profile ? fetchUserReviews(token, profile.id) : Promise.resolve(null),
       ]);
 
     if (resResult.status === "fulfilled") reservations = resResult.value.data;
     if (vehiclesResult.status === "fulfilled") vehicles = vehiclesResult.value;
     if (walletResult.status === "fulfilled") wallet = walletResult.value;
     if (statsResult.status === "fulfilled") stats = statsResult.value;
+    if (reviewsResult.status === "fulfilled") reviews = reviewsResult.value;
 
-    // Fetch reviews if profile is available
-    if (profileResult.status === "fulfilled") {
-      try {
-        reviews = await fetchUserReviews(token, profileResult.value.id);
-      } catch (err) {
-        console.error("Failed to fetch reviews:", err);
-      }
-    }
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) redirect("/login?expired=1");
   }

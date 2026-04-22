@@ -29,9 +29,10 @@ export class PhoneVerifiedGuard implements CanActivate {
       throw new ForbiddenException('Profil incomplet');
     }
 
-    if (!utilisateur.phoneVerified) {
-      throw new ForbiddenException('Numéro de téléphone non vérifié');
-    }
+    // ⚠️ Désactivé temporairement car OTP non configuré
+    // if (!utilisateur.phoneVerified) {
+    //   throw new ForbiddenException('Numéro de téléphone non vérifié');
+    // }
 
     return true;
   }

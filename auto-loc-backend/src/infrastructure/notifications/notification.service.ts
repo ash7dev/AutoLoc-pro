@@ -28,13 +28,14 @@ export interface SendResult {
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
+  private twilioClient: any; // Déclaration propre ici
   private readonly resendApiKey: string;
   private readonly fromEmail: string;
   private readonly supportEmail: string;
   private readonly adminEmail: string;
 
-  private twilioClient: any;
   private readonly twilioWhatsappFrom: string;
+  private readonly twilioSmsFrom: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -60,6 +61,10 @@ export class NotificationService {
     this.twilioWhatsappFrom = this.configService.get<string>(
       'TWILIO_WHATSAPP_FROM',
       'whatsapp:+221711194969',
+    );
+    this.twilioSmsFrom = this.configService.get<string>(
+      'TWILIO_SMS_FROM',
+      'AutoLoc',
     );
 
     if (twilioSid && twilioToken) {
@@ -181,7 +186,7 @@ export class NotificationService {
     try {
       // S'assurer que le format du numéro de destination est correct
       const to = message.to.startsWith('whatsapp:') ? message.to : `whatsapp:${message.to.startsWith('+') ? message.to : '+' + message.to}`;
-      
+
       const response = await this.twilioClient.messages.create({
         from: this.twilioWhatsappFrom,
         to,
@@ -208,13 +213,11 @@ export class NotificationService {
       const cleanTo = to.startsWith('+') ? to : `+${to}`;
 
       const response = await this.twilioClient.messages.create({
-        // Pour les SMS, Twilio utilise un Messaging Service SID ou un numéro classique.
-        // On réutilise le numéro de base en enlevant 'whatsapp:'
-        from: this.twilioWhatsappFrom.replace('whatsapp:', ''), 
+        from: this.twilioSmsFrom,
         to: cleanTo,
         body: message.body,
       });
-      this.logger.log(`📱 [SMS:sent] sid=${response.sid} to=${cleanTo}`);
+      this.logger.log(`📱 [SMS:sent] sid=${response.sid} to=${cleanTo} from=${this.twilioSmsFrom}`);
     } catch (error) {
       this.logger.error(`❌ [SMS:error] Failed to send to ${message.to}: ${error}`);
     }

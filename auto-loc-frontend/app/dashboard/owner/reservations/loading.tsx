@@ -23,7 +23,7 @@ function OwnerHeaderSkeleton({
           <div className="flex items-center gap-2 mb-1">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-0.5">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="h-3 w-28 rounded-md bg-white/10 animate-pulse" />
+              <span className="h-2 w-24 rounded-md bg-emerald-400/20 animate-pulse" />
             </span>
           </div>
           <h1 className="font-display text-xl sm:text-3xl font-bold tracking-tight text-white">
@@ -118,8 +118,26 @@ function OwnerReservationsListSkeleton() {
       {/* Grid */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          // eslint-disable-next-line react/no-array-index-key
-          <ReservationCardSkeleton key={i} />
+          <div key={i} className="group relative flex flex-col bg-white/70 backdrop-blur-xl rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-[240px]">
+             {/* Header Shimmer */}
+             <div className="p-5 space-y-3">
+                <Skeleton className="h-5 w-2/3 bg-slate-100/80 rounded-lg animate-pulse" />
+                <Skeleton className="h-3 w-1/3 bg-slate-100/50 rounded-lg animate-pulse" />
+             </div>
+             <div className="px-5 py-4 flex-1 space-y-4">
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-xl bg-slate-50 animate-pulse" />
+                   <div className="space-y-2">
+                      <Skeleton className="h-3 w-32 bg-slate-100/80 rounded-md" />
+                      <Skeleton className="h-3 w-24 bg-slate-100/50 rounded-md" />
+                   </div>
+                </div>
+             </div>
+             <div className="p-5 border-t border-slate-50 flex items-center justify-between">
+                <Skeleton className="h-4 w-20 bg-slate-100/80 rounded-md" />
+                <Skeleton className="h-8 w-8 rounded-xl bg-slate-50 animate-pulse" />
+             </div>
+          </div>
         ))}
       </div>
     </div>

@@ -1,10 +1,16 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, PlaneLanding, PlaneTakeoff, Info, CalendarRange } from "lucide-react";
+import { ChevronLeft, ChevronRight, PlaneLanding, PlaneTakeoff, Info, CalendarRange, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import type { Reservation } from "@/lib/nestjs/reservations";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const daysOfWeek = ["Di", "Lu", "Ma", "Me", "Je", "Ve", "Sa"];
 
@@ -14,6 +20,7 @@ export interface CalendarDay {
   status: "reserved" | null;
   hasCheckIn?: boolean;
   hasCheckOut?: boolean;
+  reservedVehicles?: string[];
 }
 
 interface AttendanceCalendarProps {
@@ -114,32 +121,55 @@ export function AttendanceCalendar({
               <div key={i} className="aspect-square rounded-lg sm:rounded-xl bg-slate-100 animate-pulse" />
             ))
           ) : (
-            days.map((item) => (
-              <button
-                key={item.day}
-                onClick={() => setSelectedDayDigit(item.day)}
-                className={cn(
-                  "relative aspect-square rounded-lg sm:rounded-xl text-[12px] sm:text-[13px] font-bold transition-all group",
-                  selectedDayDigit === item.day 
-                    ? "bg-slate-900 text-white shadow-xl ring-2 sm:ring-4 ring-slate-900/10" 
-                    : item.status === "reserved"
-                      ? "bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100"
-                      : "text-slate-600 hover:bg-slate-50 hover:border hover:border-slate-100"
-                )}
-              >
-                {item.day}
-                
-                {/* Movement Indicators */}
-                <div className="absolute bottom-1 sm:bottom-1.5 left-0 right-0 flex justify-center gap-0.5 sm:gap-1">
-                  {item.hasCheckIn && (
-                    <div className={cn("w-1 h-1 rounded-full bg-blue-500", selectedDayDigit === item.day && "bg-white")} />
+            <TooltipProvider>
+              {days.map((item) => (
+                <Tooltip key={item.day} delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setSelectedDayDigit(item.day)}
+                      className={cn(
+                        "relative aspect-square rounded-lg sm:rounded-xl text-[12px] sm:text-[13px] font-bold transition-all group",
+                        selectedDayDigit === item.day 
+                          ? "bg-slate-900 text-white shadow-xl ring-2 sm:ring-4 ring-slate-900/10" 
+                          : item.status === "reserved"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100"
+                            : "text-slate-600 hover:bg-slate-50 hover:border hover:border-slate-100"
+                      )}
+                    >
+                      {item.day}
+                      
+                      {/* Movement Indicators */}
+                      <div className="absolute bottom-1 sm:bottom-1.5 left-0 right-0 flex justify-center gap-0.5 sm:gap-1">
+                        {item.hasCheckIn && (
+                          <div className={cn("w-1 h-1 rounded-full bg-blue-500", selectedDayDigit === item.day && "bg-white")} />
+                        )}
+                        {item.hasCheckOut && (
+                          <div className={cn("w-1 h-1 rounded-full bg-emerald-500", selectedDayDigit === item.day && "bg-white")} />
+                        )}
+                      </div>
+                    </button>
+                  </TooltipTrigger>
+                  
+                  {item.reservedVehicles && item.reservedVehicles.length > 0 && (
+                    <TooltipContent side="top" className="p-3 bg-white/95 backdrop-blur-xl border border-slate-100 shadow-xl rounded-xl min-w-[160px]">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 pb-1.5 border-b border-slate-100">
+                          <Car className="w-3.5 h-3.5 text-indigo-500" />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Véhicules occupés</span>
+                        </div>
+                        <div className="space-y-1">
+                          {item.reservedVehicles.map((v, i) => (
+                            <p key={i} className="text-[12px] font-bold text-slate-800 leading-tight">
+                              • {v}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    </TooltipContent>
                   )}
-                  {item.hasCheckOut && (
-                    <div className={cn("w-1 h-1 rounded-full bg-emerald-500", selectedDayDigit === item.day && "bg-white")} />
-                  )}
-                </div>
-              </button>
-            ))
+                </Tooltip>
+              ))}
+            </TooltipProvider>
           )}
         </div>
 

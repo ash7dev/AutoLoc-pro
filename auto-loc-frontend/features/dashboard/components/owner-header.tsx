@@ -157,11 +157,10 @@ export function OwnerHeader({
         {/* Left */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-0.5 text-xs font-medium text-emerald-400 tracking-wide">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-0.5 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Activité normale
+              Live · Mis à jour à {time}
             </span>
-            <span className="text-xs text-white/30 tabular-nums">{time}</span>
           </div>
 
           <h1 className="font-display text-2xl sm:text-4xl font-black tracking-tighter text-white">

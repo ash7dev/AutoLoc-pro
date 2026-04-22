@@ -12,46 +12,59 @@ interface FleetPerformanceProps {
     reservations?: Reservation[];
     loading?: boolean;
     className?: string;
+    // Ajout de la période pour synchroniser avec le graphique de revenus
+    year?: number;
+    month?: number;
 }
 
-export function FleetPerformance({ vehicles, reservations = [], loading, className }: FleetPerformanceProps) {
+export function FleetPerformance({ vehicles, reservations = [], loading, className, year, month }: FleetPerformanceProps) {
     // ── Analytics Logic ─────────────────────────────────────────────────────────
 
     const fleetStats = useMemo(() => {
         if (!vehicles.length) return { topVehicles: [], avgOccupancy: 0 };
 
+        // Si month/year ne sont pas fournis, on utilise le mois actuel par défaut
         const now = new Date();
-        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const targetYear = year ?? now.getFullYear();
+        const targetMonth = month ?? now.getMonth();
+        
+        // Fenêtre pour le calcul d'occupation (le mois complet sélectionné)
+        const startOfMonth = new Date(targetYear, targetMonth, 1);
+        const endOfMonth = new Date(targetYear, targetMonth + 1, 0);
+        const daysInMonth = endOfMonth.getDate();
 
         // 1. Map vehicles with their calculated stats
         const stats = vehicles.map(v => {
-            // Filter reservations for this vehicle that are "money-making"
-            const vRes = reservations.filter(r =>
-                r.vehicule.id === v.id &&
-                ["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE"].includes(r.statut)
-            );
+            // Filtrer les réservations pour ce véhicule sur le mois/année cible
+            const vRes = reservations.filter(r => {
+                if (r.vehicule.id !== v.id) return false;
+                if (!["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE"].includes(r.statut)) return false;
+                
+                const start = new Date(r.dateDebut);
+                return start.getMonth() === targetMonth && start.getFullYear() === targetYear;
+            });
 
-            // Revenue: All-time for simplicity, OR could be month-to-date
+            // Revenu sur la période sélectionnée
             const revenue = vRes.reduce((sum, r) => sum + parseFloat(r.montantProprietaire || "0"), 0);
 
-            // Occupancy: Days rented in the last 30 days
-            let daysRented = 0;
+            // Taux d'occupation sur ce mois précis
+            let daysRentedInMonth = 0;
             vRes.forEach(r => {
                 const start = new Date(r.dateDebut);
                 const end = new Date(r.dateFin);
 
-                // Only count days within the last 30 days window
-                const effectiveStart = start < thirtyDaysAgo ? thirtyDaysAgo : start;
-                const effectiveEnd = end > now ? now : end;
+                // On ne compte que les jours qui tombent dans le mois sélectionné
+                const effectiveStart = start < startOfMonth ? startOfMonth : start;
+                const effectiveEnd = end > endOfMonth ? endOfMonth : end;
 
                 if (effectiveEnd > effectiveStart) {
                     const diffTime = Math.abs(effectiveEnd.getTime() - effectiveStart.getTime());
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    daysRented += diffDays;
+                    daysRentedInMonth += diffDays;
                 }
             });
 
-            const occupancyRate = Math.min(100, (daysRented / 30) * 100);
+            const occupancyRate = Math.min(100, (daysRentedInMonth / daysInMonth) * 100);
 
             return {
                 ...v,
@@ -67,10 +80,11 @@ export function FleetPerformance({ vehicles, reservations = [], loading, classNa
         const avgOccupancy = stats.reduce((sum, s) => sum + s.calculatedOccupancy, 0) / stats.length;
 
         return {
-            topVehicles: sorted.slice(0, 4), // Show top 4 for better fill since reviews are gone
+            topVehicles: sorted.slice(0, 4),
             avgOccupancy,
+            isFiltered: year !== undefined && month !== undefined
         };
-    }, [vehicles, reservations]);
+    }, [vehicles, reservations, year, month]);
 
     if (loading) {
         return (
@@ -108,7 +122,9 @@ export function FleetPerformance({ vehicles, reservations = [], loading, classNa
                             Performance
                         </h3>
                         <p className="text-[11px] font-bold text-slate-400 tracking-wide mt-0.5">
-                            Classement flotte
+                            {year !== undefined && month !== undefined 
+                                ? `Classement ${new Date(year, month).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}` 
+                                : "Classement flotte"}
                         </p>
                     </div>
                 </div>

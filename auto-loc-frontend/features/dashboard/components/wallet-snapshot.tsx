@@ -68,7 +68,7 @@ export function WalletSnapshot({
       <Separator className="bg-white/10 mb-5" />
 
       {/* Sub balances */}
-      <div className="grid grid-cols-2 gap-3 flex-1">
+      <div className="grid grid-cols-2 gap-3 mb-5">
         <div className="space-y-1">
           <div className="flex items-center gap-1.5">
             <Hourglass className="h-3 w-3 text-white/50" />
@@ -99,6 +99,19 @@ export function WalletSnapshot({
           <p className="text-xs text-white/40">Retraits en cours</p>
         </div>
       </div>
+
+      {/* Conditional Withdrawal Button */}
+      {!loading && data.available !== "0 FCFA" && data.available !== "— FCFA" && (
+        <div className="mt-auto pt-2">
+          <Link
+            href="/dashboard/owner/withdrawals/new"
+            className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl text-[13px] font-black transition-all shadow-[0_0_20px_rgba(52,211,153,0.15)] hover:shadow-[0_0_25px_rgba(52,211,153,0.3)] active:scale-[0.98]"
+          >
+            <Banknote className="h-4 w-4" />
+            Retirer mes fonds
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

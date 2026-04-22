@@ -44,6 +44,9 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Rôle introuvable');
     }
 
+    // 🛡️ Logique d'héritage : un ADMIN a tous les droits des autres rôles.
+    if (profile.role === RoleProfile.ADMIN) return true;
+
     const hasRole = requiredRoles.includes(profile.role as RoleProfile);
     if (!hasRole) {
       throw new ForbiddenException('Rôle insuffisant');

@@ -11,7 +11,7 @@ export class BusinessRuleException extends HttpException {
         super(
             {
                 statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-                error: 'Business Rule Violation',
+                error: 'Violation d\'une règle métier',
                 message,
                 ...(code ? { code } : {}),
             },

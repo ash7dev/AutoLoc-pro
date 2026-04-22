@@ -188,13 +188,18 @@ export function OwnerDashboardView({
             let isReserved = false;
             let hasCheckIn = false;
             let hasCheckOut = false;
+            const reservedVehicles: string[] = [];
 
             reservations.forEach(r => {
                 if (!["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE"].includes(r.statut)) return;
                 const start = r.dateDebut.split("T")[0];
                 const end = r.dateFin.split("T")[0];
 
-                if (dateStr >= start && dateStr <= end) isReserved = true;
+                if (dateStr >= start && dateStr <= end) {
+                    isReserved = true;
+                    const vName = `${r.vehicule.marque} ${r.vehicule.modele}`;
+                    if (!reservedVehicles.includes(vName)) reservedVehicles.push(vName);
+                }
                 if (start === dateStr) hasCheckIn = true;
                 if (end === dateStr) hasCheckOut = true;
             });
@@ -204,14 +209,18 @@ export function OwnerDashboardView({
                 dateStr, 
                 status: isReserved ? ("reserved" as const) : null,
                 hasCheckIn,
-                hasCheckOut
+                hasCheckOut,
+                reservedVehicles
             };
         });
     }, [calendarDate, reservations]);
 
     // ── Prepare Revenue Data ──
-    const revenueData = useMemo(() => {
+    const { revenueData, selectedYear, selectedMonth } = useMemo(() => {
         const revDate = new Date();
+        // Fixe le jour à 1 pour éviter le "date drift" (ex: 31 mars -> fév = bug)
+        revDate.setDate(1); 
+        
         if (revenuePeriod === "last") revDate.setMonth(revDate.getMonth() - 1);
         if (revenuePeriod === "2months") revDate.setMonth(revDate.getMonth() - 2);
 
@@ -225,6 +234,8 @@ export function OwnerDashboardView({
 
         reservations.forEach(r => {
             if (!["TERMINEE", "EN_COURS", "CONFIRMEE", "PAYEE"].includes(r.statut)) return;
+            
+            // On parse la date et on compare mois/année
             const start = new Date(r.dateDebut);
             if (start.getMonth() === month && start.getFullYear() === year) {
                 const amount = parseFloat(r.montantProprietaire || "0");
@@ -238,6 +249,25 @@ export function OwnerDashboardView({
         for (let d = 1; d <= daysInMonth; d++) {
             cumulative[d] = cumulative[d - 1] + dailyRevenue[d];
         }
+
+        // --- Calcule le revenu du mois PRECEDENT pour le % d'évolution ---
+        const prevDate = new Date(revDate);
+        prevDate.setMonth(prevDate.getMonth() - 1);
+        const pMonth = prevDate.getMonth();
+        const pYear = prevDate.getFullYear();
+        let prevTotalRev = 0;
+
+        reservations.forEach(r => {
+            if (!["TERMINEE", "EN_COURS", "CONFIRMEE", "PAYEE"].includes(r.statut)) return;
+            const start = new Date(r.dateDebut);
+            if (start.getMonth() === pMonth && start.getFullYear() === pYear) {
+                prevTotalRev += parseFloat(r.montantProprietaire || "0");
+            }
+        });
+
+        const evolution = prevTotalRev > 0 
+            ? ((totalRev - prevTotalRev) / prevTotalRev) * 100 
+            : totalRev > 0 ? 100 : 0;
 
         const formatter = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short" });
         const steps = [1, 5, 10, 15, 20, 25, daysInMonth];
@@ -256,7 +286,11 @@ export function OwnerDashboardView({
             points[points.length - 1].highlight = true;
         }
 
-        return { points, totalRev };
+        return { 
+            revenueData: { points, totalRev, evolution }, 
+            selectedYear: year, 
+            selectedMonth: month 
+        };
     }, [revenuePeriod, reservations]);
 
     // Wallet data
@@ -314,7 +348,7 @@ export function OwnerDashboardView({
                     <RevenueChart
                         data={revenueData.points}
                         total={revenueData.totalRev.toLocaleString("fr-FR")}
-                        change="0%"
+                        change={`${revenueData.evolution >= 0 ? "+" : ""}${Math.round(revenueData.evolution)}%`}
                         selectedMonth={revenuePeriod}
                         onMonthChange={setRevenuePeriod}
                     />
@@ -337,6 +371,8 @@ export function OwnerDashboardView({
                 <FleetPerformance 
                     vehicles={vehicles} 
                     reservations={reservations} 
+                    year={selectedYear}
+                    month={selectedMonth}
                 />
 
                 {/* Reservation Stats - Mobile */}
@@ -374,7 +410,7 @@ export function OwnerDashboardView({
                         <RevenueChart
                             data={revenueData.points}
                             total={revenueData.totalRev.toLocaleString("fr-FR")}
-                            change="0%" // Could be calculated comparing to previous month
+                            change={`${revenueData.evolution >= 0 ? "+" : ""}${Math.round(revenueData.evolution)}%`}
                             selectedMonth={revenuePeriod}
                             onMonthChange={setRevenuePeriod}
                         />
@@ -416,6 +452,8 @@ export function OwnerDashboardView({
                         <FleetPerformance 
                             vehicles={vehicles} 
                             reservations={reservations}
+                            year={selectedYear}
+                            month={selectedMonth}
                             className="flex-1"
                         />
                     </div>

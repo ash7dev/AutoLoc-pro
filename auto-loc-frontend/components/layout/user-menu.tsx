@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useSignOut } from '../../features/auth/hooks/use-signout';
 import { useRoleStore } from '../../features/auth/stores/role.store';
+import { useFastSwitch } from '../../features/auth/hooks/use-fast-switch';
 
 interface UserMenuProps {
   hasVehicles: boolean | null;
@@ -24,6 +25,8 @@ export function UserMenu({ hasVehicles }: UserMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { signOut, loading: signingOut } = useSignOut();
   const activeRole = useRoleStore((s) => s.activeRole);
+
+  const { switchToOwner, loading: switching } = useFastSwitch();
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -38,7 +41,7 @@ export function UserMenu({ hasVehicles }: UserMenuProps) {
   return (
     <div className="flex items-center gap-3">
 
-      {/* CTA contextuel — priorité au rôle */}
+      {/* CTA contextuel — priorité au rôle PROPRIETAIRE déjà actif */}
       {activeRole === 'PROPRIETAIRE' ? (
         <Link
           href="/dashboard/owner"
@@ -47,7 +50,7 @@ export function UserMenu({ hasVehicles }: UserMenuProps) {
           <Car className="w-3.5 h-3.5 text-emerald-400" />
           {hasVehicles ? "Espace propriétaire" : "Espace hôte"}
         </Link>
-      ) : activeRole === 'ADMIN' || activeRole === 'SUPPORT' ? (
+      ) : (activeRole === 'ADMIN' || activeRole === 'SUPPORT') ? (
         <Link
           href="/dashboard/admin"
           className="autoloc-body text-sm font-semibold bg-gray-900 text-white px-4 py-2 rounded-xl hover:bg-gray-700 transition-all duration-150 flex items-center gap-1.5"
@@ -55,7 +58,23 @@ export function UserMenu({ hasVehicles }: UserMenuProps) {
           <LayoutDashboard className="w-3.5 h-3.5 text-blue-400" />
           Espace Admin
         </Link>
+      ) : hasVehicles ? (
+        /* 🚀 SWITCH RAPIDE : L'utilisateur a des véhicules mais n'est pas en mode Propriétaire */
+        <button
+          type="button"
+          onClick={switchToOwner}
+          disabled={switching}
+          className="autoloc-body text-sm font-semibold bg-gray-900 text-white px-4 py-2 rounded-xl hover:bg-gray-700 transition-all duration-150 flex items-center gap-1.5 disabled:opacity-70"
+        >
+          {switching ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Car className="w-3.5 h-3.5 text-emerald-400" />
+          )}
+          Espace propriétaire
+        </button>
       ) : (
+        /* FLOW CLASSIQUE : Pas de véhicules, on va sur la page de présentation */
         <Link
           href="/become-owner"
           className="autoloc-body text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-4 py-2 rounded-xl transition-all duration-150"

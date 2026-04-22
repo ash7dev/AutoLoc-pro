@@ -21,7 +21,7 @@ function OwnerHeaderSkeleton({
           <div className="flex items-center gap-2 mb-1">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-0.5">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="h-3 w-28 rounded-md bg-white/10 animate-pulse" />
+              <span className="h-2 w-24 rounded-md bg-emerald-400/20 animate-pulse" />
             </span>
           </div>
 

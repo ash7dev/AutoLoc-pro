@@ -1,8 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogoLoader } from "@/components/ui/logo-loader";
 import { OverviewStats } from "@/features/dashboard/components/overview-stats";
 import { MobileRevenueCard } from "@/features/dashboard/components/mobile-revenue-card";
 import { RevenueChart } from "@/features/dashboard/components/revenue-chart";
@@ -103,6 +101,11 @@ function WalletSnapshotSkeleton({ hideCta = false }: { hideCta?: boolean }) {
           <Skeleton className="h-3 w-44 bg-white/10 animate-pulse" />
         </div>
       </div>
+
+      {/* Withdrawal button skeleton */}
+      <div className="mt-auto pt-2">
+        <Skeleton className="h-11 w-full bg-white/10 animate-pulse rounded-xl" />
+      </div>
     </div>
   );
 }
@@ -156,17 +159,6 @@ function QuickActionsMobileSkeleton() {
 }
 
 export default function OwnerDashboardLoading() {
-  const [showLogo, setShowLogo] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowLogo(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (showLogo) {
-    return <LogoLoader />;
-  }
-
   const reservations: ReservationItem[] = [];
 
   return (
