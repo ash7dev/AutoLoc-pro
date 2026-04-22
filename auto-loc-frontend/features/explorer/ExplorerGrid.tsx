@@ -486,31 +486,33 @@ export function ExplorerGrid(): React.ReactElement {
       </div>
 
       {/* ── Mobile Floating Filter Button ────────────────────────── */}
-      <div className="lg:hidden fixed bottom-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-        <button
-          type="button"
-          onClick={() => setMobileFiltersOpen(true)}
-          className={cn(
-            "pointer-events-auto flex items-center gap-3 px-6 py-3.5 rounded-full",
-            "bg-slate-900 text-white shadow-2xl shadow-slate-900/40 border border-white/10",
-            "active:scale-95 transition-all duration-200 animate-in fade-in slide-in-from-bottom-10"
-          )}
-        >
-          <div className="flex items-center gap-2 border-r border-white/10 pr-3">
-            <SlidersHorizontal className="h-4 w-4 text-emerald-400" strokeWidth={2.5} />
-            <span className="text-[13px] font-black uppercase tracking-wider">Filtres</span>
-            {activeFilterCount > 0 && (
-              <span className="flex items-center justify-center min-w-[20px] h-5 rounded-full bg-emerald-500 text-white text-[10px] font-black px-1.5">
-                {activeFilterCount}
-              </span>
+      {!mobileFiltersOpen && (
+        <div className="lg:hidden fixed bottom-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+          <button
+            type="button"
+            onClick={() => setMobileFiltersOpen(true)}
+            className={cn(
+              "pointer-events-auto flex items-center gap-3 px-6 py-3.5 rounded-full",
+              "bg-slate-900 text-white shadow-2xl shadow-slate-900/40 border border-white/10",
+              "active:scale-95 transition-all duration-200 animate-in fade-in slide-in-from-bottom-10"
             )}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[13px] font-black tabular-nums">{total}</span>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">Auto{total > 1 ? 's' : ''}</span>
-          </div>
-        </button>
-      </div>
+          >
+            <div className="flex items-center gap-2 border-r border-white/10 pr-3">
+              <SlidersHorizontal className="h-4 w-4 text-emerald-400" strokeWidth={2.5} />
+              <span className="text-[13px] font-black uppercase tracking-wider">Filtres</span>
+              {activeFilterCount > 0 && (
+                <span className="flex items-center justify-center min-w-[20px] h-5 rounded-full bg-emerald-500 text-white text-[10px] font-black px-1.5">
+                  {activeFilterCount}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[13px] font-black tabular-nums">{total}</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">Auto{total > 1 ? 's' : ''}</span>
+            </div>
+          </button>
+        </div>
+      )}
     </>
   );
 }
