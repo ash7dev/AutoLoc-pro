@@ -265,23 +265,26 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
         )}
 
         {/* Top-left badges */}
-        <div className="absolute top-2.5 left-2.5 flex flex-col items-start gap-1.5 z-10">
+        <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5 z-10">
           {isCoupDeCoeur && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-0.5 shadow-md shadow-emerald-500/30">
-              <Sparkles className="h-2.5 w-2.5 text-white" strokeWidth={2.5} />
-              <span className="text-[8.5px] font-black uppercase tracking-widest text-white">Coup de cœur</span>
-            </span>
+            <div className="group/badge relative">
+              <div className="absolute -inset-1 bg-emerald-400/30 rounded-full blur-[4px] opacity-0 group-hover/badge:opacity-100 transition duration-300"></div>
+              <span className="relative inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1 shadow-lg shadow-emerald-500/30">
+                <Sparkles className="h-2.5 w-2.5 text-white animate-pulse" strokeWidth={3} />
+                <span className="text-[9px] font-black uppercase tracking-[0.1em] text-white">Coup de cœur</span>
+              </span>
+            </div>
           )}
           {isPopular && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 shadow-sm">
-              <Zap className="h-2.5 w-2.5 text-white" strokeWidth={2.5} fill="currentColor" />
-              <span className="text-[8.5px] font-black text-white uppercase tracking-widest">Populaire</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/10 px-3 py-1 shadow-sm">
+              <Zap className="h-2.5 w-2.5 text-amber-400" strokeWidth={2.5} fill="currentColor" />
+              <span className="text-[9px] font-black text-white uppercase tracking-[0.1em]">Populaire</span>
             </span>
           )}
           {isVerified && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-black/50 backdrop-blur-md border border-emerald-400/30 px-2 py-0.5">
-              <Shield className="h-2.5 w-2.5 text-emerald-400" strokeWidth={2.5} />
-              <span className="text-[8.5px] font-black uppercase tracking-widest text-emerald-400">Vérifié</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1 shadow-lg">
+              <Shield className="h-2.5 w-2.5 text-emerald-400" strokeWidth={3} />
+              <span className="text-[9px] font-black uppercase tracking-[0.1em] text-white">Vérifié</span>
             </span>
           )}
         </div>
@@ -384,32 +387,35 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
 
         {/* Price + CTA row */}
         <div className="flex items-end justify-between gap-3 mt-auto">
-          <div className="min-w-0">
-            <p className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider">À partir de</p>
-            <div className="flex items-baseline gap-1">
-              <span className="text-[22px] font-black text-slate-800 tabular-nums leading-none">{formatPrice(base)}</span>
-              <span className="text-[11px] font-semibold text-slate-400">/jour</span>
-            </div>
-            <div className="flex items-center gap-1 mt-0.5 h-4">
-              {savings > 0 && minDays != null && (
-                <>
-                  <TrendingDown className="h-2.5 w-2.5 text-amber-500 flex-shrink-0" strokeWidth={2.5} />
-                  <span className="text-[9.5px] font-black text-amber-600">−{savings}% dès {minDays}j</span>
-                </>
-              )}
+          <div className="relative group/price">
+            <div className="absolute -inset-3 bg-emerald-500/5 rounded-2xl blur-xl opacity-0 group-hover/price:opacity-100 transition duration-500"></div>
+            <div className="relative">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-0.5">À partir de</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-[24px] font-black text-slate-900 tabular-nums leading-none tracking-tight">{formatPrice(base)}</span>
+                <span className="text-[12px] font-bold text-slate-400">/j</span>
+              </div>
+              <div className="flex items-center gap-1.5 mt-1 h-4">
+                {savings > 0 && minDays != null && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">
+                    <TrendingDown className="h-3 w-3" strokeWidth={3} />
+                    −{savings}% dès {minDays}j
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
           <span
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 flex-shrink-0',
-              'text-[12px] font-black text-emerald-400',
-              'bg-slate-900 hover:bg-slate-800',
-              'transition-all duration-200',
+              'inline-flex items-center gap-2 rounded-xl px-5 py-3 flex-shrink-0',
+              'text-[13px] font-black text-white',
+              'bg-slate-900 shadow-lg shadow-slate-900/10 hover:bg-emerald-500 hover:shadow-emerald-500/30',
+              'transition-all duration-300 transform active:scale-95',
             )}
           >
             Réserver
-            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform duration-200" strokeWidth={2.5} />
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" strokeWidth={3} />
           </span>
         </div>
       </div>
