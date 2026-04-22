@@ -36,11 +36,11 @@ export interface ReviewsResponse {
 // ── API Functions ──────────────────────────────────────────────────────────────
 
 /**
- * Fetch reviews for a user (server-side).
+ * Fetch reviews for a user (server-side or public).
  */
 export async function fetchUserReviews(
-    token: string,
     userId: string,
+    token?: string,
 ): Promise<ReviewsResponse> {
     return apiFetch<ReviewsResponse>(`/reviews/user/${userId}`, {
         accessToken: token,

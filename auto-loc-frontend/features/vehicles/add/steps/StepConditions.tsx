@@ -14,13 +14,7 @@ const ZONES = [
   { value: "Hors Dakar autorisé" },
 ];
 
-const INPUT_CLASS =
-  "w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-[16px] font-medium text-slate-900 placeholder-slate-300 outline-none transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15";
-
-const SELECT_CLASS =
-  "w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-[16px] font-medium text-slate-900 outline-none appearance-none cursor-pointer transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15";
-
-const LABEL_CLASS = "text-[12px] font-bold text-slate-700 uppercase tracking-wide";
+import { SectionCard, FormField, INPUT_CLASS, SELECT_CLASS, LABEL_CLASS } from "@/features/vehicles/components/VehicleFormPrimitives";
 
 interface Props {
   onNext: () => void;
@@ -238,39 +232,4 @@ export function StepConditions({ onNext, onBack }: Props) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════ */
-function SectionCard({ icon: Icon, title, subtitle, badge, children }: {
-  icon: React.ElementType; title: string; subtitle: string; badge?: string; children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
-      <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
-        <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
-          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" strokeWidth={2} />
-        </span>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="text-[13px] sm:text-[14px] font-bold text-slate-900 tracking-tight">{title}</p>
-            {badge && <span className="text-[8px] sm:text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md uppercase tracking-wider">{badge}</span>}
-          </div>
-          <p className="text-[10px] sm:text-[11px] font-medium text-slate-400 mt-0.5">{subtitle}</p>
-        </div>
-      </div>
-      <div className="p-4 sm:p-5">{children}</div>
-    </div>
-  );
-}
 
-function FormField({ label, icon: Icon, children }: {
-  label: string; icon?: React.ElementType; children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-1.5">
-        {Icon && <Icon className="w-3 h-3 text-slate-400" strokeWidth={2} />}
-        <label className={LABEL_CLASS}>{label}</label>
-      </div>
-      {children}
-    </div>
-  );
-}

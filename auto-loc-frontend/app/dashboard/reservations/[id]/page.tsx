@@ -144,7 +144,7 @@ export default async function TenantReservationDetailPage({ params }: { params: 
     const st = STATUS[r.statut] ?? STATUS.INITIEE;
 
     return (
-        <div className="min-h-screen bg-slate-50/60">
+        <div className="min-h-screen bg-slate-50/60 pb-24 lg:pb-0">
             <div className="max-w-5xl mx-auto px-4 py-6 lg:px-8 lg:py-10 space-y-5">
 
                 {/* ── Back ─────────────────────────────────────── */}
@@ -353,6 +353,8 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                                         dateDebut={r.dateDebut}
                                         statut={r.statut}
                                         showLabel={false}
+                                        name={r.proprietaire?.prenom}
+                                        reservationId={r.id}
                                     />
                                 </div>
                                 <div className="flex items-center justify-between">
@@ -383,6 +385,8 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                                         dateDebut={r.dateDebut}
                                         statut={r.statut}
                                         showLabel={false}
+                                        name={r.locataire?.prenom}
+                                        reservationId={r.id}
                                     />
                                 </div>
                                 <div className="flex items-center justify-between">
@@ -445,9 +449,20 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                                     <div className="flex flex-col">
                                         <span className="capitalize text-slate-800">{v.ville}</span>
                                         {canShowAddress && (v as any).adresse && (
-                                            <span className="text-[12px] text-slate-500 mt-0.5 font-medium">
-                                                {(v as any).adresse}
-                                            </span>
+                                            <div className="flex flex-col gap-2 mt-1">
+                                                <span className="text-[12px] text-slate-500 font-medium">
+                                                    {(v as any).adresse}
+                                                </span>
+                                                <a 
+                                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${(v as any).adresse}, ${v.ville}`)}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+                                                >
+                                                    <MapPin className="w-3 h-3" strokeWidth={2.5} />
+                                                    Ouvrir dans Maps
+                                                </a>
+                                            </div>
                                         )}
                                         {!canShowAddress && r.statut === 'CONFIRMEE' && (
                                             <p className="text-[10px] text-amber-600 font-medium mt-1">
@@ -561,6 +576,15 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                                             +{fmtMoney(r.fraisLivraison)} FCFA inclus dans le total
                                         </p>
                                     )}
+                                    <a 
+                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.adresseLivraison)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 mt-2 transition-colors"
+                                    >
+                                        <MapPin className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                        Voir l'itinéraire
+                                    </a>
                                 </div>
                             </div>
                         </Card>

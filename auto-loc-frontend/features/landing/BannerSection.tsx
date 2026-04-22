@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { MapPin, Tag, Calendar as CalendarIcon, ArrowRight, Car, Search, SlidersHorizontal } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useCurrency } from '@/providers/currency-provider';
 import {
@@ -210,58 +211,77 @@ export function BannerSection(): React.ReactElement {
       <section className="relative overflow-visible rounded-[2rem]">
 
         {/* ── Bannière photo ── */}
-        <div className="relative min-h-[65vh] lg:min-h-[82vh] overflow-hidden rounded-[2rem]">
+        <div className="relative min-h-[70vh] lg:min-h-[85vh] overflow-hidden rounded-[2.5rem]">
 
-          <Image
-            src="/banner.JPG"
-            alt="Location de véhicules au Sénégal — AutoLoc"
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center"
-          />
+          <motion.div 
+            initial={{ scale: 1.1 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 10, ease: "linear" }}
+            className="absolute inset-0"
+          >
+            <Image
+              src="/banner.JPG"
+              alt="Location de véhicules au Sénégal — AutoLoc"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-center"
+            />
+          </motion.div>
 
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/80" />
 
-          <div className="relative z-10 flex min-h-[65vh] lg:min-h-[82vh] flex-col justify-end px-8 pb-20 pt-16 lg:px-16 lg:pb-24 lg:pt-20">
-            <div className="max-w-2xl mb-10">
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3.5 py-1.5 mb-5 backdrop-blur-sm">
+          <div className="relative z-10 flex min-h-[70vh] lg:min-h-[85vh] flex-col justify-end px-8 pb-20 pt-16 lg:px-16 lg:pb-32 lg:pt-20">
+            <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="max-w-4xl mb-10"
+            >
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3.5 py-1.5 mb-6 backdrop-blur-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">
-                  Disponible partout au Sénégal
+                  La référence de la location au Sénégal
                 </span>
               </div>
 
-              <h1 className="flex flex-col gap-3">
-                <span className="text-5xl font-black leading-[1.0] tracking-tight md:text-6xl lg:text-7xl xl:text-8xl">
-                  <span className="text-white">Vous cherchez </span>
-                  <span className="text-emerald-400">un véhicule</span>
-                  <span className="text-white"> ?</span>
-                </span>
-                <span className="text-2xl font-semibold leading-snug tracking-tight text-white/60 lg:text-3xl xl:text-[2rem]">
-                  Vous êtes à{' '}
-                  <span className="text-emerald-400/80 font-bold">l&apos;endroit parfait.</span>
-                </span>
+              <h1 className="flex flex-col gap-4">
+                <motion.span 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    className="text-5xl font-black leading-[0.95] tracking-tight md:text-7xl lg:text-8xl xl:text-[9.5rem]"
+                >
+                  <span className="text-white">Le voyage </span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-300">commence</span>
+                  <span className="text-white"> ici.</span>
+                </motion.span>
+                <motion.span 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    className="text-xl font-medium leading-snug tracking-tight text-white/50 lg:text-3xl max-w-2xl"
+                >
+                  Découvrez une sélection exclusive de véhicules vérifiés pour tous vos besoins au <span className="text-white font-bold">Sénégal.</span>
+                </motion.span>
               </h1>
-
-              <p className="mt-4 text-[15px] font-medium text-white/60 max-w-md leading-relaxed">
-                Des centaines d&apos;annonces vérifiées, partout au Sénégal.
-                Réservez en quelques clics.
-              </p>
-            </div>
+            </motion.div>
           </div>
         </div>
 
         {/* ── Filtre flottant ── */}
-        <form
+        <motion.form
           onSubmit={handleSubmit}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
           className={cn(
             // Mobile : carte en flux normal, juste sous le banner
-            'w-full rounded-2xl border border-white/10 bg-slate-950 mt-3',
+            'w-full rounded-[2rem] border border-white/10 bg-slate-950 mt-3',
             // Desktop : flottant centré qui déborde sur le contenu suivant
             'lg:absolute lg:left-1/2 lg:-translate-x-1/2 lg:bottom-0 lg:translate-y-1/2 lg:z-20',
-            'lg:w-[calc(100%-3rem)] lg:max-w-5xl lg:bg-black/80 lg:mt-0',
-            'shadow-2xl shadow-black/40 backdrop-blur-xl',
+            'lg:w-[calc(100%-3rem)] lg:max-w-6xl lg:bg-black/60 lg:mt-0',
+            'shadow-[0_32px_64px_-12px_rgba(0,0,0,0.6)] backdrop-blur-2xl',
           )}
         >
 
@@ -548,7 +568,7 @@ export function BannerSection(): React.ReactElement {
             </button>
           </div>
 
-        </form>
+        </motion.form>
 
       </section>
     </div>

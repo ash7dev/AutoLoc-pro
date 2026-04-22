@@ -10,6 +10,9 @@ import { VehicleDetailSpecs } from '@/features/vehicles/components/VehicleDetail
 import { VehiclePricingTable } from '@/features/vehicles/components/VehiclePricingTable';
 import { VehicleOwnerCard, MobileReservationBar } from '@/features/vehicles/components/VehicleOwnerCard';
 import { ReservationSidebar } from '@/features/vehicles/components/ReservationSidebar';
+import { VehicleReviews } from '@/features/vehicles/components/VehicleReviews';
+import { SimilarVehicles } from '@/features/vehicles/components/SimilarVehicles';
+import { fetchUserReviews, type ReviewsResponse } from '@/lib/nestjs/reviews';
 import { Footer } from '@/features/landing/Footer';
 
 /** ISR — revalidate every 60 seconds */
@@ -32,7 +35,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function VehicleDetailPage({ params }: PageProps) {
     let vehicle: Vehicle;
-    try { vehicle = await fetchVehicle(params.id); } catch { notFound(); }
+    let reviewsData: ReviewsResponse | null = null;
+    try {
+        vehicle = await fetchVehicle(params.id);
+        if (vehicle.proprietaireId) {
+            reviewsData = await fetchUserReviews(vehicle.proprietaireId).catch(() => null);
+        }
+    } catch { notFound(); }
 
     return (
         <main className="min-h-screen bg-white">
@@ -79,6 +88,9 @@ export default async function VehicleDetailPage({ params }: PageProps) {
                         {/* Owner card */}
                         <div className="border-t border-slate-100" />
                         <VehicleOwnerCard vehicle={vehicle} />
+
+                        {/* Reviews (Auto-hidden if none) */}
+                        <VehicleReviews reviewsData={reviewsData} />
                     </div>
 
                     {/* ── Right column: sidebar (desktop only) ──────── */}
@@ -94,6 +106,9 @@ export default async function VehicleDetailPage({ params }: PageProps) {
                         />
                     </div>
                 </div>
+                
+                {/* Similar Vehicles at the bottom */}
+                <SimilarVehicles currentVehicle={vehicle} />
             </div>
 
             {/* ── Mobile sticky bottom CTA ─────────────────────────── */}

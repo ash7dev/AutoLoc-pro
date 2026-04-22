@@ -129,7 +129,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
     const st = STATUS[r.statut] ?? STATUS.INITIEE;
 
     return (
-        <div className="min-h-screen bg-slate-50/60">
+        <div className="min-h-screen bg-slate-50/60 pb-24 lg:pb-0">
             <div className="max-w-5xl mx-auto px-4 py-6 lg:px-8 lg:py-10 space-y-5">
 
                 {/* ── Back ─────────────────────────────────────── */}
@@ -304,6 +304,8 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                                 statut={r.statut}
                                 className="mt-2"
                                 showLabel={false}
+                                name={r.locataire.prenom}
+                                reservationId={r.id}
                             />
 
                             {/* Note */}
@@ -367,6 +369,15 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                                         {r.fraisLivraison && (
                                             <p className="text-[11px] font-bold text-emerald-600 mt-1">+{fmtMoney(r.fraisLivraison)} FCFA</p>
                                         )}
+                                        <a 
+                                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.adresseLivraison)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-emerald-600 hover:text-emerald-700 mt-2 transition-colors"
+                                        >
+                                            <MapPin className="w-3 h-3" strokeWidth={2.5} />
+                                            Ouvrir dans Maps
+                                        </a>
                                     </div>
                                 </div>
                             )}

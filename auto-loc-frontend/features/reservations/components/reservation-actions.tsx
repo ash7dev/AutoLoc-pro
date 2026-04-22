@@ -669,6 +669,37 @@ export function ReservationActions({
                 }
             </div>
 
+            {/* Floating Mobile Action Bar — only for primary action (first one) */}
+            {!confirmingAction && !disputeOpen && !checkinOpen && !checkoutOpen && !confirmOpen && actions.length > 0 && (
+                <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-t border-slate-200 px-4 py-4 lg:hidden animate-in slide-in-from-bottom duration-300">
+                    {actions
+                        .filter(a => a.style === "primary")
+                        .slice(0, 1)
+                        .map(action => (
+                            <button
+                                key={`floating-${action.key}`}
+                                type="button"
+                                disabled={isLoading || (action.key === "confirm" && kycBlocked)}
+                                onClick={() => handleAction(action)}
+                                className={cn(
+                                    "w-full flex items-center justify-center gap-3 rounded-2xl px-6 py-4 font-black text-[15px] shadow-xl transition-all active:scale-[0.98]",
+                                    "bg-slate-900 text-white shadow-emerald-500/20",
+                                    (isLoading || (action.key === "confirm" && kycBlocked)) && "opacity-50 grayscale"
+                                )}
+                            >
+                                {loading === action.key ? (
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                ) : (
+                                    <action.icon className="w-5 h-5" strokeWidth={2.5} />
+                                )}
+                                {action.label}
+                            </button>
+                        ))
+                    }
+                    {/* Add padding to the bottom of the page content elsewhere or just assume it's fine */}
+                </div>
+            )}
+
             {/* Inline confirm */}
             {confirmingAction && (
                 <InlineConfirm

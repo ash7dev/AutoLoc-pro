@@ -9,6 +9,8 @@ import { fetchVehicleReservations } from '@/lib/nestjs/reservations';
 import { AvailabilityCalendar } from '@/features/vehicles/components/availability-calendar';
 import { EditVehicleButton } from '@/features/vehicles/owner/EditVehicleButton';
 import { DeleteVehicleButton } from '@/features/vehicles/owner/DeleteVehicleButton';
+import { ShareVehicleButton } from '@/features/vehicles/owner/ShareVehicleButton';
+import { VehicleRevenueChart } from '@/features/vehicles/owner/VehicleRevenueChart';
 import { DocumentViewButton } from '@/features/vehicles/owner/DocumentViewButton';
 import { ReservationStatusBadge } from '@/features/reservations/components/reservation-status';
 import {
@@ -218,6 +220,7 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
                 Voir l&apos;annonce
               </Link>
             )}
+            <ShareVehicleButton vehicleId={vehicle.id} marque={vehicle.marque} modele={vehicle.modele} />
             <DeleteVehicleButton vehicleId={vehicle.id} statut={vehicle.statut} />
             <EditVehicleButton vehicle={vehicle} />
           </div>
@@ -357,6 +360,9 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
             icon={Eye}
           />
         </div>
+
+        {/* ── Revenue Chart ─────────────────────────────────────────── */}
+        <VehicleRevenueChart reservations={reservations} />
 
         {/* ── Two-col: calendar + reservations ────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

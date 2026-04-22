@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import { BannerSection } from '@/features/landing/BannerSection';
+import { BrandMarquee } from '@/features/landing/BrandMarquee';
 import { CategoriesSection } from '@/features/landing/CategoriesSection';
+import { FeaturesSection } from '@/features/landing/FeaturesSection';
 import { VehicleGridSection } from '@/features/landing/VehicleGridSection';
 import { searchVehicles, type VehicleSearchResult } from '@/lib/nestjs/vehicles';
 import { HowItWorksSection } from '@/features/landing/HowItWorksSection';
-import { TrustSection } from '@/features/landing/TrustSection';
 import { StatsSection } from '@/features/landing/StatsSection';
 import { ZonesSection } from '@/features/landing/ZonesSection';
 import { TestimonialsSection } from '@/features/landing/TestimonialsSection';
@@ -39,12 +40,13 @@ export default async function HomePage() {
   }
 
   return (
-    <main>
+    <main className="overflow-x-hidden">
       <BannerSection />
+      <BrandMarquee />
       <CategoriesSection />
       <VehicleGridSection initialVehicles={initialVehicles} />
+      <FeaturesSection />
       <HowItWorksSection />
-      <TrustSection />
       <StatsSection />
       <ZonesSection />
       <TestimonialsSection />

@@ -150,6 +150,20 @@ export function TenantCheckinButton({ reservationId, alreadyConfirmed, ownerConf
                 </div>
             )}
 
+            {/* Floating Mobile Action Bar */}
+            {ownerConfirmed && !alreadyConfirmed && !confirmed && !confirming && (
+                <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-t border-slate-200 px-4 py-4 sm:hidden animate-in slide-in-from-bottom duration-300">
+                    <button
+                        type="button"
+                        onClick={() => setConfirming(true)}
+                        className="w-full flex items-center justify-center gap-3 rounded-2xl px-6 py-4 font-black text-[15px] shadow-xl transition-all active:scale-[0.98] bg-slate-900 text-white shadow-emerald-500/20"
+                    >
+                        <LogIn className="w-5 h-5" strokeWidth={2.5} />
+                        Confirmer le trajet
+                    </button>
+                </div>
+            )}
+
             {error && (
                 <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-red-50 border border-red-200">
                     <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" strokeWidth={2} />

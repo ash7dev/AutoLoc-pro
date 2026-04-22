@@ -1,6 +1,6 @@
 'use client';
 
-import { Phone, Clock } from 'lucide-react';
+import { Phone, Clock, MessageSquare } from 'lucide-react';
 
 interface Props {
     telephone?: string;
@@ -8,6 +8,8 @@ interface Props {
     statut: string;
     className?: string;
     showLabel?: boolean;
+    name?: string; // Nom de la personne à contacter
+    reservationId?: string; // ID pour le message pré-rempli
 }
 
 /**
@@ -19,7 +21,9 @@ export function PhoneDisplay({
     dateDebut, 
     statut,
     className = '',
-    showLabel = true 
+    showLabel = true,
+    name = '',
+    reservationId = ''
 }: Props) {
     // Nouvelle logique de visibilité basée sur le statut et le temps
     const canShow = (() => {
@@ -53,11 +57,24 @@ export function PhoneDisplay({
                 {showLabel && (
                     <span className="text-[12px] text-black/40 font-black uppercase tracking-wider">Téléphone</span>
                 )}
-                <div className="flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2.5} />
-                    <span className="text-[13px] font-black text-black">
-                        {telephone}
-                    </span>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2.5} />
+                        <span className="text-[13px] font-black text-black">
+                            {telephone}
+                        </span>
+                    </div>
+                    
+                    {/* WhatsApp Button */}
+                    <a 
+                        href={`https://wa.me/${telephone.replace(/\s+/g, '')}?text=${encodeURIComponent(`Bonjour ${name}, je vous contacte concernant la réservation ${reservationId.slice(0, 8).toUpperCase()} sur AutoLoc.`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold hover:bg-emerald-600 transition-colors shadow-sm shadow-emerald-500/20"
+                    >
+                        <MessageSquare className="w-3 h-3" strokeWidth={2.5} />
+                        WhatsApp
+                    </a>
                 </div>
             </div>
         );

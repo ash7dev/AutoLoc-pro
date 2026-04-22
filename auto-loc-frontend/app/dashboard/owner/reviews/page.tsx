@@ -27,7 +27,7 @@ export default async function OwnerReviewsPage() {
 
     let reviewsData;
     try {
-        reviewsData = await fetchUserReviews(token, profile.id);
+        reviewsData = await fetchUserReviews(profile.id, token);
     } catch {
         reviewsData = null;
     }

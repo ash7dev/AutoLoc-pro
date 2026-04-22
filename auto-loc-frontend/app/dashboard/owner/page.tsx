@@ -42,7 +42,7 @@ export default async function OwnerDashboardPage() {
         fetchMyVehicles(token),
         fetchWallet(token),
         fetchOwnerStats(token),
-        profile ? fetchUserReviews(token, profile.id) : Promise.resolve(null),
+        profile ? fetchUserReviews(profile.id, token) : Promise.resolve(null),
       ]);
 
     if (resResult.status === "fulfilled") reservations = resResult.value.data;
