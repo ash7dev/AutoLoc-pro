@@ -126,7 +126,7 @@ export default function ContactPage() {
                                         {channel.title}
                                     </h3>
                                     <p className="text-[16px] font-black text-emerald-500 mt-1 tracking-tight">{channel.value}</p>
-                                    <p className={cn("text-[11px] font-medium mt-1", isBlack ? "text-white/40" : "text-black")}>
+                                    <p className={cn("text-[11px] font-medium mt-1", isBlack ? "text-white" : "text-black")}>
                                         {channel.description}
                                     </p>
                                 </div>
@@ -176,7 +176,7 @@ export default function ContactPage() {
                                             <item.icon className="w-6 h-6 text-emerald-400" />
                                         </div>
                                         <div>
-                                            <p className={cn("text-[11px] font-bold uppercase tracking-[0.2em] mb-2", isBlack ? "text-white/30" : "text-black/50")}>{item.label}</p>
+                                            <p className={cn("text-[11px] font-bold uppercase tracking-[0.2em] mb-2", isBlack ? "text-white/60" : "text-black/50")}>{item.label}</p>
                                             <p className={cn("text-[16px] font-bold whitespace-pre-line leading-relaxed", isBlack ? "text-white" : "text-black")}>{item.value}</p>
                                         </div>
                                     </div>

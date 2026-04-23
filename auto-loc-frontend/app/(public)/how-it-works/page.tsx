@@ -196,7 +196,7 @@ export default function HowItWorksPage() {
                                             </h3>
                                             <p className={cn(
                                                 "text-[14px] font-medium leading-relaxed",
-                                                isOdd ? "text-white/40" : "text-black"
+                                                isOdd ? "text-white" : "text-black"
                                             )}>
                                                 {step.description}
                                             </p>
@@ -246,12 +246,12 @@ export default function HowItWorksPage() {
 
                                     <div className={cn(
                                         "relative p-8 rounded-b-[2rem] rounded-tr-[2rem] shadow-2xl transition-all duration-500",
-                                        isEven ? "bg-black border border-t-0 border-white/10 group-hover:border-emerald-400/20" : "bg-white border border-t-0 border-slate-100 group-hover:border-emerald-500/20"
+                                        isEven ? "bg-black group-hover:border-emerald-400/20" : "bg-white border border-t-0 border-slate-100 group-hover:border-emerald-500/20"
                                     )}>
                                         <h3 className="text-[20px] font-black text-emerald-400 mb-3 tracking-tight">
                                             {step.title}
                                         </h3>
-                                        <p className={cn("text-[14px] lg:text-[15px] font-medium leading-relaxed", isEven ? "text-white/40" : "text-black")}>
+                                        <p className={cn("text-[14px] lg:text-[15px] font-medium leading-relaxed", isEven ? "text-white" : "text-black")}>
                                             {step.description}
                                         </p>
                                     </div>
@@ -291,7 +291,7 @@ export default function HowItWorksPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-[16px] font-black text-emerald-400 mb-2">{item.label}</h3>
-                                        <p className={cn("text-[14px] font-medium leading-relaxed", isBlack ? "text-white/40" : "text-black")}>
+                                        <p className={cn("text-[14px] font-medium leading-relaxed", isBlack ? "text-white" : "text-black")}>
                                             {item.description}
                                         </p>
                                     </div>
