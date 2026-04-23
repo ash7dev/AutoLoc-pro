@@ -24,9 +24,9 @@ export function useSignOut() {
     // 3. Déconnecter Supabase (invalide le token Supabase côté client).
     await supabase.auth.signOut();
 
-    // 4. Rediriger vers /login (pas /) pour que l'UI soit explicite.
-    //    Pas de router.refresh() : inutile puisqu'on change de route.
-    router.replace('/login');
+    // 4. Rediriger vers l'accueil (/) au lieu du login.
+    //    On utilise window.location.href pour forcer un rechargement propre.
+    window.location.href = '/';
 
     setLoading(false);
   };
