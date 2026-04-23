@@ -291,7 +291,7 @@ export function BannerSection(): React.ReactElement {
             'w-full rounded-[2rem] border border-white/10 bg-slate-950 mt-3',
             // Desktop : flottant centré qui déborde sur le contenu suivant
             'lg:absolute lg:left-1/2 lg:-translate-x-1/2 lg:bottom-0 lg:translate-y-1/2 lg:z-20',
-            'lg:w-[calc(100%-3rem)] lg:max-w-5xl lg:bg-black/80 lg:mt-0',
+            'lg:w-[90%] lg:max-w-4xl lg:bg-black/80 lg:mt-0',
             'shadow-2xl shadow-black/40 backdrop-blur-xl',
           )}
         >

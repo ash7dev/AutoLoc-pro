@@ -20,7 +20,7 @@ export const registerSchema = z.object({
   telephone: z.string().trim()
     // Supprime les espaces avant de valider pour accepter "77 123 45 67" ou "771234567"
     .transform(val => val.replace(/\s+/g, ''))
-    .refine(val => /^(70|75|76|77|78|33)\d{7}$/.test(val), {
+    .refine(val => /^(70|71|75|76|77|78|33)\d{7}$/.test(val), {
       message: 'Format invalide (ex: 77 000 00 00)',
     }),
 });
