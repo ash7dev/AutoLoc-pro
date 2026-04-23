@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, HelpCircle, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -150,9 +151,12 @@ export function FAQSection(): React.ReactElement {
                             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 blur-3xl" />
                             <h4 className="text-[18px] font-black mb-2">Besoin d&apos;aide directe ?</h4>
                             <p className="text-white/40 text-[14px] mb-6">Notre équipe support est disponible 7j/7 pour vous accompagner.</p>
-                            <button className="flex items-center gap-3 bg-emerald-500 text-black px-6 py-3 rounded-xl font-bold text-[14px] hover:bg-emerald-400 transition-all">
+                            <Link 
+                                href="/contact"
+                                className="inline-flex items-center gap-3 bg-emerald-500 text-black px-6 py-3 rounded-xl font-bold text-[14px] hover:bg-emerald-400 transition-all"
+                            >
                                 Nous contacter <ArrowRight className="w-4 h-4" />
-                            </button>
+                            </Link>
                         </div>
                     </motion.div>
                 </div>

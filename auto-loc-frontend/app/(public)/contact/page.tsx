@@ -56,22 +56,24 @@ const INFO_ITEMS = [
 export default function ContactPage() {
     return (
         <main className="min-h-screen bg-[#F8FAFC]">
-            {/* ── Hero ── */}
-            <section className="relative overflow-hidden bg-white border-b border-slate-200 px-4 py-20 lg:py-28">
-                <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-emerald-400/5 blur-[100px] pointer-events-none" />
-                <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-emerald-400/5 blur-[100px] pointer-events-none" />
+            {/* ── Hero (Black Section) ── */}
+            <section className="relative overflow-hidden bg-black px-4 py-20 lg:py-32 rounded-b-[4rem] lg:rounded-b-[8rem]">
+                {/* Decorative blobs */}
+                <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-emerald-400/10 blur-[120px] pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full bg-emerald-400/5 blur-[120px] pointer-events-none" />
+                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
                 <div className="relative mx-auto max-w-4xl text-center">
                     <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-4 py-1.5 mb-6">
-                        <HeadphonesIcon className="h-3.5 w-3.5 text-emerald-500" strokeWidth={2} />
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">
+                        <HeadphonesIcon className="h-3.5 w-3.5 text-emerald-400" strokeWidth={2} />
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">
                             Support client
                         </span>
                     </div>
-                    <h1 className="text-4xl lg:text-7xl font-black tracking-tight text-slate-900 leading-tight">
-                        On reste en <span className="text-emerald-500 italic">contact</span> ?
+                    <h1 className="text-4xl lg:text-7xl font-black tracking-tight text-white leading-tight">
+                        On reste en <span className="text-emerald-400 italic">contact</span> ?
                     </h1>
-                    <p className="mt-6 text-[17px] font-medium leading-relaxed text-slate-500 max-w-xl mx-auto">
+                    <p className="mt-6 text-[17px] font-medium leading-relaxed text-white/40 max-w-xl mx-auto">
                         Besoin d&apos;aide pour une réservation ou envie de devenir partenaire ? Notre équipe est à votre écoute.
                     </p>
                 </div>

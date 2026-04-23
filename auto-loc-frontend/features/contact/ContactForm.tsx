@@ -45,7 +45,7 @@ export function ContactForm(): React.ReactElement {
                 <div className="text-center">
                     <p className="text-[16px] font-bold text-black">Message envoyé !</p>
                     <p className="mt-1 text-[13px] text-black/40 max-w-xs mx-auto">
-                        Merci pour votre message. Nous vous répondrons dans les plus brefs délais.
+                        Merci pour votre message. Une copie a été transmise à <span className="text-emerald-600 font-bold">support@autoloc.sn</span>. Nous vous répondrons sous 24h.
                     </p>
                 </div>
                 <button

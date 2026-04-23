@@ -120,17 +120,18 @@ const GUARANTEES = [
 export default function HowItWorksPage() {
     return (
         <main className="min-h-screen bg-[#F8FAFC]">
-            {/* ── Hero (Light & Airy) ── */}
-            <section className="relative overflow-hidden pt-24 pb-20 lg:pt-32 lg:pb-32 px-4 bg-white border-b border-slate-200">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full opacity-10 blur-[120px] pointer-events-none bg-emerald-500/30" />
+            {/* ── Hero (Black with Bottom Radius) ── */}
+            <section className="relative overflow-hidden pt-24 pb-32 lg:pt-32 lg:pb-48 px-4 bg-black rounded-b-[4rem] lg:rounded-b-[8rem]">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full opacity-20 blur-[120px] pointer-events-none bg-emerald-500/30" />
+                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
                 <div className="relative mx-auto max-w-4xl text-center">
-                    <SectionBadge text="Simple et transparent" />
-                    <h1 className="text-4xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.1]">
+                    <SectionBadge text="Simple et transparent" isDark />
+                    <h1 className="text-4xl lg:text-7xl font-black tracking-tight text-white leading-[1.1]">
                         Découvrez la nouvelle façon de{' '}
-                        <span className="text-emerald-500 italic">louer</span>
+                        <span className="text-emerald-400 italic">louer</span>
                     </h1>
-                    <p className="mt-6 text-[18px] font-medium leading-relaxed text-slate-500 max-w-2xl mx-auto">
+                    <p className="mt-6 text-[18px] font-medium leading-relaxed text-white/40 max-w-2xl mx-auto">
                         Une plateforme pensée pour votre sécurité, que vous cherchiez un véhicule ou que vous souhaitiez rentabiliser le vôtre.
                     </p>
                 </div>
@@ -149,11 +150,10 @@ export default function HowItWorksPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {TENANT_STEPS.map((step, i) => {
                             const Icon = step.icon;
-                            const isOdd = i % 2 !== 0; // Steps 2 and 4 are Black
+                            const isOdd = i % 2 !== 0;
 
                             return (
                                 <div key={step.title} className="group relative">
-                                    {/* Number Watermark */}
                                     <span className={cn(
                                         "absolute -top-6 -left-2 text-[80px] font-black leading-none select-none pointer-events-none transition-colors duration-500",
                                         isOdd ? "text-emerald-400/20" : "text-emerald-500/10"
@@ -161,7 +161,6 @@ export default function HowItWorksPage() {
                                         0{i + 1}
                                     </span>
 
-                                    {/* Card with Asymmetric Shape */}
                                     <div 
                                         className={cn(
                                             "relative overflow-hidden p-8 h-full flex flex-col transition-all duration-500 group-hover:-translate-y-2",
@@ -210,11 +209,9 @@ export default function HowItWorksPage() {
                 </div>
             </section>
 
-            {/* ── Owner Steps (Particular Black Header Section) ── */}
+            {/* ── Owner Steps (Black Section) ── */}
             <section className="px-4 py-20 lg:py-32 relative overflow-hidden">
                 <div className="mx-auto max-w-5xl">
-                    
-                    {/* Particular Black Header Slab */}
                     <div 
                         className="bg-black text-white p-12 lg:p-16 mb-16 relative overflow-hidden"
                         style={{ clipPath: 'polygon(60px 0, 100% 0, 100% 100%, 0 100%, 0 60px)' }}
@@ -225,9 +222,6 @@ export default function HowItWorksPage() {
                             <h2 className="text-3xl lg:text-5xl font-black tracking-tight text-white mt-2">
                                 Rentabilisez votre <span className="text-emerald-400">patrimoine</span>
                             </h2>
-                            <p className="mt-4 text-white/40 max-w-xl text-[16px] font-medium leading-relaxed">
-                                Transformez votre véhicule en source de revenus régulière grâce à nos outils de gestion avancés.
-                            </p>
                         </div>
                     </div>
 
@@ -236,21 +230,20 @@ export default function HowItWorksPage() {
                             const Icon = step.icon;
                             return (
                                 <div key={step.title} className="group relative">
-                                    {/* Folder Tab Style (Light) */}
                                     <div className="flex items-end h-10">
-                                        <div className="flex items-center gap-3 px-6 py-2 rounded-t-2xl bg-white border border-b-0 border-slate-200 group-hover:bg-emerald-500 group-hover:border-emerald-500 transition-all duration-500">
-                                            <span className="text-[12px] font-black text-emerald-500 group-hover:text-white">0{i + 1}</span>
-                                            <div className="w-[1px] h-3 bg-slate-200 group-hover:bg-white/20" />
-                                            <Icon className="w-4 h-4 text-slate-400 group-hover:text-white" strokeWidth={2} />
+                                        <div className="flex items-center gap-3 px-6 py-2 rounded-t-2xl bg-black border border-b-0 border-white/10 group-hover:bg-emerald-400 group-hover:border-emerald-400 transition-all duration-500">
+                                            <span className="text-[12px] font-black text-emerald-400 group-hover:text-black">0{i + 1}</span>
+                                            <div className="w-[1px] h-3 bg-white/20 group-hover:bg-black/20" />
+                                            <Icon className="w-4 h-4 text-white/40 group-hover:text-black" strokeWidth={2} />
                                         </div>
-                                        <div className="flex-1 border-b border-slate-200 group-hover:border-emerald-500/50 transition-colors duration-500" />
+                                        <div className="flex-1 border-b border-white/10 group-hover:border-emerald-400/50 transition-colors duration-500" />
                                     </div>
 
-                                    <div className="relative p-8 bg-white border border-t-0 border-slate-200 rounded-b-[2rem] rounded-tr-[2rem] shadow-sm group-hover:shadow-md transition-all duration-500">
-                                        <h3 className="text-[20px] font-black text-slate-900 mb-3 tracking-tight group-hover:text-emerald-600 transition-colors">
+                                    <div className="relative p-8 bg-black border border-t-0 border-white/10 rounded-b-[2rem] rounded-tr-[2rem] shadow-2xl group-hover:border-emerald-400/20 transition-all duration-500">
+                                        <h3 className="text-[20px] font-black text-emerald-400 mb-3 tracking-tight">
                                             {step.title}
                                         </h3>
-                                        <p className="text-[14px] lg:text-[15px] font-medium text-slate-400 leading-relaxed">
+                                        <p className="text-[14px] lg:text-[15px] font-medium text-white/40 leading-relaxed">
                                             {step.description}
                                         </p>
                                     </div>
@@ -261,7 +254,7 @@ export default function HowItWorksPage() {
                 </div>
             </section>
 
-            {/* ── Guarantees (Airy Grid) ── */}
+            {/* ── Guarantees (Black Cards) ── */}
             <section className="px-4 py-20 lg:py-32 bg-white">
                 <div className="mx-auto max-w-6xl">
                     <div className="text-center mb-16">
@@ -275,14 +268,14 @@ export default function HowItWorksPage() {
                         {GUARANTEES.map((item) => (
                             <div
                                 key={item.label}
-                                className="flex flex-col gap-4 p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 hover:border-emerald-500/30 transition-all group"
+                                className="flex flex-col gap-4 p-8 rounded-[2.5rem] bg-black border border-white/5 hover:border-emerald-400/20 transition-all group shadow-2xl"
                             >
-                                <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
-                                    <item.icon className="w-5 h-5 text-emerald-600 group-hover:text-inherit" strokeWidth={1.5} />
+                                <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-emerald-400 group-hover:text-black transition-all">
+                                    <item.icon className="w-5 h-5 text-emerald-400 group-hover:text-inherit" strokeWidth={1.5} />
                                 </div>
                                 <div>
-                                    <h3 className="text-[16px] font-black text-slate-900 mb-2">{item.label}</h3>
-                                    <p className="text-[14px] font-medium text-slate-400 leading-relaxed">
+                                    <h3 className="text-[16px] font-black text-emerald-400 mb-2">{item.label}</h3>
+                                    <p className="text-[14px] font-medium text-white/40 leading-relaxed">
                                         {item.description}
                                     </p>
                                 </div>
@@ -292,11 +285,11 @@ export default function HowItWorksPage() {
                 </div>
             </section>
 
-            {/* ── CTA (Impactful Black) ── */}
+            {/* ── CTA ── */}
             <section className="px-4 py-20 mb-10">
                 <div className="mx-auto max-w-7xl">
                     <div 
-                        className="relative overflow-hidden px-8 py-16 lg:py-24 rounded-[4rem] bg-black text-center"
+                        className="relative overflow-hidden px-8 py-16 lg:py-24 rounded-[4rem] bg-black text-center shadow-2xl"
                         style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 60px), calc(100% - 60px) 100%, 0 100%)' }}
                     >
                         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-emerald-500/20 to-transparent pointer-events-none" />
@@ -304,9 +297,6 @@ export default function HowItWorksPage() {
                         <h2 className="text-3xl lg:text-6xl font-black tracking-tight text-white mb-6 relative z-10">
                             Prêt à prendre la <span className="text-emerald-400">route</span> ?
                         </h2>
-                        <p className="text-[17px] font-bold text-white/40 max-w-md mx-auto mb-10 relative z-10">
-                            Que vous soyez locataire ou propriétaire, AutoLoc vous accompagne à chaque étape.
-                        </p>
                         <div className="flex items-center justify-center gap-4 flex-wrap relative z-10">
                             <Link
                                 href="/explorer"
@@ -314,12 +304,6 @@ export default function HowItWorksPage() {
                             >
                                 Explorer les véhicules
                                 <ArrowRight className="w-4 h-4" />
-                            </Link>
-                            <Link
-                                href="/register"
-                                className="inline-flex items-center gap-2 rounded-2xl border-2 border-white/10 bg-white/5 px-8 py-4 text-[15px] font-bold text-white hover:bg-white/10 transition-all"
-                            >
-                                Créer un compte
                             </Link>
                         </div>
                     </div>
