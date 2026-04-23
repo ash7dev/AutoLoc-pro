@@ -4,15 +4,29 @@ import Link from 'next/link';
 import {
     Search, CalendarCheck, CreditCard, CarFront,
     Shield, HeadphonesIcon, ArrowRight,
-    UserCheck, CheckCircle2, MapPin,
+    UserCheck, CheckCircle2, MapPin, TrendingUp,
 } from 'lucide-react';
 import { Footer } from '@/features/landing/Footer';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 export const metadata: Metadata = {
     title: 'Comment ça marche — AutoLoc',
     description: 'Découvrez comment louer un véhicule sur AutoLoc en quelques étapes simples : recherchez, réservez, payez, conduisez.',
 };
+
+// ── Components ────────────────────────────────────────────────────────────────
+
+function SectionBadge({ text }: { text: string }) {
+    return (
+        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">
+                {text}
+            </span>
+        </div>
+    );
+}
 
 // ── Steps data ────────────────────────────────────────────────────────────────
 
@@ -21,56 +35,48 @@ const TENANT_STEPS = [
         icon: Search,
         title: 'Recherchez',
         description: 'Parcourez notre catalogue de véhicules vérifiés. Filtrez par ville, type, prix et disponibilité.',
-        color: 'from-blue-500 to-blue-600',
-        bgLight: 'bg-blue-50',
-        textColor: 'text-blue-600',
+        tag: 'Filtres intelligents',
     },
     {
         icon: CalendarCheck,
         title: 'Réservez',
         description: 'Choisissez vos dates, visualisez le tarif dynamique et acceptez les conditions de location.',
-        color: 'from-emerald-500 to-emerald-600',
-        bgLight: 'bg-emerald-50',
-        textColor: 'text-emerald-600',
+        tag: 'Confirmation instantanée',
     },
     {
         icon: CreditCard,
         title: 'Payez',
         description: 'Payez en toute sécurité via Wave ou Orange Money. Le propriétaire confirme ensuite la réservation.',
-        color: 'from-violet-500 to-violet-600',
-        bgLight: 'bg-violet-50',
-        textColor: 'text-violet-600',
+        tag: '100% sécurisé',
     },
     {
         icon: CarFront,
         title: 'Conduisez',
         description: 'Récupérez le véhicule au point convenu. Le contrat est généré automatiquement pour votre sécurité.',
-        color: 'from-amber-500 to-amber-600',
-        bgLight: 'bg-amber-50',
-        textColor: 'text-amber-600',
+        tag: 'Liberté totale',
     },
 ];
 
 const OWNER_STEPS = [
     {
         icon: UserCheck,
-        title: 'Inscrivez-vous',
+        title: 'Vérification KYC',
         description: 'Créez votre compte propriétaire et complétez votre vérification KYC en quelques minutes.',
     },
     {
         icon: CarFront,
-        title: 'Ajoutez vos véhicules',
-        description: 'Publiez vos véhicules avec photos, tarifs et tarifs dégressifs. Notre équipe les vérifie rapidement.',
+        title: 'Mise en ligne',
+        description: 'Publiez vos véhicules avec photos et tarifs. Notre équipe les vérifie sous 24h.',
     },
     {
         icon: CalendarCheck,
-        title: 'Recevez des réservations',
-        description: 'Les locataires réservent et paient en ligne. Vous confirmez chaque réservation depuis votre tableau de bord.',
+        title: 'Gestion fluide',
+        description: 'Les locataires réservent et paient. Vous confirmez depuis votre tableau de bord.',
     },
     {
-        icon: CreditCard,
-        title: 'Soyez payé',
-        description: 'Recevez vos paiements directement sur votre compte mobile. Commission transparente de 15%.',
+        icon: TrendingUp,
+        title: 'Revenus directs',
+        description: 'Recevez vos paiements sur votre compte mobile. Commission fixe de 15%.',
     },
 ];
 
@@ -78,166 +84,185 @@ const GUARANTEES = [
     {
         icon: Shield,
         label: 'Véhicules vérifiés',
-        description: 'Chaque véhicule est inspecté et validé par notre équipe avant publication.',
+        description: 'Inspection et validation par notre équipe.',
     },
     {
         icon: CreditCard,
         label: 'Paiement sécurisé',
-        description: 'Transactions via Wave et Orange Money. Vous ne payez qu\'après confirmation du propriétaire.',
+        description: 'Transactions via Wave et Orange Money.',
     },
     {
         icon: HeadphonesIcon,
         label: 'Support 24/7',
-        description: 'Notre équipe de support est disponible par WhatsApp, email et téléphone.',
+        description: 'Disponible par WhatsApp et téléphone.',
     },
     {
         icon: CheckCircle2,
         label: 'Contrat automatique',
-        description: 'Un contrat de location est généré automatiquement pour chaque réservation.',
+        description: 'Généré pour chaque réservation.',
     },
     {
         icon: MapPin,
         label: 'Couverture nationale',
-        description: 'Disponible à Dakar, Thiès, Saint-Louis et dans toutes les villes du Sénégal.',
+        description: 'Disponible dans tout le Sénégal.',
     },
     {
         icon: UserCheck,
-        label: 'KYC propriétaires',
-        description: 'Tous les propriétaires sont vérifiés avec des documents d\'identité officiels.',
+        label: 'Propriétaires vérifiés',
+        description: 'KYC obligatoire pour tous.',
     },
 ];
 
 export default function HowItWorksPage() {
     return (
-        <main className="min-h-screen bg-white">
-            {/* Hero */}
-            <section className="relative overflow-hidden bg-gradient-to-b from-slate-950 to-slate-900 px-4 py-20 lg:py-28 rounded-b-3xl">
-                <div className="absolute inset-0 opacity-[0.02]" style={{
-                    backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-                    backgroundSize: '24px 24px',
+        <main className="min-h-screen bg-black">
+            {/* ── Hero ── */}
+            <section className="relative overflow-hidden pt-24 pb-20 lg:pt-32 lg:pb-32 px-4">
+                {/* Background Pattern & Glows */}
+                <div className="absolute inset-0 opacity-[0.03]" style={{
+                    backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, #34d399 1px, transparent 0)',
+                    backgroundSize: '32px 32px',
                 }} />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-10 blur-[100px]"
-                    style={{ background: 'radial-gradient(circle, #34d399 0%, transparent 70%)' }} />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full opacity-20 blur-[120px] pointer-events-none bg-emerald-500/30" />
 
-                <div className="relative mx-auto max-w-3xl text-center">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/5 px-4 py-1.5 mb-6">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" strokeWidth={2} />
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">
-                            Simple et sécurisé
-                        </span>
-                    </div>
-                    <h1 className="text-4xl lg:text-6xl font-black tracking-tight text-white leading-tight">
-                        Comment ça{' '}
-                        <span className="text-emerald-400">marche</span> ?
+                <div className="relative mx-auto max-w-4xl text-center">
+                    <SectionBadge text="Simple et transparent" />
+                    <h1 className="text-4xl lg:text-7xl font-black tracking-tight text-white leading-[1.1]">
+                        Découvrez la nouvelle façon de{' '}
+                        <span className="text-emerald-400">louer</span>
                     </h1>
-                    <p className="mt-5 text-[16px] font-medium leading-relaxed text-white/40 max-w-xl mx-auto">
-                        Louez un véhicule vérifié en quelques minutes, ou proposez le vôtre
-                        à la location et gagnez de l&apos;argent facilement.
+                    <p className="mt-6 text-[18px] font-medium leading-relaxed text-white/40 max-w-2xl mx-auto">
+                        Une plateforme pensée pour votre sécurité, que vous cherchiez un véhicule ou que vous souhaitiez rentabiliser le vôtre.
                     </p>
                 </div>
             </section>
 
-            {/* Tenant steps */}
-            <section className="px-4 py-16 lg:py-24">
-                <div className="mx-auto max-w-6xl">
-                    <div className="text-center mb-14">
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-black/30">
-                            Pour les locataires
-                        </span>
-                        <h2 className="text-3xl lg:text-4xl font-black tracking-tight text-black mt-2">
-                            Louez en <span className="text-emerald-500">4 étapes</span>
+            {/* ── Tenant Steps (The section to improve) ── */}
+            <section className="px-4 py-16 lg:py-28 relative">
+                <div className="mx-auto max-w-7xl">
+                    <div className="text-center mb-16">
+                        <SectionBadge text="Pour les locataires" />
+                        <h2 className="text-3xl lg:text-5xl font-black tracking-tight text-white mt-2">
+                            Prendre la route en <span className="text-emerald-400">4 étapes</span>
                         </h2>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {TENANT_STEPS.map((step, i) => (
-                            <div key={step.title} className="relative group">
-                                {/* Connector line */}
-                                {i < TENANT_STEPS.length - 1 && (
-                                    <div className="hidden lg:block absolute top-12 left-full w-full h-0.5 bg-gradient-to-r from-slate-200 to-transparent z-0" />
-                                )}
-                                <div className="relative z-10 flex flex-col items-center text-center p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                                    <div className={cn(
-                                        'w-16 h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg mb-5',
-                                        step.color,
-                                    )}>
-                                        <step.icon className="w-7 h-7 text-white" strokeWidth={1.75} />
-                                    </div>
-                                    <span className={cn(
-                                        'text-[11px] font-black uppercase tracking-widest mb-2',
-                                        step.textColor,
-                                    )}>
-                                        Étape {i + 1}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {TENANT_STEPS.map((step, i) => {
+                            const Icon = step.icon;
+                            const isOdd = i % 2 !== 0;
+
+                            return (
+                                <div key={step.title} className="group relative">
+                                    {/* Number Watermark */}
+                                    <span className="absolute -top-6 -left-2 text-[80px] font-black text-white/[0.03] leading-none select-none pointer-events-none group-hover:text-emerald-400/[0.05] transition-colors duration-500">
+                                        0{i + 1}
                                     </span>
-                                    <h3 className="text-[18px] font-black text-black">{step.title}</h3>
-                                    <p className="mt-2 text-[13px] font-medium leading-relaxed text-black/40">
-                                        {step.description}
-                                    </p>
+
+                                    {/* Card with Asymmetric Shape */}
+                                    <div 
+                                        className={cn(
+                                            "relative overflow-hidden bg-white/[0.02] border border-white/5 p-8 h-full flex flex-col transition-all duration-500 group-hover:bg-white/[0.04] group-hover:border-emerald-400/20 group-hover:-translate-y-2",
+                                            isOdd ? "rounded-tr-[4rem] rounded-bl-[4rem]" : "rounded-tl-[4rem] rounded-br-[4rem]"
+                                        )}
+                                    >
+                                        <div className="mb-8">
+                                            <div className="w-14 h-14 rounded-2xl bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-emerald-400 group-hover:text-black transition-all duration-500">
+                                                <Icon className="w-6 h-6 text-emerald-400 group-hover:text-inherit" strokeWidth={1.5} />
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-auto">
+                                            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-emerald-400/50 mb-3">
+                                                {step.tag}
+                                            </span>
+                                            <h3 className="text-[22px] font-black text-white mb-3 tracking-tight">
+                                                {step.title}
+                                            </h3>
+                                            <p className="text-[14px] font-medium leading-relaxed text-white/40">
+                                                {step.description}
+                                            </p>
+                                        </div>
+
+                                        {/* Corner Accent */}
+                                        <div className={cn(
+                                            "absolute w-12 h-12 bg-emerald-400/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500",
+                                            isOdd ? "top-0 right-0" : "top-0 left-0"
+                                        )} />
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </section>
 
-            {/* Owner steps */}
-            <section className="px-4 py-16 lg:py-24 bg-slate-50/60">
+            {/* ── Owner Steps (Business Folder Style) ── */}
+            <section className="px-4 py-20 lg:py-32 bg-white/[0.01] border-y border-white/5">
                 <div className="mx-auto max-w-5xl">
-                    <div className="text-center mb-14">
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-black/30">
-                            Pour les propriétaires
-                        </span>
-                        <h2 className="text-3xl lg:text-4xl font-black tracking-tight text-black mt-2">
-                            Proposez votre véhicule en <span className="text-emerald-500">4 étapes</span>
+                    <div className="text-center mb-16">
+                        <SectionBadge text="Pour les propriétaires" />
+                        <h2 className="text-3xl lg:text-5xl font-black tracking-tight text-white mt-2">
+                            Rentabilisez votre <span className="text-emerald-400">patrimoine</span>
                         </h2>
                     </div>
 
-                    <div className="space-y-6">
-                        {OWNER_STEPS.map((step, i) => (
-                            <div
-                                key={step.title}
-                                className="flex items-start gap-5 p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-lg hover:border-slate-200 transition-all duration-300"
-                            >
-                                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-slate-900 to-slate-700 flex items-center justify-center">
-                                    <span className="text-[16px] font-black text-emerald-400">{i + 1}</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
+                        {OWNER_STEPS.map((step, i) => {
+                            const Icon = step.icon;
+                            return (
+                                <div key={step.title} className="group relative">
+                                    {/* Folder Tab Header */}
+                                    <div className="flex items-end h-10">
+                                        <div className="flex items-center gap-3 px-6 py-2 rounded-t-2xl bg-white/5 border border-b-0 border-white/10 group-hover:bg-emerald-400 group-hover:border-emerald-400 transition-all duration-500">
+                                            <span className="text-[12px] font-black text-emerald-400 group-hover:text-black">0{i + 1}</span>
+                                            <div className="w-[1px] h-3 bg-white/20 group-hover:bg-black/20" />
+                                            <Icon className="w-4 h-4 text-white/40 group-hover:text-black" strokeWidth={2} />
+                                        </div>
+                                        <div className="flex-1 border-b border-white/10 group-hover:border-emerald-400/50 transition-colors duration-500" />
+                                    </div>
+
+                                    {/* Card Body */}
+                                    <div className="relative overflow-hidden p-8 bg-white/[0.02] border border-t-0 border-white/10 rounded-b-[2rem] rounded-tr-[2rem] group-hover:bg-white/[0.05] group-hover:border-emerald-400/20 transition-all duration-500">
+                                        {/* Background Watermark Icon */}
+                                        <Icon className="absolute -bottom-4 -right-4 w-24 h-24 text-white/[0.02] group-hover:text-emerald-400/[0.04] transition-colors duration-700" strokeWidth={1} />
+                                        
+                                        <h3 className="text-[20px] font-black text-white mb-3 tracking-tight group-hover:text-emerald-400 transition-colors">
+                                            {step.title}
+                                        </h3>
+                                        <p className="text-[14px] lg:text-[15px] font-medium text-white/30 leading-relaxed relative z-10">
+                                            {step.description}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <h3 className="text-[16px] font-black text-black">{step.title}</h3>
-                                    <p className="mt-1 text-[13px] font-medium text-black/40 leading-relaxed">
-                                        {step.description}
-                                    </p>
-                                </div>
-                                <step.icon className="w-6 h-6 text-black/15 flex-shrink-0 hidden sm:block" strokeWidth={1.5} />
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </section>
 
-            {/* Guarantees */}
-            <section className="px-4 py-16 lg:py-24">
+            {/* ── Guarantees ── */}
+            <section className="px-4 py-20 lg:py-32">
                 <div className="mx-auto max-w-6xl">
-                    <div className="text-center mb-14">
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-black/30">
-                            Nos garanties
-                        </span>
-                        <h2 className="text-3xl lg:text-4xl font-black tracking-tight text-black mt-2">
-                            Pourquoi choisir <span className="text-emerald-500">AutoLoc</span> ?
+                    <div className="text-center mb-16">
+                        <SectionBadge text="Sécurité maximale" />
+                        <h2 className="text-3xl lg:text-5xl font-black tracking-tight text-white mt-2">
+                            Pourquoi nous <span className="text-emerald-400">faire confiance</span> ?
                         </h2>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {GUARANTEES.map((item) => (
                             <div
                                 key={item.label}
-                                className="flex items-start gap-4 p-5 rounded-2xl border border-slate-100 bg-white hover:shadow-md hover:border-slate-200 transition-all duration-300"
+                                className="flex flex-col gap-4 p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:border-emerald-400/20 transition-all group"
                             >
-                                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-                                    <item.icon className="w-5 h-5 text-emerald-600" strokeWidth={1.75} />
+                                <div className="w-12 h-12 rounded-2xl bg-emerald-400/10 flex items-center justify-center group-hover:bg-emerald-400 group-hover:text-black transition-all">
+                                    <item.icon className="w-5 h-5 text-emerald-400 group-hover:text-inherit" strokeWidth={1.5} />
                                 </div>
                                 <div>
-                                    <h3 className="text-[14px] font-bold text-black">{item.label}</h3>
-                                    <p className="mt-1 text-[12px] font-medium text-black/40 leading-relaxed">
+                                    <h3 className="text-[16px] font-black text-white mb-2">{item.label}</h3>
+                                    <p className="text-[14px] font-medium text-white/30 leading-relaxed">
                                         {item.description}
                                     </p>
                                 </div>
@@ -247,30 +272,34 @@ export default function HowItWorksPage() {
                 </div>
             </section>
 
-            {/* CTA */}
-            <section className="px-4 py-16 lg:py-20 mx-4 rounded-3xl bg-gradient-to-b from-slate-950 to-slate-900">
-                <div className="mx-auto max-w-2xl text-center">
-                    <h2 className="text-3xl lg:text-4xl font-black tracking-tight text-white">
-                        Prêt à{' '}
-                        <span className="text-emerald-400">commencer</span> ?
-                    </h2>
-                    <p className="mt-4 text-[14px] font-medium text-white/40 max-w-md mx-auto">
-                        Que vous soyez locataire ou propriétaire, AutoLoc vous accompagne à chaque étape.
-                    </p>
-                    <div className="flex items-center justify-center gap-4 mt-8 flex-wrap">
-                        <Link
-                            href="/explorer"
-                            className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3.5 text-[14px] font-bold text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-400 transition-all"
-                        >
-                            Explorer les véhicules
-                            <ArrowRight className="w-4 h-4" />
-                        </Link>
-                        <Link
-                            href="/register"
-                            className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 text-[14px] font-bold text-white hover:bg-white/10 transition-all"
-                        >
-                            Créer un compte
-                        </Link>
+            {/* ── CTA ── */}
+            <section className="px-4 py-20">
+                <div className="mx-auto max-w-7xl">
+                    <div 
+                        className="relative overflow-hidden px-8 py-16 lg:py-24 rounded-[4rem] bg-gradient-to-br from-emerald-500 to-emerald-700 text-center"
+                        style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 60px), calc(100% - 60px) 100%, 0 100%)' }}
+                    >
+                        <h2 className="text-3xl lg:text-5xl font-black tracking-tight text-black mb-6">
+                            Prêt à prendre la route ?
+                        </h2>
+                        <p className="text-[16px] font-bold text-black/60 max-w-md mx-auto mb-10">
+                            Que vous soyez locataire ou propriétaire, AutoLoc vous accompagne à chaque étape.
+                        </p>
+                        <div className="flex items-center justify-center gap-4 flex-wrap">
+                            <Link
+                                href="/explorer"
+                                className="inline-flex items-center gap-2 rounded-2xl bg-black px-8 py-4 text-[15px] font-bold text-white shadow-2xl hover:scale-105 transition-all"
+                            >
+                                Explorer les véhicules
+                                <ArrowRight className="w-4 h-4" />
+                            </Link>
+                            <Link
+                                href="/register"
+                                className="inline-flex items-center gap-2 rounded-2xl border-2 border-black/10 bg-black/5 px-8 py-4 text-[15px] font-bold text-black hover:bg-black/10 transition-all"
+                            >
+                                Créer un compte
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </section>
