@@ -3,7 +3,6 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, useSpring, useTransform, useInView } from 'framer-motion';
 import { Car, MapPin, Star, ShieldCheck } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 // ─── Stats data ───────────────────────────────────────────────────────────────
 const STATS = [
@@ -98,15 +97,76 @@ function StatItem({ stat, index }: { stat: (typeof STATS)[0]; index: number }) {
     );
 }
 
+// ─── SVG clip-path for the organic "blob card" shape ──────────────────────────
+// Top-right notch + bottom-left notch, rest is smoothly rounded
+const BLOB_CLIP_ID = 'stats-blob-clip';
+
+function BlobClipDef() {
+    return (
+        <svg width="0" height="0" className="absolute">
+            <defs>
+                <clipPath id={BLOB_CLIP_ID} clipPathUnits="objectBoundingBox">
+                    {/* 
+                        Organic shape with:
+                        - Rounded top-left corner
+                        - A concave notch on the top-right
+                        - Rounded bottom-right corner
+                        - A concave notch on the bottom-left
+                        All transitions are smooth cubic beziers.
+                    */}
+                    <path d="
+                        M 0.03,0
+                        L 0.72,0
+                        C 0.74,0 0.75,0.01 0.75,0.03
+                        L 0.75,0.06
+                        C 0.75,0.10 0.78,0.13 0.82,0.13
+                        L 0.97,0.13
+                        C 0.99,0.13 1,0.14 1,0.16
+                        L 1,0.97
+                        C 1,0.99 0.99,1 0.97,1
+                        L 0.28,1
+                        C 0.26,1 0.25,0.99 0.25,0.97
+                        L 0.25,0.94
+                        C 0.25,0.90 0.22,0.87 0.18,0.87
+                        L 0.03,0.87
+                        C 0.01,0.87 0,0.86 0,0.84
+                        L 0,0.03
+                        C 0,0.01 0.01,0 0.03,0
+                        Z
+                    " />
+                </clipPath>
+            </defs>
+        </svg>
+    );
+}
+
 export function StatsSection(): React.ReactElement {
     return (
         <section className="px-4 py-6 lg:px-8" aria-labelledby="stats-heading">
             <div className="mx-auto max-w-7xl">
-                <div className="relative overflow-hidden rounded-[2rem] bg-black border border-white/10 py-16 lg:py-20 px-6 md:px-8 lg:px-16">
+                {/* Hidden SVG clip-path definition */}
+                <BlobClipDef />
+
+                <div
+                    className="relative overflow-hidden py-16 lg:py-20 px-6 md:px-8 lg:px-16"
+                    style={{
+                        clipPath: `url(#${BLOB_CLIP_ID})`,
+                        background: 'linear-gradient(135deg, #0a0a0a 0%, #111827 40%, #064e3b 100%)',
+                    }}
+                >
+                    {/* Inner border simulation — a slightly inset outline */}
+                    <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                            clipPath: `url(#${BLOB_CLIP_ID})`,
+                            border: '1px solid rgba(255,255,255,0.08)',
+                        }}
+                    />
+
                     {/* Background glow effects */}
                     <motion.div
                         initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 0.1 }}
+                        whileInView={{ opacity: 0.12 }}
                         viewport={{ once: true }}
                         transition={{ duration: 1.5 }}
                         className="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-[100px] pointer-events-none"
@@ -114,15 +174,37 @@ export function StatsSection(): React.ReactElement {
                     />
                     <motion.div
                         initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 0.1 }}
+                        whileInView={{ opacity: 0.12 }}
                         viewport={{ once: true }}
                         transition={{ duration: 1.5, delay: 0.5 }}
                         className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full blur-[100px] pointer-events-none"
                         style={{ background: 'radial-gradient(circle, #34d399 0%, transparent 70%)' }}
                     />
 
+                    {/* Decorative dot grid */}
+                    <div
+                        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                        style={{
+                            backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, rgba(52,211,153,0.4) 1px, transparent 0)',
+                            backgroundSize: '24px 24px',
+                        }}
+                    />
+
                     {/* Header */}
                     <div className="relative z-10 text-center mb-14">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6 }}
+                        >
+                            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-4 py-1.5 mb-5 backdrop-blur-sm">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">
+                                    Nos résultats
+                                </span>
+                            </div>
+                        </motion.div>
                         <motion.h2
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}

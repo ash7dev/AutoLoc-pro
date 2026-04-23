@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Search, CalendarCheck, Car, ArrowRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Search, CalendarCheck, Car } from 'lucide-react';
 
 // ─── Steps data ───────────────────────────────────────────────────────────────
 const STEPS = [
@@ -13,6 +12,7 @@ const STEPS = [
         description:
             'Parcourez des centaines de véhicules vérifiés. Filtrez par zone, type, budget — trouvez la perle rare en quelques secondes.',
         icon: Search,
+        detail: 'Filtres intelligents',
     },
     {
         number: '02',
@@ -20,6 +20,7 @@ const STEPS = [
         description:
             'Choisissez vos dates, confirmez en un clic. Paiement sécurisé, confirmation instantanée. Zéro paperasse.',
         icon: CalendarCheck,
+        detail: 'Paiement sécurisé',
     },
     {
         number: '03',
@@ -27,6 +28,7 @@ const STEPS = [
         description:
             'Récupérez le véhicule au point convenu. La route est à vous. Assistance 24/7 incluse.',
         icon: Car,
+        detail: 'Support 24/7',
     },
 ];
 
@@ -36,12 +38,12 @@ export function HowItWorksSection(): React.ReactElement {
         <section className="px-4 py-10 lg:px-8 lg:py-14" aria-labelledby="how-it-works-heading">
             <div className="mx-auto max-w-7xl">
                 {/* ── Header ── */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
-                    className="mb-8 lg:mb-14 text-center"
+                    className="mb-10 lg:mb-16 text-center"
                 >
                     <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/5 px-4 py-1.5 mb-5">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -60,65 +62,115 @@ export function HowItWorksSection(): React.ReactElement {
                     </p>
                 </motion.div>
 
-                {/* ── Steps grid ── */}
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
-                    {STEPS.map((step, i) => {
-                        const Icon = step.icon;
-                        return (
-                            <motion.div 
-                                key={step.number} 
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.7, delay: i * 0.15 }}
-                                className="relative flex"
-                            >
-                                {/* Connector arrow — desktop only, between cards */}
-                                {i < STEPS.length - 1 && (
-                                    <div className="absolute -right-8 top-1/2 -translate-y-1/2 z-10 hidden lg:flex items-center justify-center w-8 h-8">
-                                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/20">
-                                            <ArrowRight className="h-4 w-4 text-black" strokeWidth={3} />
+                {/* ── Timeline Container ── */}
+                <div className="relative">
+
+                    {/* ── Horizontal connector line (desktop) ── */}
+                    <div className="hidden lg:block absolute top-[72px] left-[16.66%] right-[16.66%] h-px z-0">
+                        {/* Track */}
+                        <div className="w-full h-full bg-slate-200" />
+                        {/* Animated progress */}
+                        <motion.div
+                            initial={{ scaleX: 0 }}
+                            whileInView={{ scaleX: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 1.5, delay: 0.5, ease: 'easeInOut' }}
+                            className="absolute inset-0 bg-emerald-400 origin-left"
+                        />
+                    </div>
+
+                    {/* ── Steps Grid ── */}
+                    <div className="grid grid-cols-1 gap-0 lg:grid-cols-3 lg:gap-8">
+                        {STEPS.map((step, i) => {
+                            const Icon = step.icon;
+                            const isLast = i === STEPS.length - 1;
+
+                            return (
+                                <motion.div
+                                    key={step.number}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.6, delay: i * 0.2 }}
+                                    className="group relative flex flex-col items-center"
+                                >
+                                    {/* ── Vertical connector line (mobile only) ── */}
+                                    {!isLast && (
+                                        <div className="lg:hidden absolute top-[72px] left-1/2 -translate-x-1/2 w-px h-[calc(100%-56px)] z-0">
+                                            <div className="w-full h-full bg-slate-200" />
+                                            <motion.div
+                                                initial={{ scaleY: 0 }}
+                                                whileInView={{ scaleY: 1 }}
+                                                viewport={{ once: true }}
+                                                transition={{ duration: 0.8, delay: 0.6 + i * 0.3 }}
+                                                className="absolute inset-0 bg-emerald-400 origin-top"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* ── Node ── */}
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        whileInView={{ scale: 1 }}
+                                        viewport={{ once: true }}
+                                        transition={{
+                                            type: 'spring',
+                                            stiffness: 200,
+                                            damping: 15,
+                                            delay: 0.3 + i * 0.2,
+                                        }}
+                                        className="relative z-10 mb-6"
+                                    >
+                                        {/* Pulse ring */}
+                                        <div className="absolute inset-0 rounded-full bg-emerald-400/20 animate-ping opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                        {/* Outer ring */}
+                                        <div className="w-[72px] h-[72px] rounded-full bg-white border-2 border-emerald-400/30 flex items-center justify-center shadow-lg shadow-emerald-400/10 group-hover:border-emerald-400/60 group-hover:shadow-emerald-400/20 transition-all duration-300">
+                                            {/* Inner circle with icon */}
+                                            <div className="w-[52px] h-[52px] rounded-full bg-black flex items-center justify-center group-hover:bg-emerald-950 transition-colors duration-300">
+                                                <Icon className="h-5 w-5 text-emerald-400" strokeWidth={1.75} />
+                                            </div>
+                                        </div>
+                                        {/* Step number badge */}
+                                        <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-emerald-400 flex items-center justify-center shadow-md">
+                                            <span className="text-[10px] font-black text-black">{step.number}</span>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* ── Card with folder-tab shape ── */}
+                                    <div className="relative z-10 w-full mb-10 lg:mb-0">
+                                        {/* Folder tab */}
+                                        <div className="flex items-end h-7 mx-4">
+                                            <div className="flex items-center gap-1.5 px-3 pt-1.5 rounded-t-lg bg-black border border-b-0 border-white/10 group-hover:border-emerald-400/30 transition-colors duration-300">
+                                                <span className="w-1 h-1 rounded-full bg-emerald-400 opacity-60" />
+                                                <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">
+                                                    {step.detail}
+                                                </span>
+                                            </div>
+                                            <div className="flex-1 border-b border-white/10 group-hover:border-emerald-400/20 transition-colors duration-300" />
+                                        </div>
+
+                                        {/* Card body */}
+                                        <div className="relative overflow-hidden rounded-b-2xl rounded-tr-2xl bg-black border border-t-0 border-white/10 p-6 group-hover:border-emerald-400/25 transition-all duration-300">
+                                            {/* Glow */}
+                                            <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-emerald-400 opacity-0 group-hover:opacity-15 blur-2xl pointer-events-none transition-opacity duration-500" />
+
+                                            {/* Big number watermark */}
+                                            <span className="absolute top-2 right-4 text-[56px] font-black leading-none text-white/[0.03] select-none pointer-events-none">
+                                                {step.number}
+                                            </span>
+
+                                            <h3 className="text-[20px] font-black tracking-tight text-white mb-2.5">
+                                                {step.title}
+                                            </h3>
+                                            <p className="text-[13px] font-medium leading-relaxed text-white/45">
+                                                {step.description}
+                                            </p>
                                         </div>
                                     </div>
-                                )}
-
-                                {/* Card */}
-                                <div
-                                    className={cn(
-                                        'flex-1 relative overflow-hidden rounded-2xl',
-                                        'bg-black border border-white/10',
-                                        'p-6 lg:p-10',
-                                        'transition-all duration-300',
-                                        'hover:border-emerald-400/30',
-                                    )}
-                                >
-                                    {/* Glow effect top-right */}
-                                    <div
-                                        className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-20 blur-3xl pointer-events-none"
-                                        style={{ background: 'radial-gradient(circle, #34d399 0%, transparent 70%)' }}
-                                    />
-
-                                    {/* Number */}
-                                    <span className="text-[64px] font-black leading-none text-emerald-400/60 absolute top-4 right-6 select-none drop-shadow-md">
-                                        {step.number}
-                                    </span>
-
-                                    {/* Icon */}
-                                    <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-400/10 border border-emerald-400/20 mb-6">
-                                        <Icon className="h-6 w-6 text-emerald-400" strokeWidth={1.75} />
-                                    </div>
-
-                                    {/* Content */}
-                                    <h3 className="text-[22px] font-black tracking-tight text-white mb-3">
-                                        {step.title}
-                                    </h3>
-                                    <p className="text-[14px] font-medium leading-relaxed text-white/50">
-                                        {step.description}
-                                    </p>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
+                                </motion.div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         </section>
