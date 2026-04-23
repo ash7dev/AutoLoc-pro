@@ -29,7 +29,8 @@ export function useSwitchToProprietaire() {
         // ignore
       }
       setActiveRole('PROPRIETAIRE');
-      router.push('/dashboard/owner');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      window.location.href = '/dashboard/owner';
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Une erreur est survenue lors du changement de rôle.';

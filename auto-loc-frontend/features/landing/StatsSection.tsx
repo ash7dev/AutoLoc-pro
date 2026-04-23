@@ -151,7 +151,7 @@ export function StatsSection(): React.ReactElement {
                     className="relative overflow-hidden py-16 lg:py-20 px-6 md:px-8 lg:px-16"
                     style={{
                         clipPath: `url(#${BLOB_CLIP_ID})`,
-                        background: 'linear-gradient(135deg, #0a0a0a 0%, #111827 40%, #064e3b 100%)',
+                        background: '#000000',
                     }}
                 >
                     {/* Inner border simulation — a slightly inset outline */}
