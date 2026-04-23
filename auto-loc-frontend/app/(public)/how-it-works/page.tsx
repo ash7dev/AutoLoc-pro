@@ -196,7 +196,7 @@ export default function HowItWorksPage() {
                                             </h3>
                                             <p className={cn(
                                                 "text-[14px] font-medium leading-relaxed",
-                                                isOdd ? "text-white" : "text-black"
+                                                isOdd ? "text-white/70" : "text-slate-600"
                                             )}>
                                                 {step.description}
                                             </p>
@@ -251,7 +251,7 @@ export default function HowItWorksPage() {
                                         <h3 className="text-[20px] font-black text-emerald-400 mb-3 tracking-tight">
                                             {step.title}
                                         </h3>
-                                        <p className={cn("text-[14px] lg:text-[15px] font-medium leading-relaxed", isEven ? "text-white" : "text-black")}>
+                                        <p className={cn("text-[14px] lg:text-[15px] font-medium leading-relaxed", isEven ? "text-white/70" : "text-slate-600")}>
                                             {step.description}
                                         </p>
                                     </div>
@@ -291,7 +291,7 @@ export default function HowItWorksPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-[16px] font-black text-emerald-400 mb-2">{item.label}</h3>
-                                        <p className={cn("text-[14px] font-medium leading-relaxed", isBlack ? "text-white" : "text-black")}>
+                                        <p className={cn("text-[14px] font-medium leading-relaxed", isBlack ? "text-white/70" : "text-slate-600")}>
                                             {item.description}
                                         </p>
                                     </div>
