@@ -28,7 +28,7 @@ const CONTACT_CHANNELS = [
         value: '+221 77 123 45 67',
         href: 'tel:+221771234567',
         description: 'Lun – Sam, 8h – 20h',
-        variant: 'white',
+        variant: 'black',
     },
     {
         icon: MessageCircle,
@@ -36,7 +36,7 @@ const CONTACT_CHANNELS = [
         value: '+221 77 123 45 67',
         href: 'https://wa.me/221771234567',
         description: 'Réponse rapide 7j/7',
-        variant: 'black',
+        variant: 'white',
     },
 ];
 
@@ -45,11 +45,13 @@ const INFO_ITEMS = [
         icon: Building2,
         label: 'Siège social',
         value: 'Dakar, Sénégal\nAlmadies, Zone B',
+        variant: 'black',
     },
     {
         icon: Clock,
         label: 'Horaires',
         value: 'Lundi – Samedi\n08h00 – 20h00',
+        variant: 'white',
     },
 ];
 
@@ -58,7 +60,6 @@ export default function ContactPage() {
         <main className="min-h-screen bg-[#F8FAFC]">
             {/* ── Hero (Black Section) ── */}
             <section className="relative overflow-hidden bg-black px-4 py-20 lg:py-32 rounded-b-[4rem] lg:rounded-b-[8rem]">
-                {/* Decorative blobs */}
                 <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-emerald-400/10 blur-[120px] pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full bg-emerald-400/5 blur-[120px] pointer-events-none" />
                 <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
@@ -102,7 +103,7 @@ export default function ContactPage() {
                                         "px-4 py-1 rounded-t-xl text-[10px] font-black uppercase tracking-widest",
                                         isBlack ? "bg-black text-emerald-400" : "bg-white border border-b-0 border-slate-200 text-slate-400 group-hover:text-emerald-500"
                                     )}>
-                                        {isBlack ? 'Prioritaire' : `Canal 0${i + 1}`}
+                                        {isBlack ? 'Urgent' : `Canal 0${i + 1}`}
                                     </div>
                                 </div>
 
@@ -112,7 +113,6 @@ export default function ContactPage() {
                                         isBlack 
                                             ? "bg-black text-white rounded-2xl rounded-tl-none shadow-2xl group-hover:shadow-emerald-500/20" 
                                             : "bg-white border border-slate-200 rounded-2xl rounded-tl-none shadow-lg group-hover:border-emerald-400/30",
-                                        isBlack && "clip-path-particular" // Custom shape via inline style below
                                     )}
                                     style={isBlack ? { clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%)' } : {}}
                                 >
@@ -155,58 +155,50 @@ export default function ContactPage() {
                         </div>
                     </div>
 
-                    {/* Info Side (Particular Black Shape) */}
+                    {/* Info Side (Mixed Cards) */}
                     <div className="lg:col-span-5 space-y-6">
-                        <div 
-                            className="p-10 bg-black text-white relative overflow-hidden"
-                            style={{ clipPath: 'polygon(40px 0, 100% 0, 100% 100%, 0 100%, 0 40px)' }}
-                        >
-                            {/* Decorative background circle */}
-                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-emerald-400/10 rounded-full blur-3xl" />
-                            
-                            <h3 className="text-[22px] font-black mb-10 tracking-tight">Informations utiles</h3>
-                            
-                            <div className="space-y-10">
-                                {INFO_ITEMS.map((item) => (
-                                    <div key={item.label} className="flex gap-5">
-                                        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+                        {INFO_ITEMS.map((item, i) => {
+                            const isBlack = item.variant === 'black';
+                            return (
+                                <div 
+                                    key={item.label}
+                                    className={cn(
+                                        "p-10 relative overflow-hidden transition-all duration-500",
+                                        isBlack ? "bg-black text-white shadow-2xl" : "bg-white border border-slate-100 text-slate-900 shadow-sm"
+                                    )}
+                                    style={{ clipPath: isBlack ? 'polygon(40px 0, 100% 0, 100% 100%, 0 100%, 0 40px)' : 'none', borderRadius: isBlack ? '0' : '3rem' }}
+                                >
+                                    <div className="flex gap-5">
+                                        <div className={cn(
+                                            "w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0",
+                                            isBlack ? "bg-white/5 border border-white/10" : "bg-slate-50 border border-slate-100"
+                                        )}>
                                             <item.icon className="w-6 h-6 text-emerald-400" />
                                         </div>
                                         <div>
-                                            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/30 mb-2">{item.label}</p>
-                                            <p className="text-[16px] font-bold text-white whitespace-pre-line leading-relaxed">{item.value}</p>
+                                            <p className={cn("text-[11px] font-bold uppercase tracking-[0.2em] mb-2", isBlack ? "text-white/30" : "text-slate-400")}>{item.label}</p>
+                                            <p className={cn("text-[16px] font-bold whitespace-pre-line leading-relaxed", isBlack ? "text-white" : "text-slate-900")}>{item.value}</p>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-
-                            {/* Mobile-optimized visual anchor (Standard Link) */}
-                            <a 
-                                href="https://maps.google.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-12 p-6 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-between group cursor-pointer hover:bg-emerald-400 hover:text-black transition-all duration-500"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-emerald-400/20 flex items-center justify-center group-hover:bg-black/20">
-                                        <MapPin className="w-5 h-5 text-emerald-400 group-hover:text-black" />
-                                    </div>
-                                    <p className="text-[14px] font-black uppercase tracking-widest">Voir sur la carte</p>
                                 </div>
-                                <Globe className="w-4 h-4 opacity-40" />
-                            </a>
-                        </div>
+                            );
+                        })}
 
-                        {/* Social Link (Airy) */}
-                        <div className="p-8 rounded-[2.5rem] border border-slate-200 bg-white flex items-center justify-between group cursor-pointer hover:border-emerald-500/30 transition-all shadow-sm">
-                            <div>
-                                <h4 className="text-[15px] font-black text-slate-900">Suivez notre aventure</h4>
-                                <p className="text-[13px] font-medium text-slate-400">@autoloc_sn sur Instagram</p>
+                        {/* Map Link (Black) */}
+                        <a 
+                            href="https://maps.google.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-6 rounded-3xl bg-black text-white border border-white/10 flex items-center justify-between group cursor-pointer hover:bg-emerald-400 hover:text-black transition-all duration-500 shadow-2xl"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-full bg-emerald-400/20 flex items-center justify-center group-hover:bg-black/20">
+                                    <MapPin className="w-5 h-5 text-emerald-400 group-hover:text-black" />
+                                </div>
+                                <p className="text-[14px] font-black uppercase tracking-widest">Voir sur la carte</p>
                             </div>
-                            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                                <Globe className="w-4 h-4" />
-                            </div>
-                        </div>
+                            <Globe className="w-4 h-4 opacity-40" />
+                        </a>
                     </div>
                 </div>
             </section>

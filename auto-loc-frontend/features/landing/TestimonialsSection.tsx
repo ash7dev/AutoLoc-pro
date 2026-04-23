@@ -20,7 +20,7 @@ const TESTIMONIALS = [
         id: 2,
         name: 'Aïssatou Ndiaye',
         role: 'Consultante',
-        city: 'Thiès',
+        city: 'Cité keur gorgui',
         comment: 'Première location, zéro stress. L\'application est fluide, le véhicule était nickel. Je recommande !',
         avatar: 'AN',
         variant: 'white'
@@ -38,7 +38,7 @@ const TESTIMONIALS = [
         id: 4,
         name: 'Fatou Sarr',
         role: 'Médecin',
-        city: 'Saint-Louis',
+        city: 'Dakar plateau',
         comment: 'Très pratique pour mes déplacements pro. Large choix de véhicules et des propriétaires fiables.',
         avatar: 'FS',
         variant: 'white'
@@ -62,7 +62,7 @@ export function TestimonialsSection(): React.ReactElement {
     return (
         <section className="px-4 py-24 lg:px-8 lg:py-32 bg-white" aria-labelledby="testimonials-heading">
             <div className="mx-auto max-w-7xl">
-                
+
                 {/* Header Section */}
                 <div className="text-center mb-20">
                     <motion.div
@@ -82,12 +82,12 @@ export function TestimonialsSection(): React.ReactElement {
                         </h2>
                         <div className="mt-8 flex items-center justify-center gap-4">
                             <div className="flex -space-x-3">
-                                {[1,2,3,4].map(i => (
+                                {[1, 2, 3, 4].map(i => (
                                     <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold">U{i}</div>
                                 ))}
                             </div>
                             <p className="text-[14px] font-bold text-slate-400">
-                                <span className="text-slate-900">+500 avis</span> certifiés au Sénégal
+                                <span className="text-slate-900">+30 avis</span> certifiés au Sénégal
                             </p>
                         </div>
                     </motion.div>
@@ -97,7 +97,7 @@ export function TestimonialsSection(): React.ReactElement {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {TESTIMONIALS.map((t, i) => {
                         const isBlack = t.variant === 'black';
-                        
+
                         return (
                             <motion.div
                                 key={t.id}
@@ -107,16 +107,16 @@ export function TestimonialsSection(): React.ReactElement {
                                 transition={{ duration: 0.7, delay: i * 0.1 }}
                                 className={cn(
                                     "group relative p-8 flex flex-col h-full transition-all duration-500",
-                                    isBlack 
-                                        ? "bg-black text-white shadow-2xl shadow-emerald-500/5" 
+                                    isBlack
+                                        ? "bg-black text-white shadow-2xl shadow-emerald-500/5"
                                         : "bg-slate-50 text-slate-900 border border-slate-100 group-hover:border-emerald-500/20 shadow-sm",
                                     // Portal Shape
-                                    isBlack 
-                                        ? "rounded-tr-[4rem] rounded-bl-[4rem]" 
+                                    isBlack
+                                        ? "rounded-tr-[4rem] rounded-bl-[4rem]"
                                         : "rounded-tl-[4rem] rounded-br-[4rem]"
                                 )}
                                 style={{
-                                    clipPath: isBlack 
+                                    clipPath: isBlack
                                         ? 'polygon(0 0, 100% 0, 100% calc(100% - 40px), calc(100% - 40px) 100%, 0 100%)'
                                         : 'polygon(40px 0, 100% 0, 100% 100%, 0 100%, 0 40px)'
                                 }}

@@ -209,7 +209,7 @@ export default function HowItWorksPage() {
                 </div>
             </section>
 
-            {/* ── Owner Steps (Black Section) ── */}
+            {/* ── Owner Steps (Mixed Style) ── */}
             <section className="px-4 py-20 lg:py-32 relative overflow-hidden">
                 <div className="mx-auto max-w-5xl">
                     <div 
@@ -228,22 +228,30 @@ export default function HowItWorksPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
                         {OWNER_STEPS.map((step, i) => {
                             const Icon = step.icon;
+                            const isEven = i % 2 === 0;
+
                             return (
                                 <div key={step.title} className="group relative">
                                     <div className="flex items-end h-10">
-                                        <div className="flex items-center gap-3 px-6 py-2 rounded-t-2xl bg-black border border-b-0 border-white/10 group-hover:bg-emerald-400 group-hover:border-emerald-400 transition-all duration-500">
-                                            <span className="text-[12px] font-black text-emerald-400 group-hover:text-black">0{i + 1}</span>
-                                            <div className="w-[1px] h-3 bg-white/20 group-hover:bg-black/20" />
-                                            <Icon className="w-4 h-4 text-white/40 group-hover:text-black" strokeWidth={2} />
+                                        <div className={cn(
+                                            "flex items-center gap-3 px-6 py-2 rounded-t-2xl transition-all duration-500",
+                                            isEven ? "bg-black border border-b-0 border-white/10 group-hover:bg-emerald-400 group-hover:border-emerald-400" : "bg-white border border-b-0 border-slate-200 group-hover:bg-emerald-500 group-hover:border-emerald-500"
+                                        )}>
+                                            <span className={cn("text-[12px] font-black", isEven ? "text-emerald-400 group-hover:text-black" : "text-emerald-600 group-hover:text-white")}>0{i + 1}</span>
+                                            <div className={cn("w-[1px] h-3", isEven ? "bg-white/20 group-hover:bg-black/20" : "bg-slate-200 group-hover:bg-white/20")} />
+                                            <Icon className={cn("w-4 h-4", isEven ? "text-white/40 group-hover:text-black" : "text-slate-400 group-hover:text-white")} strokeWidth={2} />
                                         </div>
-                                        <div className="flex-1 border-b border-white/10 group-hover:border-emerald-400/50 transition-colors duration-500" />
+                                        <div className={cn("flex-1 border-b transition-colors duration-500", isEven ? "border-white/10 group-hover:border-emerald-400/50" : "border-slate-200 group-hover:border-emerald-500/50")} />
                                     </div>
 
-                                    <div className="relative p-8 bg-black border border-t-0 border-white/10 rounded-b-[2rem] rounded-tr-[2rem] shadow-2xl group-hover:border-emerald-400/20 transition-all duration-500">
+                                    <div className={cn(
+                                        "relative p-8 rounded-b-[2rem] rounded-tr-[2rem] shadow-2xl transition-all duration-500",
+                                        isEven ? "bg-black border border-t-0 border-white/10 group-hover:border-emerald-400/20" : "bg-white border border-t-0 border-slate-100 group-hover:border-emerald-500/20"
+                                    )}>
                                         <h3 className="text-[20px] font-black text-emerald-400 mb-3 tracking-tight">
                                             {step.title}
                                         </h3>
-                                        <p className="text-[14px] lg:text-[15px] font-medium text-white/40 leading-relaxed">
+                                        <p className={cn("text-[14px] lg:text-[15px] font-medium leading-relaxed", isEven ? "text-white/40" : "text-slate-400")}>
                                             {step.description}
                                         </p>
                                     </div>
@@ -254,7 +262,7 @@ export default function HowItWorksPage() {
                 </div>
             </section>
 
-            {/* ── Guarantees (Black Cards) ── */}
+            {/* ── Guarantees (Mixed Cards) ── */}
             <section className="px-4 py-20 lg:py-32 bg-white">
                 <div className="mx-auto max-w-6xl">
                     <div className="text-center mb-16">
@@ -265,22 +273,31 @@ export default function HowItWorksPage() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {GUARANTEES.map((item) => (
-                            <div
-                                key={item.label}
-                                className="flex flex-col gap-4 p-8 rounded-[2.5rem] bg-black border border-white/5 hover:border-emerald-400/20 transition-all group shadow-2xl"
-                            >
-                                <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-emerald-400 group-hover:text-black transition-all">
-                                    <item.icon className="w-5 h-5 text-emerald-400 group-hover:text-inherit" strokeWidth={1.5} />
+                        {GUARANTEES.map((item, i) => {
+                            const isBlack = i % 2 === 0;
+                            return (
+                                <div
+                                    key={item.label}
+                                    className={cn(
+                                        "flex flex-col gap-4 p-8 rounded-[2.5rem] transition-all group shadow-xl",
+                                        isBlack ? "bg-black border border-white/5 hover:border-emerald-400/20" : "bg-slate-50 border border-slate-100 hover:border-emerald-500/20"
+                                    )}
+                                >
+                                    <div className={cn(
+                                        "w-12 h-12 rounded-2xl flex items-center justify-center transition-all",
+                                        isBlack ? "bg-white/5 border border-white/10 group-hover:bg-emerald-400 group-hover:text-black" : "bg-white border border-slate-100 group-hover:bg-emerald-500 group-hover:text-white shadow-sm"
+                                    )}>
+                                        <item.icon className={cn("w-5 h-5", isBlack ? "text-emerald-400 group-hover:text-inherit" : "text-emerald-600 group-hover:text-inherit")} strokeWidth={1.5} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-[16px] font-black text-emerald-400 mb-2">{item.label}</h3>
+                                        <p className={cn("text-[14px] font-medium leading-relaxed", isBlack ? "text-white/40" : "text-slate-400")}>
+                                            {item.description}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-[16px] font-black text-emerald-400 mb-2">{item.label}</h3>
-                                    <p className="text-[14px] font-medium text-white/40 leading-relaxed">
-                                        {item.description}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </section>
