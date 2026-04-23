@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { BannerSection } from '@/features/landing/BannerSection';
 import { BrandMarquee } from '@/features/landing/BrandMarquee';
 import { CategoriesSection } from '@/features/landing/CategoriesSection';
-import { FeaturesSection } from '@/features/landing/FeaturesSection';
+import { TrustSection } from '@/features/landing/TrustSection';
 import { VehicleGridSection } from '@/features/landing/VehicleGridSection';
 import { searchVehicles, type VehicleSearchResult } from '@/lib/nestjs/vehicles';
 import { HowItWorksSection } from '@/features/landing/HowItWorksSection';
@@ -45,7 +45,7 @@ export default async function HomePage() {
       <BrandMarquee />
       <CategoriesSection />
       <VehicleGridSection initialVehicles={initialVehicles} />
-      <FeaturesSection />
+      <TrustSection />
       <HowItWorksSection />
       <StatsSection />
       <ZonesSection />

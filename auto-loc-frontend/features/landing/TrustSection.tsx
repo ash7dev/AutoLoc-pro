@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { ShieldCheck, CreditCard, Headphones, Star, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -38,48 +39,37 @@ const TRUST_ITEMS = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export function TrustSection(): React.ReactElement {
-    const sectionRef = useRef<HTMLElement>(null);
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsVisible(true);
-                    observer.disconnect();
-                }
-            },
-            { threshold: 0.1 },
-        );
-        if (sectionRef.current) observer.observe(sectionRef.current);
-        return () => observer.disconnect();
-    }, []);
-
     return (
         <section
-            ref={sectionRef}
             className="px-4 py-20 lg:px-8 lg:py-28"
             aria-labelledby="trust-heading"
         >
             <div className="mx-auto max-w-7xl">
                 {/* Header */}
                 <div className="mb-14 text-center">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/5 px-4 py-1.5 mb-5">
-                        <ShieldCheck className="h-3 w-3 text-emerald-500" strokeWidth={2} />
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">
-                            Confiance & sécurité
-                        </span>
-                    </div>
-                    <h2
-                        id="trust-heading"
-                        className="text-4xl font-black tracking-tight text-black leading-tight lg:text-5xl"
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
                     >
-                        Pourquoi{' '}
-                        <span className="text-emerald-400">AutoLoc</span> ?
-                    </h2>
-                    <p className="mt-4 mx-auto max-w-lg text-[15px] font-medium leading-relaxed text-black/40">
-                        Votre sécurité et votre tranquillité d&apos;esprit sont notre priorité absolue.
-                    </p>
+                        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/5 px-4 py-1.5 mb-5">
+                            <ShieldCheck className="h-3 w-3 text-emerald-500" strokeWidth={2} />
+                            <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">
+                                Confiance & sécurité
+                            </span>
+                        </div>
+                        <h2
+                            id="trust-heading"
+                            className="text-4xl font-black tracking-tight text-black leading-tight lg:text-5xl"
+                        >
+                            Pourquoi{' '}
+                            <span className="text-emerald-400">AutoLoc</span> ?
+                        </h2>
+                        <p className="mt-4 mx-auto max-w-lg text-[15px] font-medium leading-relaxed text-black/40">
+                            Votre sécurité et votre tranquillité d&apos;esprit sont notre priorité absolue.
+                        </p>
+                    </motion.div>
                 </div>
 
                 {/* Grid */}
@@ -87,17 +77,17 @@ export function TrustSection(): React.ReactElement {
                     {TRUST_ITEMS.map((item, i) => {
                         const Icon = item.icon;
                         return (
-                            <div
+                            <motion.div
                                 key={item.title}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.5, delay: i * 0.1 }}
                                 className={cn(
                                     'relative rounded-2xl bg-black border border-white/10 p-7 overflow-hidden',
-                                    'transition-all duration-700 ease-out',
-                                    'hover:border-emerald-400/25 hover:shadow-lg hover:shadow-emerald-400/5',
-                                    isVisible
-                                        ? 'opacity-100 translate-y-0'
-                                        : 'opacity-0 translate-y-8',
+                                    'transition-all duration-300 ease-out',
+                                    'hover:border-emerald-400/25 hover:shadow-2xl hover:shadow-emerald-400/5',
                                 )}
-                                style={{ transitionDelay: `${i * 120}ms` }}
                             >
                                 {/* Glow */}
                                 <div
@@ -132,7 +122,7 @@ export function TrustSection(): React.ReactElement {
                                         </li>
                                     ))}
                                 </ul>
-                            </div>
+                            </motion.div>
                         );
                     })}
                 </div>
