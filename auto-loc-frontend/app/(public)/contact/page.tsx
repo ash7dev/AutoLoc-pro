@@ -101,7 +101,7 @@ export default function ContactPage() {
                                 )}>
                                     <div className={cn(
                                         "px-4 py-1 rounded-t-xl text-[10px] font-black uppercase tracking-widest",
-                                        isBlack ? "bg-black text-emerald-400" : "bg-white border border-b-0 border-slate-200 text-slate-400 group-hover:text-emerald-500"
+                                        isBlack ? "bg-black text-emerald-400" : "bg-white text-emerald-500 shadow-sm"
                                     )}>
                                         {isBlack ? 'Urgent' : `Canal 0${i + 1}`}
                                     </div>
@@ -112,7 +112,7 @@ export default function ContactPage() {
                                         "relative overflow-hidden p-6 transition-all duration-500",
                                         isBlack 
                                             ? "bg-black text-white rounded-2xl rounded-tl-none shadow-2xl group-hover:shadow-emerald-500/20" 
-                                            : "bg-white border border-slate-200 rounded-2xl rounded-tl-none shadow-lg group-hover:border-emerald-400/30",
+                                            : "bg-white rounded-2xl rounded-tl-none shadow-lg group-hover:shadow-emerald-500/10",
                                     )}
                                     style={isBlack ? { clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%)' } : {}}
                                 >
@@ -120,13 +120,13 @@ export default function ContactPage() {
                                         "w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-300",
                                         isBlack ? "bg-emerald-400 text-black" : "bg-slate-50 group-hover:bg-emerald-500 group-hover:text-white"
                                     )}>
-                                        <Icon className="w-5 h-5" strokeWidth={1.75} />
+                                        <Icon className="w-5 h-5" strokeWidth={2} />
                                     </div>
                                     <h3 className={cn("text-[14px] font-bold", isBlack ? "text-white" : "text-slate-900")}>
                                         {channel.title}
                                     </h3>
                                     <p className="text-[16px] font-black text-emerald-500 mt-1 tracking-tight">{channel.value}</p>
-                                    <p className={cn("text-[11px] font-medium mt-1", isBlack ? "text-white/40" : "text-slate-400")}>
+                                    <p className={cn("text-[11px] font-medium mt-1", isBlack ? "text-white/40" : "text-black")}>
                                         {channel.description}
                                     </p>
                                 </div>
@@ -164,7 +164,7 @@ export default function ContactPage() {
                                     key={item.label}
                                     className={cn(
                                         "p-10 relative overflow-hidden transition-all duration-500",
-                                        isBlack ? "bg-black text-white shadow-2xl" : "bg-white border border-slate-100 text-slate-900 shadow-sm"
+                                        isBlack ? "bg-black text-white shadow-2xl" : "bg-white text-slate-900 shadow-xl"
                                     )}
                                     style={{ clipPath: isBlack ? 'polygon(40px 0, 100% 0, 100% 100%, 0 100%, 0 40px)' : 'none', borderRadius: isBlack ? '0' : '3rem' }}
                                 >
@@ -176,8 +176,8 @@ export default function ContactPage() {
                                             <item.icon className="w-6 h-6 text-emerald-400" />
                                         </div>
                                         <div>
-                                            <p className={cn("text-[11px] font-bold uppercase tracking-[0.2em] mb-2", isBlack ? "text-white/30" : "text-slate-400")}>{item.label}</p>
-                                            <p className={cn("text-[16px] font-bold whitespace-pre-line leading-relaxed", isBlack ? "text-white" : "text-slate-900")}>{item.value}</p>
+                                            <p className={cn("text-[11px] font-bold uppercase tracking-[0.2em] mb-2", isBlack ? "text-white/30" : "text-black/50")}>{item.label}</p>
+                                            <p className={cn("text-[16px] font-bold whitespace-pre-line leading-relaxed", isBlack ? "text-white" : "text-black")}>{item.value}</p>
                                         </div>
                                     </div>
                                 </div>

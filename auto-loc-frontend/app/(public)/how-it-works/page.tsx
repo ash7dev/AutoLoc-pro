@@ -156,7 +156,7 @@ export default function HowItWorksPage() {
                                 <div key={step.title} className="group relative">
                                     <span className={cn(
                                         "absolute -top-6 -left-2 text-[80px] font-black leading-none select-none pointer-events-none transition-colors duration-500",
-                                        isOdd ? "text-emerald-400/20" : "text-emerald-500/10"
+                                        isOdd ? "text-emerald-400/30" : "text-emerald-500/20"
                                     )}>
                                         0{i + 1}
                                     </span>
@@ -196,7 +196,7 @@ export default function HowItWorksPage() {
                                             </h3>
                                             <p className={cn(
                                                 "text-[14px] font-medium leading-relaxed",
-                                                isOdd ? "text-white/40" : "text-slate-400"
+                                                isOdd ? "text-white/40" : "text-black"
                                             )}>
                                                 {step.description}
                                             </p>
@@ -235,11 +235,11 @@ export default function HowItWorksPage() {
                                     <div className="flex items-end h-10">
                                         <div className={cn(
                                             "flex items-center gap-3 px-6 py-2 rounded-t-2xl transition-all duration-500",
-                                            isEven ? "bg-black border border-b-0 border-white/10 group-hover:bg-emerald-400 group-hover:border-emerald-400" : "bg-white border border-b-0 border-slate-200 group-hover:bg-emerald-500 group-hover:border-emerald-500"
+                                            isEven ? "bg-black group-hover:bg-emerald-400" : "bg-white group-hover:bg-emerald-500"
                                         )}>
-                                            <span className={cn("text-[12px] font-black", isEven ? "text-emerald-400 group-hover:text-black" : "text-emerald-600 group-hover:text-white")}>0{i + 1}</span>
+                                            <span className={cn("text-[12px] font-black", isEven ? "text-emerald-400 group-hover:text-black" : "text-emerald-500 group-hover:text-white")}>0{i + 1}</span>
                                             <div className={cn("w-[1px] h-3", isEven ? "bg-white/20 group-hover:bg-black/20" : "bg-slate-200 group-hover:bg-white/20")} />
-                                            <Icon className={cn("w-4 h-4", isEven ? "text-white/40 group-hover:text-black" : "text-slate-400 group-hover:text-white")} strokeWidth={2} />
+                                            <Icon className={cn("w-4 h-4", isEven ? "text-emerald-400 group-hover:text-black" : "text-emerald-500 group-hover:text-white")} strokeWidth={2.5} />
                                         </div>
                                         <div className={cn("flex-1 border-b transition-colors duration-500", isEven ? "border-white/10 group-hover:border-emerald-400/50" : "border-slate-200 group-hover:border-emerald-500/50")} />
                                     </div>
@@ -251,7 +251,7 @@ export default function HowItWorksPage() {
                                         <h3 className="text-[20px] font-black text-emerald-400 mb-3 tracking-tight">
                                             {step.title}
                                         </h3>
-                                        <p className={cn("text-[14px] lg:text-[15px] font-medium leading-relaxed", isEven ? "text-white/40" : "text-slate-400")}>
+                                        <p className={cn("text-[14px] lg:text-[15px] font-medium leading-relaxed", isEven ? "text-white/40" : "text-black")}>
                                             {step.description}
                                         </p>
                                     </div>
@@ -285,13 +285,13 @@ export default function HowItWorksPage() {
                                 >
                                     <div className={cn(
                                         "w-12 h-12 rounded-2xl flex items-center justify-center transition-all",
-                                        isBlack ? "bg-white/5 border border-white/10 group-hover:bg-emerald-400 group-hover:text-black" : "bg-white border border-slate-100 group-hover:bg-emerald-500 group-hover:text-white shadow-sm"
+                                        isBlack ? "bg-white/5 group-hover:bg-emerald-400 group-hover:text-black" : "bg-white group-hover:bg-emerald-500 group-hover:text-white shadow-md"
                                     )}>
-                                        <item.icon className={cn("w-5 h-5", isBlack ? "text-emerald-400 group-hover:text-inherit" : "text-emerald-600 group-hover:text-inherit")} strokeWidth={1.5} />
+                                        <item.icon className={cn("w-5 h-5", isBlack ? "text-emerald-400 group-hover:text-inherit" : "text-emerald-500 group-hover:text-inherit")} strokeWidth={2} />
                                     </div>
                                     <div>
                                         <h3 className="text-[16px] font-black text-emerald-400 mb-2">{item.label}</h3>
-                                        <p className={cn("text-[14px] font-medium leading-relaxed", isBlack ? "text-white/40" : "text-slate-400")}>
+                                        <p className={cn("text-[14px] font-medium leading-relaxed", isBlack ? "text-white/40" : "text-black")}>
                                             {item.description}
                                         </p>
                                     </div>
