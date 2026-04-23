@@ -102,7 +102,7 @@ export function CategoriesSection(): React.ReactElement {
                                             <div className="w-16 h-16 rounded-2xl bg-emerald-400/5 border border-white/5 flex items-center justify-center group-hover:scale-110 group-hover:bg-emerald-400/10 group-hover:border-emerald-400/20 transition-all duration-500">
                                                 <Icon className="h-7 w-7 text-emerald-400" strokeWidth={1.5} />
                                             </div>
-                                            <span className="text-[40px] font-black text-white/5 select-none group-hover:text-emerald-400/10 transition-colors">
+                                            <span className="text-[40px] font-black text-emerald-400/20 select-none group-hover:text-emerald-400/30 transition-colors">
                                                 0{i + 1}
                                             </span>
                                         </div>
