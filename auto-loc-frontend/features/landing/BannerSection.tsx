@@ -250,19 +250,27 @@ export function BannerSection(): React.ReactElement {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
-                    className="text-5xl font-black leading-[0.95] tracking-tight md:text-7xl lg:text-8xl xl:text-[9.5rem]"
+                    className="text-4xl font-black leading-[1] tracking-tight md:text-6xl lg:text-7xl xl:text-[6rem]"
                 >
-                  <span className="text-white">Le voyage </span>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-300">commence</span>
-                  <span className="text-white"> ici.</span>
+                  <span className="text-white">Vous cherchez un </span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-300">véhicule</span>
+                  <span className="text-white"> ?</span>
                 </motion.span>
                 <motion.span 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.4 }}
-                    className="text-xl font-medium leading-snug tracking-tight text-white/50 lg:text-3xl max-w-2xl"
+                    className="text-xl font-black leading-snug tracking-tight text-white/80 lg:text-3xl max-w-2xl"
                 >
-                  Découvrez une sélection exclusive de véhicules vérifiés pour tous vos besoins au <span className="text-white font-bold">Sénégal.</span>
+                  Vous êtes à l&apos;endroit parfait
+                </motion.span>
+                <motion.span 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.5 }}
+                    className="text-base font-medium leading-relaxed text-white/50 lg:text-xl max-w-2xl"
+                >
+                  Des centaines d&apos;annonces vérifiées, partout au Sénégal. Réservez en quelques clics.
                 </motion.span>
               </h1>
             </motion.div>
