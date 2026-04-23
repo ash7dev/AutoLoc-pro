@@ -231,7 +231,7 @@ export function BannerSection(): React.ReactElement {
 
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/80" />
 
-          <div className="relative z-10 flex min-h-[70vh] lg:min-h-[85vh] flex-col justify-end px-8 pb-20 pt-16 lg:px-16 lg:pb-32 lg:pt-20">
+          <div className="relative z-10 flex min-h-[70vh] lg:min-h-[85vh] flex-col justify-center px-8 pb-28 pt-16 lg:px-16 lg:pb-40 lg:pt-20">
             <motion.div 
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -288,7 +288,7 @@ export function BannerSection(): React.ReactElement {
             'w-full rounded-[2rem] border border-white/10 bg-slate-950 mt-3',
             // Desktop : flottant centré qui déborde sur le contenu suivant
             'lg:absolute lg:left-1/2 lg:-translate-x-1/2 lg:bottom-0 lg:translate-y-1/2 lg:z-20',
-            'lg:w-[calc(100%-3rem)] lg:max-w-6xl lg:bg-black/60 lg:mt-0',
+            'lg:w-[calc(100%-4rem)] lg:max-w-5xl lg:bg-black/60 lg:mt-0',
             'shadow-[0_32px_64px_-12px_rgba(0,0,0,0.6)] backdrop-blur-2xl',
           )}
         >
