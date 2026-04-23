@@ -208,7 +208,7 @@ export function BannerSection(): React.ReactElement {
 
   return (
     <div className="px-4 pt-1 lg:px-8 lg:pt-2 lg:pb-[56px]">
-      <section className="relative overflow-visible rounded-[2rem]">
+      <section className="relative overflow-visible rounded-[2rem] w-full">
 
         {/* ── Bannière photo ── */}
         <div className="relative min-h-[70vh] lg:min-h-[85vh] overflow-hidden rounded-[2.5rem]">
@@ -231,48 +231,51 @@ export function BannerSection(): React.ReactElement {
 
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/80" />
 
-          <div className="relative z-10 flex min-h-[70vh] lg:min-h-[85vh] flex-col justify-center px-8 pb-28 pt-16 lg:px-16 lg:pb-40 lg:pt-20">
+          <div className="relative z-10 flex min-h-[65vh] lg:min-h-[82vh] flex-col justify-end px-8 pb-20 pt-16 lg:px-16 lg:pb-24 lg:pt-20">
             <motion.div 
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className="max-w-4xl mb-10"
+                className="max-w-2xl mb-10"
             >
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3.5 py-1.5 mb-6 backdrop-blur-sm">
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3.5 py-1.5 mb-5 backdrop-blur-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">
-                  La référence de la location au Sénégal
+                  Disponible partout au Sénégal
                 </span>
               </div>
 
-              <h1 className="flex flex-col gap-4">
+              <h1 className="flex flex-col gap-3">
                 <motion.span 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
-                    className="text-4xl font-black leading-[1] tracking-tight md:text-6xl lg:text-7xl xl:text-[6rem]"
+                    className="text-5xl font-black leading-[1.0] tracking-tight md:text-6xl lg:text-7xl xl:text-8xl"
                 >
-                  <span className="text-white">Vous cherchez un </span>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-300">véhicule</span>
+                  <span className="text-white">Vous cherchez </span>
+                  <span className="text-emerald-400">un véhicule</span>
                   <span className="text-white"> ?</span>
                 </motion.span>
                 <motion.span 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.4 }}
-                    className="text-xl font-black leading-snug tracking-tight text-white/80 lg:text-3xl max-w-2xl"
+                    className="text-2xl font-semibold leading-snug tracking-tight text-white/60 lg:text-3xl xl:text-[2rem]"
                 >
-                  Vous êtes à l&apos;endroit parfait
-                </motion.span>
-                <motion.span 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.5 }}
-                    className="text-base font-medium leading-relaxed text-white/50 lg:text-xl max-w-2xl"
-                >
-                  Des centaines d&apos;annonces vérifiées, partout au Sénégal. Réservez en quelques clics.
+                  Vous êtes à{' '}
+                  <span className="text-emerald-400/80 font-bold">l&apos;endroit parfait.</span>
                 </motion.span>
               </h1>
+
+              <motion.p 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.5 }}
+                  className="mt-4 text-[15px] font-medium text-white/60 max-w-md leading-relaxed"
+              >
+                Des centaines d&apos;annonces vérifiées, partout au Sénégal.
+                Réservez en quelques clics.
+              </motion.p>
             </motion.div>
           </div>
         </div>
@@ -288,8 +291,8 @@ export function BannerSection(): React.ReactElement {
             'w-full rounded-[2rem] border border-white/10 bg-slate-950 mt-3',
             // Desktop : flottant centré qui déborde sur le contenu suivant
             'lg:absolute lg:left-1/2 lg:-translate-x-1/2 lg:bottom-0 lg:translate-y-1/2 lg:z-20',
-            'lg:w-[calc(100%-4rem)] lg:max-w-5xl lg:bg-black/60 lg:mt-0',
-            'shadow-[0_32px_64px_-12px_rgba(0,0,0,0.6)] backdrop-blur-2xl',
+            'lg:w-[calc(100%-3rem)] lg:max-w-5xl lg:bg-black/80 lg:mt-0',
+            'shadow-2xl shadow-black/40 backdrop-blur-xl',
           )}
         >
 
