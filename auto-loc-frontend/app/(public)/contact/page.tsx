@@ -178,10 +178,12 @@ export default function ContactPage() {
                                 ))}
                             </div>
 
-                            {/* Mobile-optimized visual anchor */}
-                            <div 
+                            {/* Mobile-optimized visual anchor (Standard Link) */}
+                            <a 
+                                href="https://maps.google.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="mt-12 p-6 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-between group cursor-pointer hover:bg-emerald-400 hover:text-black transition-all duration-500"
-                                onClick={() => window.open('https://maps.google.com', '_blank')}
                             >
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-full bg-emerald-400/20 flex items-center justify-center group-hover:bg-black/20">
@@ -190,7 +192,7 @@ export default function ContactPage() {
                                     <p className="text-[14px] font-black uppercase tracking-widest">Voir sur la carte</p>
                                 </div>
                                 <Globe className="w-4 h-4 opacity-40" />
-                            </div>
+                            </a>
                         </div>
 
                         {/* Social Link (Airy) */}

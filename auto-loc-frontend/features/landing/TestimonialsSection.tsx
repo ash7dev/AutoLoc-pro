@@ -1,79 +1,57 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Star, ChevronLeft, ChevronRight, Quote } from 'lucide-react';
+import { Star, Quote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// ─── Testimonials data ────────────────────────────────────────────────────────
+// ─── Data ─────────────────────────────────────────────────────────────────────
 const TESTIMONIALS = [
     {
         id: 1,
         name: 'Mamadou Diallo',
         role: 'Entrepreneur',
         city: 'Dakar',
-        rating: 5,
-        comment:
-            "Service incroyable ! J'ai trouvé un SUV vérifié en 5 minutes. Le propriétaire était ponctuel et très pro. Je ne loue plus que sur AutoLoc.",
+        comment: "Service incroyable ! J'ai trouvé un SUV vérifié en 5 minutes. Le propriétaire était ponctuel et très pro.",
         avatar: 'MD',
+        variant: 'black'
     },
     {
         id: 2,
         name: 'Aïssatou Ndiaye',
         role: 'Consultante',
         city: 'Thiès',
-        rating: 5,
-        comment:
-            'Première location, zéro stress. L\'application est fluide, le véhicule était nickel. Je recommande à 100% !',
+        comment: 'Première location, zéro stress. L\'application est fluide, le véhicule était nickel. Je recommande !',
         avatar: 'AN',
+        variant: 'white'
     },
     {
         id: 3,
         name: 'Ousmane Sow',
         role: 'Ingénieur',
         city: 'Dakar',
-        rating: 5,
-        comment:
-            'J\'ai loué une berline pour un mariage. Véhicule impeccable, prix juste, et le support m\'a aidé à chaque étape. Bravo AutoLoc !',
+        comment: 'J\'ai loué une berline pour un mariage. Véhicule impeccable, prix juste. Bravo AutoLoc !',
         avatar: 'OS',
+        variant: 'black'
     },
     {
         id: 4,
         name: 'Fatou Sarr',
         role: 'Médecin',
         city: 'Saint-Louis',
-        rating: 4,
-        comment:
-            'Très pratique pour mes déplacements professionnels. Large choix de véhicules et des propriétaires fiables. Je suis fidèle.',
+        comment: 'Très pratique pour mes déplacements pro. Large choix de véhicules et des propriétaires fiables.',
         avatar: 'FS',
-    },
-    {
-        id: 5,
-        name: 'Ibrahima Ba',
-        role: 'Photographe',
-        city: 'Dakar',
-        rating: 5,
-        comment:
-            'J\'avais besoin d\'un pick-up pour un shooting en brousse. Trouvé en 10 minutes, prix négocié directement. AutoLoc, c\'est le futur.',
-        avatar: 'IB',
+        variant: 'white'
     },
 ];
 
-// ─── Star rating ──────────────────────────────────────────────────────────────
-function StarRating({ rating }: { rating: number }) {
+// ─── Components ──────────────────────────────────────────────────────────────
+
+function StarRating() {
     return (
-        <div className="flex items-center gap-0.5">
-            {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                    key={i}
-                    className={cn(
-                        'h-3.5 w-3.5',
-                        i < rating
-                            ? 'fill-amber-400 text-amber-400'
-                            : 'fill-white/10 text-white/10',
-                    )}
-                    strokeWidth={0}
-                />
+        <div className="flex items-center gap-1">
+            {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-3 h-3 fill-emerald-400 text-emerald-400" strokeWidth={0} />
             ))}
         </div>
     );
@@ -81,156 +59,120 @@ function StarRating({ rating }: { rating: number }) {
 
 // ─── Section ──────────────────────────────────────────────────────────────────
 export function TestimonialsSection(): React.ReactElement {
-    const scrollRef = useRef<HTMLDivElement>(null);
-    const [canScrollLeft, setCanScrollLeft] = useState(false);
-    const [canScrollRight, setCanScrollRight] = useState(true);
-
-    const updateScrollButtons = useCallback(() => {
-        const el = scrollRef.current;
-        if (!el) return;
-        setCanScrollLeft(el.scrollLeft > 10);
-        setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-    }, []);
-
-    useEffect(() => {
-        const el = scrollRef.current;
-        if (!el) return;
-        el.addEventListener('scroll', updateScrollButtons, { passive: true });
-        updateScrollButtons();
-        return () => el.removeEventListener('scroll', updateScrollButtons);
-    }, [updateScrollButtons]);
-
-    function scroll(direction: 'left' | 'right') {
-        const el = scrollRef.current;
-        if (!el) return;
-        const cardWidth = 380;
-        el.scrollBy({
-            left: direction === 'left' ? -cardWidth : cardWidth,
-            behavior: 'smooth',
-        });
-    }
-
     return (
-        <section className="px-4 py-10 lg:px-8 lg:py-14 overflow-hidden" aria-labelledby="testimonials-heading">
+        <section className="px-4 py-24 lg:px-8 lg:py-32 bg-white" aria-labelledby="testimonials-heading">
             <div className="mx-auto max-w-7xl">
-                {/* ── Header ── */}
-                <div className="mb-12 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                
+                {/* Header Section */}
+                <div className="text-center mb-20">
                     <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.6 }}
                     >
-                        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/5 px-4 py-1.5 mb-5">
-                            <Star className="h-3 w-3 fill-emerald-400 text-emerald-400" strokeWidth={0} />
+                        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-50 px-4 py-1.5 mb-6">
+                            <Star className="h-3 w-3 fill-emerald-500 text-emerald-500" strokeWidth={0} />
                             <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">
-                                Témoignages
+                                La communauté AutoLoc
                             </span>
                         </div>
-                        <h2
-                            id="testimonials-heading"
-                            className="text-4xl font-black tracking-tight text-black leading-tight lg:text-5xl"
-                        >
-                            Ils nous font <span className="text-emerald-400">confiance</span>
+                        <h2 id="testimonials-heading" className="text-4xl lg:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
+                            Ils nous font <span className="text-emerald-500 italic">confiance</span>
                         </h2>
-                        <p className="mt-4 max-w-lg text-[15px] font-medium leading-relaxed text-black/40">
-                            Des milliers de locataires satisfaits partout au Sénégal. Découvrez leurs retours.
-                        </p>
-                    </motion.div>
-
-                    {/* Navigation arrows */}
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.3 }}
-                        className="flex items-center gap-2 self-start lg:self-auto"
-                    >
-                        <button
-                            type="button"
-                            onClick={() => scroll('left')}
-                            disabled={!canScrollLeft}
-                            className={cn(
-                                'flex items-center justify-center w-10 h-10 rounded-xl border transition-all duration-200',
-                                canScrollLeft
-                                    ? 'border-slate-200 bg-white text-black hover:border-slate-300 hover:bg-slate-50 shadow-sm'
-                                    : 'border-slate-100 bg-slate-50 text-black/20 cursor-not-allowed',
-                            )}
-                            aria-label="Précédent"
-                        >
-                            <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => scroll('right')}
-                            disabled={!canScrollRight}
-                            className={cn(
-                                'flex items-center justify-center w-10 h-10 rounded-xl border transition-all duration-200',
-                                canScrollRight
-                                    ? 'border-slate-200 bg-white text-black hover:border-slate-300 hover:bg-slate-50 shadow-sm'
-                                    : 'border-slate-100 bg-slate-50 text-black/20 cursor-not-allowed',
-                            )}
-                            aria-label="Suivant"
-                        >
-                            <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
-                        </button>
+                        <div className="mt-8 flex items-center justify-center gap-4">
+                            <div className="flex -space-x-3">
+                                {[1,2,3,4].map(i => (
+                                    <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold">U{i}</div>
+                                ))}
+                            </div>
+                            <p className="text-[14px] font-bold text-slate-400">
+                                <span className="text-slate-900">+500 avis</span> certifiés au Sénégal
+                            </p>
+                        </div>
                     </motion.div>
                 </div>
 
-                {/* ── Carousel ── */}
-                <div
-                    ref={scrollRef}
-                    className="flex gap-5 overflow-x-auto scrollbar-hide pb-4 snap-x snap-mandatory -mx-4 px-4 lg:-mx-0 lg:px-0"
-                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                >
-                    {TESTIMONIALS.map((t, i) => (
-                        <motion.div
-                            key={t.id}
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.7, delay: i * 0.1 }}
-                            className={cn(
-                                'flex-shrink-0 w-[85vw] sm:w-[340px] lg:w-[380px] snap-start',
-                                'relative rounded-2xl bg-black border border-white/10',
-                                'p-7 lg:p-8',
-                                'transition-all duration-300',
-                                'hover:border-emerald-400/30 hover:shadow-2xl hover:shadow-emerald-400/5',
-                            )}
-                        >
-                            {/* Quote icon */}
-                            <Quote
-                                className="absolute top-6 right-6 h-8 w-8 text-emerald-400/10"
-                                strokeWidth={1.5}
-                            />
+                {/* Testimonials Grid (Mixed Design) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {TESTIMONIALS.map((t, i) => {
+                        const isBlack = t.variant === 'black';
+                        
+                        return (
+                            <motion.div
+                                key={t.id}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.7, delay: i * 0.1 }}
+                                className={cn(
+                                    "group relative p-8 flex flex-col h-full transition-all duration-500",
+                                    isBlack 
+                                        ? "bg-black text-white shadow-2xl shadow-emerald-500/5" 
+                                        : "bg-slate-50 text-slate-900 border border-slate-100 group-hover:border-emerald-500/20 shadow-sm",
+                                    // Portal Shape
+                                    isBlack 
+                                        ? "rounded-tr-[4rem] rounded-bl-[4rem]" 
+                                        : "rounded-tl-[4rem] rounded-br-[4rem]"
+                                )}
+                                style={{
+                                    clipPath: isBlack 
+                                        ? 'polygon(0 0, 100% 0, 100% calc(100% - 40px), calc(100% - 40px) 100%, 0 100%)'
+                                        : 'polygon(40px 0, 100% 0, 100% 100%, 0 100%, 0 40px)'
+                                }}
+                            >
+                                {/* Quote Icon */}
+                                <Quote className={cn(
+                                    "absolute top-6 right-6 w-10 h-10 opacity-10",
+                                    isBlack ? "text-emerald-400" : "text-emerald-600"
+                                )} />
 
-                            {/* Stars */}
-                            <StarRating rating={t.rating} />
+                                <div className="mb-6">
+                                    <StarRating />
+                                </div>
 
-                            {/* Comment */}
-                            <p className="mt-5 text-[14px] font-medium leading-relaxed text-white/60">
-                                &ldquo;{t.comment}&rdquo;
-                            </p>
+                                <p className={cn(
+                                    "text-[15px] font-medium leading-relaxed italic mb-8",
+                                    isBlack ? "text-white/60" : "text-slate-500"
+                                )}>
+                                    &ldquo;{t.comment}&rdquo;
+                                </p>
 
-                            {/* Author */}
-                            <div className="mt-6 flex items-center gap-3 pt-5 border-t border-white/10">
-                                {/* Avatar initials */}
-                                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-400/10 border border-emerald-400/20">
-                                    <span className="text-[13px] font-bold text-emerald-400">
+                                <div className="mt-auto pt-6 border-t border-white/5 flex items-center gap-4">
+                                    <div className={cn(
+                                        "w-10 h-10 rounded-full flex items-center justify-center text-[12px] font-black",
+                                        isBlack ? "bg-emerald-400 text-black" : "bg-emerald-500 text-white"
+                                    )}>
                                         {t.avatar}
-                                    </span>
+                                    </div>
+                                    <div>
+                                        <h4 className={cn("text-[14px] font-black", isBlack ? "text-white" : "text-slate-900")}>
+                                            {t.name}
+                                        </h4>
+                                        <p className="text-[11px] font-bold text-emerald-500 uppercase tracking-widest">
+                                            {t.city}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-[14px] font-bold text-white">
-                                        {t.name}
-                                    </p>
-                                    <p className="text-[12px] font-medium text-white/35">
-                                        {t.role} · {t.city}
-                                    </p>
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
+                            </motion.div>
+                        );
+                    })}
+                </div>
+
+                {/* Footer Section Trust */}
+                <div className="mt-20 p-12 bg-black text-white relative overflow-hidden rounded-[4rem]">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/5 blur-[100px]" />
+                    <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10">
+                        <div className="text-center lg:text-left">
+                            <h3 className="text-2xl lg:text-3xl font-black mb-4 tracking-tight">Convaincu par l&apos;expérience ?</h3>
+                            <p className="text-white/40 font-medium">Rejoignez des milliers de Sénégalais qui ont choisi la simplicité.</p>
+                        </div>
+                        <div className="flex items-center gap-6">
+                            <button className="bg-emerald-500 text-black px-10 py-4 rounded-2xl font-black hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/20">
+                                Réserver maintenant
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
