@@ -23,7 +23,18 @@ export function ZonesSection(): React.ReactElement {
     return (
         <section className="px-4 py-8 lg:px-8" aria-labelledby="zones-heading">
             <div className="mx-auto max-w-7xl">
-                <div className="relative overflow-hidden rounded-[2rem] bg-black border border-white/10 px-6 py-12 md:px-8 md:py-16 lg:px-16 lg:py-20">
+                <div 
+                    className={cn(
+                        "relative overflow-hidden bg-black px-6 py-12 md:px-8 md:py-16 lg:px-16 lg:py-20",
+                        "transition-all duration-500",
+                        // Mobile: Large radius on opposing corners | Desktop: Standard large radius
+                        "rounded-tl-[80px] rounded-br-[80px] rounded-tr-[2rem] rounded-bl-[2rem] lg:rounded-[4rem]",
+                        "border border-white/10"
+                    )}
+                >
+                    {/* Inner border glow for the custom shape */}
+                    <div className="absolute inset-0 pointer-events-none rounded-tl-[80px] rounded-br-[80px] rounded-tr-[2rem] rounded-bl-[2rem] lg:rounded-[4rem] border border-emerald-400/5 group-hover:border-emerald-400/20 transition-colors duration-500" />
+
                     {/* Background glow */}
                     <motion.div
                         initial={{ opacity: 0 }}

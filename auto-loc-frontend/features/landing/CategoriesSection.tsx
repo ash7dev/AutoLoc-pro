@@ -120,12 +120,12 @@ export function CategoriesSection(): React.ReactElement {
                                     <div className="relative z-10 mt-8">
                                         <Link
                                             href={card.href}
-                                            className="inline-flex items-center gap-3 text-white font-bold group/btn"
+                                            className="inline-flex items-center gap-3 text-emerald-400 font-bold group/btn"
                                         >
                                             <span className="text-[14px] tracking-tight border-b-2 border-emerald-400/30 pb-1 group-hover/btn:border-emerald-400 transition-all">
                                                 {card.cta}
                                             </span>
-                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover/btn:bg-emerald-400 group-hover/btn:text-black transition-all">
+                                            <div className="w-10 h-10 rounded-full bg-emerald-400/10 flex items-center justify-center group-hover/btn:bg-emerald-400 group-hover/btn:text-black transition-all">
                                                 <ArrowRight className="h-4 w-4" />
                                             </div>
                                         </Link>
