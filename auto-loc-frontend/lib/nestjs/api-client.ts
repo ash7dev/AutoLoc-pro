@@ -45,6 +45,7 @@ interface ApiFetchOptions<TBody> {
   headers?: Record<string, string>;
   timeoutMs?: number;
   cache?: RequestCache;
+  next?: NextFetchRequestConfig;
   /** Nombre max de tentatives supplémentaires après la première. Défaut : 2. */
   maxRetries?: number;
 }
@@ -100,6 +101,7 @@ export async function apiFetch<TResponse, TBody = undefined>(
               : undefined,
         signal: controller.signal,
         ...(options.cache ? { cache: options.cache } : {}),
+        ...(options.next ? { next: options.next } : {}),
       });
     } catch (err) {
       clearTimeout(timeout);
