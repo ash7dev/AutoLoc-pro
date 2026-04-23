@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Star, Quote } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -168,9 +169,12 @@ export function TestimonialsSection(): React.ReactElement {
                             <p className="text-white/40 font-medium">Rejoignez des milliers de Sénégalais qui ont choisi la simplicité.</p>
                         </div>
                         <div className="flex items-center gap-6">
-                            <button className="bg-emerald-500 text-black px-10 py-4 rounded-2xl font-black hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/20">
+                            <Link 
+                                href="/explorer"
+                                className="bg-emerald-500 text-black px-10 py-4 rounded-2xl font-black hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/20"
+                            >
                                 Réserver maintenant
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </div>
