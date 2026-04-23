@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { BannerSection } from '@/features/landing/BannerSection';
-import { BrandMarquee } from '@/features/landing/BrandMarquee';
 import { CategoriesSection } from '@/features/landing/CategoriesSection';
 import { TrustSection } from '@/features/landing/TrustSection';
 import { VehicleGridSection } from '@/features/landing/VehicleGridSection';
@@ -42,7 +41,6 @@ export default async function HomePage() {
   return (
     <main className="overflow-x-hidden">
       <BannerSection />
-      <BrandMarquee />
       <CategoriesSection />
       <VehicleGridSection initialVehicles={initialVehicles} />
       <TrustSection />
