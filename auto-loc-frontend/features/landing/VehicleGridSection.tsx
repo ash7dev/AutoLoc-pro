@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
   ArrowRight, Car, TrendingUp,
@@ -86,18 +87,16 @@ function SkeletonCard({ delay }: { delay: number }) {
 /* ════════════════════════════════════════════════════════════════
    VEHICLE CARD WRAPPER  — animation + ExplorerVehicleCard
 ════════════════════════════════════════════════════════════════ */
-function AnimatedCard({ vehicle, index, visible }: { vehicle: VehicleGridItem; index: number; visible: boolean }) {
-  const delay = Math.min(index * 70, 420);
+function AnimatedCard({ vehicle, index }: { vehicle: VehicleGridItem; index: number }) {
   return (
-    <div
-      className={cn(
-        'transition-all duration-500 ease-out',
-        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8',
-      )}
-      style={{ transitionDelay: `${delay}ms` }}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: Math.min(index * 0.07, 0.42) }}
     >
       <ExplorerVehicleCard vehicle={vehicle} />
-    </div>
+    </motion.div>
   );
 }
 
@@ -162,7 +161,13 @@ function SectionHeader({
 }) {
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-      <div className="space-y-3">
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="space-y-3"
+      >
         <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-4 py-1.5">
           <TrendingUp className="h-3 w-3 text-emerald-500" strokeWidth={2} />
           <span className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-600">
@@ -175,14 +180,21 @@ function SectionHeader({
         <p className="max-w-xl text-[14px] font-medium text-slate-500 leading-relaxed">
           Sélection de véhicules vérifiés, disponibles dès maintenant partout au Sénégal.
         </p>
-      </div>
+      </motion.div>
 
       {showViewAll && (
-        <Link href={viewAllHref}
-          className="inline-flex flex-shrink-0 items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[13px] font-semibold text-slate-700 shadow-sm hover:border-emerald-200 hover:text-emerald-600 hover:shadow-md transition-all lg:self-auto">
-          Voir tout
-          <ChevronRight className="h-4 w-4 text-slate-400" strokeWidth={2.5} />
-        </Link>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Link href={viewAllHref}
+            className="inline-flex flex-shrink-0 items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[13px] font-semibold text-slate-700 shadow-sm hover:border-emerald-200 hover:text-emerald-600 hover:shadow-md transition-all lg:self-auto">
+            Voir tout
+            <ChevronRight className="h-4 w-4 text-slate-400" strokeWidth={2.5} />
+          </Link>
+        </motion.div>
       )}
     </div>
   );
@@ -236,23 +248,12 @@ export function VehicleGridSection({
   const [vehicles, setVehicles] = useState<VehicleGridItem[]>(() => initialVehicles ?? []);
   const [loading, setLoading] = useState(() => !(initialVehicles && initialVehicles.length > 0));
   const [error, setError] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
-  const [visible, setVisible] = useState(false);
   const initialLoaded = useRef(false);
 
   const sorted = sortVehicles(vehicles);
   const visible9 = sorted.slice(0, MAX_VISIBLE);
   const hiddenCount = Math.max(0, sorted.length - MAX_VISIBLE);
   const activeLabel = FILTERS.find(f => f.value === activeFilter)?.label ?? '';
-
-  useEffect(() => {
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0.04 },
-    );
-    if (sectionRef.current) obs.observe(sectionRef.current);
-    return () => obs.disconnect();
-  }, []);
 
   const fetchVehicles = useCallback(async (type?: string) => {
     setLoading(true); setError(false);
@@ -273,7 +274,7 @@ export function VehicleGridSection({
   }, [activeFilter, fetchVehicles, initialVehicles]);
 
   return (
-    <section ref={sectionRef} className="px-4 py-12 lg:px-8 lg:py-20" aria-labelledby="vehicles-heading">
+    <section className="px-4 py-12 lg:px-8 lg:py-20" aria-labelledby="vehicles-heading">
       <div className="mx-auto max-w-7xl space-y-8">
 
         {/* Header */}
@@ -317,7 +318,7 @@ export function VehicleGridSection({
           <div className="space-y-8">
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {visible9.map((v, i) => (
-                <AnimatedCard key={v.id} vehicle={v} index={i} visible={visible} />
+                <AnimatedCard key={v.id} vehicle={v} index={i} />
               ))}
             </div>
 

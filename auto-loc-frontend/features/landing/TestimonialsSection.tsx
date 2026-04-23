@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { Star, ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -83,22 +84,6 @@ export function TestimonialsSection(): React.ReactElement {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
-    const sectionRef = useRef<HTMLElement>(null);
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsVisible(true);
-                    observer.disconnect();
-                }
-            },
-            { threshold: 0.1 },
-        );
-        if (sectionRef.current) observer.observe(sectionRef.current);
-        return () => observer.disconnect();
-    }, []);
 
     const updateScrollButtons = useCallback(() => {
         const el = scrollRef.current;
@@ -126,15 +111,16 @@ export function TestimonialsSection(): React.ReactElement {
     }
 
     return (
-        <section
-            ref={sectionRef}
-            className="px-4 py-10 lg:px-8 lg:py-14 overflow-hidden"
-            aria-labelledby="testimonials-heading"
-        >
+        <section className="px-4 py-10 lg:px-8 lg:py-14 overflow-hidden" aria-labelledby="testimonials-heading">
             <div className="mx-auto max-w-7xl">
                 {/* ── Header ── */}
                 <div className="mb-12 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                    <div>
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                    >
                         <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/5 px-4 py-1.5 mb-5">
                             <Star className="h-3 w-3 fill-emerald-400 text-emerald-400" strokeWidth={0} />
                             <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">
@@ -145,17 +131,21 @@ export function TestimonialsSection(): React.ReactElement {
                             id="testimonials-heading"
                             className="text-4xl font-black tracking-tight text-black leading-tight lg:text-5xl"
                         >
-                            Ils nous font{' '}
-                            <span className="text-emerald-400">confiance</span>
+                            Ils nous font <span className="text-emerald-400">confiance</span>
                         </h2>
                         <p className="mt-4 max-w-lg text-[15px] font-medium leading-relaxed text-black/40">
-                            Des milliers de locataires satisfaits partout au Sénégal.
-                            Découvrez leurs retours.
+                            Des milliers de locataires satisfaits partout au Sénégal. Découvrez leurs retours.
                         </p>
-                    </div>
+                    </motion.div>
 
                     {/* Navigation arrows */}
-                    <div className="flex items-center gap-2 self-start lg:self-auto">
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                        className="flex items-center gap-2 self-start lg:self-auto"
+                    >
                         <button
                             type="button"
                             onClick={() => scroll('left')}
@@ -184,7 +174,7 @@ export function TestimonialsSection(): React.ReactElement {
                         >
                             <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
                         </button>
-                    </div>
+                    </motion.div>
                 </div>
 
                 {/* ── Carousel ── */}
@@ -194,19 +184,19 @@ export function TestimonialsSection(): React.ReactElement {
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                     {TESTIMONIALS.map((t, i) => (
-                        <div
+                        <motion.div
                             key={t.id}
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.7, delay: i * 0.1 }}
                             className={cn(
                                 'flex-shrink-0 w-[85vw] sm:w-[340px] lg:w-[380px] snap-start',
                                 'relative rounded-2xl bg-black border border-white/10',
                                 'p-7 lg:p-8',
-                                'transition-all duration-700 ease-out',
-                                'hover:border-emerald-400/30 hover:shadow-lg hover:shadow-emerald-400/5',
-                                isVisible
-                                    ? 'opacity-100 translate-y-0'
-                                    : 'opacity-0 translate-y-8',
+                                'transition-all duration-300',
+                                'hover:border-emerald-400/30 hover:shadow-2xl hover:shadow-emerald-400/5',
                             )}
-                            style={{ transitionDelay: `${i * 100}ms` }}
                         >
                             {/* Quote icon */}
                             <Quote
@@ -239,7 +229,7 @@ export function TestimonialsSection(): React.ReactElement {
                                     </p>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
     ArrowRight,
@@ -38,33 +39,18 @@ const BENEFITS = [
 
 // ─── Section ──────────────────────────────────────────────────────────────────
 export function BecomeHostCTA(): React.ReactElement {
-    const sectionRef = useRef<HTMLElement>(null);
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsVisible(true);
-                    observer.disconnect();
-                }
-            },
-            { threshold: 0.15 },
-        );
-        if (sectionRef.current) observer.observe(sectionRef.current);
-        return () => observer.disconnect();
-    }, []);
-
     return (
-        <section
-            ref={sectionRef}
-            className="px-4 py-20 lg:px-8 lg:py-28"
-            aria-labelledby="become-host-heading"
-        >
+        <section className="px-4 py-20 lg:px-8 lg:py-28" aria-labelledby="become-host-heading">
             <div className="mx-auto max-w-7xl">
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-0 overflow-hidden rounded-[2rem]">
                     {/* ── Left: Image side ── */}
-                    <div className="relative min-h-[300px] sm:min-h-[400px] lg:min-h-[560px] overflow-hidden rounded-[2rem] lg:rounded-r-none bg-black">
+                    <motion.div 
+                        initial={{ opacity: 0, x: -30 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8 }}
+                        className="relative min-h-[300px] sm:min-h-[400px] lg:min-h-[560px] overflow-hidden rounded-[2rem] lg:rounded-r-none bg-black"
+                    >
                         {/* Decorative pattern */}
                         <div className="absolute inset-0 opacity-30">
                             <div
@@ -83,7 +69,13 @@ export function BecomeHostCTA(): React.ReactElement {
                         {/* Content over the image area */}
                         <div className="relative z-10 flex flex-col items-center justify-center h-full px-12 py-16 text-center">
                             {/* Big icon */}
-                            <div className="flex items-center justify-center w-24 h-24 rounded-3xl bg-emerald-400/10 border border-emerald-400/20 mb-8">
+                            <motion.div 
+                                initial={{ scale: 0.8, rotate: -10 }}
+                                whileInView={{ scale: 1, rotate: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 1, delay: 0.2, type: "spring" }}
+                                className="flex items-center justify-center w-24 h-24 rounded-3xl bg-emerald-400/10 border border-emerald-400/20 mb-8"
+                            >
                                 <svg
                                     className="w-12 h-12 text-emerald-400"
                                     viewBox="0 0 24 24"
@@ -98,19 +90,37 @@ export function BecomeHostCTA(): React.ReactElement {
                                     <path d="M9 17h6" />
                                     <circle cx="17" cy="17" r="2" />
                                 </svg>
-                            </div>
+                            </motion.div>
 
-                            <p className="text-[52px] lg:text-[64px] font-black leading-none tracking-tight text-emerald-400 mb-3">
+                            <motion.p 
+                                initial={{ opacity: 0, y: 10 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.6, delay: 0.4 }}
+                                className="text-[52px] lg:text-[64px] font-black leading-none tracking-tight text-emerald-400 mb-3"
+                            >
                                 +35%
-                            </p>
-                            <p className="text-[15px] font-semibold text-white/60 max-w-xs">
+                            </motion.p>
+                            <motion.p 
+                                initial={{ opacity: 0 }}
+                                whileInView={{ opacity: 0.6 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.6, delay: 0.5 }}
+                                className="text-[15px] font-semibold text-white/60 max-w-xs"
+                            >
                                 de revenus supplémentaires en moyenne pour nos propriétaires
-                            </p>
+                            </motion.p>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* ── Right: Content side ── */}
-                    <div className="relative bg-black rounded-[2rem] lg:rounded-l-none border border-white/10 lg:border-l-0 p-6 md:p-10 lg:p-14 flex flex-col justify-center">
+                    <motion.div 
+                        initial={{ opacity: 0, x: 30 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8 }}
+                        className="relative bg-black rounded-[2rem] lg:rounded-l-none border border-white/10 lg:border-l-0 p-6 md:p-10 lg:p-14 flex flex-col justify-center"
+                    >
                         {/* Glow */}
                         <div
                             className="absolute -top-32 -right-32 w-64 h-64 rounded-full opacity-15 blur-[80px] pointer-events-none"
@@ -129,23 +139,13 @@ export function BecomeHostCTA(): React.ReactElement {
                             {/* Heading */}
                             <h2
                                 id="become-host-heading"
-                                className={cn(
-                                    'text-3xl font-black tracking-tight text-white leading-tight lg:text-4xl',
-                                    'transition-all duration-700 ease-out',
-                                    isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6',
-                                )}
+                                className="text-3xl font-black tracking-tight text-white leading-tight lg:text-4xl"
                             >
                                 Votre véhicule dort ?{' '}
                                 <span className="text-emerald-400">Faites-le travailler.</span>
                             </h2>
 
-                            <p
-                                className={cn(
-                                    'mt-5 text-[15px] font-medium leading-relaxed text-white/50 max-w-md',
-                                    'transition-all duration-700 ease-out delay-100',
-                                    isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6',
-                                )}
-                            >
+                            <p className="mt-5 text-[15px] font-medium leading-relaxed text-white/50 max-w-md">
                                 Rejoignez des centaines de propriétaires qui rentabilisent leur
                                 véhicule sur AutoLoc. Inscription gratuite, commission transparente.
                             </p>
@@ -155,17 +155,17 @@ export function BecomeHostCTA(): React.ReactElement {
                                 {BENEFITS.map((b, i) => {
                                     const Icon = b.icon;
                                     return (
-                                        <div
+                                        <motion.div
                                             key={b.title}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            whileInView={{ opacity: 1, y: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
                                             className={cn(
                                                 'flex items-start gap-3 rounded-xl bg-white/5 border border-white/5 p-4',
-                                                'transition-all duration-700 ease-out',
+                                                'transition-all duration-300',
                                                 'hover:border-emerald-400/20 hover:bg-emerald-400/5',
-                                                isVisible
-                                                    ? 'opacity-100 translate-y-0'
-                                                    : 'opacity-0 translate-y-6',
                                             )}
-                                            style={{ transitionDelay: `${200 + i * 100}ms` }}
                                         >
                                             <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-400/10 border border-emerald-400/20">
                                                 <Icon
@@ -181,13 +181,19 @@ export function BecomeHostCTA(): React.ReactElement {
                                                     {b.description}
                                                 </p>
                                             </div>
-                                        </div>
+                                        </motion.div>
                                     );
                                 })}
                             </div>
 
                             {/* CTA */}
-                            <div className="mt-10 flex flex-col sm:flex-row items-start gap-4">
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.5, delay: 0.7 }}
+                                className="mt-10 flex flex-col sm:flex-row items-start gap-4"
+                            >
                                 <Link
                                     href="/become-owner"
                                     className={cn(
@@ -207,9 +213,9 @@ export function BecomeHostCTA(): React.ReactElement {
                                     <CheckCircle2 className="h-4 w-4 text-emerald-400/50" strokeWidth={1.75} />
                                     Inscription gratuite · Sans engagement
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </section>

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -44,24 +45,24 @@ function FAQItem({
     isOpen,
     onToggle,
     index,
-    isVisible,
 }: {
     item: (typeof FAQ_ITEMS)[0];
     isOpen: boolean;
     onToggle: () => void;
     index: number;
-    isVisible: boolean;
 }) {
     return (
-        <div
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
             className={cn(
-                'rounded-2xl border overflow-hidden transition-all duration-700 ease-out',
+                'rounded-2xl border overflow-hidden transition-all duration-300',
                 isOpen
                     ? 'bg-black border-emerald-400/20 shadow-lg shadow-emerald-400/5'
                     : 'bg-white border-slate-100 hover:border-slate-200 hover:shadow-md',
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4',
             )}
-            style={{ transitionDelay: `${index * 80}ms` }}
         >
             <button
                 type="button"
@@ -86,55 +87,44 @@ function FAQItem({
                 />
             </button>
 
-            {/* Answer */}
-            <div
-                className={cn(
-                    'overflow-hidden transition-all duration-300 ease-out',
-                    isOpen ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0',
+            <AnimatePresence initial={false}>
+                {isOpen && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    >
+                        <p
+                            className={cn(
+                                'px-6 pb-5 text-[14px] font-medium leading-relaxed',
+                                isOpen ? 'text-white/55' : 'text-black/50',
+                            )}
+                        >
+                            {item.answer}
+                        </p>
+                    </motion.div>
                 )}
-            >
-                <p
-                    className={cn(
-                        'px-6 pb-5 text-[14px] font-medium leading-relaxed',
-                        isOpen ? 'text-white/55' : 'text-black/50',
-                    )}
-                >
-                    {item.answer}
-                </p>
-            </div>
-        </div>
+            </AnimatePresence>
+        </motion.div>
     );
 }
 
 // ─── Section ──────────────────────────────────────────────────────────────────
 export function FAQSection(): React.ReactElement {
     const [openIndex, setOpenIndex] = useState<number | null>(0);
-    const sectionRef = useRef<HTMLElement>(null);
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsVisible(true);
-                    observer.disconnect();
-                }
-            },
-            { threshold: 0.1 },
-        );
-        if (sectionRef.current) observer.observe(sectionRef.current);
-        return () => observer.disconnect();
-    }, []);
 
     return (
-        <section
-            ref={sectionRef}
-            className="px-4 py-20 lg:px-8 lg:py-28"
-            aria-labelledby="faq-heading"
-        >
+        <section className="px-4 py-20 lg:px-8 lg:py-28" aria-labelledby="faq-heading">
             <div className="mx-auto max-w-3xl">
                 {/* Header */}
-                <div className="mb-12 text-center">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6 }}
+                    className="mb-12 text-center"
+                >
                     <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/5 px-4 py-1.5 mb-5">
                         <HelpCircle className="h-3 w-3 text-emerald-500" strokeWidth={2} />
                         <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">
@@ -145,13 +135,12 @@ export function FAQSection(): React.ReactElement {
                         id="faq-heading"
                         className="text-4xl font-black tracking-tight text-black leading-tight lg:text-5xl"
                     >
-                        Questions{' '}
-                        <span className="text-emerald-400">fréquentes</span>
+                        Questions <span className="text-emerald-400">fréquentes</span>
                     </h2>
                     <p className="mt-4 mx-auto max-w-md text-[15px] font-medium leading-relaxed text-black/40">
                         Tout ce que vous devez savoir avant de réserver. Pas de surprises.
                     </p>
-                </div>
+                </motion.div>
 
                 {/* Accordion */}
                 <div className="flex flex-col gap-3">
@@ -162,7 +151,6 @@ export function FAQSection(): React.ReactElement {
                             isOpen={openIndex === i}
                             onToggle={() => setOpenIndex(openIndex === i ? null : i)}
                             index={i}
-                            isVisible={isVisible}
                         />
                     ))}
                 </div>

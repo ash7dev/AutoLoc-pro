@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { Car, Users, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -31,51 +32,36 @@ const CARDS = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export function CategoriesSection(): React.ReactElement {
-    const sectionRef = useRef<HTMLElement>(null);
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsVisible(true);
-                    observer.disconnect();
-                }
-            },
-            { threshold: 0.1 },
-        );
-        if (sectionRef.current) observer.observe(sectionRef.current);
-        return () => observer.disconnect();
-    }, []);
-
     return (
-        <section
-            ref={sectionRef}
-            className="px-4 py-12 lg:px-8 lg:py-20"
-        >
+        <section className="px-4 py-12 lg:px-8 lg:py-20">
             <div className="mx-auto max-w-7xl">
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     {CARDS.map((card, i) => {
                         const Icon = card.icon;
                         const isEmerald = card.variant === 'emerald';
                         return (
-                            <div
+                            <motion.div
                                 key={card.href}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.8, delay: i * 0.1 }}
+                                whileHover={{ y: -6 }}
                                 className={cn(
                                     'relative overflow-hidden rounded-3xl bg-black border border-white/10',
                                     'p-6 lg:p-12',
                                     'flex flex-col justify-between gap-6 lg:gap-8',
                                     'min-h-[220px] lg:min-h-[360px]',
-                                    'transition-all duration-700 ease-out',
-                                    isVisible
-                                        ? 'opacity-100 translate-y-0'
-                                        : 'opacity-0 translate-y-8',
+                                    'transition-all duration-300',
                                 )}
-                                style={{ transitionDelay: `${i * 150}ms` }}
                             >
                                 {/* Glow background */}
-                                <div
-                                    className="absolute -top-24 -right-24 w-72 h-72 rounded-full opacity-[0.12] blur-3xl pointer-events-none"
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    whileInView={{ opacity: 0.12, scale: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 1.5, delay: 0.2 }}
+                                    className="absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl pointer-events-none"
                                     style={{
                                         background: isEmerald
                                             ? 'radial-gradient(circle, #34d399 0%, transparent 70%)'
@@ -144,7 +130,7 @@ export function CategoriesSection(): React.ReactElement {
                                         <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
                                     </Link>
                                 </div>
-                            </div>
+                            </motion.div>
                         );
                     })}
                 </div>
