@@ -140,99 +140,128 @@ function BlobClipDef() {
     );
 }
 
+// ─── Shared inner content ─────────────────────────────────────────────────────
+function StatsSectionInner() {
+    return (
+        <>
+            {/* Background glow effects */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 0.12 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.5 }}
+                className="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-[100px] pointer-events-none"
+                style={{ background: 'radial-gradient(circle, #34d399 0%, transparent 70%)' }}
+            />
+            <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 0.12 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.5, delay: 0.5 }}
+                className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full blur-[100px] pointer-events-none"
+                style={{ background: 'radial-gradient(circle, #34d399 0%, transparent 70%)' }}
+            />
+
+            {/* Decorative dot grid */}
+            <div
+                className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                style={{
+                    backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, rgba(52,211,153,0.4) 1px, transparent 0)',
+                    backgroundSize: '24px 24px',
+                }}
+            />
+
+            {/* Header */}
+            <div className="relative z-10 text-center mb-14">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6 }}
+                >
+                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-4 py-1.5 mb-5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">
+                            Nos résultats
+                        </span>
+                    </div>
+                </motion.div>
+                <motion.h2
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6 }}
+                    id="stats-heading"
+                    className="text-3xl font-black tracking-tight text-white leading-tight lg:text-4xl"
+                >
+                    AutoLoc en <span className="text-emerald-400">chiffres</span>
+                </motion.h2>
+                <motion.p
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                    className="mt-3 mx-auto max-w-md text-[14px] font-medium leading-relaxed text-white/40"
+                >
+                    La confiance de toute une communauté, en quelques chiffres qui parlent d&apos;eux-mêmes.
+                </motion.p>
+            </div>
+
+            {/* Stats grid */}
+            <div className="relative z-10 grid grid-cols-2 gap-8 lg:grid-cols-4 lg:gap-0 lg:divide-x lg:divide-white/10">
+                {STATS.map((stat, i) => (
+                    <StatItem key={stat.label} stat={stat} index={i} />
+                ))}
+            </div>
+        </>
+    );
+}
+
 export function StatsSection(): React.ReactElement {
     return (
         <section className="px-4 py-6 lg:px-8" aria-labelledby="stats-heading">
             <div className="mx-auto max-w-7xl">
-                {/* Hidden SVG clip-path definition */}
-                <BlobClipDef />
 
+                {/* ── MOBILE : forme octogone (coins coupés diagonalement) ── */}
                 <div
-                    className="relative overflow-hidden py-16 lg:py-20 px-6 md:px-8 lg:px-16"
+                    className="lg:hidden relative overflow-hidden py-14 px-6"
                     style={{
-                        clipPath: `url(#${BLOB_CLIP_ID})`,
                         background: '#000000',
+                        clipPath: 'polygon(24px 0%, calc(100% - 24px) 0%, 100% 24px, 100% calc(100% - 24px), calc(100% - 24px) 100%, 24px 100%, 0% calc(100% - 24px), 0% 24px)',
+                        filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.4))',
                     }}
                 >
-                    {/* Inner border simulation — a slightly inset outline */}
+                    {/* Accent corners */}
+                    <div className="absolute top-0 left-0 w-10 h-10 pointer-events-none"
+                        style={{ background: 'linear-gradient(135deg, rgba(52,211,153,0.15) 0%, transparent 60%)' }} />
+                    <div className="absolute bottom-0 right-0 w-10 h-10 pointer-events-none"
+                        style={{ background: 'linear-gradient(315deg, rgba(52,211,153,0.10) 0%, transparent 60%)' }} />
+                    <StatsSectionInner />
+                </div>
+
+                {/* ── DESKTOP : forme blob (SVG clip-path) ── */}
+                <div className="hidden lg:block">
+                    <BlobClipDef />
                     <div
-                        className="absolute inset-0 pointer-events-none"
+                        className="relative overflow-hidden py-20 px-16"
                         style={{
                             clipPath: `url(#${BLOB_CLIP_ID})`,
-                            border: '1px solid rgba(255,255,255,0.08)',
+                            background: '#000000',
+                            filter: 'drop-shadow(0 12px 32px rgba(0,0,0,0.45))',
                         }}
-                    />
-
-                    {/* Background glow effects */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 0.12 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1.5 }}
-                        className="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-[100px] pointer-events-none"
-                        style={{ background: 'radial-gradient(circle, #34d399 0%, transparent 70%)' }}
-                    />
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 0.12 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1.5, delay: 0.5 }}
-                        className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full blur-[100px] pointer-events-none"
-                        style={{ background: 'radial-gradient(circle, #34d399 0%, transparent 70%)' }}
-                    />
-
-                    {/* Decorative dot grid */}
-                    <div
-                        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                        style={{
-                            backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, rgba(52,211,153,0.4) 1px, transparent 0)',
-                            backgroundSize: '24px 24px',
-                        }}
-                    />
-
-                    {/* Header */}
-                    <div className="relative z-10 text-center mb-14">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6 }}
-                        >
-                            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-4 py-1.5 mb-5 backdrop-blur-sm">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">
-                                    Nos résultats
-                                </span>
-                            </div>
-                        </motion.div>
-                        <motion.h2
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6 }}
-                            id="stats-heading"
-                            className="text-3xl font-black tracking-tight text-white leading-tight lg:text-4xl"
-                        >
-                            AutoLoc en <span className="text-emerald-400">chiffres</span>
-                        </motion.h2>
-                        <motion.p 
-                            initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="mt-3 mx-auto max-w-md text-[14px] font-medium leading-relaxed text-white/40"
-                        >
-                            La confiance de toute une communauté, en quelques chiffres qui parlent d&apos;eux-mêmes.
-                        </motion.p>
-                    </div>
-
-                    {/* Stats grid */}
-                    <div className="relative z-10 grid grid-cols-2 gap-8 lg:grid-cols-4 lg:gap-0 lg:divide-x lg:divide-white/10">
-                        {STATS.map((stat, i) => (
-                            <StatItem key={stat.label} stat={stat} index={i} />
-                        ))}
+                    >
+                        {/* Border overlay */}
+                        <div
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                                clipPath: `url(#${BLOB_CLIP_ID})`,
+                                border: '1px solid rgba(255,255,255,0.08)',
+                            }}
+                        />
+                        <StatsSectionInner />
                     </div>
                 </div>
+
             </div>
         </section>
     );

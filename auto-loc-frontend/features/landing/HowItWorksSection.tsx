@@ -159,7 +159,7 @@ export function HowItWorksSection(): React.ReactElement {
                                                 {step.number}
                                             </span>
 
-                                            <h3 className="text-[20px] font-black tracking-tight text-white mb-2.5">
+                                            <h3 className="text-[20px] font-black tracking-tight text-emerald-400 mb-2.5">
                                                 {step.title}
                                             </h3>
                                             <p className="text-[13px] font-medium leading-relaxed text-white/45">
