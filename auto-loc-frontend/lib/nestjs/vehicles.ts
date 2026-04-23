@@ -386,7 +386,6 @@ export async function searchVehicles(
   const data = await apiFetch<SearchVehiclesResponse>(
     `${VEHICLE_PATHS.search}?${qs.toString()}`,
     { 
-      cache: 'no-store',
       next: { revalidate: 0 } 
     }
   );
@@ -408,7 +407,8 @@ export async function fetchAllVerifiedVehicles(): Promise<VehicleSearchResult[]>
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    const res = await searchVehicles({ page });
+    // On n'utilise pas revalidate:0 ici pour permettre au sitemap de se générer au build
+    const res = await apiFetch<SearchVehiclesResponse>(`${VEHICLE_PATHS.search}?page=${page}`);
     const data = Array.isArray(res?.data) ? res.data : [];
     all.push(...data);
     if (data.length === 0) break;

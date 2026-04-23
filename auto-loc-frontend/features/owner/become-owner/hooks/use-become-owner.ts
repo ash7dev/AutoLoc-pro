@@ -32,8 +32,12 @@ export function useBecomeOwner() {
       // Mettre à jour le store immédiatement
       setActiveRole('PROPRIETAIRE');
       
-      // Rediriger directement vers le dashboard propriétaire
-      router.replace('/dashboard/owner');
+      // Petit délai pour assurer la consistance de la DB avant le rechargement serveur
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Utiliser window.location pour forcer un rechargement complet de la session serveur
+      // Cela évite les boucles infinies de redirection du routeur Next.js
+      window.location.href = '/dashboard/owner';
       
     } catch (err: unknown) {
       const message =
