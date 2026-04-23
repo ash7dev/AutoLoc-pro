@@ -290,7 +290,7 @@ export function BannerSection(): React.ReactElement {
             // Mobile : carte en flux normal, juste sous le banner
             'w-full rounded-[2rem] border border-white/10 bg-slate-950 mt-3',
             // Desktop : flottant centré qui déborde sur le contenu suivant
-            'lg:absolute lg:left-1/2 lg:-translate-x-1/2 lg:bottom-0 lg:translate-y-1/2 lg:z-20',
+            'lg:absolute lg:inset-x-0 lg:bottom-0 lg:translate-y-1/2 lg:z-20 lg:mx-auto',
             'lg:w-[90%] lg:max-w-4xl lg:bg-black/80 lg:mt-0',
             'shadow-2xl shadow-black/40 backdrop-blur-xl',
           )}

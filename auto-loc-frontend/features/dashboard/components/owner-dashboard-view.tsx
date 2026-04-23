@@ -328,7 +328,7 @@ export function OwnerDashboardView({
                         </div>
                         <div className="shrink-0">
                             <a
-                                href="/dashboard/owner/vehicles/add"
+                                href="/dashboard/owner/vehicles/new"
                                 className="inline-flex items-center gap-2 px-6 py-3 bg-white text-violet-600 rounded-xl font-bold text-[14px] shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-100 transition-all"
                             >
                                 Ajouter mon premier véhicule
