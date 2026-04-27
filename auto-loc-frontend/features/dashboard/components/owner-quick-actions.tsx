@@ -56,8 +56,8 @@ function ActionItem({
     const content = (
         <div className={cn(
             "group flex items-center gap-3.5 rounded-xl p-3.5 transition-all duration-200 cursor-pointer",
-            "bg-white/60 backdrop-blur-sm border border-slate-100/80",
-            "hover:shadow-md hover:-translate-y-[1px]",
+            "bg-white/60 backdrop-blur-sm ring-1 ring-slate-900/5",
+            "hover:shadow-[0_4px_12px_rgba(0,0,0,0.04)] hover:-translate-y-[1px]",
             hoverAccent,
         )}>
             <div className={cn(
@@ -129,10 +129,12 @@ export function OwnerQuickActions({ reservations }: QuickActionsProps) {
     return (
         <div className={cn(
             "relative overflow-hidden rounded-2xl flex flex-col h-full",
-            "border border-l-[3px] border-white/70 border-l-slate-800",
-            "bg-white/70 backdrop-blur-xl",
-            "shadow-sm",
+            "bg-white",
+            "ring-1 ring-slate-900/5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]",
         )}>
+            {/* Top edge glare */}
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
+
             {/* Decorative orb */}
             <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 opacity-[0.04] pointer-events-none blur-3xl" />
 

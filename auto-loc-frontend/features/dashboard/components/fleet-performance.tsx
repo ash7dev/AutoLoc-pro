@@ -88,7 +88,7 @@ export function FleetPerformance({ vehicles, reservations = [], loading, classNa
 
     if (loading) {
         return (
-            <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/70 border-l-[3px] border-l-blue-500 p-6 shadow-sm animate-pulse h-full">
+            <div className="bg-white rounded-2xl ring-1 ring-slate-900/5 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.02)] animate-pulse h-full">
                 <div className="h-6 w-48 bg-slate-100 rounded-lg mb-8" />
                 <div className="space-y-4">
                     <div className="h-20 bg-slate-50 rounded-xl" />
@@ -100,22 +100,25 @@ export function FleetPerformance({ vehicles, reservations = [], loading, classNa
 
     return (
         <div className={cn(
-            "relative overflow-hidden rounded-2xl flex flex-col h-full",
-            "border border-l-[3px] border-white/70 border-l-blue-500",
-            "bg-white/70 backdrop-blur-xl",
-            "shadow-sm hover:shadow-xl hover:shadow-blue-500/5",
-            "transition-all duration-300",
+            "group relative overflow-hidden rounded-2xl flex flex-col h-full",
+            "bg-white",
+            "ring-1 ring-slate-900/5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]",
+            "hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:ring-slate-900/10",
+            "transition-all duration-400",
             className,
         )}>
 
-            {/* Decorative gradient orb */}
-            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br from-blue-400 to-indigo-400 opacity-[0.04] pointer-events-none blur-3xl" />
+            {/* Top edge glare */}
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
+
+            {/* Ambient glow */}
+            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-500 opacity-[0.04] pointer-events-none blur-3xl" />
             
             {/* Header */}
             <div className="relative z-10 p-4 sm:p-6 pb-4 flex items-center justify-between border-b border-white/40">
                 <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 border border-blue-200 flex items-center justify-center shadow-sm">
-                        <Trophy className="w-4.5 h-4.5 text-blue-600" strokeWidth={1.75} />
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20 flex items-center justify-center">
+                        <Trophy className="w-4.5 h-4.5 text-emerald-600" strokeWidth={2} />
                     </div>
                     <div>
                         <h3 className="text-[15px] font-black tracking-tight text-slate-800 leading-tight">
@@ -131,7 +134,7 @@ export function FleetPerformance({ vehicles, reservations = [], loading, classNa
 
                 {fleetStats.avgOccupancy > 0 && (
                     <div className="flex flex-col items-end">
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-lg border border-emerald-100">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-md ring-1 ring-emerald-500/20">
                             <TrendingUp className="w-3 h-3 text-emerald-600" strokeWidth={2.5} />
                             <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest tabular-nums">
                                 {Math.round(fleetStats.avgOccupancy)}% actifs
@@ -158,7 +161,7 @@ export function FleetPerformance({ vehicles, reservations = [], loading, classNa
                                         {/* Rank Badge */}
                                         <div className={cn(
                                             "w-7 h-7 rounded-xl flex items-center justify-center text-[12px] font-black shrink-0 shadow-sm transition-all duration-300",
-                                            i === 0 ? "bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-blue-500/20 group-hover:scale-110" :
+                                            i === 0 ? "bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-emerald-500/20 group-hover:scale-110" :
                                                 i === 1 ? "bg-slate-800 text-white group-hover:scale-105" :
                                                     i === 2 ? "bg-slate-600 text-white group-hover:scale-105" :
                                                         "bg-white border border-slate-200 text-slate-400 group-hover:bg-slate-50"
@@ -169,7 +172,7 @@ export function FleetPerformance({ vehicles, reservations = [], loading, classNa
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between gap-2 mb-0.5">
                                                 <p className="text-[13px] font-black text-slate-800 truncate">
-                                                    {v.marque} <span className="text-blue-600">{v.modele}</span>
+                                                    {v.marque} <span className="text-emerald-600">{v.modele}</span>
                                                 </p>
                                                 <span className="text-[13px] font-black text-slate-900 tabular-nums">
                                                     {Math.round(v.calculatedRevenue).toLocaleString("fr-FR")} <span className="text-[9px] font-bold text-slate-400 ml-0.5">FCFA</span>
@@ -191,7 +194,7 @@ export function FleetPerformance({ vehicles, reservations = [], loading, classNa
                                         <div
                                             className={cn(
                                                 "h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden",
-                                                i === 0 ? "bg-gradient-to-r from-blue-400 to-indigo-500" : "bg-gradient-to-r from-slate-300 to-slate-400"
+                                                i === 0 ? "bg-gradient-to-r from-emerald-400 to-teal-500" : "bg-gradient-to-r from-slate-300 to-slate-400"
                                             )}
                                             style={{
                                                 width: `${Math.max(2, (v.calculatedRevenue / (fleetStats.topVehicles[0]?.calculatedRevenue || 1)) * 100)}%`
@@ -218,10 +221,10 @@ export function FleetPerformance({ vehicles, reservations = [], loading, classNa
                 <div className="mt-auto pt-2">
                     <Link
                         href="/dashboard/owner/vehicles"
-                        className="flex items-center justify-center gap-2 py-3 px-4 bg-white border border-slate-200/60 hover:bg-slate-50 text-slate-700 rounded-xl text-[12px] font-bold shadow-sm transition-all group"
+                        className="flex items-center justify-center gap-2 py-3 px-4 bg-white ring-1 ring-slate-900/5 hover:ring-slate-900/10 hover:bg-slate-50 text-slate-700 rounded-xl text-[12px] font-bold shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all group"
                     >
                         Voir le détail de ma flotte
-                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" strokeWidth={2.5} />
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" strokeWidth={2.5} />
                     </Link>
                 </div>
             </div>

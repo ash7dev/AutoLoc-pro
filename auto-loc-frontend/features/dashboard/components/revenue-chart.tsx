@@ -75,24 +75,27 @@ export function RevenueChart({
         <TooltipProvider>
             <div className={cn(
                 "relative overflow-hidden rounded-2xl",
-                "border border-l-[3px] border-white/70 border-l-emerald-500",
-                "bg-white/70 backdrop-blur-xl",
-                "shadow-sm hover:shadow-xl hover:shadow-emerald-500/5",
-                "transition-all duration-300",
+                "bg-white",
+                "ring-1 ring-slate-900/5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]",
+                "hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:ring-slate-900/10",
+                "transition-all duration-400",
                 "p-5 sm:p-6 h-full flex flex-col min-h-[260px] sm:min-h-[320px]",
             )}>
 
-                {/* Decorative gradient orb */}
-                <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br from-emerald-400 to-teal-400 opacity-[0.04] pointer-events-none blur-3xl" />
-                <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-teal-400 opacity-[0.03] pointer-events-none blur-2xl" />
+                {/* Top edge glare */}
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
+
+                {/* Ambient glow */}
+                <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-500 opacity-[0.04] pointer-events-none blur-3xl" />
+                <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-emerald-500 opacity-[0.03] pointer-events-none blur-2xl" />
 
                 {/* ── Header ───────────────────────────────── */}
                 <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-5 sm:mb-6">
                     <div className="space-y-2">
                         {/* Title with icon */}
                         <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200 flex items-center justify-center flex-shrink-0 shadow-sm">
-                                <Banknote className="w-4 h-4 text-emerald-600" strokeWidth={1.75} />
+                            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                                <Banknote className="w-4 h-4 text-emerald-600" strokeWidth={2} />
                             </div>
                             <h3 className="text-[15px] font-black tracking-tight text-slate-800">
                                 Revenus cumulés
@@ -108,7 +111,7 @@ export function RevenueChart({
                                 FCFA
                             </span>
                             {!loading && (
-                                <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 border border-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
+                                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 ring-1 ring-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
                                     <TrendingUp className="h-3 w-3" strokeWidth={2.5} />
                                     {change}
                                 </span>
@@ -116,7 +119,6 @@ export function RevenueChart({
                         </div>
                     </div>
 
-                    {/* Period selector — glass style */}
                     <Select value={selectedMonth} onValueChange={handleMonthChange}>
                         <SelectTrigger className={cn(
                             "w-full sm:w-[150px] h-9",
@@ -138,19 +140,21 @@ export function RevenueChart({
                     </Select>
                 </div>
 
-                {/* ── Chart ─────────────────────────────────── */}
                 <div className="relative flex-1 min-h-[140px] sm:min-h-[200px] z-10">
                     {isEmpty && !loading ? (
-                        /* Empty state — Harmonized with other cards */
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 flex items-center justify-center shadow-sm">
-                                <BarChart2 className="w-7 h-7 text-slate-300" strokeWidth={1.25} />
+                            {/* Empty state — ultra premium glass */}
+                            <div className="relative">
+                                <div className="absolute inset-0 rounded-full bg-emerald-500/10 blur-xl animate-pulse" />
+                                <div className="relative w-16 h-16 rounded-2xl bg-white ring-1 ring-slate-900/5 flex items-center justify-center shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
+                                    <BarChart2 className="w-7 h-7 text-emerald-500/40" strokeWidth={1.5} />
+                                </div>
                             </div>
-                            <div className="text-center space-y-1">
+                            <div className="text-center space-y-1.5 z-10">
                                 <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
                                     Aucun revenu
                                 </p>
-                                <p className="text-[10px] font-bold text-slate-300 mt-1 max-w-[220px] mx-auto leading-tight">
+                                <p className="text-[11px] font-medium text-slate-400 max-w-[220px] mx-auto leading-relaxed">
                                     Les graphiques s'activeront dès vos premières locations confirmées.
                                 </p>
                             </div>
@@ -158,7 +162,7 @@ export function RevenueChart({
                     ) : (
                         <>
                             {/* Y-axis labels */}
-                            <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between">
+                            <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between pointer-events-none z-0">
                                 {yLabels.map((label) => (
                                     <span key={label} className="text-[10px] font-bold text-slate-300 w-10 text-right tabular-nums">
                                         {label}

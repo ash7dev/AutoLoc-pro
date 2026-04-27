@@ -69,19 +69,21 @@ export function AttendanceCalendar({
   return (
     <div className={cn(
       "relative overflow-hidden flex flex-col lg:flex-row rounded-2xl",
-      "border border-l-[3px] border-white/70 border-l-indigo-500",
-      "bg-white/70 backdrop-blur-xl",
-      "shadow-sm",
+      "bg-white",
+      "ring-1 ring-slate-900/5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]",
     )}>
-      {/* Decorative orb */}
-      <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 opacity-[0.04] pointer-events-none blur-3xl" />
+      {/* Top edge glare */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
+
+      {/* Ambient glow */}
+      <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-500 opacity-[0.04] pointer-events-none blur-3xl" />
 
       {/* ── Left Side: Calendar Grid ─────────────────────────── */}
       <div className="relative z-10 flex-1 p-4 sm:p-6 border-b lg:border-b-0 lg:border-r border-slate-100/80">
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 border border-indigo-200 flex items-center justify-center shadow-sm">
-              <CalendarRange className="w-4 h-4 text-indigo-600" strokeWidth={1.75} />
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20 flex items-center justify-center">
+              <CalendarRange className="w-4 h-4 text-emerald-600" strokeWidth={2} />
             </div>
             <div>
               <h3 className="text-[15px] font-black tracking-tight text-slate-800">Agenda Logistique</h3>

@@ -265,21 +265,24 @@ export function ReservationStatsVisualizer({
   return (
     <div className={cn(
       "relative overflow-hidden rounded-2xl flex flex-col h-full",
-      "border border-l-[3px] border-white/70 border-l-violet-500",
-      "bg-white/70 backdrop-blur-xl",
-      "shadow-sm hover:shadow-xl hover:shadow-violet-500/5",
-      "transition-all duration-300",
+      "bg-white",
+      "ring-1 ring-slate-900/5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]",
+      "hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:ring-slate-900/10",
+      "transition-all duration-400",
       className,
     )}>
-      {/* Decorative orbs */}
-      <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-400 opacity-[0.05] pointer-events-none blur-3xl" />
-      <div className="absolute -bottom-10 -left-10 w-24 h-24 rounded-full bg-gradient-to-br from-violet-400 to-indigo-400 opacity-[0.03] pointer-events-none blur-2xl" />
+      {/* Top edge glare */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
+
+      {/* Ambient glow */}
+      <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-emerald-500 opacity-[0.05] pointer-events-none blur-3xl" />
+      <div className="absolute -bottom-10 -left-10 w-24 h-24 rounded-full bg-emerald-500 opacity-[0.03] pointer-events-none blur-2xl" />
 
       {/* Header */}
       <div className="relative z-10 p-4 sm:p-6 pb-4 flex items-center justify-between border-b border-white/40">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-100 to-fuchsia-100 border border-violet-200 flex items-center justify-center shadow-sm">
-            <PieChartIcon className="w-4.5 h-4.5 text-violet-600" strokeWidth={1.75} />
+          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20 flex items-center justify-center">
+            <PieChartIcon className="w-4.5 h-4.5 text-emerald-600" strokeWidth={2} />
           </div>
           <div>
             <h3 className="text-[15px] font-black tracking-tight text-slate-800 leading-tight">
@@ -294,7 +297,7 @@ export function ReservationStatsVisualizer({
         {!isEmpty && (
           <Link
             href="/dashboard/owner/reservations"
-            className="flex items-center gap-1 text-[11px] font-black text-slate-400 hover:text-violet-600 transition-all group"
+            className="flex items-center gap-1 text-[11px] font-black text-slate-400 hover:text-emerald-600 transition-all group"
           >
             Détails
             <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" strokeWidth={2.5} />
@@ -391,7 +394,7 @@ export function ReservationStatsVisualizer({
 
             {/* Bottom summary badge */}
             {activeCount > 0 && (
-              <div className="mt-auto py-2.5 px-3 rounded-xl bg-violet-50/50 border border-violet-100/50 flex items-center justify-between">
+              <div className="mt-auto py-2.5 px-3 rounded-xl bg-emerald-50/50 ring-1 ring-emerald-500/10 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="text-[11px] font-bold text-slate-600">Flux actif</span>

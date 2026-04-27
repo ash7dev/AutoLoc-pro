@@ -61,7 +61,7 @@ function ReservationRow({ r }: { r: ReservationItem }) {
     )}>
 
       {/* Vehicle Photo or Icon */}
-      <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 shrink-0 group-hover:border-emerald-200 transition-colors shadow-sm">
+      <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-slate-50 ring-1 ring-slate-900/5 shrink-0 group-hover:ring-emerald-500/20 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
         {r.vehiclePhoto ? (
           <img
             src={r.vehiclePhoto}
@@ -122,7 +122,7 @@ function ReservationRow({ r }: { r: ReservationItem }) {
 
       {/* Arrow if clickable */}
       {r.href && (
-        <div className="w-7 h-7 rounded-lg bg-white border border-slate-100 flex items-center justify-center opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 group-hover:border-emerald-200 group-hover:bg-emerald-50 ml-1 shadow-sm">
+        <div className="w-7 h-7 rounded-lg bg-white ring-1 ring-slate-900/5 flex items-center justify-center opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 group-hover:ring-emerald-500/20 ml-1 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
           <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600" strokeWidth={2.5} />
         </div>
       )}
@@ -193,26 +193,28 @@ export function RecentReservations({
   return (
     <div className={cn(
       "relative overflow-hidden rounded-2xl flex flex-col",
-      "border border-l-[3px] border-white/70 border-l-amber-500",
-      "bg-white/70 backdrop-blur-xl",
-      "shadow-sm",
+      "bg-white",
+      "ring-1 ring-slate-900/5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]",
       className,
     )}>
 
-      {/* Decorative orb */}
-      <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-orange-400 opacity-[0.04] pointer-events-none blur-3xl" />
+      {/* Top edge glare */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
+
+      {/* Ambient glow */}
+      <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-emerald-500 opacity-[0.04] pointer-events-none blur-3xl" />
 
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="relative z-10 flex items-center justify-between px-5 py-4 border-b border-slate-100/80">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 border border-amber-200 flex items-center justify-center shadow-sm">
-            <CalendarDays className="w-4 h-4 text-amber-600" strokeWidth={1.75} />
+          <div className="w-8 h-8 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20 flex items-center justify-center">
+            <CalendarDays className="w-4 h-4 text-emerald-600" strokeWidth={2} />
           </div>
           <h3 className="text-[15px] font-black tracking-tight text-slate-800">
             {effectiveTitle}
           </h3>
           {!loading && reservations.length > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-lg bg-amber-50 border border-amber-100 text-[10px] font-bold text-amber-700 tabular-nums">
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-lg bg-emerald-50 text-[10px] font-bold text-emerald-700 tabular-nums">
               {reservations.length}
             </span>
           )}

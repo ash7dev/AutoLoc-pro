@@ -2,9 +2,8 @@
 
 import type { LucideIcon } from "lucide-react";
 import {
-    TrendingUp, Car, Activity, Shield,
     ArrowUpRight, ArrowDownRight, Minus,
-    Banknote, Gauge, AlertTriangle,
+    Banknote, Car, Gauge, Shield, AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { OwnerStats } from "@/lib/nestjs/reservations";
@@ -19,8 +18,7 @@ interface StatItem {
     delta: string;
     trend: "up" | "down" | "neutral";
     icon: LucideIcon;
-    accent: "emerald" | "blue" | "amber" | "red";
-    gradient: string;
+    accent: "emerald" | "slate" | "red";
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -43,7 +41,6 @@ function buildStats(data: OwnerStats | null | undefined): StatItem[] {
             trend: data.revenusMois > 0 ? "up" : "neutral",
             icon: Banknote,
             accent: "emerald",
-            gradient: "from-emerald-500 to-teal-500",
         },
         {
             label: "Réservations actives",
@@ -54,8 +51,7 @@ function buildStats(data: OwnerStats | null | undefined): StatItem[] {
                 : "Prêt à louer",
             trend: data.reservationsActives > 0 ? "up" : "neutral",
             icon: Car,
-            accent: "blue",
-            gradient: "from-blue-500 to-indigo-500",
+            accent: "emerald",
         },
         {
             label: "Taux d'occupation",
@@ -68,8 +64,7 @@ function buildStats(data: OwnerStats | null | undefined): StatItem[] {
                     : "Catalogue disponible",
             trend: data.tauxOccupation >= 50 ? "up" : "neutral",
             icon: Gauge,
-            accent: "amber",
-            gradient: "from-amber-500 to-orange-500",
+            accent: "slate",
         },
         {
             label: "Litiges ouverts",
@@ -79,62 +74,44 @@ function buildStats(data: OwnerStats | null | undefined): StatItem[] {
             trend: data.litigesOuverts === 0 ? "neutral" : "down",
             icon: data.litigesOuverts === 0 ? Shield : AlertTriangle,
             accent: data.litigesOuverts === 0 ? "emerald" : "red",
-            gradient: data.litigesOuverts === 0 ? "from-emerald-500 to-teal-500" : "from-red-500 to-rose-500",
         },
     ];
 }
 
 const SKELETON_STATS: StatItem[] = [
-    { label: "Revenus du mois", value: "—", unit: "FCFA", delta: "", trend: "neutral", icon: Banknote, accent: "emerald", gradient: "from-emerald-500 to-teal-500" },
-    { label: "Réservations actives", value: "—", unit: "en cours", delta: "", trend: "neutral", icon: Car, accent: "blue", gradient: "from-blue-500 to-indigo-500" },
-    { label: "Taux d'occupation", value: "—", unit: "%", delta: "", trend: "neutral", icon: Gauge, accent: "amber", gradient: "from-amber-500 to-orange-500" },
-    { label: "Litiges ouverts", value: "—", unit: "litige", delta: "", trend: "neutral", icon: Shield, accent: "emerald", gradient: "from-emerald-500 to-teal-500" },
+    { label: "Revenus du mois", value: "—", unit: "FCFA", delta: "", trend: "neutral", icon: Banknote, accent: "emerald" },
+    { label: "Réservations actives", value: "—", unit: "en cours", delta: "", trend: "neutral", icon: Car, accent: "emerald" },
+    { label: "Taux d'occupation", value: "—", unit: "%", delta: "", trend: "neutral", icon: Gauge, accent: "slate" },
+    { label: "Litiges ouverts", value: "—", unit: "litige", delta: "", trend: "neutral", icon: Shield, accent: "emerald" },
 ];
 
-/* ── Accent token maps ──────────────────────────────────────── */
+/* ── Accent token maps — Premium palette ──────────────────── */
 const ACCENT_MAP: Record<StatItem["accent"], {
     iconBg: string;
     iconColor: string;
-    valueBg: string;
-    borderAccent: string;
-    glowShadow: string;
+    glowColor: string;
     trendBg: string;
     trendText: string;
 }> = {
     emerald: {
-        iconBg: "bg-gradient-to-br from-emerald-100 to-teal-100 border-emerald-200",
+        iconBg: "bg-emerald-500/10 ring-1 ring-emerald-500/20",
         iconColor: "text-emerald-600",
-        valueBg: "text-slate-900",
-        borderAccent: "border-l-emerald-500",
-        glowShadow: "hover:shadow-emerald-500/5",
-        trendBg: "bg-emerald-50",
+        glowColor: "bg-emerald-500",
+        trendBg: "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-500/20",
         trendText: "text-emerald-600",
     },
-    blue: {
-        iconBg: "bg-gradient-to-br from-blue-100 to-indigo-100 border-blue-200",
-        iconColor: "text-blue-600",
-        valueBg: "text-slate-900",
-        borderAccent: "border-l-blue-500",
-        glowShadow: "hover:shadow-blue-500/5",
-        trendBg: "bg-blue-50",
-        trendText: "text-blue-600",
-    },
-    amber: {
-        iconBg: "bg-gradient-to-br from-amber-100 to-orange-100 border-amber-200",
-        iconColor: "text-amber-600",
-        valueBg: "text-slate-900",
-        borderAccent: "border-l-amber-500",
-        glowShadow: "hover:shadow-amber-500/5",
-        trendBg: "bg-amber-50",
-        trendText: "text-amber-600",
+    slate: {
+        iconBg: "bg-slate-500/10 ring-1 ring-slate-500/20",
+        iconColor: "text-slate-600",
+        glowColor: "bg-slate-400",
+        trendBg: "bg-slate-50 text-slate-500 ring-1 ring-slate-500/20",
+        trendText: "text-slate-500",
     },
     red: {
-        iconBg: "bg-gradient-to-br from-red-100 to-rose-100 border-red-200",
+        iconBg: "bg-red-500/10 ring-1 ring-red-500/20",
         iconColor: "text-red-600",
-        valueBg: "text-red-700",
-        borderAccent: "border-l-red-500",
-        glowShadow: "hover:shadow-red-500/5",
-        trendBg: "bg-red-50",
+        glowColor: "bg-red-500",
+        trendBg: "bg-red-50 text-red-600 ring-1 ring-red-500/20",
         trendText: "text-red-600",
     },
 };
@@ -146,7 +123,7 @@ const TREND_CONFIG = {
 };
 
 /* ════════════════════════════════════════════════════════════════
-   STAT CARD — Glassmorphism
+   STAT CARD — Ultra Premium Pro
 ════════════════════════════════════════════════════════════════ */
 function StatCard({ stat, loading }: { stat: StatItem; loading: boolean }) {
     const Icon = stat.icon;
@@ -155,70 +132,67 @@ function StatCard({ stat, loading }: { stat: StatItem; loading: boolean }) {
 
     return (
         <div className={cn(
-            "relative group overflow-hidden rounded-2xl",
-            "border border-l-[3px] border-white/70",
-            a.borderAccent,
-            /* Glass */
-            "bg-white/70 backdrop-blur-xl",
-            "shadow-sm",
-            a.glowShadow,
-            "hover:shadow-xl hover:shadow-slate-200/40 hover:-translate-y-[2px]",
-            "transition-all duration-300 ease-out",
-            "p-5",
+            "group relative overflow-hidden rounded-2xl",
+            "bg-white",
+            "ring-1 ring-slate-900/5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]",
+            "hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:ring-slate-900/10 hover:-translate-y-[1px]",
+            "transition-all duration-400 ease-out",
+            "p-5 sm:p-6",
         )}>
+            {/* Top edge glare / reflection */}
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
 
-            {/* Decorative gradient orb — top right */}
+            {/* Subtle ambient hover glow in the top-right corner */}
             <div className={cn(
-                "absolute -top-6 -right-6 w-20 h-20 rounded-full opacity-[0.07] pointer-events-none blur-2xl",
-                `bg-gradient-to-br ${stat.gradient}`,
+                "absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-0 blur-3xl transition-opacity duration-500 ease-out pointer-events-none",
+                "group-hover:opacity-[0.08]",
+                a.glowColor
             )} />
 
-            <div className="relative z-10 flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                    {/* Label */}
-                    <p className="text-[9.5px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3 leading-tight">
+            <div className="relative z-10 flex flex-col gap-4">
+                {/* Header: Label + Icon */}
+                <div className="flex items-start justify-between gap-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mt-1">
                         {stat.label}
                     </p>
+                    <div className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3",
+                        a.iconBg,
+                    )}>
+                        <Icon className={cn("w-4.5 h-4.5", a.iconColor)} strokeWidth={2} />
+                    </div>
+                </div>
 
-                    {/* Value */}
+                {/* Body: Value + Delta */}
+                <div>
                     {loading ? (
-                        <div className="h-9 w-20 rounded-xl bg-slate-100 animate-pulse mb-2" />
+                        <div className="h-10 w-24 rounded-lg bg-slate-100 animate-pulse mb-3" />
                     ) : (
-                        <div className="flex items-baseline gap-1.5 mb-2.5">
-                            <span className={cn(
-                                "text-[32px] sm:text-[38px] font-black tabular-nums tracking-tighter leading-none",
-                                a.valueBg,
-                            )}>
+                        <div className="flex items-baseline gap-1.5 mb-3">
+                            <span className="text-[34px] sm:text-[40px] font-black tabular-nums tracking-tighter leading-none text-slate-900">
                                 {stat.value}
                             </span>
-                            <span className="text-[11px] font-bold text-slate-300 uppercase tracking-widest">
+                            <span className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">
                                 {stat.unit}
                             </span>
                         </div>
                     )}
 
-                    {/* Delta */}
                     {loading ? (
-                        <div className="h-4 w-24 rounded-lg bg-slate-100 animate-pulse" />
+                        <div className="h-5 w-28 rounded-md bg-slate-100 animate-pulse" />
                     ) : stat.delta ? (
-                        <div className={cn(
-                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border",
-                            a.trendBg,
-                            a.trendText,
-                            "border-transparent",
-                        )}>
-                            <TrendIcon className={cn("w-3 h-3", TREND_CONFIG[stat.trend].cls)} strokeWidth={2.5} />
-                            {stat.delta}
+                        <div className="flex items-center gap-2">
+                            <div className={cn(
+                                "inline-flex items-center justify-center rounded-md p-0.5",
+                                a.trendBg
+                            )}>
+                                <TrendIcon className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            </div>
+                            <span className="text-[11.5px] font-semibold text-slate-500">
+                                {stat.delta}
+                            </span>
                         </div>
                     ) : null}
-                </div>
-
-                {/* Icon */}
-                <div className={cn(
-                    "w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0 shadow-sm",
-                    a.iconBg,
-                )}>
-                    <Icon className={cn("w-5 h-5", a.iconColor)} strokeWidth={1.75} />
                 </div>
             </div>
         </div>

@@ -134,24 +134,49 @@ export function OwnerHeader({
   }, []);
 
   return (
-    <div className="relative rounded-2xl bg-black border border-white/[0.06] px-4 py-4 sm:px-8 sm:py-6">
-      {/* Background decoration layer - handles overflow for glows/grid only */}
+    <div className="relative rounded-2xl bg-[#0a0a0a] border border-white/[0.06] px-4 py-4 sm:px-8 sm:py-6 overflow-hidden">
+      {/* Background decoration layer */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-        {/* Ambient glows */}
-        <div className="absolute -top-20 -left-10 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="absolute -top-10 right-20 h-48 w-48 rounded-full bg-emerald-500/5 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-32 w-96 rounded-full bg-emerald-400/5 blur-2xl" />
+        {/* Animated mesh gradient — slow breathing effect */}
+        <div 
+          className="absolute -top-20 -left-10 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl"
+          style={{ animation: 'meshFloat 8s ease-in-out infinite' }}
+        />
+        <div 
+          className="absolute -top-10 right-20 h-48 w-48 rounded-full bg-emerald-500/5 blur-3xl"
+          style={{ animation: 'meshFloat 10s ease-in-out infinite reverse' }}
+        />
+        <div 
+          className="absolute bottom-0 right-0 h-32 w-96 rounded-full bg-emerald-400/5 blur-2xl"
+          style={{ animation: 'meshFloat 12s ease-in-out infinite' }}
+        />
+        <div 
+          className="absolute top-1/2 left-1/3 h-40 w-40 rounded-full bg-teal-500/5 blur-3xl"
+          style={{ animation: 'meshFloat 14s ease-in-out infinite reverse' }}
+        />
 
         {/* Subtle grid overlay */}
         <div
-          className="absolute inset-0 opacity-[0.015]"
+          className="absolute inset-0 opacity-[0.02]"
           style={{
             backgroundImage:
               "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
             backgroundSize: "40px 40px",
           }}
         />
+
+        {/* Top highlight line */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
       </div>
+
+      {/* Keyframes for mesh animation */}
+      <style jsx>{`
+        @keyframes meshFloat {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(8px, -6px) scale(1.05); }
+          66% { transform: translate(-4px, 4px) scale(0.97); }
+        }
+      `}</style>
 
       <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
         {/* Left */}
