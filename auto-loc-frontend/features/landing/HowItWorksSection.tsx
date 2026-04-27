@@ -53,7 +53,7 @@ export function HowItWorksSection(): React.ReactElement {
                     </div>
                     <h2
                         id="how-it-works-heading"
-                        className="text-4xl font-black tracking-tight text-black leading-tight lg:text-5xl"
+                        className="text-[32px] lg:text-[48px] font-black tracking-tight text-black leading-tight"
                     >
                         Comment ça <span className="text-emerald-400">marche</span> ?
                     </h2>

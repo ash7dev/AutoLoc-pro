@@ -139,7 +139,7 @@ export function FAQSection(): React.ReactElement {
                         </div>
                         <h2
                             id="faq-heading"
-                            className="text-4xl font-black tracking-tight text-slate-900 leading-[1.1] lg:text-6xl"
+                            className="text-[32px] lg:text-[48px] font-black tracking-tight text-slate-900 leading-tight"
                         >
                             Tout savoir sur <span className="text-emerald-500 italic">AutoLoc</span>
                         </h2>

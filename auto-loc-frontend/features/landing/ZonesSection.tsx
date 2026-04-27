@@ -61,7 +61,7 @@ export function ZonesSection(): React.ReactElement {
                         </div>
                         <h2
                             id="zones-heading"
-                            className="text-3xl font-black tracking-tight text-white leading-tight lg:text-4xl"
+                            className="text-[32px] lg:text-[48px] font-black tracking-tight text-white leading-tight"
                         >
                             Disponible près de <span className="text-emerald-400">chez vous</span>
                         </h2>

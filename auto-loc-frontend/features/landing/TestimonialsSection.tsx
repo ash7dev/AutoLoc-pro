@@ -78,7 +78,7 @@ export function TestimonialsSection(): React.ReactElement {
                                 La communauté AutoLoc
                             </span>
                         </div>
-                        <h2 id="testimonials-heading" className="text-4xl lg:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]">
+                        <h2 id="testimonials-heading" className="text-[32px] lg:text-[48px] font-black tracking-tight text-slate-900 leading-tight">
                             Ils nous font <span className="text-emerald-500 italic">confiance</span>
                         </h2>
                         <div className="mt-8 flex items-center justify-center gap-4">

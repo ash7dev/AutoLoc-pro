@@ -192,7 +192,7 @@ function StatsSectionInner() {
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
                     id="stats-heading"
-                    className="text-3xl font-black tracking-tight text-white leading-tight lg:text-4xl"
+                    className="text-[32px] lg:text-[48px] font-black tracking-tight text-white leading-tight"
                 >
                     AutoLoc en <span className="text-emerald-400">chiffres</span>
                 </motion.h2>

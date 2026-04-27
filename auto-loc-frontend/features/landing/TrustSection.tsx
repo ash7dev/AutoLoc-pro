@@ -68,7 +68,7 @@ export function TrustSection(): React.ReactElement {
                         </div>
                         <h2
                             id="trust-heading"
-                            className="text-4xl font-black tracking-tight text-black leading-tight lg:text-5xl"
+                            className="text-[32px] lg:text-[48px] font-black tracking-tight text-black leading-tight"
                         >
                             Pourquoi{' '}
                             <span className="text-emerald-400">AutoLoc</span> ?

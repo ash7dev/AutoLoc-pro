@@ -174,7 +174,7 @@ function SectionHeader({
             {loading ? 'Chargement…' : `${totalCount} véhicule${totalCount > 1 ? 's' : ''} disponible${totalCount > 1 ? 's' : ''}`}
           </span>
         </div>
-        <h2 className="text-[34px] lg:text-[48px] font-black tracking-tight text-slate-900 leading-[1.02]">
+        <h2 className="text-[32px] lg:text-[48px] font-black tracking-tight text-slate-900 leading-tight">
           Trouvez votre <span className="text-emerald-500">véhicule</span>
         </h2>
         <p className="max-w-xl text-[14px] font-medium text-slate-500 leading-relaxed">
