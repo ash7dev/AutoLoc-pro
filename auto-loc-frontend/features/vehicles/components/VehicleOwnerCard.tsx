@@ -78,9 +78,10 @@ interface MobileBarProps {
     fraisLivraison?: number | null;
     autoriseHorsDakar?: boolean;
     supplementHorsDakarParJour?: number | null;
+    blockedRanges?: any[];
 }
 
-export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum, ageMinimum, fraisLivraison, autoriseHorsDakar, supplementHorsDakarParJour }: MobileBarProps): React.ReactElement {
+export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum, ageMinimum, fraisLivraison, autoriseHorsDakar, supplementHorsDakarParJour, blockedRanges }: MobileBarProps): React.ReactElement {
     const [sheetOpen, setSheetOpen] = useState(false);
     const { formatPrice: currencyFormat } = useCurrency();
 
@@ -143,6 +144,7 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum, age
                             fraisLivraison={fraisLivraison}
                             autoriseHorsDakar={autoriseHorsDakar}
                             supplementHorsDakarParJour={supplementHorsDakarParJour}
+                            blockedRanges={blockedRanges}
                         />
                     </div>
                 </>
@@ -169,7 +171,7 @@ function calcAge(dateStr: string): number {
     return age;
 }
 
-function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum, fraisLivraison, autoriseHorsDakar, supplementHorsDakarParJour }: MobileBarProps) {
+function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum, fraisLivraison, autoriseHorsDakar, supplementHorsDakarParJour, blockedRanges }: MobileBarProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { formatPrice: currencyFormat } = useCurrency();
@@ -321,6 +323,7 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                     dateFin={dateFin}
                     onDateDebutChange={setDateDebut}
                     onDateFinChange={setDateFin}
+                    initialBlockedRanges={blockedRanges}
                 />
 
                 {datesValid && pricing && !loadingPricing && (

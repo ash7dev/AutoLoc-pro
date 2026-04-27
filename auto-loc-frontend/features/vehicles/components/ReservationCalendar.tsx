@@ -36,6 +36,7 @@ interface Props {
     dateFin: string;
     onDateDebutChange: (v: string) => void;
     onDateFinChange: (v: string) => void;
+    initialBlockedRanges?: BlockedRange[];
 }
 
 /* ── Calendar classNames (shared style tokens) ───────────────────── */
@@ -96,6 +97,7 @@ export function ReservationCalendar({
     dateFin,
     onDateDebutChange,
     onDateFinChange,
+    initialBlockedRanges,
 }: Props) {
     const [open, setOpen] = useState(false);
     const today = useMemo(() => {
@@ -104,13 +106,16 @@ export function ReservationCalendar({
         return d;
     }, []);
 
-    const [blockedRanges, setBlockedRanges] = useState<BlockedRange[]>([]);
+    const [blockedRanges, setBlockedRanges] = useState<BlockedRange[]>(initialBlockedRanges ?? []);
 
     useEffect(() => {
+        // Still fetch in background to ensure freshness, but user sees initialData instantly
         fetchBlockedDates(vehicleId)
             .then((res) => setBlockedRanges(res.blockedRanges))
-            .catch(() => setBlockedRanges([]));
-    }, [vehicleId]);
+            .catch(() => {
+                if (!initialBlockedRanges) setBlockedRanges([]);
+            });
+    }, [vehicleId, initialBlockedRanges]);
 
     /* Build a Set<string> of blocked dates for O(1) lookup */
     const blockedSet = useMemo(() => {

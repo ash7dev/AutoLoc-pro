@@ -34,9 +34,10 @@ interface Props {
   fraisLivraison?: number | null;
   autoriseHorsDakar?: boolean;
   supplementHorsDakarParJour?: number | null;
+  blockedRanges?: any[];
 }
 
-export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMinimum, fraisLivraison, autoriseHorsDakar, supplementHorsDakarParJour }: Props): React.ReactElement {
+export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMinimum, fraisLivraison, autoriseHorsDakar, supplementHorsDakarParJour, blockedRanges }: Props): React.ReactElement {
   const router = useRouter();
   const { formatPrice } = useCurrency();
   const params = useSearchParams();
@@ -244,6 +245,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
             dateFin={dateFin}
             onDateDebutChange={setDateDebut}
             onDateFinChange={setDateFin}
+            initialBlockedRanges={blockedRanges}
           />
 
           {/* Duration indicator */}

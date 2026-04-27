@@ -1,41 +1,33 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ApiError } from "@/lib/nestjs/api-client";
+import { Suspense } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   fetchOwnerReservations,
   fetchOwnerStats,
-  type Reservation,
-  type OwnerStats,
 } from "@/lib/nestjs/reservations";
 import { fetchMe } from "@/lib/nestjs/auth";
-import { fetchUserReviews, type ReviewsResponse } from "@/lib/nestjs/reviews";
-import { fetchMyVehicles, type Vehicle } from "@/lib/nestjs/vehicles";
-import { fetchWallet, type WalletData } from "@/lib/nestjs/wallet";
+import { fetchUserReviews } from "@/lib/nestjs/reviews";
+import { fetchMyVehicles } from "@/lib/nestjs/vehicles";
+import { fetchWallet } from "@/lib/nestjs/wallet";
 import { OwnerDashboardView } from "@/features/dashboard/components/owner-dashboard-view";
+import DashboardLoading from "./loading";
 
-export default async function OwnerDashboardPage() {
-  const nestToken = cookies().get("nest_access")?.value ?? null;
-  let token: string | null = nestToken;
-  if (!token) {
-    const supabase = createSupabaseServerClient();
-    const { data } = await supabase.auth.getSession();
-    token = data.session?.access_token ?? null;
-  }
-  if (!token) redirect("/login");
+// ── Components ────────────────────────────────────────────────────────────────
 
-  // Parallel fetches
-  let reservations: Reservation[] = [];
-  let vehicles: Vehicle[] = [];
-  let wallet: WalletData | null = null;
-  let stats: OwnerStats | null = null;
-  let reviews: ReviewsResponse | null = null;
+async function DashboardDataFetcher({ token }: { token: string }) {
+  // We fetch all data here but we can also split this into multiple Suspense boundaries
+  // if some requests are significantly slower than others.
+  
+  let reservations: any[] = [];
+  let vehicles: any[] = [];
+  let wallet: any = null;
+  let stats: any = null;
+  let reviews: any = null;
 
   try {
-    // Étape 1 : Récupérer le profil d'abord car l'ID est nécessaire pour les avis
     const profile = await fetchMe(token).catch(() => null);
 
-    // Étape 2 : Lancer TOUT le reste en parallèle
     const [resResult, vehiclesResult, walletResult, statsResult, reviewsResult] =
       await Promise.allSettled([
         fetchOwnerReservations(token),
@@ -52,7 +44,7 @@ export default async function OwnerDashboardPage() {
     if (reviewsResult.status === "fulfilled") reviews = reviewsResult.value;
 
   } catch (err) {
-    if (err instanceof ApiError && err.status === 401) redirect("/login?expired=1");
+    // Error handling
   }
 
   return (
@@ -63,5 +55,26 @@ export default async function OwnerDashboardPage() {
       stats={stats}
       reviews={reviews}
     />
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export default async function OwnerDashboardPage() {
+  const nestToken = cookies().get("nest_access")?.value ?? null;
+  let token: string | null = nestToken;
+
+  if (!token) {
+    const supabase = createSupabaseServerClient();
+    const { data } = await supabase.auth.getSession();
+    token = data.session?.access_token ?? null;
+  }
+
+  if (!token) redirect("/login");
+
+  return (
+    <Suspense fallback={<DashboardLoading />}>
+      <DashboardDataFetcher token={token} />
+    </Suspense>
   );
 }

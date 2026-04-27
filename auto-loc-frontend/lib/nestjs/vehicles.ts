@@ -169,7 +169,7 @@ export interface SearchVehiclesResponse {
 
 // ── Client cache (public search) ──────────────────────────────────────────────
 
-const SEARCH_CACHE_TTL_MS = 0; // Disable client-side cache to debug reset issues
+const SEARCH_CACHE_TTL_MS = 60_000; // 60 seconds cache for better performance
 const searchCache: Map<string, { ts: number; data: SearchVehiclesResponse }> =
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   (globalThis as any).__AUTOLOC_SEARCH_CACHE__ ?? new Map();
@@ -346,7 +346,10 @@ export async function fetchVehicle(
   id: string,
   accessToken?: string,
 ): Promise<Vehicle> {
-  return apiFetch<Vehicle>(VEHICLE_PATHS.detail(id), { accessToken });
+  return apiFetch<Vehicle>(VEHICLE_PATHS.detail(id), { 
+    accessToken,
+    next: { revalidate: 60 } 
+  });
 }
 
 /**
@@ -386,7 +389,7 @@ export async function searchVehicles(
   const data = await apiFetch<SearchVehiclesResponse>(
     `${VEHICLE_PATHS.search}?${qs.toString()}`,
     { 
-      next: { revalidate: 0 } 
+      next: { revalidate: 60 } 
     }
   );
 
