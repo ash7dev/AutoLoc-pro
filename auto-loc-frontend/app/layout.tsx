@@ -121,6 +121,8 @@ const jsonLd = {
   sameAs: [],
 };
 
+import { WhatsAppBubble } from '@/components/ui/WhatsAppBubble';
+
 export default function RootLayout({
   children,
 }: {
@@ -141,6 +143,7 @@ export default function RootLayout({
           </ColorSystemProvider>
           <GlobalModals />
           <Toaster position="top-right" richColors closeButton />
+          <WhatsAppBubble />
         </ThemeProvider>
       </body>
     </html>
