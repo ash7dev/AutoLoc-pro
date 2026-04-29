@@ -32,26 +32,19 @@ export function ModalShell({
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-[2px] px-0 sm:px-4 sm:py-6 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-[2px] px-4 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
         className={cn(
           "flex w-full flex-col overflow-hidden bg-white",
           "border border-slate-200/60",
-          // Mobile : bottom sheet
-          "max-h-[92dvh] rounded-t-3xl shadow-[0_-8px_40px_rgba(0,0,0,0.18)]",
-          "animate-in slide-in-from-bottom duration-300",
-          // Desktop : dialog centré (aligné sur PreGateOverlay: max-w-md -> max-w-[448px])
-          "sm:max-w-md sm:rounded-2xl sm:max-h-[calc(100dvh-3rem)] sm:shadow-[0_24px_64px_rgba(0,0,0,0.22)]",
-          "sm:animate-in sm:zoom-in-95 sm:slide-in-from-bottom-0",
+          "rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.22)]",
+          "animate-in zoom-in-95 duration-250",
+          "max-w-md max-h-[calc(100dvh-3rem)]",
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag handle — mobile uniquement */}
-        <div className="sm:hidden flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full bg-slate-200" />
-        </div>
 
         {/* Header */}
         <div className="flex-shrink-0 flex items-start justify-between border-b border-slate-100 bg-white px-5 pt-4 pb-4 sm:px-6 sm:pt-5 sm:pb-4">

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Check, Clock, AlertCircle, Circle,
-  Phone, ShieldCheck, CreditCard, X, ArrowRight, CalendarDays,
+  Phone, ShieldCheck, CreditCard, X, ArrowRight, CalendarDays, User
 } from "lucide-react";
 import { PhoneVerifyGate } from "@/features/vehicles/add/PhoneVerifyGate";
 import { KycGate } from "@/features/vehicles/add/KycGate";
@@ -260,17 +260,13 @@ function PreGateOverlay({
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-[2px] px-0 sm:px-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-[2px] px-4 animate-in fade-in duration-200"
       onClick={onCancel}
     >
       <div
-        className="w-full sm:max-w-md flex flex-col overflow-hidden rounded-t-3xl sm:rounded-2xl border border-slate-200/60 bg-white shadow-[0_-8px_40px_rgba(0,0,0,0.18)] sm:shadow-[0_24px_64px_rgba(0,0,0,0.22)] animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-250"
+        className="w-full sm:max-w-md flex flex-col overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-[0_24px_64px_rgba(0,0,0,0.22)] animate-in zoom-in-95 duration-250"
         onClick={e => e.stopPropagation()}
       >
-        {/* Drag handle — mobile only */}
-        <div className="sm:hidden flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-slate-200" />
-        </div>
 
         {/* Header */}
         <div className="flex items-start justify-between px-5 pt-4 pb-3 sm:px-6 sm:pt-5">
@@ -388,20 +384,48 @@ function AgeInsufficientBlock({ ageMinimum, userAge, onClose }: {
 
 /* ── CreateProfileGate — pas d'utilisateur, formulaire complet ─ */
 function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, onComplete: () => void }) {
+  const [step, setStep] = useState<'form' | 'otp'>('form');
   const [form, setForm] = useState({
     prenom: profile.prenom || '',
     nom: profile.nom || '',
     dateNaissance: profile.dateNaissance || '',
     phone: profile.phone || ''
   });
+  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRequestOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.phone) return;
+    setLoading(true);
+    setError('');
+    try {
+      // Envoie l'OTP au numéro saisi
+      await apiFetch('/auth/phone/update', {
+        method: 'POST',
+        body: { telephone: form.phone },
+      });
+      setStep('otp');
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de l\'envoi du code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyAndComplete = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
+      // 1. Vérifier l'OTP
+      await apiFetch('/auth/phone/verify', {
+        method: 'POST',
+        body: { code: otp },
+      });
+      
+      // 2. Créer le profil
       await apiFetch('/auth/complete-profile', {
         method: 'POST',
         body: {
@@ -412,34 +436,89 @@ function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, 
         },
       });
       onComplete();
-    } catch {
-      setError('Erreur lors de la création du profil. Veuillez réessayer.');
+    } catch (err: any) {
+      setError(err.message || 'Code incorrect ou erreur de création.');
     } finally {
       setLoading(false);
     }
   };
 
-  const field = (label: string, inputProps: React.InputHTMLAttributes<HTMLInputElement>) => (
+  const field = (label: string, icon: React.ElementType, inputProps: React.InputHTMLAttributes<HTMLInputElement>) => (
     <div className="space-y-1.5">
       <label className="block text-[12px] font-bold text-slate-700 ml-1">{label}</label>
-      <input
-        {...inputProps}
-        className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4
-          text-[13px] font-medium text-slate-800 placeholder-slate-300
-          focus:border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-400/5 transition-all"
-      />
+      <div className="relative group">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
+          {React.createElement(icon, { size: 16 })}
+        </div>
+        <input
+          {...inputProps}
+          className="w-full h-11 rounded-xl border border-slate-200 bg-white pl-11 pr-4
+            text-[13px] font-medium text-slate-800 placeholder-slate-300
+            focus:border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-400/5 transition-all"
+        />
+      </div>
     </div>
   );
 
+  if (step === 'otp') {
+    return (
+      <form onSubmit={handleVerifyAndComplete} className="space-y-5">
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
+          <p className="text-[12.5px] text-emerald-800 leading-relaxed text-center">
+            Un code de vérification a été envoyé au <br/>
+            <strong className="text-[14px]">{form.phone}</strong>
+          </p>
+        </div>
+
+        {field('Code de vérification', ShieldCheck, {
+          type: 'text',
+          required: true,
+          value: otp,
+          placeholder: '000000',
+          maxLength: 6,
+          onChange: e => setOtp(e.target.value.replace(/\D/g, '')),
+        })}
+
+        {error && (
+          <div className="rounded-xl border border-red-100 bg-red-50/50 p-3">
+            <p className="text-[11.5px] font-medium text-red-600 text-center">{error}</p>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <button
+            type="submit"
+            disabled={loading || otp.length < 6}
+            className={cn(
+              "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[14px] font-bold transition-all duration-200",
+              (!loading && otp.length === 6)
+                ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20"
+                : "bg-slate-100 text-slate-400 cursor-not-allowed"
+            )}
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Vérifier et créer mon profil'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setStep('form')}
+            className="w-full text-[13px] font-medium text-slate-400 hover:text-slate-600 py-1"
+          >
+            Modifier le numéro
+          </button>
+        </div>
+      </form>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleRequestOtp} className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        {field('Prénom *', {
+        {field('Prénom *', User, {
           type: 'text', required: true, value: form.prenom,
           placeholder: 'Ex: Amadou',
           onChange: e => setForm(p => ({ ...p, prenom: e.target.value })),
         })}
-        {field('Nom *', {
+        {field('Nom *', User, {
           type: 'text', required: true, value: form.nom,
           placeholder: 'Ex: Diop',
           onChange: e => setForm(p => ({ ...p, nom: e.target.value })),
@@ -454,7 +533,7 @@ function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, 
         error={!!error && !form.dateNaissance}
       />
 
-      {field('Numéro de téléphone *', {
+      {field('Numéro de téléphone *', Phone, {
         type: 'tel', required: true, value: form.phone,
         placeholder: '+221 77 000 00 00',
         onChange: e => setForm(p => ({ ...p, phone: e.target.value })),
@@ -477,8 +556,8 @@ function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, 
         )}
       >
         {loading
-          ? <><Loader2 className="w-4 h-4 animate-spin" />Création…</>
-          : <>Créer mon profil<ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>}
+          ? <><Loader2 className="w-4 h-4 animate-spin" />Chargement…</>
+          : <>Continuer <ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>}
       </button>
     </form>
   );
