@@ -222,10 +222,18 @@ export class UsersService {
         : '';
       const reasonText = dto.raison ? `\nRaison: ${dto.raison}` : '';
 
-      await this.notification.sendWhatsApp({
-        to: `whatsapp:${phone.startsWith('+') ? phone : `+221${phone}`}`,
-        body: `Ton compte Auto Loc a été ${statusText}${untilText}.${reasonText}`,
-      });
+      const messageBody = `Ton compte Auto Loc a été ${statusText}${untilText}.${reasonText}`;
+      try {
+        await this.notification.sendWhatsApp({
+          to: `whatsapp:${phone.startsWith('+') ? phone : `+221${phone}`}`,
+          body: messageBody,
+        });
+      } catch {
+        await this.notification.sendSms({
+          to: phone.startsWith('+') ? phone : `+221${phone}`,
+          body: messageBody,
+        }).catch(() => {});
+      }
     }
 
     return updated;

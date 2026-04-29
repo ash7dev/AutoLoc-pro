@@ -93,10 +93,14 @@ export class ReservationExpiryProcessor {
     ].filter((p): p is string => Boolean(p));
 
     for (const phone of phones) {
-      await this.notification.sendWhatsApp({
-        to: this.normalizeWhatsAppNumber(phone),
-        body: `Rappel: merci de signer le contrat pour la réservation ${reservation.id}.`,
-      });
+      const whatsappTo = this.normalizeWhatsAppNumber(phone);
+      const smsTo = phone.replace('whatsapp:', '').trim();
+      const body = `Rappel: merci de signer le contrat pour la réservation ${reservation.id}.`;
+      try {
+        await this.notification.sendWhatsApp({ to: whatsappTo, body });
+      } catch {
+        await this.notification.sendSms({ to: smsTo, body }).catch(() => {});
+      }
     }
 
     await this.markReminderSent(
@@ -136,10 +140,14 @@ export class ReservationExpiryProcessor {
     ].filter((p): p is string => Boolean(p));
 
     for (const phone of phones) {
-      await this.notification.sendWhatsApp({
-        to: this.normalizeWhatsAppNumber(phone),
-        body: `Rappel: votre location commence demain (réservation ${reservation.id}).`,
-      });
+      const whatsappTo = this.normalizeWhatsAppNumber(phone);
+      const smsTo = phone.replace('whatsapp:', '').trim();
+      const body = `Rappel: votre location commence demain (réservation ${reservation.id}).`;
+      try {
+        await this.notification.sendWhatsApp({ to: whatsappTo, body });
+      } catch {
+        await this.notification.sendSms({ to: smsTo, body }).catch(() => {});
+      }
     }
 
     await this.markReminderSent(
@@ -188,10 +196,13 @@ export class ReservationExpiryProcessor {
           ? `AutoLoc : le propriétaire a enregistré le départ et l'état du véhicule. Validez votre check-in dans l'app sous 24 h. Sans action, la location sera considérée comme démarrée (rés. ${shortId}…).`
           : `Rappel AutoLoc : validez votre check-in dans l'app. Sans validation, la location démarrera automatiquement selon l'état des lieux enregistré (rés. ${shortId}…).`;
 
-      await this.notification.sendWhatsApp({
-        to: this.normalizeWhatsAppNumber(phone),
-        body,
-      });
+      const whatsappTo = this.normalizeWhatsAppNumber(phone);
+      const smsTo = phone.replace('whatsapp:', '').trim();
+      try {
+        await this.notification.sendWhatsApp({ to: whatsappTo, body });
+      } catch {
+        await this.notification.sendSms({ to: smsTo, body }).catch(() => {});
+      }
     }
 
     await this.markReminderSent(

@@ -1090,10 +1090,16 @@ export class VehiclesService {
     const phone = vehicle.proprietaire.telephone?.trim();
     if (phone) {
       const prenom = vehicle.proprietaire.prenom ?? 'Propriétaire';
-      await this.notification.sendWhatsApp({
-        to: `whatsapp:${phone.startsWith('+') ? phone : `+221${phone}`}`,
-        body: `Bonjour ${prenom}, votre véhicule ${vehicle.marque} ${vehicle.modele} a été validé et est maintenant disponible à la location sur Auto Loc. 🎉`,
-      });
+      const messageBody = `Bonjour ${prenom}, votre véhicule ${vehicle.marque} ${vehicle.modele} a été validé et est maintenant disponible à la location sur Auto Loc. 🎉`;
+      const normalizedPhone = phone.startsWith('+') ? phone : `+221${phone}`;
+      try {
+        await this.notification.sendWhatsApp({
+          to: `whatsapp:${normalizedPhone}`,
+          body: messageBody,
+        });
+      } catch {
+        await this.notification.sendSms({ to: normalizedPhone, body: messageBody }).catch(() => {});
+      }
     }
 
     return updated;
@@ -1135,10 +1141,16 @@ export class VehiclesService {
     const phone = vehicle.proprietaire.telephone?.trim();
     if (phone) {
       const prenom = vehicle.proprietaire.prenom ?? 'Propriétaire';
-      await this.notification.sendWhatsApp({
-        to: `whatsapp:${phone.startsWith('+') ? phone : `+221${phone}`}`,
-        body: `Bonjour ${prenom}, votre véhicule ${vehicle.marque} ${vehicle.modele} a été suspendu sur Auto Loc.\nRaison : ${raison}\nContactez notre support pour plus d'informations.`,
-      });
+      const messageBody = `Bonjour ${prenom}, votre véhicule ${vehicle.marque} ${vehicle.modele} a été suspendu sur Auto Loc.\nRaison : ${raison}\nContactez notre support pour plus d'informations.`;
+      const normalizedPhone = phone.startsWith('+') ? phone : `+221${phone}`;
+      try {
+        await this.notification.sendWhatsApp({
+          to: `whatsapp:${normalizedPhone}`,
+          body: messageBody,
+        });
+      } catch {
+        await this.notification.sendSms({ to: normalizedPhone, body: messageBody }).catch(() => {});
+      }
     }
 
     return updated;

@@ -255,6 +255,15 @@ export class AuthService {
       throw new BadRequestException('Utilisateur invalide');
     }
 
+    // Récupérer le téléphone de l'utilisateur
+    const utilisateur = await this.prisma.utilisateur.findUnique({
+      where: { userId: user.sub },
+      select: { telephone: true, prenom: true },
+    });
+    if (!utilisateur?.telephone) {
+      throw new BadRequestException('Aucun numéro de téléphone associé à ce compte');
+    }
+
     const cooldownKey = this.getOtpCooldownKey(user.sub);
     const granted = await this.redisService.setNX(cooldownKey, '1', OTP_COOLDOWN_SECONDS);
     if (!granted) {
@@ -265,9 +274,27 @@ export class AuthService {
     const key = this.getOtpKey(user.sub);
     await this.redisService.set(key, code, OTP_TTL_SECONDS);
 
-    // TODO: envoyer SMS/WhatsApp via provider (Twilio, etc.)
-    // eslint-disable-next-line no-console
-    console.log('[Auth] phone OTP generated', { userId: user.sub, code });
+    // Envoi réel via WhatsApp (prioritaire), fallback SMS
+    const otpMessage = `🔐 AutoLoc — Votre code de vérification est : ${code}\n\nCe code expire dans 5 minutes. Ne le partagez avec personne.`;
+
+    try {
+      await this.notification.sendWhatsApp({
+        to: utilisateur.telephone,
+        body: otpMessage,
+      });
+    } catch {
+      // Fallback SMS si WhatsApp échoue
+      try {
+        await this.notification.sendSms({
+          to: utilisateur.telephone,
+          body: `AutoLoc - Votre code de vérification : ${code} (expire dans 5 min)`,
+        });
+      } catch {
+        // Les deux canaux ont échoué, mais le code est en Redis.
+        // L'utilisateur peut réessayer après le cooldown.
+        console.error('[Auth] OTP delivery failed for both WhatsApp and SMS', { userId: user.sub });
+      }
+    }
 
     return { expiresIn: OTP_TTL_SECONDS };
   }
@@ -276,8 +303,6 @@ export class AuthService {
     if (!user.sub) {
       throw new BadRequestException('Utilisateur invalide');
     }
-    // eslint-disable-next-line no-console
-    console.log('[Auth] updatePhone', { userId: user.sub, telephone });
     const normalizedPhone = this.normalizePhone(telephone);
 
     const phoneTaken = await this.prisma.utilisateur.findFirst({

@@ -168,7 +168,7 @@ const COUNTRY_CODES = [
 ] as const;
 
 type CountryIso = typeof COUNTRY_CODES[number]["iso"];
-type Stage = "intro" | "success";
+type Stage = "intro" | "otp" | "success";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    UTILS
@@ -365,6 +365,8 @@ export function PhoneVerifyGate({
   const canSubmit = phoneInput.trim().length > 0
     && (!needsProfile || (prenom.trim() && nom.trim() && dateNaissance));
 
+  const [otpCode, setOtpCode] = useState("");
+
   const handleConfirm = async () => {
     const normalized = normalizePhone(selectedCountry.code, phoneInput);
     if (!normalized || normalized.length < 8) {
@@ -389,14 +391,37 @@ export function PhoneVerifyGate({
           body: { telephone: normalized },
         });
       }
-      setStage("success");
-      setTimeout(onVerified, 1200);
+      
+      // Envoi du code OTP
+      await authFetch("/auth/phone/send-otp", { method: "POST" });
+      setStage("otp");
     } catch (err) {
       setError(
         err instanceof ApiError && err.status === 400
-          ? "Numéro invalide ou déjà utilisé par un autre compte."
+          ? "Numéro invalide ou déjà utilisé, ou limite d'envoi atteinte."
           : "Service indisponible. Réessayez.",
       );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpCode.length !== 6) {
+      setError("Le code doit contenir 6 chiffres.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      await authFetch("/auth/phone/verify-otp", {
+        method: "POST",
+        body: { code: otpCode },
+      });
+      setStage("success");
+      setTimeout(onVerified, 1200);
+    } catch (err) {
+      setError("Code incorrect ou expiré.");
     } finally {
       setLoading(false);
     }
@@ -410,14 +435,80 @@ export function PhoneVerifyGate({
           <CheckCircle2 className="w-8 h-8 text-emerald-500" strokeWidth={1.75} />
         </div>
         <div>
-          <p className="text-[15px] font-black text-slate-900">Téléphone enregistré</p>
+          <p className="text-[15px] font-black text-slate-900">Téléphone vérifié</p>
           <p className="text-[12.5px] text-slate-400 mt-1">Redirection en cours…</p>
         </div>
       </div>
     );
   }
 
-  /* ── Form ── */
+  /* ── OTP Stage ── */
+  if (stage === "otp") {
+    return (
+      <div className="space-y-4">
+        <div className="text-center mb-6">
+          <p className="text-[13.5px] font-medium text-slate-700">
+            Un code à 6 chiffres a été envoyé par WhatsApp (ou SMS) au :
+          </p>
+          <p className="text-[15px] font-black text-slate-900 mt-1">
+            {normalizePhone(selectedCountry.code, phoneInput)}
+          </p>
+        </div>
+
+        <Field label="Code de vérification" required>
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            value={otpCode}
+            onChange={e => {
+              const val = e.target.value.replace(/\D/g, "");
+              setOtpCode(val);
+              setError(null);
+              if (val.length === 6) {
+                // petite astuce pour auto-submit mais attention au state stale
+                // on laisse l'utilisateur cliquer pour être sûr, ou on le gère via useEffect
+              }
+            }}
+            onKeyDown={e => { if (e.key === "Enter" && otpCode.length === 6) handleVerifyOtp(); }}
+            placeholder="123456"
+            className={cn(INPUT_CLS(Boolean(error)), "text-center tracking-widest text-lg font-bold")}
+            autoFocus
+          />
+        </Field>
+
+        {error && (
+          <div className="px-4 py-2.5 rounded-xl bg-red-50 border border-red-100">
+            <p className="text-[12px] font-semibold text-red-600">{error}</p>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleVerifyOtp}
+          disabled={loading || otpCode.length !== 6}
+          className={cn(
+            "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[13.5px] font-bold transition-all duration-200 mt-2",
+            otpCode.length === 6 && !loading
+              ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20"
+              : "bg-slate-100 text-slate-400 cursor-not-allowed",
+          )}
+        >
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Vérifier le code"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setStage("intro"); setOtpCode(""); setError(null); }}
+          className="w-full text-[12.5px] font-semibold text-slate-500 hover:text-slate-800 transition-colors py-2"
+        >
+          Modifier le numéro
+        </button>
+      </div>
+    );
+  }
+
+  /* ── Form (Intro) ── */
   return (
     <div className="space-y-4">
 
@@ -502,7 +593,7 @@ export function PhoneVerifyGate({
           ? <Loader2 className="w-4 h-4 animate-spin" />
           : <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
         }
-        Confirmer
+        Continuer
       </button>
     </div>
   );
