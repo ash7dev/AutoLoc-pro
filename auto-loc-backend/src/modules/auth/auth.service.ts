@@ -889,8 +889,19 @@ export class AuthService {
   private normalizePhone(raw: string): string {
     const trimmed = raw.trim().replace(/[\s-]/g, '');
     if (trimmed.startsWith('+')) return trimmed;
-    if (trimmed.startsWith('221')) return `+${trimmed}`;
-    return `+221${trimmed}`;
+
+    // Si c'est un numéro local Sénégalais (9 chiffres sans le +, ex: 771234567)
+    if (trimmed.length === 9 && (trimmed.startsWith('77') || trimmed.startsWith('78') || trimmed.startsWith('76') || trimmed.startsWith('70') || trimmed.startsWith('71') || trimmed.startsWith('33'))) {
+      return `+221${trimmed}`;
+    }
+
+    // Si ça commence déjà par 221 sans le +
+    if (trimmed.startsWith('221') && trimmed.length > 10) {
+      return `+${trimmed}`;
+    }
+
+    // Par défaut, si pas de +, on garde tel quel (ou on pourrait lever une erreur, mais restons permissifs pour l'instant)
+    return trimmed.startsWith('00') ? `+${trimmed.slice(2)}` : (trimmed.startsWith('+') ? trimmed : `+${trimmed}`);
   }
 
   private normalizeEmail(raw: string): string {

@@ -77,6 +77,7 @@ export class CancelReservationUseCase {
                 proprietaireId: true,
                 vehiculeId: true,
                 dateDebut: true,
+                dateFin: true,
                 totalLocataire: true,
                 totalBase: true,
                 montantCommission: true,
@@ -273,6 +274,8 @@ export class CancelReservationUseCase {
             proprietairePhone: reservation.proprietaire?.telephone ?? null,
             proprietairePrenom: reservation.proprietaire?.prenom ?? null,
             vehicule: reservation.vehicule ? `${reservation.vehicule.marque} ${reservation.vehicule.modele}` : 'véhicule',
+            dateDebut: reservation.dateDebut,
+            dateFin: reservation.dateFin,
             isRefusal: isProprietaire && reservation.statut === StatutReservation.PAYEE,
         };
 

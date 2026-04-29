@@ -9,6 +9,7 @@ import { useLogin } from '../hooks/use-login';
 import { useLoginOtp } from '../hooks/use-login-otp';
 import { useOAuth } from '../hooks/use-oauth';
 import { LogoLoader } from '@/components/ui/logo-loader';
+import { PhoneInput } from '@/components/ui/phone-input';
 
 export default function LoginAutoLoc() {
   const [email, setEmail] = useState('');
@@ -107,7 +108,7 @@ export default function LoginAutoLoc() {
   const handlePhoneLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    const formattedPhone = `+221${phone.replace(/\s/g, '')}`;
+    const formattedPhone = phone.replace(/\s/g, ''); // phone contient déjà l'indicatif via PhoneInput
     const ok = await sendCode(formattedPhone);
     if (ok) {
       setIsRedirecting(true);
@@ -295,22 +296,12 @@ export default function LoginAutoLoc() {
             {activeTab === 'phone' && (
               <form onSubmit={handlePhoneLogin} className="space-y-4">
                 <div>
-                  <label className="autoloc-body block text-sm font-medium text-gray-800 mb-1.5">Numéro de téléphone</label>
-                  <div className="flex gap-2">
-                    <div className="autoloc-body flex items-center gap-2 px-3 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 text-sm whitespace-nowrap select-none">
-                      🇸🇳 +221
-                    </div>
-                    <div className="relative flex-1">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Phone className="h-4 w-4 text-emerald-400" />
-                      </div>
-                      <input
-                        type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                        className="autoloc-body w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder-gray-300 text-sm"
-                        placeholder="77 000 00 00" required disabled={isLoading || isRedirecting}
-                      />
-                    </div>
-                  </div>
+                  <PhoneInput
+                    value={phone}
+                    onChange={(v) => setPhone(v)}
+                    disabled={isLoading || isRedirecting}
+                    error={!!error}
+                  />
                 </div>
 
                 <button

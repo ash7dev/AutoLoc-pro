@@ -202,10 +202,23 @@ export class NotificationService {
   private getWhatsAppMapping(type: NotificationType, data: Record<string, unknown>) {
     const resId = String(data.reservationId || '').slice(0, 8).toUpperCase();
 
-    // Formatage des dates pour WhatsApp
-    const formatDate = (date: any) => date ? new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
-    const dateDeb = formatDate(data.dateDebut);
-    const dateFin = formatDate(data.dateFin);
+    // Formatage des dates pour WhatsApp (avec heure)
+    const formatDate = (date: any) => {
+      if (!date) return '';
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return '';
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      if (hours === '00' && minutes === '00') {
+        return `${day}/${month}/${year}`;
+      }
+      return `${day}/${month}/${year} à ${hours}h${minutes}`;
+    };
+    const dateDeb = formatDate(data.dateDebut) || 'Début';
+    const dateFin = formatDate(data.dateFin) || 'Fin';
 
     // Détection du rôle (Propriétaire vs Locataire) pour les messages partagés
     const isOwner = data.isOwner === true || type.includes('.owner');
@@ -229,34 +242,38 @@ export class NotificationService {
           '1': String(data.vehicule || 'véhicule'),
           '2': dateDeb, '3': dateFin,
           '4': String(data.netProprietaire || '0'),
-          '5': data.reservationId
+          '5': data.reservationId as string
         },
         fallbackText: `💰 AutoLoc — Nouvelle réservation payée pour ${data.vehicule} ! Confirmez ici.`,
       },
       'reservation.paid': {
-        contentSid: 'HX0f3dd2d8599bed754c1c7a23240383a3', // locataire_resa_validee_bouton
+        contentSid: 'HX0d287413da68b4f90bd00fbca59a941a', // locataire_resa_validee_bouton
         variables: {
           '1': String(data.vehicule || 'véhicule'),
           '2': dateDeb, '3': dateFin,
-          '4': data.reservationId
+          '4': data.reservationId as string
         },
         fallbackText: `💰 AutoLoc — Votre paiement pour ${data.vehicule} est validé ! Réservation #${resId} en attente de confirmation.`,
       },
       'reservation.confirmed': {
-        contentSid: 'HX0f3dd2d8599bed754c1c7a23240383a3', // locataire_resa_validee_bouton
+        contentSid: 'HX0d287413da68b4f90bd00fbca59a941a', // locataire_resa_validee_bouton
         variables: {
           '1': String(data.vehicule || 'véhicule'),
           '2': dateDeb, '3': dateFin,
-          '4': data.reservationId
+          '4': data.reservationId as string
         },
         fallbackText: `🎉 AutoLoc — Votre réservation pour ${data.vehicule} est CONFIRMÉE !`,
       },
 
       // --- RAPPELS ---
       'reservation.checkin.reminder_veille': {
-        contentSid: isOwner ? 'HXcbab671391d91e8189aa12b5826c376a' : 'HX4798cd370aa0e7b57351f1c82bc2ab36',
-        variables: isOwner ? { '1': String(data.vehicule), '2': data.reservationId } : { '1': String(data.vehicule), '2': data.reservationId },
-        fallbackText: `📅 AutoLoc — Demain commence la location #${resId} !`,
+        contentSid: isOwner ? 'HX6deb1fa71a4d2e88e12399294393010a' : 'HX557c749060aab5eb8538dde7f06b4034',
+        variables: {
+          '1': String(data.vehicule),
+          '2': data.reservationId as string,
+          '3': String(data.otherPartyPhone || '')
+        },
+        fallbackText: `📅 AutoLoc — Demain commence la location #${resId} ! Contact: ${data.otherPartyPhone || 'N/A'}`,
       },
       'reservation.checkin.reminder_jour': {
         contentSid: isOwner ? 'HX524bd6c9f5d7f86b87b62a7186a035cd' : 'HX775bb91c71a231c662fc90bfade9eea3',

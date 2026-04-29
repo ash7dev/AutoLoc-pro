@@ -196,15 +196,15 @@ export class ConfirmPaymentUseCase {
             await this.queue
                 .scheduleNotification({
                     type: 'reservation.paid',
-                        data: {
-                            reservationId,
-                            email: reservation.locataire?.email ?? undefined,
-                            phone: reservation.locataire?.telephone ?? reservation.locataire?.profile?.phone ?? undefined,
-                            userId: reservation.locataireId,
-                            vehicule: reservation.vehicule ? `${reservation.vehicule.marque} ${reservation.vehicule.modele}` : 'véhicule',
-                            dateDebut: reservation.dateDebut,
-                            dateFin: reservation.dateFin,
-                        },
+                    data: {
+                        reservationId,
+                        email: reservation.locataire?.email ?? undefined,
+                        phone: reservation.locataire?.telephone ?? reservation.locataire?.profile?.phone ?? undefined,
+                        userId: reservation.locataireId,
+                        vehicule: reservation.vehicule ? `${reservation.vehicule.marque} ${reservation.vehicule.modele}` : 'véhicule',
+                        dateDebut: reservation.dateDebut,
+                        dateFin: reservation.dateFin,
+                    },
                 })
                 .catch(() => { });
 
@@ -212,16 +212,16 @@ export class ConfirmPaymentUseCase {
             await this.queue
                 .scheduleNotification({
                     type: 'reservation.paid.owner',
-                        data: {
-                            reservationId,
-                            email: reservation.proprietaire?.email ?? undefined,
-                            phone: reservation.proprietaire?.telephone ?? reservation.proprietaire?.profile?.phone ?? undefined,
-                            userId: reservation.proprietaireId,
-                            vehicule: reservation.vehicule ? `${reservation.vehicule.marque} ${reservation.vehicule.modele}` : 'véhicule',
-                            dateDebut: reservation.dateDebut,
-                            dateFin: reservation.dateFin,
-                            netProprietaire: reservation.netProprietaire?.toString(),
-                        },
+                    data: {
+                        reservationId,
+                        email: reservation.proprietaire?.email ?? undefined,
+                        phone: reservation.proprietaire?.telephone ?? reservation.proprietaire?.profile?.phone ?? undefined,
+                        userId: reservation.proprietaireId,
+                        vehicule: reservation.vehicule ? `${reservation.vehicule.marque} ${reservation.vehicule.modele}` : 'véhicule',
+                        dateDebut: reservation.dateDebut,
+                        dateFin: reservation.dateFin,
+                        netProprietaire: reservation.netProprietaire?.toString(),
+                    },
                 })
                 .catch(() => { });
 

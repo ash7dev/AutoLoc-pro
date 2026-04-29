@@ -121,19 +121,32 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     return String(job.id);
   }
 
-  // Rappel check-in la veille de la date de début.
+  // Rappels check-in : veille (24h avant) et urgent (2h après début)
   async scheduleCheckinReminder(
     reservationId: string,
     dateDebut: Date,
-  ): Promise<string | null> {
-    const delayMs = dateDebut.getTime() - Date.now() - ONE_DAY_MS;
-    if (delayMs <= 0) return null;
-    const job = await this.reservationQueue.add(
+  ): Promise<void> {
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    const twoHoursMs = 2 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    // 1. Rappel "Veille" (ou immédiat si < 24h)
+    const delayVeille = Math.max(0, dateDebut.getTime() - now - oneDayMs);
+    await this.reservationQueue.add(
       RESERVATION_CHECKIN_REMINDER_JOB,
       { reservationId },
-      { delay: delayMs },
+      { delay: delayVeille },
     );
-    return String(job.id);
+
+    // 2. Rappel "Urgent" (2h après le début prévu)
+    const delayUrgent = dateDebut.getTime() - now + twoHoursMs;
+    if (delayUrgent > 0) {
+      await this.reservationQueue.add(
+        RESERVATION_CHECKIN_REMINDER_JOB,
+        { reservationId },
+        { delay: delayUrgent },
+      );
+    }
   }
 
   // Rappel check-out 2h avant la date de fin.

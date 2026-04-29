@@ -18,10 +18,14 @@ export const registerSchema = z.object({
     .regex(/^[a-zA-ZÀ-ÿ\s\-']+$/, { message: 'Ne doit contenir que des lettres' }),
 
   telephone: z.string().trim()
-    // Supprime les espaces avant de valider pour accepter "77 123 45 67" ou "771234567"
     .transform(val => val.replace(/\s+/g, ''))
-    .refine(val => /^(70|71|75|76|77|78|33)\d{7}$/.test(val), {
-      message: 'Format invalide (ex: 77 000 00 00)',
+    .refine(val => {
+      // Format Sénégalais local (9 chiffres)
+      if (/^(70|71|75|76|77|78|33)\d{7}$/.test(val)) return true;
+      // Format international E.164 (ex: +33612345678)
+      return /^\+\d{8,15}$/.test(val);
+    }, {
+      message: 'Format de téléphone invalide',
     }),
 });
 

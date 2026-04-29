@@ -14,6 +14,7 @@ import { apiFetch } from "@/lib/nestjs/api-client";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { DateInput } from "@/features/shared/DateInput";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 /* ── Types ───────────────────────────────────────────────── */
 type Gate = "phone" | "kyc" | "permis" | "age" | "age_phone" | "create_profile" | "ready";
@@ -470,11 +471,15 @@ function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, 
         error={!!error && !form.dateNaissance}
       />
 
-      {field('Téléphone *', Phone, {
-        type: 'tel', required: true, value: form.phone,
-        placeholder: '+221 77 000 00 00',
-        onChange: e => setForm(p => ({ ...p, phone: e.target.value })),
-      })}
+      <div className="space-y-1.5">
+        <label className="block text-[12px] font-bold text-slate-700 ml-1">Téléphone *</label>
+        <PhoneInput
+          value={form.phone}
+          onChange={v => setForm(p => ({ ...p, phone: v }))}
+          disabled={loading}
+          error={!!error && !form.phone}
+        />
+      </div>
 
       {error && (
         <div className="rounded-xl border border-red-100 bg-red-50/50 p-3">
@@ -554,15 +559,11 @@ function AgePhoneGate({ ageMinimum, onComplete }: { ageMinimum: number; onComple
         <label className="block text-[12px] font-bold text-slate-700 ml-1">
           Numéro de téléphone *
         </label>
-        <input
-          type="tel"
+        <PhoneInput
           value={phone}
-          onChange={e => setPhone(e.target.value)}
-          placeholder="+221 77 000 00 00"
-          required
-          className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4
-            text-[13px] font-medium text-slate-800 placeholder-slate-300
-            focus:border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-400/5 transition-all"
+          onChange={v => setPhone(v)}
+          disabled={loading}
+          error={!!error && !phone}
         />
       </div>
 

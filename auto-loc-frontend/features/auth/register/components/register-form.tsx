@@ -11,6 +11,8 @@ import { useOAuth } from '../../login/hooks/use-oauth';
 import { useRouter } from 'next/navigation';
 import { checkAvailability } from '@/lib/nestjs/auth';
 import { useAuthFlow } from '../../hooks/use-auth-flow';
+import { Controller } from 'react-hook-form';
+import { PhoneInput } from '@/components/ui/phone-input';
 
 // ─── Calcul de la force du mot de passe ───────────────────────────────────────
 function getPasswordStrength(password: string): number {
@@ -65,6 +67,7 @@ export function RegisterForm() {
     register,
     handleSubmit,
     watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) });
 
@@ -262,27 +265,19 @@ export function RegisterForm() {
                 </div>
               </div>
 
-              {/* Téléphone */}
               <div>
-                <label className="autoloc-body block text-sm font-medium text-gray-800 mb-1.5">Numéro de téléphone</label>
-                <div className="flex gap-2">
-                  <div className="autoloc-body flex items-center gap-2 px-3 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 text-sm whitespace-nowrap select-none">
-                    🇸🇳 +221
-                  </div>
-                  <div className="relative flex-1">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Phone className="h-4 w-4 text-emerald-400" />
-                    </div>
-                    <input
-                      type="tel"
-                      {...register('telephone')}
-                      onBlur={(e) => handleBlurCheck('phone', e.target.value)}
-                      placeholder="77 000 00 00"
+                <Controller
+                  name="telephone"
+                  control={control}
+                  render={({ field }) => (
+                    <PhoneInput
+                      value={field.value}
+                      onChange={field.onChange}
                       disabled={isLoading}
-                      className="autoloc-body w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all bg-white text-gray-900 placeholder-gray-300 text-sm disabled:opacity-50"
+                      error={!!errors.telephone || !!availabilityErrors.phone}
                     />
-                  </div>
-                </div>
+                  )}
+                />
                 {(errors.telephone || availabilityErrors.phone) && (
                   <p className="autoloc-body text-xs text-red-500 mt-1">
                     {errors.telephone?.message ?? availabilityErrors.phone}

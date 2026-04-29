@@ -133,6 +133,7 @@ export class ReservationExpiryProcessor {
         proprietaireId: true,
         locataire: { select: { email: true, telephone: true } },
         proprietaire: { select: { email: true, telephone: true } },
+        vehicule: { select: { marque: true, modele: true } },
       },
     });
 
@@ -161,6 +162,8 @@ export class ReservationExpiryProcessor {
 
     if (await this.wasReminderSent(reservation.id, systemTag)) return;
 
+    const vehicule = reservation.vehicule ? `${reservation.vehicule.marque} ${reservation.vehicule.modele}` : 'véhicule';
+
     // 2. Envoi aux deux parties via le service central
     const promises = [
       this.notification.send({
@@ -168,14 +171,26 @@ export class ReservationExpiryProcessor {
         userId: reservation.locataireId,
         email: reservation.locataire.email,
         phone: reservation.locataire.telephone ?? undefined,
-        data: { reservationId: reservation.id, dateDebut: startDate.toLocaleDateString('fr-FR'), isOwner: false },
+        data: { 
+          reservationId: reservation.id, 
+          dateDebut: startDate.toLocaleDateString('fr-FR'), 
+          isOwner: false, 
+          vehicule,
+          otherPartyPhone: reservation.proprietaire?.telephone ?? undefined 
+        },
       }),
       this.notification.send({
         type: notifType,
         userId: reservation.proprietaireId,
         email: reservation.proprietaire.email,
         phone: reservation.proprietaire.telephone ?? undefined,
-        data: { reservationId: reservation.id, dateDebut: startDate.toLocaleDateString('fr-FR'), isOwner: true },
+        data: { 
+          reservationId: reservation.id, 
+          dateDebut: startDate.toLocaleDateString('fr-FR'), 
+          isOwner: true, 
+          vehicule,
+          otherPartyPhone: reservation.locataire?.telephone ?? undefined 
+        },
       }),
     ];
 

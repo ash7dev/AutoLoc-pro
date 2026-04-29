@@ -132,17 +132,17 @@ export class ConfirmReservationUseCase {
             .catch(() => { });
 
         this.queue.scheduleNotification({
-                type: 'reservation.confirmed',
-                data: {
-                    reservationId,
-                    userId: reservation.locataireId,
-                    phone: reservation.locataire?.telephone ?? null,
-                    locatairePrenom: reservation.locataire?.prenom ?? null,
-                    vehicule: reservation.vehicule ? `${reservation.vehicule.marque} ${reservation.vehicule.modele}` : 'véhicule',
-                    dateDebut: newDateDebut,
-                    dateFin: newDateFin,
-                },
-            })
+            type: 'reservation.confirmed',
+            data: {
+                reservationId,
+                userId: reservation.locataireId,
+                phone: reservation.locataire?.telephone ?? null,
+                locatairePrenom: reservation.locataire?.prenom ?? null,
+                vehicule: reservation.vehicule ? `${reservation.vehicule.marque} ${reservation.vehicule.modele}` : 'véhicule',
+                dateDebut: newDateDebut,
+                dateFin: newDateFin,
+            },
+        })
             .catch(() => { });
 
         // 7. Regenerate contract PDF with ACTIF status (EN_COURS → ACTIF)
