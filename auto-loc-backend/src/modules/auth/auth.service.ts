@@ -268,7 +268,7 @@ export class AuthService {
 
     // Récupérer le téléphone de l'utilisateur
     let telephone: string | null = null;
-    
+
     const utilisateur = await this.prisma.utilisateur.findUnique({
       where: { userId: user.sub },
       select: { telephone: true },
@@ -352,11 +352,11 @@ export class AuthService {
     let smsAccepted = false;
 
     try {
-      await this.notification.sendWhatsApp({ 
-        to: phone, 
-        contentSid: 'HX7cc5a00ae1cb9c74e75f856743ac927b',
+      await this.notification.sendWhatsApp({
+        to: phone,
+        contentSid: 'HX4adc3c841559018e04cdd9a2e5ccfcf5', // Utilisation du template approuvé
         contentVariables: { '1': code },
-        body: otpMessage, 
+        body: otpMessage,
       });
       whatsappAccepted = true;
       console.log(`[Auth] Phone login OTP accepted via WhatsApp (template) for ${phone}`);

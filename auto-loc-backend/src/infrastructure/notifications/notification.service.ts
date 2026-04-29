@@ -99,15 +99,28 @@ export class NotificationService {
     let toPhone = params.phone;
 
     if (params.userId) {
-      const user = await this.prisma.utilisateur.findUnique({
-        where: { userId: params.userId },
-        select: { email: true, telephone: true },
+      // On cherche par userId (Supabase) OU par id (interne), puis on prend
+      // le téléphone depuis Utilisateur ou Profile selon le flux d'onboarding.
+      const user = await this.prisma.utilisateur.findFirst({
+        where: {
+          OR: [
+            { userId: params.userId },
+            { id: params.userId },
+          ],
+        },
+        select: {
+          email: true,
+          telephone: true,
+          profile: { select: { phone: true } },
+        },
       });
       if (user) {
         toEmail = toEmail || user.email || undefined;
-        toPhone = toPhone || user.telephone || undefined;
+        toPhone = toPhone || user.telephone || user.profile?.phone || undefined;
       }
     }
+
+    this.logger.debug(`Notification routing: type=${params.type} email=${toEmail} phone=${toPhone}`);
 
     // 2. Envoi EMAIL (Canal principal pour les détails)
     let emailResult: SendResult = { channel: 'email', success: false };
@@ -201,11 +214,15 @@ export class NotificationService {
       // --- AUTH ---
       'verification.code': {
         contentSid: 'HX4adc3c841559018e04cdd9a2e5ccfcf5', // verification_code_v2 (Copy Code)
-        variables: { '1': String(data.code) },
-        fallbackText: `Votre code AutoLoc est : ${data.code}`,
+        variables: { '1': String(data.code || data.otp) },
+        fallbackText: `Votre code AutoLoc est : ${data.code || data.otp}`,
+      },
+      'auth.login_otp': {
+        contentSid: 'HX4adc3c841559018e04cdd9a2e5ccfcf5', // verification_code_v2 (Copy Code)
+        variables: { '1': String(data.code || data.otp) },
+        fallbackText: `🔐 AutoLoc — Votre code de connexion est : ${data.code || data.otp}`,
       },
 
-      // --- RÉSERVATION ---
       'reservation.paid.owner': {
         contentSid: 'HX0541d129bdc928f330296030babe8eb0', // proprio_resa_payee_bouton
         variables: {
@@ -215,6 +232,15 @@ export class NotificationService {
           '5': data.reservationId
         },
         fallbackText: `💰 AutoLoc — Nouvelle réservation payée pour ${data.vehicule} ! Confirmez ici.`,
+      },
+      'reservation.paid': {
+        contentSid: 'HX0f3dd2d8599bed754c1c7a23240383a3', // locataire_resa_validee_bouton
+        variables: {
+          '1': String(data.vehicule || 'véhicule'),
+          '2': dateDeb, '3': dateFin,
+          '4': data.reservationId
+        },
+        fallbackText: `💰 AutoLoc — Votre paiement pour ${data.vehicule} est validé ! Réservation #${resId} en attente de confirmation.`,
       },
       'reservation.confirmed': {
         contentSid: 'HX0f3dd2d8599bed754c1c7a23240383a3', // locataire_resa_validee_bouton
@@ -281,10 +307,74 @@ export class NotificationService {
         contentSid: 'HX98001603553f6e8526ce737ff1270f50', // wallet_credite_owner
         variables: { '1': resId, '2': String(data.montant), '3': data.reservationId },
         fallbackText: `💰 AutoLoc — Votre compte a été crédité de ${data.montant} FCFA.`,
-      }
+      },
+      'user.welcome': {
+        contentSid: 'HXD98d7356c7a8a91551acf470eebe1611', // compte_verifie_succes
+        variables: {},
+        fallbackText: `👋 Bienvenue sur AutoLoc ${data.prenom || ''} ! Votre profil est prêt.`,
+      },
     };
 
-    return mappings[type];
+    if (mappings[type]) {
+      return mappings[type];
+    }
+
+    this.logger.warn(`No dedicated WhatsApp template for ${type}, using text fallback`);
+    return this.getGenericWhatsAppMapping(type, data, resId, dateDeb, dateFin);
+  }
+
+  /**
+   * Fallback WhatsApp texte pour les types qui n'ont pas encore de Content SID dédié.
+   * Cela garantit qu'on n'a pas de "trou noir" si un template Twilio manque.
+   */
+  private getGenericWhatsAppMapping(
+    type: NotificationType,
+    data: Record<string, unknown>,
+    resId: string,
+    dateDeb: string,
+    dateFin: string,
+  ) {
+    const vehicule = String(data.vehicule || data.vehicle || 'véhicule');
+    const prenom = String(data.prenom || data.locatairePrenom || data.proprietairePrenom || '').trim();
+    const prefix = prenom ? ` ${prenom}` : '';
+
+    const fallbackTextByType: Record<NotificationType, string> = {
+      'reservation.created': `⏳ AutoLoc${prefix} : votre réservation #${resId} est en attente de paiement pour ${vehicule}. Finalisez le paiement pour la confirmer.`,
+      'reservation.confirmed': `🎉 AutoLoc${prefix} : votre réservation #${resId} pour ${vehicule} est confirmée. Début prévu ${dateDeb}${dateFin ? `, fin ${dateFin}` : ''}.`,
+      'reservation.paid': `💰 AutoLoc${prefix} : votre paiement pour ${vehicule} est validé. Réservation #${resId} en attente de confirmation.`,
+      'reservation.paid.owner': `💰 AutoLoc${prefix} : une réservation payée concerne ${vehicule}. Réservation #${resId}.`,
+      'reservation.cancelled': `❌ AutoLoc${prefix} : la réservation #${resId} pour ${vehicule} a été annulée.`,
+      'reservation.checkin': `🚗 AutoLoc${prefix} : le check-in de la réservation #${resId} est validé. La location est en cours.`,
+      'reservation.checkin.owner_confirmed': `⏳ AutoLoc${prefix} : le propriétaire a confirmé le check-in pour la réservation #${resId}.`,
+      'reservation.checkin.tenant_confirmed': `⏳ AutoLoc${prefix} : le locataire a confirmé le check-in pour la réservation #${resId}.`,
+      'reservation.checkin.reminder_veille': `📅 AutoLoc${prefix} : rappel check-in demain pour ${vehicule}. Réservation #${resId}.`,
+      'reservation.checkin.reminder_jour': `🚨 AutoLoc${prefix} : check-in à finaliser aujourd'hui pour ${vehicule}. Réservation #${resId}.`,
+      'reservation.checkin.tacit_window': `⏱️ AutoLoc${prefix} : vous avez 24h pour valider le check-in de la réservation #${resId}.`,
+      'reservation.checkin.tacit_applied': `🟢 AutoLoc${prefix} : la réservation #${resId} est démarrée par validation tacite.`,
+      'reservation.checkout': `🏁 AutoLoc${prefix} : la réservation #${resId} est terminée. Pensez à laisser un avis.`,
+      'reservation.checkout.reminder': `🏁 AutoLoc${prefix} : la location #${resId} se termine bientôt.`,
+      'avis.request': `⭐ AutoLoc${prefix} : votre avis est demandé pour la réservation #${resId}.`,
+      'avis.recu': `⭐ AutoLoc${prefix} : vous avez reçu un nouvel avis pour la réservation #${resId}.`,
+      'verification.code': `🔐 AutoLoc${prefix} : votre code de vérification est ${String(data.code || '').trim()}.`,
+      'kyc.verified': `✅ AutoLoc${prefix} : votre identité est vérifiée. Vous pouvez utiliser la plateforme.`,
+      'kyc.rejected': `⚠️ AutoLoc${prefix} : votre vérification d'identité a été rejetée. Merci de corriger votre dossier.`,
+      'litige.ouvert': `🚨 AutoLoc${prefix} : un litige a été ouvert pour la réservation #${resId}.`,
+      'litige.resolu': `✅ AutoLoc${prefix} : le litige de la réservation #${resId} est résolu.`,
+      'user.welcome': `👋 Bienvenue sur AutoLoc${prefix} ! Votre compte est prêt.`,
+      'wallet.credited': `💰 AutoLoc${prefix} : votre wallet a été crédité pour la réservation #${resId}.`,
+      'auth.login_otp': ''
+    };
+
+    const fallbackText = fallbackTextByType[type];
+    if (!fallbackText) {
+      return undefined;
+    }
+
+    return {
+      body: fallbackText,
+      fallbackText,
+      smsText: fallbackText,
+    };
   }
 
   /**
@@ -309,10 +399,10 @@ export class NotificationService {
       payload.contentSid = message.contentSid;
       const normalizedVariables = message.contentVariables
         ? Object.fromEntries(
-            Object.entries(message.contentVariables)
-              .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== '')
-              .map(([key, value]) => [String(key), String(value)]),
-          )
+          Object.entries(message.contentVariables)
+            .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== '')
+            .map(([key, value]) => [String(key), String(value)]),
+        )
         : undefined;
       if (normalizedVariables && Object.keys(normalizedVariables).length > 0) {
         payload.contentVariables = JSON.stringify(normalizedVariables);

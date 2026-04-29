@@ -322,7 +322,7 @@ export class UsersService {
   async approveKyc(userId: string) {
     const utilisateur = await this.prisma.utilisateur.findUnique({
       where: { id: userId },
-      select: { id: true, statutKyc: true, email: true },
+      select: { id: true, statutKyc: true, email: true, telephone: true },
     });
     if (!utilisateur) throw new NotFoundException('Utilisateur introuvable');
 
@@ -343,13 +343,13 @@ export class UsersService {
       data: { statut: StatutVehicule.EN_ATTENTE_VALIDATION },
     });
 
-    if (utilisateur.email) {
-      this.notification.send({
-        email: utilisateur.email,
-        type: 'kyc.verified',
-        data: {},
-      }).catch(() => { });
-    }
+    this.notification.send({
+      userId: utilisateur.id,
+      email: utilisateur.email ?? undefined,
+      phone: utilisateur.telephone ?? undefined,
+      type: 'kyc.verified',
+      data: {},
+    }).catch(() => { });
 
     return {
       utilisateurId: updated.id,
@@ -453,7 +453,7 @@ export class UsersService {
   async rejectKyc(userId: string, raison?: string) {
     const utilisateur = await this.prisma.utilisateur.findUnique({
       where: { id: userId },
-      select: { id: true, statutKyc: true, email: true },
+      select: { id: true, statutKyc: true, email: true, telephone: true },
     });
     if (!utilisateur) throw new NotFoundException('Utilisateur introuvable');
 
@@ -466,13 +466,13 @@ export class UsersService {
       select: { id: true, statutKyc: true, kycRejectionReason: true },
     });
 
-    if (utilisateur.email) {
-      this.notification.send({
-        email: utilisateur.email,
-        type: 'kyc.rejected',
-        data: { raison: raison ?? null },
-      }).catch(() => { });
-    }
+    this.notification.send({
+      userId: utilisateur.id,
+      email: utilisateur.email ?? undefined,
+      phone: utilisateur.telephone ?? undefined,
+      type: 'kyc.rejected',
+      data: { raison: raison ?? null },
+    }).catch(() => { });
 
     return updated;
   }

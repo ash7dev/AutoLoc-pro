@@ -48,8 +48,10 @@ export class ConfirmReservationUseCase {
                 id: true,
                 statut: true,
                 proprietaireId: true,
+                locataireId: true,
                 dateDebut: true,
                 dateFin: true,
+                vehicule: { select: { marque: true, modele: true } },
                 locataire: { select: { telephone: true, prenom: true, statutKyc: true } },
             },
         });
@@ -129,13 +131,16 @@ export class ConfirmReservationUseCase {
             .scheduleCheckoutReminder(reservationId, reservation.dateFin)
             .catch(() => { });
 
-        await this.queue
-            .scheduleNotification({
+        this.queue.scheduleNotification({
                 type: 'reservation.confirmed',
                 data: {
                     reservationId,
-                    locatairePhone: reservation.locataire?.telephone ?? null,
+                    userId: reservation.locataireId,
+                    phone: reservation.locataire?.telephone ?? null,
                     locatairePrenom: reservation.locataire?.prenom ?? null,
+                    vehicule: reservation.vehicule ? `${reservation.vehicule.marque} ${reservation.vehicule.modele}` : 'véhicule',
+                    dateDebut: newDateDebut,
+                    dateFin: newDateFin,
                 },
             })
             .catch(() => { });

@@ -17,14 +17,18 @@ export class CheckinSideEffectsService {
         reservationId: string;
         dateFin: Date;
         locataire: { telephone: string | null; prenom: string | null };
+        locataireId: string;
         proprietaire: { telephone: string | null; prenom: string | null };
+        proprietaireId: string;
     }): Promise<{ walletCredited: boolean }> {
-        const { reservationId, dateFin, locataire, proprietaire } = params;
+        const { reservationId, dateFin, locataire, locataireId, proprietaire, proprietaireId } = params;
 
         let walletCredited = false;
+        let montantCredite = '0';
         try {
             const walletResult = await this.creditWallet.execute(reservationId);
             walletCredited = !walletResult.alreadyCredited;
+            montantCredite = walletResult.montantCredite.toString();
         } catch (err) {
             const errMsg = err instanceof Error ? err.message : String(err);
             process.stderr.write(`[CheckIn] Wallet credit failed for ${reservationId}: ${errMsg}\n`);
@@ -34,14 +38,27 @@ export class CheckinSideEffectsService {
             .scheduleAutoClose(reservationId, dateFin)
             .catch(() => { });
 
+        // Notification de check-in finalisé au locataire
         await this.queue
             .scheduleNotification({
                 type: 'reservation.checkin',
                 data: {
                     reservationId,
-                    locatairePhone: locataire.telephone ?? null,
+                    userId: locataireId,
+                    phone: locataire.telephone ?? null,
                     locatairePrenom: locataire.prenom ?? null,
-                    proprietairePhone: proprietaire.telephone ?? null,
+                },
+            })
+            .catch(() => { });
+
+        // Notification de check-in finalisé au propriétaire
+        await this.queue
+            .scheduleNotification({
+                type: 'reservation.checkin',
+                data: {
+                    reservationId,
+                    userId: proprietaireId,
+                    phone: proprietaire.telephone ?? null,
                     proprietairePrenom: proprietaire.prenom ?? null,
                 },
             })
@@ -53,8 +70,10 @@ export class CheckinSideEffectsService {
                     type: 'wallet.credited',
                     data: {
                         reservationId,
-                        proprietairePhone: proprietaire.telephone ?? null,
+                        userId: proprietaireId,
+                        phone: proprietaire.telephone ?? null,
                         proprietairePrenom: proprietaire.prenom ?? null,
+                        montant: montantCredite,
                     },
                 })
                 .catch(() => { });

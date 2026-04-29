@@ -63,6 +63,8 @@ export class TacitCheckinUseCase {
                 select: {
                     id: true,
                     dateFin: true,
+                    locataireId: true,
+                    proprietaireId: true,
                     locataire: { select: { telephone: true, prenom: true, email: true } },
                     proprietaire: { select: { telephone: true, prenom: true } },
                 },
@@ -104,7 +106,9 @@ export class TacitCheckinUseCase {
             return {
                 dateFin: reservation.dateFin,
                 locataire: reservation.locataire,
+                locataireId: reservation.locataireId,
                 proprietaire: reservation.proprietaire,
+                proprietaireId: reservation.proprietaireId,
             };
         });
 
@@ -115,7 +119,9 @@ export class TacitCheckinUseCase {
                 reservationId,
                 dateFin: snapshot.dateFin,
                 locataire: snapshot.locataire,
+                locataireId: snapshot.locataireId,
                 proprietaire: snapshot.proprietaire,
+                proprietaireId: snapshot.proprietaireId,
             });
 
             await this.queue
@@ -123,7 +129,8 @@ export class TacitCheckinUseCase {
                     type: 'reservation.checkin.tacit_applied',
                     data: {
                         reservationId,
-                        locatairePhone: snapshot.locataire?.telephone ?? null,
+                        userId: snapshot.locataireId,
+                        phone: snapshot.locataire?.telephone ?? null,
                         locatairePrenom: snapshot.locataire?.prenom ?? null,
                         email: snapshot.locataire?.email ?? undefined,
                     },

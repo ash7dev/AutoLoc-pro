@@ -46,6 +46,7 @@ export class CheckOutUseCase {
                 id: true,
                 statut: true,
                 proprietaireId: true,
+                locataireId: true,
                 dateFin: true,
                 checkoutLe: true,
                 locataire: { select: { telephone: true, prenom: true } },
@@ -126,7 +127,8 @@ export class CheckOutUseCase {
                 type: 'reservation.checkout',
                 data: {
                     reservationId,
-                    locatairePhone: reservation.locataire?.telephone ?? null,
+                    userId: reservation.locataireId,
+                    phone: reservation.locataire?.telephone ?? null,
                     locatairePrenom: reservation.locataire?.prenom ?? null,
                 },
             })

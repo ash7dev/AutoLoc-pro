@@ -28,6 +28,7 @@ export class NotificationProcessor {
       data: data as Record<string, unknown>,
       userId: (data as Record<string, unknown>)?.userId as string | undefined,
       email: (data as Record<string, unknown>)?.email as string | undefined,
+      phone: (data as Record<string, unknown>)?.phone as string | undefined,
     });
 
     if (!result.success) {

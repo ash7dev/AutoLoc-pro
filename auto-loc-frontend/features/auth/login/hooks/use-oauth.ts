@@ -6,10 +6,14 @@ export function useOAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (nextPath?: string | null) => {
     setLoading(true);
     setError(null);
     const redirectBase = window.location.origin;
+    const callbackUrl = new URL('/api/auth/callback', redirectBase);
+    if (nextPath && nextPath.startsWith('/')) {
+      callbackUrl.searchParams.set('next', nextPath);
+    }
 
     // Debug local
     // eslint-disable-next-line no-console
@@ -20,7 +24,7 @@ export function useOAuth() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${redirectBase}/api/auth/callback`,
+        redirectTo: callbackUrl.toString(),
       },
     });
 

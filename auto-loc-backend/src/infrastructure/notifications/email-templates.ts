@@ -25,7 +25,8 @@ export type NotificationType =
   | 'litige.ouvert'
   | 'litige.resolu'
   | 'user.welcome'
-  | 'wallet.credited';
+  | 'wallet.credited'
+  | 'auth.login_otp';
 
 interface TemplateConfig {
   subject: string;
@@ -726,6 +727,22 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
           { label: 'Code', value: String(data.code ?? ''), icon: '🔐' },
         ]),
         alertBox('Ce code expire dans 5 minutes. Ne le partagez avec personne.', 'warning'),
+      ].join(''),
+    }),
+  },
+
+  'auth.login_otp': {
+    subject: '🔐 Votre code de connexion AutoLoc',
+    body: (data) => baseLayout({
+      title: 'Code de connexion',
+      subtitle: 'Utilisez ce code pour accéder à votre compte.',
+      badge: { text: 'Connexion', color: '#059669', bg: '#ecfdf5' },
+      accentColor: '#10b981',
+      content: [
+        infoCard([
+          { label: 'Code OTP', value: String(data.otp ?? data.code ?? ''), icon: '🔑' },
+        ]),
+        alertBox('Ce code est strictement personnel. Ne le communiquez jamais.', 'warning'),
       ].join(''),
     }),
   },

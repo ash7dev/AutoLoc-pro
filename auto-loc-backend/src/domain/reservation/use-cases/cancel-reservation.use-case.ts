@@ -81,7 +81,7 @@ export class CancelReservationUseCase {
                 totalBase: true,
                 montantCommission: true,
                 netProprietaire: true,
-                vehicule: { select: { ville: true } },
+                vehicule: { select: { marque: true, modele: true, ville: true } },
                 paiement: {
                     select: {
                         id: true,
@@ -272,31 +272,36 @@ export class CancelReservationUseCase {
             locatairePrenom: reservation.locataire?.prenom ?? null,
             proprietairePhone: reservation.proprietaire?.telephone ?? null,
             proprietairePrenom: reservation.proprietaire?.prenom ?? null,
+            vehicule: reservation.vehicule ? `${reservation.vehicule.marque} ${reservation.vehicule.modele}` : 'véhicule',
+            isRefusal: isProprietaire && reservation.statut === StatutReservation.PAYEE,
         };
 
         // Email au locataire
-        await this.queue
-            .scheduleNotification({
+        this.queue.scheduleNotification({
                 type: 'reservation.cancelled',
                 data: {
                     ...notificationData,
                     userId: reservation.locataireId,
                     email: reservation.locataire?.email ?? undefined,
+                    phone: reservation.locataire?.telephone ?? undefined,
                 },
             })
             .catch(() => { });
 
-        // Email au propriétaire
-        await this.queue
-            .scheduleNotification({
-                type: 'reservation.cancelled',
-                data: {
-                    ...notificationData,
-                    userId: reservation.proprietaireId,
-                    email: reservation.proprietaire?.email ?? undefined,
-                },
-            })
-            .catch(() => { });
+        // Email/WhatsApp au propriétaire (seulement si ce n'est pas un simple refus de sa part)
+        if (!notificationData.isRefusal) {
+            this.queue.scheduleNotification({
+                    type: 'reservation.cancelled',
+                    data: {
+                        ...notificationData,
+                        userId: reservation.proprietaireId,
+                        email: reservation.proprietaire?.email ?? undefined,
+                        phone: reservation.proprietaire?.telephone ?? undefined,
+                        isOwner: true,
+                    },
+                })
+                .catch(() => { });
+        }
 
         // 7d. Alerte admin Telegram pour les annulations actionnables
         if (isLocataire && hasRefund) {

@@ -152,6 +152,8 @@ export class RefuseVehicleUseCase {
             type: 'reservation.dispute_opened',
             data: {
                 reservationId,
+                userId: reservation.proprietaireId,
+                phone: reservation.proprietaire?.telephone ?? null,
                 role: 'PROPRIETAIRE',
                 raison: 'Le locataire a refusé le véhicule. L\'équipe AutoLoc va examiner la situation.',
                 prenomDeclarant: reservation.locataire.prenom ?? 'Le locataire',

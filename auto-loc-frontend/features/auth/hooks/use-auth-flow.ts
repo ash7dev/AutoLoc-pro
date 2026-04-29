@@ -36,7 +36,8 @@ export function useAuthFlow() {
 
   const redirectAfterAuth = async (
     explicitSession?: any,
-    directTokens?: { accessToken: string; refreshToken: string; activeRole: string; profile: any }
+    directTokens?: { accessToken: string; refreshToken: string; activeRole: string; profile: any },
+    explicitNext?: string | null,
   ) => {
     if (inFlight.current) return;
     inFlight.current = true;
@@ -50,12 +51,8 @@ export function useAuthFlow() {
         // Cas Direct (Login Téléphone Backend)
         token = directTokens.accessToken;
         const sessionNest = await syncWithNestJS(undefined, directTokens);
-        useRoleStore.getState().setSession(sessionNest);
-        if (sessionNest.profile) {
-          profile = sessionNest.profile;
-        } else {
-          profile = await fetchMe();
-        }
+        // On récupère le profil directement de la synchro s'il existe
+        profile = sessionNest.profile || await fetchMe();
       } else {
         // Cas Supabase (Email / Google)
         if (!currentSession) {
@@ -70,56 +67,58 @@ export function useAuthFlow() {
         }
 
         const sessionNest = await syncWithNestJS(token);
-        useRoleStore.getState().setSession(sessionNest);
-        
-        if (sessionNest.profile) {
-          profile = sessionNest.profile;
-        } else {
-          profile = await fetchMe();
-        }
+        // On récupère le profil directement de la synchro s'il existe
+        profile = sessionNest.profile || await fetchMe();
       }
     } catch (err) {
+      console.error('[AuthFlow] Sync error:', err);
       inFlight.current = false;
       return false;
     }
 
-    if (!profile.hasUtilisateur) {
-      const seededProfile = extractCompleteProfileInput(currentSession);
-
-      if (seededProfile && token) {
-        try {
-          await completeProfile(token, seededProfile);
-          profile = await fetchMe();
-        } catch (err) {
-          // ignore error, will redirect anyway
+    // ── Tâches de fond (Non bloquantes pour la redirection) ──
+    const backgroundTasks = async () => {
+      // 1. Compléter le profil si nécessaire
+      if (!profile.hasUtilisateur) {
+        const seededProfile = extractCompleteProfileInput(currentSession);
+        if (seededProfile && token) {
+          try {
+            await completeProfile(token, seededProfile);
+          } catch (err) {
+            console.warn('[AuthFlow] Lazy profile completion failed:', err);
+          }
         }
       }
-    }
 
-    // ── Lier le téléphone au compte Supabase pour les futures connexions par tél ──
-    const userPhone = currentSession?.user?.phone;
-    const metadataPhone = extractCompleteProfileInput(currentSession)?.telephone;
-    if (metadataPhone && !userPhone) {
-      try {
-        await supabase.auth.updateUser({ phone: metadataPhone });
-        console.log('[AuthFlow] Phone linked to Supabase account:', metadataPhone);
-      } catch (err) {
-        console.warn('[AuthFlow] Failed to link phone:', err);
+      // 2. Lier le téléphone au compte Supabase
+      const userPhone = currentSession?.user?.phone;
+      const metadataPhone = extractCompleteProfileInput(currentSession)?.telephone;
+      if (metadataPhone && !userPhone) {
+        try {
+          await supabase.auth.updateUser({ phone: metadataPhone });
+          console.log('[AuthFlow] Phone linked in background');
+        } catch (err) {
+          console.warn('[AuthFlow] Background phone link failed:', err);
+        }
       }
-    }
+    };
+
+    // On lance les tâches de fond sans les attendre (Fire and Forget)
+    backgroundTasks().catch(console.error);
 
     // Stocker hasVehicles dans le store pour le menu utilisateur
     if (profile.hasVehicles !== undefined) {
       useRoleStore.getState().setHasVehicles(profile.hasVehicles);
     }
 
+    // ── Redirection Rapide ──
     if (profile.role === 'ADMIN' || profile.role === 'SUPPORT') {
       router.replace('/dashboard/admin');
       inFlight.current = false;
       return true;
     }
 
-    const next = searchParams.get('next');
+    const next = explicitNext ?? searchParams.get('next');
     const requiredRole = searchParams.get('role') as 'PROPRIETAIRE' | 'LOCATAIRE' | null;
 
     if (next && next.startsWith('/')) {
@@ -128,15 +127,15 @@ export function useAuthFlow() {
         requiredRole !== profile.role &&
         (requiredRole === 'PROPRIETAIRE' || requiredRole === 'LOCATAIRE')
       ) {
+        // Le switch de rôle est la seule tâche qu'on garde bloquante si nécessaire pour la destination
         try {
           await fetch('/api/nest/auth/switch-role', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ role: requiredRole }),
           });
-          document.cookie = `role_switch_at=${Date.now()}; path=/; max-age=300`;
-        } catch {
-          // ignore switch error
+        } catch (e) {
+          console.warn('[AuthFlow] Role switch failed before redirect');
         }
       }
       router.replace(next);
@@ -144,13 +143,10 @@ export function useAuthFlow() {
       return true;
     }
 
-    if (profile.role === 'PROPRIETAIRE') {
-      router.replace('/dashboard/owner');
-      inFlight.current = false;
-      return true;
-    }
-
-    router.replace('/');
+    // Redirection par défaut selon le rôle
+    const target = profile.role === 'PROPRIETAIRE' ? '/dashboard/owner' : '/';
+    router.replace(target);
+    
     inFlight.current = false;
     return true;
   };

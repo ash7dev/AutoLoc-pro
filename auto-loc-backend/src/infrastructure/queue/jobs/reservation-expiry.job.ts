@@ -97,13 +97,15 @@ export class ReservationExpiryProcessor {
 
     const promises = [
       this.notification.send({
-        type: 'reservation.paid', // Or a more specific type if we had one for reminder
+        type: 'reservation.paid',
         userId: reservation.locataireId,
+        phone: reservation.locataire?.telephone ?? undefined,
         data: { reservationId: reservation.id, isOwner: false },
       }),
       this.notification.send({
         type: 'reservation.paid.owner',
         userId: reservation.proprietaireId,
+        phone: reservation.proprietaire?.telephone ?? undefined,
         data: { reservationId: reservation.id, isOwner: true },
       }),
     ];
@@ -129,8 +131,8 @@ export class ReservationExpiryProcessor {
         dateDebut: true,
         locataireId: true,
         proprietaireId: true,
-        locataire: { select: { email: true } },
-        proprietaire: { select: { email: true } },
+        locataire: { select: { email: true, telephone: true } },
+        proprietaire: { select: { email: true, telephone: true } },
       },
     });
 
@@ -165,12 +167,14 @@ export class ReservationExpiryProcessor {
         type: notifType,
         userId: reservation.locataireId,
         email: reservation.locataire.email,
+        phone: reservation.locataire.telephone ?? undefined,
         data: { reservationId: reservation.id, dateDebut: startDate.toLocaleDateString('fr-FR'), isOwner: false },
       }),
       this.notification.send({
         type: notifType,
         userId: reservation.proprietaireId,
         email: reservation.proprietaire.email,
+        phone: reservation.proprietaire.telephone ?? undefined,
         data: { reservationId: reservation.id, dateDebut: startDate.toLocaleDateString('fr-FR'), isOwner: true },
       }),
     ];
@@ -191,8 +195,8 @@ export class ReservationExpiryProcessor {
         statut: true,
         locataireId: true,
         proprietaireId: true,
-        locataire: { select: { email: true } },
-        proprietaire: { select: { email: true } },
+        locataire: { select: { email: true, telephone: true } },
+        proprietaire: { select: { email: true, telephone: true } },
       },
     });
 
@@ -203,12 +207,14 @@ export class ReservationExpiryProcessor {
         type: 'reservation.checkout.reminder',
         userId: reservation.locataireId,
         email: reservation.locataire.email,
+        phone: reservation.locataire.telephone ?? undefined,
         data: { reservationId: reservation.id, isOwner: false },
       }),
       this.notification.send({
         type: 'reservation.checkout.reminder',
         userId: reservation.proprietaireId,
         email: reservation.proprietaire.email,
+        phone: reservation.proprietaire.telephone ?? undefined,
         data: { reservationId: reservation.id, isOwner: true },
       }),
     ];
@@ -226,7 +232,7 @@ export class ReservationExpiryProcessor {
         id: true,
         statut: true,
         locataireId: true,
-        locataire: { select: { email: true } },
+        locataire: { select: { email: true, telephone: true } },
       },
     });
 
@@ -236,6 +242,7 @@ export class ReservationExpiryProcessor {
       type: 'avis.request',
       userId: reservation.locataireId,
       email: reservation.locataire.email,
+      phone: reservation.locataire.telephone ?? undefined,
       data: { reservationId: reservation.id },
     });
   }
@@ -277,6 +284,7 @@ export class ReservationExpiryProcessor {
       await this.notification.send({
         type: 'reservation.checkin.tacit_window',
         userId: reservation.locataireId,
+        phone: phone ?? undefined,
         data: { reservationId: job.data.reservationId },
       });
     }

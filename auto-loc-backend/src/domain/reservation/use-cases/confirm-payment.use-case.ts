@@ -81,8 +81,24 @@ export class ConfirmPaymentUseCase {
                     statut: true,
                     proprietaireId: true,
                     locataireId: true,
-                    proprietaire: { select: { email: true } },
-                    locataire: { select: { email: true } },
+                    dateDebut: true,
+                    dateFin: true,
+                    netProprietaire: true,
+                    vehicule: { select: { marque: true, modele: true } },
+                    proprietaire: {
+                        select: {
+                            email: true,
+                            telephone: true,
+                            profile: { select: { phone: true } },
+                        },
+                    },
+                    locataire: {
+                        select: {
+                            email: true,
+                            telephone: true,
+                            profile: { select: { phone: true } },
+                        },
+                    },
                     paiement: {
                         select: { id: true, statut: true },
                     },
@@ -180,11 +196,15 @@ export class ConfirmPaymentUseCase {
             await this.queue
                 .scheduleNotification({
                     type: 'reservation.paid',
-                    data: {
-                        reservationId,
-                        email: reservation.locataire?.email ?? undefined,
-                        userId: reservation.locataireId,
-                    },
+                        data: {
+                            reservationId,
+                            email: reservation.locataire?.email ?? undefined,
+                            phone: reservation.locataire?.telephone ?? reservation.locataire?.profile?.phone ?? undefined,
+                            userId: reservation.locataireId,
+                            vehicule: reservation.vehicule ? `${reservation.vehicule.marque} ${reservation.vehicule.modele}` : 'véhicule',
+                            dateDebut: reservation.dateDebut,
+                            dateFin: reservation.dateFin,
+                        },
                 })
                 .catch(() => { });
 
@@ -192,11 +212,16 @@ export class ConfirmPaymentUseCase {
             await this.queue
                 .scheduleNotification({
                     type: 'reservation.paid.owner',
-                    data: {
-                        reservationId,
-                        email: reservation.proprietaire?.email ?? undefined,
-                        userId: reservation.proprietaireId,
-                    },
+                        data: {
+                            reservationId,
+                            email: reservation.proprietaire?.email ?? undefined,
+                            phone: reservation.proprietaire?.telephone ?? reservation.proprietaire?.profile?.phone ?? undefined,
+                            userId: reservation.proprietaireId,
+                            vehicule: reservation.vehicule ? `${reservation.vehicule.marque} ${reservation.vehicule.modele}` : 'véhicule',
+                            dateDebut: reservation.dateDebut,
+                            dateFin: reservation.dateFin,
+                            netProprietaire: reservation.netProprietaire?.toString(),
+                        },
                 })
                 .catch(() => { });
 

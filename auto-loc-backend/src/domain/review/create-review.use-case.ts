@@ -99,7 +99,10 @@ export class CreateReviewUseCase {
                     note: input.note,
                     commentaire: input.commentaire ?? null,
                 },
-                select: { id: true },
+                select: {
+                    id: true,
+                    cible: { select: { telephone: true, email: true } },
+                },
             });
         } catch (err) {
             if (
@@ -125,12 +128,13 @@ export class CreateReviewUseCase {
         );
 
         // ── 7. Notification (best-effort) ──────────────────────────────────
-        await this.queue
-            .scheduleNotification({
+        this.queue.scheduleNotification({
                 type: 'avis.recu',
                 data: {
                     reservationId: input.reservationId,
-                    cibleId,
+                    userId: cibleId,
+                    phone: avis.cible?.telephone ?? null,
+                    email: avis.cible?.email ?? undefined,
                     note: input.note,
                     commentaire: input.commentaire ?? null,
                 },

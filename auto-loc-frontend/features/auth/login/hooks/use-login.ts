@@ -11,7 +11,7 @@ export function useLogin() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: input.email,
       password: input.password,
     });
@@ -21,16 +21,16 @@ export function useLogin() {
       
       if (isUnconfirmed) {
         setLoading(false);
-        return { success: false, unconfirmed: true };
+        return { success: false, unconfirmed: true, session: null };
       }
 
       setError(mapSupabaseError(error.message));
       setLoading(false);
-      return { success: false, unconfirmed: false };
+      return { success: false, unconfirmed: false, session: null };
     }
 
     setLoading(false);
-    return { success: true, unconfirmed: false };
+    return { success: true, unconfirmed: false, session: data.session };
   };
 
   return { signIn, loading, error };

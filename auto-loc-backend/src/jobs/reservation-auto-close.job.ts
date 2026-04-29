@@ -93,8 +93,10 @@ export class ReservationAutoCloseJob {
             select: {
                 id: true,
                 dateDebut: true,
-                proprietaire: { select: { prenom: true, email: true, telephone: true } },
-                locataire: { select: { prenom: true, email: true, telephone: true } },
+                proprietaireId: true,
+                locataireId: true,
+                proprietaire: { select: { id: true, prenom: true, email: true, telephone: true } },
+                locataire: { select: { id: true, prenom: true, email: true, telephone: true } },
             },
         });
 
@@ -104,18 +106,21 @@ export class ReservationAutoCloseJob {
         for (const r of upcoming) {
             const dateLabel = r.dateDebut.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
             const parties = [
-                { prenom: r.proprietaire?.prenom, email: r.proprietaire?.email },
-                { prenom: r.locataire?.prenom, email: r.locataire?.email },
+                { prenom: r.proprietaire?.prenom, email: r.proprietaire?.email, phone: r.proprietaire?.telephone, id: r.proprietaireId, isOwner: true },
+                { prenom: r.locataire?.prenom, email: r.locataire?.email, phone: r.locataire?.telephone, id: r.locataireId, isOwner: false },
             ];
             for (const party of parties) {
-                if (!party.email) continue;
+                if (!party.email && !party.phone) continue;
                 await this.queue.scheduleNotification({
                     type: 'reservation.checkin.reminder_veille',
                     data: {
                         reservationId: r.id,
+                        userId: party.id,
+                        phone: party.phone ?? undefined,
                         prenom: party.prenom ?? '',
                         dateDebut: dateLabel,
-                        email: party.email,
+                        email: party.email ?? undefined,
+                        isOwner: party.isOwner,
                     },
                 }).catch(() => { });
             }
@@ -144,8 +149,10 @@ export class ReservationAutoCloseJob {
             select: {
                 id: true,
                 dateDebut: true,
-                proprietaire: { select: { prenom: true, email: true, telephone: true } },
-                locataire: { select: { prenom: true, email: true, telephone: true } },
+                proprietaireId: true,
+                locataireId: true,
+                proprietaire: { select: { id: true, prenom: true, email: true, telephone: true } },
+                locataire: { select: { id: true, prenom: true, email: true, telephone: true } },
             },
         });
 
@@ -155,18 +162,21 @@ export class ReservationAutoCloseJob {
         for (const r of atRisk) {
             const dateLabel = r.dateDebut.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
             const parties = [
-                { prenom: r.proprietaire?.prenom, email: r.proprietaire?.email },
-                { prenom: r.locataire?.prenom, email: r.locataire?.email },
+                { prenom: r.proprietaire?.prenom, email: r.proprietaire?.email, phone: r.proprietaire?.telephone, id: r.proprietaireId, isOwner: true },
+                { prenom: r.locataire?.prenom, email: r.locataire?.email, phone: r.locataire?.telephone, id: r.locataireId, isOwner: false },
             ];
             for (const party of parties) {
-                if (!party.email) continue;
+                if (!party.email && !party.phone) continue;
                 await this.queue.scheduleNotification({
                     type: 'reservation.checkin.reminder_jour',
                     data: {
                         reservationId: r.id,
+                        userId: party.id,
+                        phone: party.phone ?? undefined,
                         prenom: party.prenom ?? '',
                         dateDebut: dateLabel,
-                        email: party.email,
+                        email: party.email ?? undefined,
+                        isOwner: party.isOwner,
                     },
                 }).catch(() => { });
             }

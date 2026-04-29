@@ -369,7 +369,7 @@ export function RegisterForm() {
             {/* Google uniquement */}
             <button
               type="button"
-              onClick={signInWithGoogle}
+              onClick={() => { void signInWithGoogle(); }}
               disabled={isLoading}
               className="autoloc-body w-full bg-white border border-gray-200 rounded-xl py-3 px-4 hover:bg-gray-50 hover:border-gray-300 focus:ring-2 focus:ring-gray-900 transition-all flex items-center justify-center gap-3 text-sm font-medium text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >

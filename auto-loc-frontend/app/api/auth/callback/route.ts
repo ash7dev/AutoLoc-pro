@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   const next = searchParams.get('next') ?? '/';
+  const successUrl = new URL(next.startsWith('/') ? next : '/', origin);
 
   if (!code) {
     return NextResponse.redirect(
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
   if (next && next !== '/') {
     loginUrl.searchParams.set('next', next);
   }
-  const response = NextResponse.redirect(loginUrl);
+  const response = NextResponse.redirect(successUrl);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
             statusText: nestRes.statusText,
             api: NEST_API
           });
-          // Continue anyway - fallback to Supabase token
+          response.headers.set('Location', loginUrl.toString());
         } else {
           const { accessToken, refreshToken } = await nestRes.json() as {
             accessToken: string;
@@ -107,8 +108,10 @@ export async function GET(request: NextRequest) {
         error: error instanceof Error ? error.message : 'Unknown error',
         api: NEST_API
       });
-      // Non-bloquant : le fallback Supabase token reste valide dans les layouts.
+      response.headers.set('Location', loginUrl.toString());
     }
+  } else {
+    response.headers.set('Location', loginUrl.toString());
   }
 
   return response;

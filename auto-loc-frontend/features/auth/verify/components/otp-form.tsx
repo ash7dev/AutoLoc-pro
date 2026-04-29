@@ -6,6 +6,7 @@ import { useOtp } from '../hooks/use-otp';
 import { useAuthFlow } from '../../hooks/use-auth-flow';
 import { clearPendingOtp } from '../../register/hooks/use-register';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
 export function OtpForm({
@@ -17,6 +18,7 @@ export function OtpForm({
   phone?: string;
   type: 'email' | 'phone';
 }) {
+  const router = useRouter();
   const { verifyOtp, resendOtp, loading, error, counter, canResend } = useOtp();
   const { redirectAfterAuth } = useAuthFlow();
 
@@ -28,46 +30,55 @@ export function OtpForm({
 
   const [syncing, setSyncing] = useState(false);
 
+  // Prefetch des destinations probables pour gagner du temps
+  useEffect(() => {
+    router.prefetch('/dashboard/owner');
+    router.prefetch('/dashboard/admin');
+    router.prefetch('/');
+  }, [router]);
+
   // ── Auto-submit dès que tous les champs sont remplis ──
   const submitCode = useCallback(async (code: string) => {
     if (isSubmittingRef.current || syncing) return;
     if (code.length !== slots) return;
 
     isSubmittingRef.current = true;
+    
+    // On lance la vérification
     const { session, error: verifyError } = await verifyOtp({ email, phone, type }, code);
     
     if (!verifyError && session) {
       setSyncing(true);
-      clearPendingOtp(); // Lever le verrou : l'utilisateur est maintenant confirmé.
+      clearPendingOtp(); 
+
       try {
-        let success;
-        if (type === 'phone' && (session as any).access_token) {
-          // Cas Direct Backend (tokens convertis en format session dans useOtp)
-          success = await redirectAfterAuth(null, {
+        // Pour le flow téléphone, on a déjà tout dans session.
+        // On passe les tokens à redirectAfterAuth qui s'occupera du reste de manière optimisée.
+        const success = await redirectAfterAuth(
+          type === 'phone' ? null : session,
+          type === 'phone' ? {
             accessToken: (session as any).access_token,
             refreshToken: (session as any).refresh_token,
             activeRole: (session as any).active_role || 'LOCATAIRE',
             profile: (session as any).user
-          });
-        } else {
-          // Cas Supabase
-          success = await redirectAfterAuth(session);
-        }
+          } : undefined
+        );
 
         if (success === false) {
-          setSyncError("Connexion impossible. Réessayez dans un instant.");
+          setSyncError("Connexion impossible. Réessayez.");
+          setSyncing(false);
+          isSubmittingRef.current = false;
         }
+        // Si success, Next.js gère la redirection, on ne reset pas syncing pour éviter un flash UI
       } catch (err) {
-        setSyncError("Connexion impossible. Réessayez dans un instant.");
-      } finally {
+        setSyncError("Erreur de synchronisation.");
         setSyncing(false);
         isSubmittingRef.current = false;
       }
     } else {
       isSubmittingRef.current = false;
     }
-
-  }, [email, phone, type, slots, verifyOtp, redirectAfterAuth, syncing]);
+  }, [email, phone, type, slots, verifyOtp, redirectAfterAuth, syncing, router]);
 
   const handleInputChange = (index: number, value: string) => {
     // Gérer le collage d'un code complet

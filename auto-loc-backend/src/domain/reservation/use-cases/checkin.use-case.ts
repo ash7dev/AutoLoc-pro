@@ -209,42 +209,42 @@ export class CheckInUseCase {
                 reservationId,
                 dateFin: reservation.dateFin,
                 locataire: reservation.locataire,
+                locataireId: reservation.locataireId,
                 proprietaire: reservation.proprietaire,
+                proprietaireId: reservation.proprietaireId,
             });
             walletCredited = side.walletCredited;
         } else if (input.role === 'PROPRIETAIRE') {
-            await this.queue
-                .scheduleNotification({
+            this.queue.scheduleNotification({
                     type: 'reservation.checkin.owner_confirmed',
                     data: {
                         reservationId,
-                        locatairePhone: reservation.locataire?.telephone ?? null,
-                        proprietairePhone: reservation.proprietaire?.telephone ?? null,
+                        userId: reservation.locataireId,
+                        phone: reservation.locataire?.telephone ?? null,
                     },
                 })
                 .catch(() => { });
 
             await this.queue.scheduleTacitCheckinReminders(reservationId).catch(() => { });
 
-            await this.queue
-                .scheduleNotification({
+            this.queue.scheduleNotification({
                     type: 'reservation.checkin.tacit_window',
                     data: {
                         reservationId,
-                        locatairePhone: reservation.locataire?.telephone ?? null,
+                        userId: reservation.locataireId,
+                        phone: reservation.locataire?.telephone ?? null,
                         locatairePrenom: reservation.locataire?.prenom ?? null,
                         email: reservation.locataire?.email ?? undefined,
                     },
                 })
                 .catch(() => { });
         } else {
-            await this.queue
-                .scheduleNotification({
+            this.queue.scheduleNotification({
                     type: 'reservation.checkin.tenant_confirmed',
                     data: {
                         reservationId,
-                        locatairePhone: reservation.locataire?.telephone ?? null,
-                        proprietairePhone: reservation.proprietaire?.telephone ?? null,
+                        userId: reservation.proprietaireId,
+                        phone: reservation.proprietaire?.telephone ?? null,
                     },
                 })
                 .catch(() => { });

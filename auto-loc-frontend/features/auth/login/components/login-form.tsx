@@ -98,7 +98,7 @@ export default function LoginAutoLoc() {
     if (res.success) {
       setIsRedirecting(true);
       startTransition(() => {
-        void redirectAfterAuth();
+        void redirectAfterAuth(res.session);
       });
     }
   };
@@ -120,7 +120,7 @@ export default function LoginAutoLoc() {
   /* ── GOOGLE OAUTH ───────────────────────────────────── */
   const handleGoogle = async () => {
     setError(null);
-    await signInWithGoogle();
+    await signInWithGoogle(searchParams.get('next'));
     // Supabase redirige vers Google — le browser quitte la page ici.
     // Si erreur, oauthError est mis à jour et le useEffect l'affiche.
   };
