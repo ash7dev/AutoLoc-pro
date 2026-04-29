@@ -420,7 +420,7 @@ function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, 
     setError('');
     try {
       // 1. Vérifier l'OTP
-      await apiFetch('/auth/phone/verify', {
+      await apiFetch('/auth/phone/verify-otp', {
         method: 'POST',
         body: { code: otp },
       });
