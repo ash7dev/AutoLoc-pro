@@ -123,6 +123,8 @@ const jsonLd = {
 
 import { WhatsAppBubble } from '@/components/ui/WhatsAppBubble';
 
+import { GlobalRoleSync } from '@/features/auth/components/global-role-sync';
+
 export default function RootLayout({
   children,
 }: {
@@ -141,6 +143,7 @@ export default function RootLayout({
           <ColorSystemProvider>
             <CurrencyProviderServer>{children}</CurrencyProviderServer>
           </ColorSystemProvider>
+          <GlobalRoleSync />
           <GlobalModals />
           <Toaster position="top-right" richColors closeButton />
           <WhatsAppBubble />

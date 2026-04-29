@@ -280,18 +280,6 @@ export function MarketplaceNavbar() {
   const { switchToProprietaire, loading: switchingRole } = useSwitchToProprietaire();
   const { signOut, loading: signingOut } = useSignOut();
 
-  // Rafraîchir hasVehicles depuis l'API à chaque connexion (pas seulement quand null)
-  // Cela évite que le localStorage périmé affiche "Devenir hôte" alors que l'user a des véhicules
-  useEffect(() => {
-    if (loggedIn) {
-      fetchMe().then(profile => {
-        useRoleStore.getState().setHasVehicles(Boolean(profile.hasVehicles));
-      }).catch(() => {
-        // Ne pas écraser si l'API échoue (réseau off, etc.)
-      });
-    }
-  }, [loggedIn]);
-
   function handleMobileSearch(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams();
@@ -589,7 +577,6 @@ export function MarketplaceNavbar() {
                     Pro
                   </span>
                 </button>
-
               ) : hasVehicles === false ? (
                 <Link
                   href="/become-owner"
