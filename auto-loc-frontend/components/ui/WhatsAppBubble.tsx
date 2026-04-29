@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 export function WhatsAppBubble() {
   const phoneNumber = '221786637705';
@@ -9,22 +10,27 @@ export function WhatsAppBubble() {
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
   return (
-    <a
+    <motion.a
       href={whatsappUrl}
       target="_blank"
       rel="noopener noreferrer"
+      drag
+      dragConstraints={{ left: -300, right: 0, top: -600, bottom: 0 }}
+      dragElastic={0.1}
+      whileDrag={{ scale: 1.1, cursor: 'grabbing' }}
+      whileTap={{ scale: 0.9 }}
       className={cn(
-        "fixed bottom-20 md:bottom-6 right-6 z-[99999]",
+        "fixed bottom-6 right-6 z-[99999]",
         "flex !important items-center justify-center",
         "w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#25D366] text-white shadow-2xl",
-        "transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95",
-        "group cursor-pointer border-2 border-white/20"
+        "transition-all duration-300 hover:shadow-xl active:scale-95",
+        "group cursor-grab border-2 border-white/20"
       )}
-      style={{ display: 'flex' }}
+      style={{ display: 'flex', touchAction: 'none' }}
       aria-label="Chat with support on WhatsApp"
     >
       {/* Ripple Effect Animation */}
-      <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-25 group-hover:animate-none" />
+      <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-25 group-hover:animate-none pointer-events-none" />
       
       {/* WhatsApp Icon (SVG) */}
       <svg
@@ -40,6 +46,6 @@ export function WhatsAppBubble() {
         Besoin d'aide ? Chattez avec nous
         <div className="absolute -right-1 top-1/2 -translate-y-1/2 border-8 border-transparent border-l-gray-900" />
       </div>
-    </a>
+    </motion.a>
   );
 }

@@ -85,7 +85,6 @@ export class NotificationService {
    * Envoie une notification multicanale (Email, WhatsApp, SMS).
    */
   async send(params: SendNotificationParams): Promise<SendResult> {
-    const startTime = Date.now();
     const template = EMAIL_TEMPLATES[params.type];
 
     if (!template) {
@@ -187,7 +186,7 @@ export class NotificationService {
    */
   private getWhatsAppMapping(type: NotificationType, data: Record<string, unknown>) {
     const resId = String(data.reservationId || '').slice(0, 8).toUpperCase();
-    
+
     // Formatage des dates pour WhatsApp
     const formatDate = (date: any) => date ? new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
     const dateDeb = formatDate(data.dateDebut);
@@ -207,20 +206,20 @@ export class NotificationService {
       // --- RÉSERVATION ---
       'reservation.paid.owner': {
         contentSid: 'HX0541d129bdc928f330296030babe8eb0', // proprio_resa_payee_bouton
-        variables: { 
-          '1': String(data.vehicule || 'véhicule'), 
+        variables: {
+          '1': String(data.vehicule || 'véhicule'),
           '2': dateDeb, '3': dateFin,
           '4': String(data.netProprietaire || '0'),
-          '5': data.reservationId 
+          '5': data.reservationId
         },
         fallbackText: `💰 AutoLoc — Nouvelle réservation payée pour ${data.vehicule} ! Confirmez ici.`,
       },
       'reservation.confirmed': {
         contentSid: 'HX0f3dd2d8599bed754c1c7a23240383a3', // locataire_resa_validee_bouton
-        variables: { 
-          '1': String(data.vehicule || 'véhicule'), 
+        variables: {
+          '1': String(data.vehicule || 'véhicule'),
           '2': dateDeb, '3': dateFin,
-          '4': data.reservationId 
+          '4': data.reservationId
         },
         fallbackText: `🎉 AutoLoc — Votre réservation pour ${data.vehicule} est CONFIRMÉE !`,
       },
@@ -251,11 +250,11 @@ export class NotificationService {
 
       'reservation.cancelled': {
         contentSid: isOwner ? 'HXbed44dd662edaa6268b7b5f612e37bcd' : (data.isRefusal ? 'HX83a61506118d14b83322837d951f517d' : 'HX50d492580774fe56c5cd5002b8168016'),
-        variables: { 
-          '1': isOwner ? resId : (data.isRefusal ? String(data.vehicule) : resId), 
+        variables: {
+          '1': isOwner ? resId : (data.isRefusal ? String(data.vehicule) : resId),
           '2': isOwner ? String(data.vehicule) : (data.isRefusal ? dateDeb : String(data.vehicule)),
           '3': isOwner ? String(data.raison || 'Annulation') : (data.isRefusal ? dateFin : String(data.raison || 'Annulation')),
-          '4': data.reservationId 
+          '4': data.reservationId
         },
         fallbackText: `❌ AutoLoc — Réservation #${resId} annulée.`,
       },
