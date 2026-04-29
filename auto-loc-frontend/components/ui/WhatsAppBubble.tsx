@@ -14,12 +14,13 @@ export function WhatsAppBubble() {
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "fixed bottom-6 right-6 z-[9999]",
-        "flex items-center justify-center",
-        "w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#25D366] text-white shadow-lg",
+        "fixed bottom-20 md:bottom-6 right-6 z-[99999]",
+        "flex !important items-center justify-center",
+        "w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#25D366] text-white shadow-2xl",
         "transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95",
-        "group cursor-pointer"
+        "group cursor-pointer border-2 border-white/20"
       )}
+      style={{ display: 'flex' }}
       aria-label="Chat with support on WhatsApp"
     >
       {/* Ripple Effect Animation */}
