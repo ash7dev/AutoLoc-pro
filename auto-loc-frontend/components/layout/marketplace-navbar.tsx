@@ -186,7 +186,7 @@ function ProfileDropdown({
               label={switchingRole ? "Chargement..." : "Espace Propriétaire"} 
               badge="Pro" 
             />
-          ) : hasVehicles === false ? (
+          ) : hasVehicles === false || hasVehicles === null ? (
             <DropdownItem href="/become-owner" icon={Building2} label="Devenir hôte" badge="Nouveau" />
           ) : null}
           <DropdownItem href="/reservations" icon={CalendarRange} label="Mes réservations" />
@@ -577,7 +577,7 @@ export function MarketplaceNavbar() {
                     Pro
                   </span>
                 </button>
-              ) : hasVehicles === false ? (
+              ) : hasVehicles === false || hasVehicles === null ? (
                 <Link
                   href="/become-owner"
                   onClick={() => setMenuOpen(false)}
