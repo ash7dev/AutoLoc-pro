@@ -183,19 +183,15 @@ export class NotificationService {
       return;
     }
 
-    try {
-      // S'assurer que le format du numéro de destination est correct
-      const to = message.to.startsWith('whatsapp:') ? message.to : `whatsapp:${message.to.startsWith('+') ? message.to : '+' + message.to}`;
+    // S'assurer que le format du numéro de destination est correct
+    const to = message.to.startsWith('whatsapp:') ? message.to : `whatsapp:${message.to.startsWith('+') ? message.to : '+' + message.to}`;
 
-      const response = await this.twilioClient.messages.create({
-        from: this.twilioWhatsappFrom,
-        to,
-        body: message.body,
-      });
-      this.logger.log(`📨 [WhatsApp:sent] sid=${response.sid} to=${to}`);
-    } catch (error) {
-      this.logger.error(`❌ [WhatsApp:error] Failed to send to ${message.to}: ${error}`);
-    }
+    const response = await this.twilioClient.messages.create({
+      from: this.twilioWhatsappFrom,
+      to,
+      body: message.body,
+    });
+    this.logger.log(`📨 [WhatsApp:accepted] sid=${response.sid} to=${to} from=${this.twilioWhatsappFrom} status=${response.status}`);
   }
 
   /**
@@ -207,20 +203,16 @@ export class NotificationService {
       return;
     }
 
-    try {
-      // Enlever le préfixe whatsapp s'il y est, pour s'assurer que c'est un SMS
-      const to = message.to.replace('whatsapp:', '');
-      const cleanTo = to.startsWith('+') ? to : `+${to}`;
+    // Enlever le préfixe whatsapp s'il y est, pour s'assurer que c'est un SMS
+    const to = message.to.replace('whatsapp:', '');
+    const cleanTo = to.startsWith('+') ? to : `+${to}`;
 
-      const response = await this.twilioClient.messages.create({
-        from: this.twilioSmsFrom,
-        to: cleanTo,
-        body: message.body,
-      });
-      this.logger.log(`📱 [SMS:sent] sid=${response.sid} to=${cleanTo} from=${this.twilioSmsFrom}`);
-    } catch (error) {
-      this.logger.error(`❌ [SMS:error] Failed to send to ${message.to}: ${error}`);
-    }
+    const response = await this.twilioClient.messages.create({
+      from: this.twilioSmsFrom,
+      to: cleanTo,
+      body: message.body,
+    });
+    this.logger.log(`📱 [SMS:accepted] sid=${response.sid} to=${cleanTo} from=${this.twilioSmsFrom} status=${response.status}`);
   }
 
   /**

@@ -276,28 +276,36 @@ export class AuthService {
     const key = this.getOtpKey(user.sub);
     await this.redisService.set(key, code, OTP_TTL_SECONDS);
 
-    // Envoi réel via WhatsApp (prioritaire), fallback SMS
+    // Envoi OTP sur les deux canaux. Un accusé Twilio "accepted" n'est pas une livraison réelle.
     const otpMessage = `🔐 AutoLoc — Votre code de vérification est : ${code}\n\nCe code expire dans 5 minutes. Ne le partagez avec personne.`;
+    let whatsappAccepted = false;
+    let smsAccepted = false;
 
     try {
       await this.notification.sendWhatsApp({
         to: utilisateur.telephone,
         body: otpMessage,
       });
-    } catch {
-      // Fallback SMS si WhatsApp échoue
-      try {
-        await this.notification.sendSms({
-          to: utilisateur.telephone,
-          body: `AutoLoc - Votre code de vérification : ${code} (expire dans 5 min)`,
-        });
-      } catch {
-        // Les deux canaux ont échoué. On supprime le code Redis car il n'est pas envoyé.
-        await this.redisService.del(key);
-        await this.redisService.del(cooldownKey);
-        console.error('[Auth] OTP delivery failed for both WhatsApp and SMS', { userId: user.sub });
-        throw new InternalServerErrorException('Impossible d’envoyer le code de vérification pour le moment. Réessayez plus tard.');
-      }
+      whatsappAccepted = true;
+    } catch (error) {
+      console.error('[Auth] WhatsApp OTP request failed', { userId: user.sub, error });
+    }
+
+    try {
+      await this.notification.sendSms({
+        to: utilisateur.telephone,
+        body: `AutoLoc - Votre code de vérification : ${code} (expire dans 5 min)`,
+      });
+      smsAccepted = true;
+    } catch (error) {
+      console.error('[Auth] SMS OTP request failed', { userId: user.sub, error });
+    }
+
+    if (!whatsappAccepted && !smsAccepted) {
+      await this.redisService.del(key);
+      await this.redisService.del(cooldownKey);
+      console.error('[Auth] OTP delivery failed for both WhatsApp and SMS', { userId: user.sub });
+      throw new InternalServerErrorException('Impossible d’envoyer le code de vérification pour le moment. Réessayez plus tard.');
     }
 
     return { expiresIn: OTP_TTL_SECONDS };
@@ -339,26 +347,35 @@ export class AuthService {
     const key = `${PHONE_LOGIN_OTP_PREFIX}${phone}`;
     await this.redisService.set(key, code, OTP_TTL_SECONDS);
 
-    // 5. Envoi via WhatsApp (prioritaire), fallback SMS
+    // 5. Envoi OTP sur les deux canaux. Un accusé Twilio "accepted" n'est pas une livraison réelle.
     const otpMessage = `🔐 AutoLoc — Votre code de connexion est : ${code}\n\nCe code expire dans 5 minutes. Ne le partagez avec personne.`;
+    let whatsappAccepted = false;
+    let smsAccepted = false;
 
     try {
       await this.notification.sendWhatsApp({ to: phone, body: otpMessage });
-      console.log(`[Auth] Phone login OTP sent via WhatsApp to ${phone}`);
-    } catch {
-      try {
-        await this.notification.sendSms({
-          to: phone,
-          body: `AutoLoc - Votre code de connexion : ${code} (expire dans 5 min)`,
-        });
-        console.log(`[Auth] Phone login OTP sent via SMS to ${phone}`);
-      } catch {
-        // Les deux canaux ont échoué. On libère le cooldown pour permettre un nouvel essai.
-        await this.redisService.del(key);
-        await this.redisService.del(cooldownKey);
-        console.error(`[Auth] Phone login OTP delivery failed for ${phone}`);
-        throw new InternalServerErrorException('Impossible d’envoyer le code de connexion pour le moment. Réessayez plus tard.');
-      }
+      whatsappAccepted = true;
+      console.log(`[Auth] Phone login OTP accepted via WhatsApp for ${phone}`);
+    } catch (error) {
+      console.error('[Auth] Phone login WhatsApp request failed', { phone, error });
+    }
+
+    try {
+      await this.notification.sendSms({
+        to: phone,
+        body: `AutoLoc - Votre code de connexion : ${code} (expire dans 5 min)`,
+      });
+      smsAccepted = true;
+      console.log(`[Auth] Phone login OTP accepted via SMS for ${phone}`);
+    } catch (error) {
+      console.error('[Auth] Phone login SMS request failed', { phone, error });
+    }
+
+    if (!whatsappAccepted && !smsAccepted) {
+      await this.redisService.del(key);
+      await this.redisService.del(cooldownKey);
+      console.error(`[Auth] Phone login OTP delivery failed for ${phone}`);
+      throw new InternalServerErrorException('Impossible d’envoyer le code de connexion pour le moment. Réessayez plus tard.');
     }
 
     return { expiresIn: OTP_TTL_SECONDS };
