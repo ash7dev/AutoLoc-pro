@@ -176,22 +176,35 @@ export class NotificationService {
 
   /**
    * Envoie un message WhatsApp via Twilio.
+   * Supporte soit un message texte simple, soit un template officiel (Content SID).
    */
-  async sendWhatsApp(message: { to: string; body: string }): Promise<void> {
+  async sendWhatsApp(message: { to: string; body?: string; contentSid?: string; contentVariables?: Record<string, string> }): Promise<void> {
     if (!this.twilioClient) {
-      this.logger.log(`📨 [WhatsApp:stub] to=${message.to} body="${message.body}"`);
+      this.logger.log(`📨 [WhatsApp:stub] to=${message.to} body="${message.body || message.contentSid}"`);
       return;
     }
 
     // S'assurer que le format du numéro de destination est correct
     const to = message.to.startsWith('whatsapp:') ? message.to : `whatsapp:${message.to.startsWith('+') ? message.to : '+' + message.to}`;
 
-    const response = await this.twilioClient.messages.create({
+    const payload: any = {
       from: this.twilioWhatsappFrom,
       to,
-      body: message.body,
-    });
-    this.logger.log(`📨 [WhatsApp:accepted] sid=${response.sid} to=${to} from=${this.twilioWhatsappFrom} status=${response.status}`);
+    };
+
+    if (message.contentSid) {
+      payload.contentSid = message.contentSid;
+      if (message.contentVariables) {
+        payload.contentVariables = JSON.stringify(message.contentVariables);
+      }
+    } else if (message.body) {
+      payload.body = message.body;
+    } else {
+      throw new Error('Either body or contentSid must be provided for WhatsApp');
+    }
+
+    const response = await this.twilioClient.messages.create(payload);
+    this.logger.log(`📨 [WhatsApp:accepted] sid=${response.sid} to=${to} type=${message.contentSid ? 'template' : 'text'} status=${response.status}`);
   }
 
   /**

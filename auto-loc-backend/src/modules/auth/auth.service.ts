@@ -284,6 +284,8 @@ export class AuthService {
     try {
       await this.notification.sendWhatsApp({
         to: utilisateur.telephone,
+        contentSid: 'HX7cc5a00ae1cb9c74e75f856743ac927b',
+        contentVariables: { '1': code },
         body: otpMessage,
       });
       whatsappAccepted = true;
@@ -353,9 +355,14 @@ export class AuthService {
     let smsAccepted = false;
 
     try {
-      await this.notification.sendWhatsApp({ to: phone, body: otpMessage });
+      await this.notification.sendWhatsApp({ 
+        to: phone, 
+        contentSid: 'HX7cc5a00ae1cb9c74e75f856743ac927b',
+        contentVariables: { '1': code },
+        body: otpMessage, 
+      });
       whatsappAccepted = true;
-      console.log(`[Auth] Phone login OTP accepted via WhatsApp for ${phone}`);
+      console.log(`[Auth] Phone login OTP accepted via WhatsApp (template) for ${phone}`);
     } catch (error) {
       console.error('[Auth] Phone login WhatsApp request failed', { phone, error });
     }
