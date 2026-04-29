@@ -1,7 +1,9 @@
+import { Logger } from '@nestjs/common';
 import { Processor, Process } from '@nestjs/bull';
 import { Job } from 'bull';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { NotificationService } from '../../notifications/notification.service';
+import { NotificationType } from '../../notifications/email-templates';
 import { ExpireReservationUseCase } from '../../../domain/reservation/use-cases/expire-reservation.use-case';
 import {
   RESERVATION_QUEUE_NAME,
@@ -9,6 +11,8 @@ import {
   RESERVATION_SIGNATURE_EXPIRY_JOB,
   RESERVATION_SIGNATURE_REMINDER_JOB,
   RESERVATION_CHECKIN_REMINDER_JOB,
+  RESERVATION_CHECKOUT_REMINDER_JOB,
+  RESERVATION_AVIS_REQUEST_JOB,
   RESERVATION_AUTOCLOSE_JOB,
   RESERVATION_POST_CHECKOUT_JOB,
   RESERVATION_TACIT_CHECKIN_REMINDER_JOB,
@@ -27,6 +31,8 @@ const SYSTEM_TACIT_REMINDER_MID = 'SYSTEM_TACIT_REMINDER_MID';
 
 @Processor(RESERVATION_QUEUE_NAME)
 export class ReservationExpiryProcessor {
+  private readonly logger = new Logger(ReservationExpiryProcessor.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly notification: NotificationService,
@@ -77,6 +83,8 @@ export class ReservationExpiryProcessor {
       select: {
         id: true,
         statut: true,
+        locataireId: true,
+        proprietaireId: true,
         locataire: { select: { telephone: true } },
         proprietaire: { select: { telephone: true } },
       },
@@ -87,21 +95,20 @@ export class ReservationExpiryProcessor {
       return;
     }
 
-    const phones = [
-      reservation.locataire?.telephone,
-      reservation.proprietaire?.telephone,
-    ].filter((p): p is string => Boolean(p));
+    const promises = [
+      this.notification.send({
+        type: 'reservation.paid', // Or a more specific type if we had one for reminder
+        userId: reservation.locataireId,
+        data: { reservationId: reservation.id, isOwner: false },
+      }),
+      this.notification.send({
+        type: 'reservation.paid.owner',
+        userId: reservation.proprietaireId,
+        data: { reservationId: reservation.id, isOwner: true },
+      }),
+    ];
 
-    for (const phone of phones) {
-      const whatsappTo = this.normalizeWhatsAppNumber(phone);
-      const smsTo = phone.replace('whatsapp:', '').trim();
-      const body = `Rappel: merci de signer le contrat pour la réservation ${reservation.id}.`;
-      try {
-        await this.notification.sendWhatsApp({ to: whatsappTo, body });
-      } catch {
-        await this.notification.sendSms({ to: smsTo, body }).catch(() => {});
-      }
-    }
+    await Promise.all(promises).catch(err => this.logger.error(`Error sending signature reminders for ${reservation.id}: ${err}`));
 
     await this.markReminderSent(
       reservation.id,
@@ -119,42 +126,118 @@ export class ReservationExpiryProcessor {
       select: {
         id: true,
         statut: true,
-        locataire: { select: { telephone: true } },
-        proprietaire: { select: { telephone: true } },
+        dateDebut: true,
+        locataireId: true,
+        proprietaireId: true,
+        locataire: { select: { email: true } },
+        proprietaire: { select: { email: true } },
       },
     });
+
     if (!reservation) return;
-    if (
-      reservation.statut !== StatutReservation.PAYEE &&
-      reservation.statut !== StatutReservation.CONFIRMEE
-    ) {
-      return;
-    }
-    if (await this.wasReminderSent(reservation.id, SYSTEM_CHECKIN_REMINDER)) {
-      return;
-    }
 
-    const phones = [
-      reservation.locataire?.telephone,
-      reservation.proprietaire?.telephone,
-    ].filter((p): p is string => Boolean(p));
+    // 1. Déterminer si c'est le rappel J-1 ou l'alerte urgente J+2h
+    const now = new Date();
+    const startDate = new Date(reservation.dateDebut);
+    const diffMs = now.getTime() - startDate.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
 
-    for (const phone of phones) {
-      const whatsappTo = this.normalizeWhatsAppNumber(phone);
-      const smsTo = phone.replace('whatsapp:', '').trim();
-      const body = `Rappel: votre location commence demain (réservation ${reservation.id}).`;
-      try {
-        await this.notification.sendWhatsApp({ to: whatsappTo, body });
-      } catch {
-        await this.notification.sendSms({ to: smsTo, body }).catch(() => {});
-      }
+    let notifType: NotificationType;
+    let systemTag: string;
+
+    if (diffHours >= 2) {
+      // Cas : Plus de 2h de retard sur le début prévu
+      if (reservation.statut !== StatutReservation.CONFIRMEE) return;
+      notifType = 'reservation.checkin.reminder_jour';
+      systemTag = 'SYSTEM_CHECKIN_URGENT';
+    } else {
+      // Cas : Rappel normal la veille
+      if (reservation.statut !== StatutReservation.CONFIRMEE && reservation.statut !== StatutReservation.PAYEE) return;
+      notifType = 'reservation.checkin.reminder_veille';
+      systemTag = 'SYSTEM_CHECKIN_REMINDER';
     }
 
-    await this.markReminderSent(
-      reservation.id,
-      reservation.statut,
-      SYSTEM_CHECKIN_REMINDER,
-    );
+    if (await this.wasReminderSent(reservation.id, systemTag)) return;
+
+    // 2. Envoi aux deux parties via le service central
+    const promises = [
+      this.notification.send({
+        type: notifType,
+        userId: reservation.locataireId,
+        email: reservation.locataire.email,
+        data: { reservationId: reservation.id, dateDebut: startDate.toLocaleDateString('fr-FR'), isOwner: false },
+      }),
+      this.notification.send({
+        type: notifType,
+        userId: reservation.proprietaireId,
+        email: reservation.proprietaire.email,
+        data: { reservationId: reservation.id, dateDebut: startDate.toLocaleDateString('fr-FR'), isOwner: true },
+      }),
+    ];
+
+    await Promise.all(promises).catch(err => this.logger.error(`Error sending reminders for ${reservation.id}: ${err}`));
+
+    await this.markReminderSent(reservation.id, reservation.statut, systemTag);
+  }
+
+  @Process(RESERVATION_CHECKOUT_REMINDER_JOB)
+  async handleCheckoutReminder(
+    job: Job<{ reservationId: string }>,
+  ): Promise<void> {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: job.data.reservationId },
+      select: {
+        id: true,
+        statut: true,
+        locataireId: true,
+        proprietaireId: true,
+        locataire: { select: { email: true } },
+        proprietaire: { select: { email: true } },
+      },
+    });
+
+    if (!reservation || reservation.statut !== StatutReservation.EN_COURS) return;
+
+    const promises = [
+      this.notification.send({
+        type: 'reservation.checkout.reminder',
+        userId: reservation.locataireId,
+        email: reservation.locataire.email,
+        data: { reservationId: reservation.id, isOwner: false },
+      }),
+      this.notification.send({
+        type: 'reservation.checkout.reminder',
+        userId: reservation.proprietaireId,
+        email: reservation.proprietaire.email,
+        data: { reservationId: reservation.id, isOwner: true },
+      }),
+    ];
+
+    await Promise.all(promises).catch(err => this.logger.error(`Error sending checkout reminders for ${reservation.id}: ${err}`));
+  }
+
+  @Process(RESERVATION_AVIS_REQUEST_JOB)
+  async handleAvisRequest(
+    job: Job<{ reservationId: string }>,
+  ): Promise<void> {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: job.data.reservationId },
+      select: {
+        id: true,
+        statut: true,
+        locataireId: true,
+        locataire: { select: { email: true } },
+      },
+    });
+
+    if (!reservation || reservation.statut !== StatutReservation.TERMINEE) return;
+
+    await this.notification.send({
+      type: 'avis.request',
+      userId: reservation.locataireId,
+      email: reservation.locataire.email,
+      data: { reservationId: reservation.id },
+    });
   }
 
   @Process(RESERVATION_TACIT_CHECKIN_REMINDER_JOB)
@@ -166,6 +249,7 @@ export class ReservationExpiryProcessor {
       select: {
         id: true,
         statut: true,
+        locataireId: true,
         checkinLocataireLe: true,
         tacitCheckinDeadlineLe: true,
         locataire: { select: { telephone: true, prenom: true } },
@@ -190,19 +274,11 @@ export class ReservationExpiryProcessor {
 
     const phone = reservation.locataire?.telephone;
     if (phone) {
-      const shortId = job.data.reservationId.slice(0, 8);
-      const body =
-        job.data.phase === 'immediate'
-          ? `AutoLoc : le propriétaire a enregistré le départ et l'état du véhicule. Validez votre check-in dans l'app sous 24 h. Sans action, la location sera considérée comme démarrée (rés. ${shortId}…).`
-          : `Rappel AutoLoc : validez votre check-in dans l'app. Sans validation, la location démarrera automatiquement selon l'état des lieux enregistré (rés. ${shortId}…).`;
-
-      const whatsappTo = this.normalizeWhatsAppNumber(phone);
-      const smsTo = phone.replace('whatsapp:', '').trim();
-      try {
-        await this.notification.sendWhatsApp({ to: whatsappTo, body });
-      } catch {
-        await this.notification.sendSms({ to: smsTo, body }).catch(() => {});
-      }
+      await this.notification.send({
+        type: 'reservation.checkin.tacit_window',
+        userId: reservation.locataireId,
+        data: { reservationId: job.data.reservationId },
+      });
     }
 
     await this.markReminderSent(
@@ -329,15 +405,6 @@ export class ReservationExpiryProcessor {
     });
   }
 
-  private normalizeWhatsAppNumber(raw: string): string {
-    const trimmed = raw.trim();
-    if (trimmed.startsWith('whatsapp:')) return trimmed;
-
-    const cleaned = trimmed.replace(/[\s-]/g, '');
-    if (cleaned.startsWith('+')) return `whatsapp:${cleaned}`;
-    if (cleaned.startsWith('221')) return `whatsapp:+${cleaned}`;
-    return `whatsapp:${DEFAULT_COUNTRY_CODE}${cleaned}`;
-  }
 
   private async wasReminderSent(
     reservationId: string,

@@ -126,6 +126,10 @@ export class ConfirmReservationUseCase {
             .catch(() => { });
 
         await this.queue
+            .scheduleCheckoutReminder(reservationId, reservation.dateFin)
+            .catch(() => { });
+
+        await this.queue
             .scheduleNotification({
                 type: 'reservation.confirmed',
                 data: {

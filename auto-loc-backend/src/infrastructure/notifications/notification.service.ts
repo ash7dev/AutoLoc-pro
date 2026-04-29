@@ -82,8 +82,7 @@ export class NotificationService {
   }
 
   /**
-   * Envoie une notification par email.
-   * Si RESEND_API_KEY n'est pas configuré, log le contenu (mode stub).
+   * Envoie une notification multicanale (Email, WhatsApp, SMS).
    */
   async send(params: SendNotificationParams): Promise<SendResult> {
     const startTime = Date.now();
@@ -94,33 +93,46 @@ export class NotificationService {
       return { channel: 'log', success: false, error: 'Unknown type' };
     }
 
+    // 1. Résolution des destinataires (Email et Téléphone)
     let toEmail = params.email;
-    if (!toEmail && params.userId) {
+    let toPhone: string | undefined;
+
+    if (params.userId) {
       const user = await this.prisma.utilisateur.findUnique({
-        where: { id: params.userId },
-        select: { email: true },
+        where: { userId: params.userId },
+        select: { email: true, telephone: true },
       });
-      toEmail = user?.email ?? undefined;
-    }
-    if (!toEmail) {
-      this.logger.warn(`No email resolved for type=${params.type} userId=${params.userId ?? 'unknown'} — skipping`);
-      return { channel: 'log', success: false, error: 'No recipient email' };
+      if (user) {
+        toEmail = toEmail || user.email || undefined;
+        toPhone = user.telephone || undefined;
+      }
     }
 
-    // Mode stub si pas de clé API Resend
+    // 2. Envoi EMAIL (Canal principal pour les détails)
+    let emailResult: SendResult = { channel: 'email', success: false };
+    if (toEmail) {
+      emailResult = await this.sendEmail(toEmail, params.type, params.data);
+    }
+
+    // 3. Envoi WHATSAPP / SMS (Canal instantané)
+    if (toPhone) {
+      await this.sendInstantNotification(toPhone, params.type, params.data);
+    }
+
+    return emailResult;
+  }
+
+  /**
+   * Logique interne pour l'envoi d'email
+   */
+  private async sendEmail(to: string, type: NotificationType, data: Record<string, unknown>): Promise<SendResult> {
+    const template = EMAIL_TEMPLATES[type];
     if (!this.resendApiKey) {
-      const durationMs = Date.now() - startTime;
-      this.logger.log(
-        `📧 [EMAIL:stub] type=${params.type} to=${toEmail} ` +
-        `subject="${template.subject}" duration=${durationMs}ms`,
-      );
+      this.logger.log(`📧 [EMAIL:stub] type=${type} to=${to}`);
       return { channel: 'log', success: true };
     }
 
-    // Envoi réel via Resend API
     try {
-      const htmlBody = template.body(params.data);
-
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -129,49 +141,149 @@ export class NotificationService {
         },
         body: JSON.stringify({
           from: this.fromEmail,
-          to: [toEmail],
+          to: [to],
           reply_to: this.supportEmail,
           subject: template.subject,
-          html: htmlBody,
+          html: template.body(data),
         }),
       });
 
-      const durationMs = Date.now() - startTime;
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        this.logger.error(
-          `EMAIL_ERROR type=${params.type} to=${toEmail} ` +
-          `status=${response.status} error=${errorText} duration=${durationMs}ms`,
-        );
-        return {
-          channel: 'email',
-          success: false,
-          error: `Resend API error: ${response.status}`,
-        };
-      }
-
-      const result = (await response.json()) as { id?: string };
-
-      this.logger.log(
-        `📧 [EMAIL:sent] type=${params.type} to=${toEmail} ` +
-        `messageId=${result.id} duration=${durationMs}ms`,
-      );
-
-      return {
-        channel: 'email',
-        success: true,
-        messageId: result.id,
-      };
+      if (!response.ok) throw new Error(`Resend error: ${response.status}`);
+      const res = await response.json() as { id: string };
+      return { channel: 'email', success: true, messageId: res.id };
     } catch (err) {
-      const durationMs = Date.now() - startTime;
-      const error = err instanceof Error ? err.message : String(err);
-      this.logger.error(
-        `EMAIL_EXCEPTION type=${params.type} to=${toEmail} ` +
-        `error=${error} duration=${durationMs}ms`,
-      );
-      return { channel: 'email', success: false, error };
+      this.logger.error(`❌ [EMAIL:error] ${type} to ${to}: ${err}`);
+      return { channel: 'email', success: false, error: String(err) };
     }
+  }
+
+  /**
+   * Gère l'envoi WhatsApp avec fallback SMS selon le type de notification
+   */
+  private async sendInstantNotification(phone: string, type: NotificationType, data: Record<string, unknown>) {
+    const mapping = this.getWhatsAppMapping(type, data);
+    if (!mapping) return;
+
+    try {
+      // Tentative WhatsApp
+      await this.sendWhatsApp({
+        to: phone,
+        contentSid: mapping.contentSid,
+        contentVariables: mapping.variables,
+        body: mapping.fallbackText,
+      });
+    } catch (err) {
+      // Fallback SMS si WhatsApp échoue
+      this.logger.warn(`⚠️ WhatsApp failed for ${type}, falling back to SMS: ${err}`);
+      await this.sendSms({
+        to: phone,
+        body: mapping.smsText || mapping.fallbackText,
+      }).catch(e => this.logger.error(`❌ SMS fallback failed: ${e}`));
+    }
+  }
+
+  /**
+   * Définit quel template WhatsApp utiliser pour chaque type de notification
+   */
+  private getWhatsAppMapping(type: NotificationType, data: Record<string, unknown>) {
+    const resId = String(data.reservationId || '').slice(0, 8).toUpperCase();
+    
+    // Formatage des dates pour WhatsApp
+    const formatDate = (date: any) => date ? new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+    const dateDeb = formatDate(data.dateDebut);
+    const dateFin = formatDate(data.dateFin);
+
+    // Détection du rôle (Propriétaire vs Locataire) pour les messages partagés
+    const isOwner = data.isOwner === true || type.includes('.owner');
+
+    const mappings: Partial<Record<NotificationType, any>> = {
+      // --- AUTH ---
+      'verification.code': {
+        contentSid: 'HX4adc3c841559018e04cdd9a2e5ccfcf5', // verification_code_v2 (Copy Code)
+        variables: { '1': String(data.code) },
+        fallbackText: `Votre code AutoLoc est : ${data.code}`,
+      },
+
+      // --- RÉSERVATION ---
+      'reservation.paid.owner': {
+        contentSid: 'HX0541d129bdc928f330296030babe8eb0', // proprio_resa_payee_bouton
+        variables: { 
+          '1': String(data.vehicule || 'véhicule'), 
+          '2': dateDeb, '3': dateFin,
+          '4': String(data.netProprietaire || '0'),
+          '5': data.reservationId 
+        },
+        fallbackText: `💰 AutoLoc — Nouvelle réservation payée pour ${data.vehicule} ! Confirmez ici.`,
+      },
+      'reservation.confirmed': {
+        contentSid: 'HX0f3dd2d8599bed754c1c7a23240383a3', // locataire_resa_validee_bouton
+        variables: { 
+          '1': String(data.vehicule || 'véhicule'), 
+          '2': dateDeb, '3': dateFin,
+          '4': data.reservationId 
+        },
+        fallbackText: `🎉 AutoLoc — Votre réservation pour ${data.vehicule} est CONFIRMÉE !`,
+      },
+
+      // --- RAPPELS ---
+      'reservation.checkin.reminder_veille': {
+        contentSid: isOwner ? 'HXcbab671391d91e8189aa12b5826c376a' : 'HX4798cd370aa0e7b57351f1c82bc2ab36',
+        variables: isOwner ? { '1': String(data.vehicule), '2': data.reservationId } : { '1': String(data.vehicule), '2': data.reservationId },
+        fallbackText: `📅 AutoLoc — Demain commence la location #${resId} !`,
+      },
+      'reservation.checkin.reminder_jour': {
+        contentSid: isOwner ? 'HX524bd6c9f5d7f86b87b62a7186a035cd' : 'HX775bb91c71a231c662fc90bfade9eea3',
+        variables: { '1': String(data.vehicule), '2': data.reservationId },
+        fallbackText: `🚨 AutoLoc — Urgent ! Le check-in n'est pas validé.`,
+      },
+      'reservation.checkout.reminder': {
+        contentSid: isOwner ? 'HXfbbfd96be6664f4302a0e4b1f26d991d' : 'HX59be7100c1005d17ad94970cd86802f6',
+        variables: { '1': data.reservationId },
+        fallbackText: `🏁 AutoLoc — Fin de location imminente !`,
+      },
+
+      // --- POST-LOCATION ---
+      'avis.request': {
+        contentSid: 'HXc3c0380d917646821570d1f37f2128b3', // demande_avis_bouton
+        variables: { '1': data.reservationId },
+        fallbackText: `⭐ AutoLoc — Comment s'est passé votre trajet ? Laissez un avis !`,
+      },
+
+      'reservation.cancelled': {
+        contentSid: isOwner ? 'HXbed44dd662edaa6268b7b5f612e37bcd' : (data.isRefusal ? 'HX83a61506118d14b83322837d951f517d' : 'HX50d492580774fe56c5cd5002b8168016'),
+        variables: { 
+          '1': isOwner ? resId : (data.isRefusal ? String(data.vehicule) : resId), 
+          '2': isOwner ? String(data.vehicule) : (data.isRefusal ? dateDeb : String(data.vehicule)),
+          '3': isOwner ? String(data.raison || 'Annulation') : (data.isRefusal ? dateFin : String(data.raison || 'Annulation')),
+          '4': data.reservationId 
+        },
+        fallbackText: `❌ AutoLoc — Réservation #${resId} annulée.`,
+      },
+
+      // --- AUTRES ---
+      'litige.ouvert': {
+        contentSid: isOwner ? 'HX4313142d799e90f5094ca0b6fa3e3477' : 'HXf4707c67600cf74d0b7dec5c1cce97d9',
+        variables: isOwner ? { '1': resId, '2': String(data.vehicule), '3': data.reservationId } : { '1': resId, '2': String(data.vehicule), '3': data.reservationId },
+        fallbackText: `🚨 AutoLoc — Un litige a été ouvert sur la réservation #${resId}.`,
+      },
+      'kyc.verified': {
+        contentSid: 'HXD98d7356c7a8a91551acf470eebe1611', // compte_verifie_succes
+        variables: {},
+        fallbackText: `✅ AutoLoc — Votre identité est vérifiée !`,
+      },
+      'kyc.rejected': {
+        contentSid: 'HXfaf8c7435b4fd336a3c7f043ea771657', // kyc_rejected
+        variables: {},
+        fallbackText: `⚠️ AutoLoc — Votre identité n'a pu être vérifiée.`,
+      },
+      'wallet.credited': {
+        contentSid: 'HX98001603553f6e8526ce737ff1270f50', // wallet_credite_owner
+        variables: { '1': resId, '2': String(data.montant), '3': data.reservationId },
+        fallbackText: `💰 AutoLoc — Votre compte a été crédité de ${data.montant} FCFA.`,
+      }
+    };
+
+    return mappings[type];
   }
 
   /**

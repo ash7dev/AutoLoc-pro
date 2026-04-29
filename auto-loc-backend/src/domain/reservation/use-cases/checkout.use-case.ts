@@ -118,6 +118,10 @@ export class CheckOutUseCase {
             .catch(() => { });
 
         await this.queue
+            .scheduleAvisRequest(reservationId)
+            .catch(() => { });
+
+        await this.queue
             .scheduleNotification({
                 type: 'reservation.checkout',
                 data: {

@@ -7,6 +7,8 @@ import {
   RESERVATION_SIGNATURE_EXPIRY_JOB,
   RESERVATION_SIGNATURE_REMINDER_JOB,
   RESERVATION_CHECKIN_REMINDER_JOB,
+  RESERVATION_CHECKOUT_REMINDER_JOB,
+  RESERVATION_AVIS_REQUEST_JOB,
   RESERVATION_AUTOCLOSE_JOB,
   RESERVATION_POST_CHECKOUT_JOB,
   RESERVATION_TACIT_CHECKIN_REMINDER_JOB,
@@ -130,6 +132,35 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       RESERVATION_CHECKIN_REMINDER_JOB,
       { reservationId },
       { delay: delayMs },
+    );
+    return String(job.id);
+  }
+
+  // Rappel check-out 2h avant la date de fin.
+  async scheduleCheckoutReminder(
+    reservationId: string,
+    dateFin: Date,
+  ): Promise<string | null> {
+    const twoHoursMs = 2 * 60 * 60 * 1000;
+    const delayMs = dateFin.getTime() - Date.now() - twoHoursMs;
+    if (delayMs <= 0) return null;
+    const job = await this.reservationQueue.add(
+      RESERVATION_CHECKOUT_REMINDER_JOB,
+      { reservationId },
+      { delay: delayMs },
+    );
+    return String(job.id);
+  }
+
+  // Demande d'avis 2 minutes après la clôture.
+  async scheduleAvisRequest(
+    reservationId: string,
+  ): Promise<string> {
+    const twoMinutesMs = 2 * 60 * 1000;
+    const job = await this.reservationQueue.add(
+      RESERVATION_AVIS_REQUEST_JOB,
+      { reservationId },
+      { delay: twoMinutesMs },
     );
     return String(job.id);
   }
