@@ -24,7 +24,7 @@ export default function VerifyPage({
           <h1 className="text-2xl font-black tracking-tight text-slate-900">Vérification</h1>
           <p className="text-sm text-slate-400 mt-2 max-w-[260px] mx-auto">
             {type === 'phone'
-              ? `Saisissez le code SMS envoyé au numéro ${phone}.`
+              ? `Saisissez le code envoyé par WhatsApp ou SMS au numéro ${phone}.`
               : `Saisissez le code de confirmation envoyé à l'adresse ${email}.`}
           </p>
         </div>
@@ -54,4 +54,3 @@ export default function VerifyPage({
     </div>
   );
 }
-

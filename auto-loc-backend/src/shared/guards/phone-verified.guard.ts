@@ -26,13 +26,12 @@ export class PhoneVerifiedGuard implements CanActivate {
     });
 
     if (!utilisateur) {
-      throw new ForbiddenException('Profil incomplet');
+      throw new ForbiddenException('Votre profil est incomplet.');
     }
 
-    // ⚠️ Désactivé temporairement car OTP non configuré
-    // if (!utilisateur.phoneVerified) {
-    //   throw new ForbiddenException('Numéro de téléphone non vérifié');
-    // }
+    if (!utilisateur.phoneVerified) {
+      throw new ForbiddenException('Votre numéro de téléphone n’a pas encore été vérifié.');
+    }
 
     return true;
   }

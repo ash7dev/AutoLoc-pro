@@ -46,7 +46,7 @@ export function OtpForm({
           success = await redirectAfterAuth(null, {
             accessToken: (session as any).access_token,
             refreshToken: (session as any).refresh_token,
-            activeRole: 'LOCATAIRE',
+            activeRole: (session as any).active_role || 'LOCATAIRE',
             profile: (session as any).user
           });
         } else {
@@ -55,10 +55,10 @@ export function OtpForm({
         }
 
         if (success === false) {
-          setSyncError("Erreur de connexion au serveur. Veuillez réessayer.");
+          setSyncError("Connexion impossible. Réessayez dans un instant.");
         }
       } catch (err) {
-        setSyncError("Erreur de synchronisation avec le serveur. Veuillez réessayer.");
+        setSyncError("Connexion impossible. Réessayez dans un instant.");
       } finally {
         setSyncing(false);
         isSubmittingRef.current = false;

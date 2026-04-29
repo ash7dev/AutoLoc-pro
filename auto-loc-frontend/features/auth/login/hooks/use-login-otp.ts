@@ -26,7 +26,7 @@ export function useLoginOtp() {
       const data = await res.json();
 
       if (!res.ok) {
-        const msg = data?.message || 'Erreur lors de l\'envoi du code.';
+        const msg = data?.message || 'Impossible d’envoyer le code de connexion.';
         console.error('[Login OTP] Backend error:', msg);
         setError(msg);
         setLoading(false);
@@ -37,7 +37,7 @@ export function useLoginOtp() {
       return true;
     } catch (err) {
       console.error('[Login OTP] Network error:', err);
-      setError('Erreur de connexion au serveur.');
+      setError('Connexion impossible. Vérifiez votre réseau et réessayez.');
       setLoading(false);
       return false;
     }
@@ -60,7 +60,7 @@ export function useLoginOtp() {
       const data = await res.json();
 
       if (!res.ok) {
-        const msg = data?.message || 'Code incorrect.';
+        const msg = data?.message || 'Le code saisi est incorrect.';
         setError(msg);
         setLoading(false);
         return null;
@@ -75,7 +75,7 @@ export function useLoginOtp() {
       };
     } catch (err) {
       console.error('[Login OTP] Verify error:', err);
-      setError('Erreur de connexion au serveur.');
+      setError('Connexion impossible. Vérifiez votre réseau et réessayez.');
       setLoading(false);
       return null;
     }

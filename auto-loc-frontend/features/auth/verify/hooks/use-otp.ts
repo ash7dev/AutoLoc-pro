@@ -30,7 +30,7 @@ export function useOtp() {
         });
         const data = await res.json();
         if (!res.ok) {
-          setError(data.message || 'Code incorrect');
+          setError(data.message || 'Le code saisi est incorrect.');
           setLoading(false);
           return { session: null, error: data.message || 'error' };
         }
@@ -40,12 +40,13 @@ export function useOtp() {
           session: { 
             access_token: data.accessToken, 
             refresh_token: data.refreshToken,
-            user: data.profile 
+            user: data.profile,
+            active_role: data.activeRole,
           }, 
           error: null 
         };
       } catch (err) {
-        setError('Erreur de connexion au serveur');
+        setError('Connexion impossible. Vérifiez votre réseau et réessayez.');
         setLoading(false);
         return { session: null, error: 'connection_error' };
       }
@@ -73,7 +74,7 @@ export function useOtp() {
         });
         const data = await res.json();
         if (!res.ok) {
-          setError(data.message || 'Erreur lors de l\'envoi du code');
+          setError(data.message || 'Impossible d’envoyer un nouveau code pour le moment.');
           setLoading(false);
           return false;
         }
@@ -81,7 +82,7 @@ export function useOtp() {
         setLoading(false);
         return true;
       } catch (err) {
-        setError('Erreur de connexion au serveur');
+        setError('Connexion impossible. Vérifiez votre réseau et réessayez.');
         setLoading(false);
         return false;
       }

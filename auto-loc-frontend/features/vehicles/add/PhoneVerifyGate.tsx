@@ -416,11 +416,11 @@ export function PhoneVerifyGate({
   const handleConfirm = async () => {
     const normalized = normalizePhone(selectedCountry.code, phoneInput);
     if (!normalized || normalized.length < 8) {
-      setError("Entrez un numéro valide.");
+      setError("Saisissez un numéro de téléphone valide.");
       return;
     }
     if (needsProfile && (!prenom.trim() || !nom.trim() || !dateNaissance)) {
-      setError("Tous les champs sont requis.");
+      setError("Tous les champs obligatoires doivent être remplis.");
       return;
     }
     setLoading(true);
@@ -443,9 +443,9 @@ export function PhoneVerifyGate({
       setStage("otp");
     } catch (err) {
       setError(
-        err instanceof ApiError && err.status === 400
-          ? "Numéro invalide ou déjà utilisé, ou limite d'envoi atteinte."
-          : "Service indisponible. Réessayez.",
+        err instanceof ApiError 
+          ? (err.message || "Impossible d’envoyer le code de vérification.")
+          : "Connexion impossible. Réessayez dans un instant."
       );
     } finally {
       setLoading(false);
@@ -467,7 +467,11 @@ export function PhoneVerifyGate({
       setStage("success");
       setTimeout(onVerified, 1200);
     } catch (err) {
-      setError("Code incorrect ou expiré.");
+      setError(
+        err instanceof ApiError 
+          ? (err.message || "Le code saisi est incorrect ou expiré.") 
+          : "Connexion impossible. Réessayez dans un instant."
+      );
       setOtpValues(Array(6).fill(''));
       inputRefs.current[0]?.focus();
     } finally {

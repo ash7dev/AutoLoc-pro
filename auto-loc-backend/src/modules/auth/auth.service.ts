@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { CloudinaryService } from '../../infrastructure/cloudinary/cloudinary.service';
 import { assertValidImageBuffer } from '../../infrastructure/cloudinary/utils/file-validator';
@@ -231,7 +231,7 @@ export class AuthService {
    * au moment de publier ou recevoir un paiement.
    */
   async switchRole(user: RequestUser, dto: SwitchRoleDto): Promise<{ role: RoleProfile }> {
-      if(!user.sub) {
+    if (!user.sub) {
       throw new BadRequestException('Utilisateur invalide');
     }
 
@@ -263,13 +263,13 @@ export class AuthService {
       select: { telephone: true, prenom: true },
     });
     if (!utilisateur?.telephone) {
-      throw new BadRequestException('Aucun numéro de téléphone associé à ce compte');
+      throw new BadRequestException('Aucun numéro de téléphone n’est enregistré sur ce compte.');
     }
 
     const cooldownKey = this.getOtpCooldownKey(user.sub);
     const granted = await this.redisService.setNX(cooldownKey, '1', OTP_COOLDOWN_SECONDS);
     if (!granted) {
-      throw new BadRequestException('Code déjà envoyé. Merci de patienter 60s.');
+      throw new BadRequestException('Un code a déjà été envoyé. Attendez 60 secondes avant de réessayer.');
     }
 
     const code = this.generateOtp();
@@ -292,9 +292,11 @@ export class AuthService {
           body: `AutoLoc - Votre code de vérification : ${code} (expire dans 5 min)`,
         });
       } catch {
-        // Les deux canaux ont échoué, mais le code est en Redis.
-        // L'utilisateur peut réessayer après le cooldown.
+        // Les deux canaux ont échoué. On supprime le code Redis car il n'est pas envoyé.
+        await this.redisService.del(key);
+        await this.redisService.del(cooldownKey);
         console.error('[Auth] OTP delivery failed for both WhatsApp and SMS', { userId: user.sub });
+        throw new InternalServerErrorException('Impossible d’envoyer le code de vérification pour le moment. Réessayez plus tard.');
       }
     }
 
@@ -316,7 +318,7 @@ export class AuthService {
     });
 
     if (!utilisateur) {
-      throw new BadRequestException('Aucun compte associé à ce numéro. Inscrivez-vous d\'abord.');
+      throw new BadRequestException('Aucun compte n’est associé à ce numéro.');
     }
 
     // 2. Vérifier que le compte n'est pas bloqué/désactivé
@@ -329,7 +331,7 @@ export class AuthService {
     const cooldownKey = `${PHONE_LOGIN_COOLDOWN_PREFIX}${phone}`;
     const granted = await this.redisService.setNX(cooldownKey, '1', OTP_COOLDOWN_SECONDS);
     if (!granted) {
-      throw new BadRequestException('Code déjà envoyé. Merci de patienter 60 secondes.');
+      throw new BadRequestException('Un code a déjà été envoyé. Attendez 60 secondes avant de réessayer.');
     }
 
     // 4. Générer et stocker le code
@@ -351,7 +353,11 @@ export class AuthService {
         });
         console.log(`[Auth] Phone login OTP sent via SMS to ${phone}`);
       } catch {
+        // Les deux canaux ont échoué. On libère le cooldown pour permettre un nouvel essai.
+        await this.redisService.del(key);
+        await this.redisService.del(cooldownKey);
         console.error(`[Auth] Phone login OTP delivery failed for ${phone}`);
+        throw new InternalServerErrorException('Impossible d’envoyer le code de connexion pour le moment. Réessayez plus tard.');
       }
     }
 
@@ -365,7 +371,7 @@ export class AuthService {
     const phone = this.normalizePhone(rawPhone);
 
     if (!/^\d{6}$/.test(code)) {
-      throw new BadRequestException('Format de code invalide (6 chiffres attendus)');
+      throw new BadRequestException('Le code doit contenir 6 chiffres.');
     }
 
     // 1. Vérifier le code OTP
@@ -373,13 +379,13 @@ export class AuthService {
     const stored = await this.redisService.get(key);
 
     if (!stored) {
-      throw new BadRequestException('Code expiré. Demandez un nouveau code.');
+      throw new BadRequestException('Ce code a expiré. Demandez-en un nouveau.');
     }
 
     const storedBuf = Buffer.from(stored);
     const incomingBuf = Buffer.from(code);
     if (storedBuf.length !== incomingBuf.length || !timingSafeEqual(storedBuf, incomingBuf)) {
-      throw new BadRequestException('Code incorrect.');
+      throw new BadRequestException('Le code saisi est incorrect.');
     }
 
     await this.redisService.del(key);
@@ -387,17 +393,25 @@ export class AuthService {
     // 2. Trouver l'utilisateur
     const utilisateur = await this.prisma.utilisateur.findFirst({
       where: { telephone: phone },
-      select: { userId: true, email: true, telephone: true, actif: true, bloqueJusqua: true },
+      select: { userId: true, email: true, telephone: true, actif: true, bloqueJusqua: true, phoneVerified: true },
     });
 
     if (!utilisateur) {
-      throw new BadRequestException('Compte introuvable.');
+      throw new BadRequestException('Ce compte est introuvable.');
     }
 
     this.assertAccountIsAllowed({
       actif: utilisateur.actif,
       bloqueJusqua: utilisateur.bloqueJusqua ? utilisateur.bloqueJusqua.toISOString() : null,
     });
+
+    // 2.5 Marquer le numéro comme vérifié puisqu'on vient de valider l'OTP
+    if (!utilisateur.phoneVerified) {
+      await this.prisma.utilisateur.update({
+        where: { userId: utilisateur.userId },
+        data: { phoneVerified: true },
+      });
+    }
 
     // 3. Récupérer le profil et émettre les tokens
     const user: RequestUser = {
@@ -490,14 +504,14 @@ export class AuthService {
     await this.ensureUtilisateurExists(user.sub);
 
     if (!/^\d{6}$/.test(code)) {
-      throw new BadRequestException('Format de code invalide (6 chiffres attendus)');
+      throw new BadRequestException('Le code doit contenir 6 chiffres.');
     }
 
     const key = this.getOtpKey(user.sub);
     const stored = await this.redisService.get(key);
 
     if (!stored) {
-      throw new BadRequestException('Code expiré ou introuvable');
+      throw new BadRequestException('Ce code a expiré ou n’est plus valide.');
     }
 
     // Code Redis disponible : comparaison timing-safe stricte.
@@ -505,7 +519,7 @@ export class AuthService {
     const incomingBuf = Buffer.from(code);
     const lengthMatch = storedBuf.length === incomingBuf.length;
     if (!lengthMatch || !timingSafeEqual(storedBuf, incomingBuf)) {
-      throw new BadRequestException('Code incorrect');
+      throw new BadRequestException('Le code saisi est incorrect.');
     }
     await this.redisService.del(key);
 
