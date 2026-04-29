@@ -18,45 +18,60 @@ const NEST_COOKIE_BASE = {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as { supabaseToken?: string };
-    const { supabaseToken } = body;
+    const body = await request.json() as { 
+      supabaseToken?: string;
+      accessToken?: string;
+      refreshToken?: string;
+      activeRole?: string;
+      profile?: any;
+    };
+    
+    const { supabaseToken, accessToken, refreshToken, activeRole, profile } = body;
 
-    if (!supabaseToken) {
-      return NextResponse.json({ error: 'supabaseToken requis' }, { status: 400 });
-    }
-
-    // Si le backend n'est pas configuré, on retourne succès sans synchronisation
-    if (!NEST_API) {
-      console.warn('[Auth Sync] Backend API non configuré, synchronisation ignorée');
-      return NextResponse.json({ activeRole: 'LOCATAIRE', synced: false });
-    }
-
-    const nestRes = await fetch(`${NEST_API}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessToken: supabaseToken }),
-    });
-
-    if (!nestRes.ok) {
-      const err = await nestRes.text();
-      console.error('[Auth Sync] Backend login failed:', { status: nestRes.status, error: err });
-      return NextResponse.json({ error: 'Backend login failed', details: err }, { status: 502 });
-    }
-
-    const session = await nestRes.json() as {
+    let session: {
       accessToken: string;
       refreshToken: string;
       activeRole: string;
       profile: any;
     };
 
+    if (accessToken && refreshToken) {
+      // Cas direct (Login Téléphone Backend)
+      session = {
+        accessToken,
+        refreshToken,
+        activeRole: activeRole || 'LOCATAIRE',
+        profile: profile || null,
+      };
+    } else if (supabaseToken) {
+      // Cas Supabase (Email / Google)
+      if (!NEST_API) {
+        console.warn('[Auth Sync] Backend API non configuré, synchronisation ignorée');
+        return NextResponse.json({ activeRole: 'LOCATAIRE', synced: false });
+      }
+
+      const nestRes = await fetch(`${NEST_API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken: supabaseToken }),
+      });
+
+      if (!nestRes.ok) {
+        const err = await nestRes.text();
+        console.error('[Auth Sync] Backend login failed:', { status: nestRes.status, error: err });
+        return NextResponse.json({ error: 'Backend login failed', details: err }, { status: 502 });
+      }
+
+      session = await nestRes.json();
+    } else {
+      return NextResponse.json({ error: 'supabaseToken ou tokens directs requis' }, { status: 400 });
+    }
+
     const response = NextResponse.json({
       activeRole: session.activeRole,
       profile: session.profile,
       synced: true,
     });
-
-
 
     response.cookies.set('nest_access', session.accessToken, {
       ...NEST_COOKIE_BASE,
@@ -68,8 +83,8 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-    } catch (error) {
-      console.error('[Auth Sync] Backend error:', error);
-      return NextResponse.json({ error: 'Backend connection error' }, { status: 502 });
-    }
+  } catch (error) {
+    console.error('[Auth Sync] Backend error:', error);
+    return NextResponse.json({ error: 'Backend connection error' }, { status: 502 });
+  }
 }

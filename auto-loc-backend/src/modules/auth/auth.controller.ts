@@ -19,6 +19,7 @@ import { RefreshDto } from './dto/refresh.dto';
 import { RoleProfile } from '@prisma/client';
 import { VerifyPhoneOtpDto } from './dto/verify-phone-otp.dto';
 import { UpdatePhoneDto } from './dto/update-phone.dto';
+import { PhoneLoginSendOtpDto, PhoneLoginVerifyOtpDto } from './dto/phone-login.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -110,6 +111,22 @@ export class AuthController {
     @Body() dto: VerifyPhoneOtpDto,
   ): Promise<ProfileResponse> {
     return this.authService.verifyPhoneOtp(user, dto.code);
+  }
+
+  /* ── Phone Login (unauthenticated) ────────────────────────────────────── */
+
+  @Post('phone-login/send-otp')
+  async sendPhoneLoginOtp(
+    @Body() dto: PhoneLoginSendOtpDto,
+  ): Promise<{ expiresIn: number }> {
+    return this.authService.requestPhoneLoginOtp(dto.phone);
+  }
+
+  @Post('phone-login/verify-otp')
+  async verifyPhoneLoginOtp(
+    @Body() dto: PhoneLoginVerifyOtpDto,
+  ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile; profile: ProfileResponse }> {
+    return this.authService.verifyPhoneLoginOtp(dto.phone, dto.code);
   }
 
   /**

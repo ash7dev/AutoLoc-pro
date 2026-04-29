@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../../../lib/supabase/client';
 import { mapSupabaseError } from '../../utils/supabase-errors';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.autoloc.sn';
+
 export function useOtp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,41 +21,81 @@ export function useOtp() {
     setLoading(true);
     setError(null);
 
-    const payload =
-      target.type === 'phone'
-        ? { phone: target.phone ?? '', token, type: 'sms' as const }
-        : { email: target.email ?? '', token, type: 'signup' as const };
-
-    const { data, error } = await supabase.auth.verifyOtp(payload);
-    
-    if (error) {
-      setError(mapSupabaseError(error.message));
+    if (target.type === 'phone') {
+      try {
+        const res = await fetch(`${API_BASE}/auth/phone-login/verify-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: target.phone, code: token }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.message || 'Code incorrect');
+          setLoading(false);
+          return { session: null, error: data.message || 'error' };
+        }
+        setLoading(false);
+        // On renvoie un objet compatible "session" pour OtpForm
+        return { 
+          session: { 
+            access_token: data.accessToken, 
+            refresh_token: data.refreshToken,
+            user: data.profile 
+          }, 
+          error: null 
+        };
+      } catch (err) {
+        setError('Erreur de connexion au serveur');
+        setLoading(false);
+        return { session: null, error: 'connection_error' };
+      }
+    } else {
+      const payload = { email: target.email ?? '', token, type: 'signup' as const };
+      const { data, error } = await supabase.auth.verifyOtp(payload);
+      if (error) {
+        setError(mapSupabaseError(error.message));
+      }
+      setLoading(false);
+      return { session: data.session, error };
     }
-
-    setLoading(false);
-    return { session: data.session, error };
   };
-
 
   const resendOtp = async (target: { email?: string; phone?: string; type: 'email' | 'phone' }) => {
     setLoading(true);
     setError(null);
 
-    const payload =
-      target.type === 'phone'
-        ? { type: 'sms' as const, phone: target.phone ?? '' }
-        : { type: 'signup' as const, email: target.email ?? '' };
-
-    const { error } = await supabase.auth.resend(payload);
-
-    if (error) {
-      setError(mapSupabaseError(error.message));
+    if (target.type === 'phone') {
+      try {
+        const res = await fetch(`${API_BASE}/auth/phone-login/send-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: target.phone }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.message || 'Erreur lors de l\'envoi du code');
+          setLoading(false);
+          return false;
+        }
+        setCounter(120);
+        setLoading(false);
+        return true;
+      } catch (err) {
+        setError('Erreur de connexion au serveur');
+        setLoading(false);
+        return false;
+      }
     } else {
-      setCounter(120);
+      const payload = { type: 'signup' as const, email: target.email ?? '' };
+      const { error } = await supabase.auth.resend(payload);
+      if (error) {
+        setError(mapSupabaseError(error.message));
+      } else {
+        setCounter(120);
+      }
+      setLoading(false);
+      return !error;
     }
-
-    setLoading(false);
-    return !error;
   };
 
   return { verifyOtp, resendOtp, loading, error, counter, canResend };

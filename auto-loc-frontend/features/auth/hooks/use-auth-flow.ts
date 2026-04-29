@@ -34,39 +34,49 @@ export function useAuthFlow() {
     return () => { inFlight.current = false; };
   }, []);
 
-  const redirectAfterAuth = async (explicitSession?: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session'] | null) => {
+  const redirectAfterAuth = async (
+    explicitSession?: any,
+    directTokens?: { accessToken: string; refreshToken: string; activeRole: string; profile: any }
+  ) => {
     if (inFlight.current) return;
     inFlight.current = true;
 
-    let currentSession = explicitSession ?? null;
-
-    if (!currentSession) {
-      const { data } = await supabase.auth.getSession();
-      currentSession = data.session;
-    }
-
-    const token = currentSession?.access_token;
-
-    if (!token) {
-      inFlight.current = false;
-      return;
-    }
-
-    const provider =
-      currentSession?.user?.app_metadata?.provider ??
-      (currentSession?.user?.app_metadata as { providers?: string[] })?.providers?.[0];
-
-
     let profile: ProfileResponse;
+    let currentSession = explicitSession ?? null;
+    let token: string | undefined;
 
     try {
-      const sessionNest = await syncWithNestJS(token);
-      useRoleStore.getState().setSession(sessionNest);
-      
-      if (sessionNest.profile) {
-        profile = sessionNest.profile;
+      if (directTokens) {
+        // Cas Direct (Login Téléphone Backend)
+        token = directTokens.accessToken;
+        const sessionNest = await syncWithNestJS(undefined, directTokens);
+        useRoleStore.getState().setSession(sessionNest);
+        if (sessionNest.profile) {
+          profile = sessionNest.profile;
+        } else {
+          profile = await fetchMe();
+        }
       } else {
-        profile = await fetchMe();
+        // Cas Supabase (Email / Google)
+        if (!currentSession) {
+          const { data } = await supabase.auth.getSession();
+          currentSession = data.session;
+        }
+
+        token = currentSession?.access_token;
+        if (!token) {
+          inFlight.current = false;
+          return;
+        }
+
+        const sessionNest = await syncWithNestJS(token);
+        useRoleStore.getState().setSession(sessionNest);
+        
+        if (sessionNest.profile) {
+          profile = sessionNest.profile;
+        } else {
+          profile = await fetchMe();
+        }
       }
     } catch (err) {
       inFlight.current = false;
@@ -76,13 +86,25 @@ export function useAuthFlow() {
     if (!profile.hasUtilisateur) {
       const seededProfile = extractCompleteProfileInput(currentSession);
 
-      if (seededProfile) {
+      if (seededProfile && token) {
         try {
           await completeProfile(token, seededProfile);
           profile = await fetchMe();
         } catch (err) {
           // ignore error, will redirect anyway
         }
+      }
+    }
+
+    // ── Lier le téléphone au compte Supabase pour les futures connexions par tél ──
+    const userPhone = currentSession?.user?.phone;
+    const metadataPhone = extractCompleteProfileInput(currentSession)?.telephone;
+    if (metadataPhone && !userPhone) {
+      try {
+        await supabase.auth.updateUser({ phone: metadataPhone });
+        console.log('[AuthFlow] Phone linked to Supabase account:', metadataPhone);
+      } catch (err) {
+        console.warn('[AuthFlow] Failed to link phone:', err);
       }
     }
 

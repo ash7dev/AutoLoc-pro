@@ -23,6 +23,8 @@ const OTP_KEY_PREFIX = 'auth:phone-otp:';
 const OTP_COOLDOWN_SECONDS = 60;
 const OTP_COOLDOWN_PREFIX = 'auth:phone-otp:cooldown:';
 const REFRESH_SESSION_PREFIX = 'auth:refresh-session:';
+const PHONE_LOGIN_OTP_PREFIX = 'auth:phone-login-otp:';
+const PHONE_LOGIN_COOLDOWN_PREFIX = 'auth:phone-login-otp:cooldown:';
 
 @Injectable()
 export class AuthService {
@@ -297,6 +299,139 @@ export class AuthService {
     }
 
     return { expiresIn: OTP_TTL_SECONDS };
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+     PHONE LOGIN (unauthenticated) — envoie un OTP au numéro, vérifie le code
+     et émet un JWT métier si le compte existe.
+  ────────────────────────────────────────────────────────────────────────── */
+
+  async requestPhoneLoginOtp(rawPhone: string): Promise<{ expiresIn: number }> {
+    const phone = this.normalizePhone(rawPhone);
+
+    // 1. Vérifier que le numéro existe dans notre base
+    const utilisateur = await this.prisma.utilisateur.findFirst({
+      where: { telephone: phone },
+      select: { userId: true, prenom: true, actif: true, bloqueJusqua: true },
+    });
+
+    if (!utilisateur) {
+      throw new BadRequestException('Aucun compte associé à ce numéro. Inscrivez-vous d\'abord.');
+    }
+
+    // 2. Vérifier que le compte n'est pas bloqué/désactivé
+    this.assertAccountIsAllowed({
+      actif: utilisateur.actif,
+      bloqueJusqua: utilisateur.bloqueJusqua ? utilisateur.bloqueJusqua.toISOString() : null,
+    });
+
+    // 3. Cooldown
+    const cooldownKey = `${PHONE_LOGIN_COOLDOWN_PREFIX}${phone}`;
+    const granted = await this.redisService.setNX(cooldownKey, '1', OTP_COOLDOWN_SECONDS);
+    if (!granted) {
+      throw new BadRequestException('Code déjà envoyé. Merci de patienter 60 secondes.');
+    }
+
+    // 4. Générer et stocker le code
+    const code = this.generateOtp();
+    const key = `${PHONE_LOGIN_OTP_PREFIX}${phone}`;
+    await this.redisService.set(key, code, OTP_TTL_SECONDS);
+
+    // 5. Envoi via WhatsApp (prioritaire), fallback SMS
+    const otpMessage = `🔐 AutoLoc — Votre code de connexion est : ${code}\n\nCe code expire dans 5 minutes. Ne le partagez avec personne.`;
+
+    try {
+      await this.notification.sendWhatsApp({ to: phone, body: otpMessage });
+      console.log(`[Auth] Phone login OTP sent via WhatsApp to ${phone}`);
+    } catch {
+      try {
+        await this.notification.sendSms({
+          to: phone,
+          body: `AutoLoc - Votre code de connexion : ${code} (expire dans 5 min)`,
+        });
+        console.log(`[Auth] Phone login OTP sent via SMS to ${phone}`);
+      } catch {
+        console.error(`[Auth] Phone login OTP delivery failed for ${phone}`);
+      }
+    }
+
+    return { expiresIn: OTP_TTL_SECONDS };
+  }
+
+  async verifyPhoneLoginOtp(
+    rawPhone: string,
+    code: string,
+  ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile; profile: ProfileResponse }> {
+    const phone = this.normalizePhone(rawPhone);
+
+    if (!/^\d{6}$/.test(code)) {
+      throw new BadRequestException('Format de code invalide (6 chiffres attendus)');
+    }
+
+    // 1. Vérifier le code OTP
+    const key = `${PHONE_LOGIN_OTP_PREFIX}${phone}`;
+    const stored = await this.redisService.get(key);
+
+    if (!stored) {
+      throw new BadRequestException('Code expiré. Demandez un nouveau code.');
+    }
+
+    const storedBuf = Buffer.from(stored);
+    const incomingBuf = Buffer.from(code);
+    if (storedBuf.length !== incomingBuf.length || !timingSafeEqual(storedBuf, incomingBuf)) {
+      throw new BadRequestException('Code incorrect.');
+    }
+
+    await this.redisService.del(key);
+
+    // 2. Trouver l'utilisateur
+    const utilisateur = await this.prisma.utilisateur.findFirst({
+      where: { telephone: phone },
+      select: { userId: true, email: true, telephone: true, actif: true, bloqueJusqua: true },
+    });
+
+    if (!utilisateur) {
+      throw new BadRequestException('Compte introuvable.');
+    }
+
+    this.assertAccountIsAllowed({
+      actif: utilisateur.actif,
+      bloqueJusqua: utilisateur.bloqueJusqua ? utilisateur.bloqueJusqua.toISOString() : null,
+    });
+
+    // 3. Récupérer le profil et émettre les tokens
+    const user: RequestUser = {
+      sub: utilisateur.userId,
+      email: utilisateur.email,
+      phone: utilisateur.telephone,
+    };
+
+    const profile = await this.getOrCreateProfile(user);
+    const flags = await this.getUtilisateurFlags(user.sub);
+    this.assertAccountIsAllowed(flags);
+
+    const accessToken = await this.signAccessToken({
+      sub: user.sub,
+      email: user.email,
+      phone: user.phone,
+      role: profile.role as RoleProfile,
+    });
+    const refreshToken = await this.signRefreshToken({
+      sub: user.sub,
+      email: user.email,
+      phone: user.phone,
+      role: profile.role as RoleProfile,
+    });
+    await this.storeRefreshSession(user.sub, refreshToken);
+
+    console.log(`[Auth] Phone login successful for ${phone} (userId: ${user.sub})`);
+
+    return {
+      accessToken,
+      refreshToken,
+      activeRole: profile.role as RoleProfile,
+      profile: this.toResponse(profile, flags),
+    };
   }
 
   async updatePhone(user: RequestUser, telephone: string): Promise<ProfileResponse> {

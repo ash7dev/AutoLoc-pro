@@ -40,9 +40,21 @@ export function OtpForm({
       setSyncing(true);
       clearPendingOtp(); // Lever le verrou : l'utilisateur est maintenant confirmé.
       try {
-        const success = await redirectAfterAuth(session);
-        if (success === false) {
+        let success;
+        if (type === 'phone' && (session as any).access_token) {
+          // Cas Direct Backend (tokens convertis en format session dans useOtp)
+          success = await redirectAfterAuth(null, {
+            accessToken: (session as any).access_token,
+            refreshToken: (session as any).refresh_token,
+            activeRole: 'LOCATAIRE',
+            profile: (session as any).user
+          });
+        } else {
+          // Cas Supabase
+          success = await redirectAfterAuth(session);
+        }
 
+        if (success === false) {
           setSyncError("Erreur de connexion au serveur. Veuillez réessayer.");
         }
       } catch (err) {

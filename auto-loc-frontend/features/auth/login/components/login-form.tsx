@@ -74,7 +74,7 @@ export default function LoginAutoLoc() {
   }, [emailError]);
 
   useEffect(() => {
-    if (phoneError) setError({ erreur: "Erreur d'envoi SMS", details: phoneError });
+    if (phoneError) setError({ erreur: 'Connexion par téléphone impossible', details: phoneError });
   }, [phoneError]);
 
   useEffect(() => {
