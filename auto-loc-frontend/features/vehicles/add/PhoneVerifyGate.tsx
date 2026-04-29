@@ -365,7 +365,53 @@ export function PhoneVerifyGate({
   const canSubmit = phoneInput.trim().length > 0
     && (!needsProfile || (prenom.trim() && nom.trim() && dateNaissance));
 
-  const [otpCode, setOtpCode] = useState("");
+  const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(''));
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const handleOtpInputChange = (index: number, value: string) => {
+    if (value.length > 1) {
+      const digits = value.replace(/\D/g, '').slice(0, 6);
+      if (digits.length >= 2) {
+        const newValues = Array(6).fill('');
+        for (let i = 0; i < digits.length && i < 6; i++) {
+          newValues[i] = digits[i];
+        }
+        setOtpValues(newValues);
+        const nextFocus = Math.min(digits.length, 5);
+        inputRefs.current[nextFocus]?.focus();
+        if (digits.length === 6) handleVerifyOtp(digits);
+        return;
+      }
+    }
+    if (!/^\d*$/.test(value)) return;
+    const newOtpValues = [...otpValues];
+    newOtpValues[index] = value.slice(-1);
+    setOtpValues(newOtpValues);
+    setError(null);
+    if (value && index < 5) inputRefs.current[index + 1]?.focus();
+    const code = newOtpValues.join('');
+    if (code.length === 6 && !newOtpValues.some(v => v === '')) handleVerifyOtp(code);
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pasted) return;
+    const newValues = Array(6).fill('');
+    for (let i = 0; i < pasted.length && i < 6; i++) {
+      newValues[i] = pasted[i];
+    }
+    setOtpValues(newValues);
+    const nextFocus = Math.min(pasted.length, 5);
+    inputRefs.current[nextFocus]?.focus();
+    if (pasted.length === 6) handleVerifyOtp(pasted);
+  };
 
   const handleConfirm = async () => {
     const normalized = normalizePhone(selectedCountry.code, phoneInput);
@@ -406,8 +452,8 @@ export function PhoneVerifyGate({
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (otpCode.length !== 6) {
+  const handleVerifyOtp = async (codeToVerify: string) => {
+    if (codeToVerify.length !== 6) {
       setError("Le code doit contenir 6 chiffres.");
       return;
     }
@@ -416,12 +462,14 @@ export function PhoneVerifyGate({
     try {
       await authFetch("/auth/phone/verify-otp", {
         method: "POST",
-        body: { code: otpCode },
+        body: { code: codeToVerify },
       });
       setStage("success");
       setTimeout(onVerified, 1200);
     } catch (err) {
       setError("Code incorrect ou expiré.");
+      setOtpValues(Array(6).fill(''));
+      inputRefs.current[0]?.focus();
     } finally {
       setLoading(false);
     }
@@ -444,6 +492,7 @@ export function PhoneVerifyGate({
 
   /* ── OTP Stage ── */
   if (stage === "otp") {
+    const isFilled = !otpValues.some(v => v === '');
     return (
       <div className="space-y-4">
         <div className="text-center mb-6">
@@ -456,40 +505,45 @@ export function PhoneVerifyGate({
         </div>
 
         <Field label="Code de vérification" required>
-          <input
-            type="text"
-            inputMode="numeric"
-            maxLength={6}
-            value={otpCode}
-            onChange={e => {
-              const val = e.target.value.replace(/\D/g, "");
-              setOtpCode(val);
-              setError(null);
-              if (val.length === 6) {
-                // petite astuce pour auto-submit mais attention au state stale
-                // on laisse l'utilisateur cliquer pour être sûr, ou on le gère via useEffect
-              }
-            }}
-            onKeyDown={e => { if (e.key === "Enter" && otpCode.length === 6) handleVerifyOtp(); }}
-            placeholder="123456"
-            className={cn(INPUT_CLS(Boolean(error)), "text-center tracking-widest text-lg font-bold")}
-            autoFocus
-          />
+          <div className="flex justify-between gap-2 sm:gap-3">
+            {otpValues.map((value, index) => (
+              <input
+                key={index}
+                ref={(el) => { inputRefs.current[index] = el; }}
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={1}
+                value={value}
+                onChange={(e) => handleOtpInputChange(index, e.target.value)}
+                onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                onPaste={handleOtpPaste}
+                className={cn(
+                  "w-full h-12 text-center text-xl font-black rounded-xl border-2 transition-all outline-none",
+                  value
+                    ? "border-emerald-500 bg-emerald-50/30 text-emerald-700 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+                    : "border-slate-100 bg-slate-50 text-slate-900 focus:border-slate-300 focus:bg-white",
+                  error && "border-red-200 bg-red-50 text-red-600"
+                )}
+                autoFocus={index === 0}
+              />
+            ))}
+          </div>
         </Field>
 
         {error && (
-          <div className="px-4 py-2.5 rounded-xl bg-red-50 border border-red-100">
+          <div className="px-4 py-2.5 rounded-xl bg-red-50 border border-red-100 mt-4">
             <p className="text-[12px] font-semibold text-red-600">{error}</p>
           </div>
         )}
 
         <button
           type="button"
-          onClick={handleVerifyOtp}
-          disabled={loading || otpCode.length !== 6}
+          onClick={() => handleVerifyOtp(otpValues.join(''))}
+          disabled={loading || !isFilled}
           className={cn(
-            "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[13.5px] font-bold transition-all duration-200 mt-2",
-            otpCode.length === 6 && !loading
+            "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[13.5px] font-bold transition-all duration-200 mt-6",
+            isFilled && !loading
               ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20"
               : "bg-slate-100 text-slate-400 cursor-not-allowed",
           )}
@@ -499,7 +553,7 @@ export function PhoneVerifyGate({
 
         <button
           type="button"
-          onClick={() => { setStage("intro"); setOtpCode(""); setError(null); }}
+          onClick={() => { setStage("intro"); setOtpValues(Array(6).fill('')); setError(null); }}
           className="w-full text-[12.5px] font-semibold text-slate-500 hover:text-slate-800 transition-colors py-2"
         >
           Modifier le numéro
