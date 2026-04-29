@@ -820,6 +820,8 @@ export class AuthService {
     kycStatus?: ProfileResponse['kycStatus'];
     hasVehicles?: boolean;
     hasPermis?: boolean;
+    prenom?: string | null;
+    nom?: string | null;
     dateNaissance?: string | null;
     bloqueJusqua?: string | null;
   }> {
@@ -832,6 +834,8 @@ export class AuthService {
         statutKyc: true,
         permisUrl: true,
         dateNaissance: true,
+        prenom: true,
+        nom: true,
         bloqueJusqua: true,
         _count: { select: { vehicules: true } },
       },
@@ -844,6 +848,8 @@ export class AuthService {
       kycStatus: found.statutKyc as ProfileResponse['kycStatus'],
       hasVehicles: found._count.vehicules > 0,
       hasPermis: !!found.permisUrl,
+      prenom: found.prenom,
+      nom: found.nom,
       dateNaissance: found.dateNaissance ? found.dateNaissance.toISOString() : null,
       bloqueJusqua: found.bloqueJusqua ? found.bloqueJusqua.toISOString() : null,
     };
@@ -905,6 +911,8 @@ export class AuthService {
       kycStatus?: ProfileResponse['kycStatus'];
       hasVehicles?: boolean;
       hasPermis?: boolean;
+      prenom?: string | null;
+      nom?: string | null;
       dateNaissance?: string | null;
       bloqueJusqua?: string | null;
     } = {},
@@ -922,6 +930,8 @@ export class AuthService {
       kycStatus: flags.kycStatus,
       hasVehicles: flags.hasVehicles,
       hasPermis: flags.hasPermis,
+      prenom: flags.prenom,
+      nom: flags.nom,
       dateNaissance: flags.dateNaissance,
       bloqueJusqua: flags.bloqueJusqua,
     };

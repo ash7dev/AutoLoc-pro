@@ -30,8 +30,10 @@ interface Step {
 
 /* ── Helpers ─────────────────────────────────────────────── */
 function resolveGate(profile: ProfileResponse, ageMinimum?: number, userAge?: number): Gate {
-  // Pas d'utilisateur → formulaire de création complet (prénom + nom + date + tél)
-  if (!profile.hasUtilisateur) return "create_profile";
+  // Profil incomplet (prénom, nom ou date de naissance manquants)
+  const isProfileIncomplete = !profile.hasUtilisateur || !profile.prenom || !profile.nom || !profile.dateNaissance;
+  
+  if (isProfileIncomplete) return "create_profile";
 
   const phoneMissing = !profile.phoneVerified || !profile.phone;
 
@@ -64,6 +66,7 @@ function resolveGate(profile: ProfileResponse, ageMinimum?: number, userAge?: nu
 
 function resolveSteps(profile: ProfileResponse, ageMinimum?: number, userAge?: number): Step[] {
   const phoneOk = profile.hasUtilisateur && profile.phoneVerified && !!profile.phone;
+  const profileOk = profile.hasUtilisateur && !!profile.prenom && !!profile.nom && !!profile.dateNaissance;
   const kyc = profile.kycStatus;
   const kycStatus: StepStatus =
     kyc === "VERIFIE" ? "done"
@@ -101,16 +104,16 @@ function resolveSteps(profile: ProfileResponse, ageMinimum?: number, userAge?: n
     });
   }
 
-  // Étapes téléphone (toujours affiché si profil incomplet)
-  if (!profile.hasUtilisateur || !phoneOk) {
+  // Étapes téléphone/profil (toujours affiché si profil incomplet)
+  if (!profileOk || !phoneOk) {
     steps.push({
       key: "phone",
-      label: "Téléphone vérifié",
-      description: profile.hasUtilisateur
+      label: profileOk ? "Téléphone vérifié" : "Profil & Téléphone",
+      description: profileOk
         ? "Confirmez votre numéro de téléphone"
         : "Prénom, nom, date de naissance et numéro de téléphone",
-      duration: profile.hasUtilisateur ? "~1 min" : "~2 min",
-      status: phoneOk ? "done" : "required",
+      duration: profileOk ? "~1 min" : "~2 min",
+      status: (profileOk && phoneOk) ? "done" : "required",
       icon: Phone,
     });
   }
@@ -384,8 +387,13 @@ function AgeInsufficientBlock({ ageMinimum, userAge, onClose }: {
 }
 
 /* ── CreateProfileGate — pas d'utilisateur, formulaire complet ─ */
-function CreateProfileGate({ onComplete }: { onComplete: () => void }) {
-  const [form, setForm] = useState({ prenom: '', nom: '', dateNaissance: '', phone: '' });
+function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, onComplete: () => void }) {
+  const [form, setForm] = useState({
+    prenom: profile.prenom || '',
+    nom: profile.nom || '',
+    dateNaissance: profile.dateNaissance || '',
+    phone: profile.phone || ''
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -739,7 +747,7 @@ export function ReservationGateModal({
     >
       {/* Pas d'utilisateur : formulaire complet (prénom + nom + date + tél) */}
       {gate === "create_profile" && (
-        <CreateProfileGate onComplete={refreshProfile} />
+        <CreateProfileGate profile={currentProfile} onComplete={refreshProfile} />
       )}
 
       {/* Âge + téléphone manquants : date + tél dans un seul formulaire */}

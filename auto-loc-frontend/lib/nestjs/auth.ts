@@ -26,6 +26,8 @@ export interface ProfileResponse {
   kycStatus?: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
   hasVehicles?: boolean;
   hasPermis?: boolean;
+  prenom?: string | null;
+  nom?: string | null;
   dateNaissance?: string | null;
   bloqueJusqua?: string | null;
 }
