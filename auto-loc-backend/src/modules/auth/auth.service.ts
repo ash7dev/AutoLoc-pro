@@ -258,11 +258,25 @@ export class AuthService {
     }
 
     // Récupérer le téléphone de l'utilisateur
+    let telephone: string | null = null;
+    
     const utilisateur = await this.prisma.utilisateur.findUnique({
       where: { userId: user.sub },
-      select: { telephone: true, prenom: true },
+      select: { telephone: true },
     });
-    if (!utilisateur?.telephone) {
+
+    if (utilisateur?.telephone) {
+      telephone = utilisateur.telephone;
+    } else {
+      // Fallback sur le Profile (cas des nouveaux comptes)
+      const profile = await this.prisma.profile.findUnique({
+        where: { userId: user.sub },
+        select: { phone: true },
+      });
+      telephone = profile?.phone || null;
+    }
+
+    if (!telephone) {
       throw new BadRequestException('Aucun numéro de téléphone n’est enregistré sur ce compte.');
     }
 
@@ -283,7 +297,7 @@ export class AuthService {
 
     try {
       await this.notification.sendWhatsApp({
-        to: utilisateur.telephone,
+        to: telephone,
         contentSid: 'HX7cc5a00ae1cb9c74e75f856743ac927b',
         contentVariables: { '1': code },
         body: otpMessage,
@@ -295,7 +309,7 @@ export class AuthService {
 
     try {
       await this.notification.sendSms({
-        to: utilisateur.telephone,
+        to: telephone,
         body: `AutoLoc - Votre code de vérification : ${code} (expire dans 5 min)`,
       });
       smsAccepted = true;
@@ -506,17 +520,23 @@ export class AuthService {
       });
 
       const profile = await this.getOrCreateProfile(user);
-      return this.toResponse(profile, {
+      const res = this.toResponse(profile, {
         id: updated.id,
         phoneVerified: updated.phoneVerified,
         kycStatus: updated.statutKyc as ProfileResponse['kycStatus'],
       });
+      // Déclencher l'envoi de l'OTP
+      await this.requestPhoneOtp(user);
+      return res;
     }
 
     const profile = await this.prisma.profile.update({
       where: { userId: user.sub },
       data: { phone: normalizedPhone },
     });
+
+    // Déclencher l'envoi de l'OTP (cas nouveau compte)
+    await this.requestPhoneOtp(user);
 
     return this.toResponse(profile, {});
   }
