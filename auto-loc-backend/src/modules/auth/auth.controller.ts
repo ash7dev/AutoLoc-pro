@@ -43,6 +43,10 @@ export class AuthController {
       userId: profile.userId,
       role: profile.role,
       hasUtilisateur: profile.hasUtilisateur,
+      prenom: profile.prenom,
+      nom: profile.nom,
+      dateNaissance: profile.dateNaissance,
+      phoneVerified: profile.phoneVerified,
     });
     return profile;
   }

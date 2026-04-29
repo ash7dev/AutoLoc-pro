@@ -160,7 +160,11 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
         router.push(`/login?next=${next}`);
         return;
       }
-      router.push(`/vehicle/${vehicleId}/payment?${buildParams().toString()}`);
+      setInlineError(
+        err instanceof Error
+          ? err.message
+          : 'Impossible de vérifier votre profil pour le moment. Réessayez.',
+      );
     } finally {
       setGateLoading(false);
     }

@@ -248,7 +248,11 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                 router.push(`/login?next=${next}`);
                 return;
             }
-            router.push(`/vehicle/${vehicleId}/payment?${buildParams()}`);
+            setInlineError(
+                err instanceof Error
+                    ? err.message
+                    : 'Impossible de vérifier votre profil pour le moment. Réessayez.',
+            );
         } finally {
             setGateLoading(false);
         }
@@ -301,6 +305,8 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                 open={gateOpen}
                 onOpenChange={setGateOpen}
                 profile={gateProfile}
+                ageMinimum={ageMinimum}
+                userAge={gateProfile?.dateNaissance ? calcAge(gateProfile.dateNaissance) : undefined}
                 onProceed={() => {
                     const params = new URLSearchParams({ dateDebut, dateFin, nbJours: String(nbJours) });
                     if (wantsDelivery && deliveryAddress.trim()) {

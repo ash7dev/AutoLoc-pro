@@ -162,8 +162,17 @@ export class AuthService {
       where: { userId: user.sub },
     });
     if (existing) {
-      const profile = await this.getOrCreateProfile(user);
-      return profile;
+      await this.prisma.utilisateur.update({
+        where: { userId: user.sub },
+        data: {
+          prenom: dto.prenom,
+          nom: dto.nom,
+          telephone: this.normalizePhone(dto.telephone),
+          dateNaissance: dto.dateNaissance ? new Date(dto.dateNaissance) : undefined,
+          phoneVerified: false, // Sera mis à true par verifyPhoneOtp
+        },
+      });
+      return this.getOrCreateProfile(user);
     }
 
     const normalizedPhone = this.normalizePhone(dto.telephone);
@@ -199,7 +208,7 @@ export class AuthService {
         telephone: normalizedPhone,
         email: normalizedEmail,
         profileCompleted: true,
-        phoneVerified: false,
+        phoneVerified: false, // Sera mis à true par verifyPhoneOtp
         avatarUrl: dto.avatarUrl ?? null,
         dateNaissance: dto.dateNaissance ? new Date(dto.dateNaissance) : null,
       },
@@ -290,41 +299,15 @@ export class AuthService {
     const key = this.getOtpKey(user.sub);
     await this.redisService.set(key, code, OTP_TTL_SECONDS);
 
-    // Envoi OTP sur les deux canaux. Un accusé Twilio "accepted" n'est pas une livraison réelle.
-    const otpMessage = `🔐 AutoLoc — Votre code de vérification est : ${code}\n\nCe code expire dans 5 minutes. Ne le partagez avec personne.`;
-    let whatsappAccepted = false;
-    let smsAccepted = false;
 
-    try {
-      await this.notification.sendWhatsApp({
-        to: telephone,
-        contentSid: 'HX7cc5a00ae1cb9c74e75f856743ac927b',
-        contentVariables: { '1': code },
-        body: otpMessage,
-      });
-      whatsappAccepted = true;
-    } catch (error) {
-      console.error('[Auth] WhatsApp OTP request failed', { userId: user.sub, error });
-    }
+    await this.notification.send({
+      type: "verification.code",
+      userId: user.sub,
+      phone: telephone,
+      data: { code },
+    });
 
-    try {
-      await this.notification.sendSms({
-        to: telephone,
-        body: `AutoLoc - Votre code de vérification : ${code} (expire dans 5 min)`,
-      });
-      smsAccepted = true;
-    } catch (error) {
-      console.error('[Auth] SMS OTP request failed', { userId: user.sub, error });
-    }
-
-    if (!whatsappAccepted && !smsAccepted) {
-      await this.redisService.del(key);
-      await this.redisService.del(cooldownKey);
-      console.error('[Auth] OTP delivery failed for both WhatsApp and SMS', { userId: user.sub });
-      throw new InternalServerErrorException('Impossible d’envoyer le code de vérification pour le moment. Réessayez plus tard.');
-    }
-
-    return { expiresIn: OTP_TTL_SECONDS };
+    return { expiresIn: OTP_COOLDOWN_SECONDS };
   }
 
   /* ──────────────────────────────────────────────────────────────────────────
@@ -545,7 +528,7 @@ export class AuthService {
     if (!user.sub) {
       throw new BadRequestException('Utilisateur invalide');
     }
-    await this.ensureUtilisateurExists(user.sub);
+    // On ne bloque plus ici, car l'utilisateur peut être en train de créer son profil
 
     if (!/^\d{6}$/.test(code)) {
       throw new BadRequestException('Le code doit contenir 6 chiffres.');
@@ -567,14 +550,15 @@ export class AuthService {
     }
     await this.redisService.del(key);
 
-    await this.prisma.utilisateur.update({
-      where: { userId: user.sub },
-      data: { phoneVerified: true },
-    });
+    const existing = await this.prisma.utilisateur.findUnique({ where: { userId: user.sub } });
+    if (existing) {
+      await this.prisma.utilisateur.update({
+        where: { userId: user.sub },
+        data: { phoneVerified: true },
+      });
+    }
 
-    const profile = await this.getOrCreateProfile(user);
-    const flags = await this.getUtilisateurFlags(user.sub);
-    return this.toResponse(profile, flags);
+    return this.getOrCreateProfile(user);
   }
 
   async submitKyc(

@@ -75,7 +75,7 @@ function serializeReservation(r: Record<string, unknown> & {
 }) {
   const debut = new Date(r.dateDebut as string);
   const fin = new Date(r.dateFin as string);
-  const nbJours = Math.max(1, Math.round((fin.getTime() - debut.getTime()) / 86_400_000));
+  const nbJours = Math.max(1, Math.round((fin.getTime() - debut.getTime()) / 86_400_000) + 1);
 
   return {
     id: r.id,
@@ -259,7 +259,7 @@ export class ReservationsService {
 
     const debut = new Date(reservation.dateDebut);
     const fin = new Date(reservation.dateFin);
-    const nbJours = Math.max(1, Math.round((fin.getTime() - debut.getTime()) / 86_400_000));
+    const nbJours = Math.max(1, Math.round((fin.getTime() - debut.getTime()) / 86_400_000) + 1);
 
     type StatutContrat = 'EN_COURS' | 'ACTIF' | 'ANNULE' | 'EXPIRE';
     const statutMap: Record<string, StatutContrat> = {

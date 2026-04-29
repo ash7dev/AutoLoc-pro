@@ -98,6 +98,15 @@ export class VehiclesService {
     if (utilisateur.statutKyc === StatutKyc.NON_VERIFIE || utilisateur.statutKyc === StatutKyc.REJETE) {
       throw new ForbiddenException('Soumission du KYC requise');
     }
+    if (!dto.photos?.length) {
+      throw new BadRequestException('Au moins une photo du véhicule est requise');
+    }
+    if (!dto.carteGriseUrl || !dto.carteGrisePublicId) {
+      throw new BadRequestException('La carte grise est requise');
+    }
+    if (!dto.assuranceDocUrl || !dto.assuranceDocPublicId) {
+      throw new BadRequestException('Le document d’assurance est requis');
+    }
     const statutInitial =
       utilisateur.statutKyc === StatutKyc.VERIFIE
         ? StatutVehicule.EN_ATTENTE_VALIDATION

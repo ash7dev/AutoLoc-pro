@@ -35,7 +35,8 @@ export interface PricingResult {
 export class ReservationPricingService {
     /**
      * Normalise les dates ISO → Date UTC minuit, calcule le nombre de jours.
-     * Lève BadRequestException si dateFin <= dateDebut.
+     * Comptage inclusif : début et fin sont facturés.
+     * Lève BadRequestException si dateFin < dateDebut.
      */
     parseDatesAndDuration(dateDebutIso: string, dateFinIso: string): DateRange {
         const debut = new Date(dateDebutIso);
@@ -43,15 +44,15 @@ export class ReservationPricingService {
         debut.setUTCHours(0, 0, 0, 0);
         fin.setUTCHours(0, 0, 0, 0);
 
-        if (fin <= debut) {
+        if (fin < debut) {
             throw new BadRequestException(
-                'dateFin must be strictly after dateDebut',
+                'dateFin must be on or after dateDebut',
             );
         }
 
         const nbJours = Math.round(
             (fin.getTime() - debut.getTime()) / (1000 * 60 * 60 * 24),
-        );
+        ) + 1;
 
         return { debut, fin, nbJours };
     }

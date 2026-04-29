@@ -30,8 +30,9 @@ interface Step {
 
 /* ── Helpers ─────────────────────────────────────────────── */
 function resolveGate(profile: ProfileResponse, ageMinimum?: number, userAge?: number): Gate {
-  // Profil incomplet (prénom, nom ou date de naissance manquants)
-  const isProfileIncomplete = !profile.hasUtilisateur || !profile.prenom || !profile.nom || !profile.dateNaissance;
+  // Profil métier absent ou identité de base incomplète.
+  // La date de naissance est gérée plus bas par les gates d'âge dédiées.
+  const isProfileIncomplete = !profile.hasUtilisateur || !profile.prenom || !profile.nom;
   
   if (isProfileIncomplete) return "create_profile";
 
@@ -66,7 +67,7 @@ function resolveGate(profile: ProfileResponse, ageMinimum?: number, userAge?: nu
 
 function resolveSteps(profile: ProfileResponse, ageMinimum?: number, userAge?: number): Step[] {
   const phoneOk = profile.hasUtilisateur && profile.phoneVerified && !!profile.phone;
-  const profileOk = profile.hasUtilisateur && !!profile.prenom && !!profile.nom && !!profile.dateNaissance;
+  const profileOk = profile.hasUtilisateur && !!profile.prenom && !!profile.nom;
   const kyc = profile.kycStatus;
   const kycStatus: StepStatus =
     kyc === "VERIFIE" ? "done"
@@ -382,62 +383,47 @@ function AgeInsufficientBlock({ ageMinimum, userAge, onClose }: {
   );
 }
 
-/* ── CreateProfileGate — pas d'utilisateur, formulaire complet ─ */
-function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, onComplete: () => void }) {
-  const [step, setStep] = useState<'form' | 'otp'>('form');
+/* ── CreateProfileGate — identité uniquement, pas d'OTP ici ─ */
+function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, onComplete: (otpSent?: boolean) => void }) {
   const [form, setForm] = useState({
     prenom: profile.prenom || '',
     nom: profile.nom || '',
-    dateNaissance: profile.dateNaissance || '',
-    phone: profile.phone || ''
+    dateNaissance: profile.dateNaissance?.split('T')[0] || '',
+    phone: profile.phone || '',
   });
-  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleRequestOtp = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.phone) return;
-    setLoading(true);
-    setError('');
-    try {
-      // Envoie l'OTP au numéro saisi
-      await apiFetch('/auth/phone/update', {
-        method: 'POST',
-        body: { telephone: form.phone },
-      });
-      setStep('otp');
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de l\'envoi du code.');
-    } finally {
-      setLoading(false);
+    if (!form.prenom.trim() || !form.nom.trim() || !form.phone.trim() || !form.dateNaissance) {
+      setError('Veuillez remplir tous les champs obligatoires.');
+      return;
     }
-  };
-
-  const handleVerifyAndComplete = async (e: React.FormEvent) => {
-    e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      // 1. Vérifier l'OTP
-      await apiFetch('/auth/phone/verify-otp', {
-        method: 'POST',
-        body: { code: otp },
-      });
-      
-      // 2. Créer le profil
       await apiFetch('/auth/complete-profile', {
         method: 'POST',
         body: {
-          prenom: form.prenom,
-          nom: form.nom,
-          telephone: form.phone,
+          prenom: form.prenom.trim(),
+          nom: form.nom.trim(),
+          telephone: form.phone.trim(),
           dateNaissance: form.dateNaissance || undefined,
         },
       });
-      onComplete();
+      // Envoi OTP immédiat en arrière-plan — ne bloque pas l'UI
+      // PhoneVerifyGate s'ouvrira directement sur les cases de code
+      let otpSent = false;
+      try {
+        await apiFetch('/auth/phone/send-otp', { method: 'POST' });
+        otpSent = true;
+      } catch {
+        // Si échec (ex: cooldown), PhoneVerifyGate gère le renvoi
+      }
+      onComplete(otpSent);
     } catch (err: any) {
-      setError(err.message || 'Code incorrect ou erreur de création.');
+      setError(err.message || 'Erreur lors de la création du profil.');
     } finally {
       setLoading(false);
     }
@@ -460,62 +446,13 @@ function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, 
     </div>
   );
 
-  if (step === 'otp') {
-    return (
-      <form onSubmit={handleVerifyAndComplete} className="space-y-5">
-        <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
-          <p className="text-[12.5px] text-emerald-800 leading-relaxed text-center">
-            Un code de vérification a été envoyé au <br/>
-            <strong className="text-[14px]">{form.phone}</strong>
-          </p>
-        </div>
-
-        {field('Code de vérification', ShieldCheck, {
-          type: 'text',
-          required: true,
-          value: otp,
-          placeholder: '000000',
-          maxLength: 6,
-          onChange: e => setOtp(e.target.value.replace(/\D/g, '')),
-        })}
-
-        {error && (
-          <div className="rounded-xl border border-red-100 bg-red-50/50 p-3">
-            <p className="text-[11.5px] font-medium text-red-600 text-center">{error}</p>
-          </div>
-        )}
-
-        <div className="space-y-3">
-          <button
-            type="submit"
-            disabled={loading || otp.length < 6}
-            className={cn(
-              "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[14px] font-bold transition-all duration-200",
-              (!loading && otp.length === 6)
-                ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20"
-                : "bg-slate-100 text-slate-400 cursor-not-allowed"
-            )}
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Vérifier et créer mon profil'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setStep('form')}
-            className="w-full text-[13px] font-medium text-slate-400 hover:text-slate-600 py-1"
-          >
-            Modifier le numéro
-          </button>
-        </div>
-      </form>
-    );
-  }
-
   return (
-    <form onSubmit={handleRequestOtp} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         {field('Prénom *', User, {
           type: 'text', required: true, value: form.prenom,
           placeholder: 'Ex: Amadou',
+          autoFocus: true,
           onChange: e => setForm(p => ({ ...p, prenom: e.target.value })),
         })}
         {field('Nom *', User, {
@@ -524,8 +461,8 @@ function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, 
           onChange: e => setForm(p => ({ ...p, nom: e.target.value })),
         })}
       </div>
-      
-      <DateInput 
+
+      <DateInput
         label="Date de naissance *"
         required
         value={form.dateNaissance}
@@ -533,12 +470,12 @@ function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, 
         error={!!error && !form.dateNaissance}
       />
 
-      {field('Numéro de téléphone *', Phone, {
+      {field('Téléphone *', Phone, {
         type: 'tel', required: true, value: form.phone,
         placeholder: '+221 77 000 00 00',
         onChange: e => setForm(p => ({ ...p, phone: e.target.value })),
       })}
-      
+
       {error && (
         <div className="rounded-xl border border-red-100 bg-red-50/50 p-3">
           <p className="text-[11.5px] font-medium text-red-600">{error}</p>
@@ -549,15 +486,15 @@ function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, 
         type="submit"
         disabled={loading}
         className={cn(
-          "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[14px] font-bold transition-all duration-200 mt-2",
+          "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[14px] font-bold transition-all duration-200 mt-1",
           !loading
             ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20"
             : "bg-slate-100 text-slate-400 cursor-not-allowed"
         )}
       >
         {loading
-          ? <><Loader2 className="w-4 h-4 animate-spin" />Chargement…</>
-          : <>Continuer <ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>}
+          ? <><Loader2 className="w-4 h-4 animate-spin" />Création…</>
+          : <>Créer mon profil <ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>}
       </button>
     </form>
   );
@@ -737,17 +674,20 @@ export function ReservationGateModal({
   const [currentProfile, setCurrentProfile] = useState<ProfileResponse | null>(profile);
   const [refreshing, setRefreshing] = useState(false);
   const [preGateDismissed, setPreGateDismissed] = useState(false);
+  const [phoneOtpPreSent, setPhoneOtpPreSent] = useState(false);
 
   useEffect(() => {
     if (open) {
       setCurrentProfile(profile);
       setPreGateDismissed(false);
+      setPhoneOtpPreSent(false);
     }
   }, [open, profile]);
 
-  const refreshProfile = async () => {
+  const refreshProfile = async (otpSent?: boolean) => {
     if (refreshing) return;
     setRefreshing(true);
+    if (otpSent) setPhoneOtpPreSent(true);
     try {
       const p = await apiFetch<ProfileResponse>("/auth/me");
       setCurrentProfile(p);
@@ -824,47 +764,57 @@ export function ReservationGateModal({
       onClose={() => onOpenChange(false)}
       contentClassName="px-6 pt-6 pb-6"
     >
-      {/* Pas d'utilisateur : formulaire complet (prénom + nom + date + tél) */}
-      {gate === "create_profile" && (
-        <CreateProfileGate profile={currentProfile} onComplete={refreshProfile} />
-      )}
+      {refreshing ? (
+        <div className="flex flex-col items-center justify-center py-12 space-y-4">
+          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+          <p className="text-[13px] font-medium text-slate-500">Mise à jour du profil...</p>
+        </div>
+      ) : (
+        <>
+          {/* Pas d'utilisateur : formulaire complet (prénom + nom + date + tél) */}
+          {gate === "create_profile" && (
+            <CreateProfileGate profile={currentProfile} onComplete={refreshProfile} />
+          )}
 
-      {/* Âge + téléphone manquants : date + tél dans un seul formulaire */}
-      {gate === "age_phone" && (
-        <AgePhoneGate
-          ageMinimum={ageMinimum || 18}
-          onComplete={refreshProfile}
-        />
-      )}
+          {/* Âge + téléphone manquants : date + tél dans un seul formulaire */}
+          {gate === "age_phone" && (
+            <AgePhoneGate
+              ageMinimum={ageMinimum || 18}
+              onComplete={refreshProfile}
+            />
+          )}
 
-      {/* Scénario 4 : Âge manquant uniquement → 1 seul input */}
-      {gate === "age" && (
-        <AgeGate
-          onProceed={refreshProfile}
-          ageMinimum={ageMinimum || 18}
-        />
-      )}
+          {/* Scénario 4 : Âge manquant uniquement → 1 seul input */}
+          {gate === "age" && (
+            <AgeGate
+              onProceed={refreshProfile}
+              ageMinimum={ageMinimum || 18}
+            />
+          )}
 
-      {/* Téléphone seul manquant → flux OTP */}
-      {gate === "phone" && (
-        <PhoneVerifyGate
-          profile={currentProfile}
-          onVerified={refreshProfile}
-        />
-      )}
-      {gate === "kyc" && (
-        <KycGate
-          kycStatus={currentProfile.kycStatus}
-          onProceed={() => onOpenChange(false)}
-          onSubmitted={refreshProfile}
-          pendingMode="continue"
-        />
-      )}
-      {gate === "permis" && (
-        <PermisGate
-          onProceed={() => onOpenChange(false)}
-          onSubmitted={refreshProfile}
-        />
+          {/* Téléphone seul manquant → flux OTP premium */}
+          {gate === "phone" && (
+            <PhoneVerifyGate
+              profile={currentProfile}
+              onVerified={refreshProfile}
+              initialStage={phoneOtpPreSent ? "otp" : "intro"}
+            />
+          )}
+          {gate === "kyc" && (
+            <KycGate
+              kycStatus={currentProfile.kycStatus}
+              onProceed={() => onOpenChange(false)}
+              onSubmitted={refreshProfile}
+              pendingMode="continue"
+            />
+          )}
+          {gate === "permis" && (
+            <PermisGate
+              onProceed={() => onOpenChange(false)}
+              onSubmitted={refreshProfile}
+            />
+          )}
+        </>
       )}
     </ModalShell>
   );

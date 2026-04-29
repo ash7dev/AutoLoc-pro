@@ -265,16 +265,32 @@ export class CreateReservationUseCase {
                 id: true,
                 email: true,
                 prenom: true,
+                nom: true,
                 statutKyc: true,
                 dateNaissance: true,
                 actif: true,
                 bloqueJusqua: true,
+                phoneVerified: true,
+                permisUrl: true,
+                profileCompleted: true,
             },
         });
         if (!locataire) throw new ForbiddenException('Profil incomplet');
         if (!locataire.actif) throw new ForbiddenException('Compte suspendu');
         if (locataire.bloqueJusqua && locataire.bloqueJusqua > new Date()) {
             throw new ForbiddenException('Compte temporairement bloqué');
+        }
+        if (!locataire.profileCompleted || !locataire.prenom || !locataire.nom) {
+            throw new ForbiddenException('Profil incomplet');
+        }
+        if (!locataire.phoneVerified) {
+            throw new ForbiddenException('Numéro de téléphone non vérifié');
+        }
+        if (locataire.statutKyc !== 'EN_ATTENTE' && locataire.statutKyc !== 'VERIFIE') {
+            throw new ForbiddenException('Vérification d’identité requise');
+        }
+        if (!locataire.permisUrl) {
+            throw new ForbiddenException('Permis de conduire requis');
         }
         return locataire;
     }

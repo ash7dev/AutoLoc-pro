@@ -346,11 +346,13 @@ const INPUT_CLS = (hasError: boolean) => cn(
 export function PhoneVerifyGate({
   profile,
   onVerified,
+  initialStage = "intro",
 }: {
   profile: ProfileResponse;
   onVerified: () => void;
+  initialStage?: Stage;
 }) {
-  const [stage, setStage] = useState<Stage>("intro");
+  const [stage, setStage] = useState<Stage>(initialStage);
   const [selectedIso, setSelectedIso] = useState<CountryIso>("SN");
   const [phoneInput, setPhone] = useState(profile.phone?.replace(/^\+\d{1,3}/, "") ?? "");
   const [prenom, setPrenom] = useState("");
@@ -359,6 +361,13 @@ export function PhoneVerifyGate({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { authFetch } = useAuthFetch();
+
+  useEffect(() => {
+    setPhone(profile.phone?.replace(/^\+\d{1,3}/, "") ?? "");
+    setPrenom(profile.prenom ?? "");
+    setNom(profile.nom ?? "");
+    setDateNaissance(profile.dateNaissance ?? "");
+  }, [profile.phone, profile.prenom, profile.nom, profile.dateNaissance]);
 
   const selectedCountry = COUNTRY_CODES.find(c => c.iso === selectedIso) ?? COUNTRY_CODES[0];
   const needsProfile = !profile.hasUtilisateur;
@@ -431,15 +440,15 @@ export function PhoneVerifyGate({
           method: "POST",
           body: { prenom: prenom.trim(), nom: nom.trim(), telephone: normalized, dateNaissance },
         });
+        // completeProfile ne déclenche pas l'OTP, on l'envoie manuellement
+        await authFetch("/auth/phone/send-otp", { method: "POST" });
       } else {
+        // updatePhone déclenche déjà l'envoi de l'OTP automatiquement
         await authFetch("/auth/phone/update", {
           method: "POST",
           body: { telephone: normalized },
         });
       }
-      
-      // Envoi du code OTP
-      await authFetch("/auth/phone/send-otp", { method: "POST" });
       setStage("otp");
     } catch (err) {
       setError(

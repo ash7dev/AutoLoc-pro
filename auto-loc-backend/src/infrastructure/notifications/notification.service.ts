@@ -14,6 +14,8 @@ export interface SendNotificationParams {
   type: NotificationType;
   /** Données contextuelles pour le template */
   data: Record<string, unknown>;
+  /** Téléphone direct (si userId pas disponible ou pour surcharger) */
+  phone?: string;
 }
 
 export interface SendResult {
@@ -94,7 +96,7 @@ export class NotificationService {
 
     // 1. Résolution des destinataires (Email et Téléphone)
     let toEmail = params.email;
-    let toPhone: string | undefined;
+    let toPhone = params.phone;
 
     if (params.userId) {
       const user = await this.prisma.utilisateur.findUnique({
@@ -103,7 +105,7 @@ export class NotificationService {
       });
       if (user) {
         toEmail = toEmail || user.email || undefined;
-        toPhone = user.telephone || undefined;
+        toPhone = toPhone || user.telephone || undefined;
       }
     }
 
@@ -305,8 +307,15 @@ export class NotificationService {
 
     if (message.contentSid) {
       payload.contentSid = message.contentSid;
-      if (message.contentVariables) {
-        payload.contentVariables = JSON.stringify(message.contentVariables);
+      const normalizedVariables = message.contentVariables
+        ? Object.fromEntries(
+            Object.entries(message.contentVariables)
+              .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== '')
+              .map(([key, value]) => [String(key), String(value)]),
+          )
+        : undefined;
+      if (normalizedVariables && Object.keys(normalizedVariables).length > 0) {
+        payload.contentVariables = JSON.stringify(normalizedVariables);
       }
     } else if (message.body) {
       payload.body = message.body;
@@ -314,8 +323,16 @@ export class NotificationService {
       throw new Error('Either body or contentSid must be provided for WhatsApp');
     }
 
-    const response = await this.twilioClient.messages.create(payload);
-    this.logger.log(`📨 [WhatsApp:accepted] sid=${response.sid} to=${to} type=${message.contentSid ? 'template' : 'text'} status=${response.status}`);
+    try {
+      const response = await this.twilioClient.messages.create(payload);
+      this.logger.log(`📨 [WhatsApp:accepted] sid=${response.sid} to=${to} type=${message.contentSid ? 'template' : 'text'} status=${response.status}`);
+    } catch (error) {
+      this.logger.error(
+        `❌ [WhatsApp:error] to=${to} contentSid=${message.contentSid ?? 'none'} vars=${payload.contentVariables ?? 'none'}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+      throw error;
+    }
   }
 
   /**
