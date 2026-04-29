@@ -312,12 +312,12 @@ export class NotificationService {
       },
       'kyc.verified': {
         contentSid: 'HXD98d7356c7a8a91551acf470eebe1611', // compte_verifie_succes
-        variables: {},
+        variables: { '1': String(data.prenom || 'Cher membre') },
         fallbackText: `✅ AutoLoc — Votre identité est vérifiée !`,
       },
       'kyc.rejected': {
         contentSid: 'HXfaf8c7435b4fd336a3c7f043ea771657', // kyc_rejected
-        variables: {},
+        variables: { '1': String(data.prenom || 'Cher membre') },
         fallbackText: `⚠️ AutoLoc — Votre identité n'a pu être vérifiée.`,
       },
       'wallet.credited': {
@@ -327,7 +327,7 @@ export class NotificationService {
       },
       'user.welcome': {
         contentSid: 'HXD98d7356c7a8a91551acf470eebe1611', // compte_verifie_succes
-        variables: {},
+        variables: { '1': String(data.prenom || 'Cher membre') },
         fallbackText: `👋 Bienvenue sur AutoLoc ${data.prenom || ''} ! Votre profil est prêt.`,
       },
     };
