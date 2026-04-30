@@ -181,7 +181,9 @@ const NavContent = ({ compact }: { compact: boolean }) => (
         compact ? 'px-2' : 'px-3'
       )}>
         {DESKTOP_NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const isActive = item.href === '/dashboard/owner'
+            ? pathname === item.href
+            : pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <NavItem
               key={item.href}
@@ -288,7 +290,9 @@ const NavContent = ({ compact }: { compact: boolean }) => (
             border border-slate-100
             shadow-[0_-1px_0_0_rgba(0,0,0,0.04),0_4px_24px_rgba(0,0,0,0.10),0_16px_48px_rgba(0,0,0,0.06)]">
             {MOBILE_NAV_ITEMS.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const isActive = item.href === '/dashboard/owner'
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <Link
                   key={item.href}
