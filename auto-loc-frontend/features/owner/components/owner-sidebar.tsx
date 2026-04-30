@@ -282,35 +282,56 @@ const NavContent = ({ compact }: { compact: boolean }) => (
       </div>
 
       {/* ══ MOBILE BOTTOM TAB BAR ══════════════════════════════════ */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex bg-white/80 backdrop-blur-xl pb-safe
-        border-t border-black/[0.06] shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        {MOBILE_NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex-1 flex flex-col items-center justify-center py-3 gap-1 min-w-0 group"
-            >
-              <span className={cn(
-                'flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200',
-                isActive ? 'bg-black shadow-md shadow-black/20' : 'group-active:bg-slate-100'
-              )}>
-                <item.icon className={cn(
-                  'w-[18px] h-[18px] transition-colors duration-200',
-                  isActive ? 'text-emerald-400' : 'text-black/30'
-                )} />
-              </span>
-              <span className={cn(
-                'text-[9.5px] font-semibold tracking-tight leading-none truncate max-w-full px-1 transition-colors duration-200',
-                isActive ? 'text-emerald-400' : 'text-black/40'
-              )}>
-                {item.label}
-              </span>
-            </Link>
-          );
-        })}
-      </nav>
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 pb-safe">
+        <div className="mx-3 mb-2">
+          <nav className="flex bg-white rounded-2xl overflow-hidden
+            border border-slate-100
+            shadow-[0_-1px_0_0_rgba(0,0,0,0.04),0_4px_24px_rgba(0,0,0,0.10),0_16px_48px_rgba(0,0,0,0.06)]">
+            {MOBILE_NAV_ITEMS.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex-1 flex flex-col items-center justify-center py-3 gap-1.5 min-w-0 group relative"
+                >
+                  {/* Indicateur actif en haut */}
+                  <span className={cn(
+                    'absolute top-0 inset-x-0 flex justify-center transition-all duration-300',
+                    isActive ? 'opacity-100' : 'opacity-0',
+                  )}>
+                    <span className="w-8 h-[3px] rounded-b-full bg-emerald-500 shadow-sm shadow-emerald-500/40" />
+                  </span>
+
+                  {/* Icône */}
+                  <span className={cn(
+                    'flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200',
+                    isActive
+                      ? 'bg-slate-950 shadow-md shadow-slate-900/25 scale-105'
+                      : 'group-active:bg-slate-100 group-active:scale-95',
+                  )}>
+                    <item.icon
+                      className={cn(
+                        'w-[18px] h-[18px] transition-colors duration-200',
+                        isActive ? 'text-emerald-400' : 'text-slate-400',
+                      )}
+                      strokeWidth={isActive ? 2 : 1.75}
+                    />
+                  </span>
+
+                  {/* Label */}
+                  <span className={cn(
+                    'text-[9.5px] font-bold tracking-tight leading-none transition-colors duration-200',
+                    isActive ? 'text-slate-900' : 'text-slate-400',
+                  )}>
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
 
       {/* ══ DESKTOP SIDEBAR ════════════════════════════════════════ */}
       <aside className={cn(

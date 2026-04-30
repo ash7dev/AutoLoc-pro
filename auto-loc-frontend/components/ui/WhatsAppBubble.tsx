@@ -20,7 +20,7 @@ export function WhatsAppBubble() {
       whileDrag={{ scale: 1.1, cursor: 'grabbing' }}
       whileTap={{ scale: 0.9 }}
       className={cn(
-        "fixed bottom-6 right-6 z-[99999]",
+        "fixed bottom-16 right-6 z-[99999]",
         "flex !important items-center justify-center",
         "w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#25D366] text-white shadow-2xl",
         "transition-all duration-300 hover:shadow-xl active:scale-95",
