@@ -30,29 +30,39 @@ export class ProfileController {
         const user = req.user!;
         const utilisateur = await this.prisma.utilisateur.findUnique({
             where: { userId: user.sub },
-            select: {
-                id: true,
-                userId: true,
-                email: true,
-                telephone: true,
-                prenom: true,
-                nom: true,
-                avatarUrl: true,
-                dateNaissance: true,
-                phoneVerified: true,
-                profileCompleted: true,
-                statutKyc: true,
-                noteLocataire: true,
-                noteProprietaire: true,
-                totalAvis: true,
-                creeLe: true,
-                misAJourLe: true,
+            include: {
                 profile: {
-                    select: { role: true },
+                    select: { role: true, email: true, phone: true, createdAt: true },
                 },
             },
         });
-        if (!utilisateur) throw new ForbiddenException('Profil incomplet');
+
+        if (!utilisateur) {
+            // Fallback: Si pas d'utilisateur métier, on retourne les infos du profil d'auth
+            const profile = await this.prisma.profile.findUnique({
+                where: { userId: user.sub },
+            });
+            if (!profile) throw new ForbiddenException('Profil inexistant');
+
+            return {
+                id: '',
+                userId: profile.userId,
+                email: profile.email || '',
+                telephone: profile.phone || '',
+                prenom: '',
+                nom: '',
+                avatarUrl: null,
+                dateNaissance: null,
+                phoneVerified: false,
+                profileCompleted: false,
+                statutKyc: 'NON_VERIFIE',
+                role: profile.role,
+                noteLocataire: 0,
+                noteProprietaire: 0,
+                totalAvis: 0,
+                creeLe: profile.createdAt.toISOString(),
+            };
+        }
 
         return {
             id: utilisateur.id,
@@ -85,11 +95,30 @@ export class ProfileController {
         @Body() dto: UpdateProfileDto,
     ) {
         const user = req.user!;
-        const utilisateur = await this.prisma.utilisateur.findUnique({
+        let utilisateur = await this.prisma.utilisateur.findUnique({
             where: { userId: user.sub },
             select: { id: true, prenom: true, nom: true, dateNaissance: true, statutKyc: true },
         });
-        if (!utilisateur) throw new ForbiddenException('Profil incomplet');
+
+        // 1. Création à la volée si absent (cas Google login sans onboarding fini)
+        if (!utilisateur) {
+            const profile = await this.prisma.profile.findUnique({
+                where: { userId: user.sub },
+            });
+            if (!profile) throw new ForbiddenException('Profil inexistant');
+
+            utilisateur = await this.prisma.utilisateur.create({
+                data: {
+                    userId: user.sub,
+                    email: profile.email || '',
+                    telephone: profile.phone || '',
+                    prenom: dto.prenom || '',
+                    nom: dto.nom || '',
+                    profileCompleted: !!(dto.prenom && dto.nom),
+                },
+                select: { id: true, prenom: true, nom: true, dateNaissance: true, statutKyc: true },
+            });
+        }
 
         const data: Record<string, unknown> = {};
         if (dto.prenom !== undefined) data.prenom = dto.prenom;

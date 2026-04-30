@@ -22,10 +22,7 @@ export default async function ProfileSettingsPage() {
   let profile: UserProfile;
   try {
     profile = await fetchUserProfile(token);
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 403) {
-      redirect('/verify');
-    }
+  } catch {
     redirect('/login?expired=1');
   }
 
