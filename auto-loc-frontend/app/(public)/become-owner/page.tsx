@@ -47,5 +47,13 @@ export default function BecomeOwnerPage() {
     checkAuth();
   }, [router]);
 
-  return <BecomeOwnerForm />;
+  return (
+    <div className="min-h-screen bg-white pt-20">
+      <div className="mx-auto flex min-h-[calc(100vh-80px)] w-full max-w-5xl items-center justify-center px-6">
+        <div className="w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm">
+          <BecomeOwnerForm />
+        </div>
+      </div>
+    </div>
+  );
 }
