@@ -3,6 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
+import { apiFetch } from '@/lib/nestjs/api-client';
+import type { ProfileResponse } from '@/lib/nestjs/auth';
 import { BecomeOwnerForm } from '@/features/owner/become-owner/components/become-owner-form';
 
 /**
@@ -26,16 +28,13 @@ export default function BecomeOwnerPage() {
 
       // Récupérer le profil depuis le backend pour vérifier le rôle
       try {
-        const res = await fetch('/api/nest/auth/me', {
-          credentials: 'include',
+        const profile = await apiFetch<ProfileResponse>('/auth/me', {
+          accessToken: session.access_token,
         });
-        if (res.ok) {
-          const profile = await res.json();
-          if (profile.role === 'PROPRIETAIRE') {
-            router.push('/dashboard/owner');
-          } else if (profile.role === 'ADMIN') {
-            router.push('/dashboard/admin');
-          }
+        if (profile.role === 'PROPRIETAIRE') {
+          router.push('/dashboard/owner');
+        } else if (profile.role === 'ADMIN') {
+          router.push('/dashboard/admin');
         }
       } catch (error) {
         console.error('Error fetching profile:', error);

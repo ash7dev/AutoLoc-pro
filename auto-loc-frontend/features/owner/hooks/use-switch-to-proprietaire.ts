@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
+import { apiFetch } from '@/lib/nestjs/api-client';
 import { useRoleStore } from '../../auth/stores/role.store';
 
 export function useSwitchToProprietaire() {
@@ -22,19 +23,11 @@ export function useSwitchToProprietaire() {
         throw new Error('Non connecté');
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/switch-role`, {
+      await apiFetch('/auth/switch-role', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ role: 'PROPRIETAIRE' }),
+        body: { role: 'PROPRIETAIRE' },
+        accessToken: session.access_token,
       });
-
-      if (!res.ok) {
-        const error = await res.text();
-        throw new Error(error || 'Erreur lors du changement de rôle');
-      }
 
       try {
         document.cookie = `role_switch_at=${Date.now()}; path=/; max-age=300`;
