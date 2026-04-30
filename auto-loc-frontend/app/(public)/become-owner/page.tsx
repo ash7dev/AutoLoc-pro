@@ -26,10 +26,8 @@ export default function BecomeOwnerPage() {
 
       // Récupérer le profil depuis le backend pour vérifier le rôle
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_NESTJS_URL}/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
+        const res = await fetch('/api/nest/auth/me', {
+          credentials: 'include',
         });
         if (res.ok) {
           const profile = await res.json();
