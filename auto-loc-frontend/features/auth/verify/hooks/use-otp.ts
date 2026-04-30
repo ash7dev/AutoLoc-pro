@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../../../lib/supabase/client';
 import { mapSupabaseError } from '../../utils/supabase-errors';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.autoloc.sn';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 export function useOtp() {
   const [loading, setLoading] = useState(false);

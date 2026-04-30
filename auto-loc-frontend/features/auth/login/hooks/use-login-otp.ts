@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.autoloc.sn';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 export function useLoginOtp() {
   const [loading, setLoading] = useState(false);

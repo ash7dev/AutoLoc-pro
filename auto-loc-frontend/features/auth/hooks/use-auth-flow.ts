@@ -90,17 +90,6 @@ export function useAuthFlow() {
         }
       }
 
-      // 2. Lier le téléphone au compte Supabase
-      const userPhone = currentSession?.user?.phone;
-      const metadataPhone = extractCompleteProfileInput(currentSession)?.telephone;
-      if (metadataPhone && !userPhone) {
-        try {
-          await supabase.auth.updateUser({ phone: metadataPhone });
-          console.log('[AuthFlow] Phone linked in background');
-        } catch (err) {
-          console.warn('[AuthFlow] Background phone link failed:', err);
-        }
-      }
     };
 
     // On lance les tâches de fond sans les attendre (Fire and Forget)

@@ -76,6 +76,10 @@ export function OtpForm({
         isSubmittingRef.current = false;
       }
     } else {
+      // Libérer le lock si le code est expiré pour permettre une nouvelle inscription
+      if (verifyError && typeof verifyError === 'string' && /expir/i.test(verifyError)) {
+        clearPendingOtp();
+      }
       isSubmittingRef.current = false;
     }
   }, [email, phone, type, slots, verifyOtp, redirectAfterAuth, syncing, router]);

@@ -19,7 +19,7 @@ export default function LoginAutoLoc() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [activeTab, setActiveTab] = useState('phone');
   const [isMounted, setIsMounted] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isPending] = useTransition();
   const [error, setError] = useState<{ erreur: string; details?: string } | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
 
@@ -56,9 +56,11 @@ export default function LoginAutoLoc() {
 
         if (fromOAuth || data.session) {
           setIsRedirecting(true);
-          startTransition(() => {
-            void redirectAfterAuth();
-          });
+          const ok = await redirectAfterAuth();
+          if (ok === false) {
+            setIsRedirecting(false);
+            setError({ erreur: 'Erreur de connexion', details: 'Impossible de synchroniser la session. Réessayez.' });
+          }
         }
       }
     };
@@ -98,9 +100,11 @@ export default function LoginAutoLoc() {
 
     if (res.success) {
       setIsRedirecting(true);
-      startTransition(() => {
-        void redirectAfterAuth(res.session);
-      });
+      const ok = await redirectAfterAuth(res.session);
+      if (ok === false) {
+        setIsRedirecting(false);
+        setError({ erreur: 'Erreur de connexion', details: 'Impossible de synchroniser la session. Réessayez.' });
+      }
     }
   };
 

@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { useSwitchToLocataire } from '../hooks/use-switch-to-locataire';
 import { useSignOut } from '../../auth/hooks/use-signout';
 import { useRoleStore } from '../../auth/stores/role.store';
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 /* ── Navigation config ────────────────────────────────────────── */
 const DESKTOP_NAV_ITEMS = [
@@ -264,6 +265,9 @@ const NavContent = ({ compact }: { compact: boolean }) => (
 
   return (
     <>
+      {/* Overlay full-screen pendant le changement de rôle */}
+      {switching && <LogoLoader />}
+
       {/* ══ MOBILE TOP BAR ══════════════════════════════════════════ */}
       <div className="lg:hidden fixed top-0 inset-x-0 z-40 flex items-center px-5 h-14
         bg-white/80 backdrop-blur-xl border-b border-black/[0.06] shadow-sm shadow-black/[0.02]">
