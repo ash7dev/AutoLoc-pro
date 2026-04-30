@@ -25,14 +25,6 @@ export async function syncWithNestJS(
   return session;
 }
 
-export async function ensureValidNestToken(): Promise<boolean> {
-  try {
-    await fetch('/api/nest/auth/me', { cache: 'no-store' });
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 export function useNestToken() {
   const activeRole = useRoleStore((s) => s.activeRole);

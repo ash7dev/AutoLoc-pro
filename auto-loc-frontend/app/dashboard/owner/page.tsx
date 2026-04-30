@@ -26,16 +26,20 @@ async function DashboardDataFetcher({ token }: { token: string }) {
   let reviews: any = null;
 
   try {
-    const profile = await fetchMe(token).catch(() => null);
-
-    const [resResult, vehiclesResult, walletResult, statsResult, reviewsResult] =
+    const [profileResult, resResult, vehiclesResult, walletResult, statsResult] =
       await Promise.allSettled([
+        fetchMe(token),
         fetchOwnerReservations(token),
         fetchMyVehicles(token),
         fetchWallet(token),
         fetchOwnerStats(token),
-        profile ? fetchUserReviews(profile.id, token) : Promise.resolve(null),
       ]);
+
+    const profile = profileResult.status === 'fulfilled' ? profileResult.value : null;
+
+    const [reviewsResult] = await Promise.allSettled([
+      profile ? fetchUserReviews(profile.id, token) : Promise.resolve(null),
+    ]);
 
     if (resResult.status === "fulfilled") reservations = resResult.value.data;
     if (vehiclesResult.status === "fulfilled") vehicles = vehiclesResult.value;

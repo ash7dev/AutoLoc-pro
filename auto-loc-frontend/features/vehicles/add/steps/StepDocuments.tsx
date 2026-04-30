@@ -1,11 +1,15 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
-    ArrowLeft, ArrowRight, FileCheck2, FileUp, ShieldCheck, X, Camera, CheckCircle2,
+    ArrowLeft, ArrowRight, FileCheck2, FileUp, ShieldCheck, X, Camera, CheckCircle2, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAddVehicleStore } from "../store";
+import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
+import { VEHICLE_PATHS, uploadDocumentToCloudinary } from "@/lib/nestjs/vehicles";
+
+type DocUploadStatus = 'idle' | 'uploading' | 'done' | 'error';
 
 interface Props {
     onNext: () => void;
@@ -13,14 +17,37 @@ interface Props {
 }
 
 export function StepDocuments({ onNext, onBack }: Props) {
-    const { carteGrise, assurance, setDocument } = useAddVehicleStore();
+    const { carteGrise, assurance, carteGriseUploadResult, assuranceUploadResult, setDocument, setDocumentUploadResult } = useAddVehicleStore();
+    const { authFetch } = useAuthFetch();
 
-    const handleFile = (type: "carteGrise" | "assurance", files: FileList | null) => {
+    const [uploadStatus, setUploadStatus] = useState<{ carteGrise: DocUploadStatus; assurance: DocUploadStatus }>({
+        carteGrise: carteGriseUploadResult ? 'done' : 'idle',
+        assurance: assuranceUploadResult ? 'done' : 'idle',
+    });
+
+    const handleFile = async (type: "carteGrise" | "assurance", files: FileList | null) => {
         if (!files || files.length === 0) return;
         const file = files[0];
-        if (file.type.startsWith("image/") || file.type === "application/pdf") {
-            setDocument(type, file);
+        if (!file.type.startsWith("image/") && file.type !== "application/pdf") return;
+
+        setDocument(type, file);
+        setUploadStatus(prev => ({ ...prev, [type]: 'uploading' }));
+
+        try {
+            const sig = await authFetch<{ signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string }>(
+                VEHICLE_PATHS.uploadSignature,
+            );
+            const result = await uploadDocumentToCloudinary(file, sig);
+            setDocumentUploadResult(type, { url: result.url, publicId: result.publicId });
+            setUploadStatus(prev => ({ ...prev, [type]: 'done' }));
+        } catch {
+            setUploadStatus(prev => ({ ...prev, [type]: 'error' }));
         }
+    };
+
+    const handleClear = (type: "carteGrise" | "assurance") => {
+        setDocument(type, null);
+        setUploadStatus(prev => ({ ...prev, [type]: 'idle' }));
     };
 
     const isFormValid = !!carteGrise && !!assurance;
@@ -51,8 +78,9 @@ export function StepDocuments({ onNext, onBack }: Props) {
                             description="Certificat d'immatriculation"
                             icon={<FileCheck2 className="w-5 h-5" strokeWidth={1.75} />}
                             file={carteGrise}
+                            uploadStatus={uploadStatus.carteGrise}
                             onFileSelect={(files) => handleFile("carteGrise", files)}
-                            onClear={() => setDocument("carteGrise", null)}
+                            onClear={() => handleClear("carteGrise")}
                         />
 
                         <DocumentZone
@@ -60,8 +88,9 @@ export function StepDocuments({ onNext, onBack }: Props) {
                             description="En cours de validité"
                             icon={<ShieldCheck className="w-5 h-5" strokeWidth={1.75} />}
                             file={assurance}
+                            uploadStatus={uploadStatus.assurance}
                             onFileSelect={(files) => handleFile("assurance", files)}
-                            onClear={() => setDocument("assurance", null)}
+                            onClear={() => handleClear("assurance")}
                         />
                     </div>
                 </div>
@@ -99,6 +128,7 @@ function DocumentZone({
     description,
     icon,
     file,
+    uploadStatus,
     onFileSelect,
     onClear,
 }: {
@@ -106,6 +136,7 @@ function DocumentZone({
     description: string;
     icon: React.ReactNode;
     file: File | null;
+    uploadStatus: DocUploadStatus;
     onFileSelect: (files: FileList | null) => void;
     onClear: () => void;
 }) {
@@ -158,13 +189,26 @@ function DocumentZone({
                     <input ref={galleryRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => onFileSelect(e.target.files)} />
                 </div>
             ) : (
-                <div className="flex items-center gap-3 p-4 rounded-xl border border-emerald-200 bg-emerald-50">
-                    <span className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0">
-                        <CheckCircle2 className="w-5 h-5" strokeWidth={2} />
+                <div className={cn(
+                    "flex items-center gap-3 p-4 rounded-xl border",
+                    uploadStatus === 'error' ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50",
+                )}>
+                    <span className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
+                        uploadStatus === 'uploading' ? "bg-amber-100 text-amber-600"
+                        : uploadStatus === 'error' ? "bg-red-100 text-red-500"
+                        : "bg-emerald-100 text-emerald-600",
+                    )}>
+                        {uploadStatus === 'uploading'
+                            ? <Loader2 className="w-5 h-5 animate-spin" strokeWidth={2} />
+                            : <CheckCircle2 className="w-5 h-5" strokeWidth={2} />}
                     </span>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-bold text-emerald-800 truncate">{file.name}</p>
-                        <p className="text-[10px] font-medium text-emerald-600 mt-0.5">Prêt à être envoyé</p>
+                        <p className={cn("text-[12px] font-bold truncate", uploadStatus === 'error' ? "text-red-700" : "text-emerald-800")}>{file.name}</p>
+                        {uploadStatus === 'uploading' && <p className="text-[10px] font-medium text-amber-600 mt-0.5">Upload en cours…</p>}
+                        {uploadStatus === 'done' && <p className="text-[10px] font-medium text-emerald-600 mt-0.5">Upload terminé ✓</p>}
+                        {uploadStatus === 'error' && <p className="text-[10px] font-medium text-red-500 mt-0.5">Échec — cliquez Changer</p>}
+                        {uploadStatus === 'idle' && <p className="text-[10px] font-medium text-emerald-600 mt-0.5">Prêt à être envoyé</p>}
                     </div>
                     <button
                         type="button"

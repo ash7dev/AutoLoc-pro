@@ -19,7 +19,7 @@ interface Props {
 
 export function StepReview({ onBack }: Props) {
   const router = useRouter();
-  const { step1, step2, step3, photos, carteGrise, assurance, setVehicleId, reset } = useAddVehicleStore();
+  const { step1, step2, step3, photos, carteGrise, assurance, carteGriseUploadResult, assuranceUploadResult, setVehicleId, reset } = useAddVehicleStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { authFetch } = useAuthFetch();
@@ -35,10 +35,14 @@ export function StepReview({ onBack }: Props) {
     setError(null);
 
     try {
-      // ── Uploads parallèles des documents ────────────────────────────────────────
+      // ── Documents : utilise les résultats pré-uploadés si disponibles ──────────
       const [carteGriseResult, assuranceResult] = await Promise.all([
-        carteGrise ? uploadDocumentToCloudinaryWithRetry(carteGrise, 'carte-grise') : null,
-        assurance ? uploadDocumentToCloudinaryWithRetry(assurance, 'assurance') : null,
+        carteGriseUploadResult
+          ? Promise.resolve(carteGriseUploadResult)
+          : (carteGrise ? uploadDocumentToCloudinaryWithRetry(carteGrise, 'carte-grise') : Promise.resolve(null)),
+        assuranceUploadResult
+          ? Promise.resolve(assuranceUploadResult)
+          : (assurance ? uploadDocumentToCloudinaryWithRetry(assurance, 'assurance') : Promise.resolve(null)),
       ]);
 
       // ── Transaction unique : créer véhicule avec tous les documents ─────────────────────

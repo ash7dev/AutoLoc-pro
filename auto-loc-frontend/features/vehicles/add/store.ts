@@ -61,6 +61,11 @@ export interface PhotoEntry {
   status: 'uploading' | 'done' | 'error';
 }
 
+export interface DocumentUploadResult {
+  url: string;
+  publicId: string;
+}
+
 interface AddVehicleStore {
   vehicleId: string | null;
   step1: Step1Data | null;
@@ -69,6 +74,8 @@ interface AddVehicleStore {
   photos: PhotoEntry[];
   carteGrise: File | null;
   assurance: File | null;
+  carteGriseUploadResult: DocumentUploadResult | null;
+  assuranceUploadResult: DocumentUploadResult | null;
   setStep1: (data: Step1Data) => void;
   setStep2: (data: Step2Data) => void;
   setStep3: (data: Step3Data) => void;
@@ -79,6 +86,7 @@ interface AddVehicleStore {
   movePhotoToFirst: (index: number) => void;
   movePhoto: (fromIndex: number, toIndex: number) => void;
   setDocument: (type: "carteGrise" | "assurance", file: File | null) => void;
+  setDocumentUploadResult: (type: "carteGrise" | "assurance", result: DocumentUploadResult | null) => void;
   reset: () => void;
 }
 
@@ -90,6 +98,8 @@ export const useAddVehicleStore = create<AddVehicleStore>((set) => ({
   photos: [],
   carteGrise: null,
   assurance: null,
+  carteGriseUploadResult: null,
+  assuranceUploadResult: null,
   setStep1: (data) => set({ step1: data }),
   setStep2: (data) => set({ step2: data }),
   setStep3: (data) => set({ step3: data }),
@@ -124,7 +134,8 @@ export const useAddVehicleStore = create<AddVehicleStore>((set) => ({
       photos.splice(toIndex, 0, moved);
       return { photos };
     }),
-  setDocument: (type, file) => set({ [type]: file }),
+  setDocument: (type, file) => set({ [type]: file, [`${type}UploadResult`]: null }),
+  setDocumentUploadResult: (type, result) => set({ [`${type}UploadResult`]: result }),
   reset: () =>
-    set({ vehicleId: null, step1: null, step2: null, step3: null, photos: [], carteGrise: null, assurance: null }),
+    set({ vehicleId: null, step1: null, step2: null, step3: null, photos: [], carteGrise: null, assurance: null, carteGriseUploadResult: null, assuranceUploadResult: null }),
 }));

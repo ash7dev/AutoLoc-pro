@@ -24,17 +24,23 @@ export function StepPhotos({ onNext, onBack }: Props) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  // Pre-fetch a Cloudinary signature when the step mounts
-  const loadSignature = useCallback(async () => {
+  // Pre-fetch a Cloudinary signature when the step mounts.
+  // Retry une fois silencieusement avant d'afficher l'erreur — évite le bandeau
+  // rouge sur un simple ralentissement réseau au montage du composant.
+  const loadSignature = useCallback(async (showErrorOnFail = true) => {
     setSigError(false);
     try {
       sigRef.current = await fetchUploadSignature();
     } catch {
-      setSigError(true);
+      try {
+        sigRef.current = await fetchUploadSignature();
+      } catch {
+        if (showErrorOnFail) setSigError(true);
+      }
     }
   }, []);
 
-  useEffect(() => { loadSignature(); }, [loadSignature]);
+  useEffect(() => { loadSignature(false); }, [loadSignature]);
 
   const uploadFiles = useCallback(async (files: File[]) => {
     if (!files.length) return;
@@ -119,7 +125,7 @@ export function StepPhotos({ onNext, onBack }: Props) {
           </p>
           <button
             type="button"
-            onClick={loadSignature}
+            onClick={() => loadSignature()}
             className="flex items-center gap-1 text-[11.5px] font-bold text-red-700 hover:text-red-900"
           >
             <RotateCcw className="w-3 h-3" strokeWidth={2.5} />

@@ -11,8 +11,8 @@ import {
   type FuelType,
   type Transmission,
 } from '@/lib/nestjs/vehicles';
-import { apiFetch } from '@/lib/nestjs/api-client';
 import type { ProfileResponse } from '@/lib/nestjs/auth';
+import { useProfileStore } from '@/features/auth/stores/profile.store';
 import { KycNudgeModal } from '@/features/onboarding/KycNudgeModal';
 import { ExplorerHero } from './ExplorerHero';
 import { ExplorerFilters } from './ExplorerFilters';
@@ -325,15 +325,19 @@ export function ExplorerGrid(): React.ReactElement {
     }
     if (!signupAt || !Number.isFinite(signupAt)) return;
 
-    let active = true;
-    apiFetch<ProfileResponse>('/auth/me')
-      .then((profile) => {
-        if (active) setKycStatus(profile.kycStatus);
-      })
-      .catch(() => {
-        // not logged in or unreachable
-      });
-    return () => { active = false; };
+    const cached = useProfileStore.getState().profile;
+    if (cached) {
+      setKycStatus(cached.kycStatus);
+      return;
+    }
+
+    const unsub = useProfileStore.subscribe((state) => {
+      if (state.profile) {
+        setKycStatus(state.profile.kycStatus);
+        unsub();
+      }
+    });
+    return unsub;
   }, []);
 
   /* Debounced search to avoid too many API calls */

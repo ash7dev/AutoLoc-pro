@@ -13,6 +13,7 @@ import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles
 import { useCurrency } from '@/providers/currency-provider';
 import { apiFetch, ApiError } from '@/lib/nestjs/api-client';
 import type { ProfileResponse } from '@/lib/nestjs/auth';
+import { useProfileStore } from '@/features/auth/stores/profile.store';
 import { ReservationCalendar } from '@/features/vehicles/components/ReservationCalendar';
 import { ReservationGateModal } from "@/features/reservations/components/ReservationGateModal";
 import { AgeRestrictionModal } from "@/features/reservations/components/AgeRestrictionModal";
@@ -131,7 +132,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
     setInlineError(null);
     setGateLoading(true);
     try {
-      const profile = await apiFetch<ProfileResponse>('/auth/me');
+      const profile = useProfileStore.getState().profile ?? await apiFetch<ProfileResponse>('/auth/me');
 
       // ── Age Block (independent from Gate) ──────────────────────────────
       // Only fires when: user is logged in + birth date is known + age < minimum.

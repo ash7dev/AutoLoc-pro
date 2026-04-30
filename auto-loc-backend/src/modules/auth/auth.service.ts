@@ -111,11 +111,15 @@ export class AuthService {
     if (existing) {
       const normalizedEmail = user.email ? this.normalizeEmail(user.email) : null;
       if (normalizedEmail && existing.email !== normalizedEmail) {
-        await this.prisma.profile.update({
-          where: { userId: user.sub },
-          data: { email: normalizedEmail },
-        });
-        existing.email = normalizedEmail;
+        // Handle case where they change their email, but it might be taken
+        const emailTaken = await this.prisma.profile.findUnique({ where: { email: normalizedEmail } });
+        if (!emailTaken) {
+          await this.prisma.profile.update({
+            where: { userId: user.sub },
+            data: { email: normalizedEmail },
+          });
+          existing.email = normalizedEmail;
+        }
       }
       const flags = await this.getUtilisateurFlags(user.sub);
       this.assertAccountIsAllowed(flags);
@@ -127,6 +131,23 @@ export class AuthService {
         where: { userId: user.sub },
       });
       if (again) return again;
+
+      // 🔄 RÉCUPÉRATION DE COMPTE (Orphaned Account Recovery)
+      // Si l'utilisateur a supprimé puis recréé son compte Supabase, 
+      // son 'sub' change mais son email reste le même.
+      if (user.email) {
+        const normalizedEmail = this.normalizeEmail(user.email);
+        const emailExists = await tx.profile.findUnique({ where: { email: normalizedEmail } });
+
+        if (emailExists) {
+          // L'email existe déjà sous un ancien userId. On "réclame" le profil.
+          return tx.profile.update({
+            where: { email: normalizedEmail },
+            data: { userId: user.sub },
+          });
+        }
+      }
+
       return tx.profile.create({
         data: {
           userId: user.sub,

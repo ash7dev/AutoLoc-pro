@@ -11,6 +11,7 @@ import { TestimonialsSection } from '@/features/landing/TestimonialsSection';
 import { FAQSection } from '@/features/landing/FAQSection';
 import { BecomeHostCTA } from '@/features/landing/BecomeHostCTA';
 import { Footer } from '@/features/landing/Footer';
+import { HomeSessionRedirect } from '@/features/auth/components/home-session-redirect';
 
 export const metadata: Metadata = {
   title: 'AutoLoc — Location de véhicules au Sénégal',
@@ -40,6 +41,7 @@ export default async function HomePage() {
 
   return (
     <main className="overflow-x-hidden">
+      <HomeSessionRedirect />
       <BannerSection />
       <CategoriesSection />
       <VehicleGridSection initialVehicles={initialVehicles} />
