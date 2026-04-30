@@ -207,11 +207,11 @@ export class NotificationService {
       if (!date) return '';
       const d = new Date(date);
       if (isNaN(d.getTime())) return '';
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      const hours = String(d.getHours()).padStart(2, '0');
-      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const day = String(d.getUTCDate()).padStart(2, '0');
+      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const year = d.getUTCFullYear();
+      const hours = String(d.getUTCHours()).padStart(2, '0');
+      const minutes = String(d.getUTCMinutes()).padStart(2, '0');
       if (hours === '00' && minutes === '00') {
         return `${day}/${month}/${year}`;
       }
@@ -246,15 +246,8 @@ export class NotificationService {
         },
         fallbackText: `💰 AutoLoc — Nouvelle réservation payée pour ${data.vehicule} ! Confirmez ici.`,
       },
-      'reservation.paid': {
-        contentSid: 'HX0d287413da68b4f90bd00fbca59a941a', // locataire_resa_validee_bouton
-        variables: {
-          '1': String(data.vehicule || 'véhicule'),
-          '2': dateDeb, '3': dateFin,
-          '4': data.reservationId as string
-        },
-        fallbackText: `💰 AutoLoc — Votre paiement pour ${data.vehicule} est validé ! Réservation #${resId} en attente de confirmation.`,
-      },
+      // reservation.paid — pas de WhatsApp au locataire (email suffit, pas prioritaire)
+      // Le message "en attente de confirmation" génère de l'anxiété sans valeur ajoutée.
       'reservation.confirmed': {
         contentSid: 'HX0d287413da68b4f90bd00fbca59a941a', // locataire_resa_validee_bouton
         variables: {
@@ -267,18 +260,27 @@ export class NotificationService {
 
       // --- RAPPELS ---
       'reservation.checkin.reminder_veille': {
-        contentSid: isOwner ? 'HX6deb1fa71a4d2e88e12399294393010a' : 'HX557c749060aab5eb8538dde7f06b4034',
+        contentSid: isOwner ? 'HX9e798e37ec4561fbb3ca229ab2503c63' : 'HX96ca66cfcad4161c3a2906fb6c6cdc8f',
         variables: {
           '1': String(data.vehicule),
-          '2': data.reservationId as string,
-          '3': String(data.otherPartyPhone || '')
+          '2': resId,
+          '3': String(data.otherPartyPhone || ''),
+          '4': String(data.dateDebut || ''),
+          '5': String(data.dateFin || ''),
+          '6': data.reservationId as string,
         },
-        fallbackText: `📅 AutoLoc — Demain commence la location #${resId} ! Contact: ${data.otherPartyPhone || 'N/A'}`,
+        fallbackText: `📅 AutoLoc — Demain commence la location de ${data.vehicule || 'votre véhicule'} (#${resId}).\n⏰ Début : ${data.dateDebut || 'à confirmer'} → Fin : ${data.dateFin || 'à confirmer'}\n📞 Contact : ${data.otherPartyPhone || 'N/A'}`,
       },
       'reservation.checkin.reminder_jour': {
-        contentSid: isOwner ? 'HX524bd6c9f5d7f86b87b62a7186a035cd' : 'HX775bb91c71a231c662fc90bfade9eea3',
-        variables: { '1': String(data.vehicule), '2': data.reservationId },
-        fallbackText: `🚨 AutoLoc — Urgent ! Le check-in n'est pas validé.`,
+        contentSid: isOwner ? 'HX83b935cb406574f0fbbf866b1b6d4b86' : 'HX4ec154df382ce08b5322a09074ddbbfe',
+        variables: {
+          '1': String(data.vehicule || 'véhicule'),
+          '2': resId,
+          '3': String(data.otherPartyPhone || ''),
+          '4': String(data.dateDebut || ''),
+          '5': data.reservationId as string,
+        },
+        fallbackText: `🚗 AutoLoc — La location de ${data.vehicule || 'votre véhicule'} commence aujourd'hui (#${resId}).\n⏰ Heure : ${data.dateDebut || 'à confirmer'}\n📞 Contact : ${data.otherPartyPhone || 'N/A'}`,
       },
       'reservation.checkout.reminder': {
         contentSid: isOwner ? 'HXfbbfd96be6664f4302a0e4b1f26d991d' : 'HX59be7100c1005d17ad94970cd86802f6',

@@ -121,7 +121,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     return String(job.id);
   }
 
-  // Rappels check-in : veille (24h avant) et urgent (2h après début)
+  // Rappels check-in : veille (24h avant) ou jour-J immédiat + urgent (2h après début)
   async scheduleCheckinReminder(
     reservationId: string,
     dateDebut: Date,
@@ -129,17 +129,28 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     const oneDayMs = 24 * 60 * 60 * 1000;
     const twoHoursMs = 2 * 60 * 60 * 1000;
     const now = Date.now();
+    const timeToStart = dateDebut.getTime() - now;
 
-    // 1. Rappel "Veille" (ou immédiat si < 24h)
-    const delayVeille = Math.max(0, dateDebut.getTime() - now - oneDayMs);
-    await this.reservationQueue.add(
-      RESERVATION_CHECKIN_REMINDER_JOB,
-      { reservationId },
-      { delay: delayVeille },
-    );
+    if (timeToStart > oneDayMs) {
+      // Démarre dans > 24h : rappel veille à T-24h
+      await this.reservationQueue.add(
+        RESERVATION_CHECKIN_REMINDER_JOB,
+        { reservationId },
+        { delay: timeToStart - oneDayMs },
+      );
+    } else if (timeToStart > 0) {
+      // Démarre aujourd'hui (< 24h) : rappel jour-J immédiat
+      // forcedType évite que le processor envoie un "veille" basé sur diffHours
+      await this.reservationQueue.add(
+        RESERVATION_CHECKIN_REMINDER_JOB,
+        { reservationId, forcedType: 'jour' as const },
+        { delay: 0 },
+      );
+    }
+    // Si dateDebut est déjà passée : pas de rappel veille/jour
 
-    // 2. Rappel "Urgent" (2h après le début prévu)
-    const delayUrgent = dateDebut.getTime() - now + twoHoursMs;
+    // Rappel urgent 2h après le début prévu (no-show warning)
+    const delayUrgent = timeToStart + twoHoursMs;
     if (delayUrgent > 0) {
       await this.reservationQueue.add(
         RESERVATION_CHECKIN_REMINDER_JOB,

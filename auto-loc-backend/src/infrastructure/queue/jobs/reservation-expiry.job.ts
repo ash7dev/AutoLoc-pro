@@ -23,9 +23,7 @@ import { QueueService } from '../queue.service';
 import { isPastCheckoutInspectionWindow } from '../../../domain/reservation/reservation-checkin.constants';
 import { ContractGenerationService } from '../../../domain/reservation/contract-generation.service';
 
-const DEFAULT_COUNTRY_CODE = '+221';
 const SYSTEM_SIGNATURE_REMINDER = 'SYSTEM_SIGNATURE_REMINDER';
-const SYSTEM_CHECKIN_REMINDER = 'SYSTEM_CHECKIN_REMINDER';
 const SYSTEM_TACIT_REMINDER_IMMEDIATE = 'SYSTEM_TACIT_REMINDER_IMMEDIATE';
 const SYSTEM_TACIT_REMINDER_MID = 'SYSTEM_TACIT_REMINDER_MID';
 
@@ -121,7 +119,7 @@ export class ReservationExpiryProcessor {
 
   @Process(RESERVATION_CHECKIN_REMINDER_JOB)
   async handleCheckinReminder(
-    job: Job<{ reservationId: string }>,
+    job: Job<{ reservationId: string; forcedType?: 'jour' }>,
   ): Promise<void> {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: job.data.reservationId },
@@ -129,6 +127,7 @@ export class ReservationExpiryProcessor {
         id: true,
         statut: true,
         dateDebut: true,
+        dateFin: true,
         locataireId: true,
         proprietaireId: true,
         locataire: { select: { email: true, telephone: true } },
@@ -139,44 +138,60 @@ export class ReservationExpiryProcessor {
 
     if (!reservation) return;
 
-    // 1. Déterminer si c'est le rappel J-1 ou l'alerte urgente J+2h
-    const now = new Date();
     const startDate = new Date(reservation.dateDebut);
-    const diffMs = now.getTime() - startDate.getTime();
-    const diffHours = diffMs / (1000 * 60 * 60);
-
     let notifType: NotificationType;
     let systemTag: string;
 
-    if (diffHours >= 2) {
-      // Cas : Plus de 2h de retard sur le début prévu
+    if (job.data.forcedType === 'jour') {
+      // Réservation qui commence aujourd'hui — confirmée le jour même
       if (reservation.statut !== StatutReservation.CONFIRMEE) return;
       notifType = 'reservation.checkin.reminder_jour';
-      systemTag = 'SYSTEM_CHECKIN_URGENT';
+      systemTag = 'SYSTEM_CHECKIN_JOUR_IMMEDIAT';
     } else {
-      // Cas : Rappel normal la veille
-      if (reservation.statut !== StatutReservation.CONFIRMEE && reservation.statut !== StatutReservation.PAYEE) return;
-      notifType = 'reservation.checkin.reminder_veille';
-      systemTag = 'SYSTEM_CHECKIN_REMINDER';
+      // Déterminer si c'est le rappel J-1 ou l'alerte urgente J+2h
+      const diffHours = (Date.now() - startDate.getTime()) / (1000 * 60 * 60);
+
+      if (diffHours >= 2) {
+        // Plus de 2h de retard sur le début prévu
+        if (reservation.statut !== StatutReservation.CONFIRMEE) return;
+        notifType = 'reservation.checkin.reminder_jour';
+        systemTag = 'SYSTEM_CHECKIN_URGENT';
+      } else {
+        // Rappel normal la veille
+        if (reservation.statut !== StatutReservation.CONFIRMEE && reservation.statut !== StatutReservation.PAYEE) return;
+        notifType = 'reservation.checkin.reminder_veille';
+        systemTag = 'SYSTEM_CHECKIN_VEILLE';
+      }
     }
 
     if (await this.wasReminderSent(reservation.id, systemTag)) return;
 
     const vehicule = reservation.vehicule ? `${reservation.vehicule.marque} ${reservation.vehicule.modele}` : 'véhicule';
 
-    // 2. Envoi aux deux parties via le service central
+    const formatDateHeure = (d: Date) => {
+      const label = d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+      const h = String(d.getUTCHours()).padStart(2, '0');
+      const m = String(d.getUTCMinutes()).padStart(2, '0');
+      return d.getUTCHours() === 0 && d.getUTCMinutes() === 0 ? label : `${label} à ${h}h${m}`;
+    };
+
+    const dateHeure = formatDateHeure(startDate);
+    const dateFinHeure = formatDateHeure(new Date(reservation.dateFin));
+
+    // Envoi aux deux parties via le service central
     const promises = [
       this.notification.send({
         type: notifType,
         userId: reservation.locataireId,
         email: reservation.locataire.email,
         phone: reservation.locataire.telephone ?? undefined,
-        data: { 
-          reservationId: reservation.id, 
-          dateDebut: startDate.toLocaleDateString('fr-FR'), 
-          isOwner: false, 
+        data: {
+          reservationId: reservation.id,
+          dateDebut: dateHeure,
+          dateFin: dateFinHeure,
+          isOwner: false,
           vehicule,
-          otherPartyPhone: reservation.proprietaire?.telephone ?? undefined 
+          otherPartyPhone: reservation.proprietaire?.telephone ?? undefined,
         },
       }),
       this.notification.send({
@@ -184,12 +199,13 @@ export class ReservationExpiryProcessor {
         userId: reservation.proprietaireId,
         email: reservation.proprietaire.email,
         phone: reservation.proprietaire.telephone ?? undefined,
-        data: { 
-          reservationId: reservation.id, 
-          dateDebut: startDate.toLocaleDateString('fr-FR'), 
-          isOwner: true, 
+        data: {
+          reservationId: reservation.id,
+          dateDebut: dateHeure,
+          dateFin: dateFinHeure,
+          isOwner: true,
           vehicule,
-          otherPartyPhone: reservation.locataire?.telephone ?? undefined 
+          otherPartyPhone: reservation.locataire?.telephone ?? undefined,
         },
       }),
     ];

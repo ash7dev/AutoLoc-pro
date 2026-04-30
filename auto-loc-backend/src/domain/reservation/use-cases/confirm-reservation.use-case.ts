@@ -122,13 +122,13 @@ export class ConfirmReservationUseCase {
             return res;
         });
 
-        // 6. Side effects (best-effort)
+        // 6. Side effects (best-effort) — utiliser les NOUVELLES dates avec heure
         await this.queue
-            .scheduleCheckinReminder(reservationId, reservation.dateDebut)
+            .scheduleCheckinReminder(reservationId, newDateDebut)
             .catch(() => { });
 
         await this.queue
-            .scheduleCheckoutReminder(reservationId, reservation.dateFin)
+            .scheduleCheckoutReminder(reservationId, newDateFin)
             .catch(() => { });
 
         this.queue.scheduleNotification({

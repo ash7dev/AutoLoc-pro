@@ -93,10 +93,12 @@ export class ReservationAutoCloseJob {
             select: {
                 id: true,
                 dateDebut: true,
+                dateFin: true,
                 proprietaireId: true,
                 locataireId: true,
                 proprietaire: { select: { id: true, prenom: true, email: true, telephone: true } },
                 locataire: { select: { id: true, prenom: true, email: true, telephone: true } },
+                vehicule: { select: { marque: true, modele: true } },
             },
         });
 
@@ -104,10 +106,19 @@ export class ReservationAutoCloseJob {
         this.logger.log(`Sending veille check-in reminders for ${upcoming.length} reservation(s)`);
 
         for (const r of upcoming) {
-            const dateLabel = r.dateDebut.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+            const formatDateHeure = (d: Date) => {
+                const label = d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+                const h = String(d.getUTCHours()).padStart(2, '0');
+                const m = String(d.getUTCMinutes()).padStart(2, '0');
+                return d.getUTCHours() === 0 && d.getUTCMinutes() === 0 ? label : `${label} à ${h}h${m}`;
+            };
+            const dateHeure = formatDateHeure(r.dateDebut);
+            const dateFinHeure = formatDateHeure(r.dateFin);
+            const vehicule = r.vehicule ? `${r.vehicule.marque} ${r.vehicule.modele}` : 'véhicule';
+
             const parties = [
-                { prenom: r.proprietaire?.prenom, email: r.proprietaire?.email, phone: r.proprietaire?.telephone, id: r.proprietaireId, isOwner: true },
-                { prenom: r.locataire?.prenom, email: r.locataire?.email, phone: r.locataire?.telephone, id: r.locataireId, isOwner: false },
+                { prenom: r.proprietaire?.prenom, email: r.proprietaire?.email, phone: r.proprietaire?.telephone, id: r.proprietaireId, isOwner: true, otherPhone: r.locataire?.telephone },
+                { prenom: r.locataire?.prenom, email: r.locataire?.email, phone: r.locataire?.telephone, id: r.locataireId, isOwner: false, otherPhone: r.proprietaire?.telephone },
             ];
             for (const party of parties) {
                 if (!party.email && !party.phone) continue;
@@ -118,9 +129,12 @@ export class ReservationAutoCloseJob {
                         userId: party.id,
                         phone: party.phone ?? undefined,
                         prenom: party.prenom ?? '',
-                        dateDebut: dateLabel,
+                        dateDebut: dateHeure,
+                        dateFin: dateFinHeure,
                         email: party.email ?? undefined,
                         isOwner: party.isOwner,
+                        vehicule,
+                        otherPartyPhone: party.otherPhone ?? undefined,
                     },
                 }).catch(() => { });
             }
