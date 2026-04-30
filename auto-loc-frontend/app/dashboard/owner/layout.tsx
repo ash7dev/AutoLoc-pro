@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { unstable_cache } from 'next/cache';
 import { fetchMe } from '../../../lib/nestjs/auth';
-import { ApiError } from '../../../lib/nestjs/api-client';
 import { OwnerSidebar } from '../../../features/owner/components/owner-sidebar';
 
 /**
@@ -35,14 +34,10 @@ export default async function OwnerLayout({
     profile = await unstable_cache(
       () => fetchMe(token),
       cacheKey,
-      { revalidate: 10 }, // Réduire à 10s pour être plus réactif
+      { revalidate: 10 },
     )();
-  } catch (err) {
-    if (err instanceof ApiError) {
-      if (err.status === 401 || err.status === 403) redirect('/login?expired=1');
-      redirect('/login?expired=1');
-    }
-    throw err;
+  } catch {
+    redirect('/login?expired=1');
   }
 
   if (profile.role === 'ADMIN') {

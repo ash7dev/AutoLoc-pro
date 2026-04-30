@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { unstable_cache } from 'next/cache';
 import { fetchMe } from '../../../lib/nestjs/auth';
-import { ApiError } from '../../../lib/nestjs/api-client';
 import { OwnerSidebar } from '../../../features/owner/components/owner-sidebar';
 
 export default async function SettingsLayout({
@@ -18,23 +17,19 @@ export default async function SettingsLayout({
   }
 
   const roleSwitchAt = cookies().get('role_switch_at')?.value ?? '';
+  let profile: Awaited<ReturnType<typeof fetchMe>>;
   try {
-    const profile = await unstable_cache(
+    profile = await unstable_cache(
       () => fetchMe(token),
       ['profile', token, roleSwitchAt],
       { revalidate: 30 },
     )();
-
-    if (profile.role === 'ADMIN') redirect('/dashboard/admin');
-    if (profile.role === 'LOCATAIRE') redirect('/');
-  } catch (err) {
-    if (err instanceof ApiError) {
-      if (err.status === 401 || err.status === 403) redirect('/login?expired=1');
-      // Backend indisponible (503, réseau) → login plutôt qu'error boundary
-      redirect('/login?expired=1');
-    }
-    throw err;
+  } catch {
+    redirect('/login?expired=1');
   }
+
+  if (profile.role === 'ADMIN') redirect('/dashboard/admin');
+  if (profile.role === 'LOCATAIRE') redirect('/');
 
   return (
     <div className="flex min-h-screen bg-page">

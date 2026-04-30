@@ -4,7 +4,6 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
-import { ApiError } from '@/lib/nestjs/api-client';
 import { fetchUserProfile, type UserProfile } from '@/lib/nestjs/auth';
 import { SettingsForm } from '@/features/dashboard/components/settings-form';
 import { KycProfileButton } from '@/features/kyc/KycProfileButton';
@@ -22,11 +21,8 @@ export default async function ProfileSettingsPage() {
   let profile: UserProfile;
   try {
     profile = await fetchUserProfile(token);
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 401) {
-      redirect('/login?expired=1');
-    }
-    throw err;
+  } catch {
+    redirect('/login?expired=1');
   }
 
   const memberSince = new Date(profile.creeLe).toLocaleDateString('fr-FR', {

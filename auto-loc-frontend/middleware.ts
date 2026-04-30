@@ -38,6 +38,13 @@ export function middleware(request: NextRequest) {
   // directement vers son dashboard sans render de la landing page.
   if (pathname === '/') {
     if (nestAccess) {
+      // Si l'user vient de switcher de rôle (cookie < 5min), on ne redirige pas
+      // vers son ancien dashboard — le token JWT n'est pas encore rafraîchi.
+      const roleSwitchAt = request.cookies.get('role_switch_at')?.value;
+      if (roleSwitchAt) {
+        const ageMs = Date.now() - parseInt(roleSwitchAt, 10);
+        if (ageMs < 5 * 60 * 1000) return NextResponse.next();
+      }
       const payload = decodeNestJwt(nestAccess);
       if (payload?.role) {
         const target = dashboardTarget(payload.role);
