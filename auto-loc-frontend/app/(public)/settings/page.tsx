@@ -31,8 +31,9 @@ export default async function SettingsPage() {
     try {
         profile = await fetchUserProfile(token);
     } catch (err) {
-        if (err instanceof ApiError && err.status === 401) {
-            redirect('/login?expired=1');
+        if (err instanceof ApiError) {
+            if (err.status === 401) redirect('/login?expired=1');
+            if (err.status === 403) redirect('/verify');
         }
         throw err;
     }

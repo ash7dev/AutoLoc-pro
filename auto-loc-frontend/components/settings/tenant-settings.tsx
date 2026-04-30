@@ -43,7 +43,7 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
     lastName: initialProfile?.nom || '',
     email: initialProfile?.email || '',
     phone: initialProfile?.telephone || '',
-    birthDate: initialProfile?.dateNaissance || '',
+    birthDate: initialProfile?.dateNaissance ? initialProfile.dateNaissance.split('T')[0] : '',
   });
   
   // 1. Charger et synchroniser le profil seulement si non fourni
@@ -75,7 +75,7 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
         lastName: profile.nom || '',
         email: profile.email || '',
         phone: profile.telephone || '',
-        birthDate: profile.dateNaissance || '',
+        birthDate: profile.dateNaissance ? profile.dateNaissance.split('T')[0] : '',
       });
     }
   }, [profile]);

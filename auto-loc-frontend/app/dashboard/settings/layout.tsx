@@ -28,8 +28,7 @@ export default async function SettingsLayout({
     redirect('/login?expired=1');
   }
 
-  if (profile.role === 'ADMIN') redirect('/dashboard/admin');
-  if (profile.role === 'LOCATAIRE') redirect('/');
+  if (profile.role === 'LOCATAIRE') redirect('/settings');
 
   return (
     <div className="flex min-h-screen bg-page">
