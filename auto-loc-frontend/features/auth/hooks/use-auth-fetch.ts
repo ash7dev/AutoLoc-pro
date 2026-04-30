@@ -31,7 +31,7 @@ export function useAuthFetch() {
     ): Promise<TResponse> => {
       const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
       const isSafeToRetry = !options.method || options.method === 'GET';
-      
+
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
           return await apiFetch<TResponse, TBody>(path, options);
