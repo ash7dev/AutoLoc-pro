@@ -46,12 +46,12 @@ export function getBullModuleOptions(redisUrl: string): BullModuleOptions {
       maxRetriesPerRequest: null,
     },
     defaultJobOptions: DEFAULT_JOB_OPTIONS,
-    // Réduit le polling Redis de Bull (~5s → 30s) pour économiser les commandes
-    // Upstash. Les jobs retardés (paiement 15min, expiry 48h) n'ont pas besoin
-    // d'une précision à la seconde.
     settings: {
-      guardInterval: 30_000,    // vérifie les delayed jobs toutes les 30s (défaut 5s)
-      stalledInterval: 60_000,  // vérifie les stalled jobs toutes les 60s (défaut 30s)
+      guardInterval: 30_000,     // delayed jobs : poll toutes les 30s (défaut 5s)
+      stalledInterval: 120_000,  // stalled jobs : check toutes les 2min (défaut 30s)
+      drainDelay: 2_000,         // queue vide : attendre 2s avant le prochain poll (défaut 5ms)
+      lockDuration: 60_000,      // durée du lock job → moins de renouvellements Redis (défaut 30s)
+      lockRenewTime: 20_000,     // renouvellement à 1/3 du lock (défaut lockDuration/2)
     },
   };
 }

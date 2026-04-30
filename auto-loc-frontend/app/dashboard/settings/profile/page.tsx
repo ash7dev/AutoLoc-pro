@@ -35,13 +35,13 @@ export default async function ProfileSettingsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-full">
 
       {/* ── Mobile header ─────────────────────────────────────────── */}
       <div className="lg:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-xl border-b border-slate-100">
         <div className="flex items-center gap-3 px-4 h-14">
           <Link
-            href="/dashboard/settings"
+            href="/dashboard/owner"
             className="flex items-center justify-center w-8 h-8 rounded-xl hover:bg-slate-100 transition-colors"
           >
             <ChevronLeft className="w-4 h-4 text-slate-600" />

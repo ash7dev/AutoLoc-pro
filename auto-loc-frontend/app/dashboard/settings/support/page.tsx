@@ -157,11 +157,11 @@ const FAQ_ITEMS = [
 /* ── Page ───────────────────────────────────────────────────────── */
 export default function SupportPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-full">
       {/* ── Mobile header ─────────────────────────────────────────── */}
       <div className="lg:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-slate-100">
         <div className="flex items-center gap-3 px-4 h-14">
-          <Link href="/dashboard/settings" className="flex items-center justify-center w-8 h-8 rounded-xl hover:bg-slate-100 transition-colors">
+          <Link href="/dashboard/owner" className="flex items-center justify-center w-8 h-8 rounded-xl hover:bg-slate-100 transition-colors">
             <ChevronLeft className="w-4 h-4 text-slate-600" />
           </Link>
           <h1 className="text-[15px] font-bold text-slate-900">Aide & Support</h1>
