@@ -25,11 +25,12 @@ export default async function SettingsLayout({
       { revalidate: 30 },
     )();
 
-    if (profile.role === 'ADMIN') {
-      redirect('/dashboard/admin');
-    }
+    if (profile.role === 'ADMIN') redirect('/dashboard/admin');
+    if (profile.role === 'LOCATAIRE') redirect('/');
   } catch (err) {
-    if (err instanceof ApiError && err.status === 401) {
+    if (err instanceof ApiError) {
+      if (err.status === 401 || err.status === 403) redirect('/login?expired=1');
+      // Backend indisponible (503, réseau) → login plutôt qu'error boundary
       redirect('/login?expired=1');
     }
     throw err;

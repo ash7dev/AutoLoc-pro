@@ -38,7 +38,8 @@ export default async function OwnerLayout({
       { revalidate: 10 }, // Réduire à 10s pour être plus réactif
     )();
   } catch (err) {
-    if (err instanceof ApiError && err.status === 401) {
+    if (err instanceof ApiError) {
+      if (err.status === 401 || err.status === 403) redirect('/login?expired=1');
       redirect('/login?expired=1');
     }
     throw err;
