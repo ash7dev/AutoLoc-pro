@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { PhoneInput as BasePhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
-import { Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface PhoneInputProps {
@@ -24,7 +23,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   error,
 }) => {
   return (
-    <div className={cn("phone-input-container w-full relative", className)}>
+    <div className={cn("phone-input-container w-full", className)}>
       <BasePhoneInput
         defaultCountry="sn"
         value={value}
@@ -32,70 +31,65 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
         disabled={disabled}
         placeholder={placeholder}
         className="w-full"
-        // Style de l'input texte
         inputClassName={cn(
-          "autoloc-body !w-full !h-14 !pl-12 !pr-4 !py-4 !border-none !text-base !bg-transparent focus:!ring-0",
+          "!w-full !h-12 !pl-3 !pr-4 !border-none !text-[13.5px] !font-medium !bg-transparent focus:!ring-0 !text-slate-800",
           disabled && "opacity-50 cursor-not-allowed"
         )}
-        // Style du sélecteur de pays
         countrySelectorStyleProps={{
           buttonClassName: cn(
-            "!h-14 !px-4 !border-none !bg-gray-50/50 hover:!bg-gray-100 !rounded-l-2xl !transition-colors !flex !items-center !justify-center",
-             error && "!bg-red-50"
+            "!h-12 !pl-3 !pr-2 !border-none !bg-transparent hover:!bg-slate-50 !rounded-l-xl !transition-colors",
+            disabled && "opacity-50 cursor-not-allowed",
+            error && "!bg-red-50/50"
           ),
         }}
       />
-      
-      {/* Icône de téléphone flottante à l'intérieur de l'input */}
-      <div className="absolute left-[88px] top-1/2 -translate-y-1/2 pointer-events-none">
-        <Phone className={cn("h-4 w-4", error ? "text-red-400" : "text-emerald-500/60")} />
-      </div>
 
       <style jsx global>{`
-        /* Reset des styles par défaut de la lib pour un look sur-mesure */
         .react-international-phone-input-container {
           display: flex;
           align-items: center;
           width: 100% !important;
           background: white;
-          border: 1px solid ${error ? '#ef4444' : '#e2e8f0'};
-          border-radius: 1rem !important;
-          transition: all 0.2s ease;
+          border: 1.5px solid ${error ? '#ef4444' : '#e2e8f0'};
+          border-radius: 0.75rem !important;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+          overflow: hidden;
         }
-        
+
         .react-international-phone-input-container:focus-within {
           border-color: ${error ? '#ef4444' : '#10b981'};
-          box-shadow: 0 0 0 4px ${error ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)'};
+          box-shadow: 0 0 0 3px ${error ? 'rgba(239,68,68,0.12)' : 'rgba(16,185,129,0.12)'};
+        }
+
+        .react-international-phone-country-selector {
+          border-right: 1.5px solid #f1f5f9;
         }
 
         .react-international-phone-country-selector-button__flag-emoji {
-          font-size: 1.5rem !important;
-          margin: 0 !important;
+          font-size: 1.25rem !important;
         }
 
         .react-international-phone-country-selector-button__dropdown-arrow {
           border-top-color: #94a3b8 !important;
-          margin-left: 6px !important;
+          margin-left: 4px !important;
         }
 
         .react-international-phone-country-selector-dropdown {
           z-index: 9999 !important;
-          border-radius: 1rem !important;
+          border-radius: 0.75rem !important;
           border: 1px solid #f1f5f9 !important;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
-          margin-top: 8px !important;
+          box-shadow: 0 20px 40px -8px rgba(0,0,0,0.15) !important;
+          margin-top: 6px !important;
           background: white !important;
         }
 
-        /* Amélioration mobile */
-        @media (max-width: 640px) {
-          .react-international-phone-country-selector-button {
-            padding-left: 0.75rem !important;
-            padding-right: 0.75rem !important;
-          }
-          .react-international-phone-input {
-            padding-left: 2.5rem !important; /* Ajustement pour l'icône sur mobile */
-          }
+        .react-international-phone-input {
+          font-size: 13.5px !important;
+          color: #1e293b !important;
+        }
+
+        .react-international-phone-input::placeholder {
+          color: #cbd5e1 !important;
         }
       `}</style>
     </div>

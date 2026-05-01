@@ -325,8 +325,9 @@ export class ContractPdfService {
 
         // Pricing table
         const tableY = doc.y;
+        const prixJourTTC = Math.round(Number(t.totalLocataire) / t.nbJours);
         const rows: Array<{ label: string; value: string; bold?: boolean; accent?: boolean; bg?: string; large?: boolean }> = [
-            { label: `Prix journalier (${Number(t.prixParJour).toLocaleString('fr-FR')} FCFA) × ${t.nbJours} jour${t.nbJours > 1 ? 's' : ''}`, value: `${Number(t.totalBase).toLocaleString('fr-FR')} FCFA` },
+            { label: `Prix journalier (${prixJourTTC.toLocaleString('fr-FR')} FCFA) × ${t.nbJours} jour${t.nbJours > 1 ? 's' : ''}`, value: `${Number(t.totalLocataire).toLocaleString('fr-FR')} FCFA` },
             { label: 'Total réglé par le locataire', value: `${Number(t.totalLocataire).toLocaleString('fr-FR')} FCFA`, bold: true, accent: true, bg: C.emeraldBg, large: true },
         ];
 

@@ -176,82 +176,87 @@ export class AuthService {
       throw new BadRequestException('Utilisateur invalide');
     }
 
-    // S'assure que le Profile existe avant de créer Utilisateur (FK obligatoire).
-    await this.getOrCreateProfile(user);
+    const normalizedPhone = this.normalizePhone(dto.telephone);
+    const normalizedEmail = this.normalizeEmail(user.email ?? `${user.sub}@autoloc.local`);
 
-    const existing = await this.prisma.utilisateur.findUnique({
-      where: { userId: user.sub },
-    });
+    // Vérifier en parallèle : utilisateur existant + unicité téléphone/email
+    const [existing, phoneTaken, emailTaken] = await Promise.all([
+      this.prisma.utilisateur.findUnique({
+        where: { userId: user.sub },
+        select: { id: true },
+      }),
+      this.prisma.utilisateur.findFirst({
+        where: { telephone: normalizedPhone, NOT: { userId: user.sub } },
+        select: { id: true },
+      }),
+      this.prisma.utilisateur.findFirst({
+        where: { email: { equals: normalizedEmail, mode: 'insensitive' }, NOT: { userId: user.sub } },
+        select: { id: true },
+      }),
+    ]);
+
+    if (phoneTaken) throw new BadRequestException('Ce numéro de téléphone est déjà utilisé');
+    if (emailTaken) throw new BadRequestException('Cet email est déjà utilisé');
+
+    let utilisateurId: string;
+
     if (existing) {
       await this.prisma.utilisateur.update({
         where: { userId: user.sub },
         data: {
           prenom: dto.prenom,
           nom: dto.nom,
-          telephone: this.normalizePhone(dto.telephone),
+          telephone: normalizedPhone,
           dateNaissance: dto.dateNaissance ? new Date(dto.dateNaissance) : undefined,
-          phoneVerified: false, // Sera mis à true par verifyPhoneOtp
+          phoneVerified: false,
         },
       });
-      return this.getOrCreateProfile(user);
-    }
-
-    const normalizedPhone = this.normalizePhone(dto.telephone);
-    const normalizedEmail = this.normalizeEmail(user.email ?? `${user.sub}@autoloc.local`);
-
-    const [phoneTaken, emailTaken] = await Promise.all([
-      this.prisma.utilisateur.findFirst({
-        where: { telephone: normalizedPhone },
-        select: { id: true },
-      }),
-      this.prisma.utilisateur.findFirst({
-        where: {
-          email: {
-            equals: normalizedEmail,
-            mode: 'insensitive',
-          },
+      utilisateurId = existing.id;
+    } else {
+      // S'assure que le Profile (FK obligatoire) existe avant la création
+      await this.prisma.profile.upsert({
+        where: { userId: user.sub },
+        update: { phone: normalizedPhone },
+        create: {
+          userId: user.sub,
+          email: normalizedEmail,
+          phone: normalizedPhone,
+          role: DEFAULT_ROLE,
         },
-        select: { id: true },
-      }),
-    ]);
-    if (phoneTaken) {
-      throw new BadRequestException('Ce numéro de téléphone est déjà utilisé');
-    }
-    if (emailTaken) {
-      throw new BadRequestException('Cet email est déjà utilisé');
-    }
+      });
 
-    const createdUtilisateur = await this.prisma.utilisateur.create({
-      data: {
-        userId: user.sub,
-        prenom: dto.prenom,
-        nom: dto.nom,
-        telephone: normalizedPhone,
+      const created = await this.prisma.utilisateur.create({
+        data: {
+          userId: user.sub,
+          prenom: dto.prenom,
+          nom: dto.nom,
+          telephone: normalizedPhone,
+          email: normalizedEmail,
+          profileCompleted: true,
+          phoneVerified: false,
+          avatarUrl: dto.avatarUrl ?? null,
+          dateNaissance: dto.dateNaissance ? new Date(dto.dateNaissance) : null,
+        },
+      });
+      utilisateurId = created.id;
+
+      this.notification.send({
         email: normalizedEmail,
-        profileCompleted: true,
-        phoneVerified: false, // Sera mis à true par verifyPhoneOtp
-        avatarUrl: dto.avatarUrl ?? null,
-        dateNaissance: dto.dateNaissance ? new Date(dto.dateNaissance) : null,
-      },
-    });
+        type: 'user.welcome',
+        data: { prenom: dto.prenom },
+      }).catch(() => { });
+    }
 
-    await this.prisma.profile.update({
-      where: { userId: user.sub },
-      data: { phone: normalizedPhone },
-    });
-
-    this.notification.send({
-      email: normalizedEmail,
-      type: 'user.welcome',
-      data: { prenom: dto.prenom },
-    }).catch(() => { });
+    // Sync du téléphone sur le Profile (cas mise à jour)
+    if (existing) {
+      await this.prisma.profile.update({
+        where: { userId: user.sub },
+        data: { phone: normalizedPhone },
+      });
+    }
 
     const profile = await this.getOrCreateProfile(user);
-    return {
-      ...profile,
-      hasUtilisateur: true,
-      utilisateurId: createdUtilisateur.id,
-    };
+    return { ...profile, hasUtilisateur: true, utilisateurId };
   }
 
   /**
@@ -320,13 +325,13 @@ export class AuthService {
     const key = this.getOtpKey(user.sub);
     await this.redisService.set(key, code, OTP_TTL_SECONDS);
 
-
-    await this.notification.send({
+    // Fire-and-forget — le code est déjà en Redis, on n'attend pas Twilio
+    this.notification.send({
       type: "verification.code",
       userId: user.sub,
       phone: telephone,
       data: { code },
-    });
+    }).catch(err => console.error(`[Auth] Failed to send OTP to ${telephone}: ${err}`));
 
     return { expiresIn: OTP_COOLDOWN_SECONDS };
   }

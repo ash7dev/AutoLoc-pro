@@ -200,6 +200,10 @@ export class NotificationService {
    * Définit quel template WhatsApp utiliser pour chaque type de notification
    */
   private getWhatsAppMapping(type: NotificationType, data: Record<string, unknown>) {
+    // Types explicitement supprimés — email suffit, pas de WhatsApp
+    const WHATSAPP_SUPPRESSED = new Set<NotificationType>(['reservation.paid']);
+    if (WHATSAPP_SUPPRESSED.has(type)) return null;
+
     const resId = String(data.reservationId || '').slice(0, 8).toUpperCase();
 
     // Formatage des dates pour WhatsApp (avec heure)

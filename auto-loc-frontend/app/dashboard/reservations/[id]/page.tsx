@@ -532,7 +532,7 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                                 <div className="flex items-center justify-between px-3.5 py-2.5">
                                     <span className="text-[12px] text-slate-500 font-medium">Prix / jour</span>
                                     <span className="text-[13px] font-bold text-slate-800 tabular-nums">
-                                        {fmtMoney(r.prixParJour)} FCFA
+                                        {fmtMoney(Math.round(Number(r.prixParJour) * 1.15))} FCFA
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between px-3.5 py-2.5">

@@ -120,29 +120,23 @@ function resolveSteps(profile: ProfileResponse, ageMinimum?: number, userAge?: n
     });
   }
 
-  // Étapes KYC (uniquement si âge OK ou non requis)
-  if (!ageMinimum || ageMinimum <= 0 || (profile.dateNaissance && (!userAge || userAge >= ageMinimum))) {
-    steps.push({
-      key: "kyc",
-      label: "Vérification d'identité",
-      description: "Pièce d'identité nationale ou passeport",
-      duration: "~2 min",
-      status: kycStatus,
-      icon: ShieldCheck,
-    });
-  }
+  steps.push({
+    key: "kyc",
+    label: "Vérification d'identité",
+    description: "Pièce d'identité nationale ou passeport",
+    duration: "~2 min",
+    status: kycStatus,
+    icon: ShieldCheck,
+  });
 
-  // Étapes permis (uniquement si âge OK ou non requis)
-  if (!ageMinimum || ageMinimum <= 0 || (profile.dateNaissance && (!userAge || userAge >= ageMinimum))) {
-    steps.push({
-      key: "permis",
-      label: "Permis de conduire",
-      description: "Photo recto-verso de votre permis en cours de validité",
-      duration: "~1 min",
-      status: permisOk ? "done" : "required",
-      icon: CreditCard,
-    });
-  }
+  steps.push({
+    key: "permis",
+    label: "Permis de conduire",
+    description: "Photo recto-verso de votre permis en cours de validité",
+    duration: "~1 min",
+    status: permisOk ? "done" : "required",
+    icon: CreditCard,
+  });
 
   return steps;
 }
@@ -256,8 +250,10 @@ function PreGateOverlay({
 }) {
   const pending = steps.filter(s => s.status !== "done");
   const totalMin = pending.reduce((acc, s) => {
-    const m = parseInt(s.duration?.replace(/\D/g, "") ?? "0");
-    return acc + m;
+    if (!s.duration) return acc;
+    const num = parseInt(s.duration.replace(/\D/g, "") ?? "0");
+    const isSec = s.duration.includes("sec");
+    return acc + (isSec ? Math.round(num / 60) : num);
   }, 0);
 
   return (
