@@ -10,7 +10,7 @@ import {
     AlertCircle, ArrowRight, Users, Lock,
     TrendingUp, Fuel, Settings2, CalendarCheck,
     Eye, Zap, CheckCircle2, Clock, ShieldOff,
-    ChevronDown, Banknote, Gauge,
+    ChevronDown, Banknote, Gauge, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -331,6 +331,12 @@ function VehicleCard({
                         <span className="inline-flex items-center gap-1 rounded-full bg-black/80 backdrop-blur-sm px-2 py-[3px] text-[9px] font-black uppercase tracking-widest text-white">
                             <Lock className="h-2.5 w-2.5" strokeWidth={2.5} />
                             Loué
+                        </span>
+                    )}
+                    {vehicle.isFeatured && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2 py-[3px] text-[9px] font-black uppercase tracking-widest text-black shadow-sm">
+                            <Sparkles className="h-2.5 w-2.5" strokeWidth={3} />
+                            En vedette
                         </span>
                     )}
                 </div>

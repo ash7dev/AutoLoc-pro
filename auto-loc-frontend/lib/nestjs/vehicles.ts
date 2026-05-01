@@ -84,6 +84,8 @@ export interface Vehicle {
   equipements?: { equipement: { id: string; nom: string } }[] | string[];
   carteGriseUrl?: string | null;
   assuranceDocUrl?: string | null;
+  isFeatured?: boolean;
+  featuredUntil?: string | null;
   _count?: { reservations: number };
 }
 
@@ -138,6 +140,7 @@ export interface VehicleSearchResult {
   carburant?: FuelType | null;
   transmission?: Transmission | null;
   nombrePlaces?: number | null;
+  isFeatured?: boolean;
 }
 
 export interface SearchVehiclesParams {

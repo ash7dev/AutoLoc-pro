@@ -35,6 +35,8 @@ export interface AdminVehicle {
   carteGriseUrl: string | null;
   assuranceDocUrl: string | null;
   fraisLivraison: number | null;
+  isFeatured: boolean;
+  featuredUntil: string | null;
   proprietaire: {
     id: string;
     prenom: string | null;
@@ -200,6 +202,7 @@ export const ADMIN_PATHS = {
   vehicle: (id: string) => `/admin/vehicles/${id}`,
   validateVehicle: (id: string) => `/admin/vehicles/${id}/validate`,
   suspendVehicle: (id: string) => `/admin/vehicles/${id}/suspend`,
+  featureVehicle: (id: string) => `/admin/vehicles/${id}/feature`,
   users: (kycStatus?: KycStatus) =>
     kycStatus ? `/admin/users?kycStatus=${kycStatus}` : '/admin/users',
   user: (id: string) => `/admin/users/${id}`,

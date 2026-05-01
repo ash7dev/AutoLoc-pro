@@ -9,7 +9,7 @@ import {
   Eye, X, ChevronLeft, ChevronRight, Star,
   Key, Calendar, Users, Shield,
   Phone, Mail, Info, ZoomIn, FileText, ExternalLink, Truck,
-  Timer, ArrowUp, ArrowDown, ChevronsUpDown, ArrowUpRight,
+  Timer, ArrowUp, ArrowDown, ChevronsUpDown, ArrowUpRight, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminVehicle } from '../../../lib/nestjs/admin';
@@ -535,11 +535,12 @@ function SuspendDialog({ vehicleName, raison, onRaisonChange, onConfirm, onCance
 
 // ── Vehicle card ───────────────────────────────────────────────────────────────
 
-function VehicleCard({ vehicle, pendingId, onValidate, onSuspend, onDetails }: {
+function VehicleCard({ vehicle, pendingId, onValidate, onSuspend, onDetails, onFeature }: {
   vehicle: AdminVehicle; pendingId: string | null;
   onValidate: (id: string) => void;
   onSuspend: (id: string, name: string) => void;
   onDetails: (vehicle: AdminVehicle) => void;
+  onFeature: (id: string, active: boolean) => void;
 }) {
   const status = STATUS_CONFIG[vehicle.statut];
   const mainPhoto = vehicle.photos.find((p) => p.estPrincipale) ?? vehicle.photos[0];
@@ -657,6 +658,21 @@ function VehicleCard({ vehicle, pendingId, onValidate, onSuspend, onDetails }: {
           <Eye className="h-3.5 w-3.5" strokeWidth={2} />Détails
         </Link>
 
+        {vehicle.statut === 'VERIFIE' && (
+          <button type="button" disabled={isLoading}
+            onClick={() => onFeature(vehicle.id, !vehicle.isFeatured)}
+            className={cn(
+              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all duration-150',
+              vehicle.isFeatured
+                ? 'bg-amber-400 text-black hover:bg-amber-300'
+                : 'border border-slate-200 text-black/50 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200',
+              isLoading && 'opacity-40 cursor-not-allowed',
+            )}>
+            <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
+            {vehicle.isFeatured ? 'En vedette' : 'Mettre en avant'}
+          </button>
+        )}
+
         {vehicle.statut === 'BROUILLON' ? (
           <div className="flex flex-1 items-center gap-1.5 rounded-xl border border-amber-200/60 bg-amber-50 px-2.5 py-2">
             <Info className="h-3 w-3 flex-shrink-0 text-amber-500" strokeWidth={2} />
@@ -769,6 +785,22 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
     startTransition(() => router.push(url));
   }
 
+  const handleFeature = useCallback(async (vehicleId: string, active: boolean) => {
+    setPendingId(vehicleId);
+    try {
+      const res = await fetch(`/api/nest${ADMIN_PATHS.featureVehicle(vehicleId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active }),
+      });
+      if (!res.ok) throw new Error(await getErrorMessage(res, 'Une erreur est survenue.'));
+      showToast('success', active ? 'Véhicule mis en avant.' : 'Mise en avant retirée.');
+      router.refresh();
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Une erreur est survenue.');
+    } finally { setPendingId(null); }
+  }, [router]);
+
   const handleValidate = useCallback(async (vehicleId: string) => {
     setPendingId(vehicleId);
     try {
@@ -873,7 +905,8 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
             <VehicleCard key={v.id} vehicle={v} pendingId={pendingId}
               onValidate={handleValidate}
               onSuspend={(id, name) => openSuspend(id, name, v.statut === 'EN_ATTENTE_VALIDATION' || v.statut === 'BROUILLON')}
-              onDetails={() => router.push(`/dashboard/admin/vehicles/${v.id}`)} />
+              onDetails={() => router.push(`/dashboard/admin/vehicles/${v.id}`)}
+              onFeature={handleFeature} />
           ))}
         </div>
       )}

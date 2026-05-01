@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
   ArrowRight, Car, TrendingUp,
-  Rocket, PlusCircle, ChevronRight,
+  Rocket, PlusCircle, ChevronRight, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -251,6 +251,7 @@ export function VehicleGridSection({
   const initialLoaded = useRef(false);
 
   const sorted = sortVehicles(vehicles);
+  const featured = sorted.filter(v => v.isFeatured);
   const visible9 = sorted.slice(0, MAX_VISIBLE);
   const hiddenCount = Math.max(0, sorted.length - MAX_VISIBLE);
   const activeLabel = FILTERS.find(f => f.value === activeFilter)?.label ?? '';
@@ -287,6 +288,20 @@ export function VehicleGridSection({
 
         {/* Filter bar */}
         <FilterBar activeFilter={activeFilter} onFilter={setActiveFilter} />
+
+        {/* Featured — masqué si 0 véhicules mis en avant */}
+        {!loading && !activeFilter && featured.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-amber-400" strokeWidth={2.5} />
+              <span className="text-[12px] font-black uppercase tracking-widest text-amber-500">À la une</span>
+            </div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {featured.map((v, i) => <AnimatedCard key={v.id} vehicle={v} index={i} />)}
+            </div>
+            <div className="h-px bg-slate-100" />
+          </div>
+        )}
 
         {/* Loading */}
         {loading && (
