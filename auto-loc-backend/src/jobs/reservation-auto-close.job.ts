@@ -256,4 +256,19 @@ export class ReservationAutoCloseJob {
             }
         }
     }
+
+    /**
+     * Tous les jours à 01h00 UTC.
+     * Désactive les mises en avant dont featuredUntil est dépassé.
+     */
+    @Cron('0 1 * * *')
+    async handleExpireFeaturedVehicles(): Promise<void> {
+        const { count } = await this.prisma.vehicule.updateMany({
+            where: { isFeatured: true, featuredUntil: { lte: new Date() } },
+            data: { isFeatured: false, featuredUntil: null },
+        });
+        if (count > 0) {
+            this.logger.log(`${count} mise(s) en avant expirée(s) désactivée(s)`);
+        }
+    }
 }

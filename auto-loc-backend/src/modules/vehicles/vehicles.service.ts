@@ -43,6 +43,7 @@ interface VehicleSearchRow {
   carburant: string | null;
   transmission: string | null;
   nombrePlaces: number | null;
+  isFeatured: boolean;
 }
 
 @Injectable()
@@ -751,6 +752,7 @@ export class VehiclesService {
         v.carburant::text AS carburant,
         v.transmission::text AS transmission,
         v."nombrePlaces",
+        v."isFeatured",
         (
           SELECT p.url
           FROM "PhotoVehicule" p
@@ -771,7 +773,7 @@ export class VehiclesService {
         ${geoCondition}
         ${equipementCondition}
         ${searchCondition}
-      ORDER BY ${Prisma.raw(orderField)} ${Prisma.raw(orderDir)}
+      ORDER BY v."isFeatured" DESC, ${Prisma.raw(orderField)} ${Prisma.raw(orderDir)}
       LIMIT ${Prisma.raw(String(SEARCH_PAGE_SIZE))} OFFSET ${Prisma.raw(String(offset))}
     `;
 
@@ -811,6 +813,7 @@ export class VehiclesService {
         carburant: r.carburant ?? null,
         transmission: r.transmission ?? null,
         nombrePlaces: r.nombrePlaces ? Number(r.nombrePlaces) : null,
+        isFeatured: Boolean(r.isFeatured),
         photoUrl: r.photoUrl,
         tarifsProgressifs: (tiersByVehicle.get(r.id) ?? []).map((t) => ({
           id: t.id,
@@ -1283,6 +1286,72 @@ export class VehiclesService {
     await this.prisma.indisponibiliteVehicule.delete({ where: { id: indispoId } });
     await this.invalidateSearchCache();
     return { deleted: true };
+  }
+
+  /**
+   * PATCH /admin/vehicles/:id/feature
+   * Active ou désactive la mise en avant d'un véhicule (max 5 simultanément).
+   * Notifie le propriétaire et invalide le cache de recherche.
+   */
+  async featureVehicle(vehicleId: string, active: boolean, featuredUntil?: string) {
+    const vehicle = await this.prisma.vehicule.findUnique({
+      where: { id: vehicleId },
+      include: {
+        proprietaire: { select: { id: true, telephone: true, prenom: true, userId: true } },
+      },
+    });
+
+    if (!vehicle) throw new NotFoundException('Véhicule introuvable');
+
+    if (active) {
+      const featuredCount = await this.prisma.vehicule.count({
+        where: { isFeatured: true, id: { not: vehicleId } },
+      });
+      if (featuredCount >= 5) {
+        throw new BadRequestException('Limite atteinte : 5 véhicules mis en avant simultanément maximum.');
+      }
+    }
+
+    const updated = await this.prisma.vehicule.update({
+      where: { id: vehicleId },
+      data: {
+        isFeatured: active,
+        featuredUntil: active && featuredUntil ? new Date(featuredUntil) : null,
+      },
+      select: { id: true, isFeatured: true, featuredUntil: true, marque: true, modele: true },
+    });
+
+    await this.invalidateSearchCache(vehicle.ville);
+    this.revalidate.revalidatePath('/explorer').catch(() => { });
+    this.revalidate.revalidatePath('/').catch(() => { });
+
+    if (active) {
+      const phone = vehicle.proprietaire.telephone?.trim();
+      if (phone) {
+        const prenom = vehicle.proprietaire.prenom ?? 'Propriétaire';
+        const normalizedPhone = phone.startsWith('+') ? phone : `+221${phone}`;
+        const body = `🌟 Bonne nouvelle ${prenom} ! Votre véhicule ${vehicle.marque} ${vehicle.modele} est maintenant mis en avant sur AutoLoc. Il apparaît en priorité dans les résultats de recherche.`;
+        this.notification.sendWhatsApp({ to: `whatsapp:${normalizedPhone}`, body }).catch(() => { });
+      }
+    }
+
+    return updated;
+  }
+
+  /**
+   * Appelé par le cron quotidien pour désactiver les mises en avant expirées.
+   */
+  async expireFeaturedVehicles(): Promise<number> {
+    const { count } = await this.prisma.vehicule.updateMany({
+      where: { isFeatured: true, featuredUntil: { lte: new Date() } },
+      data: { isFeatured: false, featuredUntil: null },
+    });
+    if (count > 0) {
+      await this.invalidateSearchCache();
+      this.revalidate.revalidatePath('/explorer').catch(() => { });
+      this.revalidate.revalidatePath('/').catch(() => { });
+    }
+    return count;
   }
 
   }

@@ -92,6 +92,8 @@ model Vehicule {
   supplementHorsDakarParJour Decimal?                  @db.Decimal(10, 2)
   carburantCondition         String?
   archiveLe                  DateTime?
+  isFeatured                 Boolean                   @default(false)
+  featuredUntil              DateTime?
   indisponibilites           IndisponibiliteVehicule[]
   photos                     PhotoVehicule[]
   reservations               Reservation[]
@@ -104,6 +106,7 @@ model Vehicule {
   @@index([ville])
   @@index([statut, ville, prixParJour])
   @@index([ville, type])
+  @@index([isFeatured])
 }
 
 model TarifTier {

@@ -15,6 +15,7 @@ import { RoleProfile } from '@prisma/client';
 import { VehiclesService } from './vehicles.service';
 import { GetAdminVehiclesDto } from './dto/get-admin-vehicles.dto';
 import { SuspendVehicleDto } from './dto/suspend-vehicle.dto';
+import { FeatureVehicleDto } from './dto/feature-vehicle.dto';
 
 @Controller('admin/vehicles')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -55,5 +56,17 @@ export class AdminVehiclesController {
     @Body() dto: SuspendVehicleDto,
   ) {
     return this.vehiclesService.suspendVehicle(id, dto.raison);
+  }
+
+  /**
+   * PATCH /admin/vehicles/:id/feature
+   * Active ou désactive la mise en avant d'un véhicule (max 5 simultanément).
+   */
+  @Patch(':id/feature')
+  featureVehicle(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: FeatureVehicleDto,
+  ) {
+    return this.vehiclesService.featureVehicle(id, dto.active, dto.featuredUntil);
   }
 }
