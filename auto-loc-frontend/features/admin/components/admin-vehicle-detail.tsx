@@ -42,10 +42,11 @@ export function AdminVehicleDetail({ vehicle }: { vehicle: any }) {
         ? ADMIN_PATHS.validateVehicle(vehicle.id)
         : ADMIN_PATHS.suspendVehicle(vehicle.id);
         
-      const res = await fetch(`/api/nest${url}`, { 
+      const res = await fetch(`/api/nest${url}`, {
         method: 'PATCH',
         headers: action === 'suspend' ? { 'Content-Type': 'application/json' } : undefined,
-        body: action === 'suspend' ? JSON.stringify({ raison: "Raison de test ou détaillée dans un vrai dialogue" }) : undefined
+        body: action === 'suspend' ? JSON.stringify({ raison: "Raison de test ou détaillée dans un vrai dialogue" }) : undefined,
+        credentials: 'include',
       });
       if (!res.ok) throw new Error("Erreur action");
       showToast('success', action === 'validate' ? 'Véhicule validé' : 'Véhicule suspendu');

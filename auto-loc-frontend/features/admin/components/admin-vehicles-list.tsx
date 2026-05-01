@@ -792,6 +792,7 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active }),
+        credentials: 'include',
       });
       if (!res.ok) throw new Error(await getErrorMessage(res, 'Une erreur est survenue.'));
       showToast('success', active ? 'Véhicule mis en avant.' : 'Mise en avant retirée.');
@@ -804,7 +805,7 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
   const handleValidate = useCallback(async (vehicleId: string) => {
     setPendingId(vehicleId);
     try {
-      const res = await fetch(`/api/nest${ADMIN_PATHS.validateVehicle(vehicleId)}`, { method: 'PATCH' });
+      const res = await fetch(`/api/nest${ADMIN_PATHS.validateVehicle(vehicleId)}`, { method: 'PATCH', credentials: 'include' });
       if (!res.ok) throw new Error(await getErrorMessage(res, 'Une erreur est survenue. Réessayez.'));
       showToast('success', 'Véhicule approuvé avec succès.');
       router.refresh();
@@ -821,6 +822,7 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ raison: suspendDialog.raison }),
+        credentials: 'include',
       });
       if (!res.ok) throw new Error(await getErrorMessage(res, 'Une erreur est survenue. Réessayez.'));
       setSuspendDialog({ open: false, vehicleId: '', vehicleName: '', raison: '', isReject: false });

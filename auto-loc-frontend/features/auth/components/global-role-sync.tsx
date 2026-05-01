@@ -27,15 +27,12 @@ export function GlobalRoleSync() {
       }
 
       try {
-        const [vehiclesRes, profileRes] = await Promise.all([
-          fetch('/api/nest/vehicles/me', { credentials: 'include' }),
-          fetch('/api/nest/auth/me', { credentials: 'include' }),
-        ]);
+        const profileRes = await fetch('/api/nest/auth/me', { credentials: 'include' });
 
         // 🔄 HEALING DE SESSION :
         // Si le backend retourne 401, nos cookies (nest_access/refresh) sont morts.
         // Mais comme on a un token Supabase valide, on relance la synchronisation.
-        if ((vehiclesRes.status === 401 || profileRes.status === 401) && !isRetry) {
+        if (profileRes.status === 401 && !isRetry) {
           const syncRes = await fetch('/api/auth/sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -49,14 +46,21 @@ export function GlobalRoleSync() {
 
         if (!active) return;
 
-        if (vehiclesRes.ok) {
-          const data = await vehiclesRes.json() as unknown[];
-          useRoleStore.getState().setHasVehicles(Array.isArray(data) && data.length > 0);
-        }
-
         if (profileRes.ok) {
           const profile = await profileRes.json() as ProfileResponse;
           useProfileStore.getState().setProfile(profile);
+
+          // Fetch vehicles uniquement pour les propriétaires — les autres rôles
+          // (ADMIN, LOCATAIRE, SUPPORT) n'ont pas de véhicules et retourneraient 403.
+          if (profile.role === 'PROPRIETAIRE') {
+            const vehiclesRes = await fetch('/api/nest/vehicles/me', { credentials: 'include' });
+            if (vehiclesRes.ok) {
+              const data = await vehiclesRes.json() as unknown[];
+              useRoleStore.getState().setHasVehicles(Array.isArray(data) && data.length > 0);
+            }
+          } else {
+            useRoleStore.getState().setHasVehicles(false);
+          }
         }
       } catch {
         // Ignorer en cas d'erreur réseau

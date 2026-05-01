@@ -390,6 +390,7 @@ export function AdminDisputesList({ disputes }: AdminDisputesListProps) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ decision: statut }),
+        credentials: 'include',
       });
       if (!res.ok) throw new Error();
       const labels = { EN_INVESTIGATION: '', FONDE: 'Litige classé fondé.', NON_FONDE: 'Litige classé non fondé.' };

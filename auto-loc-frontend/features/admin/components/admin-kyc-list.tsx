@@ -550,7 +550,7 @@ export function AdminKycList({ users }: { users: AdminUser[] }) {
   async function handleApprove(userId: string) {
     setPendingId(userId);
     try {
-      const res = await fetch(`/api/nest${ADMIN_PATHS.approveKyc(userId)}`, { method: 'PATCH' });
+      const res = await fetch(`/api/nest${ADMIN_PATHS.approveKyc(userId)}`, { method: 'PATCH', credentials: 'include' });
       if (!res.ok) throw new Error();
       showToast('success', 'KYC approuvé avec succès.');
       router.refresh();
@@ -584,8 +584,8 @@ export function AdminKycList({ users }: { users: AdminUser[] }) {
     
     // Optimisation : approbation parallèle des KYC
     const results = await Promise.allSettled(
-      ids.map(id => 
-        fetch(`/api/nest${ADMIN_PATHS.approveKyc(id)}`, { method: 'PATCH' })
+      ids.map(id =>
+        fetch(`/api/nest${ADMIN_PATHS.approveKyc(id)}`, { method: 'PATCH', credentials: 'include' })
       )
     );
     
@@ -612,6 +612,7 @@ export function AdminKycList({ users }: { users: AdminUser[] }) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ raison: raison.trim() || undefined }),
+        credentials: 'include',
       });
       if (!res.ok) throw new Error();
       showToast('success', 'KYC rejeté.');

@@ -55,7 +55,7 @@ export function AdminUserDetail({ user }: { user: any }) {
   async function handleApproveKyc() {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/nest${ADMIN_PATHS.approveKyc(user.id)}`, { method: 'PATCH' });
+      const res = await fetch(`/api/nest${ADMIN_PATHS.approveKyc(user.id)}`, { method: 'PATCH', credentials: 'include' });
       if (!res.ok) throw new Error("Erreur KYC");
       showToast('success', 'KYC approuvé');
       router.refresh();
@@ -71,6 +71,7 @@ export function AdminUserDetail({ user }: { user: any }) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ actif: user.isBanned }),
+        credentials: 'include',
       });
       if (!res.ok) throw new Error("Erreur Ban");
       showToast('success', user.isBanned ? 'Compte débanni' : 'Compte banni');

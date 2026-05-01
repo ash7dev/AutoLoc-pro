@@ -57,6 +57,7 @@ export function AdminReservationDetail({ reservation, accessToken }: AdminReserv
       const res = await fetch(`/api/nest${ADMIN_PATHS.forceCancelReservation(reservation.id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
       });
       if (!res.ok) throw new Error('Erreur lors de l\'annulation forcée');
       router.refresh();
@@ -75,6 +76,7 @@ export function AdminReservationDetail({ reservation, accessToken }: AdminReserv
       const res = await fetch(`/api/nest${ADMIN_PATHS.forceCompleteReservation(reservation.id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
       });
       if (!res.ok) throw new Error('Erreur lors de la confirmation forcée');
       router.refresh();

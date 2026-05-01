@@ -542,7 +542,7 @@ export function PendingKycWithListingSection() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/nest/admin/users?kycStatus=EN_ATTENTE');
+      const res = await fetch('/api/nest/admin/users?kycStatus=EN_ATTENTE', { credentials: 'include' });
       if (!res.ok) throw new Error();
       const data: AdminUser[] = await res.json();
       setUsers(data.filter((u) =>
@@ -565,7 +565,7 @@ export function PendingKycWithListingSection() {
   async function handleApproveKyc(userId: string) {
     setPendingId(userId);
     try {
-      const res = await fetch(`/api/nest${ADMIN_PATHS.approveKyc(userId)}`, { method: 'PATCH' });
+      const res = await fetch(`/api/nest${ADMIN_PATHS.approveKyc(userId)}`, { method: 'PATCH', credentials: 'include' });
       if (!res.ok) throw new Error();
       showToast('success', 'KYC approuvé. Les véhicules sont passés en attente de validation.');
       router.refresh();
@@ -580,13 +580,13 @@ export function PendingKycWithListingSection() {
   async function handleValidateAll(userId: string, brouillonIds: string[]) {
     setPendingId(userId);
     try {
-      const kycRes = await fetch(`/api/nest${ADMIN_PATHS.approveKyc(userId)}`, { method: 'PATCH' });
+      const kycRes = await fetch(`/api/nest${ADMIN_PATHS.approveKyc(userId)}`, { method: 'PATCH', credentials: 'include' });
       if (!kycRes.ok) throw new Error('KYC');
 
       // Optimisation : validation parallèle des véhicules
       await Promise.allSettled(
-        brouillonIds.map(vid => 
-          fetch(`/api/nest${ADMIN_PATHS.validateVehicle(vid)}`, { method: 'PATCH' })
+        brouillonIds.map(vid =>
+          fetch(`/api/nest${ADMIN_PATHS.validateVehicle(vid)}`, { method: 'PATCH', credentials: 'include' })
         )
       );
 

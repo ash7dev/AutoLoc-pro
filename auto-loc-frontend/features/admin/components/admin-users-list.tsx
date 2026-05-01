@@ -607,7 +607,7 @@ export function AdminUsersList({ users }: { users: AdminUser[] }) {
   async function handleApproveKyc(userId: string) {
     setPendingId(userId);
     try {
-      const res = await fetch(`/api/nest${ADMIN_PATHS.approveKyc(userId)}`, { method: 'PATCH' });
+      const res = await fetch(`/api/nest${ADMIN_PATHS.approveKyc(userId)}`, { method: 'PATCH', credentials: 'include' });
       if (!res.ok) throw new Error(await getErrorMessage(res, 'Erreur lors de l\'approbation KYC.'));
       showToast('success', 'KYC approuvé avec succès.');
       router.refresh();
@@ -625,6 +625,7 @@ export function AdminUsersList({ users }: { users: AdminUser[] }) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ actif: false, raison: banDialog.raison || undefined }),
+        credentials: 'include',
       });
       if (!res.ok) throw new Error(await getErrorMessage(res, 'Erreur lors du bannissement.'));
       setBanDialog({ open: false, userId: '', userName: '', raison: '' });
@@ -644,6 +645,7 @@ export function AdminUsersList({ users }: { users: AdminUser[] }) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ actif: true }),
+        credentials: 'include',
       });
       if (!res.ok) throw new Error(await getErrorMessage(res, 'Erreur lors du débannissement.'));
       showToast('success', 'Utilisateur débanni avec succès.');

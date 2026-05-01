@@ -266,7 +266,7 @@ export function AdminWithdrawalsList({ withdrawals }: AdminWithdrawalsListProps)
     setPendingId(id);
     setValidateTarget(null);
     try {
-      const res = await fetch(`/api/nest${ADMIN_PATHS.validateWithdrawal(id)}`, { method: 'PATCH' });
+      const res = await fetch(`/api/nest${ADMIN_PATHS.validateWithdrawal(id)}`, { method: 'PATCH', credentials: 'include' });
       if (!res.ok) throw new Error();
       showToast('success', 'Retrait validé — virement effectué.');
       router.refresh();
@@ -285,6 +285,7 @@ export function AdminWithdrawalsList({ withdrawals }: AdminWithdrawalsListProps)
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ raison: raison.trim() || undefined }),
+        credentials: 'include',
       });
       if (!res.ok) throw new Error();
       showToast('success', 'Retrait refusé.');

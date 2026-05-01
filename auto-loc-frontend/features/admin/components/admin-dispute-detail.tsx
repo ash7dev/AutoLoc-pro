@@ -27,6 +27,7 @@ export function AdminDisputeDetailView({ data }: { data: any }) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ decision }),
+        credentials: 'include',
       });
       if (!res.ok) throw new Error('Erreur de mise à jour');
       router.refresh();
