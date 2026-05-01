@@ -122,7 +122,7 @@ export function TrustSection(): React.ReactElement {
                                     </div>
 
                                     {/* Title */}
-                                    <h3 className="text-[16px] font-black tracking-tight text-white mb-2">
+                                    <h3 className="text-[20px] font-black tracking-tight text-white mb-2">
                                         {item.title}
                                     </h3>
 

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EMAIL_TEMPLATES, NotificationType } from './email-templates';
+import { NotificationsService } from '../../modules/notifications/notifications.service';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -42,6 +43,7 @@ export class NotificationService {
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly pushNotifications: NotificationsService,
   ) {
     this.resendApiKey = this.configService.get<string>('RESEND_API_KEY', '');
     this.fromEmail = this.configService.get<string>(
@@ -133,6 +135,15 @@ export class NotificationService {
       await this.sendInstantNotification(toPhone, params.type, params.data);
     }
 
+    // 4. Push notification PWA (fire-and-forget)
+    if (params.userId) {
+      const pushPayload = this.getPushPayload(params.type, params.data);
+      if (pushPayload) {
+        this.pushNotifications.sendToUser(params.userId, pushPayload)
+          .catch(err => this.logger.error(`Push notification failed for ${params.type}: ${err}`));
+      }
+    }
+
     return emailResult;
   }
 
@@ -194,6 +205,32 @@ export class NotificationService {
         body: mapping.smsText || mapping.fallbackText,
       }).catch(e => this.logger.error(`❌ SMS fallback failed: ${e}`));
     }
+  }
+
+  private getPushPayload(type: NotificationType, data: Record<string, unknown>): { title: string; body: string; url?: string } | null {
+    const resId = String(data.reservationId || '').slice(0, 8).toUpperCase();
+    const vehicule = String(data.vehicule || 'véhicule');
+    const resUrl = data.reservationId ? `/dashboard/reservations/${data.reservationId}` : undefined;
+
+    const payloads: Partial<Record<NotificationType, { title: string; body: string; url?: string }>> = {
+      'reservation.paid': { title: 'Paiement validé', body: `Paiement pour ${vehicule} (#${resId}) reçu. En attente de confirmation.`, url: resUrl },
+      'reservation.paid.owner': { title: 'Nouvelle réservation 💰', body: `${vehicule} — réservation payée (#${resId}). Confirmez-la !`, url: resUrl },
+      'reservation.confirmed': { title: 'Réservation confirmée 🎉', body: `${vehicule} (#${resId}) est confirmé. C'est parti !`, url: resUrl },
+      'reservation.cancelled': { title: 'Réservation annulée', body: `La réservation #${resId} pour ${vehicule} a été annulée.`, url: resUrl },
+      'reservation.checkin.reminder_veille': { title: 'Rappel check-in demain 📅', body: `${vehicule} (#${resId}) — le check-in est demain.`, url: resUrl },
+      'reservation.checkin.reminder_jour': { title: 'Check-in aujourd\'hui 🚗', body: `${vehicule} (#${resId}) — le check-in est aujourd\'hui.`, url: resUrl },
+      'reservation.checkin': { title: 'Location démarrée 🚗', body: `La location de ${vehicule} (#${resId}) est en cours.`, url: resUrl },
+      'reservation.checkout': { title: 'Location terminée 🏁', body: `La location de ${vehicule} (#${resId}) est terminée.`, url: resUrl },
+      'reservation.checkout.reminder': { title: 'Fin de location imminente', body: `La location de ${vehicule} (#${resId}) se termine bientôt.`, url: resUrl },
+      'kyc.verified': { title: 'Identité vérifiée ✅', body: 'Votre identité a été vérifiée. Vous pouvez louer !', url: '/dashboard/profile' },
+      'kyc.rejected': { title: 'Vérification refusée ⚠️', body: 'Votre vérification d\'identité a été refusée. Réessayez.', url: '/dashboard/profile' },
+      'wallet.credited': { title: 'Wallet crédité 💰', body: `Votre wallet a été crédité de ${data.montant} FCFA.`, url: '/dashboard/wallet' },
+      'litige.ouvert': { title: 'Litige ouvert 🚨', body: `Un litige a été ouvert sur la réservation #${resId}.`, url: resUrl },
+      'avis.request': { title: 'Laissez un avis ⭐', body: `Comment s'est passée la location de ${vehicule} ?`, url: resUrl },
+      'user.welcome': { title: 'Bienvenue sur AutoLoc 👋', body: 'Votre profil est prêt. Commencez à louer !', url: '/dashboard' },
+    };
+
+    return payloads[type] ?? null;
   }
 
   /**

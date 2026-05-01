@@ -2,10 +2,11 @@ import { Global, Module } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { PrismaModule } from '../../prisma/prisma.module';
+import { NotificationsModule } from '../../modules/notifications/notifications.module';
 
 @Global()
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, NotificationsModule],
   providers: [NotificationService, TelegramService],
   exports: [NotificationService, TelegramService],
 })

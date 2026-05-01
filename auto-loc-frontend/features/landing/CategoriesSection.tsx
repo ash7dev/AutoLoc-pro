@@ -107,7 +107,7 @@ export function CategoriesSection(): React.ReactElement {
                                             </span>
                                         </div>
 
-                                        <h2 className="text-[28px] lg:text-[34px] font-black tracking-tight text-white leading-tight mb-4 group-hover:translate-x-2 transition-transform duration-500">
+                                        <h2 className="text-[22px] lg:text-[28px] font-black tracking-tight text-white leading-tight mb-4 group-hover:translate-x-2 transition-transform duration-500">
                                             {card.title}
                                         </h2>
 
