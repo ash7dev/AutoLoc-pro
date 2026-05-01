@@ -330,7 +330,7 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
       <div className="flex flex-col flex-1 px-4 pt-3 pb-4">
 
         {/* Vehicle name */}
-        <h3 className="text-[19px] font-black text-slate-800 leading-tight tracking-tight mb-1">
+        <h3 className="text-[21px] lg:text-[23px] font-black text-slate-800 leading-tight tracking-tight mb-1">
           {vehicle.marque} <span className="text-emerald-600">{vehicle.modele}</span>
         </h3>
 
