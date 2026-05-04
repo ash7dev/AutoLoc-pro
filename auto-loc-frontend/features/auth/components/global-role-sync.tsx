@@ -59,7 +59,9 @@ export function GlobalRoleSync() {
               useRoleStore.getState().setHasVehicles(Array.isArray(data) && data.length > 0);
             }
           } else {
-            useRoleStore.getState().setHasVehicles(false);
+            // Un utilisateur peut avoir des véhicules même avec le rôle LOCATAIRE actif
+            // (il a déjà été propriétaire). On lit profile.hasVehicles au lieu de forcer false.
+            useRoleStore.getState().setHasVehicles(profile.hasVehicles ?? false);
           }
         }
       } catch {
