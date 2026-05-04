@@ -17,7 +17,7 @@ interface Props {
 export function DocumentViewButton({ vehicleId, docType, label = 'Voir' }: Props) {
   const router = useRouter();
   const { authFetch } = useAuthFetch();
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [loadingView, setLoadingView] = useState(false);
   const [docUrl, setDocUrl] = useState<string | null>(null);
@@ -27,70 +27,58 @@ export function DocumentViewButton({ vehicleId, docType, label = 'Voir' }: Props
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Titres selon le type de document
   const isCarteGrise = docType === 'carte-grise';
-  const modalTitle = isCarteGrise ? 'Carte Grise' : 'Attestation d\'assurance';
-  const modalSubtitle = isCarteGrise 
+  const modalTitle = isCarteGrise ? 'Carte Grise' : "Attestation d'assurance";
+  const modalSubtitle = isCarteGrise
     ? "Visualisez ou mettez à jour la carte grise de votre véhicule."
     : "Visualisez ou mettez à jour votre attestation d'assurance.";
 
-  // Ouvre le modal et récupère l'URL
   async function handleOpen() {
     setIsOpen(true);
-    if (docUrl) return; // Déjà chargé
+    if (docUrl) return;
 
     setLoadingView(true);
     setViewError(null);
     try {
-      // Récupère les détails du véhicule pour avoir l'URL du document
       const vehicle = await authFetch<{ carteGriseUrl?: string; assuranceDocUrl?: string }>(`/vehicles/${vehicleId}`);
       const url = isCarteGrise ? vehicle.carteGriseUrl : vehicle.assuranceDocUrl;
       setDocUrl(url || null);
-    } catch (err) {
+    } catch {
       setViewError("Impossible de charger le document.");
     } finally {
       setLoadingView(false);
     }
   }
 
-  // Déclenche l'input file caché
   function handleTriggerUpload() {
     fileInputRef.current?.click();
   }
 
-  // Gère l'upload complet
   async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    e.target.value = ""; // reset
+    e.target.value = "";
     if (!file) return;
 
     setUploading(true);
     setUploadError(null);
 
     try {
-      // 1. Demande la signature
       const sig = await authFetch<{ signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string }>(
         VEHICLE_PATHS.documentUploadSignature(vehicleId, docType),
       );
-      
-      // 2. Upload vers Cloudinary
       const { url, publicId } = await uploadDocumentToCloudinary(file, sig);
-      
-      // 3. Attache au véhicule via PATCH général
-      const body = isCarteGrise 
+      const body = isCarteGrise
         ? { carteGriseUrl: url, carteGrisePublicId: publicId }
         : { assuranceDocUrl: url, assuranceDocPublicId: publicId };
-        
-      await authFetch(`/vehicles/${vehicleId}`, { 
-        method: "PATCH", 
-        body: body as unknown as undefined 
+
+      await authFetch(`/vehicles/${vehicleId}`, {
+        method: "PATCH",
+        body: body as unknown as undefined
       });
 
-      // Succès ! On ferme, on reset, et on demande un refresh (pour MAJ la date "misAJourLe")
-      setDocUrl(null); // Force reload next time
+      setDocUrl(null);
       setIsOpen(false);
       router.refresh();
-      
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Erreur lors de la mise à jour du document.");
     } finally {
@@ -98,7 +86,6 @@ export function DocumentViewButton({ vehicleId, docType, label = 'Voir' }: Props
     }
   }
 
-  // Détection robuste du type de fichier (tenant compte des paramètres de requête Cloudinary)
   const isPdf = docUrl?.toLowerCase().split('?')[0].endsWith('.pdf');
 
   return (
@@ -119,182 +106,181 @@ export function DocumentViewButton({ vehicleId, docType, label = 'Voir' }: Props
           subtitle={modalSubtitle}
           tag="Auto Loc · Propriétaire"
           onClose={() => setIsOpen(false)}
-          contentClassName="p-6 overflow-y-auto max-h-[85vh] w-full max-w-2xl"
+          contentClassName="px-4 pt-4 pb-6 sm:px-6 sm:pt-5 sm:pb-6 overflow-y-auto space-y-4"
         >
           {loadingView ? (
-            <div className="flex flex-col items-center justify-center py-20">
+            <div className="flex flex-col items-center justify-center py-16">
               <div className="relative">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 animate-spin text-emerald-600" strokeWidth={2} />
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 flex items-center justify-center">
+                  <Loader2 className="w-7 h-7 animate-spin text-emerald-600" strokeWidth={2} />
                 </div>
                 <div className="absolute -inset-2 rounded-2xl bg-emerald-400/10 animate-pulse" />
               </div>
-              <p className="mt-6 text-sm font-medium text-slate-600">Vérification sécurisée du document...</p>
-              <p className="text-xs text-slate-400 mt-1">Un instant, nous protégeons vos données</p>
+              <p className="mt-5 text-sm font-medium text-slate-600">Chargement sécurisé…</p>
             </div>
+
           ) : viewError ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
-                <AlertCircle className="w-8 h-8 text-red-500" strokeWidth={2} />
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
+                <AlertCircle className="w-7 h-7 text-red-500" strokeWidth={2} />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Impossible de charger le document</h3>
-              <p className="text-sm text-slate-600 max-w-md">{viewError}</p>
+              <h3 className="text-base font-semibold text-slate-900 mb-1">Impossible de charger</h3>
+              <p className="text-sm text-slate-500">{viewError}</p>
               <button
                 type="button"
                 onClick={handleOpen}
-                className="mt-4 px-4 py-2 text-sm font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+                className="mt-4 px-4 py-2 text-sm font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-colors"
               >
                 Réessayer
               </button>
             </div>
+
           ) : docUrl ? (
-            <div className="space-y-8">
-              
-              {/* Header avec informations */}
-              <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-2xl p-6 border border-slate-200">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-white shadow-sm border border-slate-200 flex items-center justify-center">
-                      {isPdf ? (
-                        <FileText className="w-6 h-6 text-slate-600" strokeWidth={2} />
-                      ) : (
-                        <ImageIcon className="w-6 h-6 text-slate-600" strokeWidth={2} />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-base font-semibold text-slate-900">{modalTitle}</h3>
-                      <p className="text-sm text-slate-500 mt-0.5">
-                        {isPdf ? 'Document PDF' : 'Document image'}
-                      </p>
-                    </div>
+            <>
+              {/* Barre d'actions rapides — bien visible sur mobile */}
+              <div className="flex items-center justify-between gap-3 px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                    {isPdf
+                      ? <FileText className="w-4 h-4 text-slate-500" strokeWidth={2} />
+                      : <ImageIcon className="w-4 h-4 text-slate-500" strokeWidth={2} />
+                    }
                   </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500" strokeWidth={2} />
-                    <span className="text-sm font-medium text-emerald-600">Document valide</span>
+                  <div>
+                    <p className="text-[12px] font-semibold text-slate-800 leading-tight">{modalTitle}</p>
+                    <p className="text-[11px] text-slate-400">{isPdf ? 'PDF' : 'Image'}</p>
                   </div>
                 </div>
-              </div>
-              
-              {/* Document viewer */}
-              <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-lg">
-                <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" strokeWidth={2.5} />
                   <a
                     href={docUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-2 px-3 py-2 bg-white/95 backdrop-blur-sm border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[12px] font-semibold text-slate-700 hover:bg-slate-50 transition-all shadow-sm"
                   >
-                    <ExternalLink className="w-4 h-4" strokeWidth={2} />
+                    <ExternalLink className="w-3.5 h-3.5" strokeWidth={2.5} />
                     Ouvrir
                   </a>
                 </div>
-                {isPdf ? (
-                  <iframe 
-                    src={docUrl} 
-                    className="w-full h-[600px] border-none bg-white"
-                    title={modalTitle}
-                  />
-                ) : (
+              </div>
+
+              {/* Document viewer */}
+              {isPdf ? (
+                <>
+                  {/* Mobile : pas d'iframe — carte d'action */}
+                  <div className="sm:hidden flex flex-col items-center gap-3 py-6 px-4 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+                    <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center">
+                      <FileText className="w-7 h-7 text-slate-400" strokeWidth={1.5} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">Document PDF</p>
+                      <p className="text-[12px] text-slate-500 mt-0.5">Les PDF ne s'affichent pas dans le modal sur mobile.</p>
+                    </div>
+                    <a
+                      href={docUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
+                    >
+                      <ExternalLink className="w-4 h-4" strokeWidth={2.5} />
+                      Ouvrir le PDF
+                    </a>
+                  </div>
+                  {/* Desktop : iframe */}
+                  <div className="hidden sm:block rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
+                    <iframe
+                      src={docUrl}
+                      className="w-full h-[500px] border-none"
+                      title={modalTitle}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 shadow-sm">
                   <img
                     src={docUrl}
                     alt={modalTitle}
-                    className="w-full object-contain max-h-[700px] bg-white"
+                    className="w-full object-contain max-h-[45vh] sm:max-h-[400px]"
                   />
-                )}
-              </div>
-              
-              {/* Mobile PDF Warning */}
-              {isPdf && (
-                <div className="sm:hidden -mt-4 p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3">
-                  <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-amber-700 leading-relaxed">
-                    Sur mobile, le PDF peut ne pas s'afficher directement. Utilisez le bouton <strong>"Ouvrir"</strong> ci-dessus pour le visualiser.
-                  </p>
                 </div>
               )}
 
-              {/* Upload section */}
+              {/* Upload */}
               {uploading ? (
-                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-8 border border-slate-200">
-                  <div className="flex flex-col items-center justify-center text-center">
-                    <div className="relative mb-4">
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-500 flex items-center justify-center">
-                        <Upload className="w-6 h-6 text-white animate-bounce" strokeWidth={2} />
-                      </div>
-                      <div className="absolute -inset-1 rounded-full bg-emerald-400/20 animate-ping" />
+                <div className="flex items-center gap-3 px-4 py-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center">
+                      <Upload className="w-4 h-4 text-white animate-bounce" strokeWidth={2} />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-900 mb-2">Mise à jour en cours</h3>
-                    <p className="text-sm text-slate-600 max-w-sm">Votre document est en cours de traitement. Ne fermez pas cette page.</p>
+                    <div className="absolute -inset-1 rounded-full bg-emerald-400/20 animate-ping" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Mise à jour en cours…</p>
+                    <p className="text-[12px] text-slate-500">Ne fermez pas cette page</p>
                   </div>
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200">
-                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-white shadow-sm border border-emerald-200 flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-6 h-6 text-emerald-600" strokeWidth={2} />
-                      </div>
-                      <div>
-                        <h4 className="text-base font-semibold text-slate-900 mb-1">Mettre à jour le document</h4>
-                        <p className="text-sm text-slate-600">Téléversez une nouvelle version pour remplacer l'actuelle</p>
-                        {uploadError && (
-                          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-xs font-medium text-red-600">{uploadError}</p>
-                          </div>
-                        )}
-                      </div>
+                <div className="bg-gradient-to-r from-emerald-50 to-emerald-100/60 rounded-2xl p-4 border border-emerald-200/60">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-xl bg-white shadow-sm border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-4 h-4 text-emerald-600" strokeWidth={2} />
                     </div>
-                    
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      className="hidden"
-                      accept="image/jpeg,image/png,image/webp,application/pdf"
-                      onChange={handleFileSelected}
-                    />
-                    
-                    <Button 
-                      onClick={handleTriggerUpload}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-lg hover:shadow-xl hover:-translate-y-px transition-all duration-200"
-                      size="lg"
-                    >
-                      <Upload className="w-4 h-4 mr-2" strokeWidth={2} />
-                      Choisir un fichier
-                    </Button>
+                    <div>
+                      <p className="text-[13px] font-semibold text-slate-900">Mettre à jour le document</p>
+                      <p className="text-[12px] text-slate-500">Téléversez une nouvelle version pour remplacer l'actuelle</p>
+                      {uploadError && (
+                        <p className="mt-1 text-[11px] font-medium text-red-600">{uploadError}</p>
+                      )}
+                    </div>
                   </div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                    onChange={handleFileSelected}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleTriggerUpload}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-[13px] font-semibold rounded-xl transition-colors shadow-md"
+                  >
+                    <Upload className="w-4 h-4" strokeWidth={2} />
+                    Choisir un fichier
+                  </button>
                 </div>
               )}
-            </div>
+            </>
+
           ) : (
-            <div className="space-y-8">
-              {/* État vide élégant */}
-              <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
-                <div className="w-20 h-20 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center mb-6 relative">
+            /* État vide */
+            <>
+              <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-slate-100 flex items-center justify-center mb-4 relative">
                   <div className="absolute inset-0 bg-emerald-500/5 rounded-2xl animate-pulse" />
-                  <FileText className="w-10 h-10 text-slate-300" strokeWidth={1.5} />
+                  <FileText className="w-8 h-8 text-slate-300" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Document manquant</h3>
-                <p className="text-sm text-slate-500 max-w-sm mx-auto mb-8">
-                  Aucun fichier n'a encore été associé à cette section. Veuillez téléverser un document pour continuer.
+                <h3 className="text-base font-bold text-slate-900 mb-1">Document manquant</h3>
+                <p className="text-[12.5px] text-slate-500 max-w-[220px] mx-auto mb-5">
+                  Aucun fichier n'a encore été associé. Téléversez-en un pour continuer.
                 </p>
-                
-                {/* Upload section intégrée directement pour l'état vide */}
                 {uploading ? (
-                  <div className="flex flex-col items-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mb-2" />
-                    <span className="text-sm font-medium text-slate-600">Envoi du document...</span>
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                    Envoi en cours…
                   </div>
                 ) : (
-                  <Button 
+                  <button
+                    type="button"
                     onClick={handleTriggerUpload}
-                    className="bg-emerald-600 hover:bg-emerald-700 h-12 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all"
+                    className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md"
                   >
-                    <Upload className="w-4 h-4 mr-2" strokeWidth={2.2} />
+                    <Upload className="w-4 h-4" strokeWidth={2.2} />
                     Ajouter le document
-                  </Button>
+                  </button>
                 )}
               </div>
-              
               <input
                 type="file"
                 ref={fileInputRef}
@@ -302,7 +288,7 @@ export function DocumentViewButton({ vehicleId, docType, label = 'Voir' }: Props
                 accept="image/jpeg,image/png,image/webp,application/pdf"
                 onChange={handleFileSelected}
               />
-            </div>
+            </>
           )}
         </ModalShell>
       )}
