@@ -32,6 +32,7 @@ import type { UserProfile } from '@/lib/nestjs/auth';
 import { updateUserProfile } from '@/lib/nestjs/auth';
 import { useSwitchToLocataire } from '@/features/owner/hooks/use-switch-to-locataire';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
+import { PhoneEditModal } from './phone-edit-modal';
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 
@@ -401,6 +402,7 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
     );
     const [globalError, setGlobalError] = useState('');
     const [showKycAlert, setShowKycAlert] = useState(false);
+    const [phoneEditOpen, setPhoneEditOpen] = useState(false);
     const { switchToLocataire, loading: switching } = useSwitchToLocataire();
     const router = useRouter();
 
@@ -623,15 +625,26 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                     icon={Phone}
                     badge={phoneBadge}
                     action={
-                        !profile.phoneVerified ? (
-                            <Link
-                                href="/dashboard/owner/kyc"
-                                className="flex items-center gap-1 text-[12px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-2.5 py-1.5 rounded-lg transition-colors"
+                        <div className="flex items-center gap-1.5">
+                            {!profile.phoneVerified && (
+                                <button
+                                    type="button"
+                                    onClick={() => setPhoneEditOpen(true)}
+                                    className="flex items-center gap-1 text-[12px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-2.5 py-1.5 rounded-lg transition-colors"
+                                >
+                                    Vérifier
+                                    <ChevronRight className="w-3 h-3" />
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => setPhoneEditOpen(true)}
+                                className="flex items-center gap-1.5 text-[12px] font-bold text-black/40 hover:text-black bg-black/[0.04] hover:bg-black/[0.08] px-2.5 py-1.5 rounded-lg transition-colors"
                             >
-                                Vérifier
-                                <ChevronRight className="w-3 h-3" />
-                            </Link>
-                        ) : undefined
+                                <Pencil className="w-3 h-3" strokeWidth={2.5} />
+                                <span className="hidden sm:inline">Modifier</span>
+                            </button>
+                        </div>
                     }
                 />
             </Section>
@@ -755,6 +768,15 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* ── Modal modification / vérification du téléphone ── */}
+            {phoneEditOpen && (
+                <PhoneEditModal
+                    currentPhone={profile.telephone ?? ''}
+                    onClose={() => setPhoneEditOpen(false)}
+                    onSuccess={() => { setPhoneEditOpen(false); router.refresh(); }}
+                />
+            )}
 
         </div>
     );

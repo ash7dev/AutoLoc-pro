@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { fetchUserProfile, updateUserProfile, type UserProfile } from '@/lib/nestjs/auth';
 import { useSwitchToProprietaire } from '@/features/owner/hooks/use-switch-to-proprietaire';
 import { Button } from '@/components/ui/button';
+import { PhoneEditModal } from '@/features/dashboard/components/phone-edit-modal';
 
 interface TenantSettingsProps {
   profile?: UserProfile | null;
@@ -37,6 +38,8 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
   const [loading, setLoading] = useState(!initialProfile);
   const [saving, setSaving] = useState(false);
   const [errorSync, setErrorSync] = useState<string | null>(null);
+
+  const [phoneEditOpen, setPhoneEditOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: initialProfile?.prenom || '',
@@ -339,11 +342,56 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
             </div>
           </div>
           
-          <div className="pt-2">
-            <p className="text-xs text-slate-400 text-center sm:text-left">Le numéro de téléphone est géré au moment de la vérification OTP dans le processus de création de compte.</p>
+          {/* TÉLÉPHONE */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Numéro de téléphone
+            </label>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={formData.phone || 'Non renseigné'}
+                  readOnly
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-700 text-sm sm:text-base cursor-default"
+                />
+              </div>
+              {profile?.phoneVerified ? (
+                <span className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-700">
+                  <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2.5} />
+                  Vérifié
+                </span>
+              ) : (
+                <span className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] font-bold text-amber-700">
+                  Non vérifié
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => setPhoneEditOpen(true)}
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-[12px] font-bold text-blue-700 transition-colors"
+              >
+                <Edit3 className="w-3.5 h-3.5" strokeWidth={2.5} />
+                <span className="hidden sm:inline">Modifier</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {phoneEditOpen && (
+        <PhoneEditModal
+          currentPhone={formData.phone}
+          onClose={() => setPhoneEditOpen(false)}
+          onSuccess={() => {
+            setPhoneEditOpen(false);
+            // Recharge le profil pour refléter le nouveau numéro + phoneVerified
+            fetchUserProfile().then(p => {
+              setProfile(p);
+            }).catch(() => {});
+          }}
+        />
+      )}
     </div>
   );
 
