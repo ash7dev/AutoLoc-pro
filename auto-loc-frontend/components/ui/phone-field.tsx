@@ -165,14 +165,15 @@ export function PhoneField({
 }: PhoneFieldProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [country, setCountry] = useState<Country>(() => {
-    // Détecte le pays depuis une valeur déjà formatée (+xxx...)
+    if (!value) return FEATURED_COUNTRIES[0];
     for (const c of ALL_COUNTRIES) {
       if (value.startsWith(c.dial)) return c;
     }
-    return FEATURED_COUNTRIES[0]; // Sénégal par défaut
+    return FEATURED_COUNTRIES[0];
   });
 
   const [number, setNumber] = useState(() => {
+    if (!value) return '';
     for (const c of ALL_COUNTRIES) {
       if (value.startsWith(c.dial)) return value.slice(c.dial.length).replace(/^0/, '');
     }
