@@ -7,7 +7,7 @@ import { ApiError } from "@/lib/nestjs/api-client";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import type { ProfileResponse } from "@/lib/nestjs/auth";
 import { cn } from "@/lib/utils";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { PhoneField } from "@/components/ui/phone-field";
 
 type Stage = "intro" | "otp" | "success";
 
@@ -316,7 +316,7 @@ export function PhoneVerifyGate({
 
       {/* Téléphone */}
       <Field label="Numéro de téléphone" required>
-        <PhoneInput
+        <PhoneField
           value={phone}
           onChange={v => { setPhone(v); setError(null); }}
           disabled={loading}

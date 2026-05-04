@@ -14,7 +14,7 @@ import { apiFetch } from "@/lib/nestjs/api-client";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { DateInput } from "@/features/shared/DateInput";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { PhoneField } from "@/components/ui/phone-field";
 
 /* ── Types ───────────────────────────────────────────────── */
 type Gate = "phone" | "kyc" | "permis" | "age" | "age_phone" | "create_profile" | "ready";
@@ -469,7 +469,7 @@ function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, 
 
       <div className="space-y-1.5">
         <label className="block text-[12px] font-bold text-slate-700 ml-1">Téléphone *</label>
-        <PhoneInput
+        <PhoneField
           value={form.phone}
           onChange={v => setForm(p => ({ ...p, phone: v }))}
           disabled={loading}
@@ -555,7 +555,7 @@ function AgePhoneGate({ ageMinimum, onComplete }: { ageMinimum: number; onComple
         <label className="block text-[12px] font-bold text-slate-700 ml-1">
           Numéro de téléphone *
         </label>
-        <PhoneInput
+        <PhoneField
           value={phone}
           onChange={v => setPhone(v)}
           disabled={loading}

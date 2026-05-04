@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Eye, EyeOff, ArrowRight, CheckCircle, Loader2, Phone, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, CheckCircle, Loader2, Phone, Mail, Lock, ChevronLeft } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, RegisterInput } from '../schema';
@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { checkAvailability } from '@/lib/nestjs/auth';
 import { useAuthFlow } from '../../hooks/use-auth-flow';
 import { Controller } from 'react-hook-form';
-import { PhoneInput } from '@/components/ui/phone-input';
+import { PhoneField } from '@/components/ui/phone-field';
 
 // ─── Calcul de la force du mot de passe ───────────────────────────────────────
 function getPasswordStrength(password: string): number {
@@ -122,6 +122,15 @@ export function RegisterForm() {
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
+
+      {/* Retour mobile */}
+      <button
+        type="button"
+        onClick={() => router.back()}
+        className="fixed top-4 left-4 z-50 lg:hidden w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm flex items-center justify-center text-gray-600 active:scale-95 transition-transform"
+      >
+        <ChevronLeft className="w-5 h-5" strokeWidth={2.5} />
+      </button>
 
       <div className="relative z-10 flex min-h-screen">
 
@@ -270,7 +279,7 @@ export function RegisterForm() {
                   name="telephone"
                   control={control}
                   render={({ field }) => (
-                    <PhoneInput
+                    <PhoneField
                       value={field.value}
                       onChange={field.onChange}
                       disabled={isLoading}

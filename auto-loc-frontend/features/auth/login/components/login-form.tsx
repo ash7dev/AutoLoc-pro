@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import Image from 'next/image';
-import { Eye, EyeOff, Loader2, Mail, Lock, Phone, ArrowRight, Shield, Clock, Star, Users } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, Lock, Phone, ArrowRight, Shield, Clock, Star, Users, ChevronLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthFlow } from '../../hooks/use-auth-flow';
 import { useLogin } from '../hooks/use-login';
 import { useLoginOtp } from '../hooks/use-login-otp';
 import { useOAuth } from '../hooks/use-oauth';
 import { LogoLoader } from '@/components/ui/logo-loader';
-import { PhoneInput } from '@/components/ui/phone-input';
+import { PhoneField } from '@/components/ui/phone-field';
 
 export default function LoginAutoLoc() {
   const [email, setEmail] = useState('');
@@ -138,6 +138,15 @@ export default function LoginAutoLoc() {
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
+
+      {/* Retour mobile */}
+      <button
+        type="button"
+        onClick={() => router.back()}
+        className="fixed top-4 left-4 z-50 lg:hidden w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm flex items-center justify-center text-gray-600 active:scale-95 transition-transform"
+      >
+        <ChevronLeft className="w-5 h-5" strokeWidth={2.5} />
+      </button>
 
       <div className="relative z-10 flex min-h-screen">
 
@@ -300,7 +309,7 @@ export default function LoginAutoLoc() {
             {activeTab === 'phone' && (
               <form onSubmit={handlePhoneLogin} className="space-y-4">
                 <div>
-                  <PhoneInput
+                  <PhoneField
                     value={phone}
                     onChange={(v) => setPhone(v)}
                     disabled={isLoading || isRedirecting}
