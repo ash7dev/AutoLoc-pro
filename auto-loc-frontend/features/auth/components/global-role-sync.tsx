@@ -22,7 +22,30 @@ export function GlobalRoleSync() {
 
     const syncAll = async (session: Session | null, isRetry = false) => {
       if (!session?.access_token) {
+        // No Supabase session — but phone-native login uses NestJS cookies only.
+        // Try the NestJS cookie before clearing the profile.
+        try {
+          const res = await fetch('/api/nest/auth/me', { credentials: 'include' });
+          if (res.ok) {
+            const profile = await res.json() as ProfileResponse;
+            useProfileStore.getState().setProfile(profile);
+            if (profile.role === 'PROPRIETAIRE') {
+              const vehiclesRes = await fetch('/api/nest/vehicles/me', { credentials: 'include' });
+              if (vehiclesRes.ok) {
+                const data = await vehiclesRes.json() as unknown[];
+                useRoleStore.getState().setHasVehicles(Array.isArray(data) && data.length > 0);
+              }
+            } else {
+              useRoleStore.getState().setHasVehicles(profile.hasVehicles ?? false);
+            }
+            return;
+          }
+        } catch {
+          // ignore network errors
+        }
+        // No NestJS session either — clear everything
         useProfileStore.getState().clearProfile();
+        useRoleStore.getState().clearRole();
         return;
       }
 

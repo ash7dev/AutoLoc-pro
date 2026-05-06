@@ -295,20 +295,36 @@ export function MarketplaceNavbar() {
   useEffect(() => {
     let active = true;
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (!active) return;
-      const isLoggedIn = Boolean(data.session?.access_token);
+      let isLoggedIn = Boolean(data.session?.access_token);
+
+      // Phone-native login has no Supabase session — check NestJS cookie as fallback
+      if (!isLoggedIn) {
+        const nestActive = Boolean(useRoleStore.getState().activeRole);
+        if (nestActive) {
+          // Verify the cookie is still valid
+          try {
+            const res = await fetch('/api/nest/auth/me', { credentials: 'include' });
+            isLoggedIn = res.ok;
+            if (!res.ok) useRoleStore.getState().clearRole();
+          } catch {
+            isLoggedIn = false;
+          }
+        }
+      }
+
+      if (!active) return;
       setLoggedIn(isLoggedIn);
       setHydrated(true);
-      // eslint-disable-next-line no-console
-      console.log('[Navbar] Session checked:', { isLoggedIn, hasToken: !!data.session?.access_token });
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       const isLoggedIn = Boolean(session?.access_token);
-      setLoggedIn(isLoggedIn);
-      // eslint-disable-next-line no-console
-      console.log('[Navbar] Auth state changed:', { isLoggedIn, hasToken: !!session?.access_token });
+      // Only update from Supabase events; phone-login state is set above
+      if (session !== null || !useRoleStore.getState().activeRole) {
+        setLoggedIn(isLoggedIn);
+      }
     });
 
     const onScroll = () => {
