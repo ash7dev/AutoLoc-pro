@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { createHash, randomUUID, timingSafeEqual } from 'crypto';
 import { CloudinaryService } from '../../infrastructure/cloudinary/cloudinary.service';
 import { assertValidImageBuffer } from '../../infrastructure/cloudinary/utils/file-validator';
@@ -325,13 +325,10 @@ export class AuthService {
     const key = this.getOtpKey(user.sub);
     await this.redisService.set(key, code, OTP_TTL_SECONDS);
 
-    // Fire-and-forget — le code est déjà en Redis, on n'attend pas Twilio
-    this.notification.send({
-      type: "verification.code",
-      userId: user.sub,
-      phone: telephone,
-      data: { code },
-    }).catch(err => console.error(`[Auth] Failed to send OTP to ${telephone}: ${err}`));
+    // Fire-and-forget — phone only (WhatsApp + SMS fallback).
+    // Intentionally NOT calling notification.send() to avoid leaking the OTP by email.
+    this.notification.sendInstantNotification(telephone, "verification.code", { code })
+      .catch(err => console.error(`[Auth] Failed to send OTP to ${telephone}: ${err}`));
 
     return { expiresIn: OTP_COOLDOWN_SECONDS };
   }
@@ -372,41 +369,14 @@ export class AuthService {
     const key = `${PHONE_LOGIN_OTP_PREFIX}${phone}`;
     await this.redisService.set(key, code, OTP_TTL_SECONDS);
 
-    // 5. Envoi OTP sur les deux canaux. Un accusé Twilio "accepted" n'est pas une livraison réelle.
-    const otpMessage = `🔐 AutoLoc — Votre code de connexion est : ${code}\n\nCe code expire dans 5 minutes. Ne le partagez avec personne.`;
-    let whatsappAccepted = false;
-    let smsAccepted = false;
-
-    try {
-      await this.notification.sendWhatsApp({
-        to: phone,
-        contentSid: 'HX4adc3c841559018e04cdd9a2e5ccfcf5', // Utilisation du template approuvé
-        contentVariables: { '1': code },
-        body: otpMessage,
+    // 5. Envoi OTP via canal unifié (WhatsApp avec fallback SMS)
+    // On utilise auth.login_otp qui a un template Twilio dédié
+    await this.notification.sendInstantNotification(phone, 'auth.login_otp', { otp: code })
+      .catch((err) => {
+        console.error(`[Auth] Phone login OTP delivery failed for ${phone}`, err);
+        // On ne crash pas ici si au moins le code est stocké, 
+        // mais l'utilisateur ne le recevra probablement pas.
       });
-      whatsappAccepted = true;
-      console.log(`[Auth] Phone login OTP accepted via WhatsApp (template) for ${phone}`);
-    } catch (error) {
-      console.error('[Auth] Phone login WhatsApp request failed', { phone, error });
-    }
-
-    try {
-      await this.notification.sendSms({
-        to: phone,
-        body: `AutoLoc - Votre code de connexion : ${code} (expire dans 5 min)`,
-      });
-      smsAccepted = true;
-      console.log(`[Auth] Phone login OTP accepted via SMS for ${phone}`);
-    } catch (error) {
-      console.error('[Auth] Phone login SMS request failed', { phone, error });
-    }
-
-    if (!whatsappAccepted && !smsAccepted) {
-      await this.redisService.del(key);
-      await this.redisService.del(cooldownKey);
-      console.error(`[Auth] Phone login OTP delivery failed for ${phone}`);
-      throw new InternalServerErrorException('Impossible d’envoyer le code de connexion pour le moment. Réessayez plus tard.');
-    }
 
     return { expiresIn: OTP_TTL_SECONDS };
   }

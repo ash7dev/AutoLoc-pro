@@ -119,7 +119,7 @@ export class ReservationExpiryProcessor {
 
   @Process(RESERVATION_CHECKIN_REMINDER_JOB)
   async handleCheckinReminder(
-    job: Job<{ reservationId: string; forcedType?: 'jour' }>,
+    job: Job<{ reservationId: string; forcedType?: 'jour' | 'urgent' }>,
   ): Promise<void> {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: job.data.reservationId },
@@ -130,6 +130,8 @@ export class ReservationExpiryProcessor {
         dateFin: true,
         locataireId: true,
         proprietaireId: true,
+        checkinProprietaireLe: true,
+        checkinLocataireLe: true,
         locataire: { select: { email: true, telephone: true } },
         proprietaire: { select: { email: true, telephone: true } },
         vehicule: { select: { marque: true, modele: true } },
@@ -137,31 +139,24 @@ export class ReservationExpiryProcessor {
     });
 
     if (!reservation) return;
+    if (reservation.statut !== StatutReservation.CONFIRMEE) return;
 
-    const startDate = new Date(reservation.dateDebut);
     let notifType: NotificationType;
     let systemTag: string;
 
-    if (job.data.forcedType === 'jour') {
-      // Réservation qui commence aujourd'hui — confirmée le jour même
-      if (reservation.statut !== StatutReservation.CONFIRMEE) return;
+    if (job.data.forcedType === 'urgent') {
+      // T+2h sans check-in — message "retard" distinct du rappel jour J
+      if (reservation.checkinProprietaireLe || reservation.checkinLocataireLe) return;
+      notifType = 'reservation.checkin.reminder_urgent';
+      systemTag = 'SYSTEM_CHECKIN_URGENT';
+    } else if (job.data.forcedType === 'jour') {
+      // Matin du jour J (9h UTC) ou même-jour immédiat
       notifType = 'reservation.checkin.reminder_jour';
-      systemTag = 'SYSTEM_CHECKIN_JOUR_IMMEDIAT';
+      systemTag = 'SYSTEM_CHECKIN_JOUR';
     } else {
-      // Déterminer si c'est le rappel J-1 ou l'alerte urgente J+2h
-      const diffHours = (Date.now() - startDate.getTime()) / (1000 * 60 * 60);
-
-      if (diffHours >= 2) {
-        // Plus de 2h de retard sur le début prévu
-        if (reservation.statut !== StatutReservation.CONFIRMEE) return;
-        notifType = 'reservation.checkin.reminder_jour';
-        systemTag = 'SYSTEM_CHECKIN_URGENT';
-      } else {
-        // Rappel normal la veille
-        if (reservation.statut !== StatutReservation.CONFIRMEE && reservation.statut !== StatutReservation.PAYEE) return;
-        notifType = 'reservation.checkin.reminder_veille';
-        systemTag = 'SYSTEM_CHECKIN_VEILLE';
-      }
+      // Veille (9h UTC J-1) — pas de forcedType
+      notifType = 'reservation.checkin.reminder_veille';
+      systemTag = 'SYSTEM_CHECKIN_VEILLE';
     }
 
     if (await this.wasReminderSent(reservation.id, systemTag)) return;
@@ -175,7 +170,7 @@ export class ReservationExpiryProcessor {
       return d.getUTCHours() === 0 && d.getUTCMinutes() === 0 ? label : `${label} à ${h}h${m}`;
     };
 
-    const dateHeure = formatDateHeure(startDate);
+    const dateHeure = formatDateHeure(new Date(reservation.dateDebut));
     const dateFinHeure = formatDateHeure(new Date(reservation.dateFin));
 
     // Envoi aux deux parties via le service central

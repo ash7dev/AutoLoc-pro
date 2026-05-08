@@ -13,6 +13,7 @@ export type NotificationType =
   | 'reservation.checkin.tenant_confirmed'
   | 'reservation.checkin.reminder_veille'
   | 'reservation.checkin.reminder_jour'
+  | 'reservation.checkin.reminder_urgent'
   | 'reservation.checkin.tacit_window'
   | 'reservation.checkin.tacit_applied'
   | 'reservation.checkout'
@@ -26,7 +27,11 @@ export type NotificationType =
   | 'litige.resolu'
   | 'user.welcome'
   | 'wallet.credited'
-  | 'auth.login_otp';
+  | 'auth.login_otp'
+  | 'user.status_changed'
+  | 'vehicle.validated'
+  | 'vehicle.suspended'
+  | 'vehicle.featured';
 
 interface TemplateConfig {
   subject: string;
@@ -537,6 +542,25 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
     }),
   },
 
+  // ── Rappel check-in urgent (T+2h sans check-in) ──────────────────────────────
+  'reservation.checkin.reminder_urgent': {
+    subject: '⏰ Check-in en retard — Agissez avant minuit',
+    body: (data) => baseLayout({
+      title: 'Le check-in n\'a pas été effectué',
+      subtitle: 'La location aurait dû commencer. Agissez avant minuit.',
+      badge: { text: 'Retard check-in', color: '#991b1b', bg: '#fef2f2' },
+      accentColor: '#ef4444',
+      cta: { label: 'Faire le check-in maintenant →', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
+      content: [
+        infoCard([
+          { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
+          { label: 'Délai limite', value: 'Ce soir avant minuit', icon: '⏰' },
+        ]),
+        alertBox('⚠️ Sans check-in avant minuit, la réservation sera <strong>annulée automatiquement</strong> et le paiement remboursé. Agissez maintenant.', 'error'),
+      ].join(''),
+    }),
+  },
+
   // ── Check-out ─────────────────────────────────────────────────────────────────
   'reservation.checkout': {
     subject: '🏁 Location terminée — Votre avis compte',
@@ -661,7 +685,6 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
       ].join(''),
     }),
   },
-
   // ── Wallet crédité ───────────────────────────────────────────────────────────
   'wallet.credited': {
     subject: '💰 Votre argent est disponible — Retirez quand vous voulez',
@@ -743,6 +766,66 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
           { label: 'Code OTP', value: String(data.otp ?? data.code ?? ''), icon: '🔑' },
         ]),
         alertBox('Ce code est strictement personnel. Ne le communiquez jamais.', 'warning'),
+      ].join(''),
+    }),
+  },
+
+  'user.status_changed': {
+    subject: '🔔 Mise à jour de votre compte AutoLoc',
+    body: (data) => baseLayout({
+      title: 'Statut de votre compte',
+      subtitle: 'Une modification a été apportée à votre accès.',
+      badge: { text: 'Information', color: '#111827', bg: '#f3f4f6' },
+      content: [
+        p(`Bonjour${data.prenom ? ` ${data.prenom}` : ''},`),
+        p(`Votre compte AutoLoc a été <strong>${data.statusText}</strong>.`),
+        data.untilText ? p(`Cette mesure est effective <strong>${data.untilText}</strong>.`) : '',
+        data.raison ? alertBox(`Raison : ${data.raison}`, 'info') : '',
+        p('Pour toute question, contactez notre support.'),
+      ].join(''),
+    }),
+  },
+
+  'vehicle.validated': {
+    subject: '🎉 Votre véhicule est en ligne !',
+    body: (data) => baseLayout({
+      title: 'Véhicule validé',
+      subtitle: 'Votre annonce est maintenant visible par tous.',
+      badge: { text: 'En ligne', color: EMERALD_DARK, bg: EMERALD_BG },
+      content: [
+        p(`Bonjour${data.prenom ? ` ${data.prenom}` : ''},`),
+        p(`Bonne nouvelle ! Votre véhicule <strong>${data.vehicule}</strong> a été validé par notre équipe.`),
+        p('Il est maintenant disponible à la location sur AutoLoc.'),
+        alertBox('Pensez à garder votre calendrier à jour pour éviter les annulations.', 'info'),
+      ].join(''),
+    }),
+  },
+
+  'vehicle.suspended': {
+    subject: '⚠️ Votre annonce a été suspendue',
+    body: (data) => baseLayout({
+      title: 'Annonce suspendue',
+      subtitle: 'Votre véhicule n\'est plus visible temporairement.',
+      badge: { text: 'Suspendu', color: '#991b1b', bg: '#fef2f2' },
+      content: [
+        p(`Bonjour${data.prenom ? ` ${data.prenom}` : ''},`),
+        p(`Votre véhicule <strong>${data.vehicule}</strong> a été suspendu sur AutoLoc.`),
+        data.raison ? alertBox(`Raison : ${data.raison}`, 'warning') : '',
+        p('Contactez notre support pour plus d\'informations.'),
+      ].join(''),
+    }),
+  },
+
+  'vehicle.featured': {
+    subject: '🌟 Votre véhicule est mis en avant !',
+    body: (data) => baseLayout({
+      title: 'Mise en avant activée',
+      subtitle: 'Boostez vos réservations avec une visibilité prioritaire.',
+      badge: { text: 'Premium', color: '#92400e', bg: '#fffbeb' },
+      content: [
+        p(`Bonjour${data.prenom ? ` ${data.prenom}` : ''},`),
+        p(`Félicitations ! Votre véhicule <strong>${data.vehicule}</strong> est maintenant mis en avant sur AutoLoc.`),
+        p('Il apparaîtra en priorité dans les résultats de recherche.'),
       ].join(''),
     }),
   },

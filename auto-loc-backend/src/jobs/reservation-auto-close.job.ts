@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { StatutReservation } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueueService } from '../infrastructure/queue/queue.service';
+import { NotificationService } from '../infrastructure/notifications/notification.service';
 import { TacitCheckinUseCase } from '../domain/reservation/use-cases/tacit-checkin.use-case';
 import { isPastCheckoutInspectionWindow } from '../domain/reservation/reservation-checkin.constants';
 
@@ -12,6 +13,11 @@ import { isPastCheckoutInspectionWindow } from '../domain/reservation/reservatio
  * Business rule: if a reservation is CONFIRMEE and dateDebut was ≥5h ago
  * without any check-in from either party, the reservation is auto-cancelled
  * to protect both parties from no-shows.
+ *
+ * NOTE (F2): Les crons handleCheckinReminderVeille (13h UTC) et handleCheckinReminderJourJ (22h UTC)
+ * ont été supprimés. Ils dupliquaient les rappels déjà programmés par scheduleCheckinReminder()
+ * (appelé depuis confirm-reservation.use-case.ts) SANS déduplication, causant des doublons.
+ * Le système de queue gère correctement : T-24h (veille), T+0 (jour express), T+2h (no-show urgent).
  */
 @Injectable()
 export class ReservationAutoCloseJob {
@@ -20,6 +26,7 @@ export class ReservationAutoCloseJob {
     constructor(
         private readonly prisma: PrismaService,
         private readonly queue: QueueService,
+        private readonly notification: NotificationService,
         private readonly tacitCheckinUseCase: TacitCheckinUseCase,
     ) { }
 
@@ -64,135 +71,13 @@ export class ReservationAutoCloseJob {
                     },
                 });
                 this.logger.log(`Reservation ${r.id} auto-cancelled (dateDebut was ${r.dateDebut.toISOString()})`);
+
+                // F5: Notifier les deux parties de l'annulation automatique
+                await this.notifyAutoCancel(r.id).catch((err) =>
+                    this.logger.error(`Failed to notify auto-cancel for ${r.id}`, err),
+                );
             } catch (err) {
                 this.logger.error(`Failed to auto-cancel reservation ${r.id}`, err);
-            }
-        }
-    }
-
-    /**
-     * Runs every day at 13:00 UTC (= 13h00 Dakar, UTC+0).
-     * Sends a reminder to both parties for reservations starting TOMORROW
-     * that have not yet been checked in.
-     */
-    @Cron('0 13 * * *')
-    async handleCheckinReminderVeille() {
-        const tomorrowStart = new Date();
-        tomorrowStart.setUTCHours(0, 0, 0, 0);
-        tomorrowStart.setUTCDate(tomorrowStart.getUTCDate() + 1);
-
-        const tomorrowEnd = new Date(tomorrowStart);
-        tomorrowEnd.setUTCDate(tomorrowEnd.getUTCDate() + 1);
-
-        const upcoming = await this.prisma.reservation.findMany({
-            where: {
-                statut: 'CONFIRMEE',
-                dateDebut: { gte: tomorrowStart, lt: tomorrowEnd },
-                checkinLe: null,
-            },
-            select: {
-                id: true,
-                dateDebut: true,
-                dateFin: true,
-                proprietaireId: true,
-                locataireId: true,
-                proprietaire: { select: { id: true, prenom: true, email: true, telephone: true } },
-                locataire: { select: { id: true, prenom: true, email: true, telephone: true } },
-                vehicule: { select: { marque: true, modele: true } },
-            },
-        });
-
-        if (upcoming.length === 0) return;
-        this.logger.log(`Sending veille check-in reminders for ${upcoming.length} reservation(s)`);
-
-        for (const r of upcoming) {
-            const formatDateHeure = (d: Date) => {
-                const label = d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
-                const h = String(d.getUTCHours()).padStart(2, '0');
-                const m = String(d.getUTCMinutes()).padStart(2, '0');
-                return d.getUTCHours() === 0 && d.getUTCMinutes() === 0 ? label : `${label} à ${h}h${m}`;
-            };
-            const dateHeure = formatDateHeure(r.dateDebut);
-            const dateFinHeure = formatDateHeure(r.dateFin);
-            const vehicule = r.vehicule ? `${r.vehicule.marque} ${r.vehicule.modele}` : 'véhicule';
-
-            const parties = [
-                { prenom: r.proprietaire?.prenom, email: r.proprietaire?.email, phone: r.proprietaire?.telephone, id: r.proprietaireId, isOwner: true, otherPhone: r.locataire?.telephone },
-                { prenom: r.locataire?.prenom, email: r.locataire?.email, phone: r.locataire?.telephone, id: r.locataireId, isOwner: false, otherPhone: r.proprietaire?.telephone },
-            ];
-            for (const party of parties) {
-                if (!party.email && !party.phone) continue;
-                await this.queue.scheduleNotification({
-                    type: 'reservation.checkin.reminder_veille',
-                    data: {
-                        reservationId: r.id,
-                        userId: party.id,
-                        phone: party.phone ?? undefined,
-                        prenom: party.prenom ?? '',
-                        dateDebut: dateHeure,
-                        dateFin: dateFinHeure,
-                        email: party.email ?? undefined,
-                        isOwner: party.isOwner,
-                        vehicule,
-                        otherPartyPhone: party.otherPhone ?? undefined,
-                    },
-                }).catch(() => { });
-            }
-        }
-    }
-
-    /**
-     * Runs every day at 22:00 UTC (= 22h00 Dakar, UTC+0).
-     * Sends an urgent reminder to both parties for reservations starting TODAY
-     * that still have no finalized check-in — warns that auto-cancel happens at midnight.
-     */
-    @Cron('0 22 * * *')
-    async handleCheckinReminderJourJ() {
-        const todayStart = new Date();
-        todayStart.setUTCHours(0, 0, 0, 0);
-
-        const todayEnd = new Date(todayStart);
-        todayEnd.setUTCDate(todayEnd.getUTCDate() + 1);
-
-        const atRisk = await this.prisma.reservation.findMany({
-            where: {
-                statut: 'CONFIRMEE',
-                dateDebut: { gte: todayStart, lt: todayEnd },
-                checkinLe: null,
-            },
-            select: {
-                id: true,
-                dateDebut: true,
-                proprietaireId: true,
-                locataireId: true,
-                proprietaire: { select: { id: true, prenom: true, email: true, telephone: true } },
-                locataire: { select: { id: true, prenom: true, email: true, telephone: true } },
-            },
-        });
-
-        if (atRisk.length === 0) return;
-        this.logger.warn(`Sending urgent jour-J check-in reminders for ${atRisk.length} reservation(s) at risk of auto-cancel`);
-
-        for (const r of atRisk) {
-            const dateLabel = r.dateDebut.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
-            const parties = [
-                { prenom: r.proprietaire?.prenom, email: r.proprietaire?.email, phone: r.proprietaire?.telephone, id: r.proprietaireId, isOwner: true },
-                { prenom: r.locataire?.prenom, email: r.locataire?.email, phone: r.locataire?.telephone, id: r.locataireId, isOwner: false },
-            ];
-            for (const party of parties) {
-                if (!party.email && !party.phone) continue;
-                await this.queue.scheduleNotification({
-                    type: 'reservation.checkin.reminder_jour',
-                    data: {
-                        reservationId: r.id,
-                        userId: party.id,
-                        phone: party.phone ?? undefined,
-                        prenom: party.prenom ?? '',
-                        dateDebut: dateLabel,
-                        email: party.email ?? undefined,
-                        isOwner: party.isOwner,
-                    },
-                }).catch(() => { });
             }
         }
     }
@@ -251,6 +136,11 @@ export class ReservationAutoCloseJob {
                     });
                 });
                 await this.queue.schedulePostCheckout(r.id).catch(() => { });
+
+                // F4: Notifier les deux parties + demander avis après auto-close
+                await this.notifyAutoClose(r.id).catch((err) =>
+                    this.logger.error(`Failed to notify auto-close for ${r.id}`, err),
+                );
             } catch (err) {
                 this.logger.error(`Failed to auto-close reservation ${r.id}`, err);
             }
@@ -270,5 +160,95 @@ export class ReservationAutoCloseJob {
         if (count > 0) {
             this.logger.log(`${count} mise(s) en avant expirée(s) désactivée(s)`);
         }
+    }
+
+    // ── Helpers de notification ──────────────────────────────────────────────────
+
+    /**
+     * F4: Notifie les deux parties après auto-close (EN_COURS → TERMINEE)
+     * et programme la demande d'avis au locataire.
+     */
+    private async notifyAutoClose(reservationId: string): Promise<void> {
+        const res = await this.prisma.reservation.findUnique({
+            where: { id: reservationId },
+            select: {
+                locataireId: true,
+                proprietaireId: true,
+                locataire: { select: { email: true, telephone: true } },
+                proprietaire: { select: { email: true, telephone: true } },
+                vehicule: { select: { marque: true, modele: true } },
+            },
+        });
+        if (!res) return;
+
+        const vehicule = res.vehicule ? `${res.vehicule.marque} ${res.vehicule.modele}` : 'véhicule';
+
+        // Notifier locataire — location terminée
+        await this.notification.send({
+            type: 'reservation.checkout',
+            userId: res.locataireId,
+            email: res.locataire?.email ?? undefined,
+            phone: res.locataire?.telephone ?? undefined,
+            data: { reservationId, vehicule, isOwner: false },
+        }).catch(() => { });
+
+        // Notifier propriétaire — location terminée
+        await this.notification.send({
+            type: 'reservation.checkout',
+            userId: res.proprietaireId,
+            email: res.proprietaire?.email ?? undefined,
+            phone: res.proprietaire?.telephone ?? undefined,
+            data: { reservationId, vehicule, isOwner: true },
+        }).catch(() => { });
+
+        // Demande d'avis au locataire (2 min après)
+        await this.queue.scheduleAvisRequest(reservationId).catch(() => { });
+    }
+
+    /**
+     * F5: Notifie les deux parties après auto-cancel (CONFIRMEE → ANNULEE)
+     * quand personne n'a fait le check-in.
+     */
+    private async notifyAutoCancel(reservationId: string): Promise<void> {
+        const res = await this.prisma.reservation.findUnique({
+            where: { id: reservationId },
+            select: {
+                locataireId: true,
+                proprietaireId: true,
+                dateDebut: true,
+                dateFin: true,
+                locataire: { select: { email: true, telephone: true } },
+                proprietaire: { select: { email: true, telephone: true } },
+                vehicule: { select: { marque: true, modele: true } },
+            },
+        });
+        if (!res) return;
+
+        const vehicule = res.vehicule ? `${res.vehicule.marque} ${res.vehicule.modele}` : 'véhicule';
+        const data = {
+            reservationId,
+            vehicule,
+            dateDebut: res.dateDebut,
+            dateFin: res.dateFin,
+            cancelledBy: 'SYSTEM',
+            raison: 'Annulation automatique : aucun check-in effectué à la date convenue.',
+        };
+
+        await Promise.all([
+            this.notification.send({
+                type: 'reservation.cancelled',
+                userId: res.locataireId,
+                email: res.locataire?.email ?? undefined,
+                phone: res.locataire?.telephone ?? undefined,
+                data: { ...data, isOwner: false },
+            }),
+            this.notification.send({
+                type: 'reservation.cancelled',
+                userId: res.proprietaireId,
+                email: res.proprietaire?.email ?? undefined,
+                phone: res.proprietaire?.telephone ?? undefined,
+                data: { ...data, isOwner: true },
+            }),
+        ]).catch(() => { });
     }
 }

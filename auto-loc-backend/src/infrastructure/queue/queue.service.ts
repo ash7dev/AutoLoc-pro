@@ -121,40 +121,79 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     return String(job.id);
   }
 
-  // Rappels check-in : veille (24h avant) ou jour-J immédiat + urgent (2h après début)
+  // Rappels check-in — trois jobs distincts :
+  //   1. veille  : 9h UTC le jour J-1 (skippé si déjà passé)
+  //   2. jourJ   : 9h UTC le jour J (ou T-2h si début avant 11h UTC)
+  //   3. urgent  : T+2h si pas de check-in (message "retard", type différent)
+  // La décision veille/jourJ est basée sur le jour calendaire UTC, pas sur 24h glissants.
   async scheduleCheckinReminder(
     reservationId: string,
     dateDebut: Date,
   ): Promise<void> {
-    const oneDayMs = 24 * 60 * 60 * 1000;
     const twoHoursMs = 2 * 60 * 60 * 1000;
     const now = Date.now();
     const timeToStart = dateDebut.getTime() - now;
 
-    if (timeToStart > oneDayMs) {
-      // Démarre dans > 24h : rappel veille à T-24h
-      await this.reservationQueue.add(
-        RESERVATION_CHECKIN_REMINDER_JOB,
-        { reservationId },
-        { delay: timeToStart - oneDayMs },
-      );
-    } else if (timeToStart > 0) {
-      // Démarre aujourd'hui (< 24h) : rappel jour-J immédiat
-      // forcedType évite que le processor envoie un "veille" basé sur diffHours
-      await this.reservationQueue.add(
-        RESERVATION_CHECKIN_REMINDER_JOB,
-        { reservationId, forcedType: 'jour' as const },
-        { delay: 0 },
-      );
-    }
-    // Si dateDebut est déjà passée : pas de rappel veille/jour
+    if (timeToStart > 0) {
+      // Comparer les jours calendaires UTC pour décider veille vs jourJ-immédiat
+      const nowDate = new Date(now);
+      const startDay = dateDebut.getUTCFullYear() * 10000 + (dateDebut.getUTCMonth() + 1) * 100 + dateDebut.getUTCDate();
+      const todayDay = nowDate.getUTCFullYear() * 10000 + (nowDate.getUTCMonth() + 1) * 100 + nowDate.getUTCDate();
+      const isSameDay = startDay === todayDay;
 
-    // Rappel urgent 2h après le début prévu (no-show warning)
+      if (isSameDay) {
+        // Démarre aujourd'hui : rappel jour J immédiat
+        await this.reservationQueue.add(
+          RESERVATION_CHECKIN_REMINDER_JOB,
+          { reservationId, forcedType: 'jour' as const },
+          { delay: 0 },
+        );
+      } else {
+        // Démarre un autre jour (demain ou plus tard)
+
+        // 1. Rappel veille : 9h UTC le jour J-1 (skippé si ce créneau est déjà passé)
+        const veille = new Date(dateDebut);
+        veille.setUTCDate(veille.getUTCDate() - 1);
+        veille.setUTCHours(9, 0, 0, 0);
+        const delayVeille = veille.getTime() - now;
+        if (delayVeille > 0) {
+          await this.reservationQueue.add(
+            RESERVATION_CHECKIN_REMINDER_JOB,
+            { reservationId },
+            { delay: delayVeille },
+          );
+        }
+
+        // 2. Rappel matin jour J : 9h UTC (ou T-2h si début avant 11h, min 7h)
+        //    Si ce créneau tombe après le début (ex: début 6h → créneau 7h), envoyer immédiatement.
+        const jourJ = new Date(dateDebut);
+        const startHour = dateDebut.getUTCHours();
+        jourJ.setUTCHours(startHour < 11 ? Math.max(7, startHour - 2) : 9, 0, 0, 0);
+        const delayJourJ = jourJ.getTime() - now;
+        if (delayJourJ > 0 && jourJ.getTime() <= dateDebut.getTime()) {
+          // Créneau futur et avant le début → scheduling normal
+          await this.reservationQueue.add(
+            RESERVATION_CHECKIN_REMINDER_JOB,
+            { reservationId, forcedType: 'jour' as const },
+            { delay: delayJourJ },
+          );
+        } else {
+          // Créneau déjà passé ou après le début → rappel immédiat
+          await this.reservationQueue.add(
+            RESERVATION_CHECKIN_REMINDER_JOB,
+            { reservationId, forcedType: 'jour' as const },
+            { delay: 0 },
+          );
+        }
+      }
+    }
+
+    // 3. Rappel urgent T+2h : si pas de check-in (message "retard", type reminder_urgent)
     const delayUrgent = timeToStart + twoHoursMs;
     if (delayUrgent > 0) {
       await this.reservationQueue.add(
         RESERVATION_CHECKIN_REMINDER_JOB,
-        { reservationId },
+        { reservationId, forcedType: 'urgent' as const },
         { delay: delayUrgent },
       );
     }

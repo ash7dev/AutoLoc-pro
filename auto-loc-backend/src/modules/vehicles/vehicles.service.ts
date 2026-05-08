@@ -1101,17 +1101,15 @@ export class VehiclesService {
 
     const phone = vehicle.proprietaire.telephone?.trim();
     if (phone) {
-      const prenom = vehicle.proprietaire.prenom ?? 'Propriétaire';
-      const messageBody = `Bonjour ${prenom}, votre véhicule ${vehicle.marque} ${vehicle.modele} a été validé et est maintenant disponible à la location sur Auto Loc. 🎉`;
-      const normalizedPhone = phone.startsWith('+') ? phone : `+221${phone}`;
-      try {
-        await this.notification.sendWhatsApp({
-          to: `whatsapp:${normalizedPhone}`,
-          body: messageBody,
-        });
-      } catch {
-        await this.notification.sendSms({ to: normalizedPhone, body: messageBody }).catch(() => {});
-      }
+      this.notification.send({
+        userId: vehicle.proprietaireId,
+        phone,
+        type: 'vehicle.validated',
+        data: {
+          prenom: vehicle.proprietaire.prenom,
+          vehicule: `${vehicle.marque} ${vehicle.modele}`,
+        },
+      }).catch(() => { });
     }
 
     return updated;
@@ -1152,17 +1150,16 @@ export class VehiclesService {
 
     const phone = vehicle.proprietaire.telephone?.trim();
     if (phone) {
-      const prenom = vehicle.proprietaire.prenom ?? 'Propriétaire';
-      const messageBody = `Bonjour ${prenom}, votre véhicule ${vehicle.marque} ${vehicle.modele} a été suspendu sur Auto Loc.\nRaison : ${raison}\nContactez notre support pour plus d'informations.`;
-      const normalizedPhone = phone.startsWith('+') ? phone : `+221${phone}`;
-      try {
-        await this.notification.sendWhatsApp({
-          to: `whatsapp:${normalizedPhone}`,
-          body: messageBody,
-        });
-      } catch {
-        await this.notification.sendSms({ to: normalizedPhone, body: messageBody }).catch(() => {});
-      }
+      this.notification.send({
+        userId: vehicle.proprietaireId,
+        phone,
+        type: 'vehicle.suspended',
+        data: {
+          prenom: vehicle.proprietaire.prenom,
+          vehicule: `${vehicle.marque} ${vehicle.modele}`,
+          raison,
+        },
+      }).catch(() => { });
     }
 
     return updated;
@@ -1328,10 +1325,15 @@ export class VehiclesService {
     if (active) {
       const phone = vehicle.proprietaire.telephone?.trim();
       if (phone) {
-        const prenom = vehicle.proprietaire.prenom ?? 'Propriétaire';
-        const normalizedPhone = phone.startsWith('+') ? phone : `+221${phone}`;
-        const body = `🌟 Bonne nouvelle ${prenom} ! Votre véhicule ${vehicle.marque} ${vehicle.modele} est maintenant mis en avant sur AutoLoc. Il apparaît en priorité dans les résultats de recherche.`;
-        this.notification.sendWhatsApp({ to: `whatsapp:${normalizedPhone}`, body }).catch(() => { });
+        this.notification.send({
+          userId: vehicle.proprietaireId,
+          phone,
+          type: 'vehicle.featured',
+          data: {
+            prenom: vehicle.proprietaire.prenom,
+            vehicule: `${vehicle.marque} ${vehicle.modele}`,
+          },
+        }).catch(() => { });
       }
     }
 

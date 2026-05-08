@@ -140,10 +140,22 @@ export class DisputesService {
       return created;
     });
 
-    const notifData = { reservationId };
-    const emails = [reservation.locataire?.email, reservation.proprietaire?.email].filter(Boolean) as string[];
-    for (const email of emails) {
-      this.notification.send({ email, type: 'litige.ouvert', data: notifData }).catch(() => { });
+    const locataireData = { reservationId, isOwner: false };
+    const proprietaireData = { reservationId, isOwner: true };
+
+    if (reservation.locataire?.email) {
+      this.notification.send({
+        email: reservation.locataire.email,
+        type: 'litige.ouvert',
+        data: locataireData,
+      }).catch(() => { });
+    }
+    if (reservation.proprietaire?.email) {
+      this.notification.send({
+        email: reservation.proprietaire.email,
+        type: 'litige.ouvert',
+        data: proprietaireData,
+      }).catch(() => { });
     }
 
     // Alerte admin Telegram — urgente, fire-and-forget

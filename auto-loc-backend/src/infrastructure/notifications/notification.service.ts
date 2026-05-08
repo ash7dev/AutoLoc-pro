@@ -185,7 +185,7 @@ export class NotificationService {
   /**
    * Gère l'envoi WhatsApp avec fallback SMS selon le type de notification
    */
-  private async sendInstantNotification(phone: string, type: NotificationType, data: Record<string, unknown>) {
+  async sendInstantNotification(phone: string, type: NotificationType, data: Record<string, unknown>) {
     const mapping = this.getWhatsAppMapping(type, data);
     if (!mapping) return;
 
@@ -273,8 +273,12 @@ export class NotificationService {
       },
       'auth.login_otp': {
         contentSid: 'HX4adc3c841559018e04cdd9a2e5ccfcf5', // verification_code_v2 (Copy Code)
-        variables: { '1': String(data.code || data.otp) },
-        fallbackText: `🔐 AutoLoc — Votre code de connexion est : ${data.code || data.otp}`,
+        variables: { '1': String(data.otp || data.code || '') },
+        fallbackText: `🔐 AutoLoc — Votre code de connexion est : ${data.otp || data.code || ''}`,
+      },
+      'user.status_changed': {
+        fallbackText: `🔔 AutoLoc — Votre compte a été ${data.statusText || 'mis à jour'}${data.untilText || ''}.`,
+        smsText: `AutoLoc: Votre compte a été ${data.statusText || 'mis à jour'}${data.untilText || ''}.${data.raison ? ` Raison: ${data.raison}` : ''}`,
       },
 
       'reservation.paid.owner': {
@@ -322,6 +326,11 @@ export class NotificationService {
           '5': data.reservationId as string,
         },
         fallbackText: `🚗 AutoLoc — La location de ${data.vehicule || 'votre véhicule'} commence aujourd'hui (#${resId}).\n⏰ Heure : ${data.dateDebut || 'à confirmer'}\n📞 Contact : ${data.otherPartyPhone || 'N/A'}`,
+      },
+      // Pas de template WhatsApp dédié pour l'urgent → free-form (fallback SMS garanti)
+      'reservation.checkin.reminder_urgent': {
+        fallbackText: `⏰ AutoLoc — Check-in non effectué pour ${data.vehicule || 'votre véhicule'} (#${resId}). Effectuez le check-in avant minuit pour éviter l'annulation automatique.`,
+        smsText: `AutoLoc - Check-in en retard pour ${data.vehicule || 'votre véhicule'} (#${resId}). Faites le check-in avant minuit.`,
       },
       'reservation.checkout.reminder': {
         contentSid: isOwner ? 'HXfbbfd96be6664f4302a0e4b1f26d991d' : 'HX59be7100c1005d17ad94970cd86802f6',
@@ -409,6 +418,7 @@ export class NotificationService {
       'reservation.checkin.tenant_confirmed': `⏳ AutoLoc${prefix} : le locataire a confirmé le check-in pour la réservation #${resId}.`,
       'reservation.checkin.reminder_veille': `📅 AutoLoc${prefix} : rappel check-in demain pour ${vehicule}. Réservation #${resId}.`,
       'reservation.checkin.reminder_jour': `🚨 AutoLoc${prefix} : check-in à finaliser aujourd'hui pour ${vehicule}. Réservation #${resId}.`,
+      'reservation.checkin.reminder_urgent': `⏰ AutoLoc${prefix} : check-in non effectué pour ${vehicule} (#${resId}). Effectuez le check-in avant minuit pour éviter l'annulation automatique.`,
       'reservation.checkin.tacit_window': `⏱️ AutoLoc${prefix} : vous avez 24h pour valider le check-in de la réservation #${resId}.`,
       'reservation.checkin.tacit_applied': `🟢 AutoLoc${prefix} : la réservation #${resId} est démarrée par validation tacite.`,
       'reservation.checkout': `🏁 AutoLoc${prefix} : la réservation #${resId} est terminée. Pensez à laisser un avis.`,
@@ -422,7 +432,11 @@ export class NotificationService {
       'litige.resolu': `✅ AutoLoc${prefix} : le litige de la réservation #${resId} est résolu.`,
       'user.welcome': `👋 Bienvenue sur AutoLoc${prefix} ! Votre compte est prêt.`,
       'wallet.credited': `💰 AutoLoc${prefix} : votre wallet a été crédité pour la réservation #${resId}.`,
-      'auth.login_otp': ''
+      'auth.login_otp': `🔐 AutoLoc — Votre code de connexion est : ${String(data.otp || data.code || '')}`,
+      'user.status_changed': `🔔 AutoLoc — Votre compte a été ${data.statusText || 'mis à jour'}${data.untilText || ''}.`,
+      'vehicle.validated': `🎉 AutoLoc — Votre véhicule ${data.vehicule} a été validé ! Il est maintenant en ligne.`,
+      'vehicle.suspended': `⚠️ AutoLoc — Votre véhicule ${data.vehicule} a été suspendu.${data.raison ? ` Raison: ${data.raison}` : ''}`,
+      'vehicle.featured': `🌟 AutoLoc — Félicitations ! Votre véhicule ${data.vehicule} est maintenant mis en avant.`,
     };
 
     const fallbackText = fallbackTextByType[type];

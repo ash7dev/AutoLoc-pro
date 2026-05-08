@@ -209,31 +209,27 @@ export class UsersService {
         actif: dto.actif,
         bloqueJusqua: dto.bloqueJusqua ? new Date(dto.bloqueJusqua) : null,
       },
-      select: { id: true, actif: true, bloqueJusqua: true, telephone: true },
+      select: { id: true, actif: true, bloqueJusqua: true, telephone: true, email: true },
     });
 
     const phone = updated.telephone?.trim();
-    if (phone) {
-      const statusText = updated.actif
-        ? 'réactivé'
-        : 'suspendu';
+    if (phone || updated.email) {
+      const statusText = updated.actif ? 'réactivé' : 'suspendu';
       const untilText = updated.bloqueJusqua
         ? ` jusqu'au ${updated.bloqueJusqua.toISOString().slice(0, 10)}`
         : '';
-      const reasonText = dto.raison ? `\nRaison: ${dto.raison}` : '';
 
-      const messageBody = `Ton compte Auto Loc a été ${statusText}${untilText}.${reasonText}`;
-      try {
-        await this.notification.sendWhatsApp({
-          to: `whatsapp:${phone.startsWith('+') ? phone : `+221${phone}`}`,
-          body: messageBody,
-        });
-      } catch {
-        await this.notification.sendSms({
-          to: phone.startsWith('+') ? phone : `+221${phone}`,
-          body: messageBody,
-        }).catch(() => {});
-      }
+      this.notification.send({
+        userId: updated.id,
+        phone: phone ?? undefined,
+        email: updated.email ?? undefined,
+        type: 'user.status_changed',
+        data: {
+          statusText,
+          untilText,
+          raison: dto.raison ?? null,
+        },
+      }).catch(() => { });
     }
 
     return updated;

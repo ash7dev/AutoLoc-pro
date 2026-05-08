@@ -215,29 +215,22 @@ export class CheckInUseCase {
             });
             walletCredited = side.walletCredited;
         } else if (input.role === 'PROPRIETAIRE') {
+            // Informer le locataire que le proprio a confirmé le check-in
             this.queue.scheduleNotification({
                     type: 'reservation.checkin.owner_confirmed',
                     data: {
                         reservationId,
                         userId: reservation.locataireId,
                         phone: reservation.locataire?.telephone ?? null,
-                    },
-                })
-                .catch(() => { });
-
-            await this.queue.scheduleTacitCheckinReminders(reservationId).catch(() => { });
-
-            this.queue.scheduleNotification({
-                    type: 'reservation.checkin.tacit_window',
-                    data: {
-                        reservationId,
-                        userId: reservation.locataireId,
-                        phone: reservation.locataire?.telephone ?? null,
-                        locatairePrenom: reservation.locataire?.prenom ?? null,
                         email: reservation.locataire?.email ?? undefined,
                     },
                 })
                 .catch(() => { });
+
+            // Programmer les rappels tacites H+0 et H+12 (incluent déjà le message tacit_window)
+            await this.queue.scheduleTacitCheckinReminders(reservationId).catch(() => { });
+            // NOTE: Ne pas envoyer scheduleNotification('tacit_window') ici — le rappel H+0
+            // via scheduleTacitCheckinReminders(phase:'immediate') envoie déjà ce message.
         } else {
             this.queue.scheduleNotification({
                     type: 'reservation.checkin.tenant_confirmed',

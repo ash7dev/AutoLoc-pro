@@ -50,6 +50,7 @@ export class CheckOutUseCase {
                 dateFin: true,
                 checkoutLe: true,
                 locataire: { select: { telephone: true, prenom: true } },
+                proprietaire: { select: { telephone: true, prenom: true } },
             },
         });
         if (!reservation) throw new NotFoundException('Réservation introuvable');
@@ -112,7 +113,7 @@ export class CheckOutUseCase {
             });
         });
 
-        // ── 6. Side effects ────────────────────────────────────────────────
+        // ── 6. Side effects ────────────────────────────────────────────────────────
         // POST_CHECKOUT job for ratings, reviews, etc.
         await this.queue
             .schedulePostCheckout(reservationId)
@@ -122,6 +123,7 @@ export class CheckOutUseCase {
             .scheduleAvisRequest(reservationId)
             .catch(() => { });
 
+        // Notification locataire
         await this.queue
             .scheduleNotification({
                 type: 'reservation.checkout',
@@ -130,6 +132,21 @@ export class CheckOutUseCase {
                     userId: reservation.locataireId,
                     phone: reservation.locataire?.telephone ?? null,
                     locatairePrenom: reservation.locataire?.prenom ?? null,
+                    isOwner: false,
+                },
+            })
+            .catch(() => { });
+
+        // Notification propriétaire — informé que la location est terminée
+        await this.queue
+            .scheduleNotification({
+                type: 'reservation.checkout',
+                data: {
+                    reservationId,
+                    userId: reservation.proprietaireId,
+                    phone: reservation.proprietaire?.telephone ?? null,
+                    proprietairePrenom: reservation.proprietaire?.prenom ?? null,
+                    isOwner: true,
                 },
             })
             .catch(() => { });

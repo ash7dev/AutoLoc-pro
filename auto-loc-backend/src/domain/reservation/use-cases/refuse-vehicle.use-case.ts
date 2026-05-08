@@ -147,16 +147,26 @@ export class RefuseVehicleUseCase {
             `<a href="https://autoloc.sn/dashboard/admin/litiges">Examiner le litige →</a>`
         ).catch((err) => this.logger.error(`Erreur notification Telegram: ${err.message}`));
 
-        // Notification asynchrone pour avertir le propriétaire (Optionnel mais recommandé)
+        // Notification au propriétaire — litige ouvert
         await this.queue.scheduleNotification({
-            type: 'reservation.dispute_opened',
+            type: 'litige.ouvert',
             data: {
                 reservationId,
                 userId: reservation.proprietaireId,
                 phone: reservation.proprietaire?.telephone ?? null,
-                role: 'PROPRIETAIRE',
-                raison: 'Le locataire a refusé le véhicule. L\'équipe AutoLoc va examiner la situation.',
-                prenomDeclarant: reservation.locataire.prenom ?? 'Le locataire',
+                isOwner: true,
+                vehicule: `${reservation.proprietaire?.prenom ?? ''} — refus véhicule au check-in`,
+            },
+        }).catch(() => {});
+
+        // Confirmation au locataire que son signalement est bien enregistré
+        await this.queue.scheduleNotification({
+            type: 'litige.ouvert',
+            data: {
+                reservationId,
+                userId: reservation.locataireId,
+                phone: reservation.locataire?.telephone ?? null,
+                isOwner: false,
             },
         }).catch(() => {});
 
