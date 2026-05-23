@@ -6,17 +6,17 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './shared/filters/http-exception.filter';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, {
-    rawBody: true, // Required for webhook HMAC signature verification
-  });
+  const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
   app.use(helmet());
-  
-  // Augmentation de la limite de taille pour les photos haute résolution (KYC, Véhicules)
+
+  // Capture the raw body before parsing — required for webhook HMAC verification (@RawBody()).
+  // Must be registered here, before body-parser, so the verify callback runs first.
+  const captureRawBody = (req: any, _res: any, buf: Buffer) => { req.rawBody = buf; };
   const { json, urlencoded } = require('body-parser');
-  app.use(json({ limit: '50mb' }));
-  app.use(urlencoded({ limit: '50mb', extended: true }));
+  app.use(json({ limit: '50mb', verify: captureRawBody }));
+  app.use(urlencoded({ limit: '50mb', extended: true, verify: captureRawBody }));
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
