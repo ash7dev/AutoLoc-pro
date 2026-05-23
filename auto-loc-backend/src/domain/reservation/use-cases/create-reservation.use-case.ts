@@ -5,6 +5,7 @@ import {
     Logger,
     NotFoundException,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { FournisseurPaiement, Prisma, StatutReservation } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { RedisService } from '../../../infrastructure/redis/redis.service';
@@ -119,12 +120,14 @@ export class CreateReservationUseCase {
         const totalAvecLivraison = price.totalLocataire.add(new Prisma.Decimal(fraisLivraison));
 
         // ── 6. Initiate payment ───────────────────────────────────────────────────
+        // Pre-generate reservation UUID so the success/cancel URLs can include it.
+        const reservationId = randomUUID();
         const paymentRef = `${input.vehiculeId.slice(0, 8)}-${Date.now()}`;
         const paymentUrl = await this.payment.initiatePayment(
             input.fournisseur,
             totalAvecLivraison,
             paymentRef,
-            { targetPayment: input.targetPayment },
+            { targetPayment: input.targetPayment, reservationId },
         );
 
         const delaiSignature = new Date(Date.now() + SIGNATURE_DEADLINE_MS);
@@ -143,6 +146,7 @@ export class CreateReservationUseCase {
 
                     const res = await tx.reservation.create({
                         data: {
+                            id: reservationId,
                             vehiculeId: input.vehiculeId,
                             locataireId: locataire.id,
                             proprietaireId: vehicule.proprietaireId,
