@@ -3,6 +3,7 @@ import { FournisseurPaiement } from '@prisma/client';
 import { PaymentProviderInterface } from './payment-provider.interface';
 import { WaveProvider } from './providers/wave.provider';
 import { OrangeMoneyProvider } from './providers/orange-money.provider';
+import { PaytechProvider } from './providers/paytech.provider';
 
 @Injectable()
 export class PaymentProviderFactory {
@@ -11,10 +12,12 @@ export class PaymentProviderFactory {
     constructor(
         private readonly wave: WaveProvider,
         private readonly orange: OrangeMoneyProvider,
+        private readonly paytech: PaytechProvider,
     ) {
         this.providers = new Map<string, PaymentProviderInterface>([
             ['WAVE', this.wave],
             ['ORANGE_MONEY', this.orange],
+            ['PAYTECH', this.paytech],
         ]);
     }
 
@@ -40,6 +43,7 @@ export class PaymentProviderFactory {
         const mapping: Record<string, string> = {
             wave: 'WAVE',
             'orange-money': 'ORANGE_MONEY',
+            paytech: 'PAYTECH',
         };
         const fournisseur = mapping[routeName];
         return fournisseur ? this.providers.get(fournisseur) : undefined;

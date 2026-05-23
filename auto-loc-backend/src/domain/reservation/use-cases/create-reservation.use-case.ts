@@ -36,6 +36,8 @@ export interface CreateReservationInput {
     adresseLivraison?: string;
     fraisLivraison?: number;
     horsDakar?: boolean;
+    /** Méthode de paiement cible pour PayTech (ex: 'Wave', 'Orange Money', 'Free Money'). */
+    targetPayment?: string;
 }
 
 export interface CreateReservationResult {
@@ -122,6 +124,7 @@ export class CreateReservationUseCase {
             input.fournisseur,
             totalAvecLivraison,
             paymentRef,
+            { targetPayment: input.targetPayment },
         );
 
         const delaiSignature = new Date(Date.now() + SIGNATURE_DEADLINE_MS);

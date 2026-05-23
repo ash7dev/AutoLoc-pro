@@ -26,18 +26,28 @@ export class PaymentService {
     fournisseur: FournisseurPaiement,
     montant: Prisma.Decimal,
     reservationRef: string,
+    options?: { targetPayment?: string },
   ): Promise<string> {
     const provider = this.factory.get(fournisseur);
 
-    // Construire le callbackUrl pour le webhook
-    const routeName = fournisseur === 'WAVE' ? 'wave' : 'orange-money';
+    const routeMap: Partial<Record<FournisseurPaiement, string>> = {
+      WAVE: 'wave',
+      ORANGE_MONEY: 'orange-money',
+      PAYTECH: 'paytech',
+    };
+    const routeName = routeMap[fournisseur] ?? fournisseur.toLowerCase();
     const callbackUrl = `${this.appBaseUrl}/payments/webhook/${routeName}`;
+
+    const nextjsUrl = this.config.get<string>('NEXTJS_URL', 'http://localhost:3000');
 
     const result = await provider.initiatePayment({
       amount: Number(montant),
       referenceId: reservationRef,
       callbackUrl,
       description: `AutoLoc — Réservation ${reservationRef}`,
+      targetPayment: options?.targetPayment,
+      successUrl: `${nextjsUrl}/payment/success`,
+      cancelUrl: `${nextjsUrl}/payment/cancel`,
     });
 
     this.logger.log(

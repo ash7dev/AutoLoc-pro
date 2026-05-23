@@ -32,6 +32,11 @@ export class CreateReservationDto {
   @IsString()
   idempotencyKey?: string;
 
+  /** Méthode de paiement cible pour PayTech (ex: 'Wave', 'Orange Money', 'Free Money'). */
+  @IsOptional()
+  @IsString()
+  targetPayment?: string;
+
   // ── Livraison (optionnel) ──────────────────────────────────────────────────
 
   @IsOptional()

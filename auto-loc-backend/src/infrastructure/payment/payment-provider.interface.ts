@@ -7,12 +7,18 @@ export interface InitiatePaymentParams {
     amount: number;
     /** Notre référence interne (reservationId ou paymentRef) */
     referenceId: string;
-    /** URL webhook où le fournisseur enverra la confirmation */
+    /** URL webhook IPN où le fournisseur enverra la confirmation (backend) */
     callbackUrl: string;
     /** Description affichée à l'utilisateur côté fournisseur */
     description?: string;
     /** Numéro de téléphone du payeur (requis pour certains providers) */
     payerPhone?: string;
+    /** Méthode de paiement cible — PayTech : 'Wave', 'Orange Money', 'Free Money' */
+    targetPayment?: string;
+    /** URL de redirection après paiement réussi (frontend) */
+    successUrl?: string;
+    /** URL de redirection après annulation (frontend) */
+    cancelUrl?: string;
 }
 
 export interface InitiatePaymentResult {
@@ -37,7 +43,7 @@ export interface WebhookPayload {
 
 export interface PaymentProviderInterface {
     /** Identifiant du fournisseur */
-    readonly provider: 'WAVE' | 'ORANGE_MONEY';
+    readonly provider: 'WAVE' | 'ORANGE_MONEY' | 'PAYTECH';
 
     /**
      * Initie un paiement et retourne l'URL de redirection.

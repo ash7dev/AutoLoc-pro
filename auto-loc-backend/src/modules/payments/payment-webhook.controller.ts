@@ -9,10 +9,12 @@ import {
     UnauthorizedException,
     BadRequestException,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { PaymentProviderFactory } from '../../infrastructure/payment/payment-provider.factory';
 import { ConfirmPaymentUseCase } from '../../domain/reservation/use-cases/confirm-payment.use-case';
 import { PrismaService } from '../../prisma/prisma.service';
 
+@SkipThrottle()
 @Controller('payments/webhook')
 export class PaymentWebhookController {
     private readonly logger = new Logger(PaymentWebhookController.name);
@@ -47,6 +49,18 @@ export class PaymentWebhookController {
         @Headers('x-orange-signature') signature?: string,
     ) {
         return this.handleWebhook('orange-money', rawBody, signature);
+    }
+
+    /**
+     * POST /payments/webhook/paytech
+     * IPN PayTech (pas de JWT, pas de header signature).
+     * La signature est embarquée dans le body (hmac_compute ou api_key_sha256).
+     */
+    @Post('paytech')
+    @HttpCode(HttpStatus.OK)
+    async handlePaytechIPN(@RawBody() rawBody: Buffer) {
+        // PayTech embeds its signature inside the body — pass empty string as header sig.
+        return this.handleWebhook('paytech', rawBody, '');
     }
 
     // ── Generic Webhook Handler ────────────────────────────────────────────────
