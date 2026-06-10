@@ -80,7 +80,7 @@ const OWNER_STEPS = [
     {
         icon: TrendingUp,
         title: 'Revenus directs',
-        description: 'Recevez vos paiements sur votre compte mobile. Commission fixe de 15%.',
+        description: 'Recevez vos paiements en toute sécurité directement sur votre compte Wave ou Orange Money.',
     },
 ];
 

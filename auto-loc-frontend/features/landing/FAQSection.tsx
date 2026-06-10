@@ -12,26 +12,31 @@ const FAQ_ITEMS = [
         question: 'Comment réserver un véhicule sur AutoLoc ?',
         answer:
             'C\'est très simple ! Parcourez les véhicules disponibles, choisissez vos dates de location, puis cliquez sur "Réserver". Vous recevrez une confirmation instantanée par email et SMS.',
+        href: '/how-it-works',
     },
     {
         question: 'Quels documents sont nécessaires pour louer ?',
         answer:
             'Vous aurez besoin d\'une pièce d\'identité valide (CNI ou passeport), d\'un permis de conduire en cours de validité, et d\'un justificatif de domicile.',
+        href: '/cgu',
     },
     {
         question: 'Puis-je annuler ma réservation ?',
         answer:
             'Oui, vous pouvez annuler jusqu\'à 24h avant la prise en charge pour un remboursement complet. Consultez nos conditions pour plus de détails.',
+        href: '/cgu',
     },
     {
         question: 'Comment sont vérifiés les locataires ?',
         answer:
             'Chaque locataire doit soumettre une pièce d\'identité valide et un permis de conduire avant de pouvoir effectuer une réservation.',
+        href: '/cgu',
     },
     {
         question: 'Comment devenir propriétaire sur AutoLoc ?',
         answer:
             'Inscrivez-vous, ajoutez votre véhicule avec photos et documents, et notre équipe le vérifiera sous 24h. C\'est simple et gratuit !',
+        href: '/become-owner',
     },
 ];
 
@@ -103,9 +108,12 @@ function FAQItem({
                                 <p className="text-[15px] font-medium leading-relaxed text-white/40">
                                     {item.answer}
                                 </p>
-                                <div className="mt-8 flex items-center gap-2 text-emerald-400 font-bold text-[13px] cursor-pointer hover:gap-3 transition-all">
+                                <Link
+                                    href={item.href}
+                                    className="mt-8 inline-flex items-center gap-2 text-emerald-400 font-bold text-[13px] hover:gap-3 transition-all"
+                                >
                                     En savoir plus <ArrowRight className="w-3.5 h-3.5" />
-                                </div>
+                                </Link>
                             </div>
                         </motion.div>
                     )}
