@@ -42,7 +42,7 @@ const SECTIONS = [
           </div>
           <div>
             <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-0.5">Téléphone</p>
-            <p className="font-semibold text-slate-800">+221 33 800 12 34</p>
+            <p className="font-semibold text-slate-800">+221 78 663 77 05</p>
           </div>
         </div>
       </div>

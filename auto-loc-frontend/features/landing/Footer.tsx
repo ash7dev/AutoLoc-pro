@@ -194,12 +194,12 @@ export function Footer(): React.ReactElement {
                 </li>
                 <li>
                   <a
-                    href="tel:+221338001234"
+                    href="tel:+221786637705"
                     className="flex items-center gap-2 text-[13.5px] font-medium text-white/50
                       hover:text-emerald-400 transition-colors duration-150 group"
                   >
                     <Phone className="h-3.5 w-3.5 text-white/20 group-hover:text-emerald-400/60 transition-colors duration-150" strokeWidth={1.75} />
-                    +221 33 800 12 34
+                    +221 78 663 77 05
                   </a>
                 </li>
                 <li className="flex items-start gap-2 text-[13.5px] font-medium text-white/35">

@@ -101,7 +101,7 @@ const jsonLd = {
   url: BASE_URL,
   logo: `${BASE_URL}/logo.png`,
   image: `${BASE_URL}/og-image.jpg`,
-  telephone: '+221 XX XXX XX XX',
+  telephone: '+221 78 663 77 05',
   email: 'contact@autoloc.sn',
   address: {
     '@type': 'PostalAddress',

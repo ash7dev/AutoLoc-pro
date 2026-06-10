@@ -206,7 +206,7 @@ export default function SupportPage() {
             title="WhatsApp"
             subtitle="Réponse rapide garantie en moins de 2h"
             action="Écrire"
-            href="https://wa.me/221XXXXXXXXX?text=Bonjour%20AutoLoc%2C%20j'ai%20besoin%20d'aide."
+            href="https://wa.me/221786637705?text=Bonjour%20AutoLoc%2C%20j'ai%20besoin%20d'aide."
             badge="Recommandé"
           />
           <ContactCard
@@ -244,7 +244,7 @@ export default function SupportPage() {
               Contactez-nous directement via WhatsApp ou email. Notre équipe vous répondra dans les plus brefs délais.
             </p>
             <a
-              href="https://wa.me/221XXXXXXXXX"
+              href="https://wa.me/221786637705"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 mt-3 text-[12.5px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
