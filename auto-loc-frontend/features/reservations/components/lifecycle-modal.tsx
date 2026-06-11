@@ -15,6 +15,8 @@ import {
   Camera,
   Scale,
   Handshake,
+  Sparkles,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,104 +26,126 @@ interface LifecycleModalProps {
   role: "TENANT" | "OWNER";
 }
 
+/* ─── Shared step type ─────────────────────────────────────── */
+interface Step {
+  number: string;
+  title: string;
+  badge: string;
+  badgeColor: string;
+  description: string;
+  icon: React.ElementType;
+  iconGradient: string;
+  accentColor: string;
+}
+
 export function LifecycleModal({ open, onClose, role: initialRole }: LifecycleModalProps) {
   const [activeTab, setActiveTab] = useState<"TENANT" | "OWNER">(initialRole);
 
   if (!open) return null;
 
-  const tenantSteps = [
+  const tenantSteps: Step[] = [
     {
       number: "1",
-      title: "Paiement & Signature (24h max)",
-      badge: "Paiement séquestré",
-      badgeColor: "bg-blue-50 text-blue-700 border-blue-100",
-      description: "Votre paiement est débité et conservé en toute sécurité par AutoLoc. Le propriétaire dispose de 24 heures pour confirmer. S'il refuse ou dépasse ce délai, vous êtes remboursé à 100%.",
+      title: "Paiement & Signature",
+      badge: "Séquestre sécurisé",
+      badgeColor: "bg-blue-500/10 text-blue-600 ring-1 ring-blue-500/20",
+      description: "Votre paiement est débité et conservé en toute sécurité par AutoLoc. Le propriétaire dispose de 24h pour confirmer. S'il refuse ou dépasse ce délai, vous êtes remboursé à 100%.",
       icon: CreditCard,
-      iconColor: "text-blue-500 bg-blue-50 border-blue-100",
+      iconGradient: "from-blue-500 to-indigo-500",
+      accentColor: "blue",
     },
     {
       number: "2",
-      title: "Accès aux Coordonnées (H-24)",
-      badge: "Sécurité",
-      badgeColor: "bg-slate-50 text-slate-600 border-slate-200",
-      description: "Par mesure de confidentialité et de sécurité, le numéro de téléphone du propriétaire ainsi que l'adresse exacte de récupération du véhicule sont débloqués sur l'application 24 heures avant le début de la location.",
-      icon: Clock,
-      iconColor: "text-slate-500 bg-slate-50 border-slate-100",
+      title: "Accès aux Coordonnées",
+      badge: "H-24",
+      badgeColor: "bg-slate-500/10 text-slate-600 ring-1 ring-slate-500/20",
+      description: "Par mesure de confidentialité, le numéro de téléphone du propriétaire et l'adresse de récupération sont débloqués 24 heures avant le début de la location.",
+      icon: Lock,
+      iconGradient: "from-slate-500 to-slate-600",
+      accentColor: "slate",
     },
     {
       number: "3",
-      title: "Prise en charge & Auto-Checkin (4h max)",
-      badge: "Double Validation",
-      badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-100",
-      description: "Le propriétaire fait l'état des lieux de départ. Vous devez obligatoirement valider le départ sur votre application pour démarrer. Si vous n'agissez pas dans les 4 heures suivant son check-in, le système appliquera une validation tacite automatique.",
+      title: "Prise en charge & Auto-Checkin",
+      badge: "Double validation",
+      badgeColor: "bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20",
+      description: "Le propriétaire fait l'état des lieux de départ. Vous devez valider le départ sur votre application. Sans action dans les 4h suivant son check-in, une validation tacite automatique s'applique.",
       icon: Camera,
-      iconColor: "text-emerald-500 bg-emerald-50 border-emerald-100",
+      iconGradient: "from-emerald-500 to-teal-500",
+      accentColor: "emerald",
     },
     {
       number: "4",
-      title: "Trajet & Signalement de non-conformité",
-      badge: "Protection Locataire",
-      badgeColor: "bg-orange-50 text-orange-700 border-orange-100",
-      description: "Pendant le trajet, vous êtes couvert. Si le véhicule présente un défaut de conformité majeur au moment du départ, vous pouvez refuser la prise en charge ou ouvrir un litige sur l'application pour suspendre les fonds.",
+      title: "Trajet & Signalement",
+      badge: "Protection locataire",
+      badgeColor: "bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20",
+      description: "Pendant le trajet, vous êtes couvert. Si le véhicule présente un défaut majeur, vous pouvez refuser la prise en charge ou ouvrir un litige pour suspendre les fonds.",
       icon: AlertTriangle,
-      iconColor: "text-orange-500 bg-orange-50 border-orange-100",
+      iconGradient: "from-amber-500 to-orange-500",
+      accentColor: "amber",
     },
     {
       number: "5",
-      title: "Règles d'annulation (Locataire)",
-      badge: "Politique Modérée",
-      badgeColor: "bg-red-50 text-red-700 border-red-100",
-      description: "Avant confirmation : remboursé à 100% hors commission de 15% (>5j), 75% (2 à 5j), 0% (<24h). Après confirmation propriétaire : 100% hors commission (>3j), 75% (1 à 3j), 0% (<24h).",
+      title: "Règles d'annulation",
+      badge: "Politique modérée",
+      badgeColor: "bg-red-500/10 text-red-600 ring-1 ring-red-500/20",
+      description: "Avant confirmation : 100% hors commission (>5j), 75% (2-5j), 0% (<24h). Après confirmation propriétaire : 100% hors commission (>3j), 75% (1-3j), 0% (<24h).",
       icon: Ban,
-      iconColor: "text-red-500 bg-red-50 border-red-100",
+      iconGradient: "from-red-500 to-rose-500",
+      accentColor: "red",
     },
   ];
 
-  const ownerSteps = [
+  const ownerSteps: Step[] = [
     {
       number: "1",
-      title: "Délai de confirmation (24h max)",
+      title: "Délai de confirmation",
       badge: "Action requise",
-      badgeColor: "bg-amber-50 text-amber-700 border-amber-100",
-      description: "Dès que le locataire paie, vous disposez de 24 heures pour valider la demande et signer le contrat numérique. Si le délai expire sans action, la réservation s'annule automatiquement et le locataire est remboursé.",
+      badgeColor: "bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20",
+      description: "Dès que le locataire paie, vous disposez de 24h pour valider et signer le contrat numérique. Si le délai expire, la réservation s'annule et le locataire est remboursé.",
       icon: ShieldCheck,
-      iconColor: "text-amber-500 bg-amber-50 border-amber-100",
+      iconGradient: "from-amber-500 to-orange-500",
+      accentColor: "amber",
     },
     {
       number: "2",
-      title: "Fenêtre de check-in (Dès la veille)",
+      title: "Fenêtre de check-in",
       badge: "J-1",
-      badgeColor: "bg-slate-50 text-slate-600 border-slate-200",
-      description: "Le check-in de départ est débloqué la veille du trajet (J-1). Vous devez obligatoirement effectuer l'état des lieux et téléverser au moins 1 photo des 4 côtés du véhicule pour pouvoir finaliser le départ.",
+      badgeColor: "bg-slate-500/10 text-slate-600 ring-1 ring-slate-500/20",
+      description: "Le check-in de départ est débloqué la veille du trajet. Vous devez effectuer l'état des lieux et téléverser au moins 1 photo des 4 côtés du véhicule.",
       icon: Camera,
-      iconColor: "text-slate-500 bg-slate-50 border-slate-100",
+      iconGradient: "from-slate-500 to-slate-600",
+      accentColor: "slate",
     },
     {
       number: "3",
-      title: "Double validation & Auto-checkin (4h)",
+      title: "Double validation & Auto-checkin",
       badge: "Paiement garanti",
-      badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-100",
-      description: "Une fois que vous validez le check-in, le locataire a 4 heures pour confirmer. S'il n'agit pas, le système applique un check-in tacite automatique pour éviter de bloquer la location et sécuriser le versement.",
+      badgeColor: "bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20",
+      description: "Après votre check-in, le locataire a 4h pour confirmer. Sans action, le système applique un check-in tacite automatique pour sécuriser le versement.",
       icon: Handshake,
-      iconColor: "text-emerald-500 bg-emerald-50 border-emerald-100",
+      iconGradient: "from-emerald-500 to-teal-500",
+      accentColor: "emerald",
     },
     {
       number: "4",
       title: "Non-présentation (No-Show)",
       badge: "Annulation auto",
-      badgeColor: "bg-red-50 text-red-700 border-red-100",
-      description: "Si à la date convenue aucun check-in n'est effectué par l'une des parties avant minuit, la réservation est automatiquement résiliée par le système pour non-présentation.",
+      badgeColor: "bg-red-500/10 text-red-600 ring-1 ring-red-500/20",
+      description: "Si à la date convenue aucun check-in n'est effectué avant minuit, la réservation est automatiquement résiliée par le système pour non-présentation.",
       icon: Ban,
-      iconColor: "text-red-500 bg-red-50 border-red-100",
+      iconGradient: "from-red-500 to-rose-500",
+      accentColor: "red",
     },
     {
       number: "5",
-      title: "Pénalités d'annulation propriétaire",
+      title: "Pénalités d'annulation",
       badge: "Grille stricte",
-      badgeColor: "bg-red-50 text-red-700 border-red-100",
-      description: "En cas d'annulation de votre part après confirmation, le locataire est intégralement remboursé. Une pénalité est retenue sur vos revenus futurs : 0% (>7j), 20% (3 à 7j), 40% (<3j). Annulation impossible le jour même.",
+      badgeColor: "bg-red-500/10 text-red-600 ring-1 ring-red-500/20",
+      description: "Annulation après confirmation : locataire remboursé intégralement. Pénalité retenue : 0% (>7j), 20% (3-7j), 40% (<3j). Annulation impossible le jour même.",
       icon: Scale,
-      iconColor: "text-red-500 bg-red-50 border-red-100",
+      iconGradient: "from-red-500 to-rose-500",
+      accentColor: "red",
     },
   ];
 
@@ -129,51 +153,64 @@ export function LifecycleModal({ open, onClose, role: initialRole }: LifecycleMo
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6"
       role="dialog"
       aria-modal="true"
     >
       {/* Overlay backdrop */}
       <div
-        className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity animate-fade-in"
         onClick={onClose}
       />
 
       {/* Main panel */}
-      <div className="relative w-full max-w-lg rounded-t-3xl sm:rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 flex flex-col max-h-[85vh] sm:max-h-[80vh]">
+      <div className="relative w-full sm:max-w-lg rounded-t-[28px] sm:rounded-[20px] bg-white overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 flex flex-col max-h-[92vh] sm:max-h-[85vh] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.35)]">
+        
         {/* Mobile handle */}
-        <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="w-10 h-1 rounded-full bg-slate-200" />
+        <div className="flex justify-center pt-2.5 pb-0 sm:hidden">
+          <div className="w-9 h-[3px] rounded-full bg-slate-300/60" />
         </div>
 
-        {/* Header */}
-        <div className="px-6 pt-4 pb-4 sm:pt-5 flex items-start justify-between border-b border-slate-100">
-          <div className="space-y-1">
-            <h2 className="text-[17px] font-black text-slate-900 leading-tight">
-              Charte de Confiance & Règles de Séjour
-            </h2>
-            <p className="text-[11.5px] text-slate-400 font-medium leading-relaxed">
-              AutoLoc applique un système hybride de double validation et de séquestre pour votre sécurité.
-            </p>
+        {/* ──── Gradient Header ──── */}
+        <div className="relative px-6 pt-5 pb-5 sm:pt-6 sm:pb-6 bg-gradient-to-br from-slate-50 via-white to-blue-50/40 overflow-hidden">
+          {/* Subtle decorative circles */}
+          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br from-blue-100/40 to-indigo-100/30 blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-gradient-to-br from-emerald-100/30 to-teal-100/20 blur-2xl pointer-events-none" />
+
+          <div className="relative flex items-start justify-between gap-3">
+            <div className="space-y-2.5">
+              {/* Icon badge */}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-slate-900 to-slate-700 text-white text-[10px] font-bold tracking-wide uppercase">
+                <Sparkles className="w-3 h-3" />
+                Charte de confiance
+              </div>
+              <h2 className="text-[18px] sm:text-[20px] font-black text-slate-900 leading-[1.2] tracking-tight">
+                Règles & Sécurité
+              </h2>
+              <p className="text-[12px] text-slate-500 font-medium leading-relaxed max-w-[300px]">
+                Système hybride de double validation et séquestre pour protéger chaque partie.
+              </p>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm border border-slate-200/60 hover:bg-slate-100 flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-200 shadow-sm flex-shrink-0"
+            >
+              <X className="w-4 h-4 text-slate-500" strokeWidth={2.5} />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center hover:scale-105 active:scale-95 transition-all flex-shrink-0 ml-3"
-          >
-            <X className="w-4 h-4 text-slate-500" strokeWidth={2.5} />
-          </button>
         </div>
 
-        {/* Role toggle tabs */}
-        <div className="px-6 py-3.5 bg-slate-50/50 border-b border-slate-100 flex items-center justify-center">
-          <div className="bg-slate-100 p-1 rounded-xl flex items-center w-full max-w-xs gap-1">
+        {/* ──── Role Toggle ──── */}
+        <div className="px-6 py-3 bg-white border-b border-slate-100/80 flex items-center justify-center">
+          <div className="bg-slate-100/80 p-[3px] rounded-[14px] flex items-center w-full max-w-[280px] gap-[3px]">
             <button
               onClick={() => setActiveTab("TENANT")}
               className={cn(
-                "flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-[12px] font-bold transition-all",
+                "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-[11px] text-[12px] font-bold transition-all duration-200",
                 activeTab === "TENANT"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-900"
+                  ? "bg-white text-slate-900 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.04)] scale-[1.02]"
+                  : "text-slate-400 hover:text-slate-600"
               )}
             >
               <User className="w-3.5 h-3.5" />
@@ -182,10 +219,10 @@ export function LifecycleModal({ open, onClose, role: initialRole }: LifecycleMo
             <button
               onClick={() => setActiveTab("OWNER")}
               className={cn(
-                "flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-[12px] font-bold transition-all",
+                "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-[11px] text-[12px] font-bold transition-all duration-200",
                 activeTab === "OWNER"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-900"
+                  ? "bg-white text-slate-900 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.04)] scale-[1.02]"
+                  : "text-slate-400 hover:text-slate-600"
               )}
             >
               <Home className="w-3.5 h-3.5" />
@@ -194,29 +231,50 @@ export function LifecycleModal({ open, onClose, role: initialRole }: LifecycleMo
           </div>
         </div>
 
-        {/* Scrollable list */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 scrollbar-thin">
-          <div className="relative border-l border-slate-100 ml-4 pl-6 space-y-6">
-            {currentSteps.map((step) => {
+        {/* ──── Scrollable Timeline ──── */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 scrollbar-thin">
+          <div className="space-y-0">
+            {currentSteps.map((step, index) => {
               const IconComponent = step.icon;
+              const isLast = index === currentSteps.length - 1;
               return (
-                <div key={step.number} className="relative group">
-                  {/* Timeline point indicator */}
-                  <div className="absolute -left-[37px] top-1 flex items-center justify-center">
-                    <div className="w-[22px] h-[22px] rounded-full bg-white border border-slate-200 flex items-center justify-center text-[10.5px] font-extrabold text-slate-700 shadow-sm group-hover:border-slate-400 group-hover:text-slate-900 transition-colors">
-                      {step.number}
+                <div
+                  key={step.number}
+                  className="relative flex gap-4 group"
+                  style={{ animationDelay: `${index * 60}ms` }}
+                >
+                  {/* ── Timeline column ── */}
+                  <div className="flex flex-col items-center flex-shrink-0 pt-1">
+                    {/* Gradient dot */}
+                    <div className={cn(
+                      "relative w-8 h-8 rounded-full flex items-center justify-center z-10",
+                      "bg-gradient-to-br shadow-md transition-transform duration-200 group-hover:scale-110",
+                      step.iconGradient
+                    )}>
+                      <IconComponent className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
                     </div>
+                    {/* Connector line */}
+                    {!isLast && (
+                      <div className="w-px flex-1 my-1.5 bg-gradient-to-b from-slate-200 via-slate-200/60 to-slate-200/20" />
+                    )}
                   </div>
 
-                  <div className="space-y-2">
-                    {/* Title + Badge row */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-[13.5px] font-black text-slate-800 tracking-tight leading-tight">
+                  {/* ── Content card ── */}
+                  <div className={cn(
+                    "flex-1 rounded-2xl border p-4 mb-4 transition-all duration-200",
+                    "bg-white hover:bg-slate-50/50",
+                    "border-slate-100 hover:border-slate-200",
+                    "shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)]",
+                    "group-hover:-translate-y-0.5"
+                  )}>
+                    {/* Title + Badge */}
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <h3 className="text-[13px] font-extrabold text-slate-800 tracking-tight leading-tight">
                         {step.title}
                       </h3>
                       <span
                         className={cn(
-                          "inline-flex items-center px-2 py-0.5 rounded-full border text-[9.5px] font-bold tracking-tight",
+                          "inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold tracking-tight",
                           step.badgeColor
                         )}
                       >
@@ -224,20 +282,10 @@ export function LifecycleModal({ open, onClose, role: initialRole }: LifecycleMo
                       </span>
                     </div>
 
-                    {/* Step Card details */}
-                    <div className="flex items-start gap-3.5 rounded-2xl border border-slate-100 bg-slate-50/40 p-3.5 group-hover:bg-slate-50 transition-all duration-200 shadow-sm">
-                      <div
-                        className={cn(
-                          "w-9 h-9 rounded-xl border flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105 duration-200",
-                          step.iconColor
-                        )}
-                      >
-                        <IconComponent className="w-4 h-4" strokeWidth={2} />
-                      </div>
-                      <p className="text-[12px] text-slate-600 font-medium leading-relaxed">
-                        {step.description}
-                      </p>
-                    </div>
+                    {/* Description */}
+                    <p className="text-[11.5px] text-slate-500 font-medium leading-[1.65]">
+                      {step.description}
+                    </p>
                   </div>
                 </div>
               );
@@ -245,11 +293,16 @@ export function LifecycleModal({ open, onClose, role: initialRole }: LifecycleMo
           </div>
         </div>
 
-        {/* CTA Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center gap-3">
+        {/* ──── CTA Footer ──── */}
+        <div className="px-6 py-4 bg-gradient-to-t from-slate-50 to-white border-t border-slate-100/80">
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-xl bg-slate-900 text-white text-[13px] font-black hover:bg-slate-800 transition-colors shadow-sm active:scale-[0.98]"
+            className={cn(
+              "w-full py-3.5 rounded-2xl text-[13px] font-black transition-all duration-200",
+              "bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white",
+              "hover:shadow-lg hover:shadow-slate-900/20 hover:-translate-y-0.5",
+              "active:scale-[0.98] active:shadow-sm"
+            )}
           >
             J&apos;ai compris
           </button>
