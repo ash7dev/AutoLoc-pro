@@ -291,7 +291,7 @@ export default async function TenantReservationDetailPage({ params }: { params: 
 
                     {/* Litige locataire — véhicule non conforme, uniquement avant check-in confirmé */}
                     {r.statut === 'CONFIRMEE' && !r.checkinLocataireLe && (
-                        <TenantDisputeButton reservationId={r.id} />
+                        <TenantDisputeButton reservationId={r.id} dateDebut={r.dateDebut} />
                     )}
 
                     {/* Annulation */}

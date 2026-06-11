@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { CheckinModal } from "./checkin-modal";
 import { CheckoutModal } from "./checkout-modal";
 import { ConfirmModal } from "./confirm-modal";
+import { TimeLockedModal, isTooEarlyFor2h } from "./time-locked-modal";
 
 /* ════════════════════════════════════════════════════════════════
    TYPES
@@ -477,6 +478,7 @@ export function ReservationActions({
     const [checkinOpen, setCheckinOpen] = useState(false);
     const [checkoutOpen, setCheckoutOpen] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
+    const [lockedOpen, setLockedOpen] = useState(false);
     const { authFetch } = useAuthFetch();
 
     const actions = getActions(statut);
@@ -536,7 +538,14 @@ export function ReservationActions({
 
     const handleAction = async (action: ActionConfig) => {
         if (action.key === "dispute") { setDisputeOpen(true); return; }
-        if (action.key === "checkin") { setCheckinOpen(true); return; }
+        if (action.key === "checkin") {
+            if (dateDebut && isTooEarlyFor2h(dateDebut)) {
+                setLockedOpen(true);
+            } else {
+                setCheckinOpen(true);
+            }
+            return;
+        }
         if (action.key === "checkout") { setCheckoutOpen(true); return; }
         if (action.key === "confirm") { setConfirmOpen(true); return; }
         if (action.requireConfirm && confirmKey !== action.key) { setConfirmKey(action.key); return; }
@@ -750,6 +759,14 @@ export function ReservationActions({
                 onConfirm={handleConfirm}
                 loading={loading === "confirm"}
             />
+            {dateDebut && (
+                <TimeLockedModal
+                    open={lockedOpen}
+                    onClose={() => setLockedOpen(false)}
+                    dateDebut={dateDebut}
+                    title="Check-in verrouillé"
+                />
+            )}
         </div>
     );
 }

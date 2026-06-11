@@ -43,14 +43,6 @@ const PHOTO_SLOTS: PhotoSlot[] = [
     { key: "carburant",  label: "Carburant",    icon: Fuel,  categorie: "CARBURANT" },
 ];
 
-/** Même logique que le backend : check-in autorisé à partir de J-1 (24h avant dateDebut) */
-function isTooEarlyForCheckin(dateDebut?: string): boolean {
-    if (!dateDebut) return false;
-    const debut = new Date(dateDebut);
-    const oneDayBefore = new Date(debut.getTime() - 24 * 60 * 60 * 1000);
-    return new Date() < oneDayBefore;
-}
-
 function formatDateFr(d: string): string {
     return new Date(d).toLocaleDateString("fr-FR", {
         weekday: "long", day: "numeric", month: "long", year: "numeric",
@@ -68,7 +60,6 @@ export function CheckinModal({ reservationId, open, onClose, dateDebut }: Checki
     const [success, setSuccess] = useState(false);
 
     const photoCount = Object.keys(photos).length;
-    const tooEarly = isTooEarlyForCheckin(dateDebut);
 
     // Reset state when modal closes
     useEffect(() => {
@@ -123,7 +114,7 @@ export function CheckinModal({ reservationId, open, onClose, dateDebut }: Checki
 
     if (!open) return null;
 
-    const canSubmit = !submitting && !success && photoCount > 0 && uploading === null && !tooEarly;
+    const canSubmit = !submitting && !success && photoCount > 0 && uploading === null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -148,22 +139,6 @@ export function CheckinModal({ reservationId, open, onClose, dateDebut }: Checki
                 </div>
 
                 <div className="px-6 py-5 space-y-5">
-
-                    {/* Avertissement trop tôt */}
-                    {tooEarly && dateDebut && (
-                        <div className="flex items-start gap-3 rounded-xl bg-amber-500/10 border border-amber-500/20 p-4">
-                            <Clock className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" strokeWidth={2} />
-                            <div>
-                                <p className="text-[12.5px] font-black text-amber-300">Check-in pas encore disponible</p>
-                                <p className="text-[11.5px] text-amber-400/80 mt-0.5 leading-relaxed">
-                                    Le check-in sera débloqué la veille de la location, soit à partir du{" "}
-                                    <span className="font-bold text-amber-300">
-                                        {formatDateFr(new Date(new Date(dateDebut).getTime() - 24 * 60 * 60 * 1000).toISOString())}
-                                    </span>.
-                                </p>
-                            </div>
-                        </div>
-                    )}
 
                     {/* Info */}
                     <div className="rounded-xl bg-blue-500/8 border border-blue-500/15 p-4 space-y-3">
@@ -293,13 +268,11 @@ export function CheckinModal({ reservationId, open, onClose, dateDebut }: Checki
                             ? <Loader2 className="w-4 h-4 animate-spin" />
                             : <CheckCircle2 className="w-4 h-4" strokeWidth={2.5} />
                         }
-                        {tooEarly
-                            ? "Check-in pas encore disponible"
-                            : uploading
-                                ? "Upload en cours…"
-                                : photoCount === 0
-                                    ? "Ajoutez au moins 1 photo"
-                                    : "Confirmer le check-in"
+                        {uploading
+                            ? "Upload en cours…"
+                            : photoCount === 0
+                                ? "Ajoutez au moins 1 photo"
+                                : "Confirmer le check-in"
                         }
                     </button>
                 </div>

@@ -23,13 +23,13 @@ export function ConfirmModal({ open, onClose, onConfirm, loading = false }: Conf
     if (!open) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div
                 className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
                 onClick={() => !loading && onClose()}
             />
 
-            <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90dvh] overflow-y-auto pb-[env(safe-area-inset-bottom)]">
 
                 {/* Header */}
                 <div className="flex items-start justify-between px-5 pt-5 pb-4">

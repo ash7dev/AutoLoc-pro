@@ -3,19 +3,28 @@
 import { useState } from 'react';
 import { AlertTriangle, ChevronRight } from 'lucide-react';
 import { RefuseVehicleModal } from './refuse-vehicle-modal';
+import { TimeLockedModal, isTooEarlyFor2h } from './time-locked-modal';
 
 interface Props {
     reservationId: string;
+    dateDebut?: string;
 }
 
-export function TenantDisputeButton({ reservationId }: Props) {
+export function TenantDisputeButton({ reservationId, dateDebut }: Props) {
     const [open, setOpen] = useState(false);
+    const [lockedOpen, setLockedOpen] = useState(false);
 
     return (
         <>
             <button
                 type="button"
-                onClick={() => setOpen(true)}
+                onClick={() => {
+                    if (isTooEarlyFor2h(dateDebut)) {
+                        setLockedOpen(true);
+                    } else {
+                        setOpen(true);
+                    }
+                }}
                 className="group flex items-center gap-3 rounded-xl px-4 py-3 border text-left w-full sm:w-auto
                     bg-white text-orange-600 border-orange-200
                     hover:bg-orange-500 hover:text-white hover:border-orange-500
@@ -38,6 +47,13 @@ export function TenantDisputeButton({ reservationId }: Props) {
                 reservationId={reservationId} 
                 open={open} 
                 onClose={() => setOpen(false)} 
+            />
+
+            <TimeLockedModal
+                open={lockedOpen}
+                onClose={() => setLockedOpen(false)}
+                dateDebut={dateDebut!}
+                title="Signalement verrouillé"
             />
         </>
     );
