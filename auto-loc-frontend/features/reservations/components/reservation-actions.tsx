@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
     Check, X, LogIn, LogOut, Loader2, Scale,
-    AlertTriangle, ChevronRight, CheckCircle2, FileWarning, ShieldAlert, Clock, Ban,
+    AlertTriangle, ChevronRight, CheckCircle2, FileWarning, ShieldAlert, Clock, Ban, Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReservationStatut } from "@/lib/nestjs/reservations";
@@ -15,6 +15,7 @@ import { CheckinModal } from "./checkin-modal";
 import { CheckoutModal } from "./checkout-modal";
 import { ConfirmModal } from "./confirm-modal";
 import { TimeLockedModal, isTooEarlyFor2h } from "./time-locked-modal";
+import { LifecycleModal } from "./lifecycle-modal";
 
 /* ════════════════════════════════════════════════════════════════
    TYPES
@@ -477,8 +478,9 @@ export function ReservationActions({
     const [disputeOpen, setDisputeOpen] = useState(false);
     const [checkinOpen, setCheckinOpen] = useState(false);
     const [checkoutOpen, setCheckoutOpen] = useState(false);
-    const [confirmOpen, setConfirmOpen] = useState(false);
+        const [confirmOpen, setConfirmOpen] = useState(false);
     const [lockedOpen, setLockedOpen] = useState(false);
+    const [lifecycleOpen, setLifecycleOpen] = useState(false);
     const { authFetch } = useAuthFetch();
 
     const actions = getActions(statut);
@@ -678,6 +680,20 @@ export function ReservationActions({
                 }
             </div>
 
+            {/* Lien premium cycle de vie */}
+            {actions.some(a => a.key === "cancel") && (
+                <div className="pt-2">
+                    <button
+                        type="button"
+                        onClick={() => setLifecycleOpen(true)}
+                        className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-slate-500 hover:text-slate-800 transition-colors underline decoration-dotted underline-offset-4"
+                    >
+                        <Info className="w-3.5 h-3.5" />
+                        Comprendre les règles & conditions (séquestre, auto-checkin…)
+                    </button>
+                </div>
+            )}
+
             {/* Floating Mobile Action Bar — only for primary action (first one) */}
             {!confirmingAction && !disputeOpen && !checkinOpen && !checkoutOpen && !confirmOpen && actions.length > 0 && (
                 <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-t border-slate-200 px-4 py-4 lg:hidden animate-in slide-in-from-bottom duration-300">
@@ -767,6 +783,11 @@ export function ReservationActions({
                     title="Check-in verrouillé"
                 />
             )}
+            <LifecycleModal
+                open={lifecycleOpen}
+                onClose={() => setLifecycleOpen(false)}
+                role="OWNER"
+            />
         </div>
     );
 }
