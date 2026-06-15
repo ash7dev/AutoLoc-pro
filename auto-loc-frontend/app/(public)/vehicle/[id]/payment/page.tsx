@@ -197,6 +197,13 @@ export default function PaymentPage() {
     const setActiveRole = useRoleStore((s) => s.setActiveRole);
     const { authFetch } = useAuthFetch();
 
+    // Précharger les scripts InTouch dès le montage pour éviter la latence au clic
+    useEffect(() => {
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js')
+            .then(() => loadScript('https://touchpay.gutouch.net/touchpayv2/script/prod_touchpay-0.0.1.js'))
+            .catch(() => { /* silencieux — on réessaiera au clic */ });
+    }, []);
+
     useEffect(() => {
         if (!vehicleId || !dateDebut || !dateFin || nbJours < 1) return;
         setLoading(true);
@@ -251,7 +258,8 @@ export default function PaymentPage() {
             sessionStorage.setItem('pending_reservation_id', reservationId);
 
             if (widgetConfig) {
-                // Charger le SDK TouchPay puis déclencher le widget
+                // CryptoJS requis par le SDK TouchPay (dépendance non bundlée)
+                await loadScript('https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js');
                 await loadScript(widgetConfig.scriptUrl);
                 (window as unknown as { sendPaymentInfos: (...args: unknown[]) => void }).sendPaymentInfos(
                     widgetConfig.idFromClient,
