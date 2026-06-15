@@ -457,7 +457,7 @@ enum FournisseurPaiement {
   WAVE
   ORANGE_MONEY
   STRIPE
-  PAYTECH
+  INTOUCH
 }
 
 enum StatutPaiement {

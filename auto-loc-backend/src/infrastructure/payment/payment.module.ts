@@ -1,7 +1,7 @@
 import { Module, Global } from '@nestjs/common';
 import { WaveProvider } from './providers/wave.provider';
 import { OrangeMoneyProvider } from './providers/orange-money.provider';
-import { PaytechProvider } from './providers/paytech.provider';
+import { IntouchProvider } from './providers/intouch.provider';
 import { PaymentProviderFactory } from './payment-provider.factory';
 import { PaymentService } from './payment.service';
 
@@ -10,7 +10,7 @@ import { PaymentService } from './payment.service';
     providers: [
         WaveProvider,
         OrangeMoneyProvider,
-        PaytechProvider,
+        IntouchProvider,
         PaymentProviderFactory,
         PaymentService,
     ],

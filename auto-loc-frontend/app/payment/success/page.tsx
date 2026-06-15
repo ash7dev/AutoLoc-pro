@@ -15,7 +15,7 @@ export default function PaymentSuccessPage() {
 
     useEffect(() => {
         isMounted.current = true;
-        const id = sessionStorage.getItem('paytech_pending_reservation_id');
+        const id = sessionStorage.getItem('pending_reservation_id');
         setReservationId(id);
 
         if (!id) {
@@ -36,7 +36,7 @@ export default function PaymentSuccessPage() {
                     accessToken: session?.access_token,
                 });
                 if (res.statut === 'PAYEE' || res.statut === 'CONFIRMEE' || res.statut === 'EN_COURS') {
-                    sessionStorage.removeItem('paytech_pending_reservation_id');
+                    sessionStorage.removeItem('pending_reservation_id');
                     if (isMounted.current) setStatus('confirmed');
                     return;
                 }

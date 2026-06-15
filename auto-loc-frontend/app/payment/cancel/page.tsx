@@ -8,7 +8,7 @@ export default function PaymentCancelPage() {
     const [reservationId, setReservationId] = useState<string | null>(null);
 
     useEffect(() => {
-        const id = sessionStorage.getItem('paytech_pending_reservation_id');
+        const id = sessionStorage.getItem('pending_reservation_id');
         setReservationId(id);
         // Ne pas supprimer l'id ici — l'utilisateur peut vouloir réessayer
     }, []);

@@ -115,6 +115,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
         : null;
     const providerLabel = paiement?.fournisseur === "WAVE" ? "Wave"
         : paiement?.fournisseur === "ORANGE_MONEY" ? "Orange Money"
+        : paiement?.fournisseur === "INTOUCH" ? "InTouch"
         : paiement?.fournisseur ?? "—";
 
     /* ── Timeline ── */

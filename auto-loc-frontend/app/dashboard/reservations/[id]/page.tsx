@@ -130,6 +130,7 @@ export default async function TenantReservationDetailPage({ params }: { params: 
         : null;
     const providerLabel = paiement?.fournisseur === 'WAVE' ? 'Wave'
         : paiement?.fournisseur === 'ORANGE_MONEY' ? 'Orange Money'
+        : paiement?.fournisseur === 'INTOUCH' ? 'InTouch'
         : paiement?.fournisseur ?? '—';
 
     /* ── Timeline ── */

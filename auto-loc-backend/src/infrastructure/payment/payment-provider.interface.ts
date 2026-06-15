@@ -1,11 +1,11 @@
 // ── Payment Provider Interface ─────────────────────────────────────────────────
-// All payment providers (Wave, Orange Money) implement this interface.
+// All payment providers (Wave, Orange Money, InTouch) implement this interface.
 // This ensures plug-and-play swapping via PaymentProviderFactory.
 
 export interface InitiatePaymentParams {
     /** Montant en FCFA (XOF) — entier, pas de décimales */
     amount: number;
-    /** Notre référence interne (reservationId ou paymentRef) */
+    /** Notre référence interne (paymentRef) — sert d'idFromClient côté InTouch */
     referenceId: string;
     /** URL webhook IPN où le fournisseur enverra la confirmation (backend) */
     callbackUrl: string;
@@ -13,7 +13,7 @@ export interface InitiatePaymentParams {
     description?: string;
     /** Numéro de téléphone du payeur (requis pour certains providers) */
     payerPhone?: string;
-    /** Méthode de paiement cible — PayTech : 'Wave', 'Orange Money', 'Free Money' */
+    /** Méthode de paiement cible — ex: 'Wave', 'Orange Money', 'Free Money' */
     targetPayment?: string;
     /** URL de redirection après paiement réussi (frontend) */
     successUrl?: string;
@@ -21,9 +21,33 @@ export interface InitiatePaymentParams {
     cancelUrl?: string;
 }
 
+/** Configuration transmise au frontend pour déclencher le widget TouchPay. */
+export interface IntouchWidgetConfig {
+    /** URL du script SDK TouchPay à charger dynamiquement */
+    scriptUrl: string;
+    /** Identifiant marchand InTouch */
+    merchantId: string;
+    /** Token marchand InTouch */
+    token: string;
+    /** Domaine du site marchand */
+    domain: string;
+    /** URL de redirection après paiement réussi */
+    successUrl: string;
+    /** URL de redirection après annulation */
+    cancelUrl: string;
+    /** Montant en FCFA (XOF) */
+    amount: number;
+    /** Ville du marchand */
+    city: string;
+    /** Référence client — sert de clé de lookup pour le webhook */
+    idFromClient: string;
+}
+
 export interface InitiatePaymentResult {
-    /** URL vers laquelle rediriger l'utilisateur pour payer */
-    paymentUrl: string;
+    /** URL de redirection (providers redirect-based : Wave, Orange Money direct) */
+    paymentUrl?: string;
+    /** Config widget TouchPay (InTouch) — si présent, le frontend utilise le SDK */
+    widgetConfig?: IntouchWidgetConfig;
     /** ID de transaction côté fournisseur */
     transactionId: string;
 }
@@ -35,7 +59,7 @@ export interface WebhookPayload {
     status: 'SUCCESS' | 'FAILED' | 'REFUNDED';
     /** Montant confirmé en XOF */
     amount: number;
-    /** Notre référence (reservationId ou paymentRef) */
+    /** Notre référence (paymentRef) */
     referenceId: string;
     /** Payload brut du fournisseur (pour logging/debug) */
     rawPayload: Record<string, unknown>;
@@ -43,10 +67,12 @@ export interface WebhookPayload {
 
 export interface PaymentProviderInterface {
     /** Identifiant du fournisseur */
-    readonly provider: 'WAVE' | 'ORANGE_MONEY' | 'PAYTECH';
+    readonly provider: 'WAVE' | 'ORANGE_MONEY' | 'INTOUCH';
 
     /**
-     * Initie un paiement et retourne l'URL de redirection.
+     * Initie un paiement.
+     * - Providers redirect : retourne `paymentUrl` (URL de redirection)
+     * - InTouch widget    : retourne `widgetConfig` (params pour le SDK frontend)
      */
     initiatePayment(params: InitiatePaymentParams): Promise<InitiatePaymentResult>;
 

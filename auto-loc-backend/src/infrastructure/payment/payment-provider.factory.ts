@@ -3,7 +3,7 @@ import { FournisseurPaiement } from '@prisma/client';
 import { PaymentProviderInterface } from './payment-provider.interface';
 import { WaveProvider } from './providers/wave.provider';
 import { OrangeMoneyProvider } from './providers/orange-money.provider';
-import { PaytechProvider } from './providers/paytech.provider';
+import { IntouchProvider } from './providers/intouch.provider';
 
 @Injectable()
 export class PaymentProviderFactory {
@@ -12,12 +12,12 @@ export class PaymentProviderFactory {
     constructor(
         private readonly wave: WaveProvider,
         private readonly orange: OrangeMoneyProvider,
-        private readonly paytech: PaytechProvider,
+        private readonly intouch: IntouchProvider,
     ) {
         this.providers = new Map<string, PaymentProviderInterface>([
             ['WAVE', this.wave],
             ['ORANGE_MONEY', this.orange],
-            ['PAYTECH', this.paytech],
+            ['INTOUCH', this.intouch],
         ]);
     }
 
@@ -29,21 +29,21 @@ export class PaymentProviderFactory {
         const provider = this.providers.get(fournisseur);
         if (!provider) {
             throw new Error(
-                `Payment provider not supported: ${fournisseur}. Available: ${[...this.providers.keys()].join(', ')}`,
+                `Payment provider non supporté : ${fournisseur}. Disponibles : ${[...this.providers.keys()].join(', ')}`,
             );
         }
         return provider;
     }
 
     /**
-     * Retourne le provider correspondant à un nom de route webhook.
-     * Ex: getByRoute('wave') → WaveProvider
+     * Retourne le provider correspondant au nom de route webhook.
+     * Ex : getByRoute('intouch') → IntouchProvider
      */
     getByRoute(routeName: string): PaymentProviderInterface | undefined {
         const mapping: Record<string, string> = {
-            wave: 'WAVE',
+            wave:          'WAVE',
             'orange-money': 'ORANGE_MONEY',
-            paytech: 'PAYTECH',
+            intouch:       'INTOUCH',
         };
         const fournisseur = mapping[routeName];
         return fournisseur ? this.providers.get(fournisseur) : undefined;

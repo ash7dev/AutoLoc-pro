@@ -26,8 +26,21 @@ export class PaymentWebhookController {
     ) { }
 
     /**
+     * POST /payments/webhook/intouch
+     * Callback InTouch/TouchPay — signature HMAC-SHA256 dans X-Intouch-Signature.
+     */
+    @Post('intouch')
+    @HttpCode(HttpStatus.OK)
+    async handleIntouchCallback(
+        @RawBody() rawBody: Buffer,
+        @Headers('x-intouch-signature') signature?: string,
+    ) {
+        return this.handleWebhook('intouch', rawBody, signature ?? '');
+    }
+
+    /**
      * POST /payments/webhook/wave
-     * Webhook public (pas de JWT) — vérifie la signature HMAC.
+     * Webhook Wave — signature HMAC-SHA256 dans X-Wave-Signature.
      */
     @Post('wave')
     @HttpCode(HttpStatus.OK)
@@ -35,12 +48,12 @@ export class PaymentWebhookController {
         @RawBody() rawBody: Buffer,
         @Headers('x-wave-signature') signature?: string,
     ) {
-        return this.handleWebhook('wave', rawBody, signature);
+        return this.handleWebhook('wave', rawBody, signature ?? '');
     }
 
     /**
      * POST /payments/webhook/orange-money
-     * Webhook public (pas de JWT) — vérifie la signature.
+     * Webhook Orange Money — signature dans X-Orange-Signature.
      */
     @Post('orange-money')
     @HttpCode(HttpStatus.OK)
@@ -48,98 +61,80 @@ export class PaymentWebhookController {
         @RawBody() rawBody: Buffer,
         @Headers('x-orange-signature') signature?: string,
     ) {
-        return this.handleWebhook('orange-money', rawBody, signature);
+        return this.handleWebhook('orange-money', rawBody, signature ?? '');
     }
 
-    /**
-     * POST /payments/webhook/paytech
-     * IPN PayTech (pas de JWT, pas de header signature).
-     * La signature est embarquée dans le body (hmac_compute ou api_key_sha256).
-     */
-    @Post('paytech')
-    @HttpCode(HttpStatus.OK)
-    async handlePaytechIPN(@RawBody() rawBody: Buffer) {
-        // PayTech embeds its signature inside the body — pass empty string as header sig.
-        return this.handleWebhook('paytech', rawBody, '');
-    }
-
-    // ── Generic Webhook Handler ────────────────────────────────────────────────
+    // ── Gestionnaire générique ─────────────────────────────────────────────────
 
     private async handleWebhook(
         routeName: string,
         rawBody: Buffer,
-        signature?: string,
+        signature: string,
     ): Promise<{ received: true }> {
         const startTime = Date.now();
+        this.logger.log(`Webhook reçu [${routeName}] — ${rawBody.length} octets`);
 
-        this.logger.log(`Webhook received: ${routeName} (${rawBody.length} bytes)`);
-
-        // 1. Resolve provider
+        // 1. Résoudre le provider
         const provider = this.providerFactory.getByRoute(routeName);
         if (!provider) {
-            throw new BadRequestException(`Unknown webhook route: ${routeName}`);
+            throw new BadRequestException(`Route webhook inconnue : ${routeName}`);
         }
 
-        // 2. Verify HMAC signature
-        if (!provider.verifyWebhookSignature(rawBody, signature ?? '')) {
+        // 2. Vérifier la signature HMAC
+        if (!provider.verifyWebhookSignature(rawBody, signature)) {
             this.logger.error(
-                `WEBHOOK_SIGNATURE_INVALID [${routeName}] — sig=${signature?.substring(0, 16)}...`,
+                `WEBHOOK_SIGNATURE_INVALIDE [${routeName}] — sig=${signature.substring(0, 16)}...`,
             );
             throw new UnauthorizedException('Signature webhook invalide');
         }
 
-        // 3. Parse payload
+        // 3. Parser le payload
         let payload;
         try {
             payload = provider.parseWebhookPayload(rawBody);
         } catch (err) {
-            this.logger.error(`WEBHOOK_PARSE_ERROR [${routeName}]:`, err);
+            this.logger.error(`WEBHOOK_PARSE_ERROR [${routeName}] :`, err);
             throw new BadRequestException('Payload webhook invalide');
         }
 
         this.logger.log(
-            `Webhook parsed [${routeName}]: txId=${payload.transactionId}, ` +
-            `status=${payload.status}, amount=${payload.amount}, ref=${payload.referenceId}`,
+            `Webhook parsé [${routeName}] : txId=${payload.transactionId}, ` +
+            `status=${payload.status}, montant=${payload.amount}, ref=${payload.referenceId}`,
         );
 
-        // 4. Route based on status
+        // 4. Dispatcher selon le statut
         if (payload.status === 'SUCCESS') {
             await this.handlePaymentSuccess(payload.transactionId, payload.referenceId);
         } else if (payload.status === 'REFUNDED') {
-            this.logger.log(`WEBHOOK_REFUND [${routeName}]: txId=${payload.transactionId}`);
-            // Refund handling could be added here
+            this.logger.log(`WEBHOOK_REFUND [${routeName}] : txId=${payload.transactionId}`);
         } else {
             this.logger.warn(
-                `WEBHOOK_FAILED [${routeName}]: txId=${payload.transactionId}, ref=${payload.referenceId}`,
+                `WEBHOOK_FAILED [${routeName}] : txId=${payload.transactionId}, ref=${payload.referenceId}`,
             );
         }
 
-        const durationMs = Date.now() - startTime;
         this.logger.log(
-            `Webhook processed [${routeName}] in ${durationMs}ms — txId=${payload.transactionId}`,
+            `Webhook traité [${routeName}] en ${Date.now() - startTime}ms`,
         );
 
         return { received: true };
     }
 
-    // ── Payment Success Handler ────────────────────────────────────────────────
+    // ── Succès paiement ────────────────────────────────────────────────────────
 
     private async handlePaymentSuccess(
         transactionId: string,
         referenceId: string,
     ): Promise<void> {
-        // Trouver la réservation via la référence (paymentRef dans idTransactionFournisseur)
+        // Le referenceId = paymentRef stocké dans Paiement.idTransactionFournisseur
         const paiement = await this.prisma.paiement.findFirst({
-            where: {
-                idTransactionFournisseur: referenceId,
-            },
+            where: { idTransactionFournisseur: referenceId },
             select: { reservationId: true },
         });
 
         if (!paiement) {
-            // Essayer via le referenceId directement comme reservationId
             this.logger.warn(
-                `WEBHOOK_PAIEMENT_NOT_FOUND: ref=${referenceId}, txId=${transactionId}`,
+                `WEBHOOK_PAIEMENT_INTROUVABLE : ref=${referenceId}, txId=${transactionId}`,
             );
             return;
         }
@@ -148,8 +143,8 @@ export class PaymentWebhookController {
             .execute(paiement.reservationId, { transactionId })
             .catch((err) => {
                 this.logger.error(
-                    `WEBHOOK_CONFIRM_ERROR: reservationId=${paiement.reservationId}, ` +
-                    `error=${err.message}`,
+                    `WEBHOOK_CONFIRM_ERROR : reservationId=${paiement.reservationId}, ` +
+                    `erreur=${err.message}`,
                 );
             });
     }

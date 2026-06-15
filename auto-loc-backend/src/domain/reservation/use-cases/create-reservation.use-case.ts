@@ -37,13 +37,16 @@ export interface CreateReservationInput {
     adresseLivraison?: string;
     fraisLivraison?: number;
     horsDakar?: boolean;
-    /** Méthode de paiement cible pour PayTech (ex: 'Wave', 'Orange Money', 'Free Money'). */
+    /** Méthode de paiement cible (ex: 'Wave', 'Orange Money', 'Free Money'). */
     targetPayment?: string;
 }
 
 export interface CreateReservationResult {
     reservationId: string;
-    paymentUrl: string;
+    /** URL de redirection — null si le paiement passe par le widget InTouch */
+    paymentUrl: string | null;
+    /** Config widget TouchPay — présent uniquement pour le fournisseur INTOUCH */
+    widgetConfig?: import('../../../infrastructure/payment/payment-provider.interface').IntouchWidgetConfig;
 }
 
 // ── Use Case ───────────────────────────────────────────────────────────────────
@@ -123,7 +126,7 @@ export class CreateReservationUseCase {
         // Pre-generate reservation UUID so the success/cancel URLs can include it.
         const reservationId = randomUUID();
         const paymentRef = `${input.vehiculeId.slice(0, 8)}-${Date.now()}`;
-        const paymentUrl = await this.payment.initiatePayment(
+        const { paymentUrl, widgetConfig } = await this.payment.initiatePayment(
             input.fournisseur,
             totalAvecLivraison,
             paymentRef,
@@ -228,7 +231,8 @@ export class CreateReservationUseCase {
         // ── 8. Post-commit side effects ───────────────────────────────────────────
         const result: IdempotencyResult = {
             reservationId: reservation.id,
-            paymentUrl: reservation.paymentUrl ?? paymentUrl,
+            paymentUrl: reservation.paymentUrl ?? paymentUrl ?? null,
+            widgetConfig,
         };
         await this.idempotency.commitResult(idempotencyKey, result);
         await this.queue.schedulePaymentExpiry(reservation.id);

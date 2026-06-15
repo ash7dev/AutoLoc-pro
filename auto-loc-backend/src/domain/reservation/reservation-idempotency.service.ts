@@ -1,6 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RedisService } from '../../infrastructure/redis/redis.service';
+import { IntouchWidgetConfig } from '../../infrastructure/payment/payment-provider.interface';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -11,7 +12,9 @@ const IDEM_PREFIX = 'idem:';
 
 export interface IdempotencyResult {
     reservationId: string;
-    paymentUrl: string;
+    paymentUrl: string | null;
+    /** Config widget TouchPay — présent pour le fournisseur INTOUCH */
+    widgetConfig?: IntouchWidgetConfig;
 }
 
 // ── Service ────────────────────────────────────────────────────────────────────
@@ -40,7 +43,7 @@ export class ReservationIdempotencyService {
                 if (redisVal === 'processing') {
                     throw new ConflictException('Requête déjà en cours de traitement');
                 }
-                return { reservationId: redisVal, paymentUrl: '' };
+                return { reservationId: redisVal, paymentUrl: null };
             }
         }
 
@@ -52,8 +55,7 @@ export class ReservationIdempotencyService {
         if (existing && existing.expiresAt > new Date()) {
             return {
                 reservationId: existing.reservationId,
-                paymentUrl:
-                    existing.paymentUrl ?? existing.reservation.paymentUrl ?? '',
+                paymentUrl: existing.paymentUrl ?? existing.reservation.paymentUrl ?? null,
             };
         }
 
