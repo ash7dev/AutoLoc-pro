@@ -9,27 +9,26 @@ import {
     WebhookPayload,
 } from '../payment-provider.interface';
 
-// ── InTouch Webhook Payload ────────────────────────────────────────────────────
+// ── InTouch Webhook Query Params ───────────────────────────────────────────────
+// InTouch envoie les données de callback dans les QUERY PARAMS (pas le body).
+// Exemple : ?payment_mode=SNPAIEMENTWAVE&paid_amount=253000&payment_status=00
+//            &command_number=<idFromClient>&payment_token=<txId>
 
-interface IntouchCallbackPayload {
+interface IntouchCallbackQuery {
     /** Notre référence passée en idFromClient — sert de clé de lookup */
-    idFromClient?: string;
-    /** ID de transaction côté InTouch */
-    transactionId?: string;
-    /** Statut du paiement */
-    status?: string;
-    /** Montant en XOF */
-    amount?: number | string;
-    /** Devise */
-    currency?: string;
-    /** Code erreur (0 = succès) */
-    errorCode?: number;
-    /** Message d'erreur */
-    errorMessage?: string;
-    /** Numéro du payeur */
-    recipientNumber?: string;
-    /** Méthode utilisée (WAVE, ORANGE_MONEY, etc.) */
-    paymentMethod?: string;
+    command_number?: string;
+    /** Token de transaction côté InTouch */
+    payment_token?: string;
+    /** Statut : '00' = succès, autre = échec */
+    payment_status?: string;
+    /** Montant payé */
+    paid_amount?: string;
+    /** Somme payée */
+    paid_sum?: string;
+    /** Mode de paiement utilisé (SNPAIEMENTWAVE, etc.) */
+    payment_mode?: string;
+    /** Date de validation */
+    payment_validation_date?: string;
 }
 
 // ── Provider ───────────────────────────────────────────────────────────────────
@@ -126,28 +125,33 @@ export class IntouchProvider implements PaymentProviderInterface {
     }
 
     // ── Parse Webhook ──────────────────────────────────────────────────────────
+    // InTouch envoie les données en query params, pas dans le body JSON.
+    // command_number  = notre idFromClient (paymentRef)
+    // payment_token   = transaction ID côté InTouch
+    // payment_status  = '00' succès, autre = échec
+    // paid_amount     = montant effectivement payé
 
-    parseWebhookPayload(rawBody: Buffer): WebhookPayload {
-        const body = JSON.parse(rawBody.toString('utf8')) as IntouchCallbackPayload;
+    parseWebhookPayload(_rawBody: Buffer, queryParams?: Record<string, string>): WebhookPayload {
+        const q = (queryParams ?? {}) as IntouchCallbackQuery;
 
-        // Succès si status === 'SUCCESS' ou errorCode === 0
-        const isSuccess =
-            body.status === 'SUCCESS' ||
-            (body.errorCode !== undefined && body.errorCode === 0);
+        const referenceId   = q.command_number ?? '';
+        const transactionId = q.payment_token  ?? `it_${referenceId || 'unknown'}`;
+        const isSuccess     = q.payment_status === '00';
         const status: 'SUCCESS' | 'FAILED' = isSuccess ? 'SUCCESS' : 'FAILED';
+        const amount        = Number(q.paid_amount ?? q.paid_sum ?? 0);
 
         this.logger.log(
-            `InTouch callback : ref=${body.idFromClient}, ` +
-            `txId=${body.transactionId}, status=${body.status}, ` +
-            `method=${body.paymentMethod ?? '—'}`,
+            `InTouch callback : ref=${referenceId}, ` +
+            `txId=${transactionId}, status=${q.payment_status}, ` +
+            `method=${q.payment_mode ?? '—'}`,
         );
 
         return {
-            transactionId: body.transactionId ?? `it_${body.idFromClient ?? 'unknown'}`,
+            transactionId,
             status,
-            amount:      Number(body.amount ?? 0),
-            referenceId: body.idFromClient ?? '',
-            rawPayload:  body as unknown as Record<string, unknown>,
+            amount,
+            referenceId,
+            rawPayload: q as unknown as Record<string, unknown>,
         };
     }
 

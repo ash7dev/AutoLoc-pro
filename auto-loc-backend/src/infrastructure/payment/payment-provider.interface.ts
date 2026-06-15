@@ -86,8 +86,9 @@ export interface PaymentProviderInterface {
 
     /**
      * Parse le payload webhook brut et extrait les champs normalisés.
+     * @param queryParams Query params de la requête (InTouch envoie les données ici)
      */
-    parseWebhookPayload(rawBody: Buffer): WebhookPayload;
+    parseWebhookPayload(rawBody: Buffer, queryParams?: Record<string, string>): WebhookPayload;
 
     /**
      * Initie un remboursement.

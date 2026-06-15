@@ -2,6 +2,7 @@ import {
     Controller,
     Post,
     Headers,
+    Query,
     RawBody,
     HttpCode,
     HttpStatus,
@@ -27,15 +28,16 @@ export class PaymentWebhookController {
 
     /**
      * POST /payments/webhook/intouch
-     * Callback InTouch/TouchPay — signature HMAC-SHA256 dans X-Intouch-Signature.
+     * Callback InTouch/TouchPay — données en query params, signature dans hash header.
      */
     @Post('intouch')
     @HttpCode(HttpStatus.OK)
     async handleIntouchCallback(
         @RawBody() rawBody: Buffer,
-        @Headers('x-intouch-signature') signature?: string,
+        @Query() queryParams: Record<string, string>,
+        @Headers('hash') signature?: string,
     ) {
-        return this.handleWebhook('intouch', rawBody, signature ?? '');
+        return this.handleWebhook('intouch', rawBody, signature ?? '', queryParams);
     }
 
     /**
@@ -70,6 +72,7 @@ export class PaymentWebhookController {
         routeName: string,
         rawBody: Buffer,
         signature: string,
+        queryParams?: Record<string, string>,
     ): Promise<{ received: true }> {
         const startTime = Date.now();
         this.logger.log(`Webhook reçu [${routeName}] — ${rawBody.length} octets`);
@@ -91,7 +94,7 @@ export class PaymentWebhookController {
         // 3. Parser le payload
         let payload;
         try {
-            payload = provider.parseWebhookPayload(rawBody);
+            payload = provider.parseWebhookPayload(rawBody, queryParams);
         } catch (err) {
             this.logger.error(`WEBHOOK_PARSE_ERROR [${routeName}] :`, err);
             throw new BadRequestException('Payload webhook invalide');
