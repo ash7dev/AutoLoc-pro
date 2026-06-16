@@ -375,7 +375,7 @@ export function ExplorerFilters({
 
             {/* ── Mobile bottom sheet ── */}
             {isMobileOpen && (
-                <div className="fixed inset-0 z-50 lg:hidden">
+                <div className="fixed inset-0 z-[60] lg:hidden">
                     {/* Backdrop */}
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCloseMobile} />
 
@@ -413,7 +413,7 @@ export function ExplorerFilters({
                         </div>
 
                         {/* Sticky CTA bottom */}
-                        <div className="flex-shrink-0 px-6 py-4 border-t border-white/10 bg-[#0d0d0d]">
+                        <div className="flex-shrink-0 px-6 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-white/10 bg-[#0d0d0d]">
                             <button
                                 type="button"
                                 onClick={onCloseMobile}

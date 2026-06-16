@@ -19,6 +19,9 @@ export function MobileBottomNav() {
   // Hide on dashboard pages (owner/admin have their own nav)
   if (pathname.startsWith('/dashboard')) return null;
 
+  // Hide on vehicle detail pages — the floating "Réserver" bar takes this spot instead
+  if (pathname.startsWith('/vehicle/')) return null;
+
   return (
     <nav
       aria-label="Navigation principale mobile"

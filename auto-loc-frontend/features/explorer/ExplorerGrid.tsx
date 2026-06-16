@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Car, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -71,24 +71,22 @@ export const DEFAULT_FILTERS: ExplorerFiltersState = {
 };
 
 /* ════════════════════════════════════════════════════════════════
-   DISPLAY STRATEGY ENGINE
+   DISPLAY STRATEGY — colonnes desktop uniquement.
+   Le backend renvoie déjà les véhicules triés (sortBy/sortOrder) ;
+   on n'effectue plus de re-tri côté client pour rester compatible
+   avec la pagination invisible (sinon les cartes déjà affichées
+   sauteraient à chaque page chargée).
 ════════════════════════════════════════════════════════════════ */
 interface DisplayStrategy {
   name: 'sparse' | 'limited' | 'normal' | 'abundant';
-  featuredCount: number;
-  gridCols: { sm: number; lg: number };
-  priorityRules: Array<{
-    field: keyof VehicleGridItem;
-    direction: 'asc' | 'desc';
-    weight: number;
-  }>;
+  gridCols: { lg: number };
 }
 
 const STRATEGIES: Record<string, DisplayStrategy> = {
-  sparse: { name: 'sparse', featuredCount: 1, gridCols: { sm: 1, lg: 2 }, priorityRules: [{ field: 'totalLocations', direction: 'desc', weight: 8 }, { field: 'note', direction: 'desc', weight: 7 }, { field: 'prixParJour', direction: 'asc', weight: 5 }] },
-  limited: { name: 'limited', featuredCount: 1, gridCols: { sm: 2, lg: 2 }, priorityRules: [{ field: 'totalLocations', direction: 'desc', weight: 8 }, { field: 'note', direction: 'desc', weight: 7 }, { field: 'prixParJour', direction: 'asc', weight: 5 }] },
-  normal: { name: 'normal', featuredCount: 1, gridCols: { sm: 2, lg: 3 }, priorityRules: [{ field: 'note', direction: 'desc', weight: 7 }, { field: 'totalLocations', direction: 'desc', weight: 6 }, { field: 'prixParJour', direction: 'asc', weight: 4 }] },
-  abundant: { name: 'abundant', featuredCount: 2, gridCols: { sm: 2, lg: 3 }, priorityRules: [{ field: 'note', direction: 'desc', weight: 7 }, { field: 'totalLocations', direction: 'desc', weight: 6 }, { field: 'prixParJour', direction: 'asc', weight: 4 }] },
+  sparse: { name: 'sparse', gridCols: { lg: 2 } },
+  limited: { name: 'limited', gridCols: { lg: 2 } },
+  normal: { name: 'normal', gridCols: { lg: 3 } },
+  abundant: { name: 'abundant', gridCols: { lg: 3 } },
 };
 
 function pickStrategy(n: number): DisplayStrategy {
@@ -96,28 +94,6 @@ function pickStrategy(n: number): DisplayStrategy {
   if (n <= 6) return STRATEGIES.limited;
   if (n <= 12) return STRATEGIES.normal;
   return STRATEGIES.abundant;
-}
-
-function calcScore(v: VehicleGridItem, rules: DisplayStrategy['priorityRules']): number {
-  return rules.reduce((acc, r) => {
-    const raw = (v[r.field] as number) ?? 0;
-    const norm =
-      r.field === 'note' ? raw / 5
-        : r.field === 'totalLocations' ? Math.min(raw / 20, 1)
-          : Math.max(0, 1 - raw / 100_000);
-    return acc + (r.direction === 'desc' ? norm : 1 - norm) * r.weight;
-  }, 0);
-}
-
-function distribute(vehicles: VehicleGridItem[], s: DisplayStrategy, scoreSort: boolean) {
-  const ordered = scoreSort
-    ? [...vehicles].sort((a, b) => calcScore(b, s.priorityRules) - calcScore(a, s.priorityRules))
-    : vehicles;
-  return {
-    featured: ordered.slice(0, s.featuredCount),
-    grid: ordered.slice(s.featuredCount),
-    total: vehicles.length,
-  };
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -180,24 +156,31 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
 function ResultsArea({
   loading,
   error,
-  filteredVehicles,
+  vehicles,
   strategy,
-  dist,
   hasActiveFilters,
   onReset,
   onRetry,
+  onEndReached,
 }: {
   loading: boolean;
   error: boolean;
-  filteredVehicles: VehicleGridItem[];
+  vehicles: VehicleGridItem[];
   strategy: DisplayStrategy;
-  dist: ReturnType<typeof distribute>;
   hasActiveFilters: boolean;
   onReset: () => void;
   onRetry: () => void;
+  onEndReached: () => void;
 }) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const triggeredRef = useRef(false);
+  const onEndReachedRef = useRef(onEndReached);
+
+  useEffect(() => {
+    onEndReachedRef.current = onEndReached;
+  }, [onEndReached]);
 
   // Re-attach observer when loading finishes (sectionRef.current is null during skeleton)
   useEffect(() => {
@@ -210,40 +193,55 @@ function ResultsArea({
     return () => obs.disconnect();
   }, [loading]);
 
+  // Pagination invisible : sentinel observé par rapport à la fenêtre (scroll vertical de la page).
+  // Re-armé à chaque ajout de véhicules pour pouvoir déclencher la page suivante.
+  useEffect(() => {
+    if (loading || !sentinelRef.current) return;
+    triggeredRef.current = false;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !triggeredRef.current) {
+          triggeredRef.current = true;
+          onEndReachedRef.current();
+        }
+      },
+      { rootMargin: '0px 0px 600px 0px' },
+    );
+    obs.observe(sentinelRef.current);
+    return () => obs.disconnect();
+  }, [loading, vehicles.length]);
+
   if (loading) return <VehicleGridSkeleton count={6} />;
   if (error) return <ErrorState onRetry={onRetry} />;
-  if (filteredVehicles.length === 0) return <EmptyState hasFilters={hasActiveFilters} onReset={onReset} />;
+  if (vehicles.length === 0) return <EmptyState hasFilters={hasActiveFilters} onReset={onReset} />;
 
   const gridColsCls = cn(
-    'grid gap-4 lg:gap-5',
-    strategy.gridCols.sm === 1 && 'grid-cols-1',
-    strategy.gridCols.sm === 2 && 'sm:grid-cols-2',
+    'grid grid-cols-2 gap-3 sm:gap-4 lg:gap-5',
     strategy.gridCols.lg === 2 && 'lg:grid-cols-2',
     strategy.gridCols.lg === 3 && 'lg:grid-cols-3',
-    'grid-cols-1',
   );
 
   return (
     <div ref={sectionRef} className="space-y-7">
 
       {/* ── Grid ─────────────────────────────────────────────── */}
-      {[...dist.featured, ...dist.grid].length > 0 && (
-        <div className={gridColsCls}>
-          {[...dist.featured, ...dist.grid].map((vehicle, i) => (
-            <div
-              key={vehicle.id}
-              className={cn(
-                'transition-all duration-500',
-                visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8',
-              )}
-              style={{ transitionDelay: `${Math.min(i * 60, 400)}ms` }}
-            >
-              <ExplorerVehicleCard vehicle={vehicle} />
-            </div>
-          ))}
-        </div>
-      )}
+      <div className={gridColsCls}>
+        {vehicles.map((vehicle, i) => (
+          <div
+            key={vehicle.id}
+            className={cn(
+              'transition-all duration-500',
+              visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8',
+            )}
+            style={{ transitionDelay: `${Math.min(i * 60, 400)}ms` }}
+          >
+            <ExplorerVehicleCard vehicle={vehicle} />
+          </div>
+        ))}
+      </div>
 
+      {/* Sentinel pagination invisible */}
+      <div ref={sentinelRef} className="h-px w-full" />
     </div>
   );
 }
@@ -347,20 +345,47 @@ export function ExplorerGrid(): React.ReactElement {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  /* API fetch */
+  /* Pagination invisible */
+  const pageRef = useRef(1);
+  const hasMoreRef = useRef(true);
+  const loadingMoreRef = useRef(false);
+  const geoParamsRef = useRef<{ latitude?: number; longitude?: number; rayon?: number }>({});
+
+  /* Construit les paramètres de recherche communs (hors page/géoloc) */
+  const buildBaseParams = useCallback(() => {
+    const sortMap: Record<string, { by: string; order: 'asc' | 'desc' }> = {
+      popular: { by: 'totalLocations', order: 'desc' },
+      rating: { by: 'note', order: 'desc' },
+      'price-asc': { by: 'prixParJour', order: 'asc' },
+      'price-desc': { by: 'prixParJour', order: 'desc' },
+      newest: { by: 'annee', order: 'desc' },
+    };
+    const { by, order } = sortMap[filters.sort] ?? { by: 'totalLocations', order: 'desc' };
+    return {
+      type: (filters.type as VehicleType) || undefined,
+      ville: filters.zone || undefined,
+      prixMin: filters.budgetMin || undefined,
+      prixMax: filters.budgetMax || undefined,
+      dateDebut: filters.dateDebut || undefined,
+      dateFin: filters.dateFin || undefined,
+      carburant: (filters.fuel as FuelType) || undefined,
+      transmission: (filters.transmission as Transmission) || undefined,
+      placesMin: filters.places || undefined,
+      noteMin: filters.noteMin || undefined,
+      equipements: filters.equipements.length ? filters.equipements : undefined,
+      sortBy: by as any,
+      sortOrder: order,
+      q: debouncedSearch.trim() || undefined,
+    };
+  }, [filters, debouncedSearch]);
+
+  /* API fetch — première page (reset complet) */
   const fetchVehicles = useCallback(async () => {
     setLoading(true);
     setError(false);
+    pageRef.current = 1;
+    hasMoreRef.current = true;
     try {
-      const sortMap: Record<string, { by: string; order: 'asc' | 'desc' }> = {
-        popular: { by: 'totalLocations', order: 'desc' },
-        rating: { by: 'note', order: 'desc' },
-        'price-asc': { by: 'prixParJour', order: 'asc' },
-        'price-desc': { by: 'prixParJour', order: 'desc' },
-        newest: { by: 'annee', order: 'desc' },
-      };
-      const { by, order } = sortMap[filters.sort] ?? { by: 'totalLocations', order: 'desc' };
-
       // Geolocation: auto-detect if "nearMe" is active
       let geoParams: { latitude?: number; longitude?: number; rayon?: number } = {};
       if (filters.nearMe && typeof navigator !== 'undefined' && navigator.geolocation) {
@@ -377,46 +402,56 @@ export function ExplorerGrid(): React.ReactElement {
           // Geolocation refused or unavailable — search without it
         }
       }
+      geoParamsRef.current = geoParams;
 
-      const result = await searchVehicles({
-        type: (filters.type as VehicleType) || undefined,
-        ville: filters.zone || undefined,
-        prixMin: filters.budgetMin || undefined,
-        prixMax: filters.budgetMax || undefined,
-        dateDebut: filters.dateDebut || undefined,
-        dateFin: filters.dateFin || undefined,
-        carburant: (filters.fuel as FuelType) || undefined,
-        transmission: (filters.transmission as Transmission) || undefined,
-        placesMin: filters.places || undefined,
-        noteMin: filters.noteMin || undefined,
-        equipements: filters.equipements.length ? filters.equipements : undefined,
-        sortBy: by as any,
-        sortOrder: order,
-        q: debouncedSearch.trim() || undefined,
-        ...geoParams,
-      });
-      setVehicles(result.data ?? []);
-      setTotal(result.total ?? result.data?.length ?? 0);
+      const result = await searchVehicles({ ...buildBaseParams(), ...geoParams, page: 1 });
+      const data = result.data ?? [];
+      const resultTotal = result.total ?? data.length;
+      setVehicles(data);
+      setTotal(resultTotal);
+      hasMoreRef.current = data.length > 0 && data.length < resultTotal;
     } catch {
       setError(true);
       setVehicles([]);
+      hasMoreRef.current = false;
     } finally {
       setLoading(false);
     }
-  }, [filters, debouncedSearch]);
+  }, [filters, buildBaseParams]);
 
   useEffect(() => { fetchVehicles(); }, [fetchVehicles]);
 
-  /* 
-     With backend search implemented, vehicles are already filtered.
-     We keep the memo to avoid re-renders but don't need local filtering logic anymore.
-  */
-  const filteredVehicles = useMemo(() => vehicles, [vehicles]);
+  /* Pagination invisible — charge la page suivante et l'ajoute sans re-trier le reste */
+  const loadMore = useCallback(async () => {
+    if (loadingMoreRef.current || !hasMoreRef.current) return;
+    loadingMoreRef.current = true;
+    try {
+      const nextPage = pageRef.current + 1;
+      const result = await searchVehicles({
+        ...buildBaseParams(),
+        ...geoParamsRef.current,
+        page: nextPage,
+      });
+      const newData = result.data ?? [];
+      if (newData.length === 0) {
+        hasMoreRef.current = false;
+        return;
+      }
+      setVehicles((prev) => {
+        const next = [...prev, ...newData];
+        if (next.length >= (result.total ?? next.length)) hasMoreRef.current = false;
+        return next;
+      });
+      pageRef.current = nextPage;
+    } catch (err) {
+      console.error('Error loading more vehicles', err);
+    } finally {
+      loadingMoreRef.current = false;
+    }
+  }, [buildBaseParams]);
 
-  /* Strategy */
-  const strategy = pickStrategy(filteredVehicles.length);
-  const scoreSort = filters.sort === 'popular' || filters.sort === 'rating';
-  const dist = distribute(filteredVehicles, strategy, scoreSort);
+  /* Strategy — basée sur le total (stable), pas sur le nb d'éléments déjà chargés */
+  const strategy = pickStrategy(total);
 
   /* Handlers */
   const handleFiltersChange = (f: ExplorerFiltersState) => setFilters(f);
@@ -477,12 +512,12 @@ export function ExplorerGrid(): React.ReactElement {
             <ResultsArea
               loading={loading}
               error={error}
-              filteredVehicles={filteredVehicles}
+              vehicles={vehicles}
               strategy={strategy}
-              dist={dist}
               hasActiveFilters={hasActiveFilters}
               onReset={handleReset}
               onRetry={fetchVehicles}
+              onEndReached={loadMore}
             />
 
           </div>
@@ -491,7 +526,7 @@ export function ExplorerGrid(): React.ReactElement {
 
       {/* ── Mobile Floating Filter Button ────────────────────────── */}
       {!mobileFiltersOpen && (
-        <div className="lg:hidden fixed bottom-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+        <div className="lg:hidden fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
           <button
             type="button"
             onClick={() => setMobileFiltersOpen(true)}

@@ -129,4 +129,10 @@ export class SearchVehiclesDto {
   @IsArray()
   @IsString({ each: true })
   equipements?: string[];
+
+  /** IDs à exclure des résultats (pagination invisible du feed accueil) */
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  excludeIds?: string[];
 }

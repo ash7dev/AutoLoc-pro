@@ -6,11 +6,11 @@ import { Car, Package, KeyRound, Truck, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
-  { value: 'CITADINE', label: 'Citadines', icon: KeyRound, desc: 'Agiles & Éco', color: 'from-amber-500/10 to-orange-500/10 text-orange-600 border-orange-500/10' },
-  { value: 'BERLINE', label: 'Berlines', icon: Car, desc: 'Confortables', color: 'from-blue-500/10 to-indigo-500/10 text-blue-600 border-blue-500/10' },
-  { value: 'SUV', label: 'SUV & 4x4', icon: Sparkles, desc: 'Spacieux & Robustes', color: 'from-emerald-500/10 to-teal-500/10 text-emerald-600 border-emerald-500/10' },
-  { value: 'PICKUP', label: 'Pick-ups', icon: Truck, desc: 'Tout-terrain', color: 'from-purple-500/10 to-violet-500/10 text-purple-600 border-purple-500/10' },
-  { value: 'UTILITAIRE', label: 'Utilitaires', icon: Package, desc: 'Grands volumes', color: 'from-rose-500/10 to-pink-500/10 text-rose-600 border-rose-500/10' },
+  { value: 'CITADINE', label: 'Citadines', icon: KeyRound, desc: 'Agiles & Éco' },
+  { value: 'BERLINE', label: 'Berlines', icon: Car, desc: 'Confortables' },
+  { value: 'SUV', label: 'SUV & 4x4', icon: Sparkles, desc: 'Spacieux & Robustes' },
+  { value: 'PICKUP', label: 'Pick-ups', icon: Truck, desc: 'Tout-terrain' },
+  { value: 'UTILITAIRE', label: 'Utilitaires', icon: Package, desc: 'Grands volumes' },
 ];
 
 export function MobileCategoriesCarousel(): React.ReactElement {
@@ -40,12 +40,12 @@ export function MobileCategoriesCarousel(): React.ReactElement {
               type="button"
               onClick={() => handleCategoryClick(cat.value)}
               className={cn(
-                'flex-shrink-0 w-[130px] p-3.5 rounded-2xl border bg-gradient-to-br text-left transition-all active:scale-95',
-                cat.color
+                'flex-shrink-0 w-[120px] p-3.5 rounded-2xl border border-slate-100 bg-white',
+                'shadow-sm shadow-slate-100/60 text-left transition-all active:scale-95 hover:border-emerald-200'
               )}
             >
-              <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-sm mb-3">
-                <Icon className="h-4.5 w-4.5" />
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-3">
+                <Icon className="h-4.5 w-4.5 text-emerald-600" strokeWidth={2} />
               </div>
               <p className="text-[12px] font-black text-slate-900 tracking-tight leading-tight">
                 {cat.label}

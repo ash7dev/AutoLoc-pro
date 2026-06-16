@@ -61,6 +61,15 @@ export class VehiclesController {
   }
 
   /**
+   * GET /vehicles/feed — Feed home (premium, nouveautés, recommandé). Public, cache Redis 120s.
+   * Doit être AVANT GET :id pour éviter que "feed" soit capturé comme UUID.
+   */
+  @Get('feed')
+  getHomeFeed() {
+    return this.vehiclesService.getHomeFeed();
+  }
+
+  /**
    * GET /vehicles/upload-signature — Génère une signature Cloudinary pour l'upload direct.
    * Le frontend upload le fichier directement vers Cloudinary sans passer par ce serveur.
    */

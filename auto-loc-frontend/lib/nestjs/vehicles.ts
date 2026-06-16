@@ -161,6 +161,7 @@ export interface SearchVehiclesParams {
   longitude?: number;
   rayon?: number;
   equipements?: string[];
+  excludeIds?: string[];
   q?: string;
 }
 
@@ -168,6 +169,15 @@ export interface SearchVehiclesResponse {
   data: VehicleSearchResult[];
   page: number;
   total: number;
+}
+
+export interface HomeFeedResponse {
+  premium: VehicleSearchResult[];
+  nouveautes: VehicleSearchResult[];
+  recommended: {
+    items: VehicleSearchResult[];
+    excludedIds: string[];
+  };
 }
 
 // ── Client cache (public search) ──────────────────────────────────────────────
@@ -184,6 +194,7 @@ const searchCache: Map<string, { ts: number; data: SearchVehiclesResponse }> =
 export const VEHICLE_PATHS = {
   create: '/vehicles',
   search: '/vehicles/search',
+  feed: '/vehicles/feed',
   me: '/vehicles/me',
   detail: (id: string) => `/vehicles/${id}`,
   update: (id: string) => `/vehicles/${id}`,
@@ -379,6 +390,7 @@ export async function searchVehicles(
   if (params.longitude != null) qs.set('longitude', String(params.longitude));
   if (params.rayon != null) qs.set('rayon', String(params.rayon));
   if (params.equipements?.length) params.equipements.forEach(e => qs.append('equipements', e));
+  if (params.excludeIds?.length) params.excludeIds.forEach(id => qs.append('excludeIds', id));
   if (params.q) qs.set('q', params.q);
 
   const key = qs.toString() || 'all';
@@ -401,6 +413,15 @@ export async function searchVehicles(
   }
 
   return data;
+}
+
+/**
+ * Récupère le feed accueil (recommandés, premium, nouveautés) en un seul appel.
+ */
+export async function fetchHomeFeed(): Promise<HomeFeedResponse> {
+  return apiFetch<HomeFeedResponse>(VEHICLE_PATHS.feed, {
+    next: { revalidate: 60 },
+  });
 }
 
 /**

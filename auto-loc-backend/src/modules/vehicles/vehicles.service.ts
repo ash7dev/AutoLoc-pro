@@ -46,8 +46,47 @@ interface VehicleSearchRow {
   isFeatured: boolean;
 }
 
+interface TarifTierRow {
+  id: string;
+  vehiculeId: string;
+  joursMin: number;
+  joursMax: number | null;
+  prix: Prisma.Decimal;
+  position: number;
+}
+
+const FEED_CACHE_KEY = 'vehicles:feed:home';
+const FEED_CACHE_TTL = 120; // secondes
+const FEED_SECTION_SIZE = 10;
+const FEED_NOUVEAUTES_WINDOW_DAYS = 14;
+
 @Injectable()
 export class VehiclesService {
+  /** Colonnes véhicule + photo de couverture, partagées entre search() et getHomeFeed(). */
+  private static readonly VEHICLE_SELECT_FRAGMENT = Prisma.sql`
+    v.id,
+    v.marque,
+    v.modele,
+    v.annee,
+    v.type::text AS type,
+    v."prixParJour",
+    v.ville,
+    v.note,
+    v."totalAvis",
+    v.statut::text AS statut,
+    v."totalLocations",
+    v.carburant::text AS carburant,
+    v.transmission::text AS transmission,
+    v."nombrePlaces",
+    v."isFeatured",
+    (
+      SELECT p.url
+      FROM "PhotoVehicule" p
+      WHERE p."vehiculeId" = v.id AND p."estPrincipale" = true
+      LIMIT 1
+    ) AS "photoUrl"
+  `;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinary: CloudinaryService,
@@ -611,6 +650,7 @@ export class VehiclesService {
       longitude: dto.longitude ?? null,
       rayon: dto.rayon ?? null,
       equipements: dto.equipements ?? null,
+      excludeIds: dto.excludeIds?.length ? [...dto.excludeIds].sort() : null,
       q: dto.q ?? null,
       page,
     });
@@ -706,6 +746,12 @@ export class VehiclesService {
           ) >= ${dto.equipements.length}`
         : Prisma.empty;
 
+    // Exclusion explicite d'IDs (pagination invisible du feed accueil)
+    const excludeCondition =
+      dto.excludeIds?.length
+        ? Prisma.sql`AND v.id <> ALL(ARRAY[${Prisma.join(dto.excludeIds)}]::uuid[])`
+        : Prisma.empty;
+
     // ── Requête native ────────────────────────────────────────────────────────
     const orderFieldMap: Record<NonNullable<typeof dto.sortBy>, string> = {
       totalLocations: 'v."totalLocations"',
@@ -732,33 +778,13 @@ export class VehiclesService {
         ${dateCondition}
         ${geoCondition}
         ${equipementCondition}
+        ${excludeCondition}
         ${searchCondition}
     `;
     const total = Number(totalQuery[0]?.count ?? 0);
 
     const rows = await this.prisma.$queryRaw<VehicleSearchRow[]>`
-      SELECT
-        v.id,
-        v.marque,
-        v.modele,
-        v.annee,
-        v.type::text AS type,
-        v."prixParJour",
-        v.ville,
-        v.note,
-        v."totalAvis",
-        v.statut::text AS statut,
-        v."totalLocations",
-        v.carburant::text AS carburant,
-        v.transmission::text AS transmission,
-        v."nombrePlaces",
-        v."isFeatured",
-        (
-          SELECT p.url
-          FROM "PhotoVehicule" p
-          WHERE p."vehiculeId" = v.id AND p."estPrincipale" = true
-          LIMIT 1
-        ) AS "photoUrl"
+      SELECT ${VehiclesService.VEHICLE_SELECT_FRAGMENT}
       FROM "Vehicule" v
       WHERE v.statut::text = 'VERIFIE'
         ${villeCondition}
@@ -772,12 +798,27 @@ export class VehiclesService {
         ${dateCondition}
         ${geoCondition}
         ${equipementCondition}
+        ${excludeCondition}
         ${searchCondition}
       ORDER BY v."isFeatured" DESC, ${Prisma.raw(orderField)} ${Prisma.raw(orderDir)}
       LIMIT ${Prisma.raw(String(SEARCH_PAGE_SIZE))} OFFSET ${Prisma.raw(String(offset))}
     `;
 
     const ids = rows.map((r) => r.id);
+    const tiersByVehicle = await this.hydrateTarifs(ids);
+
+    const result = {
+      data: rows.map((r) => this.mapSearchRow(r, tiersByVehicle)),
+      page,
+      total,
+    };
+
+    await this.redis.set(cacheKey, JSON.stringify(result), SEARCH_CACHE_TTL);
+    return result;
+  }
+
+  /** Fetch + groupe les paliers tarifaires par véhicule (réutilisé par search() et getHomeFeed()). */
+  private async hydrateTarifs(ids: string[]): Promise<Map<string, TarifTierRow[]>> {
     const tiers = await this.prisma.tarifTier.findMany({
       where: { vehiculeId: { in: ids } },
       orderBy: [{ vehiculeId: 'asc' }, { position: 'asc' }],
@@ -790,55 +831,150 @@ export class VehiclesService {
         position: true,
       },
     });
-    const tiersByVehicle = new Map<string, typeof tiers>();
+    const tiersByVehicle = new Map<string, TarifTierRow[]>();
     for (const t of tiers) {
       const arr = tiersByVehicle.get(t.vehiculeId) ?? [];
       arr.push(t);
       tiersByVehicle.set(t.vehiculeId, arr);
     }
+    return tiersByVehicle;
+  }
 
-    const result = {
-      data: rows.map((r) => ({
-        id: r.id,
-        marque: r.marque,
-        modele: r.modele,
-        annee: Number(r.annee),
-        type: r.type,
-        prixParJour: Number(r.prixParJour),
-        ville: r.ville,
-        note: Number(r.note),
-        totalAvis: Number((r as any).totalAvis ?? 0),
-        statut: (r as any).statut ?? 'VERIFIE',
-        totalLocations: Number(r.totalLocations),
-        carburant: r.carburant ?? null,
-        transmission: r.transmission ?? null,
-        nombrePlaces: r.nombrePlaces ? Number(r.nombrePlaces) : null,
-        isFeatured: Boolean(r.isFeatured),
-        photoUrl: r.photoUrl,
-        tarifsProgressifs: (tiersByVehicle.get(r.id) ?? []).map((t) => ({
-          id: t.id,
-          joursMin: t.joursMin,
-          joursMax: t.joursMax,
-          prix: t.prix.toString(),
-          position: t.position,
-        })),
+  /** Convertit une ligne SQL brute + ses tarifs en objet exposé côté API (réutilisé par search() et getHomeFeed()). */
+  private mapSearchRow(r: VehicleSearchRow, tiersByVehicle: Map<string, TarifTierRow[]>) {
+    return {
+      id: r.id,
+      marque: r.marque,
+      modele: r.modele,
+      annee: Number(r.annee),
+      type: r.type,
+      prixParJour: Number(r.prixParJour),
+      ville: r.ville,
+      note: Number(r.note),
+      totalAvis: Number((r as any).totalAvis ?? 0),
+      statut: (r as any).statut ?? 'VERIFIE',
+      totalLocations: Number(r.totalLocations),
+      carburant: r.carburant ?? null,
+      transmission: r.transmission ?? null,
+      nombrePlaces: r.nombrePlaces ? Number(r.nombrePlaces) : null,
+      isFeatured: Boolean(r.isFeatured),
+      photoUrl: r.photoUrl,
+      tarifsProgressifs: (tiersByVehicle.get(r.id) ?? []).map((t) => ({
+        id: t.id,
+        joursMin: t.joursMin,
+        joursMax: t.joursMax,
+        prix: t.prix.toString(),
+        position: t.position,
       })),
-      page,
-      total,
     };
-
-    await this.redis.set(cacheKey, JSON.stringify(result), SEARCH_CACHE_TTL);
-    return result;
   }
 
   /**
-   * Invalide tout le cache de recherche véhicules.
+   * GET /vehicles/feed — Feed home : recommandés, sélection premium, nouveautés.
+   * Une seule réponse composite, cache Redis 120s, jamais de section vide tant
+   * qu'il existe au moins un véhicule VERIFIE (cascade de tri + backfill par doublon).
+   */
+  async getHomeFeed() {
+    const cached = await this.redis.get(FEED_CACHE_KEY);
+    if (cached) {
+      return JSON.parse(cached) as ReturnType<VehiclesService['buildHomeFeed']> extends Promise<infer T> ? T : never;
+    }
+
+    const result = await this.buildHomeFeed();
+    await this.redis.set(FEED_CACHE_KEY, JSON.stringify(result), FEED_CACHE_TTL);
+    return result;
+  }
+
+  private async buildHomeFeed() {
+    // ── Premium : trié par nb de réservations, avec cascade de fallback ──────
+    const premiumRows = await this.prisma.$queryRaw<VehicleSearchRow[]>`
+      SELECT ${VehiclesService.VEHICLE_SELECT_FRAGMENT}
+      FROM "Vehicule" v
+      WHERE v.statut::text = 'VERIFIE'
+      ORDER BY v."totalLocations" DESC, v.note DESC, v."creeLe" DESC
+      LIMIT ${Prisma.raw(String(FEED_SECTION_SIZE))}
+    `;
+
+    // ── Nouveautés : fenêtre de date précise, avec backfill si catalogue jeune ──
+    const nouveautesRecentes = await this.prisma.$queryRaw<VehicleSearchRow[]>`
+      SELECT ${VehiclesService.VEHICLE_SELECT_FRAGMENT}
+      FROM "Vehicule" v
+      WHERE v.statut::text = 'VERIFIE'
+        AND v."creeLe" >= NOW() - (INTERVAL '1 day' * ${FEED_NOUVEAUTES_WINDOW_DAYS})
+      ORDER BY v."creeLe" DESC
+      LIMIT ${Prisma.raw(String(FEED_SECTION_SIZE))}
+    `;
+    let nouveautesRows = nouveautesRecentes;
+    if (nouveautesRows.length < FEED_SECTION_SIZE) {
+      const already = nouveautesRows.map((r) => r.id);
+      const backfillCondition = already.length
+        ? Prisma.sql`AND v.id <> ALL(ARRAY[${Prisma.join(already)}]::uuid[])`
+        : Prisma.empty;
+      const backfill = await this.prisma.$queryRaw<VehicleSearchRow[]>`
+        SELECT ${VehiclesService.VEHICLE_SELECT_FRAGMENT}
+        FROM "Vehicule" v
+        WHERE v.statut::text = 'VERIFIE'
+          ${backfillCondition}
+        ORDER BY v."creeLe" DESC
+        LIMIT ${Prisma.raw(String(FEED_SECTION_SIZE - nouveautesRows.length))}
+      `;
+      nouveautesRows = [...nouveautesRows, ...backfill];
+    }
+
+    const usedIds = [...new Set([...premiumRows.map((r) => r.id), ...nouveautesRows.map((r) => r.id)])];
+
+    // ── Recommandé : aléatoire, exclusion best-effort des IDs déjà utilisés ──
+    const excludeUsedCondition = usedIds.length
+      ? Prisma.sql`AND v.id <> ALL(ARRAY[${Prisma.join(usedIds)}]::uuid[])`
+      : Prisma.empty;
+    let recommendedRows = await this.prisma.$queryRaw<VehicleSearchRow[]>`
+      SELECT ${VehiclesService.VEHICLE_SELECT_FRAGMENT}
+      FROM "Vehicule" v
+      WHERE v.statut::text = 'VERIFIE'
+        ${excludeUsedCondition}
+      ORDER BY RANDOM()
+      LIMIT ${Prisma.raw(String(FEED_SECTION_SIZE))}
+    `;
+    if (recommendedRows.length < FEED_SECTION_SIZE) {
+      // Pas assez de véhicules hors premium/nouveautés (catalogue réduit) : on
+      // complète quitte à dupliquer plutôt que d'afficher une section tronquée.
+      const already = recommendedRows.map((r) => r.id);
+      const backfillCondition = already.length
+        ? Prisma.sql`AND v.id <> ALL(ARRAY[${Prisma.join(already)}]::uuid[])`
+        : Prisma.empty;
+      const backfill = await this.prisma.$queryRaw<VehicleSearchRow[]>`
+        SELECT ${VehiclesService.VEHICLE_SELECT_FRAGMENT}
+        FROM "Vehicule" v
+        WHERE v.statut::text = 'VERIFIE'
+          ${backfillCondition}
+        ORDER BY RANDOM()
+        LIMIT ${Prisma.raw(String(FEED_SECTION_SIZE - recommendedRows.length))}
+      `;
+      recommendedRows = [...recommendedRows, ...backfill];
+    }
+
+    const allIds = [...new Set([...usedIds, ...recommendedRows.map((r) => r.id)])];
+    const tiersByVehicle = await this.hydrateTarifs(allIds);
+
+    return {
+      premium: premiumRows.map((r) => this.mapSearchRow(r, tiersByVehicle)),
+      nouveautes: nouveautesRows.map((r) => this.mapSearchRow(r, tiersByVehicle)),
+      recommended: {
+        items: recommendedRows.map((r) => this.mapSearchRow(r, tiersByVehicle)),
+        excludedIds: usedIds,
+      },
+    };
+  }
+
+  /**
+   * Invalide tout le cache de recherche véhicules (et le feed accueil, qui en dépend).
    * À appeler depuis CreateReservation et CancelReservation.
    */
   async invalidateSearchCache(city?: string): Promise<void> {
     const cityKey = city?.toLowerCase();
     const pattern = cityKey ? `${SEARCH_CACHE_PREFIX}${cityKey}:*` : `${SEARCH_CACHE_PREFIX}*`;
     await this.redis.delPattern(pattern);
+    await this.redis.del(FEED_CACHE_KEY);
   }
 
   // ── Photos ───────────────────────────────────────────────────────────────────

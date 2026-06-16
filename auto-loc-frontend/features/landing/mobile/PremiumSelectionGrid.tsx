@@ -1,52 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
-import { searchVehicles } from '@/lib/nestjs/vehicles';
+import { Star, ShieldCheck, ArrowRight } from 'lucide-react';
+import type { VehicleSearchResult } from '@/lib/nestjs/vehicles';
 import { useCurrency } from '@/providers/currency-provider';
 import { cn } from '@/lib/utils';
 
 const PRIX_COEFFICIENT_AFFICHAGE = 1.15;
 
-export function PremiumSelectionGrid(): React.ReactElement | null {
-  const [loading, setLoading] = useState(false);
-  const [vehicles, setVehicles] = useState<any[]>([]);
+interface PremiumSelectionGridProps {
+  vehicles: VehicleSearchResult[];
+}
+
+export function PremiumSelectionGrid({ vehicles }: PremiumSelectionGridProps): React.ReactElement | null {
   const { formatPrice } = useCurrency();
 
-  useEffect(() => {
-    fetchPremiumVehicles();
-  }, []);
-
-  const fetchPremiumVehicles = async () => {
-    setLoading(true);
-    try {
-      // Query top rated/popular vehicles for premium selection
-      const res = await searchVehicles({ 
-        sortBy: 'note', 
-        sortOrder: 'desc',
-        page: 1 
-      });
-      // Limit to 4 for a clean 2x2 grid
-      setVehicles((res.data || []).slice(0, 4));
-    } catch (err) {
-      console.error('Error fetching premium vehicles', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 gap-2">
-        <Loader2 className="h-6 w-6 text-emerald-500 animate-spin" />
-        <p className="text-[11px] font-semibold text-slate-400">Chargement de la sélection premium...</p>
-      </div>
-    );
-  }
-
-  if (vehicles.length === 0) return null;
+  if (!vehicles || vehicles.length === 0) return null;
 
   return (
     <div className="py-4 border-t border-slate-50 px-4">
@@ -69,9 +40,9 @@ export function PremiumSelectionGrid(): React.ReactElement | null {
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
-        {vehicles.map((v) => {
+        {vehicles.slice(0, 4).map((v) => {
           const basePrice = Math.round(Number(v.prixParJour) * PRIX_COEFFICIENT_AFFICHAGE);
-          const photo = v.photoUrl || v.photos?.find((p: any) => p.estPrincipale)?.url || v.photos?.[0]?.url;
+          const photo = v.photoUrl;
 
           return (
             <Link

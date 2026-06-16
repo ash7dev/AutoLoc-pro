@@ -1,48 +1,49 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Navigation, Loader2 } from 'lucide-react';
-import { searchVehicles } from '@/lib/nestjs/vehicles';
+import { searchVehicles, type VehicleSearchResult } from '@/lib/nestjs/vehicles';
 import { HorizontalVehicleCarousel } from '../HorizontalVehicleCarousel';
 
-export function NearbyVehiclesSection(): React.ReactElement {
+interface NearbyVehiclesSectionProps {
+  initialVehicles: VehicleSearchResult[];
+  excludeIds: string[];
+}
+
+export function NearbyVehiclesSection({ initialVehicles, excludeIds }: NearbyVehiclesSectionProps): React.ReactElement {
   const [loading, setLoading] = useState(false);
-  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [vehicles, setVehicles] = useState<VehicleSearchResult[]>(initialVehicles);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
 
-  // Check if geolocation is already allowed or if we should show standard list
+  const pageRef = useRef(2);
+  const excludeIdsRef = useRef(excludeIds);
+  const hasMoreRef = useRef(true);
+  const loadingMoreRef = useRef(false);
+
+  // Resynchronise avec les données du feed quand elles arrivent (HomeMobile les fetch
+  // de façon asynchrone) — sauf si la géolocalisation a déjà pris le relais.
+  useEffect(() => {
+    if (hasPermission === true) return;
+    setVehicles(initialVehicles);
+    excludeIdsRef.current = excludeIds;
+    pageRef.current = 2;
+    hasMoreRef.current = true;
+  }, [initialVehicles, excludeIds, hasPermission]);
+
+  // Check if geolocation is already allowed or if we should keep the feed's initial list
   useEffect(() => {
     if (typeof window !== 'undefined' && navigator.permissions) {
       navigator.permissions.query({ name: 'geolocation' }).then((result) => {
         if (result.state === 'granted') {
           setHasPermission(true);
           getLocationAndFetch();
-        } else if (result.state === 'prompt') {
-          setHasPermission(null);
-          // Load default vehicles (non-geolocated) as initial view
-          fetchDefaultVehicles();
         } else {
-          setHasPermission(false);
-          fetchDefaultVehicles();
+          setHasPermission(result.state === 'prompt' ? null : false);
         }
       });
-    } else {
-      fetchDefaultVehicles();
     }
   }, []);
-
-  const fetchDefaultVehicles = async () => {
-    setLoading(true);
-    try {
-      const res = await searchVehicles({ page: 1 });
-      setVehicles(res.data || []);
-    } catch (err) {
-      console.error('Error fetching default vehicles', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getLocationAndFetch = () => {
     if (!navigator.geolocation) return;
@@ -60,6 +61,9 @@ export function NearbyVehiclesSection(): React.ReactElement {
             rayon: 50, // 50 km
           });
           setVehicles(res.data || []);
+          // Pagination invisible repartie de page 2 sur la base géolocalisée
+          pageRef.current = 2;
+          hasMoreRef.current = true;
         } catch (err) {
           console.error('Error searching nearby vehicles', err);
         } finally {
@@ -69,9 +73,33 @@ export function NearbyVehiclesSection(): React.ReactElement {
       (error) => {
         console.warn('Geolocation error:', error);
         setHasPermission(false);
-        fetchDefaultVehicles();
+        setLoading(false);
       }
     );
+  };
+
+  const loadMore = async () => {
+    if (loadingMoreRef.current || !hasMoreRef.current) return;
+    loadingMoreRef.current = true;
+    try {
+      const res = await searchVehicles({
+        page: pageRef.current,
+        excludeIds: excludeIdsRef.current,
+        ...(coords ? { latitude: coords.lat, longitude: coords.lng, rayon: 50 } : {}),
+      });
+      const newVehicles = res.data || [];
+      if (newVehicles.length === 0) {
+        hasMoreRef.current = false;
+        return;
+      }
+      setVehicles((prev) => [...prev, ...newVehicles]);
+      excludeIdsRef.current = [...excludeIdsRef.current, ...newVehicles.map((v) => v.id)];
+      pageRef.current += 1;
+    } catch (err) {
+      console.error('Error loading more vehicles', err);
+    } finally {
+      loadingMoreRef.current = false;
+    }
   };
 
   return (
@@ -106,7 +134,7 @@ export function NearbyVehiclesSection(): React.ReactElement {
         </div>
       ) : (
         <div className="px-4">
-          <HorizontalVehicleCarousel vehicles={vehicles} />
+          <HorizontalVehicleCarousel vehicles={vehicles} onEndReached={loadMore} />
         </div>
       )}
     </div>

@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Calendar as CalendarIcon, MapPin, SlidersHorizontal } from 'lucide-react';
+import { Search, Calendar as CalendarIcon, MapPin, SlidersHorizontal, Car, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCurrency } from '@/providers/currency-provider';
 import {
   Sheet,
   SheetContent,
@@ -11,6 +12,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 
 const ZONES_DAKAR = [
   { value: '', label: 'Toutes les zones' },
@@ -24,74 +31,162 @@ const ZONES_DAKAR = [
   { value: 'keurmassar-rufisque', label: 'Keur Massar – Rufisque' },
 ];
 
+const TYPES_VEHICULES = [
+  { value: '', label: 'Tous les types' },
+  { value: 'CITADINE', label: 'Citadine' },
+  { value: 'BERLINE', label: 'Berline' },
+  { value: 'SUV', label: 'SUV' },
+  { value: 'PICKUP', label: 'Pick-up' },
+  { value: 'MINIVAN', label: 'Minivan' },
+  { value: 'MONOSPACE', label: 'Monospace' },
+  { value: 'MINIBUS', label: 'Minibus' },
+  { value: 'UTILITAIRE', label: 'Utilitaire' },
+  { value: 'LUXE', label: 'Luxe' },
+  { value: 'FOUR_X_FOUR', label: '4x4' },
+];
+
+const PRIX_MAX_OPTIONS = [
+  { value: '', cfaAmount: 25000, prefix: 'À partir de' },
+  { value: '30000', cfaAmount: 30000, prefix: "Jusqu'à" },
+  { value: '50000', cfaAmount: 50000, prefix: "Jusqu'à" },
+  { value: '75000', cfaAmount: 75000, prefix: "Jusqu'à" },
+  { value: '100000', cfaAmount: 100000, prefix: "Jusqu'à" },
+];
+
+const FIELD_CLASS = 'w-full px-3.5 py-3 rounded-xl border border-slate-100 bg-slate-50 text-[12.5px] font-bold text-slate-800';
+
+// ─── Champ de date avec calendrier dédié ───────────────────────────────────
+interface DateFieldProps {
+  label: string;
+  value: string;
+  onChange: (iso: string) => void;
+  minDate?: Date;
+}
+
+function DateField({ label, value, onChange, minDate }: DateFieldProps) {
+  const [open, setOpen] = useState(false);
+  const selected = value ? new Date(value + 'T00:00:00') : undefined;
+  const display = selected
+    ? selected.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+    : 'Ajouter';
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="flex-1 min-w-0 flex flex-col items-start gap-0.5 px-4 py-3 text-left active:bg-slate-50 transition-colors"
+        >
+          <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
+            <CalendarIcon className="h-2.5 w-2.5" /> {label}
+          </span>
+          <span className={cn('text-[13px] font-bold leading-tight', selected ? 'text-slate-800' : 'text-slate-400')}>
+            {display}
+          </span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-auto p-0 rounded-2xl border border-slate-100 shadow-xl z-50"
+        align="start"
+        sideOffset={8}
+      >
+        <Calendar
+          mode="single"
+          selected={selected}
+          onSelect={(date) => {
+            if (date) {
+              onChange(date.toISOString().split('T')[0]);
+              setOpen(false);
+            }
+          }}
+          disabled={(date) => !!minDate && date < minDate}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function MobileSearchBar(): React.ReactElement {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
+  const { formatPrice } = useCurrency();
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [q, setQ] = useState('');
   const [zone, setZone] = useState('');
+  const [type, setType] = useState('');
+  const [budget, setBudget] = useState('');
   const [debut, setDebut] = useState('');
   const [fin, setFin] = useState('');
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const displayDebut = debut
-    ? new Date(debut + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-    : 'Départ';
-
-  const displayFin = fin
-    ? new Date(fin + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-    : 'Retour';
-
-  const selectedZoneLabel = ZONES_DAKAR.find(z => z.value === zone)?.label || 'Où allez-vous ?';
+  const activeFiltersCount = [zone, type, budget].filter(Boolean).length;
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams();
+    if (q) params.set('q', q);
     if (zone) params.set('zone', zone);
+    if (type) params.set('type', type);
+    if (budget) params.set('budget', budget);
     if (debut) params.set('debut', debut);
     if (fin) params.set('fin', fin);
-    setIsOpen(false);
+    setIsFiltersOpen(false);
     router.push(`/explorer?${params.toString()}`);
   }
 
   return (
-    <div className="w-full px-4 pt-4 pb-2">
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <div className="w-full flex items-stretch gap-2 px-4 pt-4 pb-2">
+      {/* Dates — accessibles directement, chacune ouvre son propre calendrier */}
+      <div className="flex-1 flex items-stretch bg-white rounded-2xl border border-slate-100 shadow-md shadow-slate-200/50 divide-x divide-slate-100 overflow-hidden">
+        <DateField label="Départ" value={debut} onChange={setDebut} minDate={today} />
+        <DateField
+          label="Arrivée"
+          value={fin}
+          onChange={setFin}
+          minDate={debut ? new Date(debut + 'T00:00:00') : today}
+        />
+      </div>
+
+      {/* Filtres — Zone, Type, Budget, Recherche */}
+      <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
         <SheetTrigger asChild>
           <button
             type="button"
-            className={cn(
-              'w-full flex items-center justify-between gap-3 px-4 py-3 bg-white rounded-2xl border border-slate-100',
-              'shadow-md shadow-slate-200/50 text-left cursor-pointer transition-all active:scale-[0.98]'
-            )}
+            className="relative w-[52px] shrink-0 flex items-center justify-center bg-white rounded-2xl border border-slate-100 shadow-md shadow-slate-200/50 active:scale-[0.96] transition-all"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
-                <Search className="h-4.5 w-4.5 text-emerald-600" strokeWidth={2.5} />
+            <SlidersHorizontal className="h-4.5 w-4.5 text-slate-600" />
+            {activeFiltersCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center">
+                {activeFiltersCount}
               </span>
-              <div className="min-w-0">
-                <p className="text-[13px] font-bold text-slate-800 truncate leading-tight">
-                  {selectedZoneLabel === 'Où allez-vous ?' ? 'Rechercher une zone...' : selectedZoneLabel}
-                </p>
-                <p className="text-[11px] font-medium text-slate-400 mt-0.5 leading-none">
-                  {debut ? `${displayDebut} — ${displayFin}` : 'Ajouter des dates'}
-                </p>
-              </div>
-            </div>
-            <span className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 text-slate-500">
-              <SlidersHorizontal className="h-4 w-4" />
-            </span>
+            )}
           </button>
         </SheetTrigger>
 
-        <SheetContent side="bottom" className="h-[85vh] rounded-t-[28px] px-6 pb-6 pt-4 border-t border-slate-100 bg-white">
-          <SheetHeader className="pb-4 border-b border-slate-50">
+        <SheetContent side="bottom" className="h-[85vh] rounded-t-[28px] px-6 pb-6 pt-4 border-t border-slate-100 bg-white flex flex-col">
+          <SheetHeader className="pb-4 border-b border-slate-50 shrink-0">
             <SheetTitle className="text-[17px] font-black tracking-tight text-slate-900">
-              Votre recherche
+              Filtres de recherche
             </SheetTitle>
           </SheetHeader>
 
-          <form onSubmit={handleSearch} className="flex flex-col gap-5 mt-5 h-[calc(100%-80px)]">
+          <form onSubmit={handleSearch} className="flex flex-col gap-5 mt-5 flex-1 overflow-y-auto pb-2">
+            {/* Free text search */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
+                <Search className="h-3 w-3 text-slate-400" /> Recherche libre
+              </label>
+              <input
+                type="text"
+                placeholder="Berline, SUV, Toyota Prado..."
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                className={FIELD_CLASS}
+              />
+            </div>
+
             {/* Zone Selector */}
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
@@ -116,42 +211,45 @@ export function MobileSearchBar(): React.ReactElement {
               </div>
             </div>
 
-            {/* Date Pickers */}
+            {/* Type & Budget */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                  <CalendarIcon className="h-3 w-3 text-slate-400" /> Début
+                  <Car className="h-3 w-3 text-slate-400" /> Type
                 </label>
-                <input
-                  type="date"
-                  value={debut}
-                  min={today.toISOString().split('T')[0]}
-                  onChange={(e) => setDebut(e.target.value)}
-                  className="w-full px-3.5 py-3 rounded-xl border border-slate-100 bg-slate-50 text-[12.5px] font-bold text-slate-800 appearance-none"
-                />
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className={FIELD_CLASS}
+                >
+                  {TYPES_VEHICULES.map(({ value, label }) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
-                  <CalendarIcon className="h-3 w-3 text-slate-400" /> Fin
+                  <Tag className="h-3 w-3 text-slate-400" /> Budget / jour
                 </label>
-                <input
-                  type="date"
-                  value={fin}
-                  min={debut || today.toISOString().split('T')[0]}
-                  onChange={(e) => setFin(e.target.value)}
-                  className="w-full px-3.5 py-3 rounded-xl border border-slate-100 bg-slate-50 text-[12.5px] font-bold text-slate-800 appearance-none"
-                />
+                <select
+                  value={budget}
+                  onChange={(e) => setBudget(e.target.value)}
+                  className={FIELD_CLASS}
+                >
+                  {PRIX_MAX_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.prefix} {formatPrice(opt.cfaAmount)}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
-
-            {/* Spacer */}
-            <div className="flex-1" />
 
             {/* CTA */}
             <button
               type="submit"
-              className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-black text-[14px] font-bold rounded-2xl shadow-lg shadow-emerald-500/25 transition-all text-center flex items-center justify-center gap-2"
+              className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-black text-[14px] font-bold rounded-2xl shadow-lg shadow-emerald-500/25 transition-all text-center flex items-center justify-center gap-2 mt-1"
             >
               <Search className="h-4.5 w-4.5 text-black" strokeWidth={2.5} />
               Rechercher un véhicule
