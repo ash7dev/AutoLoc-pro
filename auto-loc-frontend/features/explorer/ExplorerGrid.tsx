@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Car, SlidersHorizontal } from 'lucide-react';
+import Link from 'next/link';
+import { Car, SlidersHorizontal, ArrowLeft, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   searchVehicles,
@@ -283,7 +284,6 @@ function ResultsHeader({
       </div>
 
       <ExplorerResultsHeader
-        totalResults={count}
         sort={sort}
         onSortChange={onSortChange}
       />
@@ -471,6 +471,33 @@ export function ExplorerGrid(): React.ReactElement {
         activeFilterCount={activeFilterCount}
         onToggleMobileFilters={() => setMobileFiltersOpen(true)}
       />
+
+      {/* Mobile Sticky Search Bar Header */}
+      <div className="md:hidden sticky top-[60px] z-40 bg-white border-b border-slate-100 px-4 py-2 flex items-center justify-between gap-3 shadow-sm">
+        <Link
+          href="/"
+          className="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-50 border border-slate-100 text-slate-600 active:scale-95 shrink-0"
+        >
+          <ArrowLeft className="h-4 w-4" strokeWidth={2.5} />
+        </Link>
+        <button
+          type="button"
+          onClick={() => setMobileFiltersOpen(true)}
+          className="flex-1 min-w-0 bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-1.5 flex items-center gap-2.5 text-left active:scale-[0.99] transition-all"
+        >
+          <span className="w-6 h-6 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+            <Search className="h-3.5 w-3.5 text-emerald-600" strokeWidth={2.5} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11.5px] font-black text-slate-800 truncate leading-tight">
+              {filters.zone ? (filters.zone.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')) : 'Sénégal (Dakar)'}
+            </p>
+            <p className="text-[9.5px] font-semibold text-slate-400 mt-0.5 leading-none">
+              {filters.dateDebut ? `${new Date(filters.dateDebut + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} — ${filters.dateFin ? new Date(filters.dateFin + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : ''}` : 'Ajouter des dates'}
+            </p>
+          </div>
+        </button>
+      </div>
 
       {/* ── Main ─────────────────────────────────────────────── */}
       <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-10">

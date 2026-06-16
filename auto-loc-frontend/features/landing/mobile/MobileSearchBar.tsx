@@ -53,17 +53,16 @@ const PRIX_MAX_OPTIONS = [
   { value: '100000', cfaAmount: 100000, prefix: "Jusqu'à" },
 ];
 
-const FIELD_CLASS = 'w-full px-3.5 py-3 rounded-xl border border-slate-100 bg-slate-50 text-[12.5px] font-bold text-slate-800';
+const FIELD_CLASS = 'w-full px-3.5 py-3 rounded-xl border border-slate-100 bg-slate-50 text-[12.5px] font-bold text-slate-800 focus:outline-none focus:border-emerald-500';
 
-// ─── Champ de date avec calendrier dédié ───────────────────────────────────
-interface DateFieldProps {
+interface SheetDateFieldProps {
   label: string;
   value: string;
   onChange: (iso: string) => void;
   minDate?: Date;
 }
 
-function DateField({ label, value, onChange, minDate }: DateFieldProps) {
+function SheetDateField({ label, value, onChange, minDate }: SheetDateFieldProps) {
   const [open, setOpen] = useState(false);
   const selected = value ? new Date(value + 'T00:00:00') : undefined;
   const display = selected
@@ -75,21 +74,13 @@ function DateField({ label, value, onChange, minDate }: DateFieldProps) {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex-1 min-w-0 flex flex-col items-start gap-0.5 px-4 py-3 text-left active:bg-slate-50 transition-colors"
+          className="w-full text-left px-3.5 py-3 rounded-xl border border-slate-100 bg-slate-50 text-[12.5px] font-bold flex items-center justify-between"
         >
-          <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
-            <CalendarIcon className="h-2.5 w-2.5" /> {label}
-          </span>
-          <span className={cn('text-[13px] font-bold leading-tight', selected ? 'text-slate-800' : 'text-slate-400')}>
-            {display}
-          </span>
+          <span className={selected ? 'text-slate-800' : 'text-slate-400'}>{display}</span>
+          <CalendarIcon className="h-4 w-4 text-slate-400" />
         </button>
       </PopoverTrigger>
-      <PopoverContent
-        className="w-auto p-0 rounded-2xl border border-slate-100 shadow-xl z-50"
-        align="start"
-        sideOffset={8}
-      >
+      <PopoverContent className="w-auto p-0 bg-white rounded-2xl border border-slate-100 shadow-xl z-50" align="start">
         <Calendar
           mode="single"
           selected={selected}
@@ -121,7 +112,15 @@ export function MobileSearchBar(): React.ReactElement {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const activeFiltersCount = [zone, type, budget].filter(Boolean).length;
+  const displayDebut = debut
+    ? new Date(debut + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+    : 'Départ';
+
+  const displayFin = fin
+    ? new Date(fin + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+    : 'Retour';
+
+  const selectedZoneLabel = ZONES_DAKAR.find(z => z.value === zone)?.label || 'Où allez-vous ?';
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -137,42 +136,61 @@ export function MobileSearchBar(): React.ReactElement {
   }
 
   return (
-    <div className="w-full flex items-stretch gap-2 px-4 pt-4 pb-2">
-      {/* Dates — accessibles directement, chacune ouvre son propre calendrier */}
-      <div className="flex-1 flex items-stretch bg-white rounded-2xl border border-slate-100 shadow-md shadow-slate-200/50 divide-x divide-slate-100 overflow-hidden">
-        <DateField label="Départ" value={debut} onChange={setDebut} minDate={today} />
-        <DateField
-          label="Arrivée"
-          value={fin}
-          onChange={setFin}
-          minDate={debut ? new Date(debut + 'T00:00:00') : today}
-        />
-      </div>
-
-      {/* Filtres — Zone, Type, Budget, Recherche */}
+    <div className="w-full px-4 pt-4 pb-2">
       <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
         <SheetTrigger asChild>
           <button
             type="button"
-            className="relative w-[52px] shrink-0 flex items-center justify-center bg-white rounded-2xl border border-slate-100 shadow-md shadow-slate-200/50 active:scale-[0.96] transition-all"
-          >
-            <SlidersHorizontal className="h-4.5 w-4.5 text-slate-600" />
-            {activeFiltersCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center">
-                {activeFiltersCount}
-              </span>
+            className={cn(
+              'w-full flex items-center bg-white rounded-2xl border border-slate-100/80',
+              'shadow-[0_4px_25px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_30px_rgba(0,0,0,0.08)]',
+              'text-left cursor-pointer transition-all active:scale-[0.98] p-2 gap-1'
             )}
+          >
+            {/* Destination Pill */}
+            <div className="flex items-center gap-2.5 px-3 py-1.5 flex-1 min-w-0">
+              <span className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                <MapPin className="h-4 w-4 text-emerald-600" strokeWidth={2.5} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[8.5px] font-black text-slate-400 uppercase tracking-wider leading-none">Destination</p>
+                <p className="text-[12.5px] font-bold text-slate-800 truncate mt-0.5 leading-tight">
+                  {selectedZoneLabel === 'Où allez-vous ?' ? 'Sénégal (Dakar)' : selectedZoneLabel}
+                </p>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="w-px h-8 bg-slate-100 shrink-0" />
+
+            {/* Dates Pill */}
+            <div className="flex items-center gap-2.5 px-3 py-1.5 flex-1 min-w-0">
+              <span className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                <CalendarIcon className="h-4 w-4 text-emerald-600" strokeWidth={2.5} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[8.5px] font-black text-slate-400 uppercase tracking-wider leading-none">Planifier</p>
+                <p className="text-[12.5px] font-bold text-slate-800 truncate mt-0.5 leading-tight">
+                  {debut ? `${displayDebut} — ${displayFin}` : 'Ajouter des dates'}
+                </p>
+              </div>
+            </div>
+
+            {/* Compact search action circle */}
+            <span className="w-10 h-10 rounded-xl bg-slate-950 flex items-center justify-center shrink-0 text-emerald-400">
+              <Search className="h-4.5 w-4.5" strokeWidth={3} />
+            </span>
           </button>
         </SheetTrigger>
 
-        <SheetContent side="bottom" className="h-[85vh] rounded-t-[28px] px-6 pb-6 pt-4 border-t border-slate-100 bg-white flex flex-col">
+        <SheetContent side="bottom" className="h-[90vh] rounded-t-[28px] px-6 pb-6 pt-4 border-t border-slate-100 bg-white flex flex-col">
           <SheetHeader className="pb-4 border-b border-slate-50 shrink-0">
             <SheetTitle className="text-[17px] font-black tracking-tight text-slate-900">
-              Filtres de recherche
+              Recherche de véhicule
             </SheetTitle>
           </SheetHeader>
 
-          <form onSubmit={handleSearch} className="flex flex-col gap-5 mt-5 flex-1 overflow-y-auto pb-2">
+          <form onSubmit={handleSearch} className="flex flex-col gap-5 mt-5 flex-1 overflow-y-auto pb-6">
             {/* Free text search */}
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
@@ -208,6 +226,22 @@ export function MobileSearchBar(): React.ReactElement {
                     {z.label === 'Toutes les zones' ? 'Partout' : z.label}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Dates Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
+                  <CalendarIcon className="h-3 w-3 text-slate-400" /> Date début
+                </label>
+                <SheetDateField label="Début" value={debut} onChange={setDebut} minDate={today} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1">
+                  <CalendarIcon className="h-3 w-3 text-slate-400" /> Date fin
+                </label>
+                <SheetDateField label="Fin" value={fin} onChange={setFin} minDate={debut ? new Date(debut + 'T00:00:00') : today} />
               </div>
             </div>
 
@@ -249,7 +283,7 @@ export function MobileSearchBar(): React.ReactElement {
             {/* CTA */}
             <button
               type="submit"
-              className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-black text-[14px] font-bold rounded-2xl shadow-lg shadow-emerald-500/25 transition-all text-center flex items-center justify-center gap-2 mt-1"
+              className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-black text-[14px] font-bold rounded-2xl shadow-lg shadow-emerald-500/25 transition-all text-center flex items-center justify-center gap-2 mt-4 shrink-0"
             >
               <Search className="h-4.5 w-4.5 text-black" strokeWidth={2.5} />
               Rechercher un véhicule

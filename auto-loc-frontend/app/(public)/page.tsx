@@ -3,7 +3,7 @@ import { BannerSection } from '@/features/landing/BannerSection';
 import { CategoriesSection } from '@/features/landing/CategoriesSection';
 import { TrustSection } from '@/features/landing/TrustSection';
 import { VehicleGridSection } from '@/features/landing/VehicleGridSection';
-import { searchVehicles, type VehicleSearchResult } from '@/lib/nestjs/vehicles';
+import { searchVehicles, fetchHomeFeed, type VehicleSearchResult, type HomeFeedResponse } from '@/lib/nestjs/vehicles';
 import { HowItWorksSection } from '@/features/landing/HowItWorksSection';
 import { StatsSection } from '@/features/landing/StatsSection';
 import { ZonesSection } from '@/features/landing/ZonesSection';
@@ -33,9 +33,14 @@ export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   let initialVehicles: VehicleSearchResult[] = [];
+  let homeFeed: HomeFeedResponse | null = null;
   try {
-    const res = await searchVehicles({ page: 1 });
-    initialVehicles = res?.data ?? [];
+    const [vehiclesRes, feedRes] = await Promise.all([
+      searchVehicles({ page: 1 }),
+      fetchHomeFeed().catch(() => null)
+    ]);
+    initialVehicles = vehiclesRes?.data ?? [];
+    homeFeed = feedRes;
   } catch {
     // fallback to client fetch
   }
@@ -46,7 +51,7 @@ export default async function HomePage() {
       
       {/* Mobile View: App-Like Landing Page */}
       <div className="block md:hidden">
-        <HomeMobile />
+        <HomeMobile initialFeed={homeFeed} />
       </div>
 
       {/* Desktop View: Premium Desktop Landing Page */}

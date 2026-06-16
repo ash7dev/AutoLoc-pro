@@ -3,6 +3,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, StatutVehicule, StatutKyc, RoleProfile } from '@prisma/client';
@@ -62,6 +63,8 @@ const FEED_NOUVEAUTES_WINDOW_DAYS = 14;
 
 @Injectable()
 export class VehiclesService {
+  private readonly logger = new Logger(VehiclesService.name);
+
   /** Colonnes véhicule + photo de couverture, partagées entre search() et getHomeFeed(). */
   private static readonly VEHICLE_SELECT_FRAGMENT = Prisma.sql`
     v.id,
@@ -749,7 +752,7 @@ export class VehiclesService {
     // Exclusion explicite d'IDs (pagination invisible du feed accueil)
     const excludeCondition =
       dto.excludeIds?.length
-        ? Prisma.sql`AND v.id <> ALL(${dto.excludeIds}::uuid[])`
+        ? Prisma.sql`AND v.id NOT IN (${Prisma.join(dto.excludeIds)})`
         : Prisma.empty;
 
     // ── Requête native ────────────────────────────────────────────────────────
@@ -880,9 +883,23 @@ export class VehiclesService {
       return JSON.parse(cached) as ReturnType<VehiclesService['buildHomeFeed']> extends Promise<infer T> ? T : never;
     }
 
-    const result = await this.buildHomeFeed();
-    await this.redis.set(FEED_CACHE_KEY, JSON.stringify(result), FEED_CACHE_TTL);
-    return result;
+    try {
+      const result = await this.buildHomeFeed();
+      await this.redis.set(FEED_CACHE_KEY, JSON.stringify(result), FEED_CACHE_TTL);
+      return result;
+    } catch (err) {
+      // On ne casse jamais la home pour un souci sur le feed : on log clairement
+      // l'erreur réelle (distincte du log d'accès HTTP) et on renvoie un feed vide.
+      this.logger.error(
+        `getHomeFeed failed: ${err instanceof Error ? err.message : String(err)}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+      return {
+        premium: [],
+        nouveautes: [],
+        recommended: { items: [], excludedIds: [] },
+      };
+    }
   }
 
   private async buildHomeFeed() {
@@ -909,7 +926,7 @@ export class VehiclesService {
     if (nouveautesRows.length < FEED_SECTION_SIZE) {
       const already = nouveautesRows.map((r) => r.id);
       const backfillCondition = already.length
-        ? Prisma.sql`AND v.id <> ALL(${already}::uuid[])`
+        ? Prisma.sql`AND v.id NOT IN (${Prisma.join(already)})`
         : Prisma.empty;
       const backfill = await this.prisma.$queryRaw<VehicleSearchRow[]>`
         SELECT ${VehiclesService.VEHICLE_SELECT_FRAGMENT}
@@ -926,7 +943,7 @@ export class VehiclesService {
 
     // ── Recommandé : aléatoire, exclusion best-effort des IDs déjà utilisés ──
     const excludeUsedCondition = usedIds.length
-      ? Prisma.sql`AND v.id <> ALL(${usedIds}::uuid[])`
+      ? Prisma.sql`AND v.id NOT IN (${Prisma.join(usedIds)})`
       : Prisma.empty;
     let recommendedRows = await this.prisma.$queryRaw<VehicleSearchRow[]>`
       SELECT ${VehiclesService.VEHICLE_SELECT_FRAGMENT}
@@ -941,7 +958,7 @@ export class VehiclesService {
       // complète quitte à dupliquer plutôt que d'afficher une section tronquée.
       const already = recommendedRows.map((r) => r.id);
       const backfillCondition = already.length
-        ? Prisma.sql`AND v.id <> ALL(${already}::uuid[])`
+        ? Prisma.sql`AND v.id NOT IN (${Prisma.join(already)})`
         : Prisma.empty;
       const backfill = await this.prisma.$queryRaw<VehicleSearchRow[]>`
         SELECT ${VehiclesService.VEHICLE_SELECT_FRAGMENT}

@@ -22,7 +22,7 @@ export function ExplorerHero({
     onToggleMobileFilters,
 }: ExplorerHeroProps): React.ReactElement {
     return (
-        <section className="relative overflow-hidden bg-slate-950 border-b border-white/5">
+        <section className="hidden md:block relative overflow-hidden bg-slate-950 border-b border-white/5">
             {/* dynamic glow effects */}
             <div
                 className="absolute -top-24 -left-24 w-96 h-96 rounded-full opacity-20 blur-[100px] pointer-events-none animate-pulse"
