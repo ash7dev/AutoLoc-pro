@@ -401,11 +401,11 @@ export function MarketplaceNavbar() {
             */}
             {hydrated && !loggedIn && (
               <>
-                {/* Desktop : boutons auth */}
+                {/* Mobile & Desktop : boutons auth */}
                 <Link
                   href="/login"
-                  className="hidden md:inline-flex px-4 py-2 text-[13px] font-medium text-black hover:text-black
-                    rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100
+                  className="inline-flex px-3 py-1.5 md:px-4 md:py-2 text-[12.5px] md:text-[13px] font-medium text-black hover:text-black
+                    rounded-xl hover:bg-slate-50 border border-slate-200 md:border-transparent md:hover:border-slate-100
                     transition-all duration-200 tracking-tight"
                 >
                   Connexion
@@ -426,9 +426,7 @@ export function MarketplaceNavbar() {
 
             {hydrated && loggedIn && (
               <>
-                {/* Mobile : Le Profil circulaire a été supprimé car remplacé par le menu hamburger */}
-
-                {/* Desktop : Mon compte (Espace hôte PRO et Devenir hôte sont dans le dropdown) */}
+                {/* Desktop : Mon compte */}
                 <div className="hidden md:block">
                   <ProfileDropdown hasVehicles={hasVehicles} />
                 </div>
@@ -437,27 +435,6 @@ export function MarketplaceNavbar() {
 
             {/* Currency selector : toujours visible à droite pour tout le monde */}
             <CurrencySelector />
-
-            {/*
-              Hamburger : unique déclencheur du menu mobile,
-              déplacé à droite après le sélecteur de devises.
-            */}
-            <button
-              type="button"
-              onClick={() => setMenuOpen(o => !o)}
-              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-              className={cn(
-                'md:hidden flex items-center justify-center w-9 h-9 rounded-xl border transition-all duration-200',
-                menuOpen
-                  ? 'bg-slate-900 border-slate-800 text-white'
-                  : 'bg-white border-slate-200 text-black hover:bg-slate-50',
-              )}
-            >
-              {menuOpen
-                ? <X className="h-4 w-4" strokeWidth={2.5} />
-                : <Menu className="h-4 w-4" strokeWidth={2.5} />
-              }
-            </button>
           </div>
         </div>
 
@@ -489,162 +466,6 @@ export function MarketplaceNavbar() {
         </form>
 
       </div>
-
-      {/* ── Mobile menu drawer ── */}
-      <div
-        className={cn(
-          'md:hidden overflow-y-auto transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
-          menuOpen ? 'max-h-[70vh] opacity-100' : 'max-h-0 opacity-0 pointer-events-none',
-        )}
-      >
-        <nav className="px-4 pb-4 pt-1 space-y-1 border-t border-slate-100/80">
-
-          {/* Liens de navigation communs */}
-          {NAV_LINKS.map(({ href, icon: Icon, label }) => {
-            const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setMenuOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight transition-all duration-150',
-                  isActive
-                    ? 'bg-black text-emerald-400'
-                    : 'text-black hover:bg-slate-50',
-                )}
-              >
-                <span className={cn(
-                  'w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0',
-                  isActive ? 'bg-white/10' : 'bg-slate-100',
-                )}>
-                  {/* Augmentation de l'épaisseur des traits (strokeWidth de 1.75 à 2.5) */}
-                  <Icon className="h-4 w-4" strokeWidth={2.5} />
-                </span>
-                {label}
-              </Link>
-            );
-          })}
-
-          {/* ── DÉCONNECTÉ : boutons auth dans le menu ── */}
-          {hydrated && !loggedIn && (
-            <>
-              <div className="my-2 border-t border-slate-100" />
-              <Link
-                href="/login"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight text-black hover:bg-slate-50 transition-all duration-150"
-              >
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100">
-                  <User className="h-3.5 w-3.5" strokeWidth={1.75} />
-                </span>
-                Se connecter
-              </Link>
-              <Link
-                href="/register"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-semibold tracking-tight text-white bg-slate-900 hover:bg-slate-800 transition-all duration-150 shadow-md shadow-slate-900/20"
-              >
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-white/10">
-                  <Plus className="h-3.5 w-3.5" strokeWidth={1.75} />
-                </span>
-                Commencer
-                <span className="ml-auto w-2 h-2 bg-emerald-400 rounded-full border border-white/50" />
-              </Link>
-            </>
-          )}
-
-          {/* ── CONNECTÉ : options utilisateur dans le menu ── */}
-          {hydrated && loggedIn && (
-            <>
-              <div className="my-2 border-t border-slate-100" />
-              {isAdmin ? (
-                <Link
-                  href="/dashboard/admin"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-semibold tracking-tight text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all duration-150"
-                >
-                  <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-200">
-                    <LayoutDashboard className="h-4 w-4" strokeWidth={2.5} />
-                  </span>
-                  Dashboard Admin
-                  <span className="ml-auto px-2 py-0.5 bg-slate-700 text-[10px] font-bold rounded-full text-white">
-                    Admin
-                  </span>
-                </Link>
-              ) : hasVehicles === true ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    switchToProprietaire();
-                  }}
-                  disabled={switchingRole}
-                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-semibold tracking-tight text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all duration-150 disabled:opacity-70"
-                >
-                  <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-emerald-100">
-                    {switchingRole ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-emerald-700" strokeWidth={2.5} />
-                    ) : (
-                      <Car className="h-4 w-4" strokeWidth={2.5} />
-                    )}
-                  </span>
-                  {switchingRole ? "Chargement..." : "Espace Propriétaire"}
-                  <span className="ml-auto px-2 py-0.5 bg-emerald-600 text-[10px] font-bold rounded-full text-emerald-50">
-                    Pro
-                  </span>
-                </button>
-              ) : hasVehicles === false || hasVehicles === null ? (
-                <Link
-                  href="/become-owner"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight text-white bg-slate-900 hover:bg-slate-800 transition-all duration-150 shadow-md shadow-slate-900/20"
-                >
-                  <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-white/10">
-                    <Building2 className="h-4 w-4" strokeWidth={2.5} />
-                  </span>
-                  Devenir hôte
-                  <span className="ml-auto px-2 py-0.5 bg-emerald-600 text-[10px] font-bold rounded-full text-emerald-50">
-                    Nouveau
-                  </span>
-                </Link>
-              ) : null}
-              <Link
-                href="/reservations"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight text-black hover:bg-slate-50 transition-all duration-150"
-              >
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100">
-                  <CalendarRange className="h-3.5 w-3.5" strokeWidth={1.75} />
-                </span>
-                Mes réservations
-              </Link>
-              <Link
-                href="/settings"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight text-black hover:bg-slate-50 transition-all duration-150"
-              >
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100">
-                  <Settings className="h-3.5 w-3.5" strokeWidth={1.75} />
-                </span>
-                Paramètres
-              </Link>
-              <div className="my-2 border-t border-slate-100" />
-              <button
-                type="button"
-                onClick={handleSignOut}
-                disabled={signingOut}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[14px] font-medium tracking-tight text-red-600 hover:bg-red-50 transition-all duration-150 disabled:opacity-50"
-              >
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-red-100">
-                  {signingOut ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" strokeWidth={1.75} />}
-                </span>
-                {signingOut ? 'Déconnexion…' : 'Se déconnecter'}
-              </button>
-            </>
-          )}
-        </nav>
-      </div>
-
     </header>
   );
 }
