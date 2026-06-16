@@ -8,7 +8,7 @@ import { useCurrency } from '@/providers/currency-provider';
 import {
     ZONES, VEHICLE_TYPES, FUEL_TYPES, TRANSMISSIONS,
     BUDGET_PRESETS, SORT_OPTIONS, EQUIPMENTS,
-} from './ExplorerFilters';
+} from './MobileFilterSheet';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function getFilterPills(filters: ExplorerFiltersState, currencyFormat: (n: number) => string) {

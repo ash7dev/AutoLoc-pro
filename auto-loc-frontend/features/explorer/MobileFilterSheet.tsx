@@ -1,0 +1,505 @@
+'use client';
+
+import React, { useState } from 'react';
+import { X, RotateCcw, Star, MapPin, Calendar as CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { ExplorerFiltersState } from './ExplorerGrid';
+import { useCurrency } from '@/providers/currency-provider';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+
+// ─── Static data (exported for reuse in ExplorerFilters / ActiveFilters) ──────
+export const ZONES = [
+    { value: '', label: 'Toutes les zones' },
+    { value: 'almadies-ngor-mamelles', label: 'Almadies – Ngor – Mamelles' },
+    { value: 'ouakam-yoff', label: 'Ouakam – Yoff' },
+    { value: 'mermoz-sacrecoeur-ckg', label: 'Mermoz – Sacré-Cœur – CKG' },
+    { value: 'plateau-medina-gueuletapee', label: 'Plateau – Médina – Gueule Tapée' },
+    { value: 'liberte-sicap-granddakar', label: 'Liberté – Sicap – Grand Dakar' },
+    { value: 'parcelles-grandyoff', label: 'Parcelles Assainies – Grand Yoff' },
+    { value: 'pikine-guediawaye', label: 'Pikine – Guédiawaye' },
+    { value: 'keurmassar-rufisque', label: 'Keur Massar – Rufisque' },
+];
+
+export const VEHICLE_TYPES = [
+    { value: 'CITADINE', label: 'Citadine' },
+    { value: 'BERLINE', label: 'Berline' },
+    { value: 'SUV', label: 'SUV' },
+    { value: 'PICKUP', label: 'Pick-up' },
+    { value: 'MINIVAN', label: 'Minivan' },
+    { value: 'MONOSPACE', label: 'Monospace' },
+    { value: 'MINIBUS', label: 'Minibus' },
+    { value: 'UTILITAIRE', label: 'Utilitaire' },
+    { value: 'LUXE', label: 'Luxe' },
+    { value: 'FOUR_X_FOUR', label: '4x4' },
+];
+
+export const FUEL_TYPES = [
+    { value: 'ESSENCE', label: 'Essence' },
+    { value: 'DIESEL', label: 'Diesel' },
+    { value: 'HYBRIDE', label: 'Hybride' },
+    { value: 'ELECTRIQUE', label: 'Électrique' },
+];
+
+export const TRANSMISSIONS = [
+    { value: 'AUTOMATIQUE', label: 'Automatique' },
+    { value: 'MANUELLE', label: 'Manuelle' },
+];
+
+export const BUDGET_PRESETS = [
+    { value: 15000 },
+    { value: 30000 },
+    { value: 50000 },
+    { value: 100000 },
+];
+
+export const EQUIPMENTS = [
+    { value: 'GPS', label: 'GPS' },
+    { value: 'CLIMATISATION', label: 'Climatisation' },
+    { value: 'BLUETOOTH', label: 'Bluetooth' },
+    { value: 'CAMERA_RECUL', label: 'Caméra de recul' },
+    { value: 'SIEGE_ENFANT', label: 'Siège enfant' },
+    { value: 'TOIT_OUVRANT', label: 'Toit ouvrant' },
+    { value: 'RADAR_STATIONNEMENT', label: 'Radar stationnement' },
+    { value: 'REGULATEUR_VITESSE', label: 'Rég. de vitesse' },
+];
+
+export const PLACES_OPTIONS = [2, 4, 5, 7];
+
+export const NOTE_OPTIONS = [3, 3.5, 4, 4.5];
+
+export const SORT_OPTIONS = [
+    { value: 'popular', label: 'Pertinence' },
+    { value: 'price-asc', label: 'Prix croissant' },
+    { value: 'price-desc', label: 'Prix décroissant' },
+    { value: 'rating', label: 'Mieux notés' },
+    { value: 'newest', label: 'Plus récents' },
+];
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const SELECT_CLASS = cn(
+    'w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5',
+    'text-[13px] font-medium text-white placeholder-white/30',
+    'focus:border-emerald-400/50 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-emerald-400/30',
+    'transition-all duration-200',
+);
+
+const SECTION_TITLE = 'text-[10.5px] font-bold uppercase tracking-widest text-white/30 mb-3';
+
+const PILL = (active: boolean) => cn(
+    'px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all duration-200 border',
+    active
+        ? 'bg-emerald-400 text-black border-emerald-400'
+        : 'bg-white/5 text-white/50 border-white/10 hover:border-emerald-400/30 hover:text-white/80',
+);
+
+// ─── Champ date du filtre : noir sur émeraude une fois rempli, bien visible ───
+function FilterDateField({
+    label,
+    value,
+    onChange,
+    minDate,
+}: {
+    label: string;
+    value: string;
+    onChange: (iso: string) => void;
+    minDate?: Date;
+}) {
+    const [open, setOpen] = useState(false);
+    const selected = value ? new Date(value + 'T00:00:00') : undefined;
+    const display = selected
+        ? selected.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+        : 'Ajouter date';
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <button
+                    type="button"
+                    className={cn(
+                        'w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border transition-all duration-200',
+                        selected
+                            ? 'bg-emerald-400 border-emerald-400 text-black'
+                            : 'bg-white/5 border-white/10 text-white/40 hover:border-emerald-400/30 hover:text-white/70',
+                    )}
+                >
+                    <span className="text-left">
+                        <span className="block text-[9px] font-bold uppercase tracking-wider opacity-60 leading-none">{label}</span>
+                        <span className={cn('block text-[13px] font-black leading-tight mt-0.5', selected ? 'text-black' : 'text-white/50')}>
+                            {display}
+                        </span>
+                    </span>
+                    <CalendarIcon className={cn('h-4 w-4 shrink-0', selected ? 'text-black' : 'text-white/30')} strokeWidth={2.5} />
+                </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-white rounded-2xl border border-slate-100 shadow-xl z-[70]" align="start">
+                <Calendar
+                    mode="single"
+                    selected={selected}
+                    onSelect={(date) => {
+                        if (date) {
+                            onChange(date.toISOString().split('T')[0]);
+                            setOpen(false);
+                        }
+                    }}
+                    disabled={(date) => !!minDate && date < minDate}
+                    initialFocus
+                />
+            </PopoverContent>
+        </Popover>
+    );
+}
+
+// ─── Filter content (partagé entre la sidebar desktop et les sheets mobile) ───
+export function FilterContent({
+    filters,
+    onChange,
+    onReset,
+    hasActiveFilters,
+}: {
+    filters: ExplorerFiltersState;
+    onChange: (partial: Partial<ExplorerFiltersState>) => void;
+    onReset: () => void;
+    hasActiveFilters: boolean;
+}) {
+    const { formatPrice, info, isCFA, convert } = useCurrency();
+
+    // Budget inputs: state is always stored in CFA internally.
+    // For display, convert CFA → current currency. On change, convert back to CFA.
+    const toDisplay = (cfaValue: number | null) =>
+        cfaValue != null ? (isCFA ? cfaValue : parseFloat(convert(cfaValue).toFixed(2))) : '';
+    const toCFA = (raw: string) =>
+        raw ? (isCFA ? Number(raw) : Math.round(Number(raw) / info.rate)) : null;
+
+    const inputStep = isCFA ? 5000 : 1;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return (
+        <div className="flex flex-col gap-6">
+            {/* Dates */}
+            <div>
+                <p className={SECTION_TITLE}>Dates</p>
+                <div className="grid grid-cols-2 gap-2">
+                    <FilterDateField
+                        label="Début"
+                        value={filters.dateDebut ?? ''}
+                        onChange={(iso) => onChange({ dateDebut: iso })}
+                        minDate={today}
+                    />
+                    <FilterDateField
+                        label="Fin"
+                        value={filters.dateFin ?? ''}
+                        onChange={(iso) => onChange({ dateFin: iso })}
+                        minDate={filters.dateDebut ? new Date(filters.dateDebut + 'T00:00:00') : today}
+                    />
+                </div>
+            </div>
+
+            {/* Zone */}
+            <div>
+                <p className={SECTION_TITLE}>Zone</p>
+                <select
+                    value={filters.zone}
+                    onChange={(e) => onChange({ zone: e.target.value })}
+                    className={SELECT_CLASS}
+                >
+                    {ZONES.map((z) => (
+                        <option key={z.value} value={z.value} className="bg-slate-900 text-white">{z.label}</option>
+                    ))}
+                </select>
+            </div>
+
+            {/* Type */}
+            <div>
+                <p className={SECTION_TITLE}>Type de véhicule</p>
+                <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={() => onChange({ type: '' })} className={PILL(filters.type === '')}>
+                        Tous
+                    </button>
+                    {VEHICLE_TYPES.map((t) => (
+                        <button
+                            key={t.value}
+                            type="button"
+                            onClick={() => onChange({ type: filters.type === t.value ? '' : t.value })}
+                            className={PILL(filters.type === t.value)}
+                        >
+                            {t.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Budget range */}
+            <div>
+                <p className={SECTION_TITLE}>Budget / jour ({info.short})</p>
+                <div className="flex items-center gap-2">
+                    <input
+                        type="number"
+                        placeholder="Min"
+                        value={toDisplay(filters.budgetMin)}
+                        onChange={(e) => onChange({ budgetMin: toCFA(e.target.value) })}
+                        className={cn(SELECT_CLASS, 'w-1/2 text-center')}
+                        min={0}
+                        step={inputStep}
+                    />
+                    <span className="text-white/30 text-xs font-bold">—</span>
+                    <input
+                        type="number"
+                        placeholder="Max"
+                        value={toDisplay(filters.budgetMax)}
+                        onChange={(e) => onChange({ budgetMax: toCFA(e.target.value) })}
+                        className={cn(SELECT_CLASS, 'w-1/2 text-center')}
+                        min={0}
+                        step={inputStep}
+                    />
+                </div>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                    {BUDGET_PRESETS.map((b) => (
+                        <button
+                            key={b.value}
+                            type="button"
+                            onClick={() => onChange({ budgetMax: filters.budgetMax === b.value ? null : b.value })}
+                            className={cn(PILL(filters.budgetMax === b.value), 'text-center justify-center text-[11px]')}
+                        >
+                            ≤ {formatPrice(b.value)}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Fuel */}
+            <div>
+                <p className={SECTION_TITLE}>Carburant</p>
+                <div className="flex flex-wrap gap-2">
+                    {FUEL_TYPES.map((f) => (
+                        <button
+                            key={f.value}
+                            type="button"
+                            onClick={() => onChange({ fuel: filters.fuel === f.value ? '' : f.value })}
+                            className={PILL(filters.fuel === f.value)}
+                        >
+                            {f.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Transmission */}
+            <div>
+                <p className={SECTION_TITLE}>Transmission</p>
+                <div className="flex gap-2">
+                    {TRANSMISSIONS.map((t) => (
+                        <button
+                            key={t.value}
+                            type="button"
+                            onClick={() => onChange({ transmission: filters.transmission === t.value ? '' : t.value })}
+                            className={cn(PILL(filters.transmission === t.value), 'flex-1 text-center justify-center')}
+                        >
+                            {t.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Nb places */}
+            <div>
+                <p className={SECTION_TITLE}>Nombre de places min.</p>
+                <div className="flex gap-2">
+                    {PLACES_OPTIONS.map((p) => (
+                        <button
+                            key={p}
+                            type="button"
+                            onClick={() => onChange({ places: filters.places === p ? null : p })}
+                            className={cn(PILL(filters.places === p), 'flex-1 text-center justify-center')}
+                        >
+                            {p}+
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Note minimum */}
+            <div>
+                <p className={SECTION_TITLE}>Note minimum</p>
+                <div className="flex gap-2">
+                    {NOTE_OPTIONS.map((n) => (
+                        <button
+                            key={n}
+                            type="button"
+                            onClick={() => onChange({ noteMin: filters.noteMin === n ? null : n })}
+                            className={cn(PILL(filters.noteMin === n), 'flex-1 text-center justify-center gap-1')}
+                        >
+                            <Star className="h-3 w-3 inline" strokeWidth={filters.noteMin === n ? 0 : 1.5} fill={filters.noteMin === n ? '#000' : 'none'} />
+                            {n}+
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Equipements */}
+            <div>
+                <p className={SECTION_TITLE}>Équipements</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                    {EQUIPMENTS.map((eq) => {
+                        const active = filters.equipements.includes(eq.value);
+                        return (
+                            <button
+                                key={eq.value}
+                                type="button"
+                                onClick={() => {
+                                    const next = active
+                                        ? filters.equipements.filter(e => e !== eq.value)
+                                        : [...filters.equipements, eq.value];
+                                    onChange({ equipements: next });
+                                }}
+                                className={cn(
+                                    PILL(active),
+                                    'text-[11px] text-center justify-center py-1.5',
+                                )}
+                            >
+                                {eq.label}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Autour de moi */}
+            <div>
+                <p className={SECTION_TITLE}>Géolocalisation</p>
+                <button
+                    type="button"
+                    onClick={() => onChange({ nearMe: !filters.nearMe })}
+                    className={cn(
+                        'flex items-center justify-center gap-2 w-full py-2.5 rounded-xl',
+                        'text-[13px] font-semibold transition-all duration-200 border',
+                        filters.nearMe
+                            ? 'bg-emerald-400 text-black border-emerald-400'
+                            : 'bg-white/5 text-white/50 border-white/10 hover:border-emerald-400/30 hover:text-white/80',
+                    )}
+                >
+                    <MapPin className="h-4 w-4" strokeWidth={2} />
+                    {filters.nearMe ? 'Autour de moi · Actif' : 'Autour de moi'}
+                </button>
+                {filters.nearMe && (
+                    <p className="mt-1.5 text-[10px] text-emerald-400/60 text-center">
+                        Recherche dans un rayon de 30 km
+                    </p>
+                )}
+            </div>
+
+            {/* Reset */}
+            {hasActiveFilters && (
+                <button
+                    type="button"
+                    onClick={onReset}
+                    className={cn(
+                        'flex items-center justify-center gap-2 w-full py-2.5 rounded-xl',
+                        'border border-white/10 bg-white/5 text-[13px] font-semibold text-white/50',
+                        'hover:border-red-400/30 hover:text-red-400 hover:bg-red-400/5',
+                        'transition-all duration-200',
+                    )}
+                >
+                    <RotateCcw className="h-3.5 w-3.5" strokeWidth={2} />
+                    Réinitialiser
+                </button>
+            )}
+        </div>
+    );
+}
+
+// ─── Mobile bottom sheet (backdrop + shell + FilterContent + CTA paramétrable) ─
+// Réutilisé par ExplorerFilters (page /explorer) et MobileSearchBar (home).
+interface MobileFilterSheetProps {
+    open: boolean;
+    onClose: () => void;
+    filters: ExplorerFiltersState;
+    onChange: (filters: ExplorerFiltersState) => void;
+    onReset: () => void;
+    /** Texte du bouton d'action en bas du sheet (ex: "Voir 12 résultats" ou "Rechercher") */
+    ctaLabel: string;
+    /** Appelé au clic sur le CTA — à l'appelant de décider (fermer le sheet, naviguer, etc.) */
+    onSubmit: () => void;
+}
+
+export function MobileFilterSheet({
+    open,
+    onClose,
+    filters,
+    onChange,
+    onReset,
+    ctaLabel,
+    onSubmit,
+}: MobileFilterSheetProps): React.ReactElement | null {
+    const hasActiveFilters =
+        filters.zone !== '' || filters.type !== '' || filters.budgetMin !== null || filters.budgetMax !== null ||
+        filters.fuel !== '' || filters.transmission !== '' ||
+        filters.places !== null || filters.noteMin !== null ||
+        filters.equipements.length > 0 || filters.nearMe ||
+        Boolean(filters.dateDebut) || Boolean(filters.dateFin);
+
+    function handleChange(partial: Partial<ExplorerFiltersState>) {
+        onChange({ ...filters, ...partial } as ExplorerFiltersState);
+    }
+
+    if (!open) return null;
+
+    return (
+        <div className="fixed inset-0 z-[60] lg:hidden">
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+
+            {/* Sheet */}
+            <div className="absolute bottom-0 inset-x-0 max-h-[88vh] flex flex-col rounded-t-2xl bg-[#0d0d0d] border-t border-white/10 animate-slide-up">
+                {/* Handle + header */}
+                <div className="flex items-center justify-between px-6 pt-4 pb-3 border-b border-white/10 flex-shrink-0">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-1 rounded-full bg-white/20 mx-auto absolute left-1/2 -translate-x-1/2 top-2" />
+                        <h3 className="text-[16px] font-bold text-white">Filtres</h3>
+                        {hasActiveFilters && (
+                            <span className="flex items-center justify-center px-2 py-0.5 rounded-full bg-emerald-400/20 text-[10px] font-bold text-emerald-400">
+                                Actifs
+                            </span>
+                        )}
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 text-white/60 hover:text-white transition-colors"
+                        aria-label="Fermer"
+                    >
+                        <X className="h-4 w-4" strokeWidth={2} />
+                    </button>
+                </div>
+
+                {/* Scrollable content */}
+                <div className="flex-1 overflow-y-auto px-6 py-5 scrollbar-hide">
+                    <FilterContent
+                        filters={filters}
+                        onChange={handleChange}
+                        onReset={onReset}
+                        hasActiveFilters={hasActiveFilters}
+                    />
+                </div>
+
+                {/* Sticky CTA bottom */}
+                <div className="flex-shrink-0 px-6 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-white/10 bg-[#0d0d0d]">
+                    <button
+                        type="button"
+                        onClick={onSubmit}
+                        className={cn(
+                            'w-full py-3.5 rounded-xl font-bold text-[14px]',
+                            'bg-emerald-400 text-black',
+                            'hover:bg-emerald-300 transition-colors duration-200',
+                            'shadow-lg shadow-emerald-400/20',
+                        )}
+                    >
+                        {ctaLabel}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}

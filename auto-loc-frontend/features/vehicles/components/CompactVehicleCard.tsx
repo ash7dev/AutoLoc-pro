@@ -96,12 +96,15 @@ export function CompactVehicleCard({ vehicle: v }: CompactVehicleCardProps): Rea
               {formatPrice(basePrice)}
               <span className="text-[10.5px] font-medium text-slate-400">/j</span>
             </p>
-            {savings > 0 && minDays != null && (
-              <p className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
-                <TrendingDown className="h-2.5 w-2.5" strokeWidth={3} />
-                −{savings}% dès {minDays}j
-              </p>
-            )}
+            {/* Hauteur réservée même sans réduction, pour que toutes les cartes soient alignées */}
+            <div className="mt-1.5 h-[19px]">
+              {savings > 0 && minDays != null && (
+                <p className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                  <TrendingDown className="h-2.5 w-2.5" strokeWidth={3} />
+                  −{savings}% dès {minDays}j
+                </p>
+              )}
+            </div>
           </div>
           <span className="w-7 h-7 rounded-lg bg-slate-950 flex items-center justify-center text-emerald-400 shrink-0">
             <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
