@@ -33,7 +33,7 @@ export function MobileBottomNav() {
         'pb-[env(safe-area-inset-bottom)]',
       )}
     >
-      <div className="flex items-center justify-around h-16 px-2">
+      <div className="flex items-center justify-center gap-2 h-16 px-3">
         {TABS.map(({ href, icon: Icon, label }) => {
           const isActive =
             href === '/'
@@ -44,42 +44,24 @@ export function MobileBottomNav() {
             <Link
               key={href}
               href={href}
+              aria-label={label}
+              aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'relative flex flex-col items-center justify-center gap-0.5 flex-1 py-1',
-                'transition-all duration-200',
-                isActive ? 'text-emerald-600' : 'text-slate-400',
+                'flex items-center justify-center transition-all duration-300 ease-out overflow-hidden',
+                isActive
+                  ? 'flex-[1.7] gap-2 rounded-full bg-slate-950 text-emerald-400 px-4 py-3 shadow-lg shadow-slate-900/15'
+                  : 'flex-1 rounded-full text-slate-400 py-3 active:bg-slate-50',
               )}
             >
-              {/* Active indicator dot */}
+              <Icon
+                className={cn('shrink-0 transition-all duration-300', isActive ? 'h-5 w-5' : 'h-[23px] w-[23px]')}
+                strokeWidth={isActive ? 2.5 : 2}
+              />
               {isActive && (
-                <span className="absolute -top-0.5 w-6 h-[3px] rounded-full bg-emerald-500" />
+                <span className="text-[13px] font-bold whitespace-nowrap animate-in fade-in slide-in-from-left-1 duration-200">
+                  {label}
+                </span>
               )}
-
-              <span
-                className={cn(
-                  'flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200',
-                  isActive
-                    ? 'bg-emerald-50 scale-105'
-                    : 'bg-transparent group-hover:bg-slate-50',
-                )}
-              >
-                <Icon
-                  className={cn(
-                    'h-[22px] w-[22px] transition-all duration-200',
-                    isActive ? 'text-emerald-600' : 'text-slate-400',
-                  )}
-                  strokeWidth={isActive ? 2.5 : 2}
-                />
-              </span>
-
-              <span
-                className={cn(
-                  'text-[10px] font-semibold tracking-tight transition-colors duration-200',
-                  isActive ? 'text-emerald-600' : 'text-slate-400',
-                )}
-              >
-                {label}
-              </span>
             </Link>
           );
         })}

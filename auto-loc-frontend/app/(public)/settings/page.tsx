@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import { UserCircle2 } from 'lucide-react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ApiError } from '@/lib/nestjs/api-client';
@@ -7,6 +8,8 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchUserProfile, type UserProfile } from '@/lib/nestjs/auth';
 import { TenantSettings } from '@/components/settings/tenant-settings';
 import { Footer } from '@/features/landing/Footer';
+import { AuthRequiredScreen } from '@/features/auth/components/auth-required-screen';
+import { DesktopAuthRedirect } from '@/features/auth/components/desktop-auth-redirect';
 
 export const metadata: Metadata = {
     title: 'Paramètres — AutoLoc',
@@ -24,7 +27,21 @@ export default async function SettingsPage() {
     }
 
     if (!token) {
-        redirect('/login?redirect=/settings');
+        return (
+            <>
+                <div className="md:hidden">
+                    <AuthRequiredScreen
+                        icon={UserCircle2}
+                        title="Connectez-vous pour accéder à votre compte"
+                        description="Gérez vos informations personnelles, votre vérification d'identité et vos préférences."
+                        redirectTo="/settings"
+                    />
+                </div>
+                <div className="hidden md:block">
+                    <DesktopAuthRedirect redirectTo="/login?redirect=/settings" />
+                </div>
+            </>
+        );
     }
 
     let profile: UserProfile;

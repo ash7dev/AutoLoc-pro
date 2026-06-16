@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import { CalendarRange } from 'lucide-react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ApiError } from '@/lib/nestjs/api-client';
@@ -7,6 +8,8 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchTenantReservations, type Reservation } from '@/lib/nestjs/reservations';
 import { TenantReservationsList } from '@/features/reservations/components/tenant-reservations-list';
 import { Footer } from '@/features/landing/Footer';
+import { AuthRequiredScreen } from '@/features/auth/components/auth-required-screen';
+import { DesktopAuthRedirect } from '@/features/auth/components/desktop-auth-redirect';
 
 export const metadata: Metadata = {
     title: 'Mes réservations — AutoLoc',
@@ -24,7 +27,21 @@ export default async function TenantReservationsPage() {
     }
 
     if (!token) {
-        redirect('/login?redirect=/reservations');
+        return (
+            <>
+                <div className="md:hidden">
+                    <AuthRequiredScreen
+                        icon={CalendarRange}
+                        title="Connectez-vous pour voir vos réservations"
+                        description="Retrouvez l'historique et le suivi de toutes vos réservations de véhicules."
+                        redirectTo="/reservations"
+                    />
+                </div>
+                <div className="hidden md:block">
+                    <DesktopAuthRedirect redirectTo="/login?redirect=/reservations" />
+                </div>
+            </>
+        );
     }
 
     let reservations: Reservation[] = [];
