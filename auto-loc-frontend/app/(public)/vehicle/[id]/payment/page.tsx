@@ -17,7 +17,7 @@ import { useCurrency } from '@/providers/currency-provider';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type PaymentMethod = 'WAVE' | 'ORANGE_MONEY' | 'FREE_MONEY' | 'CARTE_BANCAIRE';
+type PaymentMethod = 'WAVE' | 'ORANGE_MONEY' | 'CARTE_BANCAIRE';
 
 interface IntouchWidgetConfig {
     scriptUrl: string;
@@ -36,7 +36,6 @@ interface IntouchWidgetConfig {
 const PAYMENT_METHODS: { id: PaymentMethod; label: string; sublabel: string }[] = [
     { id: 'WAVE',          label: 'Wave',          sublabel: 'Paiement mobile instantané · Sans frais' },
     { id: 'ORANGE_MONEY',  label: 'Orange Money',  sublabel: 'Paiement via votre compte Orange' },
-    { id: 'FREE_MONEY',    label: 'Free Money',    sublabel: 'Paiement via votre compte Free' },
     { id: 'CARTE_BANCAIRE', label: 'Carte bancaire', sublabel: 'Visa, Mastercard · Paiement sécurisé' },
 ];
 
@@ -69,29 +68,20 @@ function OrangeMoneyLogo({ size = 40 }: { size?: number }) {
     );
 }
 
-function FreeMoneyLogo({ size = 40 }: { size?: number }) {
-    return (
-        <div
-            className="rounded-xl bg-[#E30613] flex items-center justify-center flex-shrink-0 text-white font-black text-[10px]"
-            style={{ width: size, height: size }}
-        >
-            Free
-        </div>
-    );
-}
-
 function CarteBancaireLogo({ size = 40 }: { size?: number }) {
     return (
         <div
-            className="rounded-xl bg-slate-800 flex items-center justify-center flex-shrink-0"
+            className="rounded-xl bg-white border border-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden"
             style={{ width: size, height: size }}
         >
-            <svg width={size * 0.55} height={size * 0.4} viewBox="0 0 22 16" fill="none">
-                <rect x="0.5" y="0.5" width="21" height="15" rx="2.5" fill="#1e293b" stroke="#475569" />
-                <rect y="3" width="22" height="3.5" fill="#475569" />
-                <rect x="2" y="9" width="6" height="1.5" rx="0.75" fill="#94a3b8" />
-                <rect x="2" y="11.5" width="4" height="1.5" rx="0.75" fill="#94a3b8" />
-            </svg>
+            <Image
+                src="/cb.png"
+                alt="Carte bancaire"
+                width={size}
+                height={size}
+                className="object-contain"
+                style={{ width: size * 0.75, height: size * 0.75 }}
+            />
         </div>
     );
 }
@@ -99,7 +89,6 @@ function CarteBancaireLogo({ size = 40 }: { size?: number }) {
 function MethodLogo({ method, size = 40 }: { method: PaymentMethod; size?: number }) {
     if (method === 'WAVE')          return <WaveLogo size={size} />;
     if (method === 'ORANGE_MONEY')  return <OrangeMoneyLogo size={size} />;
-    if (method === 'FREE_MONEY')    return <FreeMoneyLogo size={size} />;
     return <CarteBancaireLogo size={size} />;
 }
 
@@ -109,7 +98,6 @@ function MethodLogo({ method, size = 40 }: { method: PaymentMethod; size?: numbe
 const METHOD_COLORS: Record<PaymentMethod, { border: string; bg: string; dot: string }> = {
     WAVE:          { border: 'border-[#1B68F9]',  bg: 'bg-blue-50/60',   dot: 'border-[#1B68F9] bg-[#1B68F9]' },
     ORANGE_MONEY:  { border: 'border-[#FF6600]',  bg: 'bg-orange-50/60', dot: 'border-[#FF6600] bg-[#FF6600]' },
-    FREE_MONEY:    { border: 'border-[#E30613]',  bg: 'bg-red-50/60',    dot: 'border-[#E30613] bg-[#E30613]' },
     CARTE_BANCAIRE: { border: 'border-slate-700', bg: 'bg-slate-50/60',  dot: 'border-slate-700 bg-slate-700' },
 };
 
@@ -349,7 +337,7 @@ export default function PaymentPage() {
     /* ── Récapitulatif ── */
     return (
         <main className="min-h-screen bg-[#F8FAFB]">
-            <div className="mx-auto max-w-lg px-4 py-8 lg:py-12">
+            <div className="mx-auto max-w-lg px-4 py-8 pb-28 lg:py-12 lg:pb-12">
 
                 {/* Retour */}
                 <button
@@ -485,13 +473,13 @@ export default function PaymentPage() {
                     </div>
                 </label>
 
-                {/* Bouton payer */}
+                {/* Bouton payer — desktop : dans le flux normal */}
                 <button
                     type="button"
                     disabled={!contractAccepted || step !== 'recap'}
                     onClick={handlePay}
                     className={cn(
-                        'w-full relative flex items-center justify-center gap-3 rounded-2xl px-6 py-4 overflow-hidden',
+                        'hidden lg:flex w-full relative items-center justify-center gap-3 rounded-2xl px-6 py-4 overflow-hidden',
                         'text-[15px] font-black tracking-tight transition-all duration-300',
                         contractAccepted
                             ? 'text-white shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-500/35 hover:-translate-y-0.5 active:translate-y-0'
@@ -513,6 +501,26 @@ export default function PaymentPage() {
                     Paiement 100% sécurisé · Réservation instantanée
                 </p>
 
+            </div>
+
+            {/* Bouton payer — mobile : fixe en bas de l'écran */}
+            <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-100 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                <button
+                    type="button"
+                    disabled={!contractAccepted || step !== 'recap'}
+                    onClick={handlePay}
+                    className={cn(
+                        'w-full relative flex items-center justify-center gap-3 rounded-2xl px-6 py-4 overflow-hidden',
+                        'text-[15px] font-black tracking-tight transition-all duration-300',
+                        contractAccepted
+                            ? 'text-white shadow-xl shadow-emerald-500/25 active:translate-y-0'
+                            : 'bg-slate-100 text-slate-300 cursor-not-allowed',
+                    )}
+                    style={contractAccepted ? { background: 'linear-gradient(135deg, #34D399 0%, #059669 55%, #047857 100%)' } : {}}
+                >
+                    <MethodLogo method={method} size={22} />
+                    Payer {formatPrice(grandTotal)}
+                </button>
             </div>
         </main>
     );

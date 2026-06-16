@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import type { VehicleSearchResult, VehicleStatus, FuelType, Transmission } from '@/lib/nestjs/vehicles';
 import { TYPE_LABELS } from '@/features/vehicles/owner/vehicle-helpers';
 import { useCurrency } from '@/providers/currency-provider';
+import { CompactVehicleCard } from '@/features/vehicles/components/CompactVehicleCard';
 
 /* ════════════════════════════════════════════════════════════════
    TYPES
@@ -433,5 +434,16 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
    EXPORT
 ════════════════════════════════════════════════════════════════ */
 export function ExplorerVehicleCard({ vehicle }: Props): React.ReactElement {
-  return <StandardCard vehicle={vehicle} />;
+  return (
+    <>
+      {/* Mobile/tablette : carte compacte (même style que Sélection Premium) */}
+      <div className="lg:hidden">
+        <CompactVehicleCard vehicle={vehicle} />
+      </div>
+      {/* Desktop : carte détaillée (specs, badges) */}
+      <div className="hidden lg:block">
+        <StandardCard vehicle={vehicle} />
+      </div>
+    </>
+  );
 }

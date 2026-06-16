@@ -749,7 +749,7 @@ export class VehiclesService {
     // Exclusion explicite d'IDs (pagination invisible du feed accueil)
     const excludeCondition =
       dto.excludeIds?.length
-        ? Prisma.sql`AND v.id <> ALL(ARRAY[${Prisma.join(dto.excludeIds)}]::uuid[])`
+        ? Prisma.sql`AND v.id <> ALL(${dto.excludeIds}::uuid[])`
         : Prisma.empty;
 
     // ── Requête native ────────────────────────────────────────────────────────
@@ -896,11 +896,12 @@ export class VehiclesService {
     `;
 
     // ── Nouveautés : fenêtre de date précise, avec backfill si catalogue jeune ──
+    const nouveautesWindowStart = new Date(Date.now() - FEED_NOUVEAUTES_WINDOW_DAYS * 24 * 60 * 60 * 1000);
     const nouveautesRecentes = await this.prisma.$queryRaw<VehicleSearchRow[]>`
       SELECT ${VehiclesService.VEHICLE_SELECT_FRAGMENT}
       FROM "Vehicule" v
       WHERE v.statut::text = 'VERIFIE'
-        AND v."creeLe" >= NOW() - (INTERVAL '1 day' * ${FEED_NOUVEAUTES_WINDOW_DAYS})
+        AND v."creeLe" >= ${nouveautesWindowStart}
       ORDER BY v."creeLe" DESC
       LIMIT ${Prisma.raw(String(FEED_SECTION_SIZE))}
     `;
@@ -908,7 +909,7 @@ export class VehiclesService {
     if (nouveautesRows.length < FEED_SECTION_SIZE) {
       const already = nouveautesRows.map((r) => r.id);
       const backfillCondition = already.length
-        ? Prisma.sql`AND v.id <> ALL(ARRAY[${Prisma.join(already)}]::uuid[])`
+        ? Prisma.sql`AND v.id <> ALL(${already}::uuid[])`
         : Prisma.empty;
       const backfill = await this.prisma.$queryRaw<VehicleSearchRow[]>`
         SELECT ${VehiclesService.VEHICLE_SELECT_FRAGMENT}
@@ -925,7 +926,7 @@ export class VehiclesService {
 
     // ── Recommandé : aléatoire, exclusion best-effort des IDs déjà utilisés ──
     const excludeUsedCondition = usedIds.length
-      ? Prisma.sql`AND v.id <> ALL(ARRAY[${Prisma.join(usedIds)}]::uuid[])`
+      ? Prisma.sql`AND v.id <> ALL(${usedIds}::uuid[])`
       : Prisma.empty;
     let recommendedRows = await this.prisma.$queryRaw<VehicleSearchRow[]>`
       SELECT ${VehiclesService.VEHICLE_SELECT_FRAGMENT}
@@ -940,7 +941,7 @@ export class VehiclesService {
       // complète quitte à dupliquer plutôt que d'afficher une section tronquée.
       const already = recommendedRows.map((r) => r.id);
       const backfillCondition = already.length
-        ? Prisma.sql`AND v.id <> ALL(ARRAY[${Prisma.join(already)}]::uuid[])`
+        ? Prisma.sql`AND v.id <> ALL(${already}::uuid[])`
         : Prisma.empty;
       const backfill = await this.prisma.$queryRaw<VehicleSearchRow[]>`
         SELECT ${VehiclesService.VEHICLE_SELECT_FRAGMENT}

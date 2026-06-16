@@ -1,22 +1,16 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { Star, ShieldCheck, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import type { VehicleSearchResult } from '@/lib/nestjs/vehicles';
-import { useCurrency } from '@/providers/currency-provider';
-import { cn } from '@/lib/utils';
-
-const PRIX_COEFFICIENT_AFFICHAGE = 1.15;
+import { CompactVehicleCard } from '@/features/vehicles/components/CompactVehicleCard';
 
 interface PremiumSelectionGridProps {
   vehicles: VehicleSearchResult[];
 }
 
 export function PremiumSelectionGrid({ vehicles }: PremiumSelectionGridProps): React.ReactElement | null {
-  const { formatPrice } = useCurrency();
-
   if (!vehicles || vehicles.length === 0) return null;
 
   return (
@@ -40,78 +34,9 @@ export function PremiumSelectionGrid({ vehicles }: PremiumSelectionGridProps): R
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
-        {vehicles.slice(0, 4).map((v) => {
-          const basePrice = Math.round(Number(v.prixParJour) * PRIX_COEFFICIENT_AFFICHAGE);
-          const photo = v.photoUrl;
-
-          return (
-            <Link
-              key={v.id}
-              href={`/vehicle/${v.id}`}
-              className={cn(
-                'group relative flex flex-col bg-white rounded-2xl border border-slate-100/80 overflow-hidden',
-                'shadow-sm shadow-slate-100/50 transition-all active:scale-[0.98]'
-              )}
-            >
-              {/* Photo */}
-              <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">
-                {photo ? (
-                  <Image
-                    src={photo}
-                    alt={`${v.marque} ${v.modele}`}
-                    fill
-                    sizes="(max-width: 640px) 50vw, 25vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-slate-50">
-                    <span className="text-[10px] font-bold text-slate-300">AutoLoc</span>
-                  </div>
-                )}
-
-                {/* Rating Badge */}
-                {v.note > 0 && (
-                  <div className="absolute bottom-2 left-2 z-10">
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-black/60 backdrop-blur-md px-2 py-0.5 text-[9px] font-black text-white">
-                      <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
-                      {Number(v.note).toFixed(1)}
-                    </span>
-                  </div>
-                )}
-
-                {/* Verify Indicator */}
-                <div className="absolute top-2 left-2">
-                  <span className="w-5 h-5 rounded-full bg-emerald-500/90 flex items-center justify-center text-white shadow">
-                    <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2.5} />
-                  </span>
-                </div>
-              </div>
-
-              {/* Body */}
-              <div className="p-3 flex flex-col flex-1">
-                <h4 className="text-[12px] font-bold text-slate-800 truncate leading-tight">
-                  {v.marque} <span className="text-emerald-600">{v.modele}</span>
-                </h4>
-                <p className="text-[9.5px] font-medium text-slate-400 mt-0.5 leading-none">
-                  {v.ville}
-                </p>
-
-                <div className="mt-3 pt-2 border-t border-slate-50 flex items-center justify-between gap-1">
-                  <div>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider leading-none">À partir de</p>
-                    <p className="text-[13px] font-black text-slate-900 leading-none mt-0.5">
-                      {formatPrice(basePrice)}
-                      <span className="text-[9px] font-medium text-slate-400">/j</span>
-                    </p>
-                  </div>
-                  <span className="w-6 h-6 rounded-lg bg-slate-950 flex items-center justify-center text-emerald-400 shrink-0">
-                    <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
-                  </span>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+        {vehicles.slice(0, 4).map((v) => (
+          <CompactVehicleCard key={v.id} vehicle={v} />
+        ))}
       </div>
 
       <Link
