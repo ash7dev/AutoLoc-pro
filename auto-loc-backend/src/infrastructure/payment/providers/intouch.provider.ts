@@ -35,22 +35,32 @@ export class IntouchProvider implements PaymentProviderInterface {
     readonly provider = 'INTOUCH' as const;
     private readonly logger = new Logger(IntouchProvider.name);
 
-    private readonly agencyCode:    string;
-    private readonly loginApi:      string;
-    private readonly passwordApi:   string;
-    private readonly webhookSecret: string;
+    private readonly agencyCode:      string;
+    private readonly loginApi:        string;
+    private readonly passwordApi:     string;
+    private readonly digestUsername:  string;
+    private readonly digestPassword:  string;
+    private readonly webhookSecret:   string;
 
     private readonly API_BASE = 'https://api.gutouch.com/dist/api/touchpayapi/v1';
 
     constructor(private readonly config: ConfigService) {
-        this.agencyCode    = this.config.get<string>('INTOUCH_AGENCY_CODE', '');
-        this.loginApi      = this.config.get<string>('INTOUCH_LOGIN_API', '');
-        this.passwordApi   = this.config.get<string>('INTOUCH_PASSWORD_API', '');
-        this.webhookSecret = this.config.get<string>('INTOUCH_WEBHOOK_SECRET', '');
+        this.agencyCode      = this.config.get<string>('INTOUCH_AGENCY_CODE', '');
+        this.loginApi        = this.config.get<string>('INTOUCH_LOGIN_API', '');
+        this.passwordApi     = this.config.get<string>('INTOUCH_PASSWORD_API', '');
+        this.digestUsername  = this.config.get<string>('INTOUCH_DIGEST_USERNAME', '');
+        this.digestPassword  = this.config.get<string>('INTOUCH_DIGEST_PASSWORD', '');
+        this.webhookSecret   = this.config.get<string>('INTOUCH_WEBHOOK_SECRET', '');
 
         if (!this.agencyCode || !this.loginApi || !this.passwordApi) {
             this.logger.warn(
                 'INTOUCH_AGENCY_CODE / INTOUCH_LOGIN_API / INTOUCH_PASSWORD_API non configurés',
+            );
+        }
+        if (!this.digestUsername || !this.digestPassword) {
+            this.logger.warn(
+                'INTOUCH_DIGEST_USERNAME / INTOUCH_DIGEST_PASSWORD non configurés — ' +
+                'ce sont les credentials SHA-256 pré-calculés pour le Digest Auth (cf. collection Postman InTouch)',
             );
         }
     }
@@ -108,17 +118,20 @@ export class IntouchProvider implements PaymentProviderInterface {
     }
 
     // ── Digest Auth ────────────────────────────────────────────────────────────
-    // InTouch utilise HTTP Digest MD5. Les credentials sont passés en SHA-256
-    // (comme observé dans la collection Postman fournie par InTouch).
+    // InTouch utilise HTTP Digest MD5.
+    // IMPORTANT : le username et password pour le Digest Auth sont des valeurs
+    // SHA-256 pré-calculées fournies directement par InTouch (dans la collection
+    // Postman). Ce ne sont PAS le SHA-256 de loginAgent/passwordAgent.
+    // loginAgent/passwordAgent vont uniquement dans la query string de l'URL.
 
     private async fetchWithDigestAuth(
         url: string,
         method: string,
         body: string,
     ): Promise<Response> {
-        // InTouch Digest auth : les credentials sont passés en SHA-256 (cf. collection Postman officielle)
-        const username = crypto.createHash('sha256').update(this.loginApi).digest('hex');
-        const password = crypto.createHash('sha256').update(this.passwordApi).digest('hex');
+        // Credentials Digest Auth = valeurs SHA-256 pré-calculées fournies par InTouch
+        const username = this.digestUsername;
+        const password = this.digestPassword;
 
         // Étape 1 : requête probe pour récupérer le nonce du serveur
         const probe = await fetch(url, {

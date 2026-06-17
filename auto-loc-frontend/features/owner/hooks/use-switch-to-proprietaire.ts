@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { apiFetch } from '@/lib/nestjs/api-client';
 import { useRoleStore } from '../../auth/stores/role.store';
@@ -9,7 +8,6 @@ import { useRoleStore } from '../../auth/stores/role.store';
 export function useSwitchToProprietaire() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const activeRole = useRoleStore((s) => s.activeRole);
   const setActiveRole = useRoleStore((s) => s.setActiveRole);
 
@@ -23,10 +21,21 @@ export function useSwitchToProprietaire() {
         throw new Error('Non connecté');
       }
 
-      await apiFetch('/auth/switch-role', {
-        method: 'PATCH',
-        body: { role: 'PROPRIETAIRE' },
-        accessToken: session.access_token,
+      const result = await apiFetch<{ role: string; accessToken: string; refreshToken: string }>(
+        '/auth/switch-role',
+        { method: 'PATCH', body: { role: 'PROPRIETAIRE' }, accessToken: session.access_token },
+      );
+
+      // Rafraîchir immédiatement le cookie httpOnly nest_access avec le nouveau JWT
+      // (rôle PROPRIETAIRE). Évite que le middleware voie un rôle stale au prochain load.
+      await fetch('/api/auth/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          activeRole: result.role,
+        }),
       });
 
       try {
@@ -35,7 +44,6 @@ export function useSwitchToProprietaire() {
         // ignore
       }
       setActiveRole('PROPRIETAIRE');
-      await new Promise(resolve => setTimeout(resolve, 500));
       window.location.href = '/dashboard/owner';
     } catch (err: unknown) {
       const message =

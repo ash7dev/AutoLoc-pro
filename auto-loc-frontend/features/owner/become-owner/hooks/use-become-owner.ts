@@ -1,14 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuthFetch } from '../../../auth/hooks/use-auth-fetch';
 import { useRoleStore } from '../../../auth/stores/role.store';
 
 export function useBecomeOwner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const setActiveRole = useRoleStore((s) => s.setActiveRole);
   const { authFetch } = useAuthFetch();
 
@@ -16,29 +14,31 @@ export function useBecomeOwner() {
     setLoading(true);
     setError(null);
     try {
-      // Faire le switch de rôle
-      await authFetch('/auth/switch-role', {
-        method: 'PATCH',
-        body: { role: 'PROPRIETAIRE' },
+      const result = await authFetch<{ role: string; accessToken: string; refreshToken: string }>(
+        '/auth/switch-role',
+        { method: 'PATCH', body: { role: 'PROPRIETAIRE' } },
+      );
+
+      // Rafraîchir immédiatement le cookie httpOnly nest_access avec le nouveau JWT.
+      await fetch('/api/auth/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          activeRole: result.role,
+        }),
       });
-      
-      // Marquer le changement de rôle pour invalider les caches
+
       try {
         document.cookie = `role_switch_at=${Date.now()}; path=/; max-age=300`;
       } catch {
         // ignore
       }
-      
-      // Mettre à jour le store immédiatement
-      setActiveRole('PROPRIETAIRE');
-      
-      // Petit délai pour assurer la consistance de la DB avant le rechargement serveur
-      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Utiliser window.location pour forcer un rechargement complet de la session serveur
-      // Cela évite les boucles infinies de redirection du routeur Next.js
+      setActiveRole('PROPRIETAIRE');
       window.location.href = '/dashboard/owner';
-      
+
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Une erreur est survenue.';

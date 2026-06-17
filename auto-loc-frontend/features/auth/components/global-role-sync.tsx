@@ -29,6 +29,7 @@ export function GlobalRoleSync() {
           if (res.ok) {
             const profile = await res.json() as ProfileResponse;
             useProfileStore.getState().setProfile(profile);
+            useRoleStore.getState().setActiveRole(profile.role);
             if (profile.role === 'PROPRIETAIRE') {
               const vehiclesRes = await fetch('/api/nest/vehicles/me', { credentials: 'include' });
               if (vehiclesRes.ok) {
@@ -72,6 +73,11 @@ export function GlobalRoleSync() {
         if (profileRes.ok) {
           const profile = await profileRes.json() as ProfileResponse;
           useProfileStore.getState().setProfile(profile);
+
+          // Synchroniser activeRole avec la source de vérité (DB via /auth/me).
+          // Évite un localStorage stale si le cookie a expiré puis été régénéré avec un
+          // rôle différent (ex: token PROPRIETAIRE stale → heal → profil LOCATAIRE en DB).
+          useRoleStore.getState().setActiveRole(profile.role);
 
           // Fetch vehicles uniquement pour les propriétaires — les autres rôles
           // (ADMIN, LOCATAIRE, SUPPORT) n'ont pas de véhicules et retourneraient 403.

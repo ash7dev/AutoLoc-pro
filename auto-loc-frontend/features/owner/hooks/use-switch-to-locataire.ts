@@ -19,23 +19,30 @@ export function useSwitchToLocataire() {
     setLoading(true);
     setError(null);
     try {
-      await authFetch('/auth/switch-role', {
-        method: 'PATCH',
-        body: { role: 'LOCATAIRE' },
+      const result = await authFetch<{ role: string; accessToken: string; refreshToken: string }>(
+        '/auth/switch-role',
+        { method: 'PATCH', body: { role: 'LOCATAIRE' } },
+      );
+
+      // Rafraîchir immédiatement le cookie httpOnly nest_access avec le nouveau JWT
+      // (rôle LOCATAIRE). Sans ça, le middleware lirait l'ancien JWT (PROPRIETAIRE)
+      // après expiry du cookie role_switch_at et redirigerait vers /dashboard/owner.
+      await fetch('/api/auth/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          activeRole: result.role,
+        }),
       });
 
-      // Cookie pour que le middleware ignore le JWT stale (encore PROPRIETAIRE)
+      // Cookie de grâce conservé comme filet de sécurité.
       document.cookie = `role_switch_at=${Date.now()}; path=/; max-age=300`;
 
-      // Vider le profileStore (stale PROPRIETAIRE) AVANT la navigation.
-      // Sans ça, HomeSessionRedirect Tier 2 lit l'ancien profil et redirige
-      // vers /dashboard/owner dès que la home page monte.
       clearProfile();
       setActiveRole('LOCATAIRE');
 
-      // Reload complet (comme signOut) : élimine tout state client stale.
-      // router.push('/') laisse GlobalRoleSync avec l'ancien profil en mémoire,
-      // ce qui peut provoquer un rebond visible avant la re-synchro.
       window.location.href = '/';
     } catch (err: unknown) {
       const message =
@@ -43,7 +50,6 @@ export function useSwitchToLocataire() {
       setError(message);
       setLoading(false);
     }
-    // Pas de finally setLoading(false) : le reload détruit le composant de toute façon
   };
 
   return { switchToLocataire, loading, error };

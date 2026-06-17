@@ -265,7 +265,10 @@ export class AuthService {
    * avec 0 véhicule. Les vraies contraintes (KYC, phone) s'appliquent plus tard,
    * au moment de publier ou recevoir un paiement.
    */
-  async switchRole(user: RequestUser, dto: SwitchRoleDto): Promise<{ role: RoleProfile }> {
+  async switchRole(
+    user: RequestUser,
+    dto: SwitchRoleDto,
+  ): Promise<{ role: RoleProfile; accessToken: string; refreshToken: string }> {
     if (!user.sub) {
       throw new BadRequestException('Utilisateur invalide');
     }
@@ -284,7 +287,25 @@ export class AuthService {
       data: { role: dto.role as RoleProfile },
     });
 
-    return { role: dto.role as RoleProfile };
+    // Émettre de nouveaux tokens avec le rôle mis à jour.
+    // Sans ça, le middleware lirait le rôle stale de l'ancien JWT et
+    // redirigerait vers /dashboard/owner même après un switch vers LOCATAIRE.
+    const newRole = dto.role as RoleProfile;
+    const accessToken = await this.signAccessToken({
+      sub: user.sub,
+      email: user.email,
+      phone: user.phone,
+      role: newRole,
+    });
+    const refreshToken = await this.signRefreshToken({
+      sub: user.sub,
+      email: user.email,
+      phone: user.phone,
+      role: newRole,
+    });
+    await this.storeRefreshSession(user.sub, refreshToken);
+
+    return { role: newRole, accessToken, refreshToken };
   }
 
   async requestPhoneOtp(user: RequestUser): Promise<{ expiresIn: number }> {
