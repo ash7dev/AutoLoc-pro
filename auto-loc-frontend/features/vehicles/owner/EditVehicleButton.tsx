@@ -23,10 +23,10 @@ export function EditVehicleButton({ vehicle }: Props) {
             <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-white/60 hover:text-white hover:border-white/20 transition-all"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-emerald-200 bg-emerald-50 text-[12px] font-bold text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 transition-all"
             >
                 <Edit className="w-3.5 h-3.5" />
-                Modifier
+                Modifier l&apos;annonce
             </button>
 
             <EditVehicleSheet

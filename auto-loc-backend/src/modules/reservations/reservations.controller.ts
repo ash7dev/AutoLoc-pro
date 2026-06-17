@@ -271,9 +271,10 @@ export class ReservationsController {
     @Req() req: Request & { user?: RequestUser },
     @Query('vehiculeId') vehiculeId?: string,
     @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
     const user = req.user!;
-    return this.reservationsService.findForOwner(user, vehiculeId, page ? Number(page) : 1);
+    return this.reservationsService.findForOwner(user, vehiculeId, page ? Number(page) : 1, limit ? Number(limit) : undefined);
   }
 
   /**

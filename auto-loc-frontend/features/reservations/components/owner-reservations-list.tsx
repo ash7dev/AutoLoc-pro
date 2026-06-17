@@ -6,7 +6,7 @@ import { OwnerReservationCard } from "@/features/reservations/components/reserva
 import Link from "next/link";
 import {
     Archive, Car, Zap, CheckCircle2, Timer, Clock,
-    XCircle, AlertTriangle, ChevronDown,
+    XCircle, AlertTriangle, ChevronDown, Hourglass,
 } from "lucide-react";
 import type { Reservation, ReservationStatut } from "@/lib/nestjs/reservations";
 
@@ -14,13 +14,14 @@ import type { Reservation, ReservationStatut } from "@/lib/nestjs/reservations";
    FILTER TABS
 ════════════════════════════════════════════════════════════════ */
 const FILTERS: { label: string; value: ReservationStatut | "ALL"; dot?: string; icon?: React.ElementType }[] = [
-    { label: "Toutes",     value: "ALL",       icon: Car },
-    { label: "À valider",  value: "PAYEE",     dot: "bg-amber-500",   icon: Zap },
-    { label: "Confirmées", value: "CONFIRMEE", dot: "bg-emerald-500", icon: CheckCircle2 },
-    { label: "En cours",   value: "EN_COURS",  dot: "bg-blue-500",    icon: Timer },
-    { label: "Terminées",  value: "TERMINEE",  dot: "bg-slate-300",   icon: Clock },
-    { label: "Annulées",   value: "ANNULEE",   dot: "bg-red-400",     icon: XCircle },
-    { label: "Litiges",    value: "LITIGE",    dot: "bg-orange-400",  icon: AlertTriangle },
+    { label: "Toutes",              value: "ALL",                  icon: Car },
+    { label: "En attente paiement", value: "EN_ATTENTE_PAIEMENT",  dot: "bg-blue-300",    icon: Hourglass },
+    { label: "À valider",           value: "PAYEE",                dot: "bg-amber-500",   icon: Zap },
+    { label: "Confirmées",          value: "CONFIRMEE",            dot: "bg-emerald-500", icon: CheckCircle2 },
+    { label: "En cours",            value: "EN_COURS",             dot: "bg-blue-500",    icon: Timer },
+    { label: "Terminées",           value: "TERMINEE",             dot: "bg-slate-300",   icon: Clock },
+    { label: "Annulées",            value: "ANNULEE",              dot: "bg-red-400",     icon: XCircle },
+    { label: "Litiges",             value: "LITIGE",               dot: "bg-orange-400",  icon: AlertTriangle },
 ];
 
 /* ════════════════════════════════════════════════════════════════
@@ -39,6 +40,17 @@ interface SectionConfig {
 }
 
 const SECTIONS: SectionConfig[] = [
+    {
+        id: "pending_payment",
+        title: "En attente de paiement",
+        subtitle: "Initiées ou en cours de paiement par le locataire",
+        icon: Hourglass,
+        iconBg: "bg-gradient-to-br from-blue-50 to-sky-50 border-blue-200",
+        iconColor: "text-blue-500",
+        statuses: ["INITIEE", "EN_ATTENTE_PAIEMENT"],
+        collapsible: true,
+        defaultOpen: true,
+    },
     {
         id: "urgent",
         title: "Action requise",
@@ -75,11 +87,11 @@ const SECTIONS: SectionConfig[] = [
     {
         id: "history",
         title: "Historique",
-        subtitle: "Réservations terminées et annulées",
+        subtitle: "Réservations terminées, annulées ou expirées",
         icon: Archive,
         iconBg: "bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200",
         iconColor: "text-slate-500",
-        statuses: ["TERMINEE", "ANNULEE"],
+        statuses: ["TERMINEE", "ANNULEE", "EXPIREE"],
         collapsible: true,
         defaultOpen: false,
     },

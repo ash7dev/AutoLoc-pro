@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   PieChart as PieChartIcon,
   Zap, CheckCircle2, Timer, Clock,
-  XCircle, AlertTriangle, ChevronRight, TrendingUp,
+  XCircle, AlertTriangle, ChevronRight, TrendingUp, Hourglass,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Reservation, ReservationStatut } from "@/lib/nestjs/reservations";
@@ -27,6 +27,24 @@ interface StatusConfig {
 }
 
 const STATUS_MAP: Record<string, StatusConfig> = {
+  INITIEE: {
+    label: "Initiées",
+    color: "bg-sky-300",
+    hex: "#7dd3fc",
+    hexHover: "#bae6fd",
+    textCls: "text-sky-500",
+    badgeCls: "bg-sky-50 text-sky-600 border-sky-100",
+    icon: Hourglass,
+  },
+  EN_ATTENTE_PAIEMENT: {
+    label: "Attente paiement",
+    color: "bg-blue-300",
+    hex: "#93c5fd",
+    hexHover: "#bfdbfe",
+    textCls: "text-blue-500",
+    badgeCls: "bg-blue-50 text-blue-600 border-blue-100",
+    icon: Hourglass,
+  },
   PAYEE: {
     label: "À valider",
     color: "bg-amber-500",
@@ -81,10 +99,19 @@ const STATUS_MAP: Record<string, StatusConfig> = {
     badgeCls: "bg-orange-50 text-orange-700 border-orange-100",
     icon: AlertTriangle,
   },
+  EXPIREE: {
+    label: "Expirées",
+    color: "bg-slate-200",
+    hex: "#e2e8f0",
+    hexHover: "#f1f5f9",
+    textCls: "text-slate-400",
+    badgeCls: "bg-slate-50 text-slate-400 border-slate-100",
+    icon: XCircle,
+  },
 };
 
 const STATUS_ORDER: ReservationStatut[] = [
-  "PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE", "ANNULEE", "LITIGE",
+  "EN_ATTENTE_PAIEMENT", "INITIEE", "PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE", "ANNULEE", "EXPIREE", "LITIGE",
 ];
 
 /* ════════════════════════════════════════════════════════════════
@@ -289,7 +316,7 @@ export function ReservationStatsVisualizer({
               Répartition
             </h3>
             <p className="text-[11px] font-bold text-slate-400 tracking-wide mt-0.5 uppercase tracking-[0.05em]">
-              États des rés.
+              États des rés. · Toutes périodes
             </p>
           </div>
         </div>

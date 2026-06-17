@@ -8,8 +8,9 @@ import { cn } from "@/lib/utils";
    TYPES
 ════════════════════════════════════════════════════════════════ */
 export type ReservationStatus =
+  | "INITIEE" | "EN_ATTENTE_PAIEMENT"
   | "PAYEE" | "CONFIRMEE" | "EN_COURS"
-  | "TERMINEE" | "ANNULEE" | "LITIGE"
+  | "TERMINEE" | "ANNULEE" | "EXPIREE" | "LITIGE"
   | "approved" | "pending";
 
 export interface ReservationItem {
@@ -36,16 +37,19 @@ const STATUS: Record<ReservationStatus, {
 }> = {
   approved: { label: "Approuvée", dot: "bg-emerald-500", cls: "text-emerald-600 bg-emerald-50 border-emerald-100" },
   pending: { label: "En attente", dot: "bg-blue-400", cls: "text-blue-600 bg-blue-50 border-blue-100" },
+  INITIEE: { label: "Initiée", dot: "bg-sky-300", cls: "text-sky-600 bg-sky-50 border-sky-100" },
+  EN_ATTENTE_PAIEMENT: { label: "Attente paiement", dot: "bg-blue-300 animate-pulse", cls: "text-blue-600 bg-blue-50 border-blue-100" },
   PAYEE: { label: "Payée", dot: "bg-emerald-500", cls: "text-emerald-600 bg-emerald-50 border-emerald-100" },
   CONFIRMEE: { label: "Confirmée", dot: "bg-slate-800", cls: "text-slate-700 bg-slate-50 border-slate-200" },
   EN_COURS: { label: "En cours", dot: "bg-emerald-500 animate-pulse", cls: "text-emerald-600 bg-emerald-50 border-emerald-100" },
   TERMINEE: { label: "Terminée", dot: "bg-slate-300", cls: "text-slate-500 bg-slate-50 border-slate-100" },
   ANNULEE: { label: "Annulée", dot: "bg-red-400", cls: "text-red-600 bg-red-50 border-red-100" },
+  EXPIREE: { label: "Expirée", dot: "bg-slate-200", cls: "text-slate-400 bg-slate-50 border-slate-100" },
   LITIGE: { label: "Litige", dot: "bg-orange-500 animate-pulse", cls: "text-orange-700 bg-orange-50 border-orange-100" },
 };
 
 const PIPELINE_ORDER: ReservationStatus[] = [
-  "PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE", "ANNULEE", "LITIGE",
+  "EN_ATTENTE_PAIEMENT", "INITIEE", "PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE", "ANNULEE", "EXPIREE", "LITIGE",
 ];
 
 /* ════════════════════════════════════════════════════════════════

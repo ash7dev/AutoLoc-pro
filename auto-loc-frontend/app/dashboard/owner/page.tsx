@@ -29,7 +29,7 @@ async function DashboardDataFetcher({ token }: { token: string }) {
     const [profileResult, resResult, vehiclesResult, walletResult, statsResult] =
       await Promise.allSettled([
         fetchMe(token),
-        fetchOwnerReservations(token),
+        fetchOwnerReservations(token, { limit: 200 }),
         fetchMyVehicles(token),
         fetchWallet(token),
         fetchOwnerStats(token),

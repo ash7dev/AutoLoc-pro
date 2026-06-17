@@ -534,7 +534,7 @@ export class ReservationsService {
 
   // ── GET /reservations/owner ──────────────────────────────────────────────────
 
-  async findForOwner(user: RequestUser, vehiculeId?: string, page = 1) {
+  async findForOwner(user: RequestUser, vehiculeId?: string, page = 1, limitOverride?: number) {
     const proprietaire = await this.prisma.utilisateur.findUnique({
       where: { userId: user.sub },
       select: { id: true },
@@ -546,7 +546,7 @@ export class ReservationsService {
     const where: Record<string, unknown> = { proprietaireId: proprietaire.id };
     if (vehiculeId) where.vehiculeId = vehiculeId;
 
-    const take = 20;
+    const take = Math.min(limitOverride ?? 20, 200);
     const skip = (page - 1) * take;
 
     const [reservations, total] = await Promise.all([

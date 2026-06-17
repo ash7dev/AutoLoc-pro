@@ -341,8 +341,8 @@ function VehicleCard({
                     )}
                 </div>
 
-                {/* Actions — top right (hover reveal) */}
-                <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300">
+                {/* Actions — toujours visible sur mobile, hover reveal sur desktop */}
+                <div className="absolute top-3 right-3 z-10 sm:opacity-0 sm:translate-y-1 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 transition-all duration-300">
                     <div className="rounded-xl bg-white/90 backdrop-blur-xl shadow-lg border border-white/30" onClick={(e) => e.stopPropagation()}>
                         <VehicleActions vehicle={vehicle} onEdit={onEdit} onArchive={onArchive} />
                     </div>
@@ -492,18 +492,14 @@ function VehicleCard({
                                 Annonce
                             </Link>
                         )}
-                        <Link
-                            href={`/dashboard/owner/vehicles/${vehicle.id}/reservations`}
-                            className={cn(
-                                "inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold transition-all duration-200",
-                                isActive
-                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100"
-                                    : "bg-slate-50 text-slate-500 border border-slate-100 hover:bg-slate-100",
-                            )}
+                        <button
+                            type="button"
+                            onClick={() => onEdit(vehicle)}
+                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-all duration-200"
                         >
-                            <CalendarDays className="h-3 w-3" strokeWidth={2} />
-                            Réservations
-                        </Link>
+                            <Pencil className="h-3 w-3" strokeWidth={2} />
+                            Modifier
+                        </button>
                     </div>
                 </div>
 
@@ -639,7 +635,7 @@ function VehicleRow({
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-end sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300" onClick={(e) => e.stopPropagation()}>
                 <VehicleActions vehicle={vehicle} onEdit={onEdit} onArchive={onArchive} />
             </div>
         </div>

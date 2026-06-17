@@ -5,7 +5,7 @@ import Image from "next/image";
 import {
     ArrowRight, Truck, CalendarRange, User2, Clock,
     Banknote, Zap, Shield, AlertTriangle, CheckCircle2,
-    XCircle, Timer, Car,
+    XCircle, Timer, Car, Hourglass,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PhoneDisplay } from "./phone-display";
@@ -85,6 +85,34 @@ const STATUS_STYLES: Record<string, {
         badgeDot: "bg-orange-400",
         pulse: true,
         glow: "shadow-orange-500/5",
+    },
+    INITIEE: {
+        label: "Initiée",
+        icon: Hourglass,
+        accent: "from-sky-300 to-blue-400",
+        accentBorder: "border-l-sky-300",
+        badgeBg: "bg-sky-50",
+        badgeText: "text-sky-700",
+        badgeDot: "bg-sky-400",
+    },
+    EN_ATTENTE_PAIEMENT: {
+        label: "Attente paiement",
+        icon: Hourglass,
+        accent: "from-blue-300 to-blue-400",
+        accentBorder: "border-l-blue-300",
+        badgeBg: "bg-blue-50",
+        badgeText: "text-blue-700",
+        badgeDot: "bg-blue-300",
+        pulse: true,
+    },
+    EXPIREE: {
+        label: "Expirée",
+        icon: XCircle,
+        accent: "from-slate-300 to-slate-400",
+        accentBorder: "border-l-slate-200",
+        badgeBg: "bg-slate-100",
+        badgeText: "text-slate-400",
+        badgeDot: "bg-slate-300",
     },
 };
 
