@@ -143,13 +143,22 @@ export function OwnerReservationCard({
     const isDimmed = r.statut === "ANNULEE" || r.statut === "TERMINEE";
     const hasDelivery = !!r.adresseLivraison;
 
-    const dateDebut = new Date(r.dateDebut).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
-    const dateFin = new Date(r.dateFin).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
-    const initials = `${r.locataire.prenom[0]}${r.locataire.nom[0]}`.toUpperCase();
+    const parseDate = (dStr: string) => {
+        const d = new Date(dStr);
+        return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+    };
+    const dateDebut = parseDate(r.dateDebut);
+    const dateFin = parseDate(r.dateFin);
+
+    const initials = r.locataire 
+        ? `${r.locataire.prenom?.[0] ?? ""}${r.locataire.nom?.[0] ?? ""}`.toUpperCase() 
+        : "—";
 
     /* Vehicle photo */
-    const photos = (r.vehicule as typeof r.vehicule & { photos?: { url: string; estPrincipale?: boolean }[] }).photos ?? [];
-    const photoUrl = photos.find(p => p.estPrincipale)?.url ?? photos[0]?.url ?? null;
+    const photos = r.vehicule 
+        ? ((r.vehicule as any).photos ?? []) 
+        : [];
+    const photoUrl = photos.find((p: any) => p.estPrincipale)?.url ?? photos[0]?.url ?? null;
 
     return (
         <Link
@@ -183,7 +192,7 @@ export function OwnerReservationCard({
                 <div className="relative w-full h-28 overflow-hidden bg-slate-100">
                     <Image
                         src={photoUrl}
-                        alt={`${r.vehicule.marque} ${r.vehicule.modele}`}
+                        alt={r.vehicule ? `${r.vehicule.marque} ${r.vehicule.modele}` : "Véhicule"}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
                         className={cn(
@@ -198,10 +207,10 @@ export function OwnerReservationCard({
                     <div className="absolute bottom-2.5 left-3.5 right-3.5 flex items-end justify-between gap-2">
                         <div>
                             <p className="text-[15px] font-black text-white leading-tight drop-shadow-md">
-                                {r.vehicule.marque}{" "}
-                                <span className="text-emerald-300">{r.vehicule.modele}</span>
+                                {r.vehicule ? r.vehicule.marque : "Véhicule"}{" "}
+                                <span className="text-emerald-300">{r.vehicule ? r.vehicule.modele : "inconnu"}</span>
                             </p>
-                            {r.vehicule.immatriculation && (
+                            {r.vehicule?.immatriculation && (
                                 <p className="text-[9.5px] font-mono text-white/50 mt-0.5 tracking-wider">
                                     {r.vehicule.immatriculation}
                                 </p>
@@ -221,10 +230,10 @@ export function OwnerReservationCard({
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                             <p className="text-[14.5px] font-black text-slate-900 truncate leading-tight tracking-[-0.01em]">
-                                {r.vehicule.marque}{" "}
-                                <span className="text-emerald-500">{r.vehicule.modele}</span>
+                                {r.vehicule ? r.vehicule.marque : "Véhicule"}{" "}
+                                <span className="text-emerald-500">{r.vehicule ? r.vehicule.modele : "inconnu"}</span>
                             </p>
-                            {r.vehicule.immatriculation && (
+                            {r.vehicule?.immatriculation && (
                                 <p className="text-[10px] font-mono text-slate-400 mt-0.5 tracking-wider">
                                     {r.vehicule.immatriculation}
                                 </p>
@@ -269,11 +278,11 @@ export function OwnerReservationCard({
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-[12px] font-bold text-slate-700 truncate leading-tight">
-                            {r.locataire.prenom} {r.locataire.nom}
+                            {r.locataire ? `${r.locataire.prenom} ${r.locataire.nom}` : "Locataire inconnu"}
                         </p>
                     </div>
                     <PhoneDisplay
-                        telephone={r.locataire.telephone}
+                        telephone={r.locataire?.telephone}
                         dateDebut={r.dateDebut}
                         statut={r.statut}
                         className="text-[11px]"

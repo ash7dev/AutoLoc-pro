@@ -29,8 +29,11 @@ interface OwnerDashboardViewProps {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function fmtDate(iso: string) {
-    return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+function fmtDate(iso: string | null | undefined) {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 function buildTodoItems(reservations: Reservation[] = [], vehicles: Vehicle[] = []) {
@@ -121,32 +124,42 @@ function buildTodoItems(reservations: Reservation[] = [], vehicles: Vehicle[] = 
 }
 
 function buildRecentReservations(reservations: Reservation[] = []) {
-    const statusPriority: Record<string, number> = {
-        PAYEE: 0, CONFIRMEE: 1, EN_COURS: 2, TERMINEE: 3, ANNULEE: 4, EXPIREE: 5, INITIEE: 6, EN_ATTENTE_PAIEMENT: 7,
-    };
-
-    return reservations
-        .sort((a, b) => (statusPriority[a.statut] ?? 99) - (statusPriority[b.statut] ?? 99))
+    // Sort by creation date (newest first) to actually get the recent reservations
+    return [...reservations]
+        .sort((a, b) => {
+            const dateA = a.creeLe ? new Date(a.creeLe).getTime() : 0;
+            const dateB = b.creeLe ? new Date(b.creeLe).getTime() : 0;
+            return dateB - dateA;
+        })
         .slice(0, 5)
-        .map((r) => ({
-            id: r.id,
-            vehicle: `${r.vehicule.marque} ${r.vehicule.modele}`,
-            vehiclePhoto: r.vehicule.photoUrl || r.vehicule.photos?.find(p => p.estPrincipale)?.url || r.vehicule.photos?.[0]?.url,
-            tenantName: `${r.locataire.prenom} ${r.locataire.nom}`,
-            tenantPhone: r.locataire.telephone,
-            duration: `${r.nbJours} j.`,
-            dateRange: `${fmtDate(r.dateDebut)} — ${fmtDate(r.dateFin)}`,
-            amount: `${r.montantProprietaire} FCFA`,
-            status: r.statut as any,
-            meta: r.statut === "PAYEE"
-                ? "Confirmation requise"
-                : r.statut === "CONFIRMEE"
-                    ? "Check-in à venir"
-                    : r.statut === "EN_COURS"
-                        ? `Fin prévue le ${new Date(r.dateFin).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}`
-                        : undefined,
-            href: `/dashboard/owner/reservations/${r.id}`,
-        }));
+        .map((r) => {
+            const dateFinParsed = new Date(r.dateFin);
+            const dateFinStr = isNaN(dateFinParsed.getTime()) 
+                ? "—" 
+                : dateFinParsed.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+
+            return {
+                id: r.id,
+                vehicle: r.vehicule ? `${r.vehicule.marque} ${r.vehicule.modele}` : "Véhicule inconnu",
+                vehiclePhoto: r.vehicule 
+                    ? (r.vehicule.photoUrl || r.vehicule.photos?.find(p => p.estPrincipale)?.url || r.vehicule.photos?.[0]?.url) 
+                    : undefined,
+                tenantName: r.locataire ? `${r.locataire.prenom} ${r.locataire.nom}` : "Locataire inconnu",
+                tenantPhone: r.locataire?.telephone,
+                duration: `${r.nbJours} j.`,
+                dateRange: `${fmtDate(r.dateDebut)} — ${fmtDate(r.dateFin)}`,
+                amount: `${r.montantProprietaire} FCFA`,
+                status: r.statut as any,
+                meta: r.statut === "PAYEE"
+                    ? "Confirmation requise"
+                    : r.statut === "CONFIRMEE"
+                        ? "Check-in à venir"
+                        : r.statut === "EN_COURS"
+                            ? `Fin prévue le ${dateFinStr}`
+                            : undefined,
+                href: `/dashboard/owner/reservations/${r.id}`,
+            };
+        });
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
