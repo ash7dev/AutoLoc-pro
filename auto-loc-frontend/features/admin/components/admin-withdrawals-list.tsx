@@ -123,7 +123,7 @@ function ConfirmValidateDialog({
                 {formatPrice(withdrawal.amount)} FCFA
               </p>
               <p className="text-[11px] text-emerald-700 mt-0.5">
-                {withdrawal.method} · {withdrawal.bankInfo}
+                {withdrawal.method} · {withdrawal.numeroDestinataire}
               </p>
             </div>
           </div>
