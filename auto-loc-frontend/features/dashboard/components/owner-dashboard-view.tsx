@@ -123,9 +123,11 @@ function buildTodoItems(reservations: Reservation[] = [], vehicles: Vehicle[] = 
     return items;
 }
 
+const EXCLUDED_STATUSES = ['INITIEE', 'EN_ATTENTE_PAIEMENT'];
+
 function buildRecentReservations(reservations: Reservation[] = []) {
-    // Sort by creation date (newest first) to actually get the recent reservations
     return [...reservations]
+        .filter((r) => !EXCLUDED_STATUSES.includes(r.statut))
         .sort((a, b) => {
             const dateA = a.creeLe ? new Date(a.creeLe).getTime() : 0;
             const dateB = b.creeLe ? new Date(b.creeLe).getTime() : 0;
