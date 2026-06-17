@@ -134,10 +134,15 @@ export class IntouchProvider implements PaymentProviderInterface {
         const nonce   = this.digestField(wwwAuth, 'nonce');
         const qop     = this.digestField(wwwAuth, 'qop');
 
+        const algorithm = this.digestField(wwwAuth, 'algorithm') || 'MD5';
         const opaque  = this.digestField(wwwAuth, 'opaque');
         const urlObj  = new URL(url);
-        // RFC 2617 : uri = request-uri (chemin seul, sans query string)
-        const uri     = urlObj.pathname;
+        // RFC 2617 : uri = request-uri (chemin + query string) exactement comme dans la requête
+        const uri     = urlObj.pathname + urlObj.search;
+
+        // qop peut être renvoyé comme "auth" ou "auth,auth-int" ; on prend auth si disponible.
+        const qopList = qop.split(',').map((v) => v.trim());
+        const qopValue = qopList.includes('auth') ? 'auth' : qopList[0] ?? '';
 
         // Étape 2 : calcul réponse Digest (RFC 2617 / MD5)
         const ha1 = crypto.createHash('md5').update(`${username}:${realm}:${password}`).digest('hex');
@@ -146,15 +151,15 @@ export class IntouchProvider implements PaymentProviderInterface {
         let digestResponse: string;
         let authHeader: string;
 
-        if (qop === 'auth') {
+        if (qopValue === 'auth') {
             const nc     = '00000001';
             const cnonce = crypto.randomBytes(8).toString('hex');
             digestResponse = crypto.createHash('md5')
-                .update(`${ha1}:${nonce}:${nc}:${cnonce}:${qop}:${ha2}`)
+                .update(`${ha1}:${nonce}:${nc}:${cnonce}:${qopValue}:${ha2}`)
                 .digest('hex');
             authHeader =
                 `Digest username="${username}", realm="${realm}", nonce="${nonce}", ` +
-                `uri="${uri}", qop=${qop}, nc=${nc}, ` +
+                `uri="${uri}", algorithm=${algorithm}, qop=${qopValue}, nc=${nc}, ` +
                 `cnonce="${cnonce}", response="${digestResponse}"` +
                 (opaque ? `, opaque="${opaque}"` : '');
         } else {
@@ -163,7 +168,7 @@ export class IntouchProvider implements PaymentProviderInterface {
                 .digest('hex');
             authHeader =
                 `Digest username="${username}", realm="${realm}", nonce="${nonce}", ` +
-                `uri="${uri}", response="${digestResponse}"` +
+                `uri="${uri}", algorithm=${algorithm}, response="${digestResponse}"` +
                 (opaque ? `, opaque="${opaque}"` : '');
         }
 
