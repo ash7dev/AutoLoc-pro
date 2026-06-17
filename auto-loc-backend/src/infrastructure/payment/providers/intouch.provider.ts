@@ -255,16 +255,18 @@ export class IntouchProvider implements PaymentProviderInterface {
         this.logger.log(`InTouch callback raw body : ${rawBody.toString().substring(0, 500)}`);
         this.logger.log(`InTouch callback query params : ${JSON.stringify(queryParams ?? {})}`);
 
-        const referenceId   = q.command_number ?? (bodyData['idFromClient'] as string) ?? '';
-        const transactionId = q.payment_token  ?? `it_${referenceId || 'unknown'}`;
-        const isSuccess     = q.payment_status === '00';
+        // Mapper les champs de la Direct API (body JSON) ou du Widget (query params)
+        const referenceId   = (bodyData.partner_transaction_id as string) ?? q.command_number ?? (bodyData.idFromClient as string) ?? '';
+        const transactionId = (bodyData.gu_transaction_id as string) ?? q.payment_token ?? `it_${referenceId || 'unknown'}`;
+        
+        const isSuccess     = q.payment_status === '00' || bodyData.status === 'SUCCESS' || bodyData.status === 'SUCCESSFUL';
         const status: 'SUCCESS' | 'FAILED' = isSuccess ? 'SUCCESS' : 'FAILED';
-        const amount        = Number(q.paid_amount ?? q.paid_sum ?? 0);
+        const amount        = Number(bodyData.amount ?? q.paid_amount ?? q.paid_sum ?? 0);
 
         this.logger.log(
             `InTouch callback : ref=${referenceId}, ` +
-            `txId=${transactionId}, status=${q.payment_status}, ` +
-            `method=${q.payment_mode ?? '—'}`,
+            `txId=${transactionId}, status=${status} (brut=${bodyData.status ?? q.payment_status ?? '—'}), ` +
+            `method=${bodyData.service_id ?? q.payment_mode ?? '—'}`,
         );
 
         return { transactionId, status, amount, referenceId, rawPayload: { ...bodyData, ...queryParams } as Record<string, unknown> };
