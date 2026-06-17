@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   User,
@@ -16,13 +17,16 @@ import {
   Target,
   Mail,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fetchUserProfile, updateUserProfile, type UserProfile } from '@/lib/nestjs/auth';
 import { useSwitchToLocataire } from '@/features/owner/hooks/use-switch-to-locataire';
 import { Button } from '@/components/ui/button';
 import { PhoneEditModal } from '@/features/dashboard/components/phone-edit-modal';
+import { supabase } from '@/lib/supabase/client';
+import { useRoleStore } from '@/features/auth/stores/role.store';
 
 interface OwnerSettingsProps {
   profile?: UserProfile | null;
@@ -31,6 +35,7 @@ interface OwnerSettingsProps {
 export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
   const { switchToLocataire, loading: switchingRole } = useSwitchToLocataire();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const [activeTab, setActiveTab] = useState('profile');
   const [editingField, setEditingField] = useState<keyof typeof formData | null>(null);
@@ -416,6 +421,12 @@ export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
     </div>
   );
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    useRoleStore.getState().clearRole();
+    router.push('/login');
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'profile': return renderProfileTab();
@@ -435,15 +446,26 @@ export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
               <h1 className="text-base sm:text-2xl font-bold tracking-tight">Paramètres</h1>
               <p className="hidden sm:block text-sm text-emerald-200 mt-1">Gérez vos informations personnelles et votre sécurité.</p>
             </div>
-            <Button
-              onClick={switchToLocataire}
-              disabled={switchingRole}
-              variant="secondary"
-              className="bg-emerald-800 hover:bg-emerald-700 text-white border-none shadow-none w-full sm:w-auto"
-            >
-              {switchingRole ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2 text-emerald-200" />}
-              Mode Locataire
-            </Button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Button
+                onClick={switchToLocataire}
+                disabled={switchingRole}
+                variant="secondary"
+                className="bg-emerald-800 hover:bg-emerald-700 text-white border-none shadow-none flex-1 sm:flex-initial sm:w-auto"
+              >
+                {switchingRole ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2 text-emerald-200" />}
+                Mode Locataire
+              </Button>
+              <Button
+                onClick={handleLogout}
+                variant="secondary"
+                className="bg-emerald-800 hover:bg-red-700 text-white border-none shadow-none shrink-0"
+                title="Se déconnecter"
+              >
+                <LogOut className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Déconnexion</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

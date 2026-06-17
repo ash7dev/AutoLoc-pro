@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   User,
   Shield,
@@ -25,6 +26,8 @@ import { fetchUserProfile, updateUserProfile, type UserProfile } from '@/lib/nes
 import { useSwitchToProprietaire } from '@/features/owner/hooks/use-switch-to-proprietaire';
 import { Button } from '@/components/ui/button';
 import { PhoneEditModal } from '@/features/dashboard/components/phone-edit-modal';
+import { supabase } from '@/lib/supabase/client';
+import { useRoleStore } from '@/features/auth/stores/role.store';
 
 interface TenantSettingsProps {
   profile?: UserProfile | null;
@@ -32,6 +35,7 @@ interface TenantSettingsProps {
 
 export function TenantSettings({ profile: initialProfile }: TenantSettingsProps) {
   const { switchToProprietaire, loading: switchingRole } = useSwitchToProprietaire();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('profile');
   const [editingField, setEditingField] = useState<keyof typeof formData | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(initialProfile || null);
@@ -435,6 +439,12 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
     </div>
   );
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    useRoleStore.getState().clearRole();
+    router.push('/login');
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'profile': return renderProfileTab();
@@ -459,7 +469,7 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
                 <p className="text-sm text-slate-500 mt-1">Gérez vos informations personnelles et votre sécurité.</p>
               </div>
             </div>
-            <div className="flex items-center justify-center sm:justify-end">
+            <div className="flex items-center justify-center sm:justify-end gap-2">
               <Button
                 onClick={switchToProprietaire}
                 disabled={switchingRole}
@@ -468,6 +478,15 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
               >
                 {switchingRole ? <Loader2 className="w-4 h-4 mr-2 animate-spin text-slate-500" /> : <RefreshCw className="w-4 h-4 mr-2 text-slate-500 group-hover:text-blue-600 transition-colors" />}
                 Mode Propriétaire
+              </Button>
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="bg-white hover:bg-red-50 text-red-600 border-red-200 shadow-sm shrink-0"
+                title="Se déconnecter"
+              >
+                <LogOut className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Déconnexion</span>
               </Button>
             </div>
           </div>
