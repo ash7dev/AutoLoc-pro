@@ -133,8 +133,10 @@ export class IntouchProvider implements PaymentProviderInterface {
         const nonce   = this.digestField(wwwAuth, 'nonce');
         const qop     = this.digestField(wwwAuth, 'qop');
 
-        const urlObj = new URL(url);
-        const uri    = urlObj.pathname + urlObj.search;
+        const opaque  = this.digestField(wwwAuth, 'opaque');
+        const urlObj  = new URL(url);
+        // RFC 2617 : uri = request-uri (chemin seul, sans query string)
+        const uri     = urlObj.pathname;
 
         // Étape 2 : calcul réponse Digest (RFC 2617 / MD5)
         const ha1 = crypto.createHash('md5').update(`${username}:${realm}:${password}`).digest('hex');
@@ -151,18 +153,23 @@ export class IntouchProvider implements PaymentProviderInterface {
                 .digest('hex');
             authHeader =
                 `Digest username="${username}", realm="${realm}", nonce="${nonce}", ` +
-                `uri="${uri}", algorithm=MD5, qop=${qop}, nc=${nc}, ` +
-                `cnonce="${cnonce}", response="${digestResponse}"`;
+                `uri="${uri}", qop=${qop}, nc=${nc}, ` +
+                `cnonce="${cnonce}", response="${digestResponse}"` +
+                (opaque ? `, opaque="${opaque}"` : '');
         } else {
             digestResponse = crypto.createHash('md5')
                 .update(`${ha1}:${nonce}:${ha2}`)
                 .digest('hex');
             authHeader =
                 `Digest username="${username}", realm="${realm}", nonce="${nonce}", ` +
-                `uri="${uri}", algorithm=MD5, response="${digestResponse}"`;
+                `uri="${uri}", response="${digestResponse}"` +
+                (opaque ? `, opaque="${opaque}"` : '');
         }
 
-        this.logger.log(`InTouch Digest auth : realm="${realm}", qop="${qop}"`);
+        this.logger.log(
+            `InTouch Digest auth : realm="${realm}", qop="${qop}", ` +
+            `uri="${uri}", ha1="${ha1}", ha2="${ha2}", response="${digestResponse}"`,
+        );
 
         // Étape 3 : vraie requête avec l'Authorization Digest
         return fetch(url, {
