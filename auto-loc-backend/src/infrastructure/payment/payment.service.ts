@@ -32,7 +32,14 @@ export class PaymentService {
         fournisseur: FournisseurPaiement,
         montant: Prisma.Decimal,
         reservationRef: string,
-        options?: { targetPayment?: string; reservationId?: string; payerPhone?: string },
+        options?: {
+            targetPayment?: string;
+            reservationId?: string;
+            payerPhone?: string;
+            payerEmail?: string;
+            payerFirstName?: string;
+            payerLastName?: string;
+        },
     ): Promise<PaymentInitResult> {
         const provider = this.factory.get(fournisseur);
 
@@ -53,6 +60,9 @@ export class PaymentService {
             description:   `AutoLoc — Réservation ${reservationRef}`,
             targetPayment: options?.targetPayment,
             payerPhone:    options?.payerPhone,
+            payerEmail:    options?.payerEmail,
+            payerFirstName: options?.payerFirstName,
+            payerLastName:  options?.payerLastName,
             successUrl:    `${nextjsUrl}/payment/success`,
             cancelUrl:     `${nextjsUrl}/payment/cancel`,
         });

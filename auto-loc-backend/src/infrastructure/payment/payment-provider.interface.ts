@@ -13,6 +13,12 @@ export interface InitiatePaymentParams {
     description?: string;
     /** Numéro de téléphone du payeur (requis pour certains providers) */
     payerPhone?: string;
+    /** Email du payeur (requis pour InTouch API directe) */
+    payerEmail?: string;
+    /** Prénom du payeur (requis pour InTouch API directe) */
+    payerFirstName?: string;
+    /** Nom de famille du payeur (requis pour InTouch API directe) */
+    payerLastName?: string;
     /** Méthode de paiement cible — ex: 'Wave', 'Orange Money', 'Free Money' */
     targetPayment?: string;
     /** URL de redirection après paiement réussi (frontend) */

@@ -85,10 +85,14 @@ export class IntouchProvider implements PaymentProviderInterface {
         const bodyObj = {
             idFromClient:     params.referenceId,
             additionnalInfos: {
-                destinataire: phone,
-                currency:     'XOF',
-                return_url:   params.successUrl,
-                cancel_url:   params.cancelUrl,
+                recipientEmail:     params.payerEmail ?? 'contact@autoloc.sn',
+                recipientFirstName: params.payerFirstName ?? 'Client',
+                recipientLastName:  params.payerLastName ?? 'AutoLoc',
+                destinataire:       phone,
+                partner_name:       'AutoLoc',
+                return_url:         params.successUrl,
+                cancel_url:         params.cancelUrl,
+                currency:           'XOF',
             },
             amount:          Math.round(params.amount),
             callback:        params.callbackUrl,

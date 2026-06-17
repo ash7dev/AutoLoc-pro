@@ -132,7 +132,14 @@ export class CreateReservationUseCase {
             input.fournisseur,
             totalAvecLivraison,
             paymentRef,
-            { targetPayment: input.targetPayment, reservationId, payerPhone: input.payerPhone },
+            {
+                targetPayment: input.targetPayment,
+                reservationId,
+                payerPhone: input.payerPhone,
+                payerEmail: locataire.email,
+                payerFirstName: locataire.prenom,
+                payerLastName: locataire.nom,
+            },
         );
 
         const delaiSignature = new Date(Date.now() + SIGNATURE_DEADLINE_MS);
