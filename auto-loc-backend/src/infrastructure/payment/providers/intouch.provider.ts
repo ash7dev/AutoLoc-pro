@@ -11,9 +11,10 @@ import {
 // ── InTouch Service Codes ──────────────────────────────────────────────────────
 
 const SERVICE_CODES: Record<string, string> = {
-    WAVE:         'SNPAIEMENTWAVE',
-    ORANGE_MONEY: 'PAIEMENTMARCHANDOMQRCODE',
-    FREE_MONEY:   'PAIEMENTMARCHANDTIGO',
+    WAVE:               'SNPAIEMENTWAVE',
+    ORANGE_MONEY:       'PAIEMENTMARCHANDOMQRCODE',
+    ORANGE_MONEY_MAXIT: 'PAIEMENTMARCHANDOMQRCODE_MAXIT',
+    FREE_MONEY:         'PAIEMENTMARCHANDTIGO',
 };
 
 // ── InTouch Webhook Query Params ───────────────────────────────────────────────

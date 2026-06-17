@@ -18,7 +18,7 @@ import { supabase } from '@/lib/supabase/client';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type PaymentMethod = 'WAVE' | 'ORANGE_MONEY' | 'FREE_MONEY';
+type PaymentMethod = 'WAVE' | 'ORANGE_MONEY' | 'ORANGE_MONEY_MAXIT' | 'FREE_MONEY';
 
 // ── Méthodes de paiement ───────────────────────────────────────────────────────
 
@@ -37,7 +37,13 @@ const PAYMENT_METHODS: {
     {
         id: 'ORANGE_MONEY',
         label: 'Orange Money',
-        sublabel: 'Notification sur votre compte Orange',
+        sublabel: 'Paiement QR Code Orange Money',
+        phonePlaceholder: 'Numéro Orange (ex: 77 000 00 00)',
+    },
+    {
+        id: 'ORANGE_MONEY_MAXIT',
+        label: 'Orange Maxit',
+        sublabel: 'Paiement via Maxit (Orange)',
         phonePlaceholder: 'Numéro Orange (ex: 77 000 00 00)',
     },
     {
@@ -91,8 +97,9 @@ function YasMoneyLogo({ size = 40 }: { size?: number }) {
 }
 
 function MethodLogo({ method, size = 40 }: { method: PaymentMethod; size?: number }) {
-    if (method === 'WAVE')         return <WaveLogo size={size} />;
-    if (method === 'ORANGE_MONEY') return <OrangeMoneyLogo size={size} />;
+    if (method === 'WAVE')               return <WaveLogo size={size} />;
+    if (method === 'ORANGE_MONEY')       return <OrangeMoneyLogo size={size} />;
+    if (method === 'ORANGE_MONEY_MAXIT') return <OrangeMoneyLogo size={size} />;
     return <YasMoneyLogo size={size} />;
 }
 
@@ -100,9 +107,10 @@ function MethodLogo({ method, size = 40 }: { method: PaymentMethod; size?: numbe
    OPTION DE MÉTHODE
 ════════════════════════════════════════════════════════════════ */
 const METHOD_COLORS: Record<PaymentMethod, { border: string; bg: string; dot: string }> = {
-    WAVE:         { border: 'border-[#1B68F9]', bg: 'bg-blue-50/60',   dot: 'border-[#1B68F9] bg-[#1B68F9]' },
-    ORANGE_MONEY: { border: 'border-[#FF6600]', bg: 'bg-orange-50/60', dot: 'border-[#FF6600] bg-[#FF6600]' },
-    FREE_MONEY:   { border: 'border-[#E30613]', bg: 'bg-red-50/60',    dot: 'border-[#E30613] bg-[#E30613]' },
+    WAVE:               { border: 'border-[#1B68F9]', bg: 'bg-blue-50/60',   dot: 'border-[#1B68F9] bg-[#1B68F9]' },
+    ORANGE_MONEY:       { border: 'border-[#FF6600]', bg: 'bg-orange-50/60', dot: 'border-[#FF6600] bg-[#FF6600]' },
+    ORANGE_MONEY_MAXIT: { border: 'border-[#FF6600]', bg: 'bg-orange-50/60', dot: 'border-[#FF6600] bg-[#FF6600]' },
+    FREE_MONEY:         { border: 'border-[#E30613]', bg: 'bg-red-50/60',    dot: 'border-[#E30613] bg-[#E30613]' },
 };
 
 function PaymentMethodOption({
