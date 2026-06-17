@@ -1,42 +1,51 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import {
     ArrowLeft, Loader2, Shield,
-    Clock, Check, Truck,
+    Clock, Check, Truck, Phone, Smartphone,
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { fetchVehicle, fetchVehiclePricing, type Vehicle, type PricingResponse } from '@/lib/nestjs/vehicles';
 import { useAuthFetch } from '@/features/auth/hooks/use-auth-fetch';
-import { ApiError } from '@/lib/nestjs/api-client';
+import { ApiError, apiFetch } from '@/lib/nestjs/api-client';
 import { useRoleStore } from '@/features/auth/stores/role.store';
 import { useCurrency } from '@/providers/currency-provider';
+import { supabase } from '@/lib/supabase/client';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type PaymentMethod = 'WAVE' | 'ORANGE_MONEY' | 'CARTE_BANCAIRE';
-
-interface IntouchWidgetConfig {
-    scriptUrl: string;
-    merchantId: string;
-    token: string;
-    domain: string;
-    successUrl: string;
-    cancelUrl: string;
-    amount: number;
-    city: string;
-    idFromClient: string;
-}
+type PaymentMethod = 'WAVE' | 'ORANGE_MONEY' | 'FREE_MONEY';
 
 // ── Méthodes de paiement ───────────────────────────────────────────────────────
 
-const PAYMENT_METHODS: { id: PaymentMethod; label: string; sublabel: string }[] = [
-    { id: 'WAVE',          label: 'Wave',          sublabel: 'Paiement mobile instantané · Sans frais' },
-    { id: 'ORANGE_MONEY',  label: 'Orange Money',  sublabel: 'Paiement via votre compte Orange' },
-    { id: 'CARTE_BANCAIRE', label: 'Carte bancaire', sublabel: 'Visa, Mastercard · Paiement sécurisé' },
+const PAYMENT_METHODS: {
+    id: PaymentMethod;
+    label: string;
+    sublabel: string;
+    phonePlaceholder: string;
+}[] = [
+    {
+        id: 'WAVE',
+        label: 'Wave',
+        sublabel: 'Notification dans votre app Wave',
+        phonePlaceholder: 'Numéro Wave (ex: 77 000 00 00)',
+    },
+    {
+        id: 'ORANGE_MONEY',
+        label: 'Orange Money',
+        sublabel: 'Notification sur votre compte Orange',
+        phonePlaceholder: 'Numéro Orange (ex: 77 000 00 00)',
+    },
+    {
+        id: 'FREE_MONEY',
+        label: 'Free Money',
+        sublabel: 'Notification sur votre compte Free',
+        phonePlaceholder: 'Numéro Free (ex: 76 000 00 00)',
+    },
 ];
 
 /* ════════════════════════════════════════════════════════════════
@@ -68,37 +77,30 @@ function OrangeMoneyLogo({ size = 40 }: { size?: number }) {
     );
 }
 
-function CarteBancaireLogo({ size = 40 }: { size?: number }) {
+function FreeMoneyLogo({ size = 40 }: { size?: number }) {
     return (
         <div
-            className="rounded-xl bg-white border border-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden"
+            className="rounded-xl bg-[#E30613] flex items-center justify-center flex-shrink-0 text-white font-black text-[10px]"
             style={{ width: size, height: size }}
         >
-            <Image
-                src="/cb.png"
-                alt="Carte bancaire"
-                width={size}
-                height={size}
-                className="object-contain"
-                style={{ width: size * 0.75, height: size * 0.75 }}
-            />
+            Free
         </div>
     );
 }
 
 function MethodLogo({ method, size = 40 }: { method: PaymentMethod; size?: number }) {
-    if (method === 'WAVE')          return <WaveLogo size={size} />;
-    if (method === 'ORANGE_MONEY')  return <OrangeMoneyLogo size={size} />;
-    return <CarteBancaireLogo size={size} />;
+    if (method === 'WAVE')         return <WaveLogo size={size} />;
+    if (method === 'ORANGE_MONEY') return <OrangeMoneyLogo size={size} />;
+    return <FreeMoneyLogo size={size} />;
 }
 
 /* ════════════════════════════════════════════════════════════════
    OPTION DE MÉTHODE
 ════════════════════════════════════════════════════════════════ */
 const METHOD_COLORS: Record<PaymentMethod, { border: string; bg: string; dot: string }> = {
-    WAVE:          { border: 'border-[#1B68F9]',  bg: 'bg-blue-50/60',   dot: 'border-[#1B68F9] bg-[#1B68F9]' },
-    ORANGE_MONEY:  { border: 'border-[#FF6600]',  bg: 'bg-orange-50/60', dot: 'border-[#FF6600] bg-[#FF6600]' },
-    CARTE_BANCAIRE: { border: 'border-slate-700', bg: 'bg-slate-50/60',  dot: 'border-slate-700 bg-slate-700' },
+    WAVE:         { border: 'border-[#1B68F9]', bg: 'bg-blue-50/60',   dot: 'border-[#1B68F9] bg-[#1B68F9]' },
+    ORANGE_MONEY: { border: 'border-[#FF6600]', bg: 'bg-orange-50/60', dot: 'border-[#FF6600] bg-[#FF6600]' },
+    FREE_MONEY:   { border: 'border-[#E30613]', bg: 'bg-red-50/60',    dot: 'border-[#E30613] bg-[#E30613]' },
 };
 
 function PaymentMethodOption({
@@ -136,62 +138,48 @@ function PaymentMethodOption({
     );
 }
 
-// ── Chargement dynamique du SDK TouchPay ───────────────────────────────────────
-
-function loadScript(src: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-        if (document.querySelector(`script[src="${src}"]`)) {
-            resolve();
-            return;
-        }
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error(`Échec chargement SDK : ${src}`));
-        document.head.appendChild(script);
-    });
-}
-
 /* ════════════════════════════════════════════════════════════════
    PAGE
 ════════════════════════════════════════════════════════════════ */
-type PaymentStep = 'recap' | 'redirecting' | 'error';
+type PaymentStep = 'recap' | 'processing' | 'waiting' | 'error';
 
 export default function PaymentPage() {
-    const router       = useRouter();
-    const { formatPrice } = useCurrency();
-    const searchParams = useSearchParams();
-    const vehicleId    = typeof window !== 'undefined'
+    const router            = useRouter();
+    const { formatPrice }   = useCurrency();
+    const searchParams      = useSearchParams();
+    const vehicleId         = typeof window !== 'undefined'
         ? window.location.pathname.split('/vehicle/')[1]?.split('/payment')[0] ?? ''
         : '';
 
-    const dateDebut       = searchParams.get('dateDebut') ?? '';
-    const dateFin         = searchParams.get('dateFin') ?? '';
-    const nbJours         = Number(searchParams.get('nbJours') ?? 0);
-    const horsDakar       = searchParams.get('horsDakar') === '1';
-    const wantsDelivery   = searchParams.get('livraison') === '1';
-    const adresseLivraison = searchParams.get('adresseLivraison') ?? '';
+    const dateDebut         = searchParams.get('dateDebut') ?? '';
+    const dateFin           = searchParams.get('dateFin') ?? '';
+    const nbJours           = Number(searchParams.get('nbJours') ?? 0);
+    const horsDakar         = searchParams.get('horsDakar') === '1';
+    const wantsDelivery     = searchParams.get('livraison') === '1';
+    const adresseLivraison  = searchParams.get('adresseLivraison') ?? '';
 
-    const [vehicle,          setVehicle]          = useState<Vehicle | null>(null);
-    const [pricing,          setPricing]          = useState<PricingResponse | null>(null);
-    const [loading,          setLoading]          = useState(true);
-    const [step,             setStep]             = useState<PaymentStep>('recap');
-    const [method,           setMethod]           = useState<PaymentMethod>('WAVE');
-    const [contractAccepted, setContractAccepted] = useState(false);
-    const [errorMsg,         setErrorMsg]         = useState('');
-    const [retryCount,       setRetryCount]       = useState(0);
+    const [vehicle,           setVehicle]          = useState<Vehicle | null>(null);
+    const [pricing,           setPricing]          = useState<PricingResponse | null>(null);
+    const [loading,           setLoading]          = useState(true);
+    const [step,              setStep]             = useState<PaymentStep>('recap');
+    const [method,            setMethod]           = useState<PaymentMethod>('WAVE');
+    const [payerPhone,        setPayerPhone]       = useState('');
+    const [contractAccepted,  setContractAccepted] = useState(false);
+    const [errorMsg,          setErrorMsg]         = useState('');
+    const [retryCount,        setRetryCount]       = useState(0);
+    const [waitingId,         setWaitingId]        = useState<string | null>(null);
 
     const activeRole    = useRoleStore((s) => s.activeRole);
     const setActiveRole = useRoleStore((s) => s.setActiveRole);
     const { authFetch } = useAuthFetch();
+    const isMounted     = useRef(true);
 
-    // Précharger les scripts InTouch dès le montage pour éviter la latence au clic
     useEffect(() => {
-        loadScript('https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js')
-            .then(() => loadScript('https://touchpay.gutouch.net/touchpayv2/script/prod_touchpay-0.0.1.js'))
-            .catch(() => { /* silencieux — on réessaiera au clic */ });
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
     }, []);
 
+    // ── Charger le véhicule + tarif ──────────────────────────────────────────────
     useEffect(() => {
         if (!vehicleId || !dateDebut || !dateFin || nbJours < 1) return;
         setLoading(true);
@@ -204,13 +192,58 @@ export default function PaymentPage() {
             .finally(() => setLoading(false));
     }, [vehicleId, dateDebut, dateFin, nbJours, horsDakar, retryCount]);
 
+    // ── Polling quand en attente de confirmation paiement ────────────────────────
+    useEffect(() => {
+        if (step !== 'waiting' || !waitingId) return;
+
+        let attempts = 0;
+        const MAX_ATTEMPTS = 60; // 60 × 5s = 5 min
+        let timeoutId: ReturnType<typeof setTimeout>;
+
+        const poll = async () => {
+            if (!isMounted.current) return;
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const res = await apiFetch<{ statut: string }>(`/reservations/${waitingId}`, {
+                    accessToken: session?.access_token,
+                });
+                if (res.statut === 'PAYEE' || res.statut === 'CONFIRMEE' || res.statut === 'EN_COURS') {
+                    sessionStorage.removeItem('pending_reservation_id');
+                    router.push('/payment/success');
+                    return;
+                }
+            } catch { /* continuer */ }
+
+            attempts++;
+            if (attempts >= MAX_ATTEMPTS) {
+                if (isMounted.current) {
+                    setErrorMsg('Le paiement a pris trop de temps. Vérifiez vos réservations.');
+                    setStep('error');
+                }
+                return;
+            }
+            timeoutId = setTimeout(poll, 5000);
+        };
+
+        poll();
+        return () => { clearTimeout(timeoutId); };
+    }, [step, waitingId, router]);
+
+    // ── Soumettre le paiement ────────────────────────────────────────────────────
     async function handlePay() {
         if (!contractAccepted || !vehicle || !pricing || step !== 'recap') return;
+
+        const phoneClean = payerPhone.replace(/\s+/g, '').replace(/-/g, '');
+        if (phoneClean.length < 8) {
+            setErrorMsg('Entrez votre numéro de téléphone mobile.');
+            return;
+        }
+
         setErrorMsg('');
-        setStep('redirecting');
+        setStep('processing');
 
         try {
-            // Vérification du prix avant paiement
+            // Vérification anti-changement de prix
             const freshPricing = await fetchVehiclePricing(vehicleId, nbJours, horsDakar);
             if (freshPricing.totalLocataire !== pricing.totalLocataire) {
                 setPricing(freshPricing);
@@ -226,45 +259,31 @@ export default function PaymentPage() {
                 setActiveRole('LOCATAIRE');
             }
 
-            const { reservationId, paymentUrl, widgetConfig } = await authFetch<
-                { reservationId: string; paymentUrl: string | null; widgetConfig?: IntouchWidgetConfig },
-                { vehiculeId: string; dateDebut: string; dateFin: string; fournisseur: 'INTOUCH'; idempotencyKey: string }
+            const { reservationId } = await authFetch<
+                { reservationId: string; paymentUrl: string | null },
+                {
+                    vehiculeId: string; dateDebut: string; dateFin: string;
+                    fournisseur: 'INTOUCH'; idempotencyKey: string;
+                    targetPayment: PaymentMethod; payerPhone: string;
+                }
             >('/reservations', {
                 method: 'POST',
                 body: {
-                    vehiculeId:    vehicleId,
+                    vehiculeId:     vehicleId,
                     dateDebut,
                     dateFin,
-                    fournisseur:   'INTOUCH',
+                    fournisseur:    'INTOUCH',
                     idempotencyKey: crypto.randomUUID(),
+                    targetPayment:  method,
+                    payerPhone:     phoneClean,
                     ...(wantsDelivery && adresseLivraison ? { adresseLivraison } : {}),
                     ...(horsDakar ? { horsDakar: true } : {}),
                 },
             });
 
-            // Persister l'ID pour les pages success/cancel
             sessionStorage.setItem('pending_reservation_id', reservationId);
-
-            if (widgetConfig) {
-                // CryptoJS requis par le SDK TouchPay (dépendance non bundlée)
-                await loadScript('https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js');
-                await loadScript(widgetConfig.scriptUrl);
-                (window as unknown as { sendPaymentInfos: (...args: unknown[]) => void }).sendPaymentInfos(
-                    widgetConfig.idFromClient,
-                    widgetConfig.merchantId,
-                    widgetConfig.token,
-                    widgetConfig.domain,
-                    widgetConfig.successUrl,
-                    widgetConfig.cancelUrl,
-                    widgetConfig.amount,
-                    widgetConfig.city,
-                    '', '', '', '',
-                );
-            } else if (paymentUrl) {
-                window.location.href = paymentUrl;
-            } else {
-                throw new Error('Aucune URL de paiement reçue');
-            }
+            setWaitingId(reservationId);
+            setStep('waiting');
 
         } catch (err) {
             if (err instanceof ApiError && (err.status === 409 || err.status === 400)) {
@@ -281,10 +300,11 @@ export default function PaymentPage() {
         }
     }
 
-    const mainPhoto  = vehicle?.photos?.find((p) => p.estPrincipale)?.url ?? vehicle?.photos?.[0]?.url ?? null;
-    const fmtDate    = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+    const mainPhoto   = vehicle?.photos?.find((p) => p.estPrincipale)?.url ?? vehicle?.photos?.[0]?.url ?? null;
+    const fmtDate     = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
     const deliveryFee = wantsDelivery && vehicle?.fraisLivraison ? Number(vehicle.fraisLivraison) : 0;
     const grandTotal  = pricing ? pricing.totalLocataire + deliveryFee : 0;
+    const methodInfo  = PAYMENT_METHODS.find((m) => m.id === method)!;
 
     /* ── Loading ── */
     if (loading) {
@@ -316,19 +336,54 @@ export default function PaymentPage() {
         );
     }
 
-    /* ── Redirection en cours ── */
-    if (step === 'redirecting') {
+    /* ── Traitement en cours ── */
+    if (step === 'processing') {
         return (
             <main className="min-h-screen bg-[#F8FAFB] flex flex-col items-center justify-center gap-5 px-4">
                 <div className="w-20 h-20 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center">
                     <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
                 </div>
                 <div className="text-center">
-                    <p className="text-[16px] font-black text-slate-800">Ouverture du paiement…</p>
-                    <p className="text-[13px] text-slate-400 mt-1">
-                        Vous allez être redirigé vers{' '}
-                        {PAYMENT_METHODS.find((m) => m.id === method)?.label ?? 'la page de paiement'}
-                    </p>
+                    <p className="text-[16px] font-black text-slate-800">Envoi de la demande…</p>
+                    <p className="text-[13px] text-slate-400 mt-1">Connexion à {methodInfo.label}</p>
+                </div>
+            </main>
+        );
+    }
+
+    /* ── En attente de confirmation sur le téléphone ── */
+    if (step === 'waiting') {
+        return (
+            <main className="min-h-screen bg-[#F8FAFB] flex flex-col items-center justify-center px-4">
+                <div className="w-full max-w-sm text-center space-y-6">
+                    <div className="mx-auto w-20 h-20 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center">
+                        <Smartphone className="w-8 h-8 text-emerald-500" strokeWidth={1.5} />
+                    </div>
+                    <div>
+                        <h1 className="text-[22px] font-black text-slate-900 tracking-tight">
+                            Vérifiez votre téléphone
+                        </h1>
+                        <p className="mt-2 text-[14px] text-slate-400 leading-relaxed">
+                            Une notification de paiement de{' '}
+                            <span className="font-bold text-slate-700">{formatPrice(grandTotal)}</span>{' '}
+                            a été envoyée sur votre numéro{' '}
+                            <span className="font-bold text-slate-700">{payerPhone}</span>{' '}
+                            via {methodInfo.label}.
+                        </p>
+                        <p className="mt-3 text-[13px] text-emerald-600 font-semibold">
+                            Approuvez le paiement dans votre app pour confirmer la réservation.
+                        </p>
+                    </div>
+                    <div className="flex items-center justify-center gap-2 text-[12px] text-slate-400">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        En attente de votre confirmation…
+                    </div>
+                    <Link
+                        href="/reservations"
+                        className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-3 px-5 text-[13px] font-semibold text-slate-500 hover:bg-slate-50 transition-all"
+                    >
+                        Voir mes réservations
+                    </Link>
                 </div>
             </main>
         );
@@ -412,7 +467,7 @@ export default function PaymentPage() {
                     </div>
                 </div>
 
-                {/* Méthode de paiement */}
+                {/* Méthode de paiement + numéro */}
                 <div className="rounded-2xl bg-white border border-slate-100 shadow-[0_1px_8px_rgba(0,0,0,0.05)] p-5 mb-4">
                     <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Moyen de paiement</h2>
                     <div className="space-y-2.5">
@@ -425,10 +480,28 @@ export default function PaymentPage() {
                             />
                         ))}
                     </div>
+
+                    {/* Champ numéro de téléphone */}
+                    <div className="mt-4">
+                        <label className="block text-[11px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                            Numéro de téléphone
+                        </label>
+                        <div className="relative">
+                            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" strokeWidth={2} />
+                            <input
+                                type="tel"
+                                value={payerPhone}
+                                onChange={(e) => { setPayerPhone(e.target.value); if (errorMsg) setErrorMsg(''); }}
+                                placeholder={methodInfo.phonePlaceholder}
+                                className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-[14px] font-semibold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all"
+                            />
+                        </div>
+                    </div>
+
                     <p className="text-[10.5px] text-slate-300 mt-3 text-center">🔒 Paiement sécurisé via InTouch</p>
                 </div>
 
-                {/* Avertissement changement de prix */}
+                {/* Avertissement */}
                 {errorMsg && step === 'recap' && (
                     <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 mb-4">
                         <Shield className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
@@ -473,7 +546,7 @@ export default function PaymentPage() {
                     </div>
                 </label>
 
-                {/* Bouton payer — desktop : dans le flux normal */}
+                {/* Bouton payer — desktop */}
                 <button
                     type="button"
                     disabled={!contractAccepted || step !== 'recap'}
@@ -503,7 +576,7 @@ export default function PaymentPage() {
 
             </div>
 
-            {/* Bouton payer — mobile : fixe en bas de l'écran */}
+            {/* Bouton payer — mobile fixe en bas */}
             <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-100 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                 <button
                     type="button"

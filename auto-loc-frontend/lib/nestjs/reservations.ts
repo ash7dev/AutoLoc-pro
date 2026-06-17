@@ -166,7 +166,7 @@ export async function checkoutReservation(id: string): Promise<void> {
  * Fetch tenant's reservations (server-side).
  */
 export async function fetchTenantReservations(
-    token: string,
+    token?: string,
     params?: { statut?: string },
 ): Promise<ReservationsResponse> {
     const query = new URLSearchParams();

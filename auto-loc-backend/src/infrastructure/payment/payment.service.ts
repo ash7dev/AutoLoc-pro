@@ -32,7 +32,7 @@ export class PaymentService {
         fournisseur: FournisseurPaiement,
         montant: Prisma.Decimal,
         reservationRef: string,
-        options?: { targetPayment?: string; reservationId?: string },
+        options?: { targetPayment?: string; reservationId?: string; payerPhone?: string },
     ): Promise<PaymentInitResult> {
         const provider = this.factory.get(fournisseur);
 
@@ -47,17 +47,14 @@ export class PaymentService {
         const nextjsUrl = this.config.get<string>('NEXTJS_URL', 'http://localhost:3000');
 
         const result = await provider.initiatePayment({
-            amount:       Number(montant),
-            referenceId:  reservationRef,
+            amount:        Number(montant),
+            referenceId:   reservationRef,
             callbackUrl,
-            description:  `AutoLoc — Réservation ${reservationRef}`,
+            description:   `AutoLoc — Réservation ${reservationRef}`,
             targetPayment: options?.targetPayment,
-            successUrl:   options?.reservationId
-                ? `${nextjsUrl}/dashboard/reservations/${options.reservationId}`
-                : `${nextjsUrl}/payment/success`,
-            cancelUrl:    options?.reservationId
-                ? `${nextjsUrl}/dashboard/reservations/${options.reservationId}`
-                : `${nextjsUrl}/payment/cancel`,
+            payerPhone:    options?.payerPhone,
+            successUrl:    `${nextjsUrl}/payment/success`,
+            cancelUrl:     `${nextjsUrl}/payment/cancel`,
         });
 
         this.logger.log(

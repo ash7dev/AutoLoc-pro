@@ -37,8 +37,10 @@ export interface CreateReservationInput {
     adresseLivraison?: string;
     fraisLivraison?: number;
     horsDakar?: boolean;
-    /** Méthode de paiement cible (ex: 'Wave', 'Orange Money', 'Free Money'). */
+    /** Méthode de paiement cible (ex: 'WAVE', 'ORANGE_MONEY', 'FREE_MONEY'). */
     targetPayment?: string;
+    /** Numéro de téléphone du payeur (requis pour InTouch API directe). */
+    payerPhone?: string;
 }
 
 export interface CreateReservationResult {
@@ -130,7 +132,7 @@ export class CreateReservationUseCase {
             input.fournisseur,
             totalAvecLivraison,
             paymentRef,
-            { targetPayment: input.targetPayment, reservationId },
+            { targetPayment: input.targetPayment, reservationId, payerPhone: input.payerPhone },
         );
 
         const delaiSignature = new Date(Date.now() + SIGNATURE_DEADLINE_MS);

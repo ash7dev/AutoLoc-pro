@@ -32,10 +32,15 @@ export class CreateReservationDto {
   @IsString()
   idempotencyKey?: string;
 
-  /** Méthode de paiement cible (ex: 'Wave', 'Orange Money', 'Free Money'). */
+  /** Méthode de paiement cible (ex: 'WAVE', 'ORANGE_MONEY', 'FREE_MONEY'). */
   @IsOptional()
   @IsString()
   targetPayment?: string;
+
+  /** Numéro de téléphone du payeur (requis pour InTouch API directe). */
+  @IsOptional()
+  @IsString()
+  payerPhone?: string;
 
   // ── Livraison (optionnel) ──────────────────────────────────────────────────
 

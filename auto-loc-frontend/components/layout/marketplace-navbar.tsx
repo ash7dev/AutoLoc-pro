@@ -19,9 +19,6 @@ import {
   Bell,
   Loader2,
   Search,
-  Menu,
-  X,
-  Plus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '../../lib/supabase/client';
@@ -271,7 +268,6 @@ export function MarketplaceNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileSearchVisible, setMobileSearchVisible] = useState(false);
   const [mobileSearch, setMobileSearch] = useState('');
-  const [menuOpen, setMenuOpen] = useState(false);
   const hasVehicles = useHasVehiclesFromStore();
   const activeRole = useRoleStore((s) => s.activeRole);
   const isAdmin = activeRole === 'ADMIN' || activeRole === 'SUPPORT';
@@ -288,7 +284,6 @@ export function MarketplaceNavbar() {
   }
 
   const handleSignOut = async () => {
-    setMenuOpen(false);
     await signOut();
   };
 
@@ -340,8 +335,6 @@ export function MarketplaceNavbar() {
     };
   }, []);
 
-  // Close menu on navigation
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   // Hide navbar on dashboard pages (owner/admin have their own nav)
   if (pathname.startsWith('/dashboard')) return null;
@@ -381,6 +374,28 @@ export function MarketplaceNavbar() {
 
           {/* Right slot */}
           <div className="flex items-center gap-2 flex-shrink-0">
+
+            {/* ── MOBILE uniquement ─────────────────────────────── */}
+
+            {/* Skeleton mobile — évite le layout shift pendant l'hydratation */}
+            {!hydrated && (
+              <div className="w-[82px] h-8 bg-slate-100 rounded-xl animate-pulse md:hidden" />
+            )}
+
+            {/* Déconnecté mobile : bouton Connexion solid (CTA visible, pas juste un lien) */}
+            {hydrated && !loggedIn && (
+              <Link
+                href="/login"
+                className="md:hidden flex items-center px-4 py-2 text-[12.5px] font-bold text-white bg-slate-950 rounded-xl active:scale-[0.97] transition-transform"
+              >
+                Connexion
+              </Link>
+            )}
+
+            {/* Connecté mobile : rien ici — la bottom nav gère toute la navigation */}
+
+            {/* ── DESKTOP uniquement ────────────────────────────── */}
+
             {/* Debug info */}
             {process.env.NODE_ENV === 'development' && (
               <div className="text-[10px] text-red-500 hidden md:block">
@@ -388,24 +403,18 @@ export function MarketplaceNavbar() {
               </div>
             )}
 
-            {/* Skeleton desktop uniquement */}
+            {/* Skeleton desktop */}
             {!hydrated && (
               <div className="w-32 h-9 bg-slate-100 rounded-2xl animate-pulse hidden md:block" />
             )}
 
-            {/*
-              DÉCONNECTÉ :
-              - Mobile  → boutons Connexion + Commencer dans la barre (à droite du logo)
-              - Desktop → idem + CurrencySelector
-              Le CurrencySelector N'apparaît PAS dans la barre mobile (il est dans le menu drawer).
-            */}
+            {/* Déconnecté desktop : Connexion + Commencer */}
             {hydrated && !loggedIn && (
               <>
-                {/* Mobile & Desktop : boutons auth */}
                 <Link
                   href="/login"
-                  className="inline-flex px-3 py-1.5 md:px-4 md:py-2 text-[12.5px] md:text-[13px] font-medium text-black hover:text-black
-                    rounded-xl hover:bg-slate-50 border border-slate-200 md:border-transparent md:hover:border-slate-100
+                  className="hidden md:inline-flex px-4 py-2 text-[13px] font-medium text-black hover:text-black
+                    rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100
                     transition-all duration-200 tracking-tight"
                 >
                   Connexion
@@ -420,20 +429,17 @@ export function MarketplaceNavbar() {
                   Commencer
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border-2 border-white" />
                 </Link>
-
               </>
             )}
 
+            {/* Connecté desktop : dropdown Mon compte */}
             {hydrated && loggedIn && (
-              <>
-                {/* Desktop : Mon compte */}
-                <div className="hidden md:block">
-                  <ProfileDropdown hasVehicles={hasVehicles} />
-                </div>
-              </>
+              <div className="hidden md:block">
+                <ProfileDropdown hasVehicles={hasVehicles} />
+              </div>
             )}
 
-            {/* Currency selector : toujours visible à droite pour tout le monde */}
+            {/* Sélecteur de devise — toujours visible (mobile + desktop) */}
             <CurrencySelector />
           </div>
         </div>

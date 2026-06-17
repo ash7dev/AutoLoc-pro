@@ -1,33 +1,31 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import {
     PaymentProviderInterface,
     InitiatePaymentParams,
     InitiatePaymentResult,
-    IntouchWidgetConfig,
     WebhookPayload,
 } from '../payment-provider.interface';
 
+// ── InTouch Service Codes ──────────────────────────────────────────────────────
+
+const SERVICE_CODES: Record<string, string> = {
+    WAVE:         'SNPAIEMENTWAVE',
+    ORANGE_MONEY: 'PAIEMENTMARCHANDOMQRCODE',
+    FREE_MONEY:   'PAIEMENTMARCHANDTIGO',
+};
+
 // ── InTouch Webhook Query Params ───────────────────────────────────────────────
 // InTouch envoie les données de callback dans les QUERY PARAMS (pas le body).
-// Exemple : ?payment_mode=SNPAIEMENTWAVE&paid_amount=253000&payment_status=00
-//            &command_number=<idFromClient>&payment_token=<txId>
 
 interface IntouchCallbackQuery {
-    /** Notre référence passée en idFromClient — sert de clé de lookup */
-    command_number?: string;
-    /** Token de transaction côté InTouch */
-    payment_token?: string;
-    /** Statut : '00' = succès, autre = échec */
-    payment_status?: string;
-    /** Montant payé */
-    paid_amount?: string;
-    /** Somme payée */
-    paid_sum?: string;
-    /** Mode de paiement utilisé (SNPAIEMENTWAVE, etc.) */
-    payment_mode?: string;
-    /** Date de validation */
+    command_number?:       string;  // notre idFromClient (paymentRef)
+    payment_token?:        string;  // transaction ID côté InTouch
+    payment_status?:       string;  // '00' = succès, autre = échec
+    paid_amount?:          string;
+    paid_sum?:             string;
+    payment_mode?:         string;  // SNPAIEMENTWAVE, etc.
     payment_validation_date?: string;
 }
 
@@ -38,62 +36,90 @@ export class IntouchProvider implements PaymentProviderInterface {
     readonly provider = 'INTOUCH' as const;
     private readonly logger = new Logger(IntouchProvider.name);
 
-    private readonly merchantId: string;
-    private readonly token: string;
-    private readonly domain: string;
-    private readonly city: string;
+    private readonly agencyCode:   string;
+    private readonly loginApi:     string;
+    private readonly passwordApi:  string;
     private readonly webhookSecret: string;
 
-    private readonly SCRIPT_URL =
-        'https://touchpay.gutouch.net/touchpayv2/script/prod_touchpay-0.0.1.js';
+    private readonly API_BASE = 'https://api.gutouch.com/dist/api/touchpayapi/v1';
 
     constructor(private readonly config: ConfigService) {
-        this.merchantId = this.config.get<string>('INTOUCH_MERCHANT_ID', '');
-        this.token      = this.config.get<string>('INTOUCH_TOKEN', '');
-        this.domain     = this.config.get<string>('INTOUCH_DOMAIN', 'autoloc.sn');
-        this.city       = this.config.get<string>('INTOUCH_CITY', 'Dakar');
+        this.agencyCode   = this.config.get<string>('INTOUCH_AGENCY_CODE', '');
+        this.loginApi     = this.config.get<string>('INTOUCH_LOGIN_API', '');
+        this.passwordApi  = this.config.get<string>('INTOUCH_PASSWORD_API', '');
         this.webhookSecret = this.config.get<string>('INTOUCH_WEBHOOK_SECRET', '');
 
-        if (!this.merchantId || !this.token) {
+        if (!this.agencyCode || !this.loginApi || !this.passwordApi) {
             this.logger.warn(
-                'INTOUCH_MERCHANT_ID / INTOUCH_TOKEN non configurés — mode stub actif',
+                'INTOUCH_AGENCY_CODE / INTOUCH_LOGIN_API / INTOUCH_PASSWORD_API non configurés',
             );
         }
     }
 
     // ── Initiate Payment ───────────────────────────────────────────────────────
-    // Pas d'appel API côté backend : le widget TouchPay est déclenché directement
-    // depuis le frontend via sendPaymentInfos(). On retourne la config nécessaire.
+    // Appel direct à l'API InTouch — pas de widget, l'utilisateur reçoit une
+    // notification sur son téléphone (Wave, Orange Money, Free Money).
 
     async initiatePayment(params: InitiatePaymentParams): Promise<InitiatePaymentResult> {
-        const nextjsUrl = this.config.get<string>('NEXTJS_URL', 'http://localhost:3000');
+        if (!params.payerPhone) {
+            throw new BadRequestException(
+                'Le numéro de téléphone est requis pour le paiement InTouch',
+            );
+        }
 
-        const widgetConfig: IntouchWidgetConfig = {
-            scriptUrl:   this.SCRIPT_URL,
-            merchantId:  this.merchantId,
-            token:       this.token,
-            domain:      this.domain,
-            city:        this.city,
-            idFromClient: params.referenceId,
-            amount:      Math.round(params.amount),
-            successUrl:  params.successUrl ?? `${nextjsUrl}/payment/success`,
-            cancelUrl:   params.cancelUrl  ?? `${nextjsUrl}/payment/cancel`,
+        const serviceCode = SERVICE_CODES[params.targetPayment ?? ''] ?? 'SNPAIEMENTWAVE';
+        const phone = params.payerPhone.replace(/\s+/g, '').replace(/^00/, '+');
+
+        const url =
+            `${this.API_BASE}/${this.agencyCode}/transaction` +
+            `?loginAgent=${encodeURIComponent(this.loginApi)}` +
+            `&passwordAgent=${encodeURIComponent(this.passwordApi)}`;
+
+        const body = {
+            idFromClient:     params.referenceId,
+            additionnalInfos: {
+                destinataire: phone,
+                currency:     'XOF',
+                return_url:   params.successUrl,
+                cancel_url:   params.cancelUrl,
+            },
+            amount:           Math.round(params.amount),
+            callback:         params.callbackUrl,
+            recipientNumber:  phone,
+            serviceCode,
         };
 
         this.logger.log(
-            `InTouch widget config : ref=${params.referenceId}, montant=${widgetConfig.amount} XOF`,
+            `InTouch API directe : ref=${params.referenceId}, ` +
+            `montant=${body.amount} XOF, service=${serviceCode}, phone=${phone}`,
         );
 
+        const response = await fetch(url, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(body),
+        });
+
+        const responseText = await response.text();
+
+        if (!response.ok) {
+            this.logger.error(
+                `InTouch API error ${response.status} : ${responseText}`,
+            );
+            throw new BadRequestException(
+                `Erreur paiement InTouch (${response.status}) — vérifiez le numéro`,
+            );
+        }
+
+        this.logger.log(`InTouch API réponse : ${responseText}`);
+
         return {
-            widgetConfig,
             transactionId: `it_${params.referenceId}`,
+            paymentUrl:    null,
         };
     }
 
     // ── Webhook Signature ──────────────────────────────────────────────────────
-    // InTouch envoie la signature dans le header X-Intouch-Signature (HMAC-SHA256).
-    // Si INTOUCH_WEBHOOK_SECRET n'est pas configuré on passe en mode permissif
-    // (dev / sandbox) — à ne pas laisser en production sans secret.
 
     verifyWebhookSignature(rawBody: Buffer, signature: string): boolean {
         if (!this.webhookSecret) {
@@ -119,17 +145,13 @@ export class IntouchProvider implements PaymentProviderInterface {
                 Buffer.from(signature, 'hex'),
             );
         } catch {
-            this.logger.warn('Comparaison signature InTouch échouée (format invalide)');
             return false;
         }
     }
 
     // ── Parse Webhook ──────────────────────────────────────────────────────────
     // InTouch envoie les données en query params, pas dans le body JSON.
-    // command_number  = notre idFromClient (paymentRef)
-    // payment_token   = transaction ID côté InTouch
-    // payment_status  = '00' succès, autre = échec
-    // paid_amount     = montant effectivement payé
+    // payment_status='00' = succès, tout autre code = échec.
 
     parseWebhookPayload(_rawBody: Buffer, queryParams?: Record<string, string>): WebhookPayload {
         const q = (queryParams ?? {}) as IntouchCallbackQuery;
@@ -156,14 +178,11 @@ export class IntouchProvider implements PaymentProviderInterface {
     }
 
     // ── Refund ─────────────────────────────────────────────────────────────────
-    // L'API de remboursement InTouch sera câblée ici quand la documentation
-    // complète sera fournie. En attendant : log + no-op (remboursement manuel).
 
     async refundPayment(transactionId: string, amount?: number): Promise<void> {
         this.logger.warn(
             `[REMBOURSEMENT MANUEL REQUIS] InTouch — ` +
-            `txId=${transactionId}, montant=${amount ?? 'total'} XOF. ` +
-            `Câbler l'API refund InTouch ici quand disponible.`,
+            `txId=${transactionId}, montant=${amount ?? 'total'} XOF`,
         );
     }
 }
