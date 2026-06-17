@@ -11,7 +11,6 @@ function formatPrice(n: number) { return new Intl.NumberFormat('fr-FR').format(n
 const METHOD_LABELS: Record<string, string> = {
   WAVE: 'Wave',
   ORANGE_MONEY: 'Orange Money',
-  VIREMENT: 'Virement',
 };
 
 const STATUT_MAP: Record<string, Withdrawal['status']> = {
@@ -33,10 +32,11 @@ export default async function AdminWithdrawalsPage(): Promise<React.ReactElement
       ownerName: w.ownerName,
       amount: w.amount,
       method: METHOD_LABELS[w.method] ?? w.method,
-      bankInfo: w.bankInfo,
+      numeroDestinataire: w.numeroDestinataire,
       requestedAt: new Date(w.demandeeLe).toLocaleDateString('fr-FR', {
         day: 'numeric', month: 'short', year: 'numeric',
       }),
+      requestedAtRaw: w.demandeeLe,
       status: STATUT_MAP[w.statut] ?? 'pending',
     }));
   } catch (error) {

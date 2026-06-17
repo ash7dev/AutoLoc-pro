@@ -150,8 +150,8 @@ export interface AdminWithdrawal {
   id: string;
   ownerName: string;
   amount: number;
-  method: 'WAVE' | 'ORANGE_MONEY' | 'VIREMENT';
-  bankInfo: string;
+  method: 'WAVE' | 'ORANGE_MONEY';
+  numeroDestinataire: string;
   statut: StatutRetrait;
   raisonRejet: string | null;
   demandeeLe: string;
@@ -210,7 +210,7 @@ export const ADMIN_PATHS = {
   approveKyc: (id: string) => `/admin/users/${id}/kyc/approve`,
   rejectKyc: (id: string) => `/admin/users/${id}/kyc/reject`,
   withdrawals: '/admin/withdrawals',
-  validateWithdrawal: (id: string) => `/admin/withdrawals/${id}/validate`,
+  validateWithdrawal: (id: string) => `/admin/withdrawals/${id}/approve`,
   rejectWithdrawal: (id: string) => `/admin/withdrawals/${id}/reject`,
   disputes: '/admin/disputes',
   updateDisputeStatus: (id: string) => `/admin/disputes/${id}/resolve`,

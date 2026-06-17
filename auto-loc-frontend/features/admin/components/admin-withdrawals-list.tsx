@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  CheckCircle2, XCircle, Search, Clock, User, CreditCard, Building2,
+  CheckCircle2, XCircle, Search, Clock, User, CreditCard,
   Loader2, X, Banknote, AlertCircle, Timer, Download,
   ArrowUp, ArrowDown, ChevronsUpDown,
 } from 'lucide-react';
@@ -15,8 +15,9 @@ export interface Withdrawal {
   ownerName: string;
   amount: number;
   method: string;
-  bankInfo: string;
+  numeroDestinataire: string;
   requestedAt: string;
+  requestedAtRaw: string;
   status: 'pending' | 'processed' | 'rejected';
 }
 
@@ -44,7 +45,7 @@ function ageLabel(dateStr: string): string {
 function exportWithdrawalsCsv(withdrawals: Withdrawal[]) {
   const headers = ['Propriétaire', 'Montant (FCFA)', 'Méthode', 'Coordonnées bancaires', 'Date demande', 'Statut'];
   const rows = withdrawals.map((w) => [
-    w.ownerName, String(w.amount), w.method, w.bankInfo, w.requestedAt, STATUS_CONFIG[w.status].label,
+    w.ownerName, String(w.amount), w.method, w.numeroDestinataire, w.requestedAt, STATUS_CONFIG[w.status].label,
   ]);
   const csv = [headers, ...rows]
     .map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(','))
@@ -237,7 +238,7 @@ export function AdminWithdrawalsList({ withdrawals }: AdminWithdrawalsListProps)
     if (filter !== 'all' && w.status !== filter) return false;
     if (search.trim()) {
       const q = search.toLowerCase();
-      return w.ownerName.toLowerCase().includes(q) || w.bankInfo.toLowerCase().includes(q);
+      return w.ownerName.toLowerCase().includes(q) || w.numeroDestinataire.toLowerCase().includes(q);
     }
     return true;
   });
@@ -399,7 +400,7 @@ export function AdminWithdrawalsList({ withdrawals }: AdminWithdrawalsListProps)
                           </div>
                           <div className="min-w-0">
                             <p className="text-[13px] font-bold text-black truncate">{w.ownerName}</p>
-                            <p className="text-[11px] font-medium text-black/35 truncate max-w-[160px]">{w.bankInfo}</p>
+                            <p className="text-[11px] font-medium text-black/35 truncate max-w-[160px]">{w.numeroDestinataire}</p>
                           </div>
                         </div>
                       </td>
@@ -415,10 +416,7 @@ export function AdminWithdrawalsList({ withdrawals }: AdminWithdrawalsListProps)
                       {/* Méthode */}
                       <td className="px-5 py-4 whitespace-nowrap">
                         <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-black/60">
-                          {w.method === 'Virement'
-                            ? <Building2 className="h-3.5 w-3.5 text-black/30" strokeWidth={1.75} />
-                            : <CreditCard className="h-3.5 w-3.5 text-black/30" strokeWidth={1.75} />
-                          }
+                          <CreditCard className="h-3.5 w-3.5 text-black/30" strokeWidth={1.75} />
                           {w.method}
                         </span>
                       </td>
@@ -433,7 +431,7 @@ export function AdminWithdrawalsList({ withdrawals }: AdminWithdrawalsListProps)
                           {w.status === 'pending' && (
                             <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-amber-600">
                               <Timer className="h-3 w-3" strokeWidth={2} />
-                              {ageLabel(w.requestedAt)}
+                              {ageLabel(w.requestedAtRaw)}
                             </span>
                           )}
                         </div>
