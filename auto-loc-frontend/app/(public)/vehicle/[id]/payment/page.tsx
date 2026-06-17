@@ -42,9 +42,9 @@ const PAYMENT_METHODS: {
     },
     {
         id: 'FREE_MONEY',
-        label: 'Free Money',
-        sublabel: 'Notification sur votre compte Free',
-        phonePlaceholder: 'Numéro Free (ex: 76 000 00 00)',
+        label: 'Yas Money',
+        sublabel: 'Notification sur votre compte Yas',
+        phonePlaceholder: 'Numéro Yas (ex: 76 000 00 00)',
     },
 ];
 
@@ -77,21 +77,23 @@ function OrangeMoneyLogo({ size = 40 }: { size?: number }) {
     );
 }
 
-function FreeMoneyLogo({ size = 40 }: { size?: number }) {
+function YasMoneyLogo({ size = 40 }: { size?: number }) {
     return (
-        <div
-            className="rounded-xl bg-[#E30613] flex items-center justify-center flex-shrink-0 text-white font-black text-[10px]"
+        <Image
+            src="/yas.png"
+            alt="Yas Money"
+            width={size}
+            height={size}
+            className="rounded-xl object-cover flex-shrink-0"
             style={{ width: size, height: size }}
-        >
-            Free
-        </div>
+        />
     );
 }
 
 function MethodLogo({ method, size = 40 }: { method: PaymentMethod; size?: number }) {
     if (method === 'WAVE')         return <WaveLogo size={size} />;
     if (method === 'ORANGE_MONEY') return <OrangeMoneyLogo size={size} />;
-    return <FreeMoneyLogo size={size} />;
+    return <YasMoneyLogo size={size} />;
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -493,7 +495,7 @@ export default function PaymentPage() {
                                 value={payerPhone}
                                 onChange={(e) => { setPayerPhone(e.target.value); if (errorMsg) setErrorMsg(''); }}
                                 placeholder={methodInfo.phonePlaceholder}
-                                className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-[14px] font-semibold text-slate-800 placeholder:text-slate-300 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all"
+                                className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-slate-100 bg-slate-50 text-[14px] font-semibold text-slate-800 placeholder:text-slate-500 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all"
                             />
                         </div>
                     </div>

@@ -17,15 +17,14 @@ const SERVICE_CODES: Record<string, string> = {
 };
 
 // ── InTouch Webhook Query Params ───────────────────────────────────────────────
-// InTouch envoie les données de callback dans les QUERY PARAMS (pas le body).
 
 interface IntouchCallbackQuery {
-    command_number?:       string;  // notre idFromClient (paymentRef)
-    payment_token?:        string;  // transaction ID côté InTouch
-    payment_status?:       string;  // '00' = succès, autre = échec
-    paid_amount?:          string;
-    paid_sum?:             string;
-    payment_mode?:         string;  // SNPAIEMENTWAVE, etc.
+    command_number?:          string;
+    payment_token?:           string;
+    payment_status?:          string;
+    paid_amount?:             string;
+    paid_sum?:                string;
+    payment_mode?:            string;
     payment_validation_date?: string;
 }
 
@@ -36,17 +35,17 @@ export class IntouchProvider implements PaymentProviderInterface {
     readonly provider = 'INTOUCH' as const;
     private readonly logger = new Logger(IntouchProvider.name);
 
-    private readonly agencyCode:   string;
-    private readonly loginApi:     string;
-    private readonly passwordApi:  string;
+    private readonly agencyCode:    string;
+    private readonly loginApi:      string;
+    private readonly passwordApi:   string;
     private readonly webhookSecret: string;
 
     private readonly API_BASE = 'https://api.gutouch.com/dist/api/touchpayapi/v1';
 
     constructor(private readonly config: ConfigService) {
-        this.agencyCode   = this.config.get<string>('INTOUCH_AGENCY_CODE', '');
-        this.loginApi     = this.config.get<string>('INTOUCH_LOGIN_API', '');
-        this.passwordApi  = this.config.get<string>('INTOUCH_PASSWORD_API', '');
+        this.agencyCode    = this.config.get<string>('INTOUCH_AGENCY_CODE', '');
+        this.loginApi      = this.config.get<string>('INTOUCH_LOGIN_API', '');
+        this.passwordApi   = this.config.get<string>('INTOUCH_PASSWORD_API', '');
         this.webhookSecret = this.config.get<string>('INTOUCH_WEBHOOK_SECRET', '');
 
         if (!this.agencyCode || !this.loginApi || !this.passwordApi) {
@@ -57,8 +56,6 @@ export class IntouchProvider implements PaymentProviderInterface {
     }
 
     // ── Initiate Payment ───────────────────────────────────────────────────────
-    // Appel direct à l'API InTouch — pas de widget, l'utilisateur reçoit une
-    // notification sur son téléphone (Wave, Orange Money, Free Money).
 
     async initiatePayment(params: InitiatePaymentParams): Promise<InitiatePaymentResult> {
         if (!params.payerPhone) {
@@ -68,14 +65,14 @@ export class IntouchProvider implements PaymentProviderInterface {
         }
 
         const serviceCode = SERVICE_CODES[params.targetPayment ?? ''] ?? 'SNPAIEMENTWAVE';
-        const phone = params.payerPhone.replace(/\s+/g, '').replace(/^00/, '+');
+        const phone       = params.payerPhone.replace(/\s+/g, '').replace(/^00/, '+');
 
         const url =
             `${this.API_BASE}/${this.agencyCode}/transaction` +
             `?loginAgent=${encodeURIComponent(this.loginApi)}` +
             `&passwordAgent=${encodeURIComponent(this.passwordApi)}`;
 
-        const body = {
+        const bodyObj = {
             idFromClient:     params.referenceId,
             additionnalInfos: {
                 destinataire: phone,
@@ -83,39 +80,105 @@ export class IntouchProvider implements PaymentProviderInterface {
                 return_url:   params.successUrl,
                 cancel_url:   params.cancelUrl,
             },
-            amount:           Math.round(params.amount),
-            callback:         params.callbackUrl,
-            recipientNumber:  phone,
+            amount:          Math.round(params.amount),
+            callback:        params.callbackUrl,
+            recipientNumber: phone,
             serviceCode,
         };
+        const bodyStr = JSON.stringify(bodyObj);
 
         this.logger.log(
             `InTouch API directe : ref=${params.referenceId}, ` +
-            `montant=${body.amount} XOF, service=${serviceCode}, phone=${phone}`,
+            `montant=${bodyObj.amount} XOF, service=${serviceCode}, phone=${phone}`,
         );
 
-        const response = await fetch(url, {
-            method:  'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify(body),
-        });
-
+        const response = await this.fetchWithDigestAuth(url, 'PUT', bodyStr);
         const responseText = await response.text();
 
         if (!response.ok) {
-            this.logger.error(
-                `InTouch API error ${response.status} : ${responseText}`,
-            );
+            this.logger.error(`InTouch API error ${response.status} : ${responseText}`);
             throw new BadRequestException(
-                `Erreur paiement InTouch (${response.status}) — vérifiez le numéro`,
+                `Erreur paiement InTouch (${response.status}) — vérifiez le numéro saisi`,
             );
         }
 
         this.logger.log(`InTouch API réponse : ${responseText}`);
 
-        return {
-            transactionId: `it_${params.referenceId}`,
-        };
+        return { transactionId: `it_${params.referenceId}` };
+    }
+
+    // ── Digest Auth ────────────────────────────────────────────────────────────
+    // InTouch utilise HTTP Digest MD5. Les credentials sont passés en SHA-256
+    // (comme observé dans la collection Postman fournie par InTouch).
+
+    private async fetchWithDigestAuth(
+        url: string,
+        method: string,
+        body: string,
+    ): Promise<Response> {
+        // Credentials pré-hashés en SHA-256 (convention InTouch)
+        const username = crypto.createHash('sha256').update(this.loginApi).digest('hex');
+        const password = crypto.createHash('sha256').update(this.passwordApi).digest('hex');
+
+        // Étape 1 : requête probe pour récupérer le nonce du serveur
+        const probe = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body,
+        });
+
+        if (probe.status !== 401) return probe;
+
+        const wwwAuth = probe.headers.get('www-authenticate') ?? '';
+        const realm   = this.digestField(wwwAuth, 'realm');
+        const nonce   = this.digestField(wwwAuth, 'nonce');
+        const qop     = this.digestField(wwwAuth, 'qop');
+
+        const urlObj = new URL(url);
+        const uri    = urlObj.pathname + urlObj.search;
+
+        // Étape 2 : calcul réponse Digest (RFC 2617 / MD5)
+        const ha1 = crypto.createHash('md5').update(`${username}:${realm}:${password}`).digest('hex');
+        const ha2 = crypto.createHash('md5').update(`${method}:${uri}`).digest('hex');
+
+        let digestResponse: string;
+        let authHeader: string;
+
+        if (qop === 'auth') {
+            const nc     = '00000001';
+            const cnonce = crypto.randomBytes(8).toString('hex');
+            digestResponse = crypto.createHash('md5')
+                .update(`${ha1}:${nonce}:${nc}:${cnonce}:${qop}:${ha2}`)
+                .digest('hex');
+            authHeader =
+                `Digest username="${username}", realm="${realm}", nonce="${nonce}", ` +
+                `uri="${uri}", algorithm=MD5, qop=${qop}, nc=${nc}, ` +
+                `cnonce="${cnonce}", response="${digestResponse}"`;
+        } else {
+            digestResponse = crypto.createHash('md5')
+                .update(`${ha1}:${nonce}:${ha2}`)
+                .digest('hex');
+            authHeader =
+                `Digest username="${username}", realm="${realm}", nonce="${nonce}", ` +
+                `uri="${uri}", algorithm=MD5, response="${digestResponse}"`;
+        }
+
+        this.logger.log(`InTouch Digest auth : realm="${realm}", qop="${qop}"`);
+
+        // Étape 3 : vraie requête avec l'Authorization Digest
+        return fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': authHeader,
+            },
+            body,
+        });
+    }
+
+    private digestField(header: string, field: string): string {
+        const match = header.match(new RegExp(`${field}="([^"]+)"`));
+        return match?.[1] ?? '';
     }
 
     // ── Webhook Signature ──────────────────────────────────────────────────────
@@ -128,10 +191,7 @@ export class IntouchProvider implements PaymentProviderInterface {
             return true;
         }
 
-        if (!signature) {
-            this.logger.warn('Webhook InTouch reçu sans header de signature');
-            return false;
-        }
+        if (!signature) return false;
 
         const expected = crypto
             .createHmac('sha256', this.webhookSecret)
@@ -149,8 +209,7 @@ export class IntouchProvider implements PaymentProviderInterface {
     }
 
     // ── Parse Webhook ──────────────────────────────────────────────────────────
-    // InTouch envoie les données en query params, pas dans le body JSON.
-    // payment_status='00' = succès, tout autre code = échec.
+    // Données dans les query params : payment_status='00' = succès.
 
     parseWebhookPayload(_rawBody: Buffer, queryParams?: Record<string, string>): WebhookPayload {
         const q = (queryParams ?? {}) as IntouchCallbackQuery;
@@ -167,13 +226,7 @@ export class IntouchProvider implements PaymentProviderInterface {
             `method=${q.payment_mode ?? '—'}`,
         );
 
-        return {
-            transactionId,
-            status,
-            amount,
-            referenceId,
-            rawPayload: q as unknown as Record<string, unknown>,
-        };
+        return { transactionId, status, amount, referenceId, rawPayload: q as unknown as Record<string, unknown> };
     }
 
     // ── Refund ─────────────────────────────────────────────────────────────────
