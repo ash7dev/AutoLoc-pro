@@ -52,15 +52,15 @@ export function DeleteVehicleButton({ vehicleId, statut }: Props) {
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <button
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-red-100 bg-red-50 text-[12px] font-bold text-red-600 hover:bg-red-100 hover:border-red-200 transition-all shadow-sm shadow-red-500/5 group"
+          className="w-9 h-9 rounded-xl border border-red-100 bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 hover:border-red-200 transition-all group"
           disabled={loading}
+          title="Supprimer définitivement"
         >
           {loading ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
-            <Trash2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+            <Trash2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" strokeWidth={2} />
           )}
-          Supprimer définitivement
         </button>
       </AlertDialogTrigger>
       <AlertDialogContent className="bg-white border-slate-200 max-w-md rounded-3xl">

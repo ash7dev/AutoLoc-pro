@@ -52,14 +52,15 @@ export function ShareVehicleButton({ vehicleId, marque, modele }: ShareVehicleBu
     return (
         <button
             onClick={handleShare}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-emerald-200 bg-emerald-50 text-[12px] font-bold text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 transition-all"
+            title="Partager l'annonce"
+            className="w-9 h-9 sm:w-auto sm:px-3.5 rounded-xl border border-slate-200 bg-white inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-slate-500 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-all"
         >
             {shared ? (
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2.5} />
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" strokeWidth={2.5} />
             ) : (
-                <Share2 className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2.5} />
+                <Share2 className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={2} />
             )}
-            Partager
+            <span className="hidden sm:inline">{shared ? 'Copié !' : 'Partager'}</span>
         </button>
     );
 }

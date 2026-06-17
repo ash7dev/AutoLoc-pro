@@ -201,23 +201,24 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
       <div className="max-w-6xl mx-auto px-4 py-6 lg:px-8 lg:py-8 space-y-6">
 
         {/* ── Top bar ─────────────────────────────────────────── */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <Link
             href="/dashboard/owner/vehicles"
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 hover:text-slate-900 transition-colors group"
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 hover:text-slate-900 transition-colors group shrink-0"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" strokeWidth={2.5} />
-            Mes véhicules
+            <span className="hidden xs:inline">Mes véhicules</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {isActive && (
               <Link
                 href={`/vehicles/${vehicle.id}`}
                 target="_blank"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 text-[12px] font-semibold text-slate-500 hover:text-slate-900 hover:border-slate-300 hover:bg-white transition-all"
+                title="Voir l'annonce publique"
+                className="w-9 h-9 sm:w-auto sm:px-3.5 rounded-xl border border-slate-200 bg-white inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-slate-500 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50 transition-all"
               >
-                <ExternalLink className="w-3.5 h-3.5" strokeWidth={2} />
-                Voir l&apos;annonce
+                <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={2} />
+                <span className="hidden sm:inline">Voir</span>
               </Link>
             )}
             <ShareVehicleButton vehicleId={vehicle.id} marque={vehicle.marque} modele={vehicle.modele} />
