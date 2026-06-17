@@ -21,7 +21,7 @@ export function useSwitchToProprietaire() {
         throw new Error('Non connecté');
       }
 
-      const result = await apiFetch<{ role: string; accessToken: string; refreshToken: string }>(
+      const result = await apiFetch<{ role: string; accessToken: string; refreshToken: string }, { role: string }>(
         '/auth/switch-role',
         { method: 'PATCH', body: { role: 'PROPRIETAIRE' }, accessToken: session.access_token },
       );

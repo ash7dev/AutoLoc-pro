@@ -14,7 +14,7 @@ export function useBecomeOwner() {
     setLoading(true);
     setError(null);
     try {
-      const result = await authFetch<{ role: string; accessToken: string; refreshToken: string }>(
+      const result = await authFetch<{ role: string; accessToken: string; refreshToken: string }, { role: string }>(
         '/auth/switch-role',
         { method: 'PATCH', body: { role: 'PROPRIETAIRE' } },
       );
