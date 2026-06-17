@@ -234,12 +234,28 @@ export class IntouchProvider implements PaymentProviderInterface {
     }
 
     // ── Parse Webhook ──────────────────────────────────────────────────────────
-    // Données dans les query params : payment_status='00' = succès.
+    // InTouch envoie les données dans le body JSON ET/OU dans les query params.
+    // On merge les deux sources (body prioritaire, query params en fallback).
 
-    parseWebhookPayload(_rawBody: Buffer, queryParams?: Record<string, string>): WebhookPayload {
-        const q = (queryParams ?? {}) as IntouchCallbackQuery;
+    parseWebhookPayload(rawBody: Buffer, queryParams?: Record<string, string>): WebhookPayload {
+        // Tenter de parser le body JSON
+        let bodyData: Record<string, unknown> = {};
+        try {
+            const bodyStr = rawBody.toString();
+            if (bodyStr.trim()) {
+                bodyData = JSON.parse(bodyStr);
+            }
+        } catch {
+            this.logger.warn('InTouch callback : body JSON invalide, fallback sur query params');
+        }
 
-        const referenceId   = q.command_number ?? '';
+        // Merger : body JSON > query params
+        const q = { ...(queryParams ?? {}), ...bodyData } as IntouchCallbackQuery;
+
+        this.logger.log(`InTouch callback raw body : ${rawBody.toString().substring(0, 500)}`);
+        this.logger.log(`InTouch callback query params : ${JSON.stringify(queryParams ?? {})}`);
+
+        const referenceId   = q.command_number ?? (bodyData['idFromClient'] as string) ?? '';
         const transactionId = q.payment_token  ?? `it_${referenceId || 'unknown'}`;
         const isSuccess     = q.payment_status === '00';
         const status: 'SUCCESS' | 'FAILED' = isSuccess ? 'SUCCESS' : 'FAILED';
@@ -251,7 +267,7 @@ export class IntouchProvider implements PaymentProviderInterface {
             `method=${q.payment_mode ?? '—'}`,
         );
 
-        return { transactionId, status, amount, referenceId, rawPayload: q as unknown as Record<string, unknown> };
+        return { transactionId, status, amount, referenceId, rawPayload: { ...bodyData, ...queryParams } as Record<string, unknown> };
     }
 
     // ── Refund ─────────────────────────────────────────────────────────────────
