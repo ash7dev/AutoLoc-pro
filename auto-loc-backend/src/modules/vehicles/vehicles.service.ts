@@ -439,7 +439,6 @@ export class VehiclesService {
    * Interdit si une location est EN_COURS.
    */
   async update(vehicleId: string, dto: UpdateVehicleDto) {
-    await this.assertNotActiveRental(vehicleId);
 
     try {
       // Si des tiers sont fournis, on remplace tout (delete + recreate).
@@ -1052,6 +1051,29 @@ export class VehiclesService {
    * DELETE /vehicles/:id/photos/:photoId — Supprimer une photo.
    * Si la photo supprimée était principale, la suivante devient principale.
    */
+  async updatePhoto(vehiculeId: string, photoId: string, dto: { position?: number; estPrincipale?: boolean }) {
+    const photo = await this.prisma.photoVehicule.findFirst({
+      where: { id: photoId, vehiculeId },
+      select: { id: true },
+    });
+    if (!photo) throw new NotFoundException('Photo introuvable');
+
+    if (dto.estPrincipale) {
+      await this.prisma.photoVehicule.updateMany({
+        where: { vehiculeId, id: { not: photoId } },
+        data: { estPrincipale: false },
+      });
+    }
+
+    return this.prisma.photoVehicule.update({
+      where: { id: photoId },
+      data: {
+        ...(dto.position !== undefined && { position: dto.position }),
+        ...(dto.estPrincipale !== undefined && { estPrincipale: dto.estPrincipale }),
+      },
+    });
+  }
+
   async deletePhoto(vehiculeId: string, photoId: string) {
     const photo = await this.prisma.photoVehicule.findFirst({
       where: { id: photoId, vehiculeId },

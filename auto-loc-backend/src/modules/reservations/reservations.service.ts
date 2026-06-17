@@ -540,6 +540,7 @@ export class ReservationsService {
       select: { id: true },
     });
     if (!proprietaire) {
+      console.warn(`[findForOwner] Aucun Utilisateur trouvé pour userId=${user.sub} — profil potentiellement désynchronisé.`);
       return { data: [], total: 0, page, limit: 20 };
     }
 

@@ -289,6 +289,20 @@ export class VehiclesController {
   }
 
   /**
+   * PATCH /vehicles/:id/photos/:photoId — Modifier position / photo principale.
+   */
+  @Patch(':id/photos/:photoId')
+  @UseGuards(JwtAuthGuard, RolesGuard, ResourceOwnerGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  updatePhoto(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('photoId', ParseUUIDPipe) photoId: string,
+    @Body() body: { position?: number; estPrincipale?: boolean },
+  ) {
+    return this.vehiclesService.updatePhoto(id, photoId, body);
+  }
+
+  /**
    * DELETE /vehicles/:id/photos/:photoId — Supprimer une photo.
    */
   @Delete(':id/photos/:photoId')
