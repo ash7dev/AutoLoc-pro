@@ -37,7 +37,7 @@ export default async function VehicleReservationsPage({ params }: PageProps) {
         throw err;
     }
 
-    const reservations = reservationsData?.data ?? [];
+    const reservations = (reservationsData?.data ?? []).filter((r: any) => r.statut !== "INITIEE");
 
     return (
         <div className="flex flex-col gap-6 p-6">

@@ -19,7 +19,7 @@ export default async function OwnerReservationsPage() {
   let reservations: Reservation[] = [];
   try {
     const result = await fetchOwnerReservations(token);
-    reservations = result?.data ?? [];
+    reservations = (result?.data ?? []).filter((r) => r.statut !== "INITIEE");
   } catch (err) {
     if (err instanceof ApiError) {
       if (err.status === 401) redirect("/login?expired=1");

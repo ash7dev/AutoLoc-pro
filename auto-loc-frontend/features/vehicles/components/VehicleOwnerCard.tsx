@@ -196,7 +196,7 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
     const deliveryFee = wantsDelivery && deliveryAvailable ? fraisLivraison : 0;
 
     const nbJours = dateDebut && dateFin
-        ? Math.max(1, Math.round((new Date(dateFin).getTime() - new Date(dateDebut).getTime()) / 86_400_000) + 1)
+        ? Math.max(1, Math.round((new Date(dateFin).getTime() - new Date(dateDebut).getTime()) / 86_400_000))
         : 0;
 
     const datesValid = nbJours >= joursMinimum;

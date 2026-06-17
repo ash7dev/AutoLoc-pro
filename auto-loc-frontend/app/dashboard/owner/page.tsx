@@ -41,7 +41,9 @@ async function DashboardDataFetcher({ token }: { token: string }) {
       profile ? fetchUserReviews(profile.id, token) : Promise.resolve(null),
     ]);
 
-    if (resResult.status === "fulfilled") reservations = resResult.value.data;
+    if (resResult.status === "fulfilled") {
+      reservations = resResult.value.data.filter((r: any) => r.statut !== "INITIEE");
+    }
     if (vehiclesResult.status === "fulfilled") vehicles = vehiclesResult.value;
     if (walletResult.status === "fulfilled") wallet = walletResult.value;
     if (statsResult.status === "fulfilled") stats = statsResult.value;

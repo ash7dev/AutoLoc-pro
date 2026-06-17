@@ -62,13 +62,11 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
   const deliveryAvailable = fraisLivraison != null && fraisLivraison > 0;
   const deliveryFee = wantsDelivery && deliveryAvailable ? fraisLivraison : 0;
 
-  // Comptage calendaire inclusif : arrivée + départ = jours facturés.
-  // Ex: 27 fév → 2 mars = 4 jours (27, 28, 1, 2) et non 3 (différence brute).
   const nbJours =
     dateDebut && dateFin
       ? Math.max(1, Math.round(
         (new Date(dateFin).getTime() - new Date(dateDebut).getTime()) / 86_400_000,
-      ) + 1)
+      ))
       : 0;
 
   const datesValid = nbJours >= joursMinimum;

@@ -38,9 +38,13 @@ export async function fetchWallet(token: string): Promise<WalletData> {
 /**
  * Request a withdrawal (client-side).
  */
-export async function requestWithdrawal(montant: number): Promise<void> {
+export async function requestWithdrawal(
+    montant: number,
+    methode: 'WAVE' | 'ORANGE_MONEY',
+    numeroDestinataire: string,
+): Promise<void> {
     await apiFetch('/wallet/withdraw', {
         method: 'POST',
-        body: { montant },
+        body: { montant, methode, numeroDestinataire },
     });
 }

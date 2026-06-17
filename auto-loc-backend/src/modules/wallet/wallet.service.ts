@@ -93,6 +93,7 @@ export class WalletService {
         id: true,
         montant: true,
         methode: true,
+        destinataire: true,
         statut: true,
         raisonRejet: true,
         demandeeLe: true,
@@ -100,7 +101,7 @@ export class WalletService {
         wallet: {
           select: {
             utilisateur: {
-              select: { prenom: true, nom: true, telephone: true },
+              select: { prenom: true, nom: true },
             },
           },
         },
@@ -112,7 +113,7 @@ export class WalletService {
       ownerName: [r.wallet.utilisateur?.prenom, r.wallet.utilisateur?.nom].filter(Boolean).join(' ') || '—',
       amount: Number(r.montant),
       method: r.methode,
-      bankInfo: r.wallet.utilisateur?.telephone ?? '—',
+      numeroDestinataire: r.destinataire,
       statut: r.statut,
       raisonRejet: r.raisonRejet ?? null,
       demandeeLe: r.demandeeLe,
@@ -120,7 +121,7 @@ export class WalletService {
     }));
   }
 
-  async requestWithdrawal(user: RequestUser, montant: number) {
+  async requestWithdrawal(user: RequestUser, montant: number, methode: 'WAVE' | 'ORANGE_MONEY', numeroDestinataire: string) {
     const utilisateur = await this.prisma.utilisateur.findUnique({
       where: { userId: user.sub },
       select: { id: true },
@@ -156,16 +157,18 @@ export class WalletService {
         data: {
           walletId: wallet.id,
           montant: amount,
-          methode: 'VIREMENT',
-          destinataire: utilisateur.id,
+          methode,
+          destinataire: numeroDestinataire,
         },
       });
     });
 
-    // Alerte admin Telegram — fire-and-forget
+    const methodeLabel = methode === 'WAVE' ? '🌊 Wave' : '🟠 Orange Money';
     this.telegram.sendAdminAlert(
       `💸 <b>Demande de retrait</b>\n` +
-      `Montant : ${montant.toLocaleString('fr-FR')} FCFA\n` +
+      `Méthode : ${methodeLabel}\n` +
+      `Numéro : <code>${numeroDestinataire}</code>\n` +
+      `Montant : <b>${montant.toLocaleString('fr-FR')} FCFA</b>\n` +
       `<a href="https://autoloc.sn/dashboard/admin/withdrawals">Traiter →</a>`,
     ).catch(() => { });
   }

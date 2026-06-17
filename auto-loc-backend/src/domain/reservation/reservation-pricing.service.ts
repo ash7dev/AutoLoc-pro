@@ -50,9 +50,9 @@ export class ReservationPricingService {
             );
         }
 
-        const nbJours = Math.round(
+        const nbJours = Math.max(1, Math.round(
             (fin.getTime() - debut.getTime()) / (1000 * 60 * 60 * 24),
-        ) + 1;
+        ));
 
         return { debut, fin, nbJours };
     }

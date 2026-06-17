@@ -3,38 +3,69 @@
 import { useState } from 'react';
 import { ArrowUpRight, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { requestWithdrawal } from '@/lib/nestjs/wallet';
+import { cn } from '@/lib/utils';
+
+type Methode = 'WAVE' | 'ORANGE_MONEY';
 
 interface WithdrawalFormProps {
     soldeDisponible: string;
 }
 
+const METHODS: { value: Methode; label: string; color: string; border: string; bg: string; activeBorder: string; activeBg: string; dot: string }[] = [
+    {
+        value: 'WAVE',
+        label: 'Wave',
+        color: 'text-blue-700',
+        border: 'border-slate-200',
+        bg: 'bg-slate-50',
+        activeBorder: 'border-blue-400',
+        activeBg: 'bg-blue-50',
+        dot: 'bg-blue-500',
+    },
+    {
+        value: 'ORANGE_MONEY',
+        label: 'Orange Money',
+        color: 'text-orange-700',
+        border: 'border-slate-200',
+        bg: 'bg-slate-50',
+        activeBorder: 'border-orange-400',
+        activeBg: 'bg-orange-50',
+        dot: 'bg-orange-500',
+    },
+];
+
 const QUICK_PERCENTS = [25, 50, 75, 100] as const;
 
 export function WithdrawalForm({ soldeDisponible }: WithdrawalFormProps) {
     const solde = Math.floor(Number(soldeDisponible));
+    const [methode, setMethode] = useState<Methode | null>(null);
+    const [numero, setNumero] = useState('');
     const [montant, setMontant] = useState('');
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [errorMsg, setErrorMsg] = useState('');
 
     const amount = Number(montant);
-    const isValid = amount >= 500 && amount <= solde;
+    const numeroClean = numero.replace(/\s/g, '');
+    const numeroValid = /^[0-9]{9,12}$/.test(numeroClean);
+    const isValid = methode !== null && numeroValid && amount >= 500 && amount <= solde;
 
     function applyPercent(pct: typeof QUICK_PERCENTS[number]) {
-        const val = Math.floor(solde * pct / 100);
-        setMontant(val.toString());
+        setMontant(Math.floor(solde * pct / 100).toString());
         setStatus('idle');
         setErrorMsg('');
     }
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        if (!isValid) return;
+        if (!isValid || !methode) return;
         setStatus('loading');
         setErrorMsg('');
         try {
-            await requestWithdrawal(amount);
+            await requestWithdrawal(amount, methode, numeroClean);
             setStatus('success');
             setMontant('');
+            setNumero('');
+            setMethode(null);
         } catch (err: unknown) {
             setErrorMsg(err instanceof Error ? err.message : 'Une erreur est survenue. Réessayez.');
             setStatus('error');
@@ -56,7 +87,7 @@ export function WithdrawalForm({ soldeDisponible }: WithdrawalFormProps) {
                     </div>
                     <div>
                         <p className="text-[14px] font-black text-slate-900">Demande envoyée</p>
-                        <p className="text-[12px] text-slate-400 mt-1">
+                        <p className="text-[12px] text-slate-400 mt-1 max-w-[260px] mx-auto">
                             Votre retrait est en cours de traitement. Les fonds seront versés sous 24–48 h.
                         </p>
                     </div>
@@ -74,7 +105,6 @@ export function WithdrawalForm({ soldeDisponible }: WithdrawalFormProps) {
 
     return (
         <div id="withdraw" className="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
-            {/* Header */}
             <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-slate-100 bg-slate-50/40">
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-emerald-50 text-emerald-600">
                     <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -91,10 +121,56 @@ export function WithdrawalForm({ soldeDisponible }: WithdrawalFormProps) {
                     </span>
                 </div>
 
-                {/* Quick % buttons */}
+                {/* Méthode */}
+                <div>
+                    <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2">
+                        Méthode de réception
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                        {METHODS.map((m) => {
+                            const active = methode === m.value;
+                            return (
+                                <button
+                                    key={m.value}
+                                    type="button"
+                                    onClick={() => { setMethode(m.value); setStatus('idle'); }}
+                                    className={cn(
+                                        'flex items-center gap-2.5 px-3.5 py-3 rounded-xl border text-left transition-all',
+                                        active ? `${m.activeBorder} ${m.activeBg}` : `${m.border} ${m.bg} hover:border-slate-300`,
+                                    )}
+                                >
+                                    <span className={cn('w-2 h-2 rounded-full flex-shrink-0', m.dot)} />
+                                    <span className={cn('text-[13px] font-bold', active ? m.color : 'text-slate-600')}>
+                                        {m.label}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Numéro */}
+                <div>
+                    <label className="block text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2">
+                        {methode === 'WAVE' ? 'Numéro Wave' : methode === 'ORANGE_MONEY' ? 'Numéro Orange Money' : 'Numéro de réception'}
+                    </label>
+                    <input
+                        type="tel"
+                        inputMode="numeric"
+                        value={numero}
+                        onChange={(e) => { setNumero(e.target.value); setStatus('idle'); }}
+                        placeholder="ex : 77 000 00 00"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[14px] font-bold text-slate-900 placeholder-slate-300 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all"
+                    />
+                    {numero && !numeroValid && (
+                        <p className="mt-1.5 text-[11px] font-medium text-red-500">Numéro invalide (9 à 12 chiffres)</p>
+                    )}
+                </div>
+
+                {/* Montant */}
                 <div>
                     <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2">Sélection rapide</p>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-4 gap-2 mb-3">
                         {QUICK_PERCENTS.map((pct) => (
                             <button
                                 key={pct}
@@ -107,10 +183,7 @@ export function WithdrawalForm({ soldeDisponible }: WithdrawalFormProps) {
                             </button>
                         ))}
                     </div>
-                </div>
 
-                {/* Amount input */}
-                <div>
                     <label className="block text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2">
                         Montant (FCFA)
                     </label>
@@ -121,11 +194,7 @@ export function WithdrawalForm({ soldeDisponible }: WithdrawalFormProps) {
                             max={solde}
                             step={100}
                             value={montant}
-                            onChange={(e) => {
-                                setMontant(e.target.value);
-                                setStatus('idle');
-                                setErrorMsg('');
-                            }}
+                            onChange={(e) => { setMontant(e.target.value); setStatus('idle'); setErrorMsg(''); }}
                             placeholder="ex : 25 000"
                             className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[14px] font-bold text-slate-900 placeholder-slate-300 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all"
                         />
@@ -133,8 +202,6 @@ export function WithdrawalForm({ soldeDisponible }: WithdrawalFormProps) {
                             FCFA
                         </span>
                     </div>
-
-                    {/* Inline hints */}
                     {montant && amount < 500 && (
                         <p className="mt-1.5 text-[11px] font-medium text-red-500">Montant minimum : 500 FCFA</p>
                     )}

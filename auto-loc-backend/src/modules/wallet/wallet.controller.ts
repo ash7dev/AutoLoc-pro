@@ -34,7 +34,7 @@ export class WalletController {
     @CurrentUser() user: RequestUser,
     @Body() dto: WithdrawalDto,
   ) {
-    await this.walletService.requestWithdrawal(user, dto.montant);
+    await this.walletService.requestWithdrawal(user, dto.montant, dto.methode, dto.numeroDestinataire);
     return { ok: true };
   }
 }

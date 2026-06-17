@@ -24,6 +24,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
             const res = exception.getResponse() as any;
             message = res.message || exception.message;
             error = res.error || 'Error';
+        } else {
+            console.error('[AllExceptionsFilter] Unhandled exception:', exception);
         }
 
         // ── Traduction Professionnelle ───────────────────────────────────────
