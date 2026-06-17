@@ -115,7 +115,6 @@ export class IntouchProvider implements PaymentProviderInterface {
 
         return {
             transactionId: `it_${params.referenceId}`,
-            paymentUrl:    null,
         };
     }
 
