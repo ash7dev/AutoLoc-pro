@@ -116,9 +116,8 @@ export class IntouchProvider implements PaymentProviderInterface {
         method: string,
         body: string,
     ): Promise<Response> {
-        // Credentials pré-hashés en SHA-256 (convention InTouch)
-        const username = crypto.createHash('sha256').update(this.loginApi).digest('hex');
-        const password = crypto.createHash('sha256').update(this.passwordApi).digest('hex');
+        const username = this.loginApi;
+        const password = this.passwordApi;
 
         // Étape 1 : requête probe pour récupérer le nonce du serveur
         const probe = await fetch(url, {
