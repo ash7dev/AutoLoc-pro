@@ -118,7 +118,18 @@ export class IntouchProvider implements PaymentProviderInterface {
 
         this.logger.log(`InTouch API réponse : ${responseText}`);
 
-        return { transactionId: `it_${params.referenceId}` };
+        let paymentUrl: string | undefined;
+        try {
+            const resData = JSON.parse(responseText);
+            paymentUrl = resData.deepLink ?? resData.MAXIT ?? resData.OM ?? resData.paymentUrl;
+        } catch {
+            this.logger.warn('Impossible de parser la réponse JSON d\'InTouch');
+        }
+
+        return {
+            transactionId: `it_${params.referenceId}`,
+            paymentUrl,
+        };
     }
 
     // ── Digest Auth ────────────────────────────────────────────────────────────

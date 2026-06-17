@@ -261,7 +261,7 @@ export default function PaymentPage() {
                 setActiveRole('LOCATAIRE');
             }
 
-            const { reservationId } = await authFetch<
+            const { reservationId, paymentUrl } = await authFetch<
                 { reservationId: string; paymentUrl: string | null },
                 {
                     vehiculeId: string; dateDebut: string; dateFin: string;
@@ -284,6 +284,12 @@ export default function PaymentPage() {
             });
 
             sessionStorage.setItem('pending_reservation_id', reservationId);
+
+            if (paymentUrl) {
+                window.location.href = paymentUrl;
+                return;
+            }
+
             setWaitingId(reservationId);
             setStep('waiting');
 
