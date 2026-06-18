@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { Prisma, SensTransaction, StatutReservation, StatutRetrait, TypeTransactionWallet } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TelegramService } from '../../infrastructure/telegram/telegram.service';
+import { NotificationService } from '../../infrastructure/notifications/notification.service';
 import { RequestUser } from '../../common/types/auth.types';
 
 @Injectable()
@@ -9,6 +10,7 @@ export class WalletService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly telegram: TelegramService,
+    private readonly notifications: NotificationService,
   ) { }
 
   async getWallet(user: RequestUser) {
@@ -121,10 +123,70 @@ export class WalletService {
     }));
   }
 
-  async requestWithdrawal(user: RequestUser, montant: number, methode: 'WAVE' | 'ORANGE_MONEY', numeroDestinataire: string) {
+  /**
+   * GET /wallet/penalites
+   * Retourne les pénalités en attente pour le propriétaire.
+   */
+  async getPendingPenalties(user: RequestUser) {
     const utilisateur = await this.prisma.utilisateur.findUnique({
       where: { userId: user.sub },
       select: { id: true },
+    });
+
+    if (!utilisateur) {
+      throw new NotFoundException('Utilisateur introuvable');
+    }
+
+    const penalites = await this.prisma.penaliteProprietaire.findMany({
+      where: {
+        utilisateurId: utilisateur.id,
+        preleveleLe: null, // Seulement celles pas encore prélevées
+      },
+      select: {
+        id: true,
+        montant: true,
+        raison: true,
+        creeLe: true,
+        reservation: {
+          select: {
+            id: true,
+            dateDebut: true,
+            vehicule: {
+              select: {
+                marque: true,
+                modele: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { creeLe: 'asc' },
+    });
+
+    const totalDette = penalites.reduce(
+      (sum, p) => sum + Number(p.montant),
+      0,
+    );
+
+    return {
+      penalites: penalites.map((p) => ({
+        id: p.id,
+        montant: Number(p.montant),
+        raison: p.raison,
+        creeLe: p.creeLe,
+        reservationId: p.reservation.id,
+        vehicule: `${p.reservation.vehicule.marque} ${p.reservation.vehicule.modele}`,
+        dateLocation: p.reservation.dateDebut,
+      })),
+      totalDette,
+      count: penalites.length,
+    };
+  }
+
+  async requestWithdrawal(user: RequestUser, montant: number, methode: 'WAVE' | 'ORANGE_MONEY', numeroDestinataire: string) {
+    const utilisateur = await this.prisma.utilisateur.findUnique({
+      where: { userId: user.sub },
+      select: { id: true, prenom: true, nom: true },
     });
     if (!utilisateur) throw new NotFoundException('Profil incomplet');
 
@@ -164,6 +226,9 @@ export class WalletService {
     });
 
     const methodeLabel = methode === 'WAVE' ? '🌊 Wave' : '🟠 Orange Money';
+    const ownerName = [utilisateur.prenom, utilisateur.nom].filter(Boolean).join(' ') || 'Propriétaire';
+
+    // Send Telegram alert
     this.telegram.sendAdminAlert(
       `💸 <b>Demande de retrait</b>\n` +
       `Méthode : ${methodeLabel}\n` +
@@ -171,6 +236,22 @@ export class WalletService {
       `Montant : <b>${montant.toLocaleString('fr-FR')} FCFA</b>\n` +
       `<a href="https://autoloc.sn/dashboard/admin/withdrawals">Traiter →</a>`,
     ).catch(() => { });
+
+    // Send admin emails to nstanislas03@gmail.com and jinicopi@gmail.com
+    const adminEmails = ['nstanislas03@gmail.com', 'jinicopi@gmail.com'];
+    for (const adminEmail of adminEmails) {
+      this.notifications.send({
+        email: adminEmail,
+        type: 'admin.withdrawal.requested',
+        data: {
+          ownerName,
+          montant: montant.toString(),
+          methode,
+          numeroDestinataire,
+          requestedAt: new Date().toLocaleDateString('fr-FR'),
+        },
+      }).catch(() => { });
+    }
   }
 
   async adminApproveWithdrawal(retraitId: string) {

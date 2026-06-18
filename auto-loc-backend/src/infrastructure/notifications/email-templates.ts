@@ -31,7 +31,9 @@ export type NotificationType =
   | 'user.status_changed'
   | 'vehicle.validated'
   | 'vehicle.suspended'
-  | 'vehicle.featured';
+  | 'vehicle.featured'
+  | 'admin.withdrawal.requested'
+  | 'admin.reservation.cancelled';
 
 interface TemplateConfig {
   subject: string;
@@ -828,5 +830,84 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
         p('Il apparaîtra en priorité dans les résultats de recherche.'),
       ].join(''),
     }),
+  },
+
+  // ── Admin Notifications ──────────────────────────────────────────────────────
+
+  'admin.withdrawal.requested': {
+    subject: '[AutoLoc Admin] Demande de retrait',
+    body: (data) => baseLayout({
+      title: '💸 Nouvelle demande de retrait',
+      subtitle: 'Action requise pour traiter le retrait',
+      badge: { text: 'Admin', color: '#b91c1c', bg: '#fef2f2' },
+      content: [
+        infoCard([
+          { label: 'Propriétaire', value: String(data.ownerName || 'N/A') },
+          { label: 'Montant', value: `<strong>${Number(data.montant || 0).toLocaleString('fr-FR')} FCFA</strong>` },
+          { label: 'Méthode', value: data.methode === 'WAVE' ? '🌊 Wave' : '🟠 Orange Money' },
+          { label: 'Numéro', value: `<code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:12px;">${data.numeroDestinataire}</code>` },
+          { label: 'Demandé le', value: String(data.requestedAt || new Date().toLocaleDateString('fr-FR')) },
+        ]),
+        p('<strong>Action requise :</strong>'),
+        `<ol style="margin:16px 0;padding-left:24px;color:${GRAY};font-size:14px;line-height:1.7;">
+          <li>Exportez le CSV des retraits en attente</li>
+          <li>Uploadez sur InTouch BO (Bulk Payment)</li>
+          <li>Validez sur le dashboard</li>
+        </ol>`,
+      ].join(''),
+      cta: { label: 'Traiter les retraits', href: 'https://autoloc.sn/dashboard/admin/withdrawals' },
+    }),
+  },
+
+  'admin.reservation.cancelled': {
+    subject: '[AutoLoc Admin] Annulation de réservation',
+    body: (data) => {
+      const isLocataire = data.cancelledBy === 'LOCATAIRE';
+      const isCritical = data.refundAmount && Number(data.refundAmount) > 0;
+
+      return baseLayout({
+        title: '❌ Réservation annulée',
+        subtitle: `Annulé par : ${isLocataire ? 'Locataire' : 'Propriétaire'}`,
+        badge: isCritical
+          ? { text: 'Action requise', color: '#b91c1c', bg: '#fef2f2' }
+          : { text: 'Info', color: '#1e40af', bg: '#eff6ff' },
+        content: [
+          infoCard([
+            { label: 'Véhicule', value: String(data.vehicule || 'N/A') },
+            { label: 'Dates', value: `${data.dateDebut ? new Date(String(data.dateDebut)).toLocaleDateString('fr-FR') : 'N/A'} → ${data.dateFin ? new Date(String(data.dateFin)).toLocaleDateString('fr-FR') : 'N/A'}` },
+            { label: 'Annulé par', value: `<strong>${isLocataire ? 'LOCATAIRE' : 'PROPRIETAIRE'}</strong> (${data.cancelledByName || 'N/A'})` },
+            { label: 'Raison', value: String(data.raison || 'Non précisée') },
+            { label: 'Annulé le', value: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) },
+          ]),
+          `<div style="margin:24px 0;padding:16px;background:#f8fafc;border-left:4px solid ${EMERALD};border-radius:8px;">
+            <p style="margin:0 0 8px 0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${GRAY};">💰 Politique appliquée</p>
+            <table style="width:100%;border-collapse:collapse;">
+              <tr style="border-bottom:1px solid ${BORDER};">
+                <td style="padding:8px 0;font-size:13px;color:${GRAY};">Remboursement locataire</td>
+                <td style="padding:8px 0;font-size:14px;font-weight:700;text-align:right;color:${DARK};">
+                  ${data.refundPercentage || 0}% (${Number(data.refundAmount || 0).toLocaleString('fr-FR')} FCFA)
+                </td>
+              </tr>
+              <tr style="border-bottom:1px solid ${BORDER};">
+                <td style="padding:8px 0;font-size:13px;color:${GRAY};">Commission retenue</td>
+                <td style="padding:8px 0;font-size:14px;font-weight:700;text-align:right;color:${DARK};">
+                  ${Number(data.commissionRetained || 0).toLocaleString('fr-FR')} FCFA
+                </td>
+              </tr>
+              ${!isLocataire ? `<tr>
+                <td style="padding:8px 0;font-size:13px;color:${GRAY};">Pénalité propriétaire</td>
+                <td style="padding:8px 0;font-size:14px;font-weight:700;text-align:right;color:#dc2626;">
+                  ${Number(data.ownerPenaltyAmount || 0).toLocaleString('fr-FR')} FCFA (${data.ownerPenaltyPercentage || 0}%)
+                </td>
+              </tr>` : ''}
+            </table>
+          </div>`,
+          isCritical
+            ? p(`<strong>⚠️ Action requise :</strong> Rembourser <strong>${Number(data.refundAmount).toLocaleString('fr-FR')} FCFA</strong> au locataire via InTouch.`)
+            : '',
+        ].join(''),
+        cta: { label: 'Voir la réservation', href: `https://autoloc.sn/dashboard/admin/reservations/${data.reservationId}` },
+      });
+    },
   },
 };

@@ -24,6 +24,8 @@ export class CreditWalletUseCase {
      * Crédite le wallet du propriétaire après un check-in finalisé.
      * Montant = netProprietaire (total - commission 15%).
      *
+     * IMPORTANT : Avant de créditer, prélève automatiquement les pénalités en attente.
+     *
      * Protection double crédit : @@unique([reservationId, type]) sur TransactionWallet
      * empêche un second crédit pour la même réservation.
      */
@@ -54,9 +56,25 @@ export class CreditWalletUseCase {
                     select: { id: true, soldeDisponible: true },
                 });
 
-                const nouveauSolde = wallet.soldeDisponible.add(montant);
+                // ── 2a. Récupérer les pénalités en attente ────────────────────
+                const penalites = await tx.penaliteProprietaire.findMany({
+                    where: {
+                        utilisateurId: reservation.proprietaireId,
+                        preleveleLe: null, // Pas encore prélevées
+                    },
+                    orderBy: { creeLe: 'asc' }, // FIFO
+                });
 
-                // Créer la transaction wallet (protection double par @@unique)
+                const totalPenalites = penalites.reduce(
+                    (sum, p) => sum.add(p.montant),
+                    new Prisma.Decimal(0),
+                );
+
+                // ── 2b. Calculer le montant net après déduction pénalités ──────
+                const montantNet = montant.sub(totalPenalites).toDecimalPlaces(2);
+                const nouveauSolde = wallet.soldeDisponible.add(montantNet).toDecimalPlaces(2);
+
+                // ── 2c. Créer la transaction CREDIT_LOCATION (montant brut) ────
                 await tx.transactionWallet.create({
                     data: {
                         walletId: wallet.id,
@@ -64,11 +82,30 @@ export class CreditWalletUseCase {
                         type: TypeTransactionWallet.CREDIT_LOCATION,
                         montant,
                         sens: SensTransaction.CREDIT,
-                        soldeApres: nouveauSolde,
+                        soldeApres: nouveauSolde, // Solde final après déduction pénalités
                     },
                 });
 
-                // Mettre à jour le solde
+                // ── 2d. Créer les transactions DEBIT_PENALITE et marquer prélevées ──
+                for (const penalite of penalites) {
+                    await tx.transactionWallet.create({
+                        data: {
+                            walletId: wallet.id,
+                            reservationId: penalite.reservationId,
+                            type: TypeTransactionWallet.DEBIT_PENALITE,
+                            montant: penalite.montant,
+                            sens: SensTransaction.DEBIT,
+                            soldeApres: nouveauSolde, // Même solde final
+                        },
+                    });
+
+                    await tx.penaliteProprietaire.update({
+                        where: { id: penalite.id },
+                        data: { preleveleLe: new Date() },
+                    });
+                }
+
+                // ── 2e. Mettre à jour le solde wallet ──────────────────────────
                 await tx.wallet.update({
                     where: { id: wallet.id },
                     data: { soldeDisponible: nouveauSolde },
@@ -76,15 +113,21 @@ export class CreditWalletUseCase {
 
                 return {
                     walletId: wallet.id,
-                    montantCredite: montant,
+                    montantCredite: montantNet, // Montant net après pénalités
                     nouveauSolde,
                     alreadyCredited: false,
                 };
             });
 
-            this.logger.log(
-                `Wallet credited: ${montant} FCFA for reservation ${reservationId} → wallet ${result.walletId}`,
-            );
+            if (result.montantCredite.lt(montant)) {
+                this.logger.log(
+                    `Wallet credited with penalty deduction: ${montant} - penalties = ${result.montantCredite} FCFA for reservation ${reservationId}`,
+                );
+            } else {
+                this.logger.log(
+                    `Wallet credited: ${montant} FCFA for reservation ${reservationId} → wallet ${result.walletId}`,
+                );
+            }
 
             return result;
         } catch (err) {

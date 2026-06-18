@@ -66,15 +66,15 @@ function bestTierMinDays(tiers: TarifTier[]): number | null {
 
 
 /* ════════════════════════════════════════════════════════════════
-   FEATURED CARD  — kept for reference, not used
+   CARTE PREMIUM — style "À la une" avec badge + message économies
 ════════════════════════════════════════════════════════════════ */
 function FeaturedCard({ vehicle }: { vehicle: VehicleCardItem }) {
   const [liked, setLiked] = useState(false);
   const { formatPrice } = useCurrency();
   const photo = mainPhoto(vehicle);
-  const tiers = vehicle.tarifsProgressifs ?? [];
+  const tiers = vehicle.tarifsProgressifs ?? []; // tarifs progressifs du véhicule, s'il y en a
   const ownerBase = Number(vehicle.prixParJour);
-  const base = Math.round(ownerBase * 1.15); // tenant price with 15% commission
+  const base = Math.round(ownerBase * 1.15); // 15% sur le prix de location
   const hasTiers = tiers.length > 0;
   const minDays = bestTierMinDays(tiers);
   const reservations = vehicle.totalLocations ?? 0;

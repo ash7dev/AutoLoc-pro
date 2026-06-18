@@ -44,14 +44,15 @@ model Utilisateur {
   kycRejectionReason       String?
   permisPublicId           String?
   permisUrl                String?
-  avisEnvoyes              Avis[]             @relation("auteur")
-  avisRecus                Avis[]             @relation("cible")
-  reservationsLocataire    Reservation[]      @relation("locataire")
-  reservationsProprietaire Reservation[]      @relation("proprietaire_res")
-  profile                  Profile            @relation(fields: [userId], references: [userId])
+  avisEnvoyes              Avis[]                   @relation("auteur")
+  avisRecus                Avis[]                   @relation("cible")
+  reservationsLocataire    Reservation[]            @relation("locataire")
+  reservationsProprietaire Reservation[]            @relation("proprietaire_res")
+  profile                  Profile                  @relation(fields: [userId], references: [userId])
   vehicules                Vehicule[]
   wallet                   Wallet?
   pushSubscriptions        PushSubscription[]
+  penalites                PenaliteProprietaire[]
 
   @@index([userId])
 }
@@ -195,6 +196,7 @@ model Reservation {
   proprietaire           Utilisateur             @relation("proprietaire_res", fields: [proprietaireId], references: [id])
   vehicule               Vehicule                @relation(fields: [vehiculeId], references: [id])
   historique             ReservationHistorique[]
+  penalites              PenaliteProprietaire[]
 
   @@index([vehiculeId, statut])
   @@index([vehiculeId, statut, dateDebut, dateFin])
@@ -276,6 +278,21 @@ model Retrait {
   wallet       Wallet         @relation(fields: [walletId], references: [id])
 
   @@index([statut])
+}
+
+model PenaliteProprietaire {
+  id            String      @id @default(uuid())
+  utilisateurId String
+  reservationId String
+  montant       Decimal     @db.Decimal(10, 2)
+  raison        String
+  creeLe        DateTime    @default(now())
+  preleveleLe   DateTime?
+  utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+
+  @@index([utilisateurId, preleveleLe])
+  @@index([utilisateurId])
 }
 
 model Litige {

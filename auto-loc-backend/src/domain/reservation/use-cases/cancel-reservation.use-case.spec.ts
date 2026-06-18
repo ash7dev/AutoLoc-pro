@@ -50,6 +50,10 @@ const mockTelegram = {
     sendAdminAlert: jest.fn().mockResolvedValue(undefined),
 };
 
+const mockNotifications = {
+    send: jest.fn().mockResolvedValue(undefined),
+};
+
 function createUseCase(): CancelReservationUseCase {
     return new CancelReservationUseCase(
         mockPrisma as any,
@@ -60,6 +64,7 @@ function createUseCase(): CancelReservationUseCase {
         mockContractGeneration as any,
         mockRevalidateService as any,
         mockTelegram as any,
+        mockNotifications as any,
     );
 }
 

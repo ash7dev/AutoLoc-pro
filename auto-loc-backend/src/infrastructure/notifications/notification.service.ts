@@ -437,6 +437,8 @@ export class NotificationService {
       'vehicle.validated': `🎉 AutoLoc — Votre véhicule ${data.vehicule} a été validé ! Il est maintenant en ligne.`,
       'vehicle.suspended': `⚠️ AutoLoc — Votre véhicule ${data.vehicule} a été suspendu.${data.raison ? ` Raison: ${data.raison}` : ''}`,
       'vehicle.featured': `🌟 AutoLoc — Félicitations ! Votre véhicule ${data.vehicule} est maintenant mis en avant.`,
+      'admin.withdrawal.requested': `💸 AutoLoc — Nouvelle demande de retrait de ${data.montant} FCFA (${data.methode}).`,
+      'admin.reservation.cancelled': `❌ AutoLoc — Réservation #${resId} annulée.`,
     };
 
     const fallbackText = fallbackTextByType[type];

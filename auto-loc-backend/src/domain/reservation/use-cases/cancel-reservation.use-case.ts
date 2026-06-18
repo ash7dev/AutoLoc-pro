@@ -18,6 +18,7 @@ import {
 import { ContractGenerationService } from '../contract-generation.service';
 import { RevalidateService } from '../../../infrastructure/revalidate/revalidate.service';
 import { TelegramService } from '../../../infrastructure/telegram/telegram.service';
+import { NotificationService } from '../../../infrastructure/notifications/notification.service';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -53,6 +54,7 @@ export class CancelReservationUseCase {
         private readonly contractGeneration: ContractGenerationService,
         private readonly revalidate: RevalidateService,
         private readonly telegram: TelegramService,
+        private readonly notifications: NotificationService,
     ) { }
 
     async execute(
@@ -129,21 +131,10 @@ export class CancelReservationUseCase {
         if (isLocataire) {
             const isConfirmed = reservation.statut === StatutReservation.CONFIRMEE;
             policy = this.cancellationPolicy.calculateForTenant(reservationData, now, isConfirmed);
-        } else if (reservation.statut === StatutReservation.PAYEE) {
-            // Propriétaire n'a pas encore confirmé → refus de réservation.
-            // Remboursement intégral, aucune pénalité.
-            const zero = new Prisma.Decimal(0);
-            policy = {
-                refundPercentage: 100,
-                refundAmount: reservationData.totalLocataire,
-                commissionRetained: zero,
-                ownerPenaltyPercentage: 0,
-                ownerPenaltyAmount: zero,
-                warnings: ['Propriétaire refuse la réservation : remboursement intégral au locataire'],
-                canCancel: true,
-            };
         } else {
-            policy = this.cancellationPolicy.calculateForOwner(reservationData, now);
+            // Propriétaire annule
+            const isConfirmed = reservation.statut !== StatutReservation.PAYEE;
+            policy = this.cancellationPolicy.calculateForOwner(reservationData, now, isConfirmed);
         }
 
         if (!policy.canCancel) {
@@ -194,45 +185,46 @@ export class CancelReservationUseCase {
                     });
                 }
 
-                // 6d. Wallet propriétaire — DEBIT_PENALITE si déjà crédité
-                if (policy.ownerPenaltyAmount.gt(0)) {
+                // 6d. Wallet propriétaire : débiter TOUT le solde disponible
+                if (isProprietaire) {
                     const wallet = await tx.wallet.findUnique({
                         where: { utilisateurId: reservation.proprietaireId },
                         select: { id: true, soldeDisponible: true },
                     });
 
-                    if (wallet) {
-                        // Check if owner was already credited for this reservation
-                        const existingCredit = await tx.transactionWallet.findUnique({
-                            where: {
-                                reservationId_type: {
-                                    reservationId,
-                                    type: TypeTransactionWallet.CREDIT_LOCATION,
-                                },
-                            },
+                    if (wallet && wallet.soldeDisponible.gt(0)) {
+                        // Débiter TOUT le wallet proprio (on récupère ce qu'on peut)
+                        const montantDebite = wallet.soldeDisponible;
+
+                        await tx.wallet.update({
+                            where: { id: wallet.id },
+                            data: { soldeDisponible: new Prisma.Decimal(0) },
                         });
 
-                        if (existingCredit) {
-                            const newSolde = wallet.soldeDisponible
-                                .sub(policy.ownerPenaltyAmount)
-                                .toDecimalPlaces(2);
+                        await tx.transactionWallet.create({
+                            data: {
+                                walletId: wallet.id,
+                                reservationId,
+                                type: TypeTransactionWallet.DEBIT_PENALITE,
+                                montant: montantDebite,
+                                sens: SensTransaction.DEBIT,
+                                soldeApres: new Prisma.Decimal(0),
+                            },
+                        });
+                    }
 
-                            await tx.wallet.update({
-                                where: { id: wallet.id },
-                                data: { soldeDisponible: newSolde },
-                            });
-
-                            await tx.transactionWallet.create({
-                                data: {
-                                    walletId: wallet.id,
-                                    reservationId,
-                                    type: TypeTransactionWallet.DEBIT_PENALITE,
-                                    montant: policy.ownerPenaltyAmount,
-                                    sens: SensTransaction.DEBIT,
-                                    soldeApres: newSolde,
-                                },
-                            });
-                        }
+                    // 6e. Créer pénalité différée si applicable
+                    if (policy.ownerPenaltyAmount.gt(0)) {
+                        await tx.penaliteProprietaire.create({
+                            data: {
+                                utilisateurId: reservation.proprietaireId,
+                                reservationId,
+                                montant: policy.ownerPenaltyAmount,
+                                raison: `Annulation ${Math.floor(
+                                    this.cancellationPolicy.daysUntilStart(reservation.dateDebut, now),
+                                )} jours avant location - Pénalité ${policy.ownerPenaltyPercentage}%`,
+                            },
+                        });
                     }
                 }
             },
@@ -327,7 +319,29 @@ export class CancelReservationUseCase {
             ).catch(() => { });
         }
 
-        // 7e. Regenerate contract with ANNULÉ watermark — fire-and-forget.
+        // 7e. Send admin emails
+        const adminEmails = ['nstanislas03@gmail.com', 'jinicopi@gmail.com'];
+        for (const adminEmail of adminEmails) {
+            this.notifications.send({
+                email: adminEmail,
+                type: 'admin.reservation.cancelled',
+                data: {
+                    reservationId: reservationId.slice(0, 8).toUpperCase(),
+                    vehicule: notificationData.vehicule,
+                    cancelledBy: isLocataire ? 'Locataire' : 'Propriétaire',
+                    dateDebut: reservation.dateDebut,
+                    dateFin: reservation.dateFin,
+                    raison: input.raison,
+                    refundAmount: policy.refundAmount.toString(),
+                    refundPercentage: policy.refundPercentage.toString(),
+                    ownerPenaltyAmount: policy.ownerPenaltyAmount.toString(),
+                    ownerPenaltyPercentage: policy.ownerPenaltyPercentage.toString(),
+                    cancelledAt: now.toLocaleDateString('fr-FR'),
+                },
+            }).catch(() => { });
+        }
+
+        // 7f. Regenerate contract with ANNULÉ watermark — fire-and-forget.
         // PDF generation + Cloudinary upload can take 10-30s : on ne bloque pas la réponse HTTP.
         void this.contractGeneration
             .generateAndStore(reservationId, {

@@ -2,17 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 // ── Constants métier ───────────────────────────────────────────────────────────
-
-// Seuils locataire (politique modérée)
-const TENANT_FULL_REFUND_DAYS = 5;    // > 5 jours → 100% (commission retenue)
-const TENANT_PARTIAL_REFUND_DAYS = 2; // 2-5 jours → 75%
-// < 24h (< 1 jour) → 0%
-
-// Seuils propriétaire (pénalités strictes)
-const OWNER_NO_PENALTY_DAYS = 7;       // > 7 jours → 0% pénalité
-const OWNER_MEDIUM_PENALTY_DAYS = 3;   // 3-7 jours → 20% pénalité
-// < 3 jours → 40% pénalité
-// Jour même → annulation impossible (sauf accord)
+// Les seuils sont maintenant hardcodés directement dans les méthodes pour plus de clarté
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -47,15 +37,15 @@ export interface CancellationResult {
 export class CancellationPolicyService {
     /**
      * Calcule le remboursement pour une annulation par le locataire.
-     * Politique modérée :
-     * AVANT confirmation (statut PAYEE) :
-     * - > 5 jours  → 100% remb. (commission 15% retenue = locataire récupère totalBase)
-     * - 2-5 jours  → 75% du totalLocataire (commission + 25% restant retenus)
-     * - < 24h      → 0%
-     * 
-     * APRÈS confirmation (statut CONFIRMEE) :
-     * - > 3 jours  → 100% remb. (commission 15% retenue = locataire récupère totalBase)
-     * - 1-3 jours  → 75% du totalLocataire (commission + 25% restant retenus)
+     *
+     * USE CASE 1 - AVANT confirmation (statut PAYEE) :
+     * → Remboursement intégral 100% (y compris la commission)
+     * Le proprio n'a même pas encore confirmé, le locataire récupère tout.
+     *
+     * USE CASE 2 - APRÈS confirmation (statut CONFIRMEE) :
+     * - > 5 jours  → 100% du totalBase (commission 15% retenue)
+     * - 3-5 jours  → 75% du totalLocataire
+     * - 1-3 jours  → 50% du totalLocataire
      * - < 24h      → 0%
      */
     calculateForTenant(
@@ -66,16 +56,26 @@ export class CancellationPolicyService {
         const daysUntil = this.daysUntilStart(reservation.dateDebut, cancelDate);
         const zero = new Prisma.Decimal(0);
 
-        // Choisir le seuil selon que la réservation est confirmée ou non
-        const fullRefundDays = isConfirmed ? 3 : TENANT_FULL_REFUND_DAYS; // 3 jours après confirmation, 5 avant
-        const partialRefundDays = isConfirmed ? 1 : TENANT_PARTIAL_REFUND_DAYS; // 1 jour après confirmation, 2 avant
-
-        if (daysUntil > fullRefundDays) {
-            // > seuil : remboursement intégral MOINS les frais de service (commission)
-            const refundAmount = reservation.totalBase; // totalLocataire - commission
+        // USE CASE 1 : Réservation PAS encore confirmée → remboursement intégral
+        if (!isConfirmed) {
             return {
                 refundPercentage: 100,
-                refundAmount,
+                refundAmount: reservation.totalLocataire, // Même la commission
+                commissionRetained: zero,
+                ownerPenaltyPercentage: 0,
+                ownerPenaltyAmount: zero,
+                warnings: ['Réservation non confirmée : remboursement intégral'],
+                canCancel: true,
+            };
+        }
+
+        // USE CASE 2 : Réservation CONFIRMÉE → politique stricte
+
+        if (daysUntil > 5) {
+            // > 5 jours : remboursement du totalBase (commission retenue)
+            return {
+                refundPercentage: 100,
+                refundAmount: reservation.totalBase,
                 commissionRetained: reservation.montantCommission,
                 ownerPenaltyPercentage: 0,
                 ownerPenaltyAmount: zero,
@@ -84,8 +84,8 @@ export class CancellationPolicyService {
             };
         }
 
-        if (daysUntil >= partialRefundDays) {
-            // Entre seuil partiel et seuil complet : 75% du totalLocataire
+        if (daysUntil >= 3) {
+            // 3-5 jours : 75% du totalLocataire
             const refundAmount = reservation.totalLocataire
                 .mul(new Prisma.Decimal('0.75'))
                 .toDecimalPlaces(2);
@@ -98,7 +98,27 @@ export class CancellationPolicyService {
                 ownerPenaltyPercentage: 0,
                 ownerPenaltyAmount: zero,
                 warnings: [
-                    `Annulation entre ${partialRefundDays} et ${fullRefundDays} jours : 75% remboursé (${refundAmount} FCFA)`,
+                    `Annulation entre 3 et 5 jours : 75% remboursé (${refundAmount} FCFA)`,
+                ],
+                canCancel: true,
+            };
+        }
+
+        if (daysUntil >= 1) {
+            // 1-3 jours : 50% du totalLocataire
+            const refundAmount = reservation.totalLocataire
+                .mul(new Prisma.Decimal('0.50'))
+                .toDecimalPlaces(2);
+            return {
+                refundPercentage: 50,
+                refundAmount,
+                commissionRetained: reservation.totalLocataire
+                    .sub(refundAmount)
+                    .toDecimalPlaces(2),
+                ownerPenaltyPercentage: 0,
+                ownerPenaltyAmount: zero,
+                warnings: [
+                    `Annulation entre 1 et 3 jours : 50% remboursé (${refundAmount} FCFA)`,
                 ],
                 canCancel: true,
             };
@@ -118,15 +138,24 @@ export class CancellationPolicyService {
 
     /**
      * Calcule les pénalités pour une annulation par le propriétaire.
-     * Le client est TOUJOURS remboursé intégralement.
-     * - > 7 jours  → aucune pénalité (avertissement)
-     * - 3-7 jours  → pénalité 20% sur prochaine location
-     * - < 3 jours  → pénalité 40%
-     * - Jour même  → annulation impossible depuis la plateforme
+     *
+     * USE CASE 3 - Réservation PAYEE (pas encore confirmée) :
+     * → Refus de réservation
+     * → Remboursement intégral 100% (même la commission)
+     * → Aucune pénalité pour le proprio
+     *
+     * USE CASE 4 - Réservation CONFIRMEE ou EN_COURS :
+     * Le locataire est TOUJOURS remboursé intégralement.
+     * Pénalités différées (prélevées sur prochaine location) :
+     * - > 7 jours  → 0% pénalité (avertissement seulement)
+     * - 3-7 jours  → 20% pénalité
+     * - < 3 jours  → 40% pénalité
+     * - < 24h      → 40% pénalité + BLOCAGE (admin doit forcer)
      */
     calculateForOwner(
         reservation: ReservationForCancellation,
         cancelDate: Date = new Date(),
+        isConfirmed: boolean = true, // Par défaut on suppose CONFIRMEE
     ): CancellationResult {
         const daysUntil = this.daysUntilStart(reservation.dateDebut, cancelDate);
         const zero = new Prisma.Decimal(0);
@@ -134,16 +163,32 @@ export class CancellationPolicyService {
         // Remboursement intégral au client dans TOUS les cas proprio
         const refundAmount = reservation.totalLocataire;
 
+        // USE CASE 3 : Réservation PAS encore confirmée (refus)
+        if (!isConfirmed) {
+            return {
+                refundPercentage: 100,
+                refundAmount,
+                commissionRetained: zero,
+                ownerPenaltyPercentage: 0,
+                ownerPenaltyAmount: zero,
+                warnings: ['Propriétaire refuse la réservation : remboursement intégral au locataire'],
+                canCancel: true,
+            };
+        }
+
+        // USE CASE 4 : Réservation CONFIRMÉE → pénalités
+
         if (daysUntil < 1) {
-            // Jour même : annulation impossible
+            // < 24h : annulation BLOQUÉE
+            const penaltyAmount = reservation.totalBase
+                .mul(new Prisma.Decimal('0.40'))
+                .toDecimalPlaces(2);
             return {
                 refundPercentage: 100,
                 refundAmount,
                 commissionRetained: zero,
                 ownerPenaltyPercentage: 40,
-                ownerPenaltyAmount: reservation.totalBase
-                    .mul(new Prisma.Decimal('0.40'))
-                    .toDecimalPlaces(2),
+                ownerPenaltyAmount: penaltyAmount,
                 warnings: [
                     'Annulation le jour même impossible depuis la plateforme, sauf accord avec le locataire',
                 ],
@@ -151,7 +196,7 @@ export class CancellationPolicyService {
             };
         }
 
-        if (daysUntil < OWNER_MEDIUM_PENALTY_DAYS) {
+        if (daysUntil < 3) {
             // < 3 jours : 40% pénalité
             const penaltyAmount = reservation.totalBase
                 .mul(new Prisma.Decimal('0.40'))
@@ -170,7 +215,7 @@ export class CancellationPolicyService {
             };
         }
 
-        if (daysUntil <= OWNER_NO_PENALTY_DAYS) {
+        if (daysUntil <= 7) {
             // 3-7 jours : 20% pénalité
             const penaltyAmount = reservation.totalBase
                 .mul(new Prisma.Decimal('0.20'))
@@ -226,8 +271,9 @@ export class CancellationPolicyService {
     /**
      * Nombre de jours complets entre cancelDate et dateDebut.
      * Si négatif (dateDebut déjà passée), retourne 0.
+     * PUBLIC pour être utilisé dans les use-cases.
      */
-    daysUntilStart(dateDebut: Date, cancelDate: Date): number {
+    public daysUntilStart(dateDebut: Date, cancelDate: Date): number {
         const diffMs = dateDebut.getTime() - cancelDate.getTime();
         const days = diffMs / (1000 * 60 * 60 * 24);
         return Math.max(0, days);

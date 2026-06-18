@@ -25,6 +25,16 @@ export class WalletController {
   }
 
   /**
+   * GET /wallet/penalites
+   * Retourne les pénalités en attente du propriétaire.
+   */
+  @Get('penalites')
+  @HttpCode(200)
+  getPenalites(@CurrentUser() user: RequestUser) {
+    return this.walletService.getPendingPenalties(user);
+  }
+
+  /**
    * POST /wallet/withdraw
    * Demande un retrait (débit immédiat du wallet).
    */
