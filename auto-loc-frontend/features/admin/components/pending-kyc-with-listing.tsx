@@ -544,7 +544,9 @@ export function PendingKycWithListingSection() {
       const res = await fetch('/api/nest/admin/users?kycStatus=EN_ATTENTE', { credentials: 'include' });
       console.log('[PendingKycWithListing] Response status:', res.status);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data: AdminUser[] = await res.json();
+      const response = await res.json();
+      console.log('[PendingKycWithListing] Response:', response);
+      const data: AdminUser[] = response.data || response;
       console.log('[PendingKycWithListing] Total users:', data.length);
       const filtered = data.filter((u) =>
         u.vehicles?.some((v) => v.statut === 'BROUILLON' || v.statut === 'EN_ATTENTE_VALIDATION') ?? false,
