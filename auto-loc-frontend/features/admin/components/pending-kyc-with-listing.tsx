@@ -343,7 +343,7 @@ function PendingUserRow({
   const vehicles = user.vehicles ?? [];
   const isLoading = pendingId === user.id || vehicles.some((v) => pendingId === v.id);
 
-  const brouillonVehicles   = vehicles.filter((v) => v.statut === 'BROUILLON');
+  const brouillonVehicles   = vehicles.filter((v) => v.statut === 'BROUILLON' || v.statut === 'EN_ATTENTE_VALIDATION');
   const brouillonVehicleIds = brouillonVehicles.map((v) => v.id);
 
   return (
@@ -385,7 +385,7 @@ function PendingUserRow({
             <span className="inline-flex items-center gap-1 rounded-full border border-blue-300/60
               bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 whitespace-nowrap">
               <Car className="w-2.5 h-2.5" strokeWidth={2} />
-              {brouillonVehicleIds.length} annonce{brouillonVehicleIds.length > 1 ? 's' : ''} En attente
+              {brouillonVehicleIds.length} annonce{brouillonVehicleIds.length > 1 ? 's' : ''} à valider
             </span>
           )}
         </div>
@@ -458,7 +458,7 @@ function PendingUserRow({
                 <div className="flex items-center gap-2 mb-3">
                   <Car className="w-4 h-4 text-blue-500" strokeWidth={1.75} />
                   <h4 className="text-[13px] font-black text-black">
-                    Annonce{brouillonVehicles.length > 1 ? 's' : ''} en brouillon
+                    Annonce{brouillonVehicles.length > 1 ? 's' : ''} à valider
                   </h4>
                   <span className="ml-auto text-[10.5px] font-bold text-black/30">
                     {brouillonVehicles.length} véhicule{brouillonVehicles.length > 1 ? 's' : ''}
@@ -484,8 +484,7 @@ function PendingUserRow({
                   <AlertTriangle className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5"
                     strokeWidth={1.75} />
                   <p className="text-[11px] font-medium text-blue-700 leading-snug">
-                    Bloquées en <span className="font-bold">brouillon</span> jusqu&apos;à la
-                    validation du KYC. &ldquo;Valider tout&rdquo; les publie directement.
+                    Annonces en attente de validation. &ldquo;Valider tout&rdquo; approuve le KYC et publie les annonces directement.
                   </p>
                 </div>
               </div>
@@ -546,7 +545,7 @@ export function PendingKycWithListingSection() {
       if (!res.ok) throw new Error();
       const data: AdminUser[] = await res.json();
       setUsers(data.filter((u) =>
-        u.vehicles?.some((v) => v.statut === 'BROUILLON') ?? false,
+        u.vehicles?.some((v) => v.statut === 'BROUILLON' || v.statut === 'EN_ATTENTE_VALIDATION') ?? false,
       ));
     } catch {
       setUsers([]);
