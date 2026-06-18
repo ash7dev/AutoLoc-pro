@@ -542,12 +542,18 @@ export function PendingKycWithListingSection() {
     setLoading(true);
     try {
       const res = await fetch('/api/nest/admin/users?kycStatus=EN_ATTENTE', { credentials: 'include' });
-      if (!res.ok) throw new Error();
+      console.log('[PendingKycWithListing] Response status:', res.status);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: AdminUser[] = await res.json();
-      setUsers(data.filter((u) =>
+      console.log('[PendingKycWithListing] Total users:', data.length);
+      const filtered = data.filter((u) =>
         u.vehicles?.some((v) => v.statut === 'BROUILLON' || v.statut === 'EN_ATTENTE_VALIDATION') ?? false,
-      ));
-    } catch {
+      );
+      console.log('[PendingKycWithListing] Filtered users with vehicles:', filtered.length);
+      console.log('[PendingKycWithListing] Users:', filtered);
+      setUsers(filtered);
+    } catch (e) {
+      console.error('[PendingKycWithListing] Error loading:', e);
       setUsers([]);
     } finally {
       setLoading(false);
