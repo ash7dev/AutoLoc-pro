@@ -22,6 +22,7 @@ import { SearchVehiclesDto } from './dto/search-vehicles.dto';
 import { CreateIndisponibiliteDto } from './dto/create-indisponibilite.dto';
 import { ReservationPricingService } from '../../domain/reservation/reservation-pricing.service';
 import { RevalidateService } from '../../infrastructure/revalidate/revalidate.service';
+import { QueueService } from '../../infrastructure/queue/queue.service';
 
 const MAX_PHOTOS = 8;
 const SEARCH_PAGE_SIZE = 12;
@@ -98,6 +99,7 @@ export class VehiclesService {
     private readonly pricing: ReservationPricingService,
     private readonly revalidate: RevalidateService,
     private readonly telegram: TelegramService,
+    private readonly queue: QueueService,
   ) { }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -596,6 +598,11 @@ export class VehiclesService {
     });
 
     await this.invalidateDetailCache(vehicleId);
+
+    // Suppression différée des assets Cloudinary (24h = expiration cache CDN).
+    // Le cron vehicle-archive-cleanup supprimera l'enregistrement DB à J+30.
+    this.queue.scheduleCloudinaryDelete(vehicleId).catch(() => {});
+
     return updated;
   }
 

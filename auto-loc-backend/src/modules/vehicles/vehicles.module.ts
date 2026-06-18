@@ -7,9 +7,10 @@ import { ResourceOwnerGuard } from '../../shared/guards/resource-owner.guard';
 import { OptionalJwtAuthGuard } from '../../shared/guards/optional-jwt-auth.guard';
 import { ReservationDomainModule } from '../../domain/reservation/reservation.domain.module';
 import { RevalidateModule } from '../../infrastructure/revalidate/revalidate.module';
+import { QueueModule } from '../../infrastructure/queue/queue.module';
 
 @Module({
-  imports: [ReservationDomainModule, RevalidateModule],
+  imports: [ReservationDomainModule, RevalidateModule, QueueModule],
   controllers: [VehiclesController, AdminVehiclesController],
   providers: [
     VehiclesService,

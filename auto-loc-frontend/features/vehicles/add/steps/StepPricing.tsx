@@ -53,7 +53,7 @@ export function StepPricing({ onNext, onBack }: Props) {
                 placeholder="25 000"
                 className={cn(INPUT_CLASS, "pr-16")}
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 uppercase">FCFA</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[13px] sm:text-[11px] font-bold text-slate-400 uppercase">FCFA</span>
             </div>
           </FormField>
 
@@ -250,7 +250,7 @@ export function StepPricing({ onNext, onBack }: Props) {
                     placeholder="Ex : 5 000"
                     className={cn(INPUT_CLASS, "pr-16")}
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 uppercase">FCFA</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[13px] sm:text-[11px] font-bold text-slate-400 uppercase">FCFA</span>
                 </div>
               </FormField>
             </div>

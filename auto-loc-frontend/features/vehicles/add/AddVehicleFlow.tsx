@@ -401,10 +401,10 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
 
           {/* ── Step title ──────────────────────────────────────── */}
           <div className="text-center space-y-1 px-4">
-            <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-emerald-500">
+            <p className="text-[12px] sm:text-[11px] font-black uppercase tracking-[0.15em] text-emerald-500">
               Étape {currentStep} sur {STEP_TITLES.length}
             </p>
-            <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
+            <h2 className="text-2xl sm:text-2xl font-black text-slate-900 tracking-tight">
               {STEP_TITLES[currentStep - 1]}
             </h2>
           </div>

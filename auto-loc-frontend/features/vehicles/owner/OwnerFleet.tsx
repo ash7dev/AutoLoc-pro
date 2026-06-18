@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import type { Vehicle, VehicleStatus } from "@/lib/nestjs/vehicles";
 import { VEHICLE_PATHS } from "@/lib/nestjs/vehicles";
+import { toast } from "sonner";
 import { EditVehicleSheet } from "./EditVehicleSheet";
 import {
     STATUS_CONFIG, TYPE_LABELS, FUEL_LABELS, StatusChip,
@@ -759,8 +760,9 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
         try {
             await authFetch(VEHICLE_PATHS.archive(confirmVehicle.id), { method: "DELETE" });
             setVehicles(prev => prev.map(v => v.id === confirmVehicle.id ? { ...v, statut: "ARCHIVE" as const } : v));
-        } catch {
-            // silently ignore
+            toast.success('Véhicule archivé. Les photos seront supprimées de Cloudinary dans 24h.');
+        } catch (err: any) {
+            toast.error(err?.message || 'Impossible d\'archiver ce véhicule.');
         } finally {
             setArchivingId(null);
             setConfirmVehicle(null);

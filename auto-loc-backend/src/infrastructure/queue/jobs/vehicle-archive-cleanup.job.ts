@@ -1,10 +1,13 @@
 import { Processor, Process } from '@nestjs/bull';
+import { Job } from 'bull';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CloudinaryService } from '../../cloudinary/cloudinary.service';
 import { StatutVehicule } from '@prisma/client';
-
-const VEHICLE_QUEUE_NAME = 'vehicle-jobs';
-const VEHICLE_ARCHIVE_CLEANUP_JOB = 'vehicle-archive-cleanup';
+import {
+  VEHICLE_QUEUE_NAME,
+  VEHICLE_ARCHIVE_CLEANUP_JOB,
+  VEHICLE_CLOUDINARY_DELETE_JOB,
+} from '../queue.config';
 
 @Processor(VEHICLE_QUEUE_NAME)
 export class VehicleArchiveCleanupProcessor {
@@ -18,24 +21,16 @@ export class VehicleArchiveCleanupProcessor {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    // Find all vehicles archived more than 30 days ago
     const archivedVehicles = await this.prisma.vehicule.findMany({
       where: {
         statut: StatutVehicule.ARCHIVE,
-        archiveLe: {
-          lte: thirtyDaysAgo,
-        },
+        archiveLe: { lte: thirtyDaysAgo },
       },
-      select: {
-        id: true,
-      },
+      select: { id: true },
     });
 
-    if (archivedVehicles.length === 0) {
-      return;
-    }
+    if (archivedVehicles.length === 0) return;
 
-    // Delete each vehicle and its photos
     for (const vehicle of archivedVehicles) {
       try {
         await this.deleteVehicleCompletely(vehicle.id);
@@ -45,25 +40,41 @@ export class VehicleArchiveCleanupProcessor {
     }
   }
 
-  private async deleteVehicleCompletely(vehicleId: string): Promise<void> {
-    // Get all photo public IDs
-    const photos = await this.prisma.photoVehicule.findMany({
-      where: { vehiculeId: vehicleId },
-      select: { publicId: true },
-    });
+  // Suppression différée des images Cloudinary après archivage (expiration cache CDN).
+  // Ne supprime pas l'enregistrement DB — le cron vehicle-archive-cleanup s'en charge à J+30.
+  @Process(VEHICLE_CLOUDINARY_DELETE_JOB)
+  async handleCloudinaryDelete(job: Job<{ vehicleId: string }>): Promise<void> {
+    await this.deleteCloudinaryAssets(job.data.vehicleId);
+  }
 
-    // Delete photos from Cloudinary
-    const publicIds = photos.map((p) => p.publicId).filter(Boolean) as string[];
+  private async deleteCloudinaryAssets(vehicleId: string): Promise<void> {
+    const [photos, vehicle] = await Promise.all([
+      this.prisma.photoVehicule.findMany({
+        where: { vehiculeId: vehicleId },
+        select: { publicId: true },
+      }),
+      this.prisma.vehicule.findUnique({
+        where: { id: vehicleId },
+        select: { carteGrisePublicId: true, assuranceDocPublicId: true },
+      }),
+    ]);
+
+    const publicIds = [
+      ...photos.map((p) => p.publicId).filter(Boolean) as string[],
+      vehicle?.carteGrisePublicId,
+      vehicle?.assuranceDocPublicId,
+    ].filter(Boolean) as string[];
+
     if (publicIds.length > 0) {
       await Promise.all(
-        publicIds.map((id) => this.cloudinary.deleteByPublicId(id).catch(() => { })),
+        publicIds.map((id) => this.cloudinary.deleteByPublicId(id).catch(() => {})),
       );
     }
+  }
 
-    // Delete vehicle from database (cascade will delete photos, equipment, etc.)
-    await this.prisma.vehicule.delete({
-      where: { id: vehicleId },
-    });
+  private async deleteVehicleCompletely(vehicleId: string): Promise<void> {
+    await this.deleteCloudinaryAssets(vehicleId);
+    await this.prisma.vehicule.delete({ where: { id: vehicleId } });
   }
 }
 

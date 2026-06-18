@@ -10,33 +10,19 @@ export async function SimilarVehicles({ currentVehicle }: SimilarVehiclesProps) 
     let similarVehicles: VehicleSearchResult[] = [];
 
     try {
-        // On cherche des véhicules dans la même ville et idéalement du même type
-        const res = await searchVehicles({
-            ville: currentVehicle.ville,
-            type: currentVehicle.type,
-        });
+        // Lancer les deux recherches en parallèle : par type+ville et par ville seule
+        const [typeRes, cityRes] = await Promise.all([
+            searchVehicles({ ville: currentVehicle.ville, type: currentVehicle.type }),
+            searchVehicles({ ville: currentVehicle.ville }),
+        ]);
 
-        if (res && Array.isArray(res.data)) {
-            // On exclut le véhicule actuel et on prend les 3 premiers
-            similarVehicles = res.data
-                .filter((v) => v.id !== currentVehicle.id)
-                .slice(0, 3);
-        }
-
-        // Si on n'en trouve pas assez avec le même type, on élargit juste à la ville
-        if (similarVehicles.length < 3) {
-            const fallbackRes = await searchVehicles({
-                ville: currentVehicle.ville,
-            });
-            if (fallbackRes && Array.isArray(fallbackRes.data)) {
-                const newVehicles = fallbackRes.data
-                    .filter((v) => v.id !== currentVehicle.id && !similarVehicles.find(sv => sv.id === v.id));
-                
-                similarVehicles = [...similarVehicles, ...newVehicles].slice(0, 3);
-            }
-        }
+        const byType = (typeRes?.data ?? []).filter((v) => v.id !== currentVehicle.id);
+        const byCity = (cityRes?.data ?? []).filter(
+            (v) => v.id !== currentVehicle.id && !byType.find((sv) => sv.id === v.id),
+        );
+        similarVehicles = [...byType, ...byCity].slice(0, 3);
     } catch (err) {
-        console.error("Failed to fetch similar vehicles:", err);
+        console.error('Failed to fetch similar vehicles:', err);
     }
 
     if (similarVehicles.length === 0) {

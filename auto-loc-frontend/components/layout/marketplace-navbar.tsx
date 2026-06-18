@@ -261,6 +261,9 @@ function SliderNav({ pathname }: { pathname: string }) {
 }
 
 
+// Résultat en mémoire de la vérification cookie NestJS — évite un fetch réseau à chaque navigation
+let _cachedNestAuthResult: boolean | null = null;
+
 /* ── Main navbar ─────────────────────────────────────────────── */
 export function MarketplaceNavbar() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -298,13 +301,19 @@ export function MarketplaceNavbar() {
       if (!isLoggedIn) {
         const nestActive = Boolean(useRoleStore.getState().activeRole);
         if (nestActive) {
-          // Verify the cookie is still valid
-          try {
-            const res = await fetch('/api/nest/auth/me', { credentials: 'include' });
-            isLoggedIn = res.ok;
-            if (!res.ok) useRoleStore.getState().clearRole();
-          } catch {
-            isLoggedIn = false;
+          if (_cachedNestAuthResult !== null) {
+            isLoggedIn = _cachedNestAuthResult;
+            if (!_cachedNestAuthResult) useRoleStore.getState().clearRole();
+          } else {
+            try {
+              const res = await fetch('/api/nest/auth/me', { credentials: 'include' });
+              _cachedNestAuthResult = res.ok;
+              isLoggedIn = res.ok;
+              if (!res.ok) useRoleStore.getState().clearRole();
+            } catch {
+              _cachedNestAuthResult = false;
+              isLoggedIn = false;
+            }
           }
         }
       }

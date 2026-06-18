@@ -27,6 +27,7 @@ export const NOTIFICATION_JOB_NAME = 'notification-dispatch';
 
 export const VEHICLE_QUEUE_NAME = 'vehicle-jobs';
 export const VEHICLE_ARCHIVE_CLEANUP_JOB = 'vehicle-archive-cleanup';
+export const VEHICLE_CLOUDINARY_DELETE_JOB = 'vehicle-cloudinary-delete';
 
 export function getBullModuleOptions(redisUrl: string): BullModuleOptions {
   const url = redisUrl.trim();

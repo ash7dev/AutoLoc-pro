@@ -460,33 +460,35 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
       <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 h-auto sm:h-20 py-4 sm:py-0">
-            <div className="flex items-center gap-4">
-              <Link href="/reservations" className="text-slate-400 hover:text-slate-600 transition-colors h-10 w-10 flex items-center justify-center rounded-full hover:bg-slate-100">
+            <div className="flex items-center gap-3 min-w-0">
+              <Link href="/reservations" className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition-colors h-9 w-9 flex items-center justify-center rounded-xl hover:bg-slate-100">
                 <ChevronRight className="w-5 h-5 rotate-180" />
               </Link>
-              <div>
+              <div className="min-w-0">
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Paramètres</h1>
-                <p className="text-sm text-slate-500 mt-1">Gérez vos informations personnelles et votre sécurité.</p>
+                <p className="hidden sm:block text-sm text-slate-500 mt-0.5">Gérez vos informations personnelles et votre sécurité.</p>
               </div>
             </div>
-            <div className="flex items-center justify-center sm:justify-end gap-2">
+            <div className="flex items-center gap-2">
               <Button
                 onClick={switchToProprietaire}
                 disabled={switchingRole}
                 variant="outline"
-                className="bg-white hover:bg-slate-50 text-slate-900 shadow-sm border-slate-200 group w-full sm:w-auto"
+                className="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-slate-900 shadow-sm border-slate-200 group"
               >
-                {switchingRole ? <Loader2 className="w-4 h-4 mr-2 animate-spin text-slate-500" /> : <RefreshCw className="w-4 h-4 mr-2 text-slate-500 group-hover:text-blue-600 transition-colors" />}
-                Mode Propriétaire
+                {switchingRole
+                  ? <Loader2 className="w-4 h-4 mr-2 animate-spin text-slate-500" />
+                  : <RefreshCw className="w-4 h-4 mr-2 text-slate-500 group-hover:text-blue-600 transition-colors" />
+                }
+                <span className="hidden sm:inline">Mode </span>Propriétaire
               </Button>
               <Button
                 onClick={handleLogout}
                 variant="outline"
-                className="bg-white hover:bg-red-50 text-red-600 border-red-200 shadow-sm shrink-0"
-                title="Se déconnecter"
+                className="flex-1 sm:flex-none bg-white hover:bg-red-50 text-red-600 border-red-200 shadow-sm"
               >
-                <LogOut className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Déconnexion</span>
+                <LogOut className="w-4 h-4 mr-2" />
+                Déconnexion
               </Button>
             </div>
           </div>

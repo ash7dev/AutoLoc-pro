@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { unstable_cache } from 'next/cache';
 import { fetchMe } from '../../../lib/nestjs/auth';
 import { OwnerSidebar } from '../../../features/owner/components/owner-sidebar';
+import { SettingsShell } from '../../../features/settings/components/settings-shell';
 
 export default async function SettingsLayout({
   children,
@@ -34,7 +35,9 @@ export default async function SettingsLayout({
     <div className="flex min-h-screen bg-page">
       <OwnerSidebar />
       <main className="flex-1 min-w-0 overflow-y-auto pt-14 pb-[90px] lg:pt-0 lg:pb-0">
-        {children}
+        <SettingsShell>
+          {children}
+        </SettingsShell>
       </main>
     </div>
   );

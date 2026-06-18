@@ -187,9 +187,13 @@ export class ConfirmPaymentUseCase {
                     return null;
                 });
 
-            // ── 8. Post-commit: Schedule signature expiry + notifications ──
+            // ── 8. Post-commit: Schedule signature expiry + rappel T+24h + notifications ──
             await this.queue
                 .scheduleSignatureExpiry(reservationId)
+                .catch(() => { });
+
+            await this.queue
+                .scheduleSignatureReminder(reservationId)
                 .catch(() => { });
 
             // Notification au locataire

@@ -107,7 +107,7 @@ export function WizardProgress({
       <div className="md:hidden">
         {/* Progress bar */}
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-[11px] font-black text-slate-900 tabular-nums">
+          <span className="text-[15px] sm:text-[13px] font-black text-slate-900 tabular-nums">
             {currentStep}/{STEPS.length}
           </span>
           <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
@@ -133,16 +133,16 @@ export function WizardProgress({
                 onClick={() => done && onStepClick?.(num)}
                 disabled={!done}
                 className={cn(
-                  "flex-shrink-0 snap-center flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] sm:text-[11px] font-bold border transition-all whitespace-nowrap",
+                  "flex-shrink-0 snap-center flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] sm:text-[12px] font-bold border transition-all whitespace-nowrap",
                   done && "bg-emerald-50 border-emerald-200 text-emerald-700",
                   active && "bg-slate-900 border-slate-900 text-white shadow-md shadow-slate-900/20",
                   !done && !active && "bg-slate-50 border-slate-100 text-slate-400",
                 )}
               >
                 {done ? (
-                  <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-500" strokeWidth={3} />
+                  <Check className="w-3.5 h-3.5 text-emerald-500" strokeWidth={3} />
                 ) : (
-                  <Icon className="w-2.5 h-2.5 sm:w-3 sm:h-3" strokeWidth={2} />
+                  <Icon className="w-3.5 h-3.5" strokeWidth={2} />
                 )}
                 {step.shortLabel}
               </button>

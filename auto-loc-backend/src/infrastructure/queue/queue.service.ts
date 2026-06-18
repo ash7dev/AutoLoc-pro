@@ -17,6 +17,7 @@ import {
   NOTIFICATION_JOB_NAME,
   VEHICLE_QUEUE_NAME,
   VEHICLE_ARCHIVE_CLEANUP_JOB,
+  VEHICLE_CLOUDINARY_DELETE_JOB,
 } from './queue.config';
 import { getCheckoutAutoCloseDelayMs } from '../../domain/reservation/reservation-checkin.constants';
 
@@ -165,7 +166,10 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
         }
 
         // 2. Rappel matin jour J : 9h UTC (ou T-2h si début avant 11h, min 7h)
-        //    Si ce créneau tombe après le début (ex: début 6h → créneau 7h), envoyer immédiatement.
+        //    Si le créneau calculé dépasse l'heure de début (ex: début 03h15 → créneau 07h00 > 03h15),
+        //    on ne fait RIEN ici : le rappel veille (J-1 9h) + urgent (T+2h) couvrent ce cas.
+        //    IMPORTANT : ne jamais envoyer en immédiat (delay:0) depuis la branche "autre jour",
+        //    car cela enverrait le message "la location commence aujourd'hui" des jours à l'avance.
         const jourJ = new Date(dateDebut);
         const startHour = dateDebut.getUTCHours();
         jourJ.setUTCHours(startHour < 11 ? Math.max(7, startHour - 2) : 9, 0, 0, 0);
@@ -177,14 +181,9 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
             { reservationId, forcedType: 'jour' as const },
             { delay: delayJourJ },
           );
-        } else {
-          // Créneau déjà passé ou après le début → rappel immédiat
-          await this.reservationQueue.add(
-            RESERVATION_CHECKIN_REMINDER_JOB,
-            { reservationId, forcedType: 'jour' as const },
-            { delay: 0 },
-          );
         }
+        // else: créneau après le début (début trop tôt le matin) → on skip,
+        // le rappel veille + urgent T+2h sont suffisants.
       }
     }
 
@@ -244,7 +243,8 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
 
   /** Rappels locataire H+0 et H+12 après check-in proprio (validation tacite annoncée). */
   async scheduleTacitCheckinReminders(reservationId: string): Promise<void> {
-    const twelveHours = 12 * 60 * 60 * 1000;
+    const twelveHours  = 12 * 60 * 60 * 1000;
+    const twentyTwoHours = 22 * 60 * 60 * 1000;
     await this.reservationQueue.add(
       RESERVATION_TACIT_CHECKIN_REMINDER_JOB,
       { reservationId, phase: 'immediate' as const },
@@ -254,6 +254,12 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
       RESERVATION_TACIT_CHECKIN_REMINDER_JOB,
       { reservationId, phase: 'mid' as const },
       { delay: twelveHours },
+    );
+    // Dernière chance 2h avant la validation tacite (H+22 sur une fenêtre de 24h)
+    await this.reservationQueue.add(
+      RESERVATION_TACIT_CHECKIN_REMINDER_JOB,
+      { reservationId, phase: 'last' as const },
+      { delay: twentyTwoHours },
     );
   }
 
@@ -294,6 +300,19 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     if (job) {
       await job.remove();
     }
+  }
+
+  // Supprime les images Cloudinary d'un véhicule après un délai (expiration cache CDN).
+  async scheduleCloudinaryDelete(
+    vehicleId: string,
+    delayMs: number = 24 * 60 * 60 * 1000,
+  ): Promise<string> {
+    const job = await this.vehicleQueue.add(
+      VEHICLE_CLOUDINARY_DELETE_JOB,
+      { vehicleId },
+      { delay: delayMs },
+    );
+    return String(job.id);
   }
 
   async onModuleDestroy(): Promise<void> {

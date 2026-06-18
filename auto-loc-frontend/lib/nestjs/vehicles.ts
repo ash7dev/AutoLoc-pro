@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { apiFetch } from './api-client';
 
 // ── Enums / Unions ────────────────────────────────────────────────────────────
@@ -355,16 +356,18 @@ export async function fetchMyVehicles(accessToken: string): Promise<Vehicle[]> {
 
 /**
  * Récupère le détail d'un véhicule (RSC ou public).
+ * Wrappé avec React.cache pour déduplication au sein d'un même render pass
+ * (generateMetadata + page body appellent la même URL sans double fetch réseau).
  */
-export async function fetchVehicle(
+export const fetchVehicle = cache(async (
   id: string,
   accessToken?: string,
-): Promise<Vehicle> {
-  return apiFetch<Vehicle>(VEHICLE_PATHS.detail(id), { 
+): Promise<Vehicle> => {
+  return apiFetch<Vehicle>(VEHICLE_PATHS.detail(id), {
     accessToken,
-    next: { revalidate: 60 } 
+    next: { revalidate: 60 },
   });
-}
+});
 
 /**
  * Recherche publique de véhicules disponibles (RSC ou client sans auth).

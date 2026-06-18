@@ -9,7 +9,7 @@ export const INPUT_CLASS =
 export const SELECT_CLASS =
   "w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-base lg:text-[13px] font-medium text-slate-900 outline-none appearance-none cursor-pointer transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-50";
 
-export const LABEL_CLASS = "text-[12px] font-bold text-slate-700 uppercase tracking-wide";
+export const LABEL_CLASS = "text-[14px] sm:text-[13px] font-bold text-slate-700 uppercase tracking-[0.04em]";
 
 /* ═══════════════════════════════════════════════════════════════════
    Shared UI primitives
@@ -39,8 +39,8 @@ export function SectionCard({
             <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" strokeWidth={2} />
           </span>
           <div>
-            <p className="text-[13px] sm:text-[14px] font-bold text-slate-900 tracking-tight">{title}</p>
-            <p className="text-[10px] sm:text-[11px] font-medium text-slate-400 mt-0.5">{subtitle}</p>
+            <p className="text-[15px] sm:text-[14px] font-bold text-slate-900 tracking-tight">{title}</p>
+            <p className="text-[13px] sm:text-[12px] font-medium text-slate-400 mt-0.5">{subtitle}</p>
           </div>
         </div>
         {badge && <div>{badge}</div>}

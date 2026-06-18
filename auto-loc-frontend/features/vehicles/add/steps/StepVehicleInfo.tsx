@@ -186,7 +186,7 @@ export function StepVehicleInfo({ onNext }: Props) {
                     {...register("type", { required: true })}
                     className="sr-only"
                   />
-                  <span className="text-[12px] font-bold">{t.label}</span>
+                  <span className="text-[14px] sm:text-[13px] font-bold">{t.label}</span>
                 </label>
               );
             })}
@@ -268,7 +268,7 @@ export function StepVehicleInfo({ onNext }: Props) {
                   className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0", active ? "text-emerald-500" : "text-slate-400")}
                   strokeWidth={2}
                 />
-                <span className={cn("text-[11px] sm:text-[12px] font-bold leading-tight", active ? "text-emerald-700" : "text-slate-600")}>
+                <span className={cn("text-[13px] sm:text-[12px] font-bold leading-tight", active ? "text-emerald-700" : "text-slate-600")}>
                   {eq.label}
                 </span>
                 {active && (

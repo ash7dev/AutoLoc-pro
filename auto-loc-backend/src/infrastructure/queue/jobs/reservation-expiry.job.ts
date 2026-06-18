@@ -26,6 +26,7 @@ import { ContractGenerationService } from '../../../domain/reservation/contract-
 const SYSTEM_SIGNATURE_REMINDER = 'SYSTEM_SIGNATURE_REMINDER';
 const SYSTEM_TACIT_REMINDER_IMMEDIATE = 'SYSTEM_TACIT_REMINDER_IMMEDIATE';
 const SYSTEM_TACIT_REMINDER_MID = 'SYSTEM_TACIT_REMINDER_MID';
+const SYSTEM_TACIT_REMINDER_LAST = 'SYSTEM_TACIT_REMINDER_LAST';
 
 @Processor(RESERVATION_QUEUE_NAME)
 export class ReservationExpiryProcessor {
@@ -275,7 +276,7 @@ export class ReservationExpiryProcessor {
 
   @Process(RESERVATION_TACIT_CHECKIN_REMINDER_JOB)
   async handleTacitCheckinReminder(
-    job: Job<{ reservationId: string; phase: 'immediate' | 'mid' }>,
+    job: Job<{ reservationId: string; phase: 'immediate' | 'mid' | 'last' }>,
   ): Promise<void> {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: job.data.reservationId },
@@ -300,7 +301,9 @@ export class ReservationExpiryProcessor {
     const tag =
       job.data.phase === 'immediate'
         ? SYSTEM_TACIT_REMINDER_IMMEDIATE
-        : SYSTEM_TACIT_REMINDER_MID;
+        : job.data.phase === 'mid'
+          ? SYSTEM_TACIT_REMINDER_MID
+          : SYSTEM_TACIT_REMINDER_LAST;
     if (await this.wasReminderSent(job.data.reservationId, tag)) {
       return;
     }
@@ -370,6 +373,43 @@ export class ReservationExpiryProcessor {
 
     if (outcome.closed) {
       await this.queue.schedulePostCheckout(job.data.reservationId).catch(() => { });
+
+      // Notifications checkout + demande d'avis (identique au checkout manuel)
+      const res = await this.prisma.reservation.findUnique({
+        where: { id: job.data.reservationId },
+        select: {
+          locataireId: true,
+          proprietaireId: true,
+          locataire: { select: { email: true, telephone: true } },
+          proprietaire: { select: { email: true, telephone: true } },
+          vehicule: { select: { marque: true, modele: true } },
+        },
+      });
+
+      if (res) {
+        const vehicule = res.vehicule
+          ? `${res.vehicule.marque} ${res.vehicule.modele}`
+          : 'véhicule';
+
+        await Promise.all([
+          this.notification.send({
+            type: 'reservation.checkout',
+            userId: res.locataireId,
+            email: res.locataire?.email ?? undefined,
+            phone: res.locataire?.telephone ?? undefined,
+            data: { reservationId: job.data.reservationId, vehicule, isOwner: false },
+          }),
+          this.notification.send({
+            type: 'reservation.checkout',
+            userId: res.proprietaireId,
+            email: res.proprietaire?.email ?? undefined,
+            phone: res.proprietaire?.telephone ?? undefined,
+            data: { reservationId: job.data.reservationId, vehicule, isOwner: true },
+          }),
+        ]).catch(() => { });
+
+        await this.queue.scheduleAvisRequest(job.data.reservationId).catch(() => { });
+      }
     }
   }
 
