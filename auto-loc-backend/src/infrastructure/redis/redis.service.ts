@@ -73,6 +73,14 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * Get Time To Live (TTL) of a key in seconds.
+   * @returns TTL in seconds, -1 if no expiry, -2 if key doesn't exist
+   */
+  async ttl(key: string): Promise<number> {
+    return this.getClient().ttl(key);
+  }
+
+  /**
    * Set if Not Exists (for distributed locks).
    * @returns true if key was set, false if key already existed
    */

@@ -70,6 +70,16 @@ export class VehiclesController {
   }
 
   /**
+   * GET /vehicles/feed/mobile — Feed mobile ultra-complet avec 10 sections.
+   * Optimisé pour scroll infini. Public, cache Redis 180s.
+   * Doit être AVANT GET :id pour éviter que "feed/mobile" soit capturé comme UUID.
+   */
+  @Get('feed/mobile')
+  getMobileFeed() {
+    return this.vehiclesService.getMobileFeed();
+  }
+
+  /**
    * GET /vehicles/upload-signature — Génère une signature Cloudinary pour l'upload direct.
    * Le frontend upload le fichier directement vers Cloudinary sans passer par ce serveur.
    */

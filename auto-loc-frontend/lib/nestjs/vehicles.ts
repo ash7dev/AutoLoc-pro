@@ -181,6 +181,26 @@ export interface HomeFeedResponse {
   };
 }
 
+/**
+ * Feed mobile ultra-complet avec 10 sections
+ * Endpoint: GET /vehicles/feed/mobile
+ */
+export interface MobileFeedResponse {
+  premium: VehicleSearchResult[];           // 8 - Premium (isFeatured + meilleurs scores)
+  nouveautes: VehicleSearchResult[];        // 8 - Créés dans les 14 derniers jours
+  topNotes: VehicleSearchResult[];          // 8 - Note ≥ 4.5★ avec min 3 avis
+  economiques: VehicleSearchResult[];       // 8 - Prix ≤ médiane
+  luxe: VehicleSearchResult[];              // 8 - Prix > 75e percentile OU type LUXE
+  dakar: VehicleSearchResult[];             // 8 - Populaires à Dakar
+  thies: VehicleSearchResult[];             // 8 - Populaires à Thiès
+  suvMoment: VehicleSearchResult[];         // 8 - SUV et 4x4 populaires
+  berlinesPopulaires: VehicleSearchResult[]; // 8 - Berlines et citadines
+  recommended: {
+    items: VehicleSearchResult[];           // 8 - Recommandés (exclusion des IDs)
+    excludedIds: string[];
+  };
+}
+
 // ── Client cache (public search) ──────────────────────────────────────────────
 
 const SEARCH_CACHE_TTL_MS = 60_000; // 60 seconds cache for better performance
@@ -196,6 +216,7 @@ export const VEHICLE_PATHS = {
   create: '/vehicles',
   search: '/vehicles/search',
   feed: '/vehicles/feed',
+  mobileFeed: '/vehicles/feed/mobile',
   me: '/vehicles/me',
   detail: (id: string) => `/vehicles/${id}`,
   update: (id: string) => `/vehicles/${id}`,
@@ -423,6 +444,16 @@ export async function searchVehicles(
  */
 export async function fetchHomeFeed(): Promise<HomeFeedResponse> {
   return apiFetch<HomeFeedResponse>(VEHICLE_PATHS.feed, {
+    next: { revalidate: 60 },
+  });
+}
+
+/**
+ * Récupère le feed mobile ultra-complet avec 10 sections.
+ * Cache 180s côté serveur.
+ */
+export async function fetchMobileFeed(): Promise<MobileFeedResponse> {
+  return apiFetch<MobileFeedResponse>(VEHICLE_PATHS.mobileFeed, {
     next: { revalidate: 60 },
   });
 }
