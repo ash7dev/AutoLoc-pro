@@ -8,16 +8,7 @@ import { ShieldCheck, Clock, Zap, ArrowRight } from 'lucide-react';
 export function MobileIntroCard(): React.ReactElement {
   return (
     <div className="px-4 py-2">
-      <div className="relative overflow-hidden rounded-3xl bg-slate-950 p-6 border border-white/5 shadow-xl shadow-slate-950/20">
-        {/* Neon glow behind the vehicle (Option 2 - Neon 3D) */}
-        <div
-          className="absolute right-[-10%] top-[10%] w-[55%] h-[75%] rounded-full opacity-40 blur-3xl pointer-events-none animate-pulse"
-          style={{
-            background: 'radial-gradient(circle, #10b981 0%, transparent 70%)',
-            animationDuration: '4s',
-          }}
-        />
-
+      <div className="relative overflow-hidden rounded-3xl bg-black p-6 border border-white/5 shadow-xl shadow-black/25">
         {/* Floating premium vehicle image (Option 2 - Neon 3D) */}
         <div className="absolute right-0 bottom-0 top-0 w-[48%] pointer-events-none overflow-hidden select-none z-0">
           <div className="absolute right-[-6%] bottom-[-2%] w-[115%] h-[82%] flex items-end justify-end">
@@ -30,10 +21,8 @@ export function MobileIntroCard(): React.ReactElement {
               className="object-contain object-right-bottom mix-blend-lighten opacity-85 transition-all duration-700 hover:scale-105"
             />
           </div>
-          {/* Subtle dark to transparent gradient mask to merge with slate-950 on the left */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
-          {/* Emerald accent glow overlay */}
-          <div className="absolute inset-0 bg-emerald-500/5 mix-blend-overlay" />
+          {/* Subtle dark to transparent gradient mask to merge with black on the left */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
         </div>
         
         <div className="relative z-10">
@@ -43,10 +32,10 @@ export function MobileIntroCard(): React.ReactElement {
               <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400">AutoLoc Sénégal</span>
             </div>
 
-            <h2 className="text-[19px] font-black text-white tracking-tight leading-tight">
-              Louez en toute confiance et <span className="text-emerald-400">sans compromis</span>
+            <h2 className="text-[21px] font-extrabold text-white tracking-tight leading-[1.15]">
+              Louez en toute confiance <span className="block mt-0.5 text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-300 font-black">sans compromis</span>
             </h2>
-            <p className="mt-1.5 text-[11px] font-medium text-white/40 leading-relaxed">
+            <p className="mt-2 text-[11px] font-medium text-white/40 leading-relaxed">
               Des véhicules vérifiés à Dakar et partout au Sénégal.
             </p>
 
