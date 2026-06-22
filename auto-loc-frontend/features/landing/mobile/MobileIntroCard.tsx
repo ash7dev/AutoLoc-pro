@@ -20,18 +20,18 @@ export function MobileIntroCard(): React.ReactElement {
 
         {/* Floating premium vehicle image (Option 2 - Neon 3D) */}
         <div className="absolute right-0 bottom-0 top-0 w-[48%] pointer-events-none overflow-hidden select-none z-0">
-          <div className="absolute right-[-10%] bottom-[-5%] w-[120%] h-[80%] flex items-end justify-end">
+          <div className="absolute right-[-6%] bottom-[-2%] w-[115%] h-[82%] flex items-end justify-end">
             <Image
-              src="/banner-premium.png"
+              src="/images/premium_car_banner.png"
               alt="AutoLoc Premium Car"
               width={260}
-              height={150}
+              height={260}
               priority
-              className="object-contain object-right-bottom mix-blend-lighten opacity-90 transition-all duration-700 hover:scale-105"
+              className="object-contain object-right-bottom mix-blend-lighten opacity-85 transition-all duration-700 hover:scale-105"
             />
           </div>
           {/* Subtle dark to transparent gradient mask to merge with slate-950 on the left */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
           {/* Emerald accent glow overlay */}
           <div className="absolute inset-0 bg-emerald-500/5 mix-blend-overlay" />
         </div>
@@ -43,11 +43,11 @@ export function MobileIntroCard(): React.ReactElement {
               <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400">AutoLoc Sénégal</span>
             </div>
 
-            <h2 className="text-xl font-black text-white tracking-tight leading-tight">
+            <h2 className="text-[19px] font-black text-white tracking-tight leading-tight">
               Louez en toute confiance et <span className="text-emerald-400">sans compromis</span>
             </h2>
-            <p className="mt-2 text-[12px] font-medium text-white/50 leading-relaxed">
-              Trouvez et réservez des véhicules de propriétaires vérifiés à Dakar et partout au Sénégal en quelques clics.
+            <p className="mt-1.5 text-[11px] font-medium text-white/40 leading-relaxed">
+              Des véhicules vérifiés à Dakar et partout au Sénégal.
             </p>
 
             <Link
