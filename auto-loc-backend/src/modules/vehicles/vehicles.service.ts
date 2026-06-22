@@ -1316,11 +1316,12 @@ export class VehiclesService {
     ];
     const uniqueUsedIds = [...new Set(usedIds)];
 
+    // Essayer d'abord sans les IDs déjà utilisés
     const excludeCondition = uniqueUsedIds.length
       ? Prisma.sql`AND v.id NOT IN (${Prisma.join(uniqueUsedIds)})`
       : Prisma.empty;
 
-    const recommendedRaw = await this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
+    let recommendedRaw = await this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
       SELECT
         ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
         COALESCE(m."scoreGlobal", 0) as "scoreGlobal"
@@ -1331,6 +1332,27 @@ export class VehiclesService {
       ORDER BY COALESCE(m."scoreGlobal", 0) DESC, RANDOM()
       LIMIT ${Prisma.raw(String(SECTION_SIZE * 2))}
     `;
+
+    // 🔥 BACKFILL RECOMMANDÉS : Si le catalogue est petit et qu'il n'y a pas assez de véhicules,
+    // autoriser la duplication pour garantir que cette section ne soit jamais vide
+    if (recommendedRaw.length < SECTION_SIZE) {
+      this.logger.warn(
+        `[buildMobileFeed] Section Recommandés insuffisante (${recommendedRaw.length}/${SECTION_SIZE}). ` +
+        `Activation du backfill avec duplication autorisée.`
+      );
+      const backfill = await this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
+        SELECT
+          ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
+          COALESCE(m."scoreGlobal", 0) as "scoreGlobal"
+        FROM "Vehicule" v
+        LEFT JOIN "vehicule_metrics" m ON m."vehiculeId" = v.id
+        WHERE v.statut::text = 'VERIFIE'
+        ORDER BY COALESCE(m."scoreGlobal", 0) DESC, RANDOM()
+        LIMIT ${Prisma.raw(String(SECTION_SIZE))}
+      `;
+      recommendedRaw = backfill.length > 0 ? backfill : recommendedRaw;
+    }
+
     const recommended = this.feedOptimizer.diversifyByGeography(recommendedRaw, SECTION_SIZE);
 
     // ── Hydratation des tarifs progressifs ──────────────────────────────
