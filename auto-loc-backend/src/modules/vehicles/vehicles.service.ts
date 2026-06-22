@@ -961,7 +961,6 @@ export class VehiclesService {
         economiques: [],
         luxe: [],
         dakar: [],
-        thies: [],
         suvMoment: [],
         berlinesPopulaires: [],
         recommended: { items: [], excludedIds: [] },
@@ -1236,35 +1235,7 @@ export class VehiclesService {
     }
     const dakar = dakarRaw;
 
-    // ── 7. POPULAIRES À THIÈS ────────────────────────────────────────────
-    let thiesRaw = await this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
-      SELECT
-        ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
-        COALESCE(m."scoreGlobal", 0) as "scoreGlobal"
-      FROM "Vehicule" v
-      LEFT JOIN "vehicule_metrics" m ON m."vehiculeId" = v.id
-      WHERE v.statut::text = 'VERIFIE'
-        AND LOWER(v.ville) = 'thiès'
-      ORDER BY COALESCE(m."scoreGlobal", 0) DESC, v."totalLocations" DESC
-      LIMIT ${Prisma.raw(String(SECTION_SIZE))}
-    `;
-
-    // Backfill Thiès si vide
-    if (thiesRaw.length === 0) {
-      thiesRaw = await this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
-        SELECT
-          ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
-          COALESCE(m."scoreGlobal", 0) as "scoreGlobal"
-        FROM "Vehicule" v
-        LEFT JOIN "vehicule_metrics" m ON m."vehiculeId" = v.id
-        WHERE v.statut::text = 'VERIFIE'
-        ORDER BY COALESCE(m."scoreGlobal", 0) DESC, v."totalLocations" DESC
-        LIMIT ${Prisma.raw(String(SECTION_SIZE))}
-      `;
-    }
-    const thies = thiesRaw;
-
-    // ── 8. SUV DU MOMENT ─────────────────────────────────────────────────
+    // ── 7. SUV DU MOMENT ─────────────────────────────────────────────────
     let suvRaw = await this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
       SELECT
         ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
@@ -1332,7 +1303,7 @@ export class VehiclesService {
     }
     const berlinesPopulaires = this.feedOptimizer.diversifyByGeography(berlinesRaw, SECTION_SIZE);
 
-    // ── 10. RECOMMANDÉS (aléatoire avec score, exclusion des IDs utilisés) ─
+    // ── 8. RECOMMANDÉS (aléatoire avec score, exclusion des IDs utilisés) ─
     const usedIds = [
       ...premium.map((r) => r.id),
       ...nouveautes.map((r) => r.id),
@@ -1340,7 +1311,6 @@ export class VehiclesService {
       ...economiques.map((r) => r.id),
       ...luxe.map((r) => r.id),
       ...dakar.map((r) => r.id),
-      ...thies.map((r) => r.id),
       ...suvMoment.map((r) => r.id),
       ...berlinesPopulaires.map((r) => r.id),
     ];
@@ -1377,7 +1347,6 @@ export class VehiclesService {
       economiques: economiques.map((r) => this.mapSearchRow(r, tiersByVehicle)),
       luxe: luxe.map((r) => this.mapSearchRow(r, tiersByVehicle)),
       dakar: dakar.map((r) => this.mapSearchRow(r, tiersByVehicle)),
-      thies: thies.map((r) => this.mapSearchRow(r, tiersByVehicle)),
       suvMoment: suvMoment.map((r) => this.mapSearchRow(r, tiersByVehicle)),
       berlinesPopulaires: berlinesPopulaires.map((r) => this.mapSearchRow(r, tiersByVehicle)),
       recommended: {

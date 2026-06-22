@@ -182,7 +182,7 @@ export interface HomeFeedResponse {
 }
 
 /**
- * Feed mobile ultra-complet avec 10 sections
+ * Feed mobile ultra-complet avec 9 sections
  * Endpoint: GET /vehicles/feed/mobile
  */
 export interface MobileFeedResponse {
@@ -192,7 +192,6 @@ export interface MobileFeedResponse {
   economiques: VehicleSearchResult[];       // 8 - Prix ≤ médiane
   luxe: VehicleSearchResult[];              // 8 - Prix > 75e percentile OU type LUXE
   dakar: VehicleSearchResult[];             // 8 - Populaires à Dakar
-  thies: VehicleSearchResult[];             // 8 - Populaires à Thiès
   suvMoment: VehicleSearchResult[];         // 8 - SUV et 4x4 populaires
   berlinesPopulaires: VehicleSearchResult[]; // 8 - Berlines et citadines
   recommended: {
