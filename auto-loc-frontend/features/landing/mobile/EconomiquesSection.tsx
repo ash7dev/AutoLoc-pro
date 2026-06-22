@@ -1,0 +1,44 @@
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import { Wallet, ArrowRight } from 'lucide-react';
+import type { VehicleSearchResult } from '@/lib/nestjs/vehicles';
+import { CompactVehicleCard } from '@/features/vehicles/components/CompactVehicleCard';
+
+interface EconomiquesSectionProps {
+  vehicles: VehicleSearchResult[];
+}
+
+export function EconomiquesSection({ vehicles }: EconomiquesSectionProps): React.ReactElement | null {
+  if (!vehicles || vehicles.length === 0) return null;
+
+  return (
+    <div className="py-4 border-t border-slate-50 px-4">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h3 className="text-[14px] font-black text-slate-800 tracking-tight uppercase flex items-center gap-1.5">
+            <Wallet className="h-4 w-4 text-blue-500" />
+            Économiques
+          </h3>
+          <p className="text-[10px] font-medium text-slate-400 mt-0.5 leading-none">
+            Les meilleurs prix
+          </p>
+        </div>
+
+        <Link
+          href="/explorer?tri=prix-asc"
+          className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5"
+        >
+          Voir tout <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        {vehicles.slice(0, 4).map((v) => (
+          <CompactVehicleCard key={v.id} vehicle={v} />
+        ))}
+      </div>
+    </div>
+  );
+}

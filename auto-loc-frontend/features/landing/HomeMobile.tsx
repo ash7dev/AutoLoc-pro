@@ -1,13 +1,19 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { fetchHomeFeed, type HomeFeedResponse } from '@/lib/nestjs/vehicles';
+import { fetchMobileFeed, type MobileFeedResponse } from '@/lib/nestjs/vehicles';
 import { MobileSearchBar } from './mobile/MobileSearchBar';
 import { MobileIntroCard } from './mobile/MobileIntroCard';
 import { MobileCategoriesCarousel } from './mobile/MobileCategoriesCarousel';
 import { NearbyVehiclesSection } from './mobile/NearbyVehiclesSection';
 import { PremiumSelectionGrid } from './mobile/PremiumSelectionGrid';
 import { NouveautesSection } from './NouveautesSection';
+import { TopNotesSection } from './mobile/TopNotesSection';
+import { EconomiquesSection } from './mobile/EconomiquesSection';
+import { LuxeSection } from './mobile/LuxeSection';
+import { DakarSection } from './mobile/DakarSection';
+import { SUVSection } from './mobile/SUVSection';
+import { BerlinesSection } from './mobile/BerlinesSection';
 import { HowItWorksSection } from './HowItWorksSection';
 import { BecomeHostCTA } from './BecomeHostCTA';
 import { Footer } from './Footer';
@@ -52,18 +58,18 @@ function GridSkeleton() {
 }
 
 interface HomeMobileProps {
-  initialFeed: HomeFeedResponse | null;
+  initialFeed: MobileFeedResponse | null;
 }
 
 export function HomeMobile({ initialFeed }: HomeMobileProps): React.ReactElement {
-  const [feed, setFeed] = useState<HomeFeedResponse | null>(initialFeed);
+  const [feed, setFeed] = useState<MobileFeedResponse | null>(initialFeed);
   const [loading, setLoading] = useState(!initialFeed);
 
   useEffect(() => {
     // If we didn't receive initial feed (e.g. client navigation or failed server fetch), load it on the client
     if (!initialFeed) {
       setLoading(true);
-      fetchHomeFeed()
+      fetchMobileFeed()
         .then((data) => {
           setFeed(data);
           setLoading(false);
@@ -105,17 +111,35 @@ export function HomeMobile({ initialFeed }: HomeMobileProps): React.ReactElement
         </>
       ) : (
         <>
-          {/* Recommandé — carousel, alimenté par le feed accueil + géolocalisation */}
+          {/* 1. Recommandé — carousel, alimenté par le feed accueil + géolocalisation */}
           <NearbyVehiclesSection
             initialVehicles={feed?.recommended.items ?? []}
             excludeIds={feed?.recommended.excludedIds ?? []}
           />
 
-          {/* Sélection Premium — grille, triée par nb de réservations côté backend */}
+          {/* 2. Sélection Premium — grille, triée par nb de réservations côté backend */}
           <PremiumSelectionGrid vehicles={feed?.premium ?? []} />
 
-          {/* Nouveautés — carousel, véhicules ajoutés récemment */}
+          {/* 3. Nouveautés — carousel, véhicules ajoutés récemment */}
           <NouveautesSection vehicles={feed?.nouveautes ?? []} />
+
+          {/* 4. Top Notés — carousel, note ≥ 4.5★ */}
+          <TopNotesSection vehicles={feed?.topNotes ?? []} />
+
+          {/* 5. Économiques — grille, prix ≤ médiane */}
+          <EconomiquesSection vehicles={feed?.economiques ?? []} />
+
+          {/* 6. Luxe — grille, véhicules haut de gamme */}
+          <LuxeSection vehicles={feed?.luxe ?? []} />
+
+          {/* 7. Dakar — carousel, véhicules disponibles à Dakar */}
+          <DakarSection vehicles={feed?.dakar ?? []} />
+
+          {/* 8. SUV du moment — carousel, SUV et 4x4 populaires */}
+          <SUVSection vehicles={feed?.suvMoment ?? []} />
+
+          {/* 9. Berlines populaires — grille, berlines et citadines */}
+          <BerlinesSection vehicles={feed?.berlinesPopulaires ?? []} />
         </>
       )}
 
