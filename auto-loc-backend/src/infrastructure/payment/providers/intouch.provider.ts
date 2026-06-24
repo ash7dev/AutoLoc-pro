@@ -122,7 +122,7 @@ export class IntouchProvider implements PaymentProviderInterface {
         let paymentUrl: string | undefined;
         try {
             const resData = JSON.parse(responseText);
-            paymentUrl = resData.deepLink ?? resData.MAXIT ?? resData.OM ?? resData.paymentUrl;
+            paymentUrl = resData.deepLink ?? resData.MAXIT ?? resData.OM ?? resData.paymentUrl ?? resData.payment_url;
         } catch {
             this.logger.warn('Impossible de parser la réponse JSON d\'InTouch');
         }
