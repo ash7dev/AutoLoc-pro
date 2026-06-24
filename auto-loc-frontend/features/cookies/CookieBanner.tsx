@@ -79,7 +79,7 @@ export function CookieBanner() {
             {/* Actions */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 ml-11">
               <Link
-                href="/politique-de-confidentialite"
+                href="/legal/privacy"
                 className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-slate-400 hover:text-emerald-600 transition-colors"
               >
                 Politique de confidentialité

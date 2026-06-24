@@ -363,6 +363,7 @@ export function BannerSection(): React.ReactElement {
                         value={filters.ville}
                         onChange={(e) => handleChange('ville', e.target.value)}
                         className={FIELD_CLASS}
+                        aria-label="Ville"
                       >
                         {ZONES_DAKAR.map(({ value, label }) => (
                           <option key={value} value={value} className="bg-slate-900 text-white">
@@ -381,6 +382,7 @@ export function BannerSection(): React.ReactElement {
                         value={filters.type}
                         onChange={(e) => handleChange('type', e.target.value)}
                         className={FIELD_CLASS}
+                        aria-label="Type de véhicule"
                       >
                         {TYPES_VEHICULES.map(({ value, label }) => (
                           <option key={value} value={value} className="bg-slate-900 text-white">
@@ -399,6 +401,7 @@ export function BannerSection(): React.ReactElement {
                         value={filters.prixMax}
                         onChange={(e) => handleChange('prixMax', e.target.value)}
                         className={FIELD_CLASS}
+                        aria-label="Budget maximum par jour"
                       >
                         {PRIX_MAX_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value} className="bg-slate-900 text-white">
@@ -482,6 +485,7 @@ export function BannerSection(): React.ReactElement {
                 value={filters.ville}
                 onChange={(e) => handleChange('ville', e.target.value)}
                 className={FIELD_CLASS}
+                aria-label="Ville"
               >
                 {ZONES_DAKAR.map(({ value, label }) => (
                   <option key={value} value={value} className="bg-slate-900 text-white">
@@ -502,6 +506,7 @@ export function BannerSection(): React.ReactElement {
                 value={filters.type}
                 onChange={(e) => handleChange('type', e.target.value)}
                 className={FIELD_CLASS}
+                aria-label="Type de véhicule"
               >
                 {TYPES_VEHICULES.map(({ value, label }) => (
                   <option key={value} value={value} className="bg-slate-900 text-white">
@@ -522,6 +527,7 @@ export function BannerSection(): React.ReactElement {
                 value={filters.prixMax}
                 onChange={(e) => handleChange('prixMax', e.target.value)}
                 className={FIELD_CLASS}
+                aria-label="Budget maximum par jour"
               >
                 {PRIX_MAX_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value} className="bg-slate-900 text-white">

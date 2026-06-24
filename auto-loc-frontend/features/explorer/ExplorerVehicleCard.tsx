@@ -122,6 +122,7 @@ function FeaturedCard({ vehicle }: { vehicle: VehicleCardItem }) {
 
         {/* fav */}
         <button type="button" onClick={e => { e.preventDefault(); setLiked(l => !l); }}
+          aria-label={liked ? "Retirer des favoris" : "Ajouter aux favoris"}
           className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center hover:border-red-400/30 hover:bg-red-400/10 transition-all z-10">
           <Heart className={cn('h-4 w-4 transition-colors', liked ? 'fill-red-500 text-red-500' : 'text-white/60')} strokeWidth={2} />
         </button>
@@ -306,6 +307,7 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
           <button
             type="button"
             onClick={e => { e.preventDefault(); setLiked(l => !l); }}
+            aria-label={liked ? "Retirer des favoris" : "Ajouter aux favoris"}
             className={cn(
               'w-7 h-7 rounded-full flex items-center justify-center',
               'backdrop-blur-md border transition-all duration-200',
