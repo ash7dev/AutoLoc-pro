@@ -13,6 +13,7 @@ import {
 import { SkipThrottle } from '@nestjs/throttler';
 import { PaymentProviderFactory } from '../../infrastructure/payment/payment-provider.factory';
 import { ConfirmPaymentUseCase } from '../../domain/reservation/use-cases/confirm-payment.use-case';
+import { ExpireReservationUseCase } from '../../domain/reservation/use-cases/expire-reservation.use-case';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @SkipThrottle()
@@ -23,6 +24,7 @@ export class PaymentWebhookController {
     constructor(
         private readonly providerFactory: PaymentProviderFactory,
         private readonly confirmPayment: ConfirmPaymentUseCase,
+        private readonly expireUseCase: ExpireReservationUseCase,
         private readonly prisma: PrismaService,
     ) { }
 
@@ -114,6 +116,7 @@ export class PaymentWebhookController {
             this.logger.warn(
                 `WEBHOOK_FAILED [${routeName}] : txId=${payload.transactionId}, ref=${payload.referenceId}`,
             );
+            await this.handlePaymentFailure(payload.referenceId);
         }
 
         this.logger.log(
@@ -147,6 +150,32 @@ export class PaymentWebhookController {
             .catch((err) => {
                 this.logger.error(
                     `WEBHOOK_CONFIRM_ERROR : reservationId=${paiement.reservationId}, ` +
+                    `erreur=${err.message}`,
+                );
+            });
+    }
+
+    // ── Échec paiement ─────────────────────────────────────────────────────────
+
+    private async handlePaymentFailure(referenceId: string): Promise<void> {
+        // Le referenceId = paymentRef stocké dans Paiement.idTransactionFournisseur
+        const paiement = await this.prisma.paiement.findFirst({
+            where: { idTransactionFournisseur: referenceId },
+            select: { reservationId: true },
+        });
+
+        if (!paiement) {
+            this.logger.warn(
+                `WEBHOOK_PAIEMENT_FAILURE_INTROUVABLE : ref=${referenceId}`,
+            );
+            return;
+        }
+
+        await this.expireUseCase
+            .execute(paiement.reservationId)
+            .catch((err) => {
+                this.logger.error(
+                    `WEBHOOK_EXPIRE_ERROR : reservationId=${paiement.reservationId}, ` +
                     `erreur=${err.message}`,
                 );
             });
