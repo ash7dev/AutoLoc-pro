@@ -248,17 +248,8 @@ export class CreateReservationUseCase {
 
         // Email supprimé intentionnellement : l'utilisateur vient de créer la réservation
         // et est encore sur le flux de paiement. L'email pertinent est reservation.paid.
-
-        // Alerte admin Telegram — fire-and-forget
-        const debutFmt = dates.debut.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-        const finFmt = dates.fin.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-        this.telegram.sendAdminAlert(
-            `📋 <b>Nouvelle réservation</b>\n` +
-            `Véhicule : ${vehicule.marque} ${vehicule.modele} — ${vehicule.ville}\n` +
-            `Période : ${debutFmt} → ${finFmt} (${dates.nbJours}j)\n` +
-            `Montant : ${price.totalLocataire} FCFA\n` +
-            `<a href="https://autoloc.sn/dashboard/admin/reservations">Voir →</a>`,
-        ).catch(() => { });
+        // Note : L'alerte Telegram n'est envoyée qu'au moment du paiement confirmé (SUCCESS),
+        // dans confirm-payment.use-case.ts.
 
         const city = vehicule.ville?.toLowerCase?.() ?? '';
         const cityPattern = city

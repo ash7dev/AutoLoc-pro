@@ -18,7 +18,7 @@ import { supabase } from '@/lib/supabase/client';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type PaymentMethod = 'WAVE' | 'ORANGE_MONEY' | 'FREE_MONEY';
+type PaymentMethod = 'WAVE' | 'ORANGE_MONEY';
 
 // ── Méthodes de paiement ───────────────────────────────────────────────────────
 
@@ -39,12 +39,6 @@ const PAYMENT_METHODS: {
         label: 'Orange Money',
         sublabel: 'Paiement Orange Money / Maxit',
         phonePlaceholder: 'Numéro Orange (ex: 77 000 00 00)',
-    },
-    {
-        id: 'FREE_MONEY',
-        label: 'Yas Money',
-        sublabel: 'Notification sur votre compte Yas',
-        phonePlaceholder: 'Numéro Yas (ex: 76 000 00 00)',
     },
 ];
 
@@ -77,23 +71,9 @@ function OrangeMoneyLogo({ size = 40 }: { size?: number }) {
     );
 }
 
-function YasMoneyLogo({ size = 40 }: { size?: number }) {
-    return (
-        <Image
-            src="/yas.png"
-            alt="Yas Money"
-            width={size}
-            height={size}
-            className="rounded-xl object-cover flex-shrink-0"
-            style={{ width: size, height: size }}
-        />
-    );
-}
-
 function MethodLogo({ method, size = 40 }: { method: PaymentMethod; size?: number }) {
     if (method === 'WAVE')         return <WaveLogo size={size} />;
-    if (method === 'ORANGE_MONEY') return <OrangeMoneyLogo size={size} />;
-    return <YasMoneyLogo size={size} />;
+    return <OrangeMoneyLogo size={size} />;
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -102,7 +82,6 @@ function MethodLogo({ method, size = 40 }: { method: PaymentMethod; size?: numbe
 const METHOD_COLORS: Record<PaymentMethod, { border: string; bg: string; dot: string }> = {
     WAVE:         { border: 'border-[#1B68F9]', bg: 'bg-blue-50/60',   dot: 'border-[#1B68F9] bg-[#1B68F9]' },
     ORANGE_MONEY: { border: 'border-[#FF6600]', bg: 'bg-orange-50/60', dot: 'border-[#FF6600] bg-[#FF6600]' },
-    FREE_MONEY:   { border: 'border-[#E30613]', bg: 'bg-red-50/60',    dot: 'border-[#E30613] bg-[#E30613]' },
 };
 
 function PaymentMethodOption({

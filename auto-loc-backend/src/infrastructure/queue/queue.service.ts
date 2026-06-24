@@ -23,7 +23,7 @@ import { getCheckoutAutoCloseDelayMs } from '../../domain/reservation/reservatio
 
 const DEFAULT_PAYMENT_EXPIRY_MS = process.env.PAYMENT_EXPIRY_MS
   ? parseInt(process.env.PAYMENT_EXPIRY_MS, 10)
-  : 3 * 60 * 1000;
+  : 5 * 60 * 1000;
 const DEFAULT_SIGNATURE_EXPIRY_MS = 48 * 60 * 60 * 1000;
 const DEFAULT_SIGNATURE_REMINDER_MS = 24 * 60 * 60 * 1000;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -85,7 +85,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  // Annule si paiement non reçu après 15 minutes.
+  // Annule si paiement non reçu après 3 minutes (configurable via PAYMENT_EXPIRY_MS).
   async schedulePaymentExpiry(
     reservationId: string,
     delayMs: number = DEFAULT_PAYMENT_EXPIRY_MS,
@@ -245,7 +245,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
 
   /** Rappels locataire H+0 et H+12 après check-in proprio (validation tacite annoncée). */
   async scheduleTacitCheckinReminders(reservationId: string): Promise<void> {
-    const twelveHours  = 12 * 60 * 60 * 1000;
+    const twelveHours = 12 * 60 * 60 * 1000;
     const twentyTwoHours = 22 * 60 * 60 * 1000;
     await this.reservationQueue.add(
       RESERVATION_TACIT_CHECKIN_REMINDER_JOB,

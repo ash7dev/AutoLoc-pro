@@ -45,6 +45,12 @@ export class IntouchProvider implements PaymentProviderInterface {
 
     private readonly API_BASE = 'https://api.gutouch.com/dist/api/touchpayapi/v1';
 
+    private lastRealm = '';
+    private lastNonce = '';
+    private lastQop = '';
+    private lastOpaque = '';
+    private ncCounter = 0;
+
     constructor(private readonly config: ConfigService) {
         this.agencyCode      = this.config.get<string>('INTOUCH_AGENCY_CODE', '');
         this.loginApi        = this.config.get<string>('INTOUCH_LOGIN_API', '');
@@ -145,35 +151,94 @@ export class IntouchProvider implements PaymentProviderInterface {
         method: string,
         body: string,
     ): Promise<Response> {
-        // Credentials Digest Auth = valeurs SHA-256 pré-calculées fournies par InTouch
         const username = this.digestUsername;
         const password = this.digestPassword;
 
-        // Étape 1 : requête probe pour récupérer le nonce du serveur
+        // Si nous avons un nonce en cache, on tente une requête préemptive directe
+        if (this.lastNonce) {
+            this.ncCounter++;
+            const authHeader = this.buildDigestHeader(
+                method,
+                url,
+                this.lastRealm,
+                this.lastNonce,
+                this.lastQop,
+                this.lastOpaque,
+                this.ncCounter,
+            );
+
+            this.logger.log(`InTouch Digest : tentative préemptive avec nonce en cache (nc=${this.ncCounter})`);
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': authHeader,
+                },
+                body,
+            });
+
+            if (response.status !== 401) {
+                return response;
+            }
+            this.logger.log(`InTouch Digest : nonce expiré, récupération d'un nouveau nonce`);
+        }
+
+        // Sinon (ou si la tentative préemptive a renvoyé 401), on fait la requête probe
+        // On évite d'envoyer le body sur la requête probe pour économiser la bande passante et accélérer l'échange
         const probe = await fetch(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
-            body,
+            body: method === 'GET' || method === 'HEAD' ? undefined : '',
         });
 
         if (probe.status !== 401) return probe;
 
         const wwwAuth = probe.headers.get('www-authenticate') ?? '';
-        const realm   = this.digestField(wwwAuth, 'realm');
-        const nonce   = this.digestField(wwwAuth, 'nonce');
-        const qop     = this.digestField(wwwAuth, 'qop');
+        this.lastRealm   = this.digestField(wwwAuth, 'realm');
+        this.lastNonce   = this.digestField(wwwAuth, 'nonce');
+        this.lastQop     = this.digestField(wwwAuth, 'qop');
+        this.lastOpaque  = this.digestField(wwwAuth, 'opaque');
+        this.ncCounter   = 1;
 
-        const algorithm = this.digestField(wwwAuth, 'algorithm') || 'MD5';
-        const opaque  = this.digestField(wwwAuth, 'opaque');
+        const authHeader = this.buildDigestHeader(
+            method,
+            url,
+            this.lastRealm,
+            this.lastNonce,
+            this.lastQop,
+            this.lastOpaque,
+            this.ncCounter,
+        );
+
+        this.logger.log(`InTouch Digest : nouvelle authentification établie`);
+        return fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': authHeader,
+            },
+            body,
+        });
+    }
+
+    private buildDigestHeader(
+        method: string,
+        url: string,
+        realm: string,
+        nonce: string,
+        qop: string,
+        opaque: string,
+        ncVal: number,
+    ): string {
+        const username = this.digestUsername;
+        const password = this.digestPassword;
+        const algorithm = 'MD5';
         const urlObj  = new URL(url);
-        // RFC 2617 : uri = request-uri (chemin + query string) exactement comme dans la requête
         const uri     = urlObj.pathname + urlObj.search;
 
-        // qop peut être renvoyé comme "auth" ou "auth,auth-int" ; on prend auth si disponible.
         const qopList = qop.split(',').map((v) => v.trim());
         const qopValue = qopList.includes('auth') ? 'auth' : qopList[0] ?? '';
 
-        // Étape 2 : calcul réponse Digest (RFC 2617 / MD5)
         const ha1 = crypto.createHash('md5').update(`${username}:${realm}:${password}`).digest('hex');
         const ha2 = crypto.createHash('md5').update(`${method}:${uri}`).digest('hex');
 
@@ -181,7 +246,7 @@ export class IntouchProvider implements PaymentProviderInterface {
         let authHeader: string;
 
         if (qopValue === 'auth') {
-            const nc     = '00000001';
+            const nc = String(ncVal).padStart(8, '0');
             const cnonce = crypto.randomBytes(8).toString('hex');
             digestResponse = crypto.createHash('md5')
                 .update(`${ha1}:${nonce}:${nc}:${cnonce}:${qopValue}:${ha2}`)
@@ -200,21 +265,7 @@ export class IntouchProvider implements PaymentProviderInterface {
                 `uri="${uri}", algorithm=${algorithm}, response="${digestResponse}"` +
                 (opaque ? `, opaque="${opaque}"` : '');
         }
-
-        this.logger.log(
-            `InTouch Digest auth : realm="${realm}", qop="${qop}", ` +
-            `uri="${uri}", ha1="${ha1}", ha2="${ha2}", response="${digestResponse}"`,
-        );
-
-        // Étape 3 : vraie requête avec l'Authorization Digest
-        return fetch(url, {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': authHeader,
-            },
-            body,
-        });
+        return authHeader;
     }
 
     private digestField(header: string, field: string): string {
