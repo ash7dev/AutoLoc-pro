@@ -65,7 +65,7 @@ export function ZonesSection(): React.ReactElement {
                         >
                             Disponible près de <span className="text-emerald-400">chez vous</span>
                         </h2>
-                        <p className="mt-3 mx-auto max-w-md text-[14px] font-medium leading-relaxed text-white/40">
+                        <p className="mt-3 mx-auto max-w-md text-[14px] font-medium leading-relaxed text-white/60">
                             Des véhicules dans tous les quartiers de Dakar et ses environs.
                         </p>
                     </motion.div>
@@ -96,7 +96,7 @@ export function ZonesSection(): React.ReactElement {
                                             <p className="text-[13px] font-bold text-white tracking-tight truncate">
                                                 {zone.name}
                                             </p>
-                                            <p className="text-[11px] font-medium text-white/30 mt-0.5">
+                                            <p className="text-[11px] font-medium text-white/60 mt-0.5">
                                                 {zone.subtitle}
                                             </p>
                                         </div>

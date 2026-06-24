@@ -57,7 +57,7 @@ export function HowItWorksSection(): React.ReactElement {
                     >
                         Comment ça <span className="text-emerald-400">marche</span> ?
                     </h2>
-                    <p className="mt-4 mx-auto max-w-lg text-[15px] font-medium leading-relaxed text-black/40">
+                    <p className="mt-4 mx-auto max-w-lg text-[15px] font-medium leading-relaxed text-black/60">
                         3 étapes simples pour prendre la route. Pas de paperasse, pas de stress.
                     </p>
                 </motion.div>
@@ -162,7 +162,7 @@ export function HowItWorksSection(): React.ReactElement {
                                             <h3 className="text-[20px] font-black tracking-tight text-emerald-400 mb-2.5">
                                                 {step.title}
                                             </h3>
-                                            <p className="text-[13px] font-medium leading-relaxed text-white/45">
+                                            <p className="text-[13px] font-medium leading-relaxed text-white/70">
                                                 {step.description}
                                             </p>
                                         </div>

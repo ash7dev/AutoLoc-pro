@@ -90,7 +90,7 @@ function StatItem({ stat, index }: { stat: (typeof STATS)[0]; index: number }) {
             <p className="mt-3 text-[14px] font-bold text-white tracking-tight">
                 {stat.label}
             </p>
-            <p className="mt-1 text-[12px] font-medium text-white/35">
+            <p className="mt-1 text-[12px] font-medium text-white/60">
                 {stat.description}
             </p>
         </motion.div>
@@ -201,7 +201,7 @@ function StatsSectionInner() {
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, delay: 0.2 }}
-                    className="mt-3 mx-auto max-w-md text-[14px] font-medium leading-relaxed text-white/40"
+                    className="mt-3 mx-auto max-w-md text-[14px] font-medium leading-relaxed text-white/60"
                 >
                     La confiance de toute une communauté, en quelques chiffres qui parlent d&apos;eux-mêmes.
                 </motion.p>

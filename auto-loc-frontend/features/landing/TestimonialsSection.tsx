@@ -134,7 +134,7 @@ export function TestimonialsSection(): React.ReactElement {
 
                                 <p className={cn(
                                     "text-[15px] font-medium leading-relaxed italic mb-8",
-                                    isBlack ? "text-white/60" : "text-slate-500"
+                                    isBlack ? "text-white/70" : "text-slate-600"
                                 )}>
                                     &ldquo;{t.comment}&rdquo;
                                 </p>
@@ -147,9 +147,9 @@ export function TestimonialsSection(): React.ReactElement {
                                         {t.avatar}
                                     </div>
                                     <div>
-                                        <h4 className={cn("text-[14px] font-black", isBlack ? "text-white" : "text-slate-900")}>
+                                        <p className={cn("text-[14px] font-black", isBlack ? "text-white" : "text-slate-900")}>
                                             {t.name}
-                                        </h4>
+                                        </p>
                                         <p className="text-[11px] font-bold text-emerald-500 uppercase tracking-widest">
                                             {t.city}
                                         </p>
@@ -166,7 +166,7 @@ export function TestimonialsSection(): React.ReactElement {
                     <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10">
                         <div className="text-center lg:text-left">
                             <h3 className="text-2xl lg:text-3xl font-black mb-4 tracking-tight">Convaincu par l&apos;expérience ?</h3>
-                            <p className="text-white/40 font-medium">Rejoignez des milliers de Sénégalais qui ont choisi la simplicité.</p>
+                            <p className="text-white/60 font-medium">Rejoignez des milliers de Sénégalais qui ont choisi la simplicité.</p>
                         </div>
                         <div className="flex items-center gap-6">
                             <Link 

@@ -271,7 +271,7 @@ export function BannerSection(): React.ReactElement {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.5 }}
-                  className="mt-4 text-[15px] font-medium text-white/60 max-w-md leading-relaxed"
+                  className="mt-4 text-[15px] font-medium text-white/70 max-w-md leading-relaxed"
               >
                 Des centaines d&apos;annonces vérifiées, partout au Sénégal.
                 Réservez en quelques clics.

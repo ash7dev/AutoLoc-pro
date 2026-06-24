@@ -62,7 +62,7 @@ export function TrustSection(): React.ReactElement {
                     >
                         <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/5 px-4 py-1.5 mb-5">
                             <ShieldCheck className="h-3 w-3 text-emerald-500" strokeWidth={2} />
-                            <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-600">
+                            <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-700">
                                 Confiance &amp; sécurité
                             </span>
                         </div>
@@ -73,7 +73,7 @@ export function TrustSection(): React.ReactElement {
                             Pourquoi{' '}
                             <span className="text-emerald-400">AutoLoc</span> ?
                         </h2>
-                        <p className="mt-4 mx-auto max-w-lg text-[15px] font-medium leading-relaxed text-black/40">
+                        <p className="mt-4 mx-auto max-w-lg text-[15px] font-medium leading-relaxed text-black/60">
                             Votre sécurité et votre tranquillité d&apos;esprit sont notre priorité absolue.
                         </p>
                     </motion.div>
@@ -127,7 +127,7 @@ export function TrustSection(): React.ReactElement {
                                     </h3>
 
                                     {/* Description */}
-                                    <p className="text-[12.5px] font-medium leading-relaxed text-white/40 mb-5 flex-1">
+                                    <p className="text-[12.5px] font-medium leading-relaxed text-white/60 mb-5 flex-1">
                                         {item.description}
                                     </p>
 
@@ -139,7 +139,7 @@ export function TrustSection(): React.ReactElement {
                                         {item.highlights.map((h) => (
                                             <li
                                                 key={h}
-                                                className="flex items-center gap-2 text-[11.5px] font-semibold text-white/50"
+                                                className="flex items-center gap-2 text-[11.5px] font-semibold text-white/70"
                                             >
                                                 <CheckCircle2
                                                     className="h-3.5 w-3.5 text-emerald-400/50 flex-shrink-0"

@@ -110,10 +110,10 @@ export function BecomeHostCTA(): React.ReactElement {
                             </motion.p>
                             <motion.p
                                 initial={{ opacity: 0 }}
-                                whileInView={{ opacity: 0.5 }}
+                                whileInView={{ opacity: 0.65 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.6, delay: 0.4 }}
-                                className="text-[13px] font-semibold text-white/50 max-w-[200px] text-center leading-relaxed"
+                                className="text-[13px] font-semibold text-white/65 max-w-[200px] text-center leading-relaxed"
                             >
                                 de revenus supplémentaires en moyenne
                             </motion.p>
@@ -133,7 +133,7 @@ export function BecomeHostCTA(): React.ReactElement {
                                 ].map((s) => (
                                     <div key={s.label} className="text-center">
                                         <p className="text-[17px] font-black text-white">{s.val}</p>
-                                        <p className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">{s.label}</p>
+                                        <p className="text-[10px] font-semibold text-white/60 uppercase tracking-widest">{s.label}</p>
                                     </div>
                                 ))}
                             </motion.div>
@@ -163,7 +163,7 @@ export function BecomeHostCTA(): React.ReactElement {
                                 Votre véhicule dort ?{' '}
                                 <span className="text-emerald-400">Faites-le travailler.</span>
                             </h2>
-                            <p className="text-[13px] font-medium leading-relaxed text-white/40 max-w-sm mb-6">
+                            <p className="text-[13px] font-medium leading-relaxed text-white/60 max-w-sm mb-6">
                                 Rejoignez des centaines de propriétaires qui rentabilisent leur
                                 véhicule sur AutoLoc. Inscription gratuite, commission transparente.
                             </p>
@@ -186,7 +186,7 @@ export function BecomeHostCTA(): React.ReactElement {
                                             </div>
                                             <div>
                                                 <p className="text-[12px] font-bold text-white leading-tight">{b.title}</p>
-                                                <p className="text-[11px] font-medium text-white/35 mt-0.5 leading-snug hidden sm:block">{b.description}</p>
+                                                <p className="text-[11px] font-medium text-white/60 mt-0.5 leading-snug hidden sm:block">{b.description}</p>
                                             </div>
                                         </motion.div>
                                     );
@@ -209,7 +209,7 @@ export function BecomeHostCTA(): React.ReactElement {
                                     <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
                                 </Link>
 
-                                <div className="flex items-center gap-2 text-[12px] font-medium text-white/30">
+                                <div className="flex items-center gap-2 text-[12px] font-medium text-white/60">
                                     <CheckCircle2 className="h-4 w-4 text-emerald-400/50 flex-shrink-0" strokeWidth={1.75} />
                                     Inscription gratuite · Sans engagement
                                 </div>

@@ -105,7 +105,7 @@ function FAQItem({
                         >
                             <div className="px-8 pb-8">
                                 <div className="h-[1px] w-12 bg-emerald-400/30 mb-6" />
-                                <p className="text-[15px] font-medium leading-relaxed text-white/40">
+                                <p className="text-[15px] font-medium leading-relaxed text-white/60">
                                     {item.answer}
                                 </p>
                                 <Link
@@ -157,8 +157,8 @@ export function FAQSection(): React.ReactElement {
                         
                         <div className="mt-10 p-8 rounded-[2.5rem] bg-black text-white relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 blur-3xl" />
-                            <h4 className="text-[18px] font-black mb-2">Besoin d&apos;aide directe ?</h4>
-                            <p className="text-white/40 text-[14px] mb-6">Notre équipe support est disponible 7j/7 pour vous accompagner.</p>
+                            <p className="text-[18px] font-black mb-2">Besoin d&apos;aide directe ?</p>
+                            <p className="text-white/60 text-[14px] mb-6">Notre équipe support est disponible 7j/7 pour vous accompagner.</p>
                             <Link 
                                 href="/contact"
                                 className="inline-flex items-center gap-3 bg-emerald-500 text-black px-6 py-3 rounded-xl font-bold text-[14px] hover:bg-emerald-400 transition-all"

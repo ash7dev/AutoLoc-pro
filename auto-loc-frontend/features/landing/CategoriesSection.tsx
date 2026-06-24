@@ -35,6 +35,7 @@ export function CategoriesSection(): React.ReactElement {
     return (
         <section className="px-4 py-16 lg:px-8 lg:py-24" aria-labelledby="categories-heading">
             <div className="mx-auto max-w-7xl">
+                <h2 id="categories-heading" className="sr-only">Locataires et Propriétaires</h2>
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                     {CARDS.map((card, i) => {
                         const Icon = card.icon;
@@ -107,11 +108,11 @@ export function CategoriesSection(): React.ReactElement {
                                             </span>
                                         </div>
 
-                                        <h2 className="text-[22px] lg:text-[28px] font-black tracking-tight text-white leading-tight mb-4 group-hover:translate-x-2 transition-transform duration-500">
+                                        <h3 className="text-[22px] lg:text-[28px] font-black tracking-tight text-white leading-tight mb-4 group-hover:translate-x-2 transition-transform duration-500">
                                             {card.title}
-                                        </h2>
+                                        </h3>
 
-                                        <p className="text-[15px] font-medium leading-relaxed text-white/40 max-w-sm">
+                                        <p className="text-[15px] font-medium leading-relaxed text-white/60 max-w-sm">
                                             {card.description}
                                         </p>
                                     </div>
