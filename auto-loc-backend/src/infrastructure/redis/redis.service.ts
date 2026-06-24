@@ -105,4 +105,62 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       }
     } while (cursor !== '0');
   }
+
+  /**
+   * 🚀 OPTIMISATION: Set with expiry (alias pour setex pour cohérence)
+   */
+  async setex(key: string, ttlSeconds: number, value: string): Promise<void> {
+    await this.getClient().setex(key, ttlSeconds, value);
+  }
+
+  /**
+   * 🚀 OPTIMISATION: Distributed lock avec retry
+   * @param key Lock key
+   * @param ttlSeconds Lock TTL
+   * @param maxRetries Maximum retry attempts
+   * @param retryDelayMs Delay between retries
+   * @returns true if lock acquired, false otherwise
+   */
+  async acquireLock(
+    key: string,
+    ttlSeconds: number = 10,
+    maxRetries: number = 5,
+    retryDelayMs: number = 100,
+  ): Promise<boolean> {
+    for (let i = 0; i < maxRetries; i++) {
+      const acquired = await this.setNX(key, '1', ttlSeconds);
+      if (acquired) return true;
+
+      // Wait before retry with exponential backoff
+      await new Promise(resolve => setTimeout(resolve, retryDelayMs * (i + 1)));
+    }
+    return false;
+  }
+
+  /**
+   * 🚀 OPTIMISATION: Release distributed lock
+   */
+  async releaseLock(key: string): Promise<void> {
+    await this.del(key);
+  }
+
+  /**
+   * 🚀 OPTIMISATION: Get with JSON parse
+   */
+  async getJSON<T>(key: string): Promise<T | null> {
+    const value = await this.get(key);
+    if (!value) return null;
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * 🚀 OPTIMISATION: Set with JSON stringify
+   */
+  async setJSON<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
+    await this.set(key, JSON.stringify(value), ttlSeconds);
+  }
 }

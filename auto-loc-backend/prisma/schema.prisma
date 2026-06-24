@@ -113,6 +113,13 @@ model Vehicule {
   @@index([isFeatured])
   @@index([statut, totalLocations(sort: Desc), note(sort: Desc), creeLe(sort: Desc)])
   @@index([statut, creeLe(sort: Desc)])
+  // 🚀 OPTIMISATIONS PERFORMANCE - Semaine 1
+  @@index([statut, ville, type, prixParJour]) // Recherche multi-critères optimisée
+  @@index([statut, note(sort: Desc), totalAvis(sort: Desc)]) // Tri par qualité
+  @@index([isFeatured, featuredUntil, statut]) // Featured vehicles actifs
+  @@index([ville, statut, note(sort: Desc)]) // Recherche ville avec tri note
+  @@index([archiveLe, statut]) // Cleanup des archivés
+  @@index([statut, ville, creeLe(sort: Desc)]) // Nouveautés par ville
 }
 
 model TarifTier {
@@ -239,6 +246,9 @@ model Paiement {
   reservation              Reservation         @relation(fields: [reservationId], references: [id])
 
   @@index([statut])
+  @@index([fournisseur, statut]) // Requêtes par provider
+  @@index([idTransactionFournisseur, fournisseur]) // Webhook lookup rapide
+  @@index([creeLe(sort: Desc), statut]) // Liste chronologique des paiements
 }
 
 model Wallet {

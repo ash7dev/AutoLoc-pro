@@ -80,29 +80,77 @@ export class WaveProvider implements PaymentProviderInterface {
 
         this.logger.log(`Initiating Wave payment: ${JSON.stringify(body)}`);
 
-        const response = await fetch(`${this.apiUrl}/checkout/sessions`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${this.apiKey}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body),
-        });
+        // 🚀 OPTIMISATION: Timeout + Retry avec backoff exponentiel
+        const maxRetries = 2;
+        let lastError: Error | undefined;
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            this.logger.error(`Wave API error: ${response.status} — ${errorText}`);
-            throw new Error(`Wave API error: ${response.status}`);
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8_000); // 8s timeout
+
+            try {
+                const response = await fetch(`${this.apiUrl}/checkout/sessions`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.apiKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body),
+                    signal: controller.signal,
+                });
+
+                clearTimeout(timeout);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+
+                    // Retry uniquement sur erreurs 5xx ou 429
+                    if (attempt < maxRetries && (response.status >= 500 || response.status === 429)) {
+                        const retryAfter = response.headers.get('retry-after');
+                        const delayMs = retryAfter ? parseInt(retryAfter) * 1000 : 1000 * (attempt + 1);
+                        this.logger.warn(`Wave API error ${response.status}, retrying in ${delayMs}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, delayMs));
+                        continue;
+                    }
+
+                    this.logger.error(`Wave API error: ${response.status} — ${errorText}`);
+                    throw new Error(`Wave API error: ${response.status}`);
+                }
+
+                // Success!
+                const data = (await response.json()) as WaveCheckoutResponse;
+                this.logger.log(`Wave checkout created: ${data.id}`);
+
+                return {
+                    paymentUrl: data.wave_launch_url,
+                    transactionId: data.id,
+                };
+            } catch (error) {
+                clearTimeout(timeout);
+                lastError = error as Error;
+
+                if ((error as { name?: string }).name === 'AbortError') {
+                    // Timeout: retry
+                    if (attempt < maxRetries) {
+                        this.logger.warn(`Wave API timeout, retrying (${attempt + 1}/${maxRetries})...`);
+                        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                        continue;
+                    }
+                    throw new Error('Wave API timeout after retries');
+                }
+
+                // Autre erreur réseau: retry
+                if (attempt < maxRetries) {
+                    this.logger.warn(`Wave network error, retrying: ${error}`);
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                    continue;
+                }
+
+                throw error;
+            }
         }
 
-        const data = (await response.json()) as WaveCheckoutResponse;
-
-        this.logger.log(`Wave checkout created: ${data.id}`);
-
-        return {
-            paymentUrl: data.wave_launch_url,
-            transactionId: data.id,
-        };
+        throw lastError || new Error('Wave payment failed after retries');
     }
 
     // ── Webhook Signature ──────────────────────────────────────────────────────

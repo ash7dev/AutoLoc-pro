@@ -15,17 +15,23 @@ import { PaymentProviderFactory } from '../../infrastructure/payment/payment-pro
 import { ConfirmPaymentUseCase } from '../../domain/reservation/use-cases/confirm-payment.use-case';
 import { ExpireReservationUseCase } from '../../domain/reservation/use-cases/expire-reservation.use-case';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RedisService } from '../../infrastructure/redis/redis.service';
 
 @SkipThrottle()
 @Controller('payments/webhook')
 export class PaymentWebhookController {
     private readonly logger = new Logger(PaymentWebhookController.name);
 
+    // 🚀 OPTIMISATION: Déduplication des webhooks
+    private static readonly WEBHOOK_DEDUP_PREFIX = 'webhook:processed:';
+    private static readonly WEBHOOK_DEDUP_TTL = 86400; // 24h
+
     constructor(
         private readonly providerFactory: PaymentProviderFactory,
         private readonly confirmPayment: ConfirmPaymentUseCase,
         private readonly expireUseCase: ExpireReservationUseCase,
         private readonly prisma: PrismaService,
+        private readonly redis: RedisService,
     ) { }
 
     /**
@@ -107,23 +113,62 @@ export class PaymentWebhookController {
             `status=${payload.status}, montant=${payload.amount}, ref=${payload.referenceId}`,
         );
 
-        // 4. Dispatcher selon le statut
-        if (payload.status === 'SUCCESS') {
-            await this.handlePaymentSuccess(payload.transactionId, payload.referenceId);
-        } else if (payload.status === 'REFUNDED') {
-            this.logger.log(`WEBHOOK_REFUND [${routeName}] : txId=${payload.transactionId}`);
-        } else {
+        // 4. 🚀 OPTIMISATION: Vérifier la déduplication (idempotence)
+        const webhookId = payload.transactionId || payload.referenceId;
+        const dedupKey = `${PaymentWebhookController.WEBHOOK_DEDUP_PREFIX}${routeName}:${webhookId}`;
+
+        const alreadyProcessed = await this.redis.get(dedupKey);
+        if (alreadyProcessed) {
             this.logger.warn(
-                `WEBHOOK_FAILED [${routeName}] : txId=${payload.transactionId}, ref=${payload.referenceId}`,
+                `WEBHOOK_DUPLICATE [${routeName}] : txId=${payload.transactionId} déjà traité, ignoring...`,
             );
-            await this.handlePaymentFailure(payload.referenceId);
+            return { received: true }; // Return OK pour éviter les retries du provider
         }
 
-        this.logger.log(
-            `Webhook traité [${routeName}] en ${Date.now() - startTime}ms`,
-        );
+        // Marquer comme en cours de traitement (lock)
+        const lockKey = `${dedupKey}:lock`;
+        const lockAcquired = await this.redis.acquireLock(lockKey, 30); // 30s timeout
 
-        return { received: true };
+        if (!lockAcquired) {
+            this.logger.warn(
+                `WEBHOOK_CONCURRENT [${routeName}] : txId=${payload.transactionId} en cours de traitement par un autre process`,
+            );
+            return { received: true }; // Return OK
+        }
+
+        try {
+            // 5. Dispatcher selon le statut
+            if (payload.status === 'SUCCESS') {
+                await this.handlePaymentSuccess(payload.transactionId, payload.referenceId);
+            } else if (payload.status === 'REFUNDED') {
+                this.logger.log(`WEBHOOK_REFUND [${routeName}] : txId=${payload.transactionId}`);
+            } else {
+                this.logger.warn(
+                    `WEBHOOK_FAILED [${routeName}] : txId=${payload.transactionId}, ref=${payload.referenceId}`,
+                );
+                await this.handlePaymentFailure(payload.referenceId);
+            }
+
+            // 6. Marquer le webhook comme traité (idempotence)
+            await this.redis.setex(
+                dedupKey,
+                PaymentWebhookController.WEBHOOK_DEDUP_TTL,
+                JSON.stringify({
+                    processedAt: new Date().toISOString(),
+                    status: payload.status,
+                    amount: payload.amount,
+                }),
+            );
+
+            this.logger.log(
+                `Webhook traité [${routeName}] en ${Date.now() - startTime}ms`,
+            );
+
+            return { received: true };
+        } finally {
+            // 7. Libérer le lock
+            await this.redis.releaseLock(lockKey);
+        }
     }
 
     // ── Succès paiement ────────────────────────────────────────────────────────
