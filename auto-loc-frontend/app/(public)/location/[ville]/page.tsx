@@ -42,7 +42,7 @@ export default function LocationPage({ params }: LocationPageProps) {
                     Découvrez les véhicules disponibles à {ville}
                 </p>
             </section>
-            <ExplorerGrid />
+            <ExplorerGrid initialZone={ville} />
             <Footer />
         </main>
     );

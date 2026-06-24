@@ -294,12 +294,12 @@ function ResultsHeader({
 /* ════════════════════════════════════════════════════════════════
    MAIN ORCHESTRATOR
 ════════════════════════════════════════════════════════════════ */
-export function ExplorerGrid(): React.ReactElement {
+export function ExplorerGrid({ initialZone }: { initialZone?: string } = {}): React.ReactElement {
   const { formatPrice } = useCurrency();
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState<ExplorerFiltersState>(() => ({
     ...DEFAULT_FILTERS,
-    zone: searchParams.get('zone') ?? '',
+    zone: initialZone || (searchParams.get('zone') ?? ''),
     type: searchParams.get('type') ?? '',
     budgetMin: searchParams.has('budgetMin') ? Number(searchParams.get('budgetMin')) : null,
     budgetMax: searchParams.has('budget') ? Number(searchParams.get('budget')) : null,

@@ -12,7 +12,6 @@ const withPWA = require('@ducanh2912/next-pwa').default({
 });
 
 
-/** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -22,6 +21,21 @@ const nextConfig = {
     ],
   },
   transpilePackages: ['sonner'],
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'www.autoloc.sn',
+          },
+        ],
+        destination: 'https://autoloc.sn/:path*',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = withPWA(nextConfig);
