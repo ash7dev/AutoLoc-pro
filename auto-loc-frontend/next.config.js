@@ -21,21 +21,6 @@ const nextConfig = {
     ],
   },
   transpilePackages: ['sonner'],
-  async redirects() {
-    return [
-      {
-        source: '/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'www.autoloc.sn',
-          },
-        ],
-        destination: 'https://autoloc.sn/:path*',
-        permanent: true,
-      },
-    ];
-  },
 };
 
 module.exports = withPWA(nextConfig);
