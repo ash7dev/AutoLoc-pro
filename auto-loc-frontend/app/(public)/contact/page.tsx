@@ -11,6 +11,14 @@ import { cn } from '@/lib/utils';
 export const metadata: Metadata = {
     title: 'Contact — AutoLoc',
     description: 'Contactez l\'équipe AutoLoc par email, téléphone ou WhatsApp. Nous sommes disponibles 7j/7 pour répondre à vos questions.',
+    alternates: {
+        canonical: 'https://www.autoloc.sn/contact',
+    },
+    openGraph: {
+        url: 'https://www.autoloc.sn/contact',
+        title: 'Contact — AutoLoc',
+        description: 'Contactez l\'équipe AutoLoc par email, téléphone ou WhatsApp.',
+    },
 };
 
 const CONTACT_CHANNELS = [
@@ -56,8 +64,29 @@ const INFO_ITEMS = [
 ];
 
 export default function ContactPage() {
+    const contactJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'ContactPage',
+        'name': 'Contact — AutoLoc',
+        'description': 'Contactez l\'équipe AutoLoc par email, téléphone ou WhatsApp.',
+        'url': 'https://www.autoloc.sn/contact',
+        'contactPoint': [
+            {
+                '@type': 'ContactPoint',
+                'telephone': '+221 78 663 77 05',
+                'contactType': 'customer service',
+                'areaServed': 'SN',
+                'availableLanguage': ['French', 'Wolof']
+            }
+        ]
+    };
+
     return (
         <main className="min-h-screen bg-[#F8FAFC]">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(contactJsonLd) }}
+            />
             {/* ── Hero (Black Section) ── */}
             <section className="relative overflow-hidden bg-black px-4 py-20 lg:py-32 rounded-b-[4rem] lg:rounded-b-[8rem]">
                 <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-emerald-400/10 blur-[120px] pointer-events-none" />

@@ -12,6 +12,14 @@ import { cn } from '@/lib/utils';
 export const metadata: Metadata = {
     title: 'Comment ça marche — AutoLoc',
     description: 'Découvrez comment louer un véhicule sur AutoLoc en quelques étapes simples : recherchez, réservez, payez, conduisez.',
+    alternates: {
+        canonical: 'https://www.autoloc.sn/how-it-works',
+    },
+    openGraph: {
+        url: 'https://www.autoloc.sn/how-it-works',
+        title: 'Comment ça marche — AutoLoc',
+        description: 'Découvrez comment louer un véhicule sur AutoLoc en quelques étapes simples : recherchez, réservez, payez, conduisez.',
+    },
 };
 
 // ── Components ────────────────────────────────────────────────────────────────
@@ -118,8 +126,50 @@ const GUARANTEES = [
 ];
 
 export default function HowItWorksPage() {
+    const howToSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'HowTo',
+        'name': 'Comment louer un véhicule sur AutoLoc',
+        'description': 'Louez un véhicule vérifié au Sénégal en 4 étapes simples.',
+        'step': [
+            {
+                '@type': 'HowToStep',
+                'position': 1,
+                'name': 'Recherchez',
+                'text': 'Parcourez notre catalogue de véhicules vérifiés. Filtrez par ville, type, prix et disponibilité.',
+                'url': 'https://www.autoloc.sn/how-it-works'
+            },
+            {
+                '@type': 'HowToStep',
+                'position': 2,
+                'name': 'Réservez',
+                'text': 'Choisissez vos dates, visualisez le tarif dynamique et acceptez les conditions de location.',
+                'url': 'https://www.autoloc.sn/how-it-works'
+            },
+            {
+                '@type': 'HowToStep',
+                'position': 3,
+                'name': 'Payez',
+                'text': 'Payez en toute sécurité via Wave ou Orange Money. Le propriétaire confirme ensuite la réservation.',
+                'url': 'https://www.autoloc.sn/how-it-works'
+            },
+            {
+                '@type': 'HowToStep',
+                'position': 4,
+                'name': 'Conduisez',
+                'text': 'Récupérez le véhicule au point convenu. Le contrat est généré automatiquement pour votre sécurité.',
+                'url': 'https://www.autoloc.sn/how-it-works'
+            }
+        ],
+        'totalTime': 'PT10M'
+    };
+
     return (
         <main className="min-h-screen bg-[#F8FAFC]">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
+            />
             {/* ── Hero (Black with Bottom Radius) ── */}
             <section className="relative overflow-hidden pt-24 pb-32 lg:pt-32 lg:pb-48 px-4 bg-black rounded-b-[4rem] lg:rounded-b-[8rem]">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full opacity-20 blur-[120px] pointer-events-none bg-emerald-500/30" />

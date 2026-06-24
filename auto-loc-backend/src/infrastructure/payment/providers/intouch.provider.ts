@@ -11,21 +11,21 @@ import {
 // ── InTouch Service Codes ──────────────────────────────────────────────────────
 
 const SERVICE_CODES: Record<string, string> = {
-    WAVE:               'SNPAIEMENTWAVE',
-    ORANGE_MONEY:       'PAIEMENTMARCHANDOMQRCODE',
+    WAVE: 'SNPAIEMENTWAVE',
+    ORANGE_MONEY: 'PAIEMENTMARCHANDOMQRCODE',
     ORANGE_MONEY_MAXIT: 'PAIEMENTMARCHANDOMQRCODE_MAXIT',
-    FREE_MONEY:         'PAIEMENTMARCHANDTIGO',
+    FREE_MONEY: 'PAIEMENTMARCHANDTIGO',
 };
 
 // ── InTouch Webhook Query Params ───────────────────────────────────────────────
 
 interface IntouchCallbackQuery {
-    command_number?:          string;
-    payment_token?:           string;
-    payment_status?:          string;
-    paid_amount?:             string;
-    paid_sum?:                string;
-    payment_mode?:            string;
+    command_number?: string;
+    payment_token?: string;
+    payment_status?: string;
+    paid_amount?: string;
+    paid_sum?: string;
+    payment_mode?: string;
     payment_validation_date?: string;
 }
 
@@ -36,12 +36,12 @@ export class IntouchProvider implements PaymentProviderInterface {
     readonly provider = 'INTOUCH' as const;
     private readonly logger = new Logger(IntouchProvider.name);
 
-    private readonly agencyCode:      string;
-    private readonly loginApi:        string;
-    private readonly passwordApi:     string;
-    private readonly digestUsername:  string;
-    private readonly digestPassword:  string;
-    private readonly webhookSecret:   string;
+    private readonly agencyCode: string;
+    private readonly loginApi: string;
+    private readonly passwordApi: string;
+    private readonly digestUsername: string;
+    private readonly digestPassword: string;
+    private readonly webhookSecret: string;
 
     private readonly API_BASE = 'https://api.gutouch.com/dist/api/touchpayapi/v1';
 
@@ -52,12 +52,12 @@ export class IntouchProvider implements PaymentProviderInterface {
     private ncCounter = 0;
 
     constructor(private readonly config: ConfigService) {
-        this.agencyCode      = this.config.get<string>('INTOUCH_AGENCY_CODE', '');
-        this.loginApi        = this.config.get<string>('INTOUCH_LOGIN_API', '');
-        this.passwordApi     = this.config.get<string>('INTOUCH_PASSWORD_API', '');
-        this.digestUsername  = this.config.get<string>('INTOUCH_DIGEST_USERNAME', '');
-        this.digestPassword  = this.config.get<string>('INTOUCH_DIGEST_PASSWORD', '');
-        this.webhookSecret   = this.config.get<string>('INTOUCH_WEBHOOK_SECRET', '');
+        this.agencyCode = this.config.get<string>('INTOUCH_AGENCY_CODE', '');
+        this.loginApi = this.config.get<string>('INTOUCH_LOGIN_API', '');
+        this.passwordApi = this.config.get<string>('INTOUCH_PASSWORD_API', '');
+        this.digestUsername = this.config.get<string>('INTOUCH_DIGEST_USERNAME', '');
+        this.digestPassword = this.config.get<string>('INTOUCH_DIGEST_PASSWORD', '');
+        this.webhookSecret = this.config.get<string>('INTOUCH_WEBHOOK_SECRET', '');
 
         if (!this.agencyCode || !this.loginApi || !this.passwordApi) {
             this.logger.warn(
@@ -82,7 +82,7 @@ export class IntouchProvider implements PaymentProviderInterface {
         }
 
         const serviceCode = SERVICE_CODES[params.targetPayment ?? ''] ?? 'SNPAIEMENTWAVE';
-        const phone       = params.payerPhone.replace(/\s+/g, '').replace(/^00/, '+');
+        const phone = params.payerPhone.replace(/\s+/g, '').replace(/^00/, '+');
 
         const url =
             `${this.API_BASE}/${this.agencyCode}/transaction` +
@@ -90,19 +90,19 @@ export class IntouchProvider implements PaymentProviderInterface {
             `&passwordAgent=${encodeURIComponent(this.passwordApi)}`;
 
         const bodyObj = {
-            idFromClient:     params.referenceId,
+            idFromClient: params.referenceId,
             additionnalInfos: {
-                recipientEmail:     params.payerEmail ?? 'contact@autoloc.sn',
+                recipientEmail: params.payerEmail ?? 'contact@autoloc.sn',
                 recipientFirstName: params.payerFirstName ?? 'Client',
-                recipientLastName:  params.payerLastName ?? 'AutoLoc',
-                destinataire:       phone,
-                partner_name:       'AutoLoc',
-                return_url:         params.successUrl,
-                cancel_url:         params.cancelUrl,
-                currency:           'XOF',
+                recipientLastName: params.payerLastName ?? 'AutoLoc',
+                destinataire: phone,
+                partner_name: 'AutoLoc',
+                return_url: params.successUrl,
+                cancel_url: params.cancelUrl,
+                currency: 'XOF',
             },
-            amount:          Math.round(params.amount),
-            callback:        params.callbackUrl,
+            amount: Math.round(params.amount),
+            callback: params.callbackUrl,
             recipientNumber: phone,
             serviceCode,
         };
@@ -151,37 +151,7 @@ export class IntouchProvider implements PaymentProviderInterface {
         method: string,
         body: string,
     ): Promise<Response> {
-        const username = this.digestUsername;
-        const password = this.digestPassword;
 
-        // Si nous avons un nonce en cache, on tente une requête préemptive directe
-        if (this.lastNonce) {
-            this.ncCounter++;
-            const authHeader = this.buildDigestHeader(
-                method,
-                url,
-                this.lastRealm,
-                this.lastNonce,
-                this.lastQop,
-                this.lastOpaque,
-                this.ncCounter,
-            );
-
-            this.logger.log(`InTouch Digest : tentative préemptive avec nonce en cache (nc=${this.ncCounter})`);
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': authHeader,
-                },
-                body,
-            });
-
-            if (response.status !== 401) {
-                return response;
-            }
-            this.logger.log(`InTouch Digest : nonce expiré, récupération d'un nouveau nonce`);
-        }
 
         // Sinon (ou si la tentative préemptive a renvoyé 401), on fait la requête probe
         // On évite d'envoyer le body sur la requête probe pour économiser la bande passante et accélérer l'échange
@@ -194,11 +164,11 @@ export class IntouchProvider implements PaymentProviderInterface {
         if (probe.status !== 401) return probe;
 
         const wwwAuth = probe.headers.get('www-authenticate') ?? '';
-        this.lastRealm   = this.digestField(wwwAuth, 'realm');
-        this.lastNonce   = this.digestField(wwwAuth, 'nonce');
-        this.lastQop     = this.digestField(wwwAuth, 'qop');
-        this.lastOpaque  = this.digestField(wwwAuth, 'opaque');
-        this.ncCounter   = 1;
+        this.lastRealm = this.digestField(wwwAuth, 'realm');
+        this.lastNonce = this.digestField(wwwAuth, 'nonce');
+        this.lastQop = this.digestField(wwwAuth, 'qop');
+        this.lastOpaque = this.digestField(wwwAuth, 'opaque');
+        this.ncCounter = 1;
 
         const authHeader = this.buildDigestHeader(
             method,
@@ -233,8 +203,8 @@ export class IntouchProvider implements PaymentProviderInterface {
         const username = this.digestUsername;
         const password = this.digestPassword;
         const algorithm = 'MD5';
-        const urlObj  = new URL(url);
-        const uri     = urlObj.pathname + urlObj.search;
+        const urlObj = new URL(url);
+        const uri = urlObj.pathname + urlObj.search;
 
         const qopList = qop.split(',').map((v) => v.trim());
         const qopValue = qopList.includes('auth') ? 'auth' : qopList[0] ?? '';
@@ -323,12 +293,12 @@ export class IntouchProvider implements PaymentProviderInterface {
         this.logger.log(`InTouch callback query params : ${JSON.stringify(queryParams ?? {})}`);
 
         // Mapper les champs de la Direct API (body JSON) ou du Widget (query params)
-        const referenceId   = (bodyData.partner_transaction_id as string) ?? q.command_number ?? (bodyData.idFromClient as string) ?? '';
+        const referenceId = (bodyData.partner_transaction_id as string) ?? q.command_number ?? (bodyData.idFromClient as string) ?? '';
         const transactionId = (bodyData.gu_transaction_id as string) ?? q.payment_token ?? `it_${referenceId || 'unknown'}`;
-        
-        const isSuccess     = q.payment_status === '00' || bodyData.status === 'SUCCESS' || bodyData.status === 'SUCCESSFUL';
+
+        const isSuccess = q.payment_status === '00' || bodyData.status === 'SUCCESS' || bodyData.status === 'SUCCESSFUL';
         const status: 'SUCCESS' | 'FAILED' = isSuccess ? 'SUCCESS' : 'FAILED';
-        const amount        = Number(bodyData.amount ?? q.paid_amount ?? q.paid_sum ?? 0);
+        const amount = Number(bodyData.amount ?? q.paid_amount ?? q.paid_sum ?? 0);
 
         this.logger.log(
             `InTouch callback : ref=${referenceId}, ` +

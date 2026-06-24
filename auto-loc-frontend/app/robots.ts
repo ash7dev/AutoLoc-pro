@@ -22,6 +22,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: 'https://autoloc.sn/sitemap.xml',
+    sitemap: 'https://www.autoloc.sn/sitemap.xml',
   };
 }

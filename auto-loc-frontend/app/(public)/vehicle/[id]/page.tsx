@@ -29,7 +29,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         const description = `Louez une ${vehicle.marque} ${vehicle.modele} à ${vehicle.ville} dès ${vehicle.prixParJour.toLocaleString('fr-FR')} FCFA/jour.`;
         return {
             title, description,
-            openGraph: { title, description, images: vehicle.photos?.[0]?.url ? [vehicle.photos[0].url] : [] },
+            openGraph: { title, description, url: `https://www.autoloc.sn/vehicle/${params.id}`, images: vehicle.photos?.[0]?.url ? [vehicle.photos[0].url] : [] },
+            alternates: {
+                canonical: `https://www.autoloc.sn/vehicle/${params.id}`,
+            },
         };
     } catch {
         return { title: 'Véhicule introuvable — AutoLoc' };
@@ -63,8 +66,38 @@ export default async function VehicleDetailPage({ params }: PageProps) {
         notFound(); 
     }
 
+    const carJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Car',
+        'name': `${vehicle.marque} ${vehicle.modele} ${vehicle.annee}`,
+        'description': `Louez ce véhicule ${vehicle.marque} ${vehicle.modele} à ${vehicle.ville} sur AutoLoc.`,
+        'image': vehicle.photos?.[0]?.url || 'https://www.autoloc.sn/og-image.jpg',
+        'offers': {
+            '@type': 'Offer',
+            'price': vehicle.prixParJour,
+            'priceCurrency': 'XOF',
+            'availability': 'https://schema.org/InStock',
+            'url': `https://www.autoloc.sn/vehicle/${vehicle.id}`
+        },
+        'brand': {
+            '@type': 'Brand',
+            'name': vehicle.marque
+        },
+        'vehicleModel': vehicle.modele,
+        'modelDate': vehicle.annee,
+        'address': {
+            '@type': 'PostalAddress',
+            'addressLocality': vehicle.ville,
+            'addressCountry': 'SN'
+        }
+    };
+
     return (
         <main className="min-h-screen bg-white">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(carJsonLd) }}
+            />
             {/* ── Breadcrumb ──────────────────────────────────────────── */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-0">
                 <Link

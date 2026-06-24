@@ -19,10 +19,10 @@ export const metadata: Metadata = {
   description:
     'Trouvez et réservez un véhicule vérifié au Sénégal : SUV, berlines, pick-ups, utilitaires. Disponible à Dakar, Thiès, Saint-Louis et partout au Sénégal.',
   alternates: {
-    canonical: '/',
+    canonical: 'https://www.autoloc.sn',
   },
   openGraph: {
-    url: '/',
+    url: 'https://www.autoloc.sn',
     title: 'AutoLoc — Location de véhicules au Sénégal',
     description:
       'Trouvez et réservez un véhicule vérifié au Sénégal : SUV, berlines, pick-ups, utilitaires. Disponible à Dakar et partout au Sénégal.',
@@ -48,8 +48,75 @@ export default async function HomePage() {
     // fallback to client fetch
   }
 
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    'name': 'AutoLoc',
+    'url': 'https://www.autoloc.sn',
+    'potentialAction': {
+      '@type': 'SearchAction',
+      'target': 'https://www.autoloc.sn/explorer?q={search_term_string}',
+      'query-input': 'required name=search_term_string'
+    }
+  };
+
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    'mainEntity': [
+      {
+        '@type': 'Question',
+        'name': 'Comment réserver un véhicule sur AutoLoc ?',
+        'acceptedAnswer': {
+          '@type': 'Answer',
+          'text': 'C\'est très simple ! Parcourez les véhicules disponibles, choisissez vos dates de location, puis cliquez sur "Réserver". Vous recevrez une confirmation instantanée par email et SMS.'
+        }
+      },
+      {
+        '@type': 'Question',
+        'name': 'Quels documents sont nécessaires pour louer ?',
+        'acceptedAnswer': {
+          '@type': 'Answer',
+          'text': 'Vous aurez besoin d\'une pièce d\'identité valide (CNI ou passeport), d\'un permis de conduire en cours de validité, et d\'un justificatif de domicile.'
+        }
+      },
+      {
+        '@type': 'Question',
+        'name': 'Puis-je annuler ma réservation ?',
+        'acceptedAnswer': {
+          '@type': 'Answer',
+          'text': 'Oui, vous pouvez annuler jusqu\'à 24h avant la prise en charge pour un remboursement complet. Consultez nos conditions pour plus de détails.'
+        }
+      },
+      {
+        '@type': 'Question',
+        'name': 'Comment sont vérifiés les locataires ?',
+        'acceptedAnswer': {
+          '@type': 'Answer',
+          'text': 'Chaque locataire doit soumettre une pièce d\'identité valide et un permis de conduire avant de pouvoir effectuer une réservation.'
+        }
+      },
+      {
+        '@type': 'Question',
+        'name': 'Comment devenir propriétaire sur AutoLoc ?',
+        'acceptedAnswer': {
+          '@type': 'Answer',
+          'text': 'Inscrivez-vous, ajoutez votre véhicule avec photos et documents, et notre équipe le vérifiera sous 24h. C\'est simple et gratuit !'
+        }
+      }
+    ]
+  };
+
   return (
     <main className="overflow-x-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <HomeSessionRedirect />
       
       {/* Mobile View: App-Like Landing Page */}

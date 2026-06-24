@@ -9,6 +9,14 @@ import {
 export const metadata: Metadata = {
   title: 'Conditions Générales d\'Utilisation — AutoLoc',
   description: 'Consultez les conditions générales d\'utilisation de la plateforme AutoLoc, régissant la location de véhicules entre particuliers au Sénégal.',
+  alternates: {
+    canonical: 'https://www.autoloc.sn/cgu',
+  },
+  openGraph: {
+    url: 'https://www.autoloc.sn/cgu',
+    title: 'Conditions Générales d\'Utilisation — AutoLoc',
+    description: 'Consultez les conditions générales d\'utilisation de la plateforme AutoLoc.',
+  },
 };
 
 /* ════════════════════════════════════════════════════════════════

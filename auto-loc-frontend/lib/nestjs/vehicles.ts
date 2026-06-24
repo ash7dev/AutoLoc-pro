@@ -44,6 +44,7 @@ export interface TarifTier {
 }
 
 export interface Vehicle {
+  description: string;
   id: string;
   proprietaireId: string;
   proprietaire?: {
@@ -252,43 +253,43 @@ export async function fetchUploadSignature(): Promise<CloudinarySignature> {
 
 /** Helper to compress image client-side before upload */
 export async function compressImage(file: File, maxSize = 1600): Promise<File> {
-    if (typeof window === 'undefined') return file;
-    // Skip if not an image or already small
-    if (!file.type.startsWith('image/') || file.size < 512 * 1024) return file;
+  if (typeof window === 'undefined') return file;
+  // Skip if not an image or already small
+  if (!file.type.startsWith('image/') || file.size < 512 * 1024) return file;
 
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
 
-            if (width > height) {
-                if (width > maxSize) {
-                    height *= maxSize / width;
-                    width = maxSize;
-                }
-            } else {
-                if (height > maxSize) {
-                    width *= maxSize / height;
-                    height = maxSize;
-                }
-            }
+      if (width > height) {
+        if (width > maxSize) {
+          height *= maxSize / width;
+          width = maxSize;
+        }
+      } else {
+        if (height > maxSize) {
+          width *= maxSize / height;
+          height = maxSize;
+        }
+      }
 
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx?.drawImage(img, 0, 0, width, height);
-            canvas.toBlob((blob) => {
-                if (blob) {
-                    resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg' }));
-                } else {
-                    resolve(file);
-                }
-            }, 'image/jpeg', 0.85);
-        };
-        img.src = URL.createObjectURL(file);
-    });
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg' }));
+        } else {
+          resolve(file);
+        }
+      }, 'image/jpeg', 0.85);
+    };
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 /** Upload a file directly to Cloudinary using a pre-signed signature. */
@@ -297,7 +298,7 @@ export async function uploadToCloudinary(
   sig: CloudinarySignature,
 ): Promise<{ url: string; publicId: string }> {
   const TRANSFORM = 'w_800,h_600,c_fill,f_webp,q_auto';
-  
+
   // ── Optimization: Compress client-side if it's an image ──
   const optimizedFile = await compressImage(file);
 
@@ -426,8 +427,8 @@ export async function searchVehicles(
 
   const data = await apiFetch<SearchVehiclesResponse>(
     `${VEHICLE_PATHS.search}?${qs.toString()}`,
-    { 
-      next: { revalidate: 60 } 
+    {
+      next: { revalidate: 60 }
     }
   );
 

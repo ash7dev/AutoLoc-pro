@@ -6,6 +6,14 @@ import { ArrowLeft, FileText, CheckCircle2, ChevronRight } from 'lucide-react';
 export const metadata: Metadata = {
     title: 'Contrat de Réservation — AutoLoc',
     description: 'Consultez les termes du contrat de réservation AutoLoc avant de finaliser votre location.',
+    alternates: {
+        canonical: 'https://www.autoloc.sn/contrat-reservation',
+    },
+    openGraph: {
+        url: 'https://www.autoloc.sn/contrat-reservation',
+        title: 'Contrat de Réservation — AutoLoc',
+        description: 'Consultez les termes du contrat de réservation AutoLoc avant de finaliser votre location.',
+    },
 };
 
 const CLAUSES = [

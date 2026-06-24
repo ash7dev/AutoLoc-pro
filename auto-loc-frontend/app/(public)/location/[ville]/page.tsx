@@ -21,10 +21,10 @@ export function generateMetadata({ params }: LocationPageProps): Metadata {
         openGraph: {
             title,
             description,
-            url: `https://autoloc.sn/location/${params.ville}`,
+            url: `https://www.autoloc.sn/location/${params.ville}`,
         },
         alternates: {
-            canonical: `https://autoloc.sn/location/${params.ville}`,
+            canonical: `https://www.autoloc.sn/location/${params.ville}`,
         },
     };
 }

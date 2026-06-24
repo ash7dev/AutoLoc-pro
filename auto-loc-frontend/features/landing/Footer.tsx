@@ -63,6 +63,7 @@ function NewsletterForm(): React.ReactElement {
       />
       <button
         type="submit"
+        aria-label="S'abonner à la newsletter"
         className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-xl
           bg-emerald-400/10 border border-emerald-400/30
           px-4 py-2.5 text-[13px] font-semibold text-emerald-400

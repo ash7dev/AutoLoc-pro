@@ -1,35 +1,81 @@
 import type { MetadataRoute } from 'next';
 import { fetchAllVerifiedVehicles } from '@/lib/nestjs/vehicles';
 
-const BASE_URL = 'https://autoloc.sn';
+const BASE_URL = 'https://www.autoloc.sn';
 
 // Revalidate the sitemap at most once every hour to keep dynamic pages updated
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ── Static pages ────────────────────────────────────────────────────────────
+  const now = new Date();
+
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'daily',
       priority: 1,
     },
     {
       url: `${BASE_URL}/explorer`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'daily',
       priority: 0.9,
     },
     {
       url: `${BASE_URL}/how-it-works`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'monthly',
-      priority: 0.6,
+      priority: 0.7,
     },
     {
       url: `${BASE_URL}/contact`,
-      lastModified: new Date(),
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/become-owner`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    // Legal pages
+    {
+      url: `${BASE_URL}/cgu`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    },
+    {
+      url: `${BASE_URL}/legal/privacy`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    },
+    {
+      url: `${BASE_URL}/legal/cookies`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    },
+    {
+      url: `${BASE_URL}/contrat-reservation`,
+      lastModified: now,
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    },
+    // Acquisition pages
+    {
+      url: `${BASE_URL}/login`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${BASE_URL}/register`,
+      lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.6,
     },
@@ -52,7 +98,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
   const cityPages: MetadataRoute.Sitemap = uniqueCities.map((ville) => ({
     url: `${BASE_URL}/location/${encodeURIComponent(ville.toLowerCase())}`,
-    lastModified: new Date(),
+    lastModified: now,
     changeFrequency: 'daily' as const,
     priority: 0.8,
   }));
@@ -62,7 +108,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .filter((v) => v && v.id)
     .map((v) => ({
       url: `${BASE_URL}/vehicle/${v.id}`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     }));

@@ -1,8 +1,16 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Politique des Cookies - AutoLoc',
-  description: 'Politique d\'utilisation des cookies sur AutoLoc',
+  title: 'Politique des Cookies — AutoLoc',
+  description: 'Découvrez notre politique d\'utilisation des cookies sur la plateforme AutoLoc.',
+  alternates: {
+    canonical: 'https://www.autoloc.sn/legal/cookies',
+  },
+  openGraph: {
+    url: 'https://www.autoloc.sn/legal/cookies',
+    title: 'Politique des Cookies — AutoLoc',
+    description: 'Découvrez notre politique d\'utilisation des cookies sur la plateforme AutoLoc.',
+  },
 };
 
 export default function CookiesPage() {

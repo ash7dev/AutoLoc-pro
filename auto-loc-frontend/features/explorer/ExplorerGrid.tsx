@@ -483,6 +483,7 @@ export function ExplorerGrid({ initialZone }: { initialZone?: string } = {}): Re
       <div className="md:hidden sticky top-[60px] z-40 bg-white border-b border-slate-100 px-4 py-2 flex items-center justify-between gap-3 shadow-sm">
         <Link
           href="/"
+          aria-label="Retour à l'accueil"
           className="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-50 border border-slate-100 text-slate-600 active:scale-95 shrink-0"
         >
           <ArrowLeft className="h-4 w-4" strokeWidth={2.5} />

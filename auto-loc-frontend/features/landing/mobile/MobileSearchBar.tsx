@@ -133,6 +133,7 @@ export function MobileSearchBar(): React.ReactElement {
         <button
           type="button"
           onClick={() => setIsFilterOpen(true)}
+          aria-label="Filtres de recherche"
           className="relative w-[52px] shrink-0 flex items-center justify-center bg-white rounded-2xl border border-slate-100/80 shadow-[0_4px_25px_rgba(0,0,0,0.04)] active:scale-[0.96] transition-all"
         >
           <SlidersHorizontal className="h-4.5 w-4.5 text-slate-600" />

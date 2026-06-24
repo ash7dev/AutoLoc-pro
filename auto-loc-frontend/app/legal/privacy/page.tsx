@@ -9,6 +9,14 @@ import {
 export const metadata: Metadata = {
   title: 'Politique de Confidentialité — AutoLoc',
   description: 'Découvrez comment AutoLoc collecte, utilise et protège vos données personnelles conformément au RGPD et à la législation sénégalaise.',
+  alternates: {
+    canonical: 'https://www.autoloc.sn/legal/privacy',
+  },
+  openGraph: {
+    url: 'https://www.autoloc.sn/legal/privacy',
+    title: 'Politique de Confidentialité — AutoLoc',
+    description: 'Découvrez comment AutoLoc collecte, utilise et protège vos données personnelles.',
+  },
 };
 
 /* ════════════════════════════════════════════════════════════════
