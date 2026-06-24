@@ -21,7 +21,9 @@ import {
 } from './queue.config';
 import { getCheckoutAutoCloseDelayMs } from '../../domain/reservation/reservation-checkin.constants';
 
-const DEFAULT_PAYMENT_EXPIRY_MS = 15 * 60 * 1000;
+const DEFAULT_PAYMENT_EXPIRY_MS = process.env.PAYMENT_EXPIRY_MS
+  ? parseInt(process.env.PAYMENT_EXPIRY_MS, 10)
+  : 3 * 60 * 1000;
 const DEFAULT_SIGNATURE_EXPIRY_MS = 48 * 60 * 60 * 1000;
 const DEFAULT_SIGNATURE_REMINDER_MS = 24 * 60 * 60 * 1000;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
