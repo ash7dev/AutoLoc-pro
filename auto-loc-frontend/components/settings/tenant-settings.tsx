@@ -34,7 +34,7 @@ interface TenantSettingsProps {
 }
 
 export function TenantSettings({ profile: initialProfile }: TenantSettingsProps) {
-  const { switchToProprietaire, loading: switchingRole } = useSwitchToProprietaire();
+  const { switchToProprietaire, loading: switchingRole, error: hookError } = useSwitchToProprietaire();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('profile');
   const [editingField, setEditingField] = useState<keyof typeof formData | null>(null);
@@ -516,9 +516,9 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
                 <span className="hidden sm:inline">Déconnexion</span>
               </Button>
             </div>
-            {switchError && (
+            {(switchError || hookError) && (
               <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-                {switchError}
+                {switchError || hookError}
               </div>
             )}
           </div>
