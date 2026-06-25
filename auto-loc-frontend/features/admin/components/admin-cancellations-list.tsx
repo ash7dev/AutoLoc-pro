@@ -39,36 +39,53 @@ export function AdminCancellationsList({
   const [filterBy, setFilterBy] = useState<string>("ALL");
   const [data, setData] = useState(initialData.data);
 
+  // Filtrer d'abord les paiements échoués pour les compteurs
+  const validCancellationsForCounts = initialData.data.filter((c) => {
+    if (c.paiement?.statut === 'ECHOUE' || c.paiement?.statut === 'EN_ATTENTE_PAIEMENT') {
+      return false;
+    }
+    return true;
+  });
+
   const filters = [
-    { key: "ALL", label: "Toutes", count: initialData.total },
+    { key: "ALL", label: "Toutes", count: validCancellationsForCounts.length },
     {
       key: "PROPRIETAIRE",
       label: "Propriétaires",
-      count: initialData.data.filter((c) => c.annuleePar === "PROPRIETAIRE")
+      count: validCancellationsForCounts.filter((c) => c.annuleePar === "PROPRIETAIRE")
         .length,
     },
     {
       key: "LOCATAIRE",
       label: "Locataires",
-      count: initialData.data.filter((c) => c.annuleePar === "LOCATAIRE")
+      count: validCancellationsForCounts.filter((c) => c.annuleePar === "LOCATAIRE")
         .length,
     },
     {
       key: "SYSTEM",
       label: "Auto (système)",
-      count: initialData.data.filter((c) => c.annuleePar === "SYSTEM").length,
+      count: validCancellationsForCounts.filter((c) => c.annuleePar === "SYSTEM").length,
     },
     {
       key: "ADMIN",
       label: "Admin (forcé)",
-      count: initialData.data.filter((c) => c.annuleePar === "ADMIN").length,
+      count: validCancellationsForCounts.filter((c) => c.annuleePar === "ADMIN").length,
     },
   ];
 
+  // Filtrer d'abord les paiements échoués
+  const validCancellations = data.filter((c) => {
+    // Masquer si le paiement a échoué
+    if (c.paiement?.statut === 'ECHOUE' || c.paiement?.statut === 'EN_ATTENTE_PAIEMENT') {
+      return false;
+    }
+    return true;
+  });
+
   const filtered =
     filterBy === "ALL"
-      ? data
-      : data.filter((c) => c.annuleePar === filterBy);
+      ? validCancellations
+      : validCancellations.filter((c) => c.annuleePar === filterBy);
 
   const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString("fr-FR", {
@@ -185,11 +202,11 @@ export function AdminCancellationsList({
             </p>
           </div>
           <p className="text-[28px] font-black text-red-600 tabular-nums">
-            {initialData.totalPenalties}
+            {validCancellationsForCounts.filter((c) => Number(c.penalite) > 0).length}
           </p>
           <p className="text-[12px] text-red-500 font-medium mt-1">
             {fmtMoney(
-              initialData.data.reduce(
+              validCancellationsForCounts.reduce(
                 (sum, c) => sum + (Number(c.penalite) || 0),
                 0
               )
@@ -208,11 +225,11 @@ export function AdminCancellationsList({
             </p>
           </div>
           <p className="text-[28px] font-black text-blue-600 tabular-nums">
-            {initialData.data.filter((c) => c.paiement?.rembourseLe).length}
+            {validCancellationsForCounts.filter((c) => c.paiement?.rembourseLe).length}
           </p>
           <p className="text-[12px] text-blue-500 font-medium mt-1">
             {fmtMoney(
-              initialData.data.reduce(
+              validCancellationsForCounts.reduce(
                 (sum, c) =>
                   sum + (Number(c.paiement?.montantRembourse) || 0),
                 0
@@ -233,7 +250,7 @@ export function AdminCancellationsList({
           </div>
           <p className="text-[28px] font-black text-amber-600 tabular-nums">
             {
-              initialData.data.filter(
+              validCancellationsForCounts.filter(
                 (c) => c.paiement?.statut === "CONFIRME" && !c.paiement.rembourseLe
               ).length
             }

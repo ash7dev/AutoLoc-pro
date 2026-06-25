@@ -25,6 +25,17 @@ export default async function AdminCancellationsPage() {
   // Initial data fetch for SEO / SSR
   const initialData = await fetchAdminCancellations(token);
 
+  // Filtrer les annulations avec paiements échoués
+  const validCancellations = initialData.data.filter((c) => {
+    if (c.paiement?.statut === 'ECHOUE' || c.paiement?.statut === 'EN_ATTENTE_PAIEMENT') {
+      return false;
+    }
+    return true;
+  });
+
+  const totalValidCancellations = validCancellations.length;
+  const totalValidPenalties = validCancellations.filter((c) => Number(c.penalite) > 0).length;
+
   return (
     <div className="p-4 sm:p-6 lg:p-10 space-y-8 max-w-7xl mx-auto">
       {/* Header */}
@@ -47,11 +58,11 @@ export default async function AdminCancellationsPage() {
         <div className="flex items-center gap-3">
           <div className="bg-white border border-slate-100 rounded-2xl px-5 py-3 shadow-sm">
             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-0.5">Total</p>
-            <p className="text-[20px] font-black text-black leading-none">{initialData.total}</p>
+            <p className="text-[20px] font-black text-black leading-none">{totalValidCancellations}</p>
           </div>
           <div className="bg-gradient-to-br from-red-50 to-orange-50 border border-red-100 rounded-2xl px-5 py-3 shadow-sm">
             <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-0.5">Pénalités</p>
-            <p className="text-[20px] font-black text-red-600 leading-none">{initialData.totalPenalties}</p>
+            <p className="text-[20px] font-black text-red-600 leading-none">{totalValidPenalties}</p>
           </div>
         </div>
       </div>

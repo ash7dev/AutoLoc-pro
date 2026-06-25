@@ -226,7 +226,7 @@ const SECTIONS = [
           ))}
         </div>
         <p className="text-[13px] bg-emerald-50 border border-emerald-100 rounded-xl p-3">
-          <strong className="text-emerald-700">Transferts internationaux :</strong> Vos données sont hébergées au Sénégal. Tout transfert hors du pays est soumis aux garanties appropriées conformément à la réglementation en vigueur.
+          <strong className="text-emerald-700">Transferts internationaux :</strong> Vos données de profil et de réservation sont stockées sur des serveurs sécurisés situés en Europe (Irlande), dans le cadre de services cloud bénéficiant de mesures de sécurité renforcées. Tout transfert hors du Sénégal fait l&apos;objet d&apos;une demande d&apos;autorisation auprès de la CDP.
         </p>
       </div>
     ),
