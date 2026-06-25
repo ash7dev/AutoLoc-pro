@@ -147,6 +147,8 @@ export default async function AdminOverviewPage(): Promise<React.ReactElement> {
         kyc={stats ? { value: stats.pending.kycEnAttente } : undefined}
         vehicles={stats ? { value: stats.pending.vehiculesAValider } : undefined}
         withdrawals={stats ? { value: stats.pending.retraitsEnAttente } : undefined}
+        refunds={undefined}
+        cancellations={undefined}
         disputes={stats ? { value: stats.pending.litigesOuverts } : undefined}
       />
 

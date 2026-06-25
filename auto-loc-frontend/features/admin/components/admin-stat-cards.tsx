@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { BadgeCheck, Car, Banknote, Scale, ArrowRight } from 'lucide-react';
+import { BadgeCheck, Car, Banknote, Scale, ArrowRight, RefreshCcw, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface StatCardData {
@@ -15,10 +15,12 @@ interface AdminStatCardsProps {
   kyc?: Pick<StatCardData, 'value' | 'trend'>;
   vehicles?: Pick<StatCardData, 'value' | 'trend'>;
   withdrawals?: Pick<StatCardData, 'value' | 'trend'>;
+  refunds?: Pick<StatCardData, 'value' | 'trend'>;
+  cancellations?: Pick<StatCardData, 'value' | 'trend'>;
   disputes?: Pick<StatCardData, 'value' | 'trend'>;
 }
 
-type Color = 'amber' | 'emerald' | 'blue' | 'red';
+type Color = 'amber' | 'emerald' | 'blue' | 'red' | 'purple' | 'orange';
 
 const COLOR_MAP: Record<Color, {
   bg: string; border: string; iconBg: string; iconText: string;
@@ -48,6 +50,18 @@ const COLOR_MAP: Record<Color, {
     valuText: 'text-red-900',     urgent: 'ring-red-300/60',
     zeroBg: 'bg-slate-50 border-slate-100',
   },
+  purple:  {
+    bg: 'bg-purple-50',  border: 'border-purple-200/70',
+    iconBg: 'bg-purple-100',  iconText: 'text-purple-600',
+    valuText: 'text-purple-900',  urgent: 'ring-purple-300/60',
+    zeroBg: 'bg-slate-50 border-slate-100',
+  },
+  orange:  {
+    bg: 'bg-orange-50',  border: 'border-orange-200/70',
+    iconBg: 'bg-orange-100',  iconText: 'text-orange-600',
+    valuText: 'text-orange-900',  urgent: 'ring-orange-300/60',
+    zeroBg: 'bg-slate-50 border-slate-100',
+  },
 };
 
 interface CardConfig {
@@ -61,17 +75,19 @@ interface CardConfig {
 }
 
 const CARD_CONFIGS: CardConfig[] = [
-  { key: 'kyc',         label: 'KYC en attente',     sub: 'vérifications identité',   cta: 'Examiner',  href: '/dashboard/admin/kyc',         icon: BadgeCheck, color: 'amber'   },
-  { key: 'vehicles',    label: 'Véhicules à valider', sub: 'en attente de validation', cta: 'Valider',   href: '/dashboard/admin/vehicles',    icon: Car,        color: 'blue'    },
-  { key: 'withdrawals', label: 'Retraits demandés',   sub: 'FCFA à traiter',           cta: 'Traiter',   href: '/dashboard/admin/withdrawals', icon: Banknote,   color: 'emerald' },
-  { key: 'disputes',    label: 'Litiges ouverts',     sub: 'à résoudre en priorité',   cta: 'Arbitrer',  href: '/dashboard/admin/disputes',    icon: Scale,      color: 'red'     },
+  { key: 'kyc',           label: 'KYC en attente',         sub: 'vérifications identité',   cta: 'Examiner',     href: '/dashboard/admin/kyc',           icon: BadgeCheck, color: 'amber'   },
+  { key: 'vehicles',      label: 'Véhicules à valider',   sub: 'en attente de validation', cta: 'Valider',      href: '/dashboard/admin/vehicles',      icon: Car,        color: 'blue'    },
+  { key: 'withdrawals',   label: 'Retraits demandés',     sub: 'FCFA à traiter',           cta: 'Traiter',      href: '/dashboard/admin/withdrawals',   icon: Banknote,   color: 'emerald' },
+  { key: 'refunds',       label: 'Remboursements',        sub: 'en attente de traitement', cta: 'Traiter',      href: '/dashboard/admin/refunds',       icon: RefreshCcw, color: 'purple'  },
+  { key: 'cancellations', label: 'Annulations récentes',  sub: 'à examiner',               cta: 'Examiner',     href: '/dashboard/admin/cancellations', icon: XCircle,    color: 'orange'  },
+  { key: 'disputes',      label: 'Litiges ouverts',       sub: 'à résoudre en priorité',   cta: 'Arbitrer',     href: '/dashboard/admin/disputes',      icon: Scale,      color: 'red'     },
 ];
 
-export function AdminStatCards({ kyc, vehicles, withdrawals, disputes }: AdminStatCardsProps) {
-  const data = { kyc, vehicles, withdrawals, disputes };
+export function AdminStatCards({ kyc, vehicles, withdrawals, refunds, cancellations, disputes }: AdminStatCardsProps) {
+  const data = { kyc, vehicles, withdrawals, refunds, cancellations, disputes };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
       {CARD_CONFIGS.map((cfg) => {
         const c = COLOR_MAP[cfg.color];
         const Icon = cfg.icon;
@@ -99,13 +115,17 @@ export function AdminStatCards({ kyc, vehicles, withdrawals, disputes }: AdminSt
                   'animate-ping absolute inline-flex h-full w-full rounded-full opacity-60',
                   cfg.color === 'red' ? 'bg-red-400' :
                   cfg.color === 'amber' ? 'bg-amber-400' :
-                  cfg.color === 'blue' ? 'bg-blue-400' : 'bg-emerald-400',
+                  cfg.color === 'blue' ? 'bg-blue-400' :
+                  cfg.color === 'purple' ? 'bg-purple-400' :
+                  cfg.color === 'orange' ? 'bg-orange-400' : 'bg-emerald-400',
                 )} />
                 <span className={cn(
                   'relative inline-flex rounded-full h-2 w-2',
                   cfg.color === 'red' ? 'bg-red-500' :
                   cfg.color === 'amber' ? 'bg-amber-500' :
-                  cfg.color === 'blue' ? 'bg-blue-500' : 'bg-emerald-500',
+                  cfg.color === 'blue' ? 'bg-blue-500' :
+                  cfg.color === 'purple' ? 'bg-purple-500' :
+                  cfg.color === 'orange' ? 'bg-orange-500' : 'bg-emerald-500',
                 )} />
               </span>
             )}

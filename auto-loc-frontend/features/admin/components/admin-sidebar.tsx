@@ -19,6 +19,8 @@ import {
   History,
   Calendar,
   Menu,
+  XCircle,
+  RefreshCcw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSignOut } from '../../auth/hooks/use-signout';
@@ -36,6 +38,8 @@ const NAV_ITEMS = [
   { href: '/dashboard/admin/reservations', icon: Calendar,        label: 'Réservations',     group: 'ops'  },
   { href: '/dashboard/admin/kyc',          icon: BadgeCheck,      label: 'KYC',              group: 'ops'  },
   { href: '/dashboard/admin/withdrawals',  icon: Banknote,        label: 'Retraits',         group: 'ops'  },
+  { href: '/dashboard/admin/refunds',      icon: RefreshCcw,      label: 'Remboursements',   group: 'ops'  },
+  { href: '/dashboard/admin/cancellations', icon: XCircle,        label: 'Annulations',      group: 'ops'  },
   { href: '/dashboard/admin/disputes',     icon: Scale,           label: 'Litiges',          group: 'ops'  },
   { href: '/dashboard/admin/users',        icon: Users,           label: 'Utilisateurs',     group: 'data' },
   { href: '/dashboard/admin/audit',        icon: History,         label: 'Audit',            group: 'data' },
@@ -143,10 +147,12 @@ export function AdminSidebar() {
   const badges = useAdminBadges();
 
   const badgeFor: Record<string, number | undefined> = {
-    '/dashboard/admin/kyc':         badges?.pendingKyc,
-    '/dashboard/admin/vehicles':    badges?.pendingVehicles,
-    '/dashboard/admin/withdrawals': badges?.pendingWithdrawals,
-    '/dashboard/admin/disputes':    badges?.pendingLitiges,
+    '/dashboard/admin/kyc':           badges?.pendingKyc,
+    '/dashboard/admin/vehicles':      badges?.pendingVehicles,
+    '/dashboard/admin/withdrawals':   badges?.pendingWithdrawals,
+    '/dashboard/admin/disputes':      badges?.pendingLitiges,
+    '/dashboard/admin/refunds':       undefined, // TODO: Add backend support
+    '/dashboard/admin/cancellations': undefined, // TODO: Add backend support
   };
 
   const urgentPaths = ['/dashboard/admin/disputes', '/dashboard/admin/kyc'];
