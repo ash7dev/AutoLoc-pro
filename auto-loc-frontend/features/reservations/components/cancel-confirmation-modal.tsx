@@ -279,7 +279,7 @@ export function CancelConfirmationModal({
     const config = severityConfig[policy.severity];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
+        <div className="fixed inset-0 z-[100000] flex items-end sm:items-center justify-center p-0 sm:p-6">
             {/* Enhanced backdrop */}
             <div
                 className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/60 backdrop-blur-md"
@@ -295,7 +295,7 @@ export function CancelConfirmationModal({
                 </div>
 
                 {/* Header */}
-                <div className="flex items-start gap-4 px-6 pt-5 pb-5 sm:pt-6 border-b border-slate-100">
+                <div className="flex items-start gap-4 px-4 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5 border-b border-slate-100">
                     <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg", config.iconBg)}>
                         {policy.canCancel ? (
                             <AlertTriangle className="w-7 h-7 text-white" strokeWidth={2.5} />
@@ -303,7 +303,7 @@ export function CancelConfirmationModal({
                             <Ban className="w-7 h-7 text-white" strokeWidth={2.5} />
                         )}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                         <h2 className="text-[20px] font-black text-slate-900 leading-tight tracking-tight">
                             {policy.canCancel ? "Confirmer l'annulation ?" : "Annulation impossible"}
                         </h2>
@@ -316,13 +316,13 @@ export function CancelConfirmationModal({
                         type="button"
                         onClick={() => !loading && onClose()}
                         disabled={loading}
-                        className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all disabled:opacity-30"
+                        className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all disabled:opacity-30 flex-shrink-0"
                     >
                         <X className="w-4.5 h-4.5" strokeWidth={2.5} />
                     </button>
                 </div>
 
-                <div className="px-6 py-6 space-y-5">
+                <div className="px-4 py-4 sm:px-6 sm:py-6 space-y-4 sm:space-y-5">
 
                     {/* Résumé des conséquences */}
                     <div className={cn("rounded-3xl border-2 overflow-hidden shadow-sm", config.border)}>
@@ -339,23 +339,23 @@ export function CancelConfirmationModal({
 
                         {isOwner ? (
                             // ── VUE PROPRIÉTAIRE ──
-                            <div className="p-5 bg-white space-y-4">
+                            <div className="p-3.5 sm:p-5 bg-white space-y-3.5 sm:space-y-4">
                                 {/* Remboursement locataire */}
-                                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center">
+                                <div className="flex items-center justify-between gap-3 p-3 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center flex-shrink-0">
                                             <DollarSign className="w-5 h-5 text-slate-600" strokeWidth={2.5} />
                                         </div>
-                                        <div>
-                                            <p className="text-[13.5px] font-bold text-slate-900">
+                                        <div className="min-w-0">
+                                            <p className="text-[13.5px] font-bold text-slate-900 truncate">
                                                 Remboursement locataire
                                             </p>
-                                            <p className="text-[11.5px] text-slate-500 font-medium mt-0.5">
+                                            <p className="text-[11.5px] text-slate-500 font-medium mt-0.5 truncate">
                                                 AutoLoc remboursera {policy.refundPercentage}%
                                             </p>
                                         </div>
                                     </div>
-                                    <p className="text-[20px] font-black text-slate-900 tabular-nums">
+                                    <p className="text-[20px] font-black text-slate-900 tabular-nums whitespace-nowrap flex-shrink-0">
                                         {fmtMoney(policy.refundAmount)} <span className="text-[14px] font-semibold text-slate-500">F</span>
                                     </p>
                                 </div>
@@ -363,27 +363,27 @@ export function CancelConfirmationModal({
                                 {/* Pénalité */}
                                 {policy.penaltyAmount > 0 && (
                                     <>
-                                        <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-red-50 border-2 border-red-200">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-sm">
+                                        <div className="flex items-center justify-between gap-3 p-3 sm:p-4 rounded-2xl bg-red-50 border-2 border-red-200">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-sm flex-shrink-0">
                                                     <AlertCircleIcon className="w-5 h-5 text-white" strokeWidth={2.5} />
                                                 </div>
-                                                <div>
-                                                    <p className="text-[13.5px] font-bold text-red-900">
+                                                <div className="min-w-0">
+                                                    <p className="text-[13.5px] font-bold text-red-900 truncate">
                                                         Votre pénalité
                                                     </p>
-                                                    <p className="text-[11.5px] text-red-700 font-medium mt-0.5">
+                                                    <p className="text-[11.5px] text-red-700 font-medium mt-0.5 truncate">
                                                         {policy.penaltyPercentage}% du montant de base
                                                     </p>
                                                 </div>
                                             </div>
-                                            <p className="text-[20px] font-black text-red-600 tabular-nums">
+                                            <p className="text-[20px] font-black text-red-600 tabular-nums whitespace-nowrap flex-shrink-0">
                                                 {fmtMoney(policy.penaltyAmount)} <span className="text-[14px] font-semibold text-red-500">F</span>
                                             </p>
                                         </div>
 
                                         {/* Explication prélèvement */}
-                                        <div className={cn("rounded-2xl border-2 px-4 py-3.5 flex items-start gap-3", config.bg, config.border)}>
+                                        <div className={cn("rounded-2xl border-2 px-3 py-3 sm:px-4 sm:py-3.5 flex items-start gap-3", config.bg, config.border)}>
                                             <Lightbulb className={cn("w-4 h-4 flex-shrink-0 mt-0.5", config.text)} strokeWidth={2.5} />
                                             <p className={cn("text-[12.5px] font-semibold leading-relaxed", config.text)}>
                                                 Cette pénalité sera <strong className="font-black">déduite de votre prochaine location</strong>. Si votre wallet n'a pas assez de solde, elle sera enregistrée comme dette.
@@ -394,9 +394,9 @@ export function CancelConfirmationModal({
 
                                 {/* Aucune pénalité */}
                                 {policy.penaltyAmount === 0 && (
-                                    <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 px-4 py-3.5">
+                                    <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 px-3 py-3 sm:px-4 sm:py-3.5">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+                                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center flex-shrink-0">
                                                 <CheckCircle2 className="w-4.5 h-4.5 text-white" strokeWidth={2.5} />
                                             </div>
                                             <p className="text-[12.5px] text-emerald-900 font-bold leading-relaxed">
@@ -408,24 +408,24 @@ export function CancelConfirmationModal({
                             </div>
                         ) : (
                             // ── VUE LOCATAIRE ──
-                            <div className="p-5 bg-white space-y-4">
+                            <div className="p-3.5 sm:p-5 bg-white space-y-3.5 sm:space-y-4">
                                 {/* Montant remboursé */}
-                                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-200">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-sm">
+                                <div className="flex items-center justify-between gap-3 p-3 sm:p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-200">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-sm flex-shrink-0">
                                             <CheckCircle2 className="w-5 h-5 text-white" strokeWidth={2.5} />
                                         </div>
-                                        <div>
-                                            <p className="text-[13.5px] font-bold text-emerald-900">
+                                        <div className="min-w-0">
+                                            <p className="text-[13.5px] font-bold text-emerald-900 truncate">
                                                 Vous serez remboursé
                                             </p>
-                                            <p className="text-[11.5px] text-emerald-700 font-medium mt-0.5">
+                                            <p className="text-[11.5px] text-emerald-700 font-medium mt-0.5 truncate">
                                                 {policy.refundPercentage}% du montant payé
                                             </p>
                                         </div>
                                     </div>
                                     <p className={cn(
-                                        "text-[20px] font-black tabular-nums",
+                                        "text-[20px] font-black tabular-nums whitespace-nowrap flex-shrink-0",
                                         policy.refundAmount > 0 ? "text-emerald-600" : "text-red-600"
                                     )}>
                                         {fmtMoney(policy.refundAmount)} <span className="text-[14px] font-semibold opacity-70">F</span>
@@ -434,21 +434,21 @@ export function CancelConfirmationModal({
 
                                 {/* Montant perdu */}
                                 {totalLocataire !== undefined && policy.refundAmount < totalLocataire && (
-                                    <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-red-50 border-2 border-red-200">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-sm">
+                                    <div className="flex items-center justify-between gap-3 p-3 sm:p-4 rounded-2xl bg-red-50 border-2 border-red-200">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-sm flex-shrink-0">
                                                 <XCircle className="w-5 h-5 text-white" strokeWidth={2.5} />
                                             </div>
-                                            <div>
-                                                <p className="text-[13.5px] font-bold text-red-900">
+                                            <div className="min-w-0">
+                                                <p className="text-[13.5px] font-bold text-red-900 truncate">
                                                     Frais d'annulation
                                                 </p>
-                                                <p className="text-[11.5px] text-red-700 font-medium mt-0.5">
+                                                <p className="text-[11.5px] text-red-700 font-medium mt-0.5 truncate">
                                                     {100 - policy.refundPercentage}% non remboursé
                                                 </p>
                                             </div>
                                         </div>
-                                        <p className="text-[20px] font-black text-red-600 tabular-nums">
+                                        <p className="text-[20px] font-black text-red-600 tabular-nums whitespace-nowrap flex-shrink-0">
                                             {fmtMoney(totalLocataire - policy.refundAmount)} <span className="text-[14px] font-semibold text-red-500">F</span>
                                         </p>
                                     </div>
@@ -459,7 +459,7 @@ export function CancelConfirmationModal({
 
                     {/* Avertissements */}
                     {policy.warnings.length > 0 && (
-                        <div className={cn("rounded-2xl border-2 px-4 py-4 space-y-2.5", config.bg, config.border)}>
+                        <div className={cn("rounded-2xl border-2 px-3 py-3 sm:px-4 sm:py-4 space-y-2.5", config.bg, config.border)}>
                             {policy.warnings.map((warning, idx) => (
                                 <div key={idx} className="flex items-start gap-3">
                                     <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0", policy.severity === 'blocked' ? 'bg-slate-200' : 'bg-white/80')}>
@@ -484,7 +484,7 @@ export function CancelConfirmationModal({
                                 value={raison}
                                 onChange={(e) => setRaison(e.target.value)}
                                 placeholder="Expliquez brièvement pourquoi vous annulez..."
-                                className="w-full rounded-2xl border-2 border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-400/20 px-4 py-3.5 text-[13.5px] font-medium resize-none transition-all disabled:opacity-50"
+                                className="w-full rounded-2xl border-2 border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-400/20 px-3 py-3 sm:px-4 sm:py-3.5 text-[13.5px] font-medium resize-none transition-all disabled:opacity-50"
                                 rows={3}
                                 disabled={loading}
                             />
@@ -496,7 +496,7 @@ export function CancelConfirmationModal({
                                 )}>
                                     {raison.trim().length > 0 && raison.trim().length < 10 && (
                                         <>
-                                            <AlertTriangle className="w-3 h-3" strokeWidth={2.5} />
+                                            <AlertTriangle className="w-3 h-3 flex-shrink-0" strokeWidth={2.5} />
                                             Minimum 10 caractères requis
                                         </>
                                     )}
@@ -509,11 +509,11 @@ export function CancelConfirmationModal({
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center gap-3 pt-2">
+                    <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 pt-2">
                         <button
                             onClick={() => !loading && onClose()}
                             disabled={loading}
-                            className="flex-1 px-5 py-3.5 rounded-2xl text-[14px] font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-2 border-slate-200 transition-all disabled:opacity-40"
+                            className="w-full sm:flex-1 px-5 py-3.5 rounded-2xl text-[14px] font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-2 border-slate-200 transition-all disabled:opacity-40"
                         >
                             Retour
                         </button>
@@ -522,16 +522,16 @@ export function CancelConfirmationModal({
                                 onClick={() => raison.trim().length >= 10 && onConfirm(raison)}
                                 disabled={loading || raison.trim().length < 10}
                                 className={cn(
-                                    "flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-2xl text-[14px] font-black transition-all duration-200",
+                                    "w-full sm:flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-2xl text-[14px] font-black transition-all duration-200",
                                     raison.trim().length >= 10 && !loading
                                         ? `${config.btnBg} ${config.btnText} hover:-translate-y-0.5 active:translate-y-0 active:shadow-md`
                                         : "bg-slate-100 text-slate-400 cursor-not-allowed",
                                 )}
                             >
                                 {loading ? (
-                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
                                 ) : (
-                                    <XCircle className="w-5 h-5" strokeWidth={2.5} />
+                                    <XCircle className="w-5 h-5 flex-shrink-0" strokeWidth={2.5} />
                                 )}
                                 Confirmer l'annulation
                             </button>
