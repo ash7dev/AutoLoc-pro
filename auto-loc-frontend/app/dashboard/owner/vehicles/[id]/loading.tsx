@@ -1,5 +1,6 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LogoLoader } from "@/components/ui/logo-loader";
 
 function TopBarSkeleton() {
   return (
@@ -106,9 +107,16 @@ function SectionCardSkeleton({
 
 export default function OwnerVehicleDetailLoading() {
   return (
-    <div className="min-h-screen bg-slate-50/40">
-      <div className="max-w-6xl mx-auto px-4 py-6 lg:px-8 lg:py-8 space-y-6">
-        <TopBarSkeleton />
+    <>
+      {/* Logo Loader - Mobile */}
+      <div className="lg:hidden">
+        <LogoLoader message="Chargement du véhicule..." />
+      </div>
+
+      {/* Skeleton - Desktop */}
+      <div className="hidden lg:block min-h-screen bg-slate-50/40">
+        <div className="max-w-6xl mx-auto px-4 py-6 lg:px-8 lg:py-8 space-y-6">
+          <TopBarSkeleton />
 
         <HeroCardSkeleton />
 
@@ -118,8 +126,9 @@ export default function OwnerVehicleDetailLoading() {
           <SectionCardSkeleton titleWidth="w-44" bodyHeight="h-72" />
           <SectionCardSkeleton titleWidth="w-52" bodyHeight="h-72" />
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

@@ -26,10 +26,12 @@ async function DashboardDataFetcher({ token }: { token: string }) {
   let reviews: any = null;
 
   try {
+    // OPTIMISATION MOBILE: Réduire la limite à 15 réservations pour le dashboard
+    // Les réservations complètes sont disponibles sur /dashboard/owner/reservations
     const [profileResult, resResult, vehiclesResult, walletResult, statsResult] =
       await Promise.allSettled([
         fetchMe(token),
-        fetchOwnerReservations(token, { limit: 200 }),
+        fetchOwnerReservations(token, { limit: 15 }), // Réduit de 200 → 15 pour performance mobile
         fetchMyVehicles(token),
         fetchWallet(token),
         fetchOwnerStats(token),

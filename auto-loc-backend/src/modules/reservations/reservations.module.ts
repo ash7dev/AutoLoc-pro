@@ -10,10 +10,11 @@ import { CloudinaryModule } from '../../infrastructure/cloudinary/cloudinary.mod
 import { ContractModule } from '../../infrastructure/contract/contract.module';
 import { QueueModule } from '../../infrastructure/queue/queue.module';
 import { AdminReservationsController } from './admin-reservations.controller';
+import { AdminCancellationsController } from './admin-cancellations.controller';
 
 @Module({
   imports: [ReservationDomainModule, DisputesModule, CloudinaryModule, ContractModule, QueueModule],
-  controllers: [ReservationsController, AdminReservationsController],
+  controllers: [ReservationsController, AdminReservationsController, AdminCancellationsController],
   providers: [
     ReservationsService,
     JwtAuthGuard,

@@ -842,6 +842,79 @@ export class ReservationsService {
     return reservation;
   }
 
+  /**
+   * Récupère toutes les annulations (exclut les EXPIREE)
+   * EXPIREE = réservation non payée dans les délais (pas une vraie annulation)
+   */
+  async adminGetCancellations(annuleePar?: string, page = 1) {
+    const take = 20;
+    const skip = (page - 1) * take;
+
+    const where: any = {
+      statut: StatutReservation.ANNULEE,
+      // Exclure les EXPIREE qui sont techniquement en statut ANNULEE mais pas de vraies annulations
+      NOT: {
+        raisonAnnulation: {
+          contains: 'paiement non effectué',
+        },
+      },
+    };
+
+    // Filtrer par qui a annulé
+    if (annuleePar) {
+      where.annuleePar = annuleePar;
+    }
+
+    const [reservations, total] = await Promise.all([
+      this.prisma.reservation.findMany({
+        where,
+        orderBy: { annuleLe: 'desc' }, // Correct field name
+        take,
+        skip,
+        include: {
+          vehicule: {
+            select: { id: true, marque: true, modele: true, immatriculation: true, ville: true },
+          },
+          locataire: {
+            select: { id: true, prenom: true, nom: true, email: true, telephone: true },
+          },
+          proprietaire: {
+            select: { id: true, prenom: true, nom: true, email: true, telephone: true },
+          },
+          paiement: {
+            select: {
+              statut: true,
+              montant: true,
+              montantRembourse: true,
+              rembourseLe: true,
+            },
+          },
+        },
+      }),
+      this.prisma.reservation.count({ where }),
+    ]);
+
+    // Calculer les statistiques
+    const totalPenalties = await this.prisma.penaliteProprietaire.count({
+      where: {
+        reservationId: {
+          in: reservations.map(r => r.id),
+        },
+      },
+    });
+
+    const totalRefunds = reservations.filter(r => r.paiement?.rembourseLe).length;
+
+    return {
+      data: reservations,
+      total,
+      totalPenalties,
+      totalRefunds,
+      page,
+      limit: take,
+    };
+  }
+
   async adminForceCancel(id: string) {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id },

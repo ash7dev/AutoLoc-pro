@@ -340,3 +340,119 @@ export interface AdminNotificationsCount {
   pendingLitiges: number;
   total: number;
 }
+
+// ── Admin Cancellations ───────────────────────────────────────────────────────
+
+export interface AdminCancellation {
+  id: string;
+  statut: 'ANNULEE';
+  dateDebut: string;
+  dateFin: string;
+  annuleeLe: string;
+  raisonAnnulation: string | null;
+  annuleePar: 'LOCATAIRE' | 'PROPRIETAIRE' | 'SYSTEM' | 'ADMIN';
+  totalLocataire: string | number;
+  montantProprietaire: string | number;
+  montantRembourse: number | null;
+  penalite: number | null;
+  paiement: {
+    statut: string;
+    montant: number;
+    montantRembourse: number | null;
+    rembourseLe: string | null;
+  } | null;
+  locataire: {
+    id: string;
+    prenom: string;
+    nom: string;
+    email: string;
+    telephone: string;
+  };
+  proprietaire: {
+    id: string;
+    prenom: string;
+    nom: string;
+    email: string;
+    telephone: string;
+  };
+  vehicule: {
+    id: string;
+    marque: string;
+    modele: string;
+    immatriculation: string;
+    ville: string;
+  };
+}
+
+export interface AdminPenalty {
+  id: string;
+  montant: number;
+  raison: string;
+  statut: 'EN_ATTENTE' | 'DEDUIT' | 'ANNULE';
+  creeLe: string;
+  deduitLe: string | null;
+  reservationId: string;
+  proprietaireId: string;
+  proprietaire: {
+    prenom: string;
+    nom: string;
+    email: string;
+  };
+  reservation: {
+    dateDebut: string;
+    vehicule: {
+      marque: string;
+      modele: string;
+    };
+  };
+}
+
+// ── Fetch functions for cancellations ─────────────────────────────────────────
+
+export async function fetchAdminCancellations(
+  accessToken: string,
+  annuleePar?: string,
+  page = 1
+): Promise<{
+  data: AdminCancellation[];
+  total: number;
+  totalPenalties: number;
+  totalRefunds: number;
+  page: number;
+  limit: number;
+}> {
+  try {
+    const params = new URLSearchParams({ page: page.toString() });
+    if (annuleePar) params.append('annuleePar', annuleePar);
+
+    const url = `/admin/cancellations?${params.toString()}`;
+    const res = await apiFetch<any>(url, { accessToken });
+    return res;
+  } catch (error) {
+    console.error('Failed to fetch admin cancellations:', error);
+    return { data: [], total: 0, totalPenalties: 0, totalRefunds: 0, page: 1, limit: 20 };
+  }
+}
+
+export async function fetchAdminPenalties(
+  accessToken: string,
+  statut?: 'EN_ATTENTE' | 'DEDUIT' | 'ANNULE'
+): Promise<AdminPenalty[]> {
+  try {
+    const url = statut
+      ? `/admin/penalties?statut=${statut}`
+      : '/admin/penalties';
+    const res = await apiFetch<any>(url, { accessToken });
+
+    if (Array.isArray(res)) return res as AdminPenalty[];
+    if (res && typeof res === 'object') {
+      const obj = res as Record<string, unknown>;
+      const inner = obj.data ?? obj.items ?? obj.penalties;
+      if (Array.isArray(inner)) return inner as AdminPenalty[];
+    }
+    return [];
+  } catch (error) {
+    console.error('Failed to fetch admin penalties:', error);
+    return [];
+  }
+}

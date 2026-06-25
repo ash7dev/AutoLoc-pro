@@ -296,4 +296,101 @@ export class WalletService {
 
     return { success: true };
   }
+
+  // ── ADMIN - Gestion des pénalités ──────────────────────────────────────────────
+
+  /**
+   * GET /admin/penalties
+   * Récupère toutes les pénalités avec filtrage par statut
+   */
+  async adminGetAllPenalties(statut?: string) {
+    const where: any = {};
+
+    // Filtrage par statut basé sur le champ preleveleLe
+    if (statut === 'EN_ATTENTE') {
+      where.preleveleLe = null;
+    } else if (statut === 'DEDUIT') {
+      where.preleveleLe = { not: null };
+    }
+    // Note: ANNULE n'existe pas dans le modèle actuel, on garde les pénalités avec raison contenant "ANNULÉE"
+
+    const penalites = await this.prisma.penaliteProprietaire.findMany({
+      where,
+      orderBy: { creeLe: 'desc' },
+      include: {
+        utilisateur: {
+          select: {
+            id: true,
+            prenom: true,
+            nom: true,
+            email: true,
+          },
+        },
+        reservation: {
+          select: {
+            id: true,
+            dateDebut: true,
+            vehicule: {
+              select: { marque: true, modele: true },
+            },
+          },
+        },
+      },
+    });
+
+    return penalites.map(p => ({
+      id: p.id,
+      montant: Number(p.montant),
+      raison: p.raison,
+      statut: p.preleveleLe ? 'DEDUIT' : (p.raison.includes('[ANNULÉE PAR ADMIN') ? 'ANNULE' : 'EN_ATTENTE'),
+      creeLe: p.creeLe.toISOString(),
+      deduitLe: p.preleveleLe?.toISOString() || null,
+      reservationId: p.reservationId,
+      proprietaireId: p.utilisateurId,
+      proprietaire: {
+        prenom: p.utilisateur.prenom || '',
+        nom: p.utilisateur.nom || '',
+        email: p.utilisateur.email || '',
+      },
+      reservation: {
+        dateDebut: p.reservation.dateDebut.toISOString(),
+        vehicule: {
+          marque: p.reservation.vehicule.marque,
+          modele: p.reservation.vehicule.modele,
+        },
+      },
+    }));
+  }
+
+  /**
+   * PATCH /admin/penalties/:id/cancel
+   * Annuler manuellement une pénalité
+   */
+  async adminCancelPenalty(penaliteId: string, raison: string) {
+    const penalite = await this.prisma.penaliteProprietaire.findUnique({
+      where: { id: penaliteId },
+    });
+
+    if (!penalite) {
+      throw new NotFoundException('Pénalité introuvable');
+    }
+
+    if (penalite.preleveleLe) {
+      throw new BadRequestException('Impossible d\'annuler une pénalité déjà déduite');
+    }
+
+    if (penalite.raison.includes('[ANNULÉE PAR ADMIN')) {
+      throw new BadRequestException('Cette pénalité est déjà annulée');
+    }
+
+    // On marque comme "annulée" en mettant à jour la raison
+    await this.prisma.penaliteProprietaire.update({
+      where: { id: penaliteId },
+      data: {
+        raison: `${penalite.raison} [ANNULÉE PAR ADMIN: ${raison}]`,
+      },
+    });
+
+    return { success: true, message: 'Pénalité annulée avec succès' };
+  }
 }

@@ -1,5 +1,6 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LogoLoader } from "@/components/ui/logo-loader";
 
 function BackLinkSkeleton() {
   return (
@@ -156,9 +157,16 @@ function TimelineCardSkeleton() {
 
 export default function OwnerReservationDetailLoading() {
   return (
-    <div className="min-h-screen bg-slate-50/60">
-      <div className="max-w-5xl mx-auto px-4 py-6 lg:px-8 lg:py-10 space-y-5">
-        <BackLinkSkeleton />
+    <>
+      {/* Logo Loader - Mobile uniquement pour feedback immédiat */}
+      <div className="lg:hidden">
+        <LogoLoader message="Chargement de la réservation..." />
+      </div>
+
+      {/* Skeleton détaillé - Desktop */}
+      <div className="hidden lg:block min-h-screen bg-slate-50/60">
+        <div className="max-w-5xl mx-auto px-4 py-6 lg:px-8 lg:py-10 space-y-5">
+          <BackLinkSkeleton />
 
         <HeroSkeleton />
 
@@ -173,8 +181,9 @@ export default function OwnerReservationDetailLoading() {
         </div>
 
         <TimelineCardSkeleton />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

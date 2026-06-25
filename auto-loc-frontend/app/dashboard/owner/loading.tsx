@@ -1,14 +1,22 @@
 import React from "react";
+import { LogoLoader } from "@/components/ui/logo-loader";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardLoading() {
   return (
-    <div className="flex flex-col gap-4 p-3 sm:gap-6 sm:p-6 animate-in fade-in duration-500">
-      {/* Header Skeleton */}
-      <div className="flex flex-col gap-2 mb-2">
-        <Skeleton className="h-10 w-48 bg-slate-200" />
-        <Skeleton className="h-4 w-72 bg-slate-100" />
+    <>
+      {/* Logo Loader - Affichage immédiat sur mobile pour feedback visuel */}
+      <div className="lg:hidden">
+        <LogoLoader message="Chargement du tableau de bord..." />
       </div>
+
+      {/* Skeleton - Desktop uniquement pour un effet plus élégant */}
+      <div className="hidden lg:flex flex-col gap-4 p-3 sm:gap-6 sm:p-6 animate-in fade-in duration-500">
+        {/* Header Skeleton */}
+        <div className="flex flex-col gap-2 mb-2">
+          <Skeleton className="h-10 w-48 bg-slate-200" />
+          <Skeleton className="h-4 w-72 bg-slate-100" />
+        </div>
 
       {/* Stats Row Skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
@@ -60,6 +68,7 @@ export default function DashboardLoading() {
             ))}
          </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
