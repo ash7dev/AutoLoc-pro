@@ -14,23 +14,7 @@ import { fetchWallet, fetchPenalties } from "@/lib/nestjs/wallet";
 import { OwnerDashboardView } from "@/features/dashboard/components/owner-dashboard-view";
 import { CACHE_TAGS, CACHE_DURATIONS, getCacheKey } from "@/lib/cache-config";
 
-// ── Composants de chargement progressif ───────────────────────────────────────
 
-function QuickStats({ stats }: { stats: any }) {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4">
-      {/* Affichage rapide des stats essentielles */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-100">
-        <p className="text-xs text-slate-500 mb-1">Réservations</p>
-        <p className="text-2xl font-black">{stats?.totalReservations || 0}</p>
-      </div>
-      <div className="bg-white rounded-2xl p-4 border border-slate-100">
-        <p className="text-xs text-slate-500 mb-1">Revenus</p>
-        <p className="text-2xl font-black">{stats?.totalRevenue || 0} F</p>
-      </div>
-    </div>
-  );
-}
 
 // ── Fetchers avec cache optimisé ──────────────────────────────────────────────
 
@@ -78,16 +62,7 @@ async function getCachedWallet(token: string) {
   )();
 }
 
-// ── Fetcher de stats rapides (prioritaire) ────────────────────────────────────
 
-async function QuickStatsLoader({ token }: { token: string }) {
-  try {
-    const stats = await getCachedStats(token);
-    return <QuickStats stats={stats} />;
-  } catch {
-    return null;
-  }
-}
 
 // ── Fetcher principal avec données complètes ───────────────────────────────────
 
@@ -157,16 +132,6 @@ export default async function OwnerDashboardPage() {
 
   return (
     <div className="min-h-screen">
-      {/* ÉTAPE 1 : Stats rapides - Affichage immédiat */}
-      <Suspense
-        fallback={
-          <div className="animate-pulse p-4">
-            <div className="h-24 bg-slate-100 rounded-2xl" />
-          </div>
-        }
-      >
-        <QuickStatsLoader token={token} />
-      </Suspense>
 
       {/* ÉTAPE 2 : Dashboard complet - Streaming progressif */}
       <Suspense
