@@ -447,6 +447,7 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
   };
 
   const handleSwitchToOwner = async () => {
+    console.log('Switch to owner button clicked');
     setSwitchError(null);
     try {
       await switchToProprietaire();
@@ -481,15 +482,22 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
                 <p className="hidden sm:block text-sm text-slate-500 mt-0.5">Gérez vos informations personnelles et votre sécurité.</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto relative z-10">
               <Button
                 onClick={(e) => {
+                  console.log('Button onClick fired');
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSwitchToOwner();
+                }}
+                onTouchEnd={(e) => {
+                  console.log('Button onTouchEnd fired');
                   e.preventDefault();
                   e.stopPropagation();
                   handleSwitchToOwner();
                 }}
                 disabled={switchingRole}
-                className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 border-0 group min-h-[44px] touch-manipulation transition-all duration-200 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98]"
+                className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 border-0 group min-h-[44px] touch-manipulation transition-all duration-200 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98] relative z-20"
                 type="button"
               >
                 {switchingRole
@@ -501,7 +509,7 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
               <Button
                 onClick={handleLogout}
                 variant="outline"
-                className="flex-1 sm:flex-none bg-white hover:bg-red-50 text-red-600 border-red-200 shadow-sm min-h-[44px] touch-manipulation transition-all duration-200 hover:shadow-md active:scale-[0.98]"
+                className="flex-1 sm:flex-none bg-white hover:bg-red-50 text-red-600 border-red-200 shadow-sm min-h-[44px] touch-manipulation transition-all duration-200 hover:shadow-md active:scale-[0.98] relative z-20"
                 type="button"
               >
                 <LogOut className="w-4 h-4 mr-2" />
