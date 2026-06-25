@@ -93,6 +93,15 @@ export class ConfirmReservationUseCase {
         const newDateDebut = new Date(reservation.dateDebut);
         newDateDebut.setUTCHours(hours, minutes, 0, 0);
 
+        // 4.6. Vérifier que l'heure de début n'est pas dans le passé
+        const now = new Date();
+        if (newDateDebut < now) {
+            throw new BusinessRuleException(
+                "L'heure de début ne peut pas être dans le passé. Veuillez sélectionner une heure future.",
+                'START_TIME_IN_PAST'
+            );
+        }
+
         const newDateFin = new Date(reservation.dateFin);
         // Heure de fin = heure de début + 1 heure de courtoisie
         newDateFin.setUTCHours(hours + 1, minutes, 0, 0);

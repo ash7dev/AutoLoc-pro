@@ -16,6 +16,7 @@ import { CheckoutModal } from "./checkout-modal";
 import { ConfirmModal } from "./confirm-modal";
 import { TimeLockedModal, isTooEarlyFor2h } from "./time-locked-modal";
 import { LifecycleModal } from "./lifecycle-modal";
+import { CancelConfirmationModal } from "./cancel-confirmation-modal";
 
 /* ════════════════════════════════════════════════════════════════
    TYPES
@@ -29,6 +30,9 @@ interface ReservationActionsProps {
     checkinProprietaireLe?: string;
     checkinLocataireLe?: string;
     tacitCheckinDeadlineLe?: string | null;
+    totalLocataire?: number;
+    totalBase?: number;
+    isOwner?: boolean;
     className?: string;
 }
 
@@ -467,6 +471,9 @@ export function ReservationActions({
     reservationId, statut, dateDebut, dateFin, locataireKycStatus,
     checkinProprietaireLe, checkinLocataireLe,
     tacitCheckinDeadlineLe,
+    totalLocataire,
+    totalBase,
+    isOwner = true,
     className,
 }: ReservationActionsProps) {
     const router = useRouter();
@@ -481,6 +488,7 @@ export function ReservationActions({
         const [confirmOpen, setConfirmOpen] = useState(false);
     const [lockedOpen, setLockedOpen] = useState(false);
     const [lifecycleOpen, setLifecycleOpen] = useState(false);
+    const [cancelModalOpen, setCancelModalOpen] = useState(false);
     const { authFetch } = useAuthFetch();
 
     const actions = getActions(statut);
@@ -540,6 +548,7 @@ export function ReservationActions({
 
     const handleAction = async (action: ActionConfig) => {
         if (action.key === "dispute") { setDisputeOpen(true); return; }
+        if (action.key === "cancel") { setCancelModalOpen(true); return; }
         if (action.key === "checkin") {
             if (dateDebut && isTooEarlyFor2h(dateDebut)) {
                 setLockedOpen(true);
@@ -596,6 +605,21 @@ export function ReservationActions({
             setDisputeOpen(false);
             router.refresh();
             toast.success("Litige ouvert avec succès");
+        } catch (err) {
+            const msg = translateError(err);
+            setError(msg);
+            toast.error(msg);
+        } finally {
+            setLoading(null);
+        }
+    };
+
+    const handleCancelConfirm = async (reason: string) => {
+        setError(null); setLoading("cancel"); setCancelModalOpen(false);
+        try {
+            await authFetch(`/reservations/${reservationId}/cancel`, { method: "PATCH", body: { raison: reason.trim() } });
+            router.refresh();
+            toast.success("Réservation annulée");
         } catch (err) {
             const msg = translateError(err);
             setError(msg);
@@ -695,9 +719,13 @@ export function ReservationActions({
             )}
 
             {/* Floating Mobile Action Bar — only for primary action (first one) */}
-            {!confirmingAction && !disputeOpen && !checkinOpen && !checkoutOpen && !confirmOpen && actions.length > 0 && (
+            {!confirmingAction && !disputeOpen && !checkinOpen && !checkoutOpen && !confirmOpen && !cancelModalOpen && actions.length > 0 && (
                 <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-t border-slate-200 px-4 py-4 lg:hidden animate-in slide-in-from-bottom duration-300">
                     {actions
+                        .filter(action =>
+                            // Appliquer le même filtre que pour les boutons desktop
+                            !(action.key === "checkin" && checkinProprietaireLe)
+                        )
                         .filter(a => a.style === "primary")
                         .slice(0, 1)
                         .map(action => (
@@ -774,6 +802,7 @@ export function ReservationActions({
                 onClose={() => setConfirmOpen(false)}
                 onConfirm={handleConfirm}
                 loading={loading === "confirm"}
+                dateDebut={dateDebut}
             />
             {dateDebut && (
                 <TimeLockedModal
@@ -787,6 +816,17 @@ export function ReservationActions({
                 open={lifecycleOpen}
                 onClose={() => setLifecycleOpen(false)}
                 role="OWNER"
+            />
+            <CancelConfirmationModal
+                open={cancelModalOpen}
+                onClose={() => setCancelModalOpen(false)}
+                onConfirm={handleCancelConfirm}
+                loading={loading === "cancel"}
+                statut={statut}
+                dateDebut={dateDebut}
+                totalLocataire={totalLocataire}
+                totalBase={totalBase}
+                isOwner={isOwner}
             />
         </div>
     );

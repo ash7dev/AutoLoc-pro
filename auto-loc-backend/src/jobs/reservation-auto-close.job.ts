@@ -4,6 +4,7 @@ import { StatutReservation } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueueService } from '../infrastructure/queue/queue.service';
 import { NotificationService } from '../infrastructure/notifications/notification.service';
+import { TelegramService } from '../infrastructure/telegram/telegram.service';
 import { TacitCheckinUseCase } from '../domain/reservation/use-cases/tacit-checkin.use-case';
 import { isPastCheckoutInspectionWindow } from '../domain/reservation/reservation-checkin.constants';
 
@@ -27,6 +28,7 @@ export class ReservationAutoCloseJob {
         private readonly prisma: PrismaService,
         private readonly queue: QueueService,
         private readonly notification: NotificationService,
+        private readonly telegram: TelegramService,
         private readonly tacitCheckinUseCase: TacitCheckinUseCase,
     ) { }
 
@@ -50,26 +52,66 @@ export class ReservationAutoCloseJob {
                 checkinProprietaireLe: null,
                 checkinLocataireLe: null,
             },
-            select: { id: true, dateDebut: true },
+            select: {
+                id: true,
+                dateDebut: true,
+                totalLocataire: true,
+                paiement: {
+                    select: {
+                        id: true,
+                        statut: true,
+                        montant: true,
+                    },
+                },
+            },
         });
 
         if (stale.length === 0) return;
 
         this.logger.warn(
-            `Auto-cancelling ${stale.length} stale reservation(s) with no check-in after 5h`,
+            `Auto-cancelling ${stale.length} stale reservation(s) with no check-in`,
         );
 
         for (const r of stale) {
             try {
-                await this.prisma.reservation.update({
-                    where: { id: r.id },
-                    data: {
-                        statut: 'ANNULEE',
-                        annuleLe: new Date(),
-                        raisonAnnulation:
-                            'Contrat résilié automatiquement : aucun check-in n\'a été effectué par les deux parties à la date convenue de la location.',
-                    },
+                await this.prisma.$transaction(async (tx) => {
+                    const now = new Date();
+
+                    // 1. Mettre la réservation en statut ANNULEE
+                    await tx.reservation.update({
+                        where: { id: r.id },
+                        data: {
+                            statut: 'ANNULEE',
+                            annuleLe: now,
+                            raisonAnnulation:
+                                'Contrat résilié automatiquement : aucun check-in n\'a été effectué par les deux parties à la date convenue de la location.',
+                            updatedBySystem: true,
+                        },
+                    });
+
+                    // 2. Marquer le paiement comme REMBOURSE (100% - aucune pénalité)
+                    if (r.paiement && r.paiement.statut === 'CONFIRME') {
+                        await tx.paiement.update({
+                            where: { id: r.paiement.id },
+                            data: {
+                                statut: 'REMBOURSE',
+                                rembourseLe: now,
+                                montantRembourse: r.totalLocataire,
+                            },
+                        });
+                    }
+
+                    // 3. Créer l'historique
+                    await tx.reservationHistorique.create({
+                        data: {
+                            reservationId: r.id,
+                            ancienStatut: 'CONFIRMEE',
+                            nouveauStatut: 'ANNULEE',
+                            modifiePar: 'SYSTEM_AUTO_CANCEL_NO_CHECKIN',
+                        },
+                    });
                 });
+
                 this.logger.log(`Reservation ${r.id} auto-cancelled (dateDebut was ${r.dateDebut.toISOString()})`);
 
                 // F5: Notifier les deux parties de l'annulation automatique
@@ -217,8 +259,9 @@ export class ReservationAutoCloseJob {
                 proprietaireId: true,
                 dateDebut: true,
                 dateFin: true,
-                locataire: { select: { email: true, telephone: true } },
-                proprietaire: { select: { email: true, telephone: true } },
+                totalLocataire: true,
+                locataire: { select: { email: true, telephone: true, prenom: true } },
+                proprietaire: { select: { email: true, telephone: true, prenom: true } },
                 vehicule: { select: { marque: true, modele: true } },
             },
         });
@@ -250,5 +293,19 @@ export class ReservationAutoCloseJob {
                 data: { ...data, isOwner: true },
             }),
         ]).catch(() => { });
+
+        // Alerte admin Telegram : remboursement manuel requis
+        this.telegram.sendAdminAlert(
+            `🤖 <b>Annulation automatique - No-show</b>\n\n` +
+            `Réservation : <code>${reservationId.slice(0, 8).toUpperCase()}</code>\n` +
+            `Véhicule : ${vehicule}\n` +
+            `Locataire : ${res.locataire?.prenom ?? 'N/A'}\n` +
+            `Propriétaire : ${res.proprietaire?.prenom ?? 'N/A'}\n` +
+            `Montant : ${res.totalLocataire} FCFA\n\n` +
+            `⚠️ <b>Action requise :</b> Remboursement 100% à traiter manuellement via InTouch\n` +
+            `<a href="https://autoloc.sn/dashboard/admin/reservations/${reservationId}">Voir la réservation →</a>`,
+        ).catch((err) => {
+            this.logger.error(`Failed to send Telegram alert for auto-cancel ${reservationId}`, err);
+        });
     }
 }

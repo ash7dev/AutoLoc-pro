@@ -26,6 +26,22 @@ export interface WalletData {
     transactions: WalletTransaction[];
 }
 
+export interface PenaltyItem {
+    id: string;
+    montant: number;
+    raison: string;
+    creeLe: string;
+    reservationId: string;
+    vehicule: string;
+    dateLocation: string;
+}
+
+export interface PenaltiesData {
+    penalites: PenaltyItem[];
+    totalDette: number;
+    count: number;
+}
+
 // ── API Functions ──────────────────────────────────────────────────────────────
 
 /**
@@ -33,6 +49,13 @@ export interface WalletData {
  */
 export async function fetchWallet(token: string): Promise<WalletData> {
     return apiFetch<WalletData>('/wallet/me', { accessToken: token });
+}
+
+/**
+ * Fetch pending penalties for the owner (server-side).
+ */
+export async function fetchPenalties(token: string): Promise<PenaltiesData> {
+    return apiFetch<PenaltiesData>('/wallet/penalites', { accessToken: token });
 }
 
 /**

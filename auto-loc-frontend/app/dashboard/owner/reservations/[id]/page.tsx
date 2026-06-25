@@ -242,6 +242,9 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                     checkinProprietaireLe={r.checkinProprietaireLe ?? undefined}
                     checkinLocataireLe={r.checkinLocataireLe ?? undefined}
                     tacitCheckinDeadlineLe={r.tacitCheckinDeadlineLe}
+                    totalLocataire={totalLocataire}
+                    totalBase={netAmt}
+                    isOwner={true}
                 />
 
                 {/* ══════════════════════════════════════════════════

@@ -9,16 +9,36 @@ interface ConfirmModalProps {
     onClose: () => void;
     onConfirm: (heureDebut: string) => void;
     loading?: boolean;
+    dateDebut?: string; // Date de début de la réservation
 }
 
-export function ConfirmModal({ open, onClose, onConfirm, loading = false }: ConfirmModalProps) {
+export function ConfirmModal({ open, onClose, onConfirm, loading = false, dateDebut }: ConfirmModalProps) {
     const [heureDebut, setHeureDebut] = useState("");
+    const [isPastTime, setIsPastTime] = useState(false);
 
     useEffect(() => {
-        if (!open) setHeureDebut("");
+        if (!open) {
+            setHeureDebut("");
+            setIsPastTime(false);
+        }
     }, [open]);
 
-    const canConfirm = heureDebut.length === 5 && !loading;
+    // Validation de l'heure sélectionnée
+    useEffect(() => {
+        if (!heureDebut || !dateDebut) {
+            setIsPastTime(false);
+            return;
+        }
+
+        const [hours, minutes] = heureDebut.split(':').map(Number);
+        const selectedDateTime = new Date(dateDebut);
+        selectedDateTime.setHours(hours, minutes, 0, 0);
+
+        const now = new Date();
+        setIsPastTime(selectedDateTime < now);
+    }, [heureDebut, dateDebut]);
+
+    const canConfirm = heureDebut.length === 5 && !loading && !isPastTime;
 
     if (!open) return null;
 
@@ -73,11 +93,18 @@ export function ConfirmModal({ open, onClose, onConfirm, loading = false }: Conf
                                 className={cn(
                                     "w-full text-center text-[36px] tracking-tight font-black rounded-xl border-2 bg-white px-4 py-3 text-slate-900",
                                     "focus:outline-none transition-all",
-                                    heureDebut
+                                    isPastTime
+                                        ? "border-red-400 focus:ring-4 focus:ring-red-500/10"
+                                        : heureDebut
                                         ? "border-emerald-400 focus:ring-4 focus:ring-emerald-500/10"
                                         : "border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-500/10",
                                 )}
                             />
+                            {isPastTime && (
+                                <p className="text-[11.5px] text-red-600 font-semibold mt-2 text-center">
+                                    L'heure sélectionnée est déjà passée. Veuillez choisir une heure future.
+                                </p>
+                            )}
                         </div>
                     </div>
 
