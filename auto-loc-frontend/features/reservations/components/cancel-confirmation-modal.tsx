@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AlertTriangle, XCircle, Ban, Info, Loader2 } from "lucide-react";
+import { AlertTriangle, XCircle, Ban, Info, Loader2, DollarSign, AlertCircleIcon, CheckCircle2, X, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -236,123 +236,157 @@ export function CancelConfirmationModal({
     const severityConfig = {
         success: {
             bg: "bg-emerald-50",
-            border: "border-emerald-200",
-            text: "text-emerald-800",
-            iconBg: "bg-emerald-100",
-            iconColor: "text-emerald-600",
-            btnBg: "bg-emerald-500 hover:bg-emerald-600",
+            border: "border-emerald-300",
+            text: "text-emerald-900",
+            iconBg: "bg-gradient-to-br from-emerald-500 to-emerald-600",
+            iconColor: "text-white",
+            btnBg: "bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40",
             btnText: "text-white",
+            badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
         },
         warning: {
             bg: "bg-amber-50",
-            border: "border-amber-200",
+            border: "border-amber-300",
             text: "text-amber-900",
-            iconBg: "bg-amber-100",
-            iconColor: "text-amber-600",
-            btnBg: "bg-amber-500 hover:bg-amber-600",
+            iconBg: "bg-gradient-to-br from-amber-500 to-amber-600",
+            iconColor: "text-white",
+            btnBg: "bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40",
             btnText: "text-white",
+            badge: "bg-amber-100 text-amber-700 border-amber-200",
         },
         danger: {
             bg: "bg-red-50",
-            border: "border-red-200",
+            border: "border-red-300",
             text: "text-red-900",
-            iconBg: "bg-red-100",
-            iconColor: "text-red-600",
-            btnBg: "bg-red-500 hover:bg-red-600",
+            iconBg: "bg-gradient-to-br from-red-500 to-red-600",
+            iconColor: "text-white",
+            btnBg: "bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40",
             btnText: "text-white",
+            badge: "bg-red-100 text-red-700 border-red-200",
         },
         blocked: {
             bg: "bg-slate-50",
             border: "border-slate-300",
             text: "text-slate-800",
-            iconBg: "bg-slate-200",
-            iconColor: "text-slate-600",
-            btnBg: "bg-slate-400",
-            btnText: "text-white",
+            iconBg: "bg-gradient-to-br from-slate-400 to-slate-500",
+            iconColor: "text-white",
+            btnBg: "bg-slate-300",
+            btnText: "text-slate-500",
+            badge: "bg-slate-100 text-slate-600 border-slate-200",
         },
     };
 
     const config = severityConfig[policy.severity];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6">
+            {/* Enhanced backdrop */}
             <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+                className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/60 backdrop-blur-md"
                 onClick={() => !loading && onClose()}
             />
 
-            <div className="relative w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 max-h-[90dvh] overflow-y-auto pb-[env(safe-area-inset-bottom)]">
+            {/* Panel */}
+            <div className="relative w-full sm:max-w-2xl bg-white/95 backdrop-blur-xl rounded-t-[32px] sm:rounded-[28px] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.3)] sm:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] overflow-hidden animate-in fade-in slide-in-from-bottom-8 sm:zoom-in-95 duration-300 max-h-[92dvh] overflow-y-auto border border-slate-200/60">
+
+                {/* Drag handle (mobile) */}
+                <div className="flex justify-center pt-4 pb-2 sm:hidden">
+                    <div className="w-12 h-1.5 rounded-full bg-slate-300/80" />
+                </div>
 
                 {/* Header */}
-                <div className="flex items-start gap-3 px-5 pt-5 pb-4 border-b border-slate-100">
-                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0", config.iconBg)}>
+                <div className="flex items-start gap-4 px-6 pt-5 pb-5 sm:pt-6 border-b border-slate-100">
+                    <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg", config.iconBg)}>
                         {policy.canCancel ? (
-                            <AlertTriangle className={cn("w-5 h-5", config.iconColor)} strokeWidth={2.5} />
+                            <AlertTriangle className="w-7 h-7 text-white" strokeWidth={2.5} />
                         ) : (
-                            <Ban className={cn("w-5 h-5", config.iconColor)} strokeWidth={2.5} />
+                            <Ban className="w-7 h-7 text-white" strokeWidth={2.5} />
                         )}
                     </div>
                     <div className="flex-1">
-                        <h2 className="text-[18px] font-black text-slate-900 leading-tight">
+                        <h2 className="text-[20px] font-black text-slate-900 leading-tight tracking-tight">
                             {policy.canCancel ? "Confirmer l'annulation ?" : "Annulation impossible"}
                         </h2>
-                        <p className="text-[12.5px] text-slate-500 mt-0.5 font-medium">
+                        <p className={cn("inline-flex items-center gap-1.5 text-[12px] font-bold mt-2 px-2.5 py-1 rounded-full border", config.badge)}>
+                            <span className="w-1.5 h-1.5 rounded-full bg-current" />
                             {isOwner ? "Vous êtes propriétaire" : "Vous êtes locataire"}
                         </p>
                     </div>
+                    <button
+                        type="button"
+                        onClick={() => !loading && onClose()}
+                        disabled={loading}
+                        className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all disabled:opacity-30"
+                    >
+                        <X className="w-4.5 h-4.5" strokeWidth={2.5} />
+                    </button>
                 </div>
 
-                <div className="px-5 py-4 space-y-4">
+                <div className="px-6 py-6 space-y-5">
 
                     {/* Résumé des conséquences */}
-                    <div className={cn("rounded-2xl border-2 overflow-hidden", config.border)}>
-                        <div className={cn("px-4 py-3 border-b", config.bg, config.border)}>
-                            <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">
+                    <div className={cn("rounded-3xl border-2 overflow-hidden shadow-sm", config.border)}>
+                        <div className={cn("px-5 py-3.5 border-b-2 flex items-center gap-2", config.bg, config.border)}>
+                            {isOwner ? (
+                                <AlertTriangle className="w-3.5 h-3.5 text-slate-600" strokeWidth={2.5} />
+                            ) : (
+                                <DollarSign className="w-3.5 h-3.5 text-slate-600" strokeWidth={2.5} />
+                            )}
+                            <p className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-600">
                                 {isOwner ? "Conséquences pour vous" : "Remboursement"}
                             </p>
                         </div>
 
                         {isOwner ? (
                             // ── VUE PROPRIÉTAIRE ──
-                            <div className="p-4 bg-white space-y-3">
+                            <div className="p-5 bg-white space-y-4">
                                 {/* Remboursement locataire */}
-                                <div className="flex items-start justify-between gap-3">
-                                    <div>
-                                        <p className="text-[13px] font-semibold text-slate-700">
-                                            Remboursement locataire
-                                        </p>
-                                        <p className="text-[11px] text-slate-500 mt-0.5">
-                                            AutoLoc remboursera {policy.refundPercentage}%
-                                        </p>
+                                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center">
+                                            <DollarSign className="w-5 h-5 text-slate-600" strokeWidth={2.5} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[13.5px] font-bold text-slate-900">
+                                                Remboursement locataire
+                                            </p>
+                                            <p className="text-[11.5px] text-slate-500 font-medium mt-0.5">
+                                                AutoLoc remboursera {policy.refundPercentage}%
+                                            </p>
+                                        </div>
                                     </div>
-                                    <p className="text-[17px] font-black text-slate-900 tabular-nums">
-                                        {fmtMoney(policy.refundAmount)} F
+                                    <p className="text-[20px] font-black text-slate-900 tabular-nums">
+                                        {fmtMoney(policy.refundAmount)} <span className="text-[14px] font-semibold text-slate-500">F</span>
                                     </p>
                                 </div>
 
                                 {/* Pénalité */}
                                 {policy.penaltyAmount > 0 && (
                                     <>
-                                        <div className="border-t border-slate-100 pt-3">
-                                            <div className="flex items-start justify-between gap-3">
+                                        <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-red-50 border-2 border-red-200">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-sm">
+                                                    <AlertCircleIcon className="w-5 h-5 text-white" strokeWidth={2.5} />
+                                                </div>
                                                 <div>
-                                                    <p className="text-[13px] font-semibold text-red-700">
+                                                    <p className="text-[13.5px] font-bold text-red-900">
                                                         Votre pénalité
                                                     </p>
-                                                    <p className="text-[11px] text-red-600 mt-0.5">
+                                                    <p className="text-[11.5px] text-red-700 font-medium mt-0.5">
                                                         {policy.penaltyPercentage}% du montant de base
                                                     </p>
                                                 </div>
-                                                <p className="text-[17px] font-black text-red-600 tabular-nums">
-                                                    {fmtMoney(policy.penaltyAmount)} F
-                                                </p>
                                             </div>
+                                            <p className="text-[20px] font-black text-red-600 tabular-nums">
+                                                {fmtMoney(policy.penaltyAmount)} <span className="text-[14px] font-semibold text-red-500">F</span>
+                                            </p>
                                         </div>
 
                                         {/* Explication prélèvement */}
-                                        <div className={cn("rounded-xl border px-3 py-2.5", config.bg, config.border)}>
-                                            <p className={cn("text-[11.5px] font-medium leading-relaxed", config.text)}>
-                                                💡 Cette pénalité sera <strong className="font-bold">déduite de votre prochaine location</strong>. Si votre wallet n'a pas assez de solde, elle sera enregistrée comme dette.
+                                        <div className={cn("rounded-2xl border-2 px-4 py-3.5 flex items-start gap-3", config.bg, config.border)}>
+                                            <Lightbulb className={cn("w-4 h-4 flex-shrink-0 mt-0.5", config.text)} strokeWidth={2.5} />
+                                            <p className={cn("text-[12.5px] font-semibold leading-relaxed", config.text)}>
+                                                Cette pénalité sera <strong className="font-black">déduite de votre prochaine location</strong>. Si votre wallet n'a pas assez de solde, elle sera enregistrée comme dette.
                                             </p>
                                         </div>
                                     </>
@@ -360,50 +394,63 @@ export function CancelConfirmationModal({
 
                                 {/* Aucune pénalité */}
                                 {policy.penaltyAmount === 0 && (
-                                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5">
-                                        <p className="text-[11.5px] text-emerald-800 font-medium leading-relaxed">
-                                            ✅ <strong className="font-bold">Aucune pénalité</strong> ne vous sera appliquée.
-                                        </p>
+                                    <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 px-4 py-3.5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+                                                <CheckCircle2 className="w-4.5 h-4.5 text-white" strokeWidth={2.5} />
+                                            </div>
+                                            <p className="text-[12.5px] text-emerald-900 font-bold leading-relaxed">
+                                                Aucune pénalité ne vous sera appliquée.
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
                             </div>
                         ) : (
                             // ── VUE LOCATAIRE ──
-                            <div className="p-4 bg-white space-y-3">
+                            <div className="p-5 bg-white space-y-4">
                                 {/* Montant remboursé */}
-                                <div className="flex items-start justify-between gap-3">
-                                    <div>
-                                        <p className="text-[13px] font-semibold text-slate-700">
-                                            Vous serez remboursé
-                                        </p>
-                                        <p className="text-[11px] text-slate-500 mt-0.5">
-                                            {policy.refundPercentage}% du montant payé
-                                        </p>
+                                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-200">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-sm">
+                                            <CheckCircle2 className="w-5 h-5 text-white" strokeWidth={2.5} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[13.5px] font-bold text-emerald-900">
+                                                Vous serez remboursé
+                                            </p>
+                                            <p className="text-[11.5px] text-emerald-700 font-medium mt-0.5">
+                                                {policy.refundPercentage}% du montant payé
+                                            </p>
+                                        </div>
                                     </div>
                                     <p className={cn(
-                                        "text-[17px] font-black tabular-nums",
+                                        "text-[20px] font-black tabular-nums",
                                         policy.refundAmount > 0 ? "text-emerald-600" : "text-red-600"
                                     )}>
-                                        {fmtMoney(policy.refundAmount)} F
+                                        {fmtMoney(policy.refundAmount)} <span className="text-[14px] font-semibold opacity-70">F</span>
                                     </p>
                                 </div>
 
                                 {/* Montant perdu */}
                                 {totalLocataire !== undefined && policy.refundAmount < totalLocataire && (
-                                    <div className="border-t border-slate-100 pt-3">
-                                        <div className="flex items-start justify-between gap-3">
+                                    <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-red-50 border-2 border-red-200">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-sm">
+                                                <XCircle className="w-5 h-5 text-white" strokeWidth={2.5} />
+                                            </div>
                                             <div>
-                                                <p className="text-[13px] font-semibold text-slate-700">
+                                                <p className="text-[13.5px] font-bold text-red-900">
                                                     Frais d'annulation
                                                 </p>
-                                                <p className="text-[11px] text-slate-500 mt-0.5">
+                                                <p className="text-[11.5px] text-red-700 font-medium mt-0.5">
                                                     {100 - policy.refundPercentage}% non remboursé
                                                 </p>
                                             </div>
-                                            <p className="text-[17px] font-black text-red-600 tabular-nums">
-                                                {fmtMoney(totalLocataire - policy.refundAmount)} F
-                                            </p>
                                         </div>
+                                        <p className="text-[20px] font-black text-red-600 tabular-nums">
+                                            {fmtMoney(totalLocataire - policy.refundAmount)} <span className="text-[14px] font-semibold text-red-500">F</span>
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -412,11 +459,13 @@ export function CancelConfirmationModal({
 
                     {/* Avertissements */}
                     {policy.warnings.length > 0 && (
-                        <div className={cn("rounded-xl border px-3.5 py-3 space-y-1.5", config.bg, config.border)}>
+                        <div className={cn("rounded-2xl border-2 px-4 py-4 space-y-2.5", config.bg, config.border)}>
                             {policy.warnings.map((warning, idx) => (
-                                <div key={idx} className="flex items-start gap-2">
-                                    <Info className={cn("w-3.5 h-3.5 flex-shrink-0 mt-0.5", config.iconColor)} strokeWidth={2.5} />
-                                    <p className={cn("text-[11.5px] font-medium leading-relaxed", config.text)}>
+                                <div key={idx} className="flex items-start gap-3">
+                                    <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0", policy.severity === 'blocked' ? 'bg-slate-200' : 'bg-white/80')}>
+                                        <Info className={cn("w-3.5 h-3.5", config.text)} strokeWidth={2.5} />
+                                    </div>
+                                    <p className={cn("text-[12.5px] font-semibold leading-relaxed pt-0.5", config.text)}>
                                         {warning}
                                     </p>
                                 </div>
@@ -426,27 +475,45 @@ export function CancelConfirmationModal({
 
                     {/* Raison */}
                     {policy.canCancel && (
-                        <div>
-                            <label className="block text-[12px] font-bold text-slate-700 mb-2">
-                                Raison de l'annulation <span className="text-red-500">*</span>
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-600">
+                                <span>Raison de l'annulation</span>
+                                <span className="text-red-500">*</span>
                             </label>
                             <textarea
                                 value={raison}
                                 onChange={(e) => setRaison(e.target.value)}
                                 placeholder="Expliquez brièvement pourquoi vous annulez..."
-                                className="w-full rounded-xl border-2 border-slate-200 focus:border-slate-400 focus:ring-4 focus:ring-slate-400/10 px-4 py-3 text-[13px] resize-none transition-all"
+                                className="w-full rounded-2xl border-2 border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-400/20 px-4 py-3.5 text-[13.5px] font-medium resize-none transition-all disabled:opacity-50"
                                 rows={3}
                                 disabled={loading}
                             />
+                            <div className="flex items-center justify-between px-1">
+                                <span className={cn(
+                                    "text-[11px] font-bold flex items-center gap-1",
+                                    raison.trim().length > 0 && raison.trim().length < 10
+                                        ? "text-red-500" : "text-slate-400"
+                                )}>
+                                    {raison.trim().length > 0 && raison.trim().length < 10 && (
+                                        <>
+                                            <AlertTriangle className="w-3 h-3" strokeWidth={2.5} />
+                                            Minimum 10 caractères requis
+                                        </>
+                                    )}
+                                </span>
+                                <span className="text-[11px] text-slate-400 font-semibold tabular-nums">
+                                    {raison.length}/500
+                                </span>
+                            </div>
                         </div>
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2.5 pt-1">
+                    <div className="flex items-center gap-3 pt-2">
                         <button
                             onClick={() => !loading && onClose()}
                             disabled={loading}
-                            className="flex-1 px-4 py-3 rounded-2xl text-[13px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 transition-all disabled:opacity-40"
+                            className="flex-1 px-5 py-3.5 rounded-2xl text-[14px] font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-2 border-slate-200 transition-all disabled:opacity-40"
                         >
                             Retour
                         </button>
@@ -455,22 +522,25 @@ export function CancelConfirmationModal({
                                 onClick={() => raison.trim().length >= 10 && onConfirm(raison)}
                                 disabled={loading || raison.trim().length < 10}
                                 className={cn(
-                                    "flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[13.5px] font-bold transition-all duration-200",
+                                    "flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-2xl text-[14px] font-black transition-all duration-200",
                                     raison.trim().length >= 10 && !loading
-                                        ? `${config.btnBg} ${config.btnText} shadow-lg hover:-translate-y-px active:translate-y-0`
+                                        ? `${config.btnBg} ${config.btnText} hover:-translate-y-0.5 active:translate-y-0 active:shadow-md`
                                         : "bg-slate-100 text-slate-400 cursor-not-allowed",
                                 )}
                             >
                                 {loading ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <Loader2 className="w-5 h-5 animate-spin" />
                                 ) : (
-                                    <XCircle className="w-4 h-4" strokeWidth={2.5} />
+                                    <XCircle className="w-5 h-5" strokeWidth={2.5} />
                                 )}
                                 Confirmer l'annulation
                             </button>
                         )}
                     </div>
                 </div>
+
+                {/* iOS safe area bottom padding */}
+                <div className="sm:hidden pb-[env(safe-area-inset-bottom)]" />
             </div>
         </div>
     );

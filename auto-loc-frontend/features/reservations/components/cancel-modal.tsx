@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, XCircle, Loader2, AlertTriangle, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { X, XCircle, Loader2, AlertTriangle, ChevronRight, CheckCircle2, Clock, DollarSign, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthFetch } from '@/features/auth/hooks/use-auth-fetch';
 import { translateError } from '@/lib/utils/api-error-fr';
@@ -21,32 +21,32 @@ interface CancelModalProps {
 /* ════════════════════════════════════════════════════════════════
    COMPONENT
 ════════════════════════════════════════════════════════════════ */
-function getCancelWarning(statut?: string): { text: string; color: 'amber' | 'red'; icon: string } {
+function getCancelWarning(statut?: string): { text: string; color: 'amber' | 'red'; icon: React.ReactNode } {
   if (statut === 'EN_ATTENTE_PAIEMENT') {
     return {
       text: 'Votre paiement n\'est pas encore confirmé. L\'annulation est immédiate et aucun remboursement ne sera effectué.',
       color: 'amber',
-      icon: '⏳',
+      icon: <Clock className="w-5 h-5" strokeWidth={2.5} />,
     };
   }
   if (statut === 'PAYEE') {
     return {
       text: 'Paiement confirmé. Le remboursement dépend du délai restant avant le début de la location (de 0 % à 100 % hors frais de service). L\'annulation est définitive.',
       color: 'amber',
-      icon: '💰',
+      icon: <DollarSign className="w-5 h-5" strokeWidth={2.5} />,
     };
   }
   if (statut === 'CONFIRMEE') {
     return {
       text: 'Le propriétaire a déjà confirmé cette réservation. Le remboursement peut être réduit ou nul selon le délai restant. L\'annulation est définitive.',
       color: 'red',
-      icon: '🚨',
+      icon: <AlertCircle className="w-5 h-5" strokeWidth={2.5} />,
     };
   }
   return {
     text: 'L\'annulation est définitive. Le remboursement dépend de la politique en vigueur.',
     color: 'amber',
-    icon: '⚠️',
+    icon: <AlertTriangle className="w-5 h-5" strokeWidth={2.5} />,
   };
 }
 
@@ -180,8 +180,8 @@ export function CancelModal({ reservationId, vehicleName, statut, open, onClose 
               )}>
                 <div className="flex items-start gap-3.5">
                   <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-xl",
-                    isRed ? 'bg-red-100/80' : 'bg-amber-100/80',
+                    "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
+                    isRed ? 'bg-red-100/80 text-red-600' : 'bg-amber-100/80 text-amber-600',
                   )}>
                     {warning.icon}
                   </div>
@@ -225,11 +225,16 @@ export function CancelModal({ reservationId, vehicleName, statut, open, onClose 
                 />
                 <div className="flex items-center justify-between px-1">
                   <span className={cn(
-                    'text-[11px] font-bold',
+                    'text-[11px] font-bold flex items-center gap-1',
                     reason.trim().length > 0 && reason.trim().length < 5
                       ? 'text-red-500' : 'text-slate-400',
                   )}>
-                    {reason.trim().length > 0 && reason.trim().length < 5 && '⚠️ Minimum 5 caractères requis'}
+                    {reason.trim().length > 0 && reason.trim().length < 5 && (
+                      <>
+                        <AlertTriangle className="w-3 h-3" strokeWidth={2.5} />
+                        Minimum 5 caractères requis
+                      </>
+                    )}
                   </span>
                   <span className="text-[11px] text-slate-400 font-semibold tabular-nums">
                     {reason.length}/500
