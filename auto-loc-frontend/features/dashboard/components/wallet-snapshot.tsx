@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Banknote, Clock3, Hourglass } from "lucide-react";
+import { ArrowRight, Banknote, Clock3, Hourglass, AlertTriangle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -9,6 +9,8 @@ export interface WalletSnapshotData {
   available: string;
   pending: string;
   processing: string;
+  totalPenalties?: number; // Montant total des pénalités en FCFA
+  penaltiesCount?: number; // Nombre de pénalités
 }
 
 export function WalletSnapshot({
@@ -66,6 +68,30 @@ export function WalletSnapshot({
       </div>
 
       <Separator className="bg-white/10 mb-5" />
+
+      {/* Alerte Pénalités - Visible uniquement si pénalités > 0 */}
+      {!loading && data.totalPenalties && data.totalPenalties > 0 && (
+        <Link
+          href={href}
+          className="mb-4 flex items-start gap-2.5 p-3 bg-red-500/10 border border-red-500/20 rounded-xl hover:bg-red-500/15 transition-colors group"
+        >
+          <div className="w-7 h-7 rounded-lg bg-red-500/20 border border-red-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <AlertTriangle className="w-3.5 h-3.5 text-red-400" strokeWidth={2.5} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-bold text-red-400 leading-tight">
+              {data.penaltiesCount} pénalité{data.penaltiesCount! > 1 ? "s" : ""} en attente
+            </p>
+            <p className="text-[15px] font-black text-red-300 mt-0.5 tabular-nums">
+              {data.totalPenalties.toLocaleString("fr-FR")} FCFA
+            </p>
+            <p className="text-[10px] text-red-400/70 mt-1">
+              Sera déduit de votre prochain paiement
+            </p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-red-400/50 group-hover:text-red-400 group-hover:translate-x-0.5 transition-all mt-1 flex-shrink-0" strokeWidth={2} />
+        </Link>
+      )}
 
       {/* Sub balances */}
       <div className="grid grid-cols-2 gap-3 mb-5">

@@ -393,4 +393,160 @@ export class WalletService {
 
     return { success: true, message: 'Pénalité annulée avec succès' };
   }
+
+  // ── ADMIN - Gestion des remboursements ────────────────────────────────────────
+
+  /**
+   * GET /admin/refunds
+   * Récupère tous les remboursements en attente suite aux annulations
+   */
+  async adminListRefunds() {
+    const refunds = await this.prisma.paiement.findMany({
+      where: {
+        statut: 'EN_ATTENTE_REMBOURSEMENT',
+      },
+      orderBy: { creeLe: 'asc' }, // Plus anciens en premier
+      include: {
+        reservation: {
+          select: {
+            id: true,
+            dateDebut: true,
+            dateFin: true,
+            annuleLe: true,
+            raisonAnnulation: true,
+            locataire: {
+              select: {
+                id: true,
+                prenom: true,
+                nom: true,
+                email: true,
+                telephone: true,
+              },
+            },
+            vehicule: {
+              select: {
+                marque: true,
+                modele: true,
+                immatriculation: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return refunds.map(p => ({
+      id: p.id,
+      reservationId: p.reservationId,
+      montant: Number(p.montant),
+      montantRembourse: p.montantRembourse ? Number(p.montantRembourse) : 0,
+      devise: p.devise,
+      fournisseur: p.fournisseur,
+      statut: p.statut,
+      creeLe: p.creeLe.toISOString(),
+      annuleLe: p.reservation.annuleLe?.toISOString() || null,
+      raisonAnnulation: p.reservation.raisonAnnulation || '',
+      locataire: {
+        id: p.reservation.locataire.id,
+        prenom: p.reservation.locataire.prenom || '',
+        nom: p.reservation.locataire.nom || '',
+        email: p.reservation.locataire.email || '',
+        telephone: p.reservation.locataire.telephone || '',
+      },
+      vehicule: {
+        marque: p.reservation.vehicule.marque,
+        modele: p.reservation.vehicule.modele,
+        immatriculation: p.reservation.vehicule.immatriculation || '',
+      },
+      dateDebut: p.reservation.dateDebut.toISOString(),
+      dateFin: p.reservation.dateFin.toISOString(),
+    }));
+  }
+
+  /**
+   * PATCH /admin/refunds/:id/process
+   * Marque un remboursement comme effectué après virement InTouch manuel
+   */
+  async adminProcessRefund(paiementId: string) {
+    const paiement = await this.prisma.paiement.findUnique({
+      where: { id: paiementId },
+      select: {
+        id: true,
+        statut: true,
+        montantRembourse: true,
+        montant: true,
+        fournisseur: true,
+        reservation: {
+          select: {
+            id: true,
+            dateDebut: true,
+            dateFin: true,
+            raisonAnnulation: true,
+            locataire: {
+              select: {
+                prenom: true,
+                nom: true,
+                email: true,
+                telephone: true,
+              },
+            },
+            vehicule: {
+              select: {
+                marque: true,
+                modele: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!paiement) {
+      throw new NotFoundException('Paiement introuvable');
+    }
+
+    if (paiement.statut !== 'EN_ATTENTE_REMBOURSEMENT') {
+      throw new ConflictException('Ce remboursement a déjà été traité ou n\'est pas en attente');
+    }
+
+    const now = new Date();
+
+    await this.prisma.paiement.update({
+      where: { id: paiementId },
+      data: {
+        statut: 'REMBOURSE',
+        rembourseLe: now,
+      },
+    });
+
+    // Notification aux admins
+    const adminEmails = ['nstanislas03@gmail.com', 'jinicopi@gmail.com'];
+    const locataire = paiement.reservation?.locataire;
+    const vehicule = paiement.reservation?.vehicule;
+    const montantRembourse = Number(paiement.montantRembourse || 0);
+
+    for (const adminEmail of adminEmails) {
+      this.notifications.send({
+        email: adminEmail,
+        type: 'admin.refund.processed',
+        data: {
+          locataireNom: locataire ? `${locataire.prenom} ${locataire.nom}` : 'Inconnu',
+          locataireEmail: locataire?.email || '',
+          montant: montantRembourse.toLocaleString('fr-FR'),
+          fournisseur: paiement.fournisseur,
+          vehicule: vehicule ? `${vehicule.marque} ${vehicule.modele}` : 'Véhicule inconnu',
+          reservationId: paiement.reservation?.id.slice(0, 8).toUpperCase() || '',
+          processedAt: now.toLocaleDateString('fr-FR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        },
+      }).catch(() => { });
+    }
+
+    return { success: true, message: 'Remboursement marqué comme effectué' };
+  }
 }

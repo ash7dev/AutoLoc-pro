@@ -187,20 +187,54 @@ export function ContractClient({
                         </div>
                     )}
                     {contractStatus === 'ANNULE' && (
-                        <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 sm:mt-5 px-3 sm:px-4 py-3 rounded-xl bg-red-50 border border-red-200 flex items-start gap-2.5 sm:gap-3">
-                            <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" strokeWidth={2} />
-                            <div>
-                                <p className="text-[11px] sm:text-[12px] font-bold text-red-700">Contrat résilié</p>
-                                <p className="text-[10px] sm:text-[11px] text-red-600/80 mt-0.5 leading-relaxed">
-                                    {r.raisonAnnulation ?? 'Cette réservation a été annulée. Le contrat n\'est plus en vigueur.'}
-                                    {r.annuleeLe && (
-                                        <span className="ml-1 font-medium">
-                                            — le {fmtDate(r.annuleeLe, { day: 'numeric', month: 'long', year: 'numeric' })}.
-                                        </span>
-                                    )}
-                                </p>
+                        <>
+                            <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 sm:mt-5 px-3 sm:px-4 py-3 rounded-xl bg-red-50 border border-red-200 flex items-start gap-2.5 sm:gap-3">
+                                <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" strokeWidth={2} />
+                                <div>
+                                    <p className="text-[11px] sm:text-[12px] font-bold text-red-700">Contrat résilié</p>
+                                    <p className="text-[10px] sm:text-[11px] text-red-600/80 mt-0.5 leading-relaxed">
+                                        {r.raisonAnnulation ?? 'Cette réservation a été annulée. Le contrat n\'est plus en vigueur.'}
+                                        {r.annuleeLe && (
+                                            <span className="ml-1 font-medium">
+                                                — le {fmtDate(r.annuleeLe, { day: 'numeric', month: 'long', year: 'numeric' })}.
+                                            </span>
+                                        )}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
+
+                            {/* Remboursement info */}
+                            {r.paiement?.statut === 'REMBOURSE' && r.paiement?.rembourseLe && r.paiement?.montantRembourse && (
+                                <div className="mx-4 sm:mx-6 lg:mx-8 mt-3 px-3 sm:px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-2.5 sm:gap-3">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" strokeWidth={2} />
+                                    <div className="flex-1">
+                                        <p className="text-[11px] sm:text-[12px] font-bold text-emerald-700">Remboursement effectué</p>
+                                        <p className="text-[10px] sm:text-[11px] text-emerald-600/80 mt-0.5 leading-relaxed">
+                                            Montant remboursé : <span className="font-bold">{fmtMoney(r.paiement.montantRembourse)} FCFA</span>
+                                            {r.paiement.rembourseLe && (
+                                                <span className="ml-1">
+                                                    — le {fmtDate(r.paiement.rembourseLe, { day: 'numeric', month: 'long', year: 'numeric' })}.
+                                                </span>
+                                            )}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Remboursement en cours de traitement */}
+                            {r.paiement?.statut === 'EN_ATTENTE_REMBOURSEMENT' && r.paiement?.montantRembourse && (
+                                <div className="mx-4 sm:mx-6 lg:mx-8 mt-3 px-3 sm:px-4 py-3 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-2.5 sm:gap-3">
+                                    <Clock className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" strokeWidth={2} />
+                                    <div className="flex-1">
+                                        <p className="text-[11px] sm:text-[12px] font-bold text-blue-700">Remboursement en cours</p>
+                                        <p className="text-[10px] sm:text-[11px] text-blue-600/80 mt-0.5 leading-relaxed">
+                                            Montant à rembourser : <span className="font-bold">{fmtMoney(r.paiement.montantRembourse)} FCFA</span>
+                                            <span className="ml-1">— Votre remboursement est en cours de traitement. Vous recevrez les fonds sous 24-48h.</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     )}
 
                     {/* ══════════════════════════════════════════════

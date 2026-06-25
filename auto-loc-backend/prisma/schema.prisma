@@ -497,6 +497,7 @@ enum StatutPaiement {
   CONFIRME
   ECHOUE
   REMBOURSE
+  EN_ATTENTE_REMBOURSEMENT
 }
 
 enum TypeTransactionWallet {

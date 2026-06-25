@@ -4,11 +4,12 @@ import { SharedModule } from '../../shared/shared.module';
 import { WalletController } from './wallet.controller';
 import { AdminWalletController } from './admin-wallet.controller';
 import { AdminPenaltiesController } from './admin-penalties.controller';
+import { AdminRefundsController } from './admin-refunds.controller';
 import { WalletService } from './wallet.service';
 
 @Module({
   imports: [PrismaModule, SharedModule],
-  controllers: [WalletController, AdminWalletController, AdminPenaltiesController],
+  controllers: [WalletController, AdminWalletController, AdminPenaltiesController, AdminRefundsController],
   providers: [WalletService],
 })
 export class WalletModule { }

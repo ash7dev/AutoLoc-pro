@@ -212,6 +212,8 @@ export const ADMIN_PATHS = {
   withdrawals: '/admin/withdrawals',
   validateWithdrawal: (id: string) => `/admin/withdrawals/${id}/approve`,
   rejectWithdrawal: (id: string) => `/admin/withdrawals/${id}/reject`,
+  refunds: '/admin/refunds',
+  processRefund: (id: string) => `/admin/refunds/${id}/process`,
   disputes: '/admin/disputes',
   updateDisputeStatus: (id: string) => `/admin/disputes/${id}/resolve`,
   reservations: '/admin/reservations',
@@ -453,6 +455,52 @@ export async function fetchAdminPenalties(
     return [];
   } catch (error) {
     console.error('Failed to fetch admin penalties:', error);
+    return [];
+  }
+}
+
+// ── Admin Refunds ─────────────────────────────────────────────────────────────
+
+export interface AdminRefund {
+  id: string;
+  reservationId: string;
+  montant: number;
+  montantRembourse: number;
+  devise: string;
+  fournisseur: string;
+  statut: string;
+  creeLe: string;
+  annuleLe: string | null;
+  raisonAnnulation: string;
+  locataire: {
+    id: string;
+    prenom: string;
+    nom: string;
+    email: string;
+    telephone: string;
+  };
+  vehicule: {
+    marque: string;
+    modele: string;
+    immatriculation: string;
+  };
+  dateDebut: string;
+  dateFin: string;
+}
+
+export async function fetchAdminRefunds(accessToken: string): Promise<AdminRefund[]> {
+  try {
+    const res = await apiFetch<any>('/admin/refunds', { accessToken });
+
+    if (Array.isArray(res)) return res as AdminRefund[];
+    if (res && typeof res === 'object') {
+      const obj = res as Record<string, unknown>;
+      const inner = obj.data ?? obj.items ?? obj.refunds;
+      if (Array.isArray(inner)) return inner as AdminRefund[];
+    }
+    return [];
+  } catch (error) {
+    console.error('Failed to fetch admin refunds:', error);
     return [];
   }
 }

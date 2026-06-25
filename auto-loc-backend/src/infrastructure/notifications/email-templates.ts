@@ -33,7 +33,8 @@ export type NotificationType =
   | 'vehicle.suspended'
   | 'vehicle.featured'
   | 'admin.withdrawal.requested'
-  | 'admin.reservation.cancelled';
+  | 'admin.reservation.cancelled'
+  | 'admin.refund.processed';
 
 interface TemplateConfig {
   subject: string;
@@ -909,5 +910,26 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
         cta: { label: 'Voir la réservation', href: `https://autoloc.sn/dashboard/admin/reservations/${data.reservationId}` },
       });
     },
+  },
+
+  'admin.refund.processed': {
+    subject: '[AutoLoc Admin] Remboursement effectué',
+    body: (data) => baseLayout({
+      title: '✅ Remboursement traité',
+      subtitle: `Locataire remboursé via ${data.fournisseur || 'InTouch'}`,
+      badge: { text: 'Confirmé', color: '#047857', bg: '#d1fae5' },
+      content: [
+        infoCard([
+          { label: 'Locataire', value: `${data.locataireNom || 'N/A'}<br/><span style="font-size:12px;color:#64748b;">${data.locataireEmail || ''}</span>` },
+          { label: 'Montant remboursé', value: `<strong style="color:#047857;">${data.montant || 0} FCFA</strong>` },
+          { label: 'Méthode', value: String(data.fournisseur || 'InTouch') },
+          { label: 'Véhicule', value: String(data.vehicule || 'N/A') },
+          { label: 'Réservation', value: String(data.reservationId || 'N/A') },
+          { label: 'Traité le', value: String(data.processedAt || new Date().toLocaleDateString('fr-FR')) },
+        ]),
+        p(`✅ Le remboursement a été marqué comme effectué dans le système. Le locataire peut maintenant voir le statut "Remboursé" sur son contrat.`),
+      ].join(''),
+      cta: { label: 'Voir les remboursements', href: 'https://autoloc.sn/dashboard/admin/refunds' },
+    }),
   },
 };

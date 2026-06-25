@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "StatutPaiement" ADD VALUE 'EN_ATTENTE_REMBOURSEMENT';

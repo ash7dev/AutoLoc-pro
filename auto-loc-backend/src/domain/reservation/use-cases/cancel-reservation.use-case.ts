@@ -173,13 +173,13 @@ export class CancelReservationUseCase {
                     },
                 });
 
-                // 6c. Paiement → REMBOURSE (si applicable)
+                // 6c. Paiement → EN_ATTENTE_REMBOURSEMENT (si applicable)
+                // L'admin devra traiter le remboursement InTouch manuellement via /admin/refunds
                 if (hasRefund && reservation.paiement) {
                     await tx.paiement.update({
                         where: { id: reservation.paiement.id },
                         data: {
-                            statut: StatutPaiement.REMBOURSE,
-                            rembourseLe: now,
+                            statut: StatutPaiement.EN_ATTENTE_REMBOURSEMENT,
                             montantRembourse: policy.refundAmount,
                         },
                     });
@@ -302,11 +302,12 @@ export class CancelReservationUseCase {
         if (isLocataire && hasRefund) {
             // Locataire annule après paiement → remboursement à traiter
             this.telegram.sendAdminAlert(
-                `❌ <b>Annulation après paiement</b>\n` +
+                `💸 <b>REMBOURSEMENT À TRAITER</b>\n` +
                 `Par : Locataire\n` +
                 `Motif : ${input.raison.slice(0, 100)}\n` +
-                `Remboursement dû : ${policy.refundAmount} FCFA (${policy.refundPercentage}%)\n` +
-                `<a href="https://autoloc.sn/dashboard/admin/reservations">Voir →</a>`,
+                `Montant : ${policy.refundAmount} FCFA (${policy.refundPercentage}%)\n` +
+                `⚠️ ACTION REQUISE : Faire le virement InTouch puis valider\n` +
+                `<a href="https://autoloc.sn/dashboard/admin/refunds">Traiter le remboursement →</a>`,
             ).catch(() => { });
         } else if (isProprietaire && ([StatutReservation.PAYEE, StatutReservation.CONFIRMEE] as StatutReservation[]).includes(reservation.statut)) {
             // Propriétaire annule une réservation déjà payée ou confirmée → mauvaise expérience

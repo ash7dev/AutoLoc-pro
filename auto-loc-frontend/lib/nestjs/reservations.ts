@@ -80,6 +80,8 @@ export interface Reservation {
     paiement?: {
         statut: string;
         fournisseur: string;
+        rembourseLe?: string | null;
+        montantRembourse?: string | null;
     };
     photosEtatLieu?: PhotoEtatLieu[];
 }

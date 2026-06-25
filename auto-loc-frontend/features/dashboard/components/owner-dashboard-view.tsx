@@ -23,6 +23,7 @@ interface OwnerDashboardViewProps {
     reservations?: Reservation[];
     vehicles?: Vehicle[];
     wallet: WalletData | null;
+    penalties?: { totalDette: number; count: number } | null;
     stats?: OwnerStats | null;
     reviews: ReviewsResponse | null;
 }
@@ -170,6 +171,7 @@ export function OwnerDashboardView({
     reservations = [],
     vehicles = [],
     wallet,
+    penalties,
     stats,
     reviews,
 }: OwnerDashboardViewProps) {
@@ -310,8 +312,20 @@ export function OwnerDashboardView({
 
     // Wallet data
     const walletSnapshot = wallet
-        ? { available: `${wallet.balance.soldeDisponible} FCFA`, pending: `${wallet.balance.enAttente} FCFA`, processing: "0 FCFA" }
-        : { available: "— FCFA", pending: "— FCFA", processing: "— FCFA" };
+        ? {
+            available: `${wallet.balance.soldeDisponible} FCFA`,
+            pending: `${wallet.balance.enAttente} FCFA`,
+            processing: "0 FCFA",
+            totalPenalties: penalties?.totalDette || 0,
+            penaltiesCount: penalties?.count || 0
+          }
+        : {
+            available: "— FCFA",
+            pending: "— FCFA",
+            processing: "— FCFA",
+            totalPenalties: 0,
+            penaltiesCount: 0
+          };
 
     // Stats
     const totalRevenue = reservations

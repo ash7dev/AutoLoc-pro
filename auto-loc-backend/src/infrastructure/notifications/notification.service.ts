@@ -439,6 +439,7 @@ export class NotificationService {
       'vehicle.featured': `🌟 AutoLoc — Félicitations ! Votre véhicule ${data.vehicule} est maintenant mis en avant.`,
       'admin.withdrawal.requested': `💸 AutoLoc — Nouvelle demande de retrait de ${data.montant} FCFA (${data.methode}).`,
       'admin.reservation.cancelled': `❌ AutoLoc — Réservation #${resId} annulée.`,
+      'admin.refund.processed': `✅ AutoLoc — Remboursement de ${data.montant} FCFA effectué pour ${data.locataireNom}.`,
     };
 
     const fallbackText = fallbackTextByType[type];

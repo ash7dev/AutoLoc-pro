@@ -587,6 +587,8 @@ export class ReservationsService {
             montant: true,
             devise: true,
             fournisseur: true,
+            rembourseLe: true,
+            montantRembourse: true,
           },
         },
       },
@@ -646,6 +648,8 @@ export class ReservationsService {
             montant: true,
             devise: true,
             fournisseur: true,
+            rembourseLe: true,
+            montantRembourse: true,
           },
         },
       },
@@ -757,7 +761,7 @@ export class ReservationsService {
           select: { id: true, prenom: true, nom: true, telephone: true },
         },
         paiement: {
-          select: { statut: true, montant: true, devise: true, fournisseur: true },
+          select: { statut: true, montant: true, devise: true, fournisseur: true, rembourseLe: true, montantRembourse: true },
         },
         photosEtatLieu: {
           orderBy: [{ type: 'asc' }, { position: 'asc' }],
