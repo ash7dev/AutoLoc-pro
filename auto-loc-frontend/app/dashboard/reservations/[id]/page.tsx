@@ -301,6 +301,9 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                             reservationId={r.id}
                             vehicleName={v ? `${v.marque} ${v.modele}` : undefined}
                             statut={r.statut}
+                            dateDebut={r.dateDebut}
+                            totalLocataire={totalPaye}
+                            totalBase={Math.round(totalPaye * 0.85)}
                         />
                     )}
                 </div>

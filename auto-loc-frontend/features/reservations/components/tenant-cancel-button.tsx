@@ -1,19 +1,44 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { XCircle, Info } from 'lucide-react';
-import { CancelModal } from './cancel-modal';
+import { CancelConfirmationModal } from './cancel-confirmation-modal';
 import { LifecycleModal } from './lifecycle-modal';
+import { useAuthFetch } from '@/features/auth/hooks/use-auth-fetch';
+import { translateError } from '@/lib/utils/api-error-fr';
 
 interface Props {
   reservationId: string;
   vehicleName?: string;
   statut?: string;
+  dateDebut?: string;
+  totalLocataire?: number;
+  totalBase?: number;
 }
 
-export function TenantCancelButton({ reservationId, vehicleName, statut }: Props) {
+export function TenantCancelButton({ reservationId, vehicleName, statut, dateDebut, totalLocataire, totalBase }: Props) {
+  const router = useRouter();
+  const { authFetch } = useAuthFetch();
   const [open, setOpen] = useState(false);
   const [lifecycleOpen, setLifecycleOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function handleConfirm(raison: string) {
+    setLoading(true);
+    try {
+      await authFetch(`/reservations/${reservationId}/cancel`, {
+        method: 'PATCH',
+        body: { raison: raison.trim() },
+      });
+      setOpen(false);
+      router.refresh();
+    } catch (err) {
+      throw err; // Let the modal handle the error display
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <>
@@ -33,16 +58,20 @@ export function TenantCancelButton({ reservationId, vehicleName, statut }: Props
           className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-slate-500 hover:text-slate-800 transition-colors underline decoration-dotted underline-offset-4 self-start"
         >
           <Info className="w-3.5 h-3.5" />
-          Comprendre les règles & conditions (séquestre, auto-checkin…)
+          Comprendre les règles &amp; conditions (séquestre, auto-checkin…)
         </button>
       </div>
 
-      <CancelModal
-        reservationId={reservationId}
-        vehicleName={vehicleName}
-        statut={statut}
+      <CancelConfirmationModal
         open={open}
         onClose={() => setOpen(false)}
+        onConfirm={handleConfirm}
+        loading={loading}
+        statut={statut ?? ''}
+        dateDebut={dateDebut}
+        totalLocataire={totalLocataire}
+        totalBase={totalBase}
+        isOwner={false}
       />
 
       <LifecycleModal
@@ -53,4 +82,3 @@ export function TenantCancelButton({ reservationId, vehicleName, statut }: Props
     </>
   );
 }
-
