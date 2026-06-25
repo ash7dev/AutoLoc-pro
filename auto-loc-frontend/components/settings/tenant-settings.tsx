@@ -42,6 +42,7 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
   const [loading, setLoading] = useState(!initialProfile);
   const [saving, setSaving] = useState(false);
   const [errorSync, setErrorSync] = useState<string | null>(null);
+  const [switchError, setSwitchError] = useState<string | null>(null);
 
   const [phoneEditOpen, setPhoneEditOpen] = useState(false);
 
@@ -445,6 +446,17 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
     router.push('/login');
   };
 
+  const handleSwitchToOwner = async () => {
+    setSwitchError(null);
+    try {
+      await switchToProprietaire();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erreur lors du changement de rôle';
+      setSwitchError(message);
+      console.error('Switch to owner error:', error);
+    }
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'profile': return renderProfileTab();
@@ -474,29 +486,33 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  switchToProprietaire();
+                  handleSwitchToOwner();
                 }}
                 disabled={switchingRole}
-                variant="outline"
-                className="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-slate-900 shadow-sm border-slate-200 group min-h-[44px] touch-manipulation"
+                className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 border-0 group min-h-[44px] touch-manipulation transition-all duration-200 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98]"
                 type="button"
               >
                 {switchingRole
-                  ? <Loader2 className="w-4 h-4 mr-2 animate-spin text-slate-500" />
-                  : <RefreshCw className="w-4 h-4 mr-2 text-slate-500 group-hover:text-blue-600 transition-colors" />
+                  ? <Loader2 className="w-4 h-4 mr-2 animate-spin text-white/80" />
+                  : <RefreshCw className="w-4 h-4 mr-2 text-white/90 group-hover:rotate-180 transition-transform duration-500" />
                 }
-                <span className="hidden sm:inline">Mode </span>Propriétaire
+                <span className="hidden sm:inline font-semibold">Espace </span>Propriétaire
               </Button>
               <Button
                 onClick={handleLogout}
                 variant="outline"
-                className="flex-1 sm:flex-none bg-white hover:bg-red-50 text-red-600 border-red-200 shadow-sm min-h-[44px] touch-manipulation"
+                className="flex-1 sm:flex-none bg-white hover:bg-red-50 text-red-600 border-red-200 shadow-sm min-h-[44px] touch-manipulation transition-all duration-200 hover:shadow-md active:scale-[0.98]"
                 type="button"
               >
                 <LogOut className="w-4 h-4 mr-2" />
-                Déconnexion
+                <span className="hidden sm:inline">Déconnexion</span>
               </Button>
             </div>
+            {switchError && (
+              <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                {switchError}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -45,9 +45,23 @@ export class WalletService {
       StatutReservation.TERMINEE,
     ];
 
+    // Récupérer les IDs des réservations déjà créditées (CREDIT_LOCATION)
+    const creditedReservations = await this.prisma.transactionWallet.findMany({
+      where: { 
+        walletId: wallet.id,
+        type: TypeTransactionWallet.CREDIT_LOCATION,
+      },
+      select: { reservationId: true },
+    });
+    const creditedReservationIds = new Set(creditedReservations.map(t => t.reservationId).filter(Boolean));
+
     const [pendingAgg, earnedAgg, transactions] = await Promise.all([
       this.prisma.reservation.aggregate({
-        where: { proprietaireId: utilisateur.id, statut: { in: pendingStatuses } },
+        where: { 
+          proprietaireId: utilisateur.id, 
+          statut: { in: pendingStatuses },
+          id: { notIn: Array.from(creditedReservationIds) }, // Exclure les réservations déjà créditées
+        },
         _sum: { netProprietaire: true },
       }),
       this.prisma.reservation.aggregate({
