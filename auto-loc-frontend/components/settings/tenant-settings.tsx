@@ -471,10 +471,15 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
             </div>
             <div className="flex items-center gap-2">
               <Button
-                onClick={switchToProprietaire}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  switchToProprietaire();
+                }}
                 disabled={switchingRole}
                 variant="outline"
-                className="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-slate-900 shadow-sm border-slate-200 group"
+                className="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-slate-900 shadow-sm border-slate-200 group min-h-[44px] touch-manipulation"
+                type="button"
               >
                 {switchingRole
                   ? <Loader2 className="w-4 h-4 mr-2 animate-spin text-slate-500" />
@@ -485,7 +490,8 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
               <Button
                 onClick={handleLogout}
                 variant="outline"
-                className="flex-1 sm:flex-none bg-white hover:bg-red-50 text-red-600 border-red-200 shadow-sm"
+                className="flex-1 sm:flex-none bg-white hover:bg-red-50 text-red-600 border-red-200 shadow-sm min-h-[44px] touch-manipulation"
+                type="button"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Déconnexion
