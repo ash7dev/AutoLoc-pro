@@ -76,7 +76,49 @@ export function useAuthFlow() {
       return false;
     }
 
-    // ── Tâches de fond (Non bloquantes pour la redirection) ──
+    // Stocker hasVehicles dans le store pour le menu utilisateur (rapide, synchrone)
+    if (profile.hasVehicles !== undefined) {
+      useRoleStore.getState().setHasVehicles(profile.hasVehicles);
+    }
+
+    // ── Redirection Rapide (sans attendre les tâches de fond) ──
+    if (profile.role === 'ADMIN' || profile.role === 'SUPPORT') {
+      router.replace('/dashboard/admin');
+      inFlight.current = false;
+      return true;
+    }
+
+    const next = explicitNext ?? searchParams.get('next');
+    const requiredRole = searchParams.get('role') as 'PROPRIETAIRE' | 'LOCATAIRE' | null;
+
+    if (next && next.startsWith('/')) {
+      // Rediriger immédiatement
+      router.replace(next);
+      inFlight.current = false;
+
+      // Switch de rôle en tâche de fond si nécessaire
+      if (
+        requiredRole &&
+        requiredRole !== profile.role &&
+        (requiredRole === 'PROPRIETAIRE' || requiredRole === 'LOCATAIRE')
+      ) {
+        fetch('/api/nest/auth/switch-role', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: requiredRole }),
+        }).catch(e => console.warn('[AuthFlow] Role switch failed after redirect'));
+      }
+
+      return true;
+    }
+
+    // Redirection par défaut selon le rôle
+    const target = profile.role === 'PROPRIETAIRE' ? '/dashboard/owner' : '/';
+    router.replace(target);
+
+    inFlight.current = false;
+
+    // ── Tâches de fond (Non bloquantes, lancées APRÈS la redirection) ──
     const backgroundTasks = async () => {
       // 1. Compléter le profil si nécessaire
       if (!profile.hasUtilisateur) {
@@ -89,54 +131,11 @@ export function useAuthFlow() {
           }
         }
       }
-
     };
 
     // On lance les tâches de fond sans les attendre (Fire and Forget)
     backgroundTasks().catch(console.error);
 
-    // Stocker hasVehicles dans le store pour le menu utilisateur
-    if (profile.hasVehicles !== undefined) {
-      useRoleStore.getState().setHasVehicles(profile.hasVehicles);
-    }
-
-    // ── Redirection Rapide ──
-    if (profile.role === 'ADMIN' || profile.role === 'SUPPORT') {
-      router.replace('/dashboard/admin');
-      inFlight.current = false;
-      return true;
-    }
-
-    const next = explicitNext ?? searchParams.get('next');
-    const requiredRole = searchParams.get('role') as 'PROPRIETAIRE' | 'LOCATAIRE' | null;
-
-    if (next && next.startsWith('/')) {
-      if (
-        requiredRole &&
-        requiredRole !== profile.role &&
-        (requiredRole === 'PROPRIETAIRE' || requiredRole === 'LOCATAIRE')
-      ) {
-        // Le switch de rôle est la seule tâche qu'on garde bloquante si nécessaire pour la destination
-        try {
-          await fetch('/api/nest/auth/switch-role', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ role: requiredRole }),
-          });
-        } catch (e) {
-          console.warn('[AuthFlow] Role switch failed before redirect');
-        }
-      }
-      router.replace(next);
-      inFlight.current = false;
-      return true;
-    }
-
-    // Redirection par défaut selon le rôle
-    const target = profile.role === 'PROPRIETAIRE' ? '/dashboard/owner' : '/';
-    router.replace(target);
-    
-    inFlight.current = false;
     return true;
   };
 
