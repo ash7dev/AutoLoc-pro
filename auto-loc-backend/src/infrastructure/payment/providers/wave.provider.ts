@@ -80,7 +80,7 @@ export class WaveProvider implements PaymentProviderInterface {
         }
 
         const timestamp = Math.floor(Date.now() / 1000);
-        const payload = `${timestamp}.${body}`;
+        const payload = `${timestamp}${body}`;  // Pas de point entre timestamp et body
         const signature = crypto
             .createHmac('sha256', this.signingSecret)
             .update(payload)
