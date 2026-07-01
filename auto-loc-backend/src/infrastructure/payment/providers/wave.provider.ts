@@ -52,12 +52,14 @@ export class WaveProvider implements PaymentProviderInterface {
 
     private readonly apiKey: string;
     private readonly webhookSecret: string;
+    private readonly signingSecret: string;
     private readonly apiUrl: string;
     private readonly isSandbox: boolean;
 
     constructor(private readonly config: ConfigService) {
         this.apiKey = this.config.get<string>('WAVE_API_KEY', '');
         this.webhookSecret = this.config.get<string>('WAVE_WEBHOOK_SECRET', '');
+        this.signingSecret = this.config.get<string>('WAVE_SIGNING_SECRET', '');
         this.apiUrl = this.config.get<string>(
             'WAVE_API_URL',
             'https://api.sandbox.wave.com/v1',
@@ -67,6 +69,24 @@ export class WaveProvider implements PaymentProviderInterface {
         if (this.isSandbox) {
             this.logger.warn('Wave provider running in SANDBOX mode');
         }
+    }
+
+    // ── Generate Wave-Signature Header ─────────────────────────────────────────────
+
+    private generateWaveSignature(body: string): string {
+        if (!this.signingSecret) {
+            this.logger.warn('WAVE_SIGNING_SECRET not set — skipping request signing');
+            return '';
+        }
+
+        const timestamp = Math.floor(Date.now() / 1000);
+        const payload = `${timestamp}.${body}`;
+        const signature = crypto
+            .createHmac('sha256', this.signingSecret)
+            .update(payload)
+            .digest('hex');
+
+        return `t=${timestamp},v1=${signature}`;
     }
 
     // ── Initiate Payment ───────────────────────────────────────────────────────
@@ -104,13 +124,22 @@ export class WaveProvider implements PaymentProviderInterface {
             const timeout = setTimeout(() => controller.abort(), 8_000); // 8s timeout
 
             try {
+                const bodyString = JSON.stringify(body);
+                const waveSignature = this.generateWaveSignature(bodyString);
+
+                const headers: Record<string, string> = {
+                    'Authorization': `Bearer ${this.apiKey}`,
+                    'Content-Type': 'application/json',
+                };
+
+                if (waveSignature) {
+                    headers['Wave-Signature'] = waveSignature;
+                }
+
                 const response = await fetch(`${this.apiUrl}/checkout/sessions`, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${this.apiKey}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(body),
+                    headers,
+                    body: bodyString,
                     signal: controller.signal,
                 });
 
@@ -286,13 +315,22 @@ export class WaveProvider implements PaymentProviderInterface {
             const timeout = setTimeout(() => controller.abort(), 10_000); // 10s timeout
 
             try {
+                const bodyString = JSON.stringify(body);
+                const waveSignature = this.generateWaveSignature(bodyString);
+
+                const headers: Record<string, string> = {
+                    'Authorization': `Bearer ${this.apiKey}`,
+                    'Content-Type': 'application/json',
+                };
+
+                if (waveSignature) {
+                    headers['Wave-Signature'] = waveSignature;
+                }
+
                 const response = await fetch(`${this.apiUrl}/checkout/payouts`, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${this.apiKey}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(body),
+                    headers,
+                    body: bodyString,
                     signal: controller.signal,
                 });
 
