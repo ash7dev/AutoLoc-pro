@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
 
 type NestRole = 'LOCATAIRE' | 'PROPRIETAIRE' | 'ADMIN' | 'SUPPORT';
 
@@ -10,15 +11,27 @@ interface NestJwtPayload {
   exp?: number;
 }
 
-function decodeNestJwt(token: string): NestJwtPayload | null {
+/**
+ * Verify and decode NestJS JWT token with signature validation
+ * @param token - JWT token string
+ * @returns Payload if valid, null if invalid or expired
+ */
+async function verifyNestJwt(token: string): Promise<NestJwtPayload | null> {
   try {
-    const part = token.split('.')[1];
-    if (!part) return null;
-    // JWT utilise base64url — on convertit en base64 standard
-    const base64 = part.replace(/-/g, '+').replace(/_/g, '/');
-    const json = atob(base64);
-    return JSON.parse(json) as NestJwtPayload;
-  } catch {
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    if (!secret || !process.env.JWT_SECRET) {
+      console.error('[Middleware] JWT_SECRET not configured');
+      return null;
+    }
+
+    const { payload } = await jwtVerify(token, secret, {
+      algorithms: ['HS256', 'HS512'], // NestJS default algorithms
+    });
+
+    return payload as NestJwtPayload;
+  } catch (error) {
+    // Invalid signature, expired, or malformed token
+    console.warn('[Middleware] JWT verification failed:', error instanceof Error ? error.message : 'Unknown error');
     return null;
   }
 }
@@ -29,7 +42,7 @@ function dashboardTarget(role: NestRole): string | null {
   return null;
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const nestAccess = request.cookies.get('nest_access')?.value;
 
@@ -45,7 +58,9 @@ export function middleware(request: NextRequest) {
         const ageMs = Date.now() - parseInt(roleSwitchAt, 10);
         if (ageMs < 5 * 60 * 1000) return NextResponse.next();
       }
-      const payload = decodeNestJwt(nestAccess);
+
+      // ✅ NEW: Verify JWT signature before trusting payload
+      const payload = await verifyNestJwt(nestAccess);
       if (payload?.role) {
         const target = dashboardTarget(payload.role);
         if (target) {
@@ -56,16 +71,25 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // ── Protection dashboard ─────────────────────────────��────────────────────
-  // Pas de cookie nest_access → redirect login.
-  // La validation réelle du JWT (expiry, signature) est faite côté serveur
-  // dans les sous-layouts dashboard via fetchMe.
+  // ── Protection dashboard ─────────────────────────────────────────────────
+  // Validate JWT signature before allowing access
   if (pathname.startsWith('/dashboard')) {
     if (!nestAccess) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('next', pathname);
       return NextResponse.redirect(loginUrl);
     }
+
+    // ✅ NEW: Verify JWT signature
+    const payload = await verifyNestJwt(nestAccess);
+    if (!payload) {
+      // Invalid or expired token → redirect to login
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('expired', '1');
+      loginUrl.searchParams.set('next', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
     return NextResponse.next();
   }
 

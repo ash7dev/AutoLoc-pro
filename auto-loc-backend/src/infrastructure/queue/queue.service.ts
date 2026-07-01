@@ -297,6 +297,20 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     return String(job.id);
   }
 
+  async scheduleWaveRefund(
+    reservationId: string,
+    paiementId: string,
+    amount: number,
+    delayMs: number = 20 * 60 * 1000, // 20 minutes
+  ): Promise<string> {
+    const job = await this.reservationQueue.add(
+      'reservation-wave-refund',
+      { reservationId, paiementId, amount },
+      { delay: delayMs },
+    );
+    return String(job.id);
+  }
+
   async cancelJob(jobId: string): Promise<void> {
     const job = await this.reservationQueue.getJob(jobId);
     if (job) {

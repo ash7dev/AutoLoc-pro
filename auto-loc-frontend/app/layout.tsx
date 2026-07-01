@@ -125,6 +125,7 @@ const jsonLd = {
 import { WhatsAppBubble } from '@/components/ui/WhatsAppBubble';
 
 import { GlobalRoleSync } from '@/features/auth/components/global-role-sync';
+import { SessionExpiryToast } from '@/features/auth/components/session-expiry-toast';
 
 export default function RootLayout({
   children,
@@ -145,6 +146,7 @@ export default function RootLayout({
             <CurrencyProviderServer>{children}</CurrencyProviderServer>
           </ColorSystemProvider>
           <GlobalRoleSync />
+          <SessionExpiryToast />
           <GlobalModals />
           <Toaster position="top-right" richColors closeButton />
           <WhatsAppBubble />

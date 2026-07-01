@@ -22,6 +22,8 @@ import { StatutReservation, StatutPaiement } from '@prisma/client';
 import { QueueService } from '../queue.service';
 import { isPastCheckoutInspectionWindow } from '../../../domain/reservation/reservation-checkin.constants';
 import { ContractGenerationService } from '../../../domain/reservation/contract-generation.service';
+import { PaymentService } from '../../payment/payment.service';
+import { TelegramService } from '../../telegram/telegram.service';
 
 const SYSTEM_SIGNATURE_REMINDER = 'SYSTEM_SIGNATURE_REMINDER';
 const SYSTEM_TACIT_REMINDER_IMMEDIATE = 'SYSTEM_TACIT_REMINDER_IMMEDIATE';
@@ -38,6 +40,8 @@ export class ReservationExpiryProcessor {
     private readonly expireUseCase: ExpireReservationUseCase,
     private readonly queue: QueueService,
     private readonly contractGeneration: ContractGenerationService,
+    private readonly payment: PaymentService,
+    private readonly telegram: TelegramService,
   ) { }
 
   @Process(RESERVATION_CONTRACT_GENERATION_JOB)
@@ -49,6 +53,58 @@ export class ReservationExpiryProcessor {
     } catch (err) {
       console.error(`[Queue] Contract generation failed for ${job.data.reservationId}:`, err);
       throw err; // Permet à Bull de réessayer selon la config
+    }
+  }
+
+  @Process('reservation-wave-refund')
+  async handleWaveRefund(
+    job: Job<{ reservationId: string; paiementId: string; amount: number }>,
+  ): Promise<void> {
+    const { reservationId, paiementId, amount } = job.data;
+    this.logger.log(`[Queue] Processing delayed Wave refund for reservation ${reservationId} (Amount: ${amount} XOF)`);
+
+    const paiement = await this.prisma.paiement.findUnique({
+      where: { id: paiementId },
+    });
+
+    if (!paiement) {
+      this.logger.warn(`[Queue] Paiement ${paiementId} not found, skipping refund`);
+      return;
+    }
+
+    if (paiement.statut !== StatutPaiement.EN_ATTENTE_REMBOURSEMENT) {
+      this.logger.warn(`[Queue] Paiement ${paiementId} is not in EN_ATTENTE_REMBOURSEMENT status (current: ${paiement.statut}), skipping refund`);
+      return;
+    }
+
+    try {
+      await this.payment.refundPayment(
+        'WAVE',
+        paiement.idTransactionFournisseur || '',
+        amount,
+      );
+
+      await this.prisma.paiement.update({
+        where: { id: paiementId },
+        data: {
+          statut: StatutPaiement.REMBOURSE,
+          rembourseLe: new Date(),
+        },
+      });
+      this.logger.log(`[Queue] Delayed Wave refund succeeded for reservation ${reservationId}`);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      this.logger.error(`[Queue] Échec du remboursement automatique Wave différé : ${errorMsg}`);
+
+      await this.telegram.sendAdminAlert(
+        `⚠️ <b>Échec remboursement automatique Wave différé (20min)</b>\n` +
+        `Réservation : <code>${reservationId.slice(0, 8).toUpperCase()}</code>\n` +
+        `Montant : ${amount} XOF\n` +
+        `Erreur : ${errorMsg}\n` +
+        `Le remboursement doit être effectué manuellement.`
+      ).catch(() => {});
+
+      throw error;
     }
   }
 
@@ -437,6 +493,8 @@ export class ReservationExpiryProcessor {
     systemTag: string,
     markRefund?: boolean,
   ): Promise<void> {
+    let paiementToRefund: { id: string; montant: any; fournisseur: string | null } | null = null;
+
     await this.prisma.$transaction(async (tx) => {
       const reservation = await tx.reservation.findUnique({
         where: { id: reservationId },
@@ -466,17 +524,35 @@ export class ReservationExpiryProcessor {
       });
 
       if (markRefund && reservation.paiement) {
-        // TODO: déclencher un remboursement réel via le provider.
         await tx.paiement.update({
           where: { id: reservation.paiement.id },
           data: {
-            statut: StatutPaiement.REMBOURSE,
-            rembourseLe: new Date(),
+            statut: StatutPaiement.EN_ATTENTE_REMBOURSEMENT,
             montantRembourse: reservation.paiement.montant,
           },
         });
+        paiementToRefund = {
+          id: reservation.paiement.id,
+          montant: reservation.paiement.montant,
+          fournisseur: reservation.paiement.fournisseur,
+        };
       }
     });
+
+    // Post-commit : planifier le remboursement Wave différé de 20 minutes
+    if (paiementToRefund && (paiementToRefund as any).fournisseur === 'WAVE') {
+      try {
+        await this.queue.scheduleWaveRefund(
+          reservationId,
+          (paiementToRefund as any).id,
+          Number((paiementToRefund as any).montant),
+        );
+        this.logger.log(`Remboursement Wave différé de 20 minutes planifié (signature expiry) pour la réservation ${reservationId}`);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        this.logger.error(`Échec de la planification du remboursement Wave différé (signature expiry) : ${errorMsg}`);
+      }
+    }
   }
 
 

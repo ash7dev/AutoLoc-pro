@@ -83,12 +83,11 @@ export class CreateReservationUseCase {
             input.dateFin,
         );
 
-        // ── 2.5 Validate dateDebut is not in the past ─────────────────────────────
-        const todayUTC = new Date();
-        todayUTC.setUTCHours(0, 0, 0, 0);
-        if (dates.debut < todayUTC) {
+        // ── 2.5 Validate dateDebut avec préavis minimum ───────────────────────────
+        const minStartTime = new Date(Date.now() + 1 * 60 * 60 * 1000); // +1h minimum
+        if (dates.debut < minStartTime) {
             throw new BadRequestException(
-                'La date de début de location ne peut pas être dans le passé',
+                'La réservation doit commencer au minimum 1 heure après la création',
             );
         }
 
@@ -142,7 +141,27 @@ export class CreateReservationUseCase {
             },
         );
 
-        const delaiSignature = new Date(Date.now() + SIGNATURE_DEADLINE_MS);
+        // Délai de confirmation adaptatif pour same-day bookings
+        const timeUntilStart = dates.debut.getTime() - Date.now();
+        const hoursUntilStart = timeUntilStart / (60 * 60 * 1000);
+
+        let delaiSignature: Date;
+        if (hoursUntilStart < 24) {
+            // Same-day ou < 24h : délai = 50% du temps restant
+            // Minimum 1h, maximum 6h
+            const adaptiveDelayMs = Math.max(
+                1 * 60 * 60 * 1000, // min 1h
+                Math.min(
+                    6 * 60 * 60 * 1000, // max 6h
+                    timeUntilStart * 0.5 // 50% du temps restant
+                )
+            );
+            delaiSignature = new Date(Date.now() + adaptiveDelayMs);
+            this.logger.log(`Same-day booking: deadline set to ${Math.round(adaptiveDelayMs / (60 * 60 * 1000))}h (start in ${hoursUntilStart.toFixed(1)}h)`);
+        } else {
+            // Réservation normale : 48h standard
+            delaiSignature = new Date(Date.now() + SIGNATURE_DEADLINE_MS);
+        }
 
         // ── 7. Transaction RepeatableRead ─────────────────────────────────────────
         let reservation: { id: string; paymentUrl: string | null } | null = null;

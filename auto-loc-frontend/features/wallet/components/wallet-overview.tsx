@@ -37,8 +37,38 @@ export function WalletOverview({ data }: WalletOverviewProps) {
             {/* ── Wallet Snapshot ───────────────────────────────────────────── */}
             <WalletSnapshot data={snapshotData} hideCta />
 
+            {/* ── Soldes par fournisseur ────────────────────────────────────── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-xl border border-[hsl(var(--border))] bg-card p-5">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                            <span className="text-blue-600 font-semibold text-sm">🌊</span>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground">Solde Wave</p>
+                            <p className="text-lg font-bold">{data.balance.soldeWave} FCFA</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="rounded-xl border border-[hsl(var(--border))] bg-card p-5">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
+                            <span className="text-orange-600 font-semibold text-sm">🟠</span>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground">Solde Orange Money</p>
+                            <p className="text-lg font-bold">{data.balance.soldeOrangeMoney} FCFA</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* ── Withdrawal Form ───────────────────────────────────────────── */}
-            <WithdrawalForm soldeDisponible={data.balance.soldeDisponible} />
+            <WithdrawalForm
+                soldeDisponible={data.balance.soldeDisponible}
+                soldeWave={data.balance.soldeWave}
+                soldeOrangeMoney={data.balance.soldeOrangeMoney}
+            />
 
             {/* ── Transactions ─────────────────────────────────────────────── */}
             <div className="rounded-xl border border-[hsl(var(--border))] bg-card">

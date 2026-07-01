@@ -6,6 +6,8 @@ import {
     InitiatePaymentParams,
     InitiatePaymentResult,
     WebhookPayload,
+    InitiatePayoutParams,
+    InitiatePayoutResult,
 } from '../payment-provider.interface';
 
 // ── Wave API Types (based on Wave CI documentation) ────────────────────────────
@@ -26,6 +28,19 @@ interface WaveWebhookBody {
         client_reference?: string;
         currency: string;
     };
+}
+
+interface WavePayoutResponse {
+    id: string;
+    amount: string;
+    currency: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    recipient: {
+        mobile: string;
+        name?: string;
+    };
+    client_reference?: string;
+    created_at: string;
 }
 
 // ── Provider ───────────────────────────────────────────────────────────────────
@@ -230,5 +245,115 @@ export class WaveProvider implements PaymentProviderInterface {
         }
 
         this.logger.log(`Wave refund completed for ${transactionId}`);
+    }
+
+    // ── Payout (Retrait) ───────────────────────────────────────────────────────
+
+    async initiatePayout(params: InitiatePayoutParams): Promise<InitiatePayoutResult> {
+        // Mode stub si pas de clé API
+        if (!this.apiKey) {
+            this.logger.warn('WAVE_API_KEY not set — returning stub payout');
+            return {
+                transactionId: `wave_payout_stub_${Date.now()}`,
+                status: 'PENDING',
+            };
+        }
+
+        // Normaliser le numéro de téléphone (format international)
+        const phone = params.recipientPhone
+            .replace(/\s+/g, '')
+            .replace(/^00/, '+')
+            .replace(/^221/, '+221');
+
+        const body = {
+            amount: params.amount.toString(),
+            currency: 'XOF',
+            mobile: phone,
+            client_reference: params.referenceId,
+            ...(params.recipientName ? { recipient_name: params.recipientName } : {}),
+        };
+
+        this.logger.log(
+            `Initiating Wave payout: ${params.amount} XOF → ${phone} (ref: ${params.referenceId})`,
+        );
+
+        // 🚀 OPTIMISATION: Timeout + Retry
+        const maxRetries = 2;
+        let lastError: Error | undefined;
+
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 10_000); // 10s timeout
+
+            try {
+                const response = await fetch(`${this.apiUrl}/checkout/payouts`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.apiKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body),
+                    signal: controller.signal,
+                });
+
+                clearTimeout(timeout);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+
+                    // Retry uniquement sur erreurs 5xx ou 429
+                    if (attempt < maxRetries && (response.status >= 500 || response.status === 429)) {
+                        const retryAfter = response.headers.get('retry-after');
+                        const delayMs = retryAfter ? parseInt(retryAfter) * 1000 : 1000 * (attempt + 1);
+                        this.logger.warn(`Wave Payout API error ${response.status}, retrying in ${delayMs}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, delayMs));
+                        continue;
+                    }
+
+                    this.logger.error(`Wave Payout API error: ${response.status} — ${errorText}`);
+                    throw new Error(`Wave Payout error: ${response.status} - ${errorText}`);
+                }
+
+                // Success!
+                const data = (await response.json()) as WavePayoutResponse;
+                this.logger.log(`Wave payout created: ${data.id} (status: ${data.status})`);
+
+                const statusMap: Record<string, 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'> = {
+                    pending: 'PENDING',
+                    processing: 'PROCESSING',
+                    completed: 'COMPLETED',
+                    failed: 'FAILED',
+                };
+
+                return {
+                    transactionId: data.id,
+                    status: statusMap[data.status] ?? 'PENDING',
+                };
+            } catch (error) {
+                clearTimeout(timeout);
+                lastError = error as Error;
+
+                if ((error as { name?: string }).name === 'AbortError') {
+                    // Timeout: retry
+                    if (attempt < maxRetries) {
+                        this.logger.warn(`Wave Payout API timeout, retrying (${attempt + 1}/${maxRetries})...`);
+                        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                        continue;
+                    }
+                    throw new Error('Wave Payout API timeout after retries');
+                }
+
+                // Autre erreur réseau: retry
+                if (attempt < maxRetries) {
+                    this.logger.warn(`Wave Payout network error, retrying: ${error}`);
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                    continue;
+                }
+
+                throw error;
+            }
+        }
+
+        throw lastError || new Error('Wave payout failed after retries');
     }
 }

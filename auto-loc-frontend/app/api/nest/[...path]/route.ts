@@ -15,9 +15,32 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
+import crypto from 'crypto';
 
 const NEST_API = process.env.NEXT_PUBLIC_API_URL ?? '';
 const IS_PROD = process.env.NODE_ENV === 'production';
+
+// ✅ NEW: Cacheable paths (GET requests only)
+const CACHEABLE_PATHS = [
+  '/auth/me',
+  '/users/',
+  '/vehicles/',
+];
+
+/**
+ * Generate ETag from response body
+ */
+function generateETag(body: string): string {
+  return `"${crypto.createHash('md5').update(body).digest('hex')}"`;
+}
+
+/**
+ * Check if path should be cached
+ */
+function isCacheable(path: string, method: string): boolean {
+  if (method !== 'GET') return false;
+  return CACHEABLE_PATHS.some(prefix => path.startsWith(prefix));
+}
 
 const COOKIE_BASE = {
   httpOnly: true,
@@ -60,12 +83,46 @@ function buildHeaders(accessToken: string | null, contentType: string | null, pa
   return h;
 }
 
-async function toNextResponse(res: Response): Promise<NextResponse> {
+async function toNextResponse(
+  res: Response,
+  options?: { path?: string; method?: string; clientETag?: string | null }
+): Promise<NextResponse> {
   const contentType = res.headers.get('content-type') ?? '';
+
   if (contentType.includes('application/json')) {
-    const json = await res.json();
+    const text = await res.text();
+    const json = text ? JSON.parse(text) : null;
+
+    // ✅ NEW: ETag support for cacheable GET requests
+    if (options?.path && options?.method && isCacheable(options.path, options.method)) {
+      const etag = generateETag(text);
+
+      // If client sent If-None-Match and ETag matches → 304 Not Modified
+      if (options.clientETag === etag) {
+        console.log(`[Proxy] Cache HIT for ${options.path} (ETag: ${etag})`);
+        return new NextResponse(null, {
+          status: 304,
+          headers: {
+            'ETag': etag,
+            'Cache-Control': 'private, max-age=60', // 1 minute cache
+          },
+        });
+      }
+
+      // Return with ETag header for client caching
+      console.log(`[Proxy] Cache MISS for ${options.path} (ETag: ${etag})`);
+      return NextResponse.json(json, {
+        status: res.status,
+        headers: {
+          'ETag': etag,
+          'Cache-Control': 'private, max-age=60',
+        },
+      });
+    }
+
     return NextResponse.json(json, { status: res.status });
   }
+
   const buffer = await res.arrayBuffer();
   const headers = new Headers();
   if (contentType) headers.set('Content-Type', contentType);
@@ -107,6 +164,9 @@ async function proxy(
   const path = '/' + params.path.join('/');
   const search = request.nextUrl.search;
   const url = `${NEST_API}${path}${search}`;
+
+  // ✅ NEW: Extract If-None-Match header for ETag support
+  const clientETag = request.headers.get('if-none-match');
 
   const contentType = request.headers.get('content-type');
   // Lire le body une seule fois (stream ne peut être consommé qu'une fois).
@@ -156,14 +216,18 @@ async function proxy(
           return nextRes;
         }
 
-        const nextRes = await toNextResponse(res);
+        const nextRes = await toNextResponse(res, {
+          path,
+          method: request.method,
+          clientETag,
+        });
         setCookies(nextRes, session);
         return nextRes;
       }
     }
 
     // Refresh échoué ou absent → renvoyer le 401 au client
-    return toNextResponse(res);
+    return toNextResponse(res, { path, method: request.method, clientETag });
   }
 
   // ── Mise à jour automatique des cookies sur les endpoints auth ──
@@ -180,7 +244,7 @@ async function proxy(
     return nextRes;
   }
 
-  return toNextResponse(res);
+  return toNextResponse(res, { path, method: request.method, clientETag });
 }
 
 export const GET = proxy;

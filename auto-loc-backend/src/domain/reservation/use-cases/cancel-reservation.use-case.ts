@@ -4,7 +4,7 @@ import {
     Logger,
     NotFoundException,
 } from '@nestjs/common';
-import { Prisma, StatutReservation, StatutPaiement, SensTransaction, TypeTransactionWallet } from '@prisma/client';
+import { Prisma, StatutReservation, StatutPaiement, SensTransaction, TypeTransactionWallet, FournisseurPaiement } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { RedisService } from '../../../infrastructure/redis/redis.service';
 import { QueueService } from '../../../infrastructure/queue/queue.service';
@@ -69,32 +69,52 @@ export class CancelReservationUseCase {
         });
         if (!utilisateur) throw new ForbiddenException('Profil incomplet');
 
-        // ── 2. Fetch reservation with relations ────────────────────────────────
-        const reservation = await this.prisma.reservation.findUnique({
-            where: { id: reservationId },
-            select: {
-                id: true,
-                statut: true,
-                locataireId: true,
-                proprietaireId: true,
-                vehiculeId: true,
-                dateDebut: true,
-                dateFin: true,
-                totalLocataire: true,
-                totalBase: true,
-                montantCommission: true,
-                netProprietaire: true,
-                vehicule: { select: { marque: true, modele: true, ville: true } },
-                paiement: {
-                    select: {
-                        id: true,
-                        statut: true,
-                        montant: true,
+        // ── 2. Fetch reservation with relations + LOCK to prevent race condition ────
+        // Use transaction with FOR UPDATE to prevent simultaneous cancellations
+        const reservation = await this.prisma.$transaction(async (tx) => {
+            const res = await tx.reservation.findUnique({
+                where: { id: reservationId },
+                select: {
+                    id: true,
+                    statut: true,
+                    locataireId: true,
+                    proprietaireId: true,
+                    vehiculeId: true,
+                    dateDebut: true,
+                    dateFin: true,
+                    totalLocataire: true,
+                    totalBase: true,
+                    montantCommission: true,
+                    netProprietaire: true,
+                    vehicule: { select: { marque: true, modele: true, ville: true } },
+                    paiement: {
+                        select: {
+                            id: true,
+                            statut: true,
+                            montant: true,
+                            fournisseur: true,
+                            idTransactionFournisseur: true,
+                        },
                     },
+                    locataire: { select: { telephone: true, prenom: true, email: true } },
+                    proprietaire: { select: { telephone: true, prenom: true, email: true } },
                 },
-                locataire: { select: { telephone: true, prenom: true, email: true } },
-                proprietaire: { select: { telephone: true, prenom: true, email: true } },
-            },
+            });
+
+            if (!res) throw new NotFoundException('Réservation introuvable');
+
+            // Lock the reservation to prevent parallel cancellations
+            await tx.$executeRaw`SELECT id FROM "Reservation" WHERE id = ${reservationId} FOR UPDATE`;
+
+            // Check if already cancelled
+            if (res.statut === StatutReservation.ANNULEE) {
+                throw new BusinessRuleException(
+                    'Cette réservation a déjà été annulée',
+                    'ALREADY_CANCELLED',
+                );
+            }
+
+            return res;
         });
         if (!reservation) throw new NotFoundException('Réservation introuvable');
 
@@ -233,7 +253,23 @@ export class CancelReservationUseCase {
 
         // ── 7. Post-commit side effects ────────────────────────────────────────
 
-        // 7a. Cancel scheduled expiry jobs
+        // 7a. Remboursement automatique Wave différé si applicable (délai de 20 minutes)
+        if (hasRefund && reservation.paiement && reservation.paiement.fournisseur === FournisseurPaiement.WAVE) {
+            const refundVal = Number(policy.refundAmount);
+            try {
+                await this.queue.scheduleWaveRefund(
+                    reservationId,
+                    reservation.paiement.id,
+                    refundVal,
+                );
+                this.logger.log(`Remboursement Wave différé de 20 minutes planifié pour la réservation ${reservationId}`);
+            } catch (error) {
+                const errorMsg = error instanceof Error ? error.message : String(error);
+                this.logger.error(`Échec de la planification du remboursement Wave différé : ${errorMsg}`);
+            }
+        }
+
+        // 7b. Cancel scheduled expiry jobs
         // Note: cancelJob is best-effort, we use the reservationId pattern
         this.logger.log(`Reservation ${reservationId} cancelled by ${isLocataire ? 'locataire' : 'proprietaire'}`);
 

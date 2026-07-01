@@ -474,16 +474,16 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
 
   // ── Fenêtre validation tacite (email locataire, en parallèle des relances WhatsApp) ─
   'reservation.checkin.tacit_window': {
-    subject: '⏱️ 24 h pour valider votre check-in — AutoLoc',
+    subject: '⏱️ 6 h pour valider votre check-in — AutoLoc',
     body: (data) => baseLayout({
       title: 'Le propriétaire a enregistré le départ',
-      subtitle: 'Validez ou signalez un problème dans les 24 heures.',
+      subtitle: 'Validez ou signalez un problème dans les 6 heures.',
       badge: { text: 'Action requise', color: '#92400e', bg: '#fffbeb' },
       accentColor: '#f59e0b',
       cta: { label: 'Ouvrir la réservation', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
       content: [
-        p('Le propriétaire a confirmé le check-in et l’état des lieux de départ. <strong>Validez votre check-in</strong> dans l’application ou signalez un litige si vous n’êtes pas d’accord.'),
-        p('Sans action de votre part dans les <strong>24 heures</strong>, la location sera considérée comme démarrée sur la base de l’état des lieux enregistré par le propriétaire (validation tacite, voir CGU).'),
+        p('Le propriétaire a confirmé le check-in et l\'état des lieux de départ. <strong>Validez votre check-in</strong> dans l\'application ou signalez un litige si vous n\'êtes pas d\'accord.'),
+        p('Sans action de votre part dans les <strong>6 heures</strong>, la location sera considérée comme démarrée sur la base de l\'état des lieux enregistré par le propriétaire (validation tacite, voir CGU).'),
         infoCard([
           { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
         ]),

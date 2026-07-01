@@ -9,6 +9,8 @@ type Methode = 'WAVE' | 'ORANGE_MONEY';
 
 interface WithdrawalFormProps {
     soldeDisponible: string;
+    soldeWave: string;
+    soldeOrangeMoney: string;
 }
 
 const METHODS: { value: Methode; label: string; color: string; border: string; bg: string; activeBorder: string; activeBg: string; dot: string }[] = [
@@ -36,21 +38,26 @@ const METHODS: { value: Methode; label: string; color: string; border: string; b
 
 const QUICK_PERCENTS = [25, 50, 75, 100] as const;
 
-export function WithdrawalForm({ soldeDisponible }: WithdrawalFormProps) {
+export function WithdrawalForm({ soldeDisponible, soldeWave, soldeOrangeMoney }: WithdrawalFormProps) {
     const solde = Math.floor(Number(soldeDisponible));
+    const soldeWaveNum = Math.floor(Number(soldeWave));
+    const soldeOMNum = Math.floor(Number(soldeOrangeMoney));
     const [methode, setMethode] = useState<Methode | null>(null);
     const [numero, setNumero] = useState('');
     const [montant, setMontant] = useState('');
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [errorMsg, setErrorMsg] = useState('');
 
+    // Solde disponible selon la méthode sélectionnée
+    const soldeMethode = methode === 'WAVE' ? soldeWaveNum : methode === 'ORANGE_MONEY' ? soldeOMNum : solde;
+
     const amount = Number(montant);
     const numeroClean = numero.replace(/\s/g, '');
     const numeroValid = /^[0-9]{9,12}$/.test(numeroClean);
-    const isValid = methode !== null && numeroValid && amount >= 500 && amount <= solde;
+    const isValid = methode !== null && numeroValid && amount >= 500 && amount <= soldeMethode;
 
     function applyPercent(pct: typeof QUICK_PERCENTS[number]) {
-        setMontant(Math.floor(solde * pct / 100).toString());
+        setMontant(Math.floor(soldeMethode * pct / 100).toString());
         setStatus('idle');
         setErrorMsg('');
     }
@@ -115,9 +122,11 @@ export function WithdrawalForm({ soldeDisponible }: WithdrawalFormProps) {
             <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
                 {/* Solde disponible */}
                 <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
-                    <span className="text-[11.5px] font-semibold text-emerald-700">Solde disponible</span>
+                    <span className="text-[11.5px] font-semibold text-emerald-700">
+                        {methode === 'WAVE' ? 'Solde Wave disponible' : methode === 'ORANGE_MONEY' ? 'Solde Orange Money disponible' : 'Solde disponible'}
+                    </span>
                     <span className="text-[14px] font-black text-emerald-700 tabular-nums">
-                        {solde.toLocaleString('fr-FR')} FCFA
+                        {soldeMethode.toLocaleString('fr-FR')} FCFA
                     </span>
                 </div>
 
@@ -176,7 +185,7 @@ export function WithdrawalForm({ soldeDisponible }: WithdrawalFormProps) {
                                 key={pct}
                                 type="button"
                                 onClick={() => applyPercent(pct)}
-                                disabled={solde === 0}
+                                disabled={soldeMethode === 0}
                                 className="py-2 rounded-xl border border-slate-200 bg-slate-50 text-[12px] font-bold text-slate-600 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                                 {pct === 100 ? 'Tout' : `${pct}%`}
@@ -191,7 +200,7 @@ export function WithdrawalForm({ soldeDisponible }: WithdrawalFormProps) {
                         <input
                             type="number"
                             min={500}
-                            max={solde}
+                            max={soldeMethode}
                             step={100}
                             value={montant}
                             onChange={(e) => { setMontant(e.target.value); setStatus('idle'); setErrorMsg(''); }}
@@ -205,11 +214,15 @@ export function WithdrawalForm({ soldeDisponible }: WithdrawalFormProps) {
                     {montant && amount < 500 && (
                         <p className="mt-1.5 text-[11px] font-medium text-red-500">Montant minimum : 500 FCFA</p>
                     )}
-                    {montant && amount > solde && solde > 0 && (
-                        <p className="mt-1.5 text-[11px] font-medium text-red-500">Montant supérieur au solde disponible</p>
+                    {montant && amount > soldeMethode && soldeMethode > 0 && (
+                        <p className="mt-1.5 text-[11px] font-medium text-red-500">
+                            Montant supérieur au solde {methode === 'WAVE' ? 'Wave' : methode === 'ORANGE_MONEY' ? 'Orange Money' : ''} disponible
+                        </p>
                     )}
-                    {solde === 0 && (
-                        <p className="mt-1.5 text-[11px] font-medium text-slate-400">Aucun solde disponible pour le moment</p>
+                    {soldeMethode === 0 && methode && (
+                        <p className="mt-1.5 text-[11px] font-medium text-slate-400">
+                            Aucun solde {methode === 'WAVE' ? 'Wave' : 'Orange Money'} disponible pour le moment
+                        </p>
                     )}
                 </div>
 

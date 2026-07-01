@@ -9,6 +9,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { RequestUser } from '../../common/types/auth.types';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { CancelReservationDto } from './dto/cancel-reservation.dto';
+import { SignalOverloadDto } from './dto/signal-overload.dto';
 import {
   CreateReservationUseCase,
   CreateReservationResult,
@@ -766,6 +767,7 @@ export class ReservationsService {
         photosEtatLieu: {
           orderBy: [{ type: 'asc' }, { position: 'asc' }],
         },
+        litige: true,
       },
     });
     if (!reservation) throw new NotFoundException('Réservation introuvable');
@@ -1002,5 +1004,220 @@ export class ReservationsService {
     });
 
     return { success: true };
+  }
+
+  // ── SIGNALER NO-SHOW LOCATAIRE ─────────────────────────────────────────────
+
+  async signalTenantNoshow(user: RequestUser, reservationId: string, commentaire?: string) {
+    // 1. Vérifier propriétaire
+    const utilisateur = await this.prisma.utilisateur.findUnique({
+      where: { userId: user.sub },
+      select: { id: true },
+    });
+    if (!utilisateur) throw new ForbiddenException('Profil incomplet');
+
+    // 2. Vérifier réservation
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: reservationId },
+      select: {
+        id: true,
+        statut: true,
+        proprietaireId: true,
+        dateDebut: true,
+        locataireId: true,
+        absenceSignalee: true,
+        locataire: { select: { prenom: true, telephone: true } },
+      },
+    });
+    if (!reservation) throw new NotFoundException('Réservation introuvable');
+
+    // 3. Vérifier ownership
+    if (reservation.proprietaireId !== utilisateur.id) {
+      throw new ForbiddenException('Accès refusé');
+    }
+
+    // 4. Vérifier statut (doit être CONFIRMEE)
+    if (reservation.statut !== StatutReservation.CONFIRMEE) {
+      throw new BadRequestException(
+        'Le signalement no-show est uniquement possible pour les réservations confirmées sans check-in'
+      );
+    }
+
+    // 4b. Vérifier que l'absence n'a pas déjà été signalée
+    if (reservation.absenceSignalee) {
+      throw new BadRequestException(
+        'L\'absence du locataire a déjà été signalée pour cette réservation'
+      );
+    }
+
+    // 5. Vérifier timing (minimum T+2h après heure de début)
+    const now = new Date();
+    const twoHoursAfterStart = new Date(reservation.dateDebut.getTime() + 2 * 60 * 60 * 1000);
+    if (now < twoHoursAfterStart) {
+      throw new BadRequestException(
+        'Vous pouvez signaler l\'absence du locataire uniquement 2h après l\'heure de début prévue'
+      );
+    }
+
+    // 6. Créer l'historique de signalement et marquer comme signalé
+    await this.prisma.$transaction(async (tx) => {
+      await tx.reservationHistorique.create({
+        data: {
+          reservationId,
+          ancienStatut: reservation.statut,
+          nouveauStatut: reservation.statut,
+          modifiePar: 'OWNER_SIGNAL_TENANT_NOSHOW',
+        },
+      });
+
+      await tx.reservation.update({
+        where: { id: reservationId },
+        data: { absenceSignalee: true },
+      });
+    });
+
+    return {
+      success: true,
+      message: 'No-show signalé. La réservation sera annulée automatiquement si le locataire ne se présente pas d\'ici T+5h avec remboursement partiel (30%).'
+    };
+  }
+
+  // ── POST /reservations/:id/signal-overload ──────────────────────────────────
+
+  /**
+   * Signalement d'un dépassement du nombre de voyageurs autorisé.
+   * Cette action déclenche une annulation IMMÉDIATE avec pénalité 50% pour le locataire.
+   * Logique : si le proprio utilise ce bouton, c'est qu'aucun accord n'a pu être trouvé.
+   */
+  async signalOverload(user: RequestUser, reservationId: string, dto: SignalOverloadDto) {
+    // 1. Récupérer l'utilisateur propriétaire
+    const utilisateur = await this.prisma.utilisateur.findUnique({
+      where: { userId: user.sub },
+      select: { id: true },
+    });
+    if (!utilisateur) throw new ForbiddenException('Profil incomplet');
+
+    // 2. Récupérer la réservation avec véhicule et locataire
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: reservationId },
+      include: {
+        vehicule: {
+          select: {
+            nombrePlaces: true,
+            marque: true,
+            modele: true,
+          },
+        },
+        locataire: {
+          select: {
+            id: true,
+            prenom: true,
+            nom: true,
+            email: true,
+            telephone: true,
+          },
+        },
+        proprietaire: {
+          select: {
+            prenom: true,
+            nom: true,
+          },
+        },
+      },
+    });
+    if (!reservation) throw new NotFoundException('Réservation introuvable');
+
+    // 3. Vérifier ownership (normalement fait par le guard, mais sécurité supplémentaire)
+    if (reservation.proprietaireId !== utilisateur.id) {
+      throw new ForbiddenException('Vous n\'êtes pas le propriétaire de cette réservation');
+    }
+
+    // 4. Vérifier que la réservation est dans un état annulable
+    const annulableStatuses: StatutReservation[] = [
+      StatutReservation.CONFIRMEE,
+      StatutReservation.EN_COURS,
+    ];
+    if (!annulableStatuses.includes(reservation.statut)) {
+      throw new BadRequestException(
+        `Le signalement de dépassement de voyageurs n'est possible que pour les réservations CONFIRMEE ou EN_COURS. Statut actuel : ${reservation.statut}`
+      );
+    }
+
+    // 5. Vérifier que le flag n'a pas déjà été posé
+    if (reservation.occupantsSignales) {
+      throw new BadRequestException(
+        'Le dépassement de voyageurs a déjà été signalé pour cette réservation'
+      );
+    }
+
+    // 6. Vérifier qu'il y a vraiment un dépassement
+    if (!reservation.vehicule.nombrePlaces) {
+      throw new BadRequestException('Le véhicule n\'a pas de capacité définie');
+    }
+    if (dto.nombreOccupantsReel <= reservation.vehicule.nombrePlaces) {
+      throw new BadRequestException(
+        `Le nombre d'occupants déclaré (${dto.nombreOccupantsReel}) ne dépasse pas la capacité du véhicule (${reservation.vehicule.nombrePlaces} places)`
+      );
+    }
+
+    // 7. Préparer la raison d'annulation détaillée
+    const raisonAnnulation = `DÉPASSEMENT_VOYAGEURS: ${dto.nombreOccupantsReel}/${reservation.vehicule.nombrePlaces} personnes. ${dto.commentaire || ''}`;
+
+    // 8. Annuler la réservation via le use-case existant
+    // Avec rôle PROPRIETAIRE → pénalité 50% locataire, 0% proprio
+    const cancelDto: CancelReservationDto = {
+      raison: raisonAnnulation,
+    };
+
+    const cancelResult = await this.cancelUseCase.execute(
+      user,
+      reservationId,
+      cancelDto,
+    );
+
+    // 9. Marquer le flag occupantsSignales dans une transaction séparée
+    await this.prisma.reservation.update({
+      where: { id: reservationId },
+      data: { occupantsSignales: true },
+    });
+
+    // 10. Logger l'événement dans l'historique
+    await this.prisma.reservationHistorique.create({
+      data: {
+        reservationId,
+        ancienStatut: reservation.statut,
+        nouveauStatut: StatutReservation.ANNULEE,
+        modifiePar: `OWNER_SIGNAL_OVERLOAD: ${dto.nombreOccupantsReel} personnes`,
+      },
+    });
+
+    // 11. TODO: Envoyer notifications
+    // await this.notificationsService.sendOverloadCancellation({
+    //   locataire: reservation.locataire,
+    //   proprietaire: reservation.proprietaire,
+    //   vehicule: reservation.vehicule,
+    //   nombreOccupantsReel: dto.nombreOccupantsReel,
+    //   capaciteVehicule: reservation.vehicule.nombrePlaces,
+    //   penaliteLocataire: cancelResult.penalites?.locataire || 0,
+    // });
+
+    return {
+      success: true,
+      message: 'Réservation annulée pour dépassement du nombre de voyageurs autorisé',
+      annulation: {
+        reservationId: cancelResult.reservationId,
+        ancienStatut: reservation.statut,
+        nouveauStatut: cancelResult.statut,
+        raison: raisonAnnulation,
+        capaciteVehicule: reservation.vehicule.nombrePlaces,
+        nombreOccupantsReel: dto.nombreOccupantsReel,
+        remboursementLocataire: {
+          montant: cancelResult.refundAmount,
+          pourcentage: cancelResult.refundPercentage,
+        },
+        penaliteProprietaire: cancelResult.ownerPenaltyAmount,
+        avertissements: cancelResult.warnings,
+      },
+    };
   }
 }

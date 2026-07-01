@@ -31,6 +31,8 @@ import { RequestUser } from '../../common/types/auth.types';
 import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { CancelReservationDto } from './dto/cancel-reservation.dto';
+import { SignalTenantNoshowDto } from './dto/signal-tenant-noshow.dto';
+import { SignalOverloadDto } from './dto/signal-overload.dto';
 import { DisputesService } from '../disputes/disputes.service';
 import { CreateDisputeDto } from '../disputes/dto/create-dispute.dto';
 import { VEHICLE_PHOTO_MULTER_OPTIONS } from '../upload/upload.config';
@@ -141,10 +143,13 @@ export class ReservationsController {
   async refuseCheckin(
     @Req() req: Request & { user?: RequestUser },
     @Param('id', ParseUUIDPipe) reservationId: string,
-    @Body() body: { raison: string },
+    @Body() body: { motif: string; commentaire: string; raison?: string },
   ) {
     const user = req.user!;
-    return this.reservationsService.refuseCheckin(user, reservationId, { raison: body.raison });
+    return this.reservationsService.refuseCheckin(user, reservationId, {
+      motif: body.motif,
+      commentaire: body.commentaire || body.raison || '',
+    });
   }
 
   /**
@@ -352,5 +357,43 @@ export class ReservationsController {
   ) {
     const user = req.user!;
     return this.disputesService.create(user, reservationId, dto);
+  }
+
+  /**
+   * POST /reservations/:id/signal-noshow
+   * Propriétaire signale que le locataire n'est pas venu (no-show).
+   * Uniquement possible T+2h après l'heure de début.
+   * Déclenche annulation automatique T+5h avec remboursement 30% locataire / 50% proprio.
+   */
+  @Post(':id/signal-noshow')
+  @UseGuards(RolesGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  @HttpCode(HttpStatus.OK)
+  async signalTenantNoshow(
+    @Req() req: Request & { user?: RequestUser },
+    @Param('id', ParseUUIDPipe) reservationId: string,
+    @Body() dto: SignalTenantNoshowDto,
+  ) {
+    const user = req.user!;
+    return this.reservationsService.signalTenantNoshow(user, reservationId, dto.commentaire);
+  }
+
+  /**
+   * POST /reservations/:id/signal-overload
+   * Propriétaire signale un dépassement du nombre de voyageurs autorisé.
+   * Déclenche annulation IMMÉDIATE avec pénalité 50% pour le locataire.
+   * Cette action signifie qu'aucun accord n'a pu être trouvé entre les parties.
+   */
+  @Post(':id/signal-overload')
+  @UseGuards(RolesGuard, ReservationOwnerGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  @HttpCode(HttpStatus.OK)
+  async signalOverload(
+    @Req() req: Request & { user?: RequestUser },
+    @Param('id', ParseUUIDPipe) reservationId: string,
+    @Body() dto: SignalOverloadDto,
+  ) {
+    const user = req.user!;
+    return this.reservationsService.signalOverload(user, reservationId, dto);
   }
 }

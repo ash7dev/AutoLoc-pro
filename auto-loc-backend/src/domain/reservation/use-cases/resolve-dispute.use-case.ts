@@ -119,6 +119,7 @@ export class ResolveDisputeUseCase {
                                 montant: reservation.netProprietaire,
                                 sens: SensTransaction.CREDIT,
                                 soldeApres: newSolde,
+                                fournisseur: reservation.paiement?.fournisseur,
                             }
                         });
                     }

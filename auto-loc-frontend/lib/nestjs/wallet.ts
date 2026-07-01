@@ -4,6 +4,8 @@ import { apiFetch } from './api-client';
 
 export interface WalletBalance {
     soldeDisponible: string;
+    soldeWave: string;
+    soldeOrangeMoney: string;
     enAttente: string;
     totalGagne: string;
 }
@@ -19,6 +21,7 @@ export interface WalletTransaction {
     soldeApres: string;
     creeLe: string;
     reservationId?: string;
+    fournisseur?: 'WAVE' | 'ORANGE_MONEY';
 }
 
 export interface WalletData {

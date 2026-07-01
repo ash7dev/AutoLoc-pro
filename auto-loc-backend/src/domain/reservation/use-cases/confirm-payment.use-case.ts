@@ -153,6 +153,7 @@ export class ConfirmPaymentUseCase {
                             where: { id: reservation.paiement.id },
                             data: {
                                 statut: StatutPaiement.CONFIRME,
+                                ...(input.transactionId ? { idTransactionFournisseur: input.transactionId } : {}),
                             },
                         });
                     }

@@ -199,6 +199,9 @@ model Reservation {
   supplementHorsDakar    Decimal?                @db.Decimal(10, 2)
   tacitCheckinDeadlineLe DateTime?
   checkinLocataireSource CheckinLocataireSource?
+  absenceSignalee        Boolean                 @default(false)
+  occupantsSignales      Boolean                 @default(false)
+  walletCredite          Boolean                 @default(false)
   avis                   Avis[]
   idempotencyKey         IdempotencyKey?
   litige                 Litige?
@@ -265,32 +268,35 @@ model Wallet {
 }
 
 model TransactionWallet {
-  id            String                @id @default(uuid())
-  walletId      String
-  reservationId String?
-  type          TypeTransactionWallet
-  montant       Decimal               @db.Decimal(10, 2)
-  sens          SensTransaction
-  soldeApres    Decimal               @db.Decimal(10, 2)
-  creeLe        DateTime              @default(now())
-  wallet        Wallet                @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  id                 String                @id @default(uuid())
+  walletId           String
+  reservationId      String?
+  type               TypeTransactionWallet
+  montant            Decimal               @db.Decimal(10, 2)
+  sens               SensTransaction
+  soldeApres         Decimal               @db.Decimal(10, 2)
+  fournisseur        FournisseurPaiement?  // Wave, Orange Money, etc. (pour tracer l'origine)
+  creeLe             DateTime              @default(now())
+  wallet             Wallet                @relation(fields: [walletId], references: [id], onDelete: Cascade)
 
   @@unique([reservationId, type])
   @@index([walletId])
   @@index([walletId, creeLe(sort: Desc)])
+  @@index([walletId, fournisseur])
 }
 
 model Retrait {
-  id           String         @id @default(uuid())
-  walletId     String
-  montant      Decimal        @db.Decimal(10, 2)
-  methode      MethodeRetrait
-  destinataire String
-  statut       StatutRetrait  @default(EN_ATTENTE)
-  raisonRejet  String?
-  demandeeLe   DateTime       @default(now())
-  traiteLe     DateTime?
-  wallet       Wallet         @relation(fields: [walletId], references: [id])
+  id                        String         @id @default(uuid())
+  walletId                  String
+  montant                   Decimal        @db.Decimal(10, 2)
+  methode                   MethodeRetrait
+  destinataire              String
+  statut                    StatutRetrait  @default(EN_ATTENTE)
+  raisonRejet               String?
+  idTransactionFournisseur  String?        // ID de transaction Wave/Orange Money pour le payout
+  demandeeLe                DateTime       @default(now())
+  traiteLe                  DateTime?
+  wallet                    Wallet         @relation(fields: [walletId], references: [id])
 
   @@index([statut])
 }
@@ -313,6 +319,7 @@ model PenaliteProprietaire {
 model Litige {
   id                  String       @id @default(uuid())
   reservationId       String       @unique
+  motif               String       // Motif du litige (ex: DEPASSEMENT_PERSONNES, DEGRADATION, etc.)
   description         String
   coutEstime          Decimal?     @db.Decimal(10, 2)
   statut              StatutLitige @default(EN_ATTENTE)

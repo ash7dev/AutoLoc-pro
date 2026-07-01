@@ -1,16 +1,20 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma, SensTransaction, StatutReservation, StatutRetrait, TypeTransactionWallet } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TelegramService } from '../../infrastructure/telegram/telegram.service';
 import { NotificationService } from '../../infrastructure/notifications/notification.service';
 import { RequestUser } from '../../common/types/auth.types';
+import { PaymentProviderFactory } from '../../infrastructure/payment/payment-provider.factory';
 
 @Injectable()
 export class WalletService {
+  private readonly logger = new Logger(WalletService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly telegram: TelegramService,
     private readonly notifications: NotificationService,
+    private readonly providerFactory: PaymentProviderFactory,
   ) { }
 
   async getWallet(user: RequestUser) {
@@ -47,7 +51,7 @@ export class WalletService {
 
     // Récupérer les IDs des réservations déjà créditées (CREDIT_LOCATION)
     const creditedReservations = await this.prisma.transactionWallet.findMany({
-      where: { 
+      where: {
         walletId: wallet.id,
         type: TypeTransactionWallet.CREDIT_LOCATION,
       },
@@ -55,12 +59,37 @@ export class WalletService {
     });
     const creditedReservationIds = new Set(creditedReservations.map(t => t.reservationId).filter(Boolean));
 
+    // Calculer les soldes séparés par fournisseur
+    const allTransactions = await this.prisma.transactionWallet.findMany({
+      where: { walletId: wallet.id },
+      select: {
+        montant: true,
+        sens: true,
+        fournisseur: true,
+      },
+    });
+
+    let soldeWave = new Prisma.Decimal(0);
+    let soldeOrangeMoney = new Prisma.Decimal(0);
+
+    for (const tx of allTransactions) {
+      const montant = tx.montant;
+      const multiplier = tx.sens === SensTransaction.CREDIT ? 1 : -1;
+      const amount = montant.mul(multiplier);
+
+      if (tx.fournisseur === 'WAVE') {
+        soldeWave = soldeWave.add(amount);
+      } else if (tx.fournisseur === 'ORANGE_MONEY') {
+        soldeOrangeMoney = soldeOrangeMoney.add(amount);
+      }
+    }
+
     const [pendingAgg, earnedAgg, transactions] = await Promise.all([
       this.prisma.reservation.aggregate({
-        where: { 
-          proprietaireId: utilisateur.id, 
+        where: {
+          proprietaireId: utilisateur.id,
           statut: { in: pendingStatuses },
-          id: { notIn: Array.from(creditedReservationIds) }, // Exclure les réservations déjà créditées
+          id: { notIn: Array.from(creditedReservationIds).filter((id): id is string => id !== null) }, // Exclure les réservations déjà créditées
         },
         _sum: { netProprietaire: true },
       }),
@@ -80,6 +109,7 @@ export class WalletService {
           soldeApres: true,
           creeLe: true,
           reservationId: true,
+          fournisseur: true,
         },
       }),
     ]);
@@ -87,7 +117,9 @@ export class WalletService {
     return {
       balance: {
         soldeDisponible: wallet.soldeDisponible.toString(),
-        enAttente: pendingAgg._sum.netProprietaire?.toString() ?? '0',
+        soldeWave: soldeWave.toString(),
+        soldeOrangeMoney: soldeOrangeMoney.toString(),
+        enAttente: pendingAgg._sum?.netProprietaire?.toString() ?? '0',
         totalGagne: earnedAgg._sum.netProprietaire?.toString() ?? '0',
       },
       transactions: transactions.map((t) => ({
@@ -98,6 +130,7 @@ export class WalletService {
         soldeApres: t.soldeApres.toString(),
         creeLe: t.creeLe,
         reservationId: t.reservationId ?? undefined,
+        fournisseur: t.fournisseur ?? undefined,
       })),
     };
   }
@@ -212,9 +245,39 @@ export class WalletService {
 
     const amount = new Prisma.Decimal(montant);
     if (amount.lte(0)) throw new BadRequestException('Montant invalide');
-    if (amount.gt(wallet.soldeDisponible)) throw new BadRequestException('Solde insuffisant');
 
-    await this.prisma.$transaction(async (tx) => {
+    // Calculer le solde disponible pour le fournisseur sélectionné
+    const allTransactions = await this.prisma.transactionWallet.findMany({
+      where: { walletId: wallet.id },
+      select: {
+        montant: true,
+        sens: true,
+        fournisseur: true,
+      },
+    });
+
+    let soldeProvider = new Prisma.Decimal(0);
+    const targetProvider = methode === 'WAVE' ? 'WAVE' : 'ORANGE_MONEY';
+
+    for (const tx of allTransactions) {
+      const multiplier = tx.sens === SensTransaction.CREDIT ? 1 : -1;
+      const txAmount = tx.montant.mul(multiplier);
+
+      if (tx.fournisseur === targetProvider) {
+        soldeProvider = soldeProvider.add(txAmount);
+      }
+    }
+
+    // Vérifier que le solde du fournisseur est suffisant
+    if (amount.gt(soldeProvider)) {
+      const methodeLabel = methode === 'WAVE' ? 'Wave' : 'Orange Money';
+      throw new BadRequestException(
+        `Solde ${methodeLabel} insuffisant. Disponible : ${soldeProvider.toString()} FCFA`,
+      );
+    }
+
+    // Créer la demande de retrait et débiter le wallet
+    const retrait = await this.prisma.$transaction(async (tx) => {
       const newSolde = wallet.soldeDisponible.sub(amount);
       await tx.wallet.update({
         where: { id: wallet.id },
@@ -227,9 +290,10 @@ export class WalletService {
           soldeApres: newSolde,
           sens: SensTransaction.DEBIT,
           type: TypeTransactionWallet.DEBIT_RETRAIT,
+          fournisseur: targetProvider,
         },
       });
-      await tx.retrait.create({
+      const retraitResult = await tx.retrait.create({
         data: {
           walletId: wallet.id,
           montant: amount,
@@ -237,34 +301,103 @@ export class WalletService {
           destinataire: numeroDestinataire,
         },
       });
+      return retraitResult;
     });
+
+    const retraitId = retrait.id;
 
     const methodeLabel = methode === 'WAVE' ? '🌊 Wave' : '🟠 Orange Money';
     const ownerName = [utilisateur.prenom, utilisateur.nom].filter(Boolean).join(' ') || 'Propriétaire';
 
-    // Send Telegram alert
-    this.telegram.sendAdminAlert(
-      `💸 <b>Demande de retrait</b>\n` +
-      `Méthode : ${methodeLabel}\n` +
-      `Numéro : <code>${numeroDestinataire}</code>\n` +
-      `Montant : <b>${montant.toLocaleString('fr-FR')} FCFA</b>\n` +
-      `<a href="https://autoloc.sn/dashboard/admin/withdrawals">Traiter →</a>`,
-    ).catch(() => { });
+    // 🚀 AUTOMATISATION : Si Wave, déclencher le payout automatiquement
+    if (methode === 'WAVE') {
+      try {
+        const waveProvider = this.providerFactory.get('WAVE');
 
-    // Send admin emails to nstanislas03@gmail.com and jinicopi@gmail.com
-    const adminEmails = ['nstanislas03@gmail.com', 'jinicopi@gmail.com'];
-    for (const adminEmail of adminEmails) {
-      this.notifications.send({
-        email: adminEmail,
-        type: 'admin.withdrawal.requested',
-        data: {
-          ownerName,
-          montant: montant.toString(),
-          methode,
-          numeroDestinataire,
-          requestedAt: new Date().toLocaleDateString('fr-FR'),
-        },
-      }).catch(() => { });
+        if (!waveProvider.initiatePayout) {
+          throw new Error('Wave payout not supported by provider');
+        }
+
+        this.logger.log(
+          `🌊 Initiating automatic Wave payout: ${montant} FCFA → ${numeroDestinataire}`,
+        );
+
+        const payoutResult = await waveProvider.initiatePayout({
+          amount: montant,
+          recipientPhone: numeroDestinataire,
+          referenceId: retraitId,
+          recipientName: ownerName,
+        });
+
+        this.logger.log(
+          `✅ Wave payout initiated: ${payoutResult.transactionId} (status: ${payoutResult.status})`,
+        );
+
+        // Mettre à jour le retrait avec l'ID de transaction Wave
+        await this.prisma.retrait.update({
+          where: { id: retraitId },
+          data: {
+            idTransactionFournisseur: payoutResult.transactionId,
+            statut: payoutResult.status === 'COMPLETED' ? StatutRetrait.EFFECTUE : StatutRetrait.EN_ATTENTE,
+            ...(payoutResult.status === 'COMPLETED' ? { traiteLe: new Date() } : {}),
+          },
+        });
+
+        // Notification succès
+        this.telegram.sendAdminAlert(
+          `✅ <b>Retrait Wave automatique</b>\n` +
+          `Propriétaire : ${ownerName}\n` +
+          `Montant : <b>${montant.toLocaleString('fr-FR')} FCFA</b>\n` +
+          `Numéro : <code>${numeroDestinataire}</code>\n` +
+          `ID Transaction : <code>${payoutResult.transactionId}</code>\n` +
+          `Statut : ${payoutResult.status}`,
+        ).catch(() => { });
+
+        return;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.error(
+          `❌ Wave payout failed: ${errorMessage}`,
+        );
+
+        // En cas d'erreur, notifier les admins pour traitement manuel
+        this.telegram.sendAdminAlert(
+          `⚠️ <b>Retrait Wave échoué - Action requise</b>\n` +
+          `Propriétaire : ${ownerName}\n` +
+          `Montant : <b>${montant.toLocaleString('fr-FR')} FCFA</b>\n` +
+          `Numéro : <code>${numeroDestinataire}</code>\n` +
+          `Erreur : ${errorMessage}\n` +
+          `<a href="https://autoloc.sn/dashboard/admin/withdrawals">Traiter manuellement →</a>`,
+        ).catch(() => { });
+      }
+    }
+
+    // 🟠 ORANGE MONEY : Traitement manuel (notification aux admins)
+    if (methode === 'ORANGE_MONEY') {
+      this.telegram.sendAdminAlert(
+        `💸 <b>Demande de retrait Orange Money</b>\n` +
+        `Méthode : ${methodeLabel}\n` +
+        `Numéro : <code>${numeroDestinataire}</code>\n` +
+        `Montant : <b>${montant.toLocaleString('fr-FR')} FCFA</b>\n` +
+        `⚠️ Traitement manuel requis\n` +
+        `<a href="https://autoloc.sn/dashboard/admin/withdrawals">Traiter →</a>`,
+      ).catch(() => { });
+
+      // Send admin emails
+      const adminEmails = ['nstanislas03@gmail.com', 'jinicopi@gmail.com'];
+      for (const adminEmail of adminEmails) {
+        this.notifications.send({
+          email: adminEmail,
+          type: 'admin.withdrawal.requested',
+          data: {
+            ownerName,
+            montant: montant.toString(),
+            methode,
+            numeroDestinataire,
+            requestedAt: new Date().toLocaleDateString('fr-FR'),
+          },
+        }).catch(() => { });
+      }
     }
   }
 

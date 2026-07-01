@@ -94,6 +94,7 @@ export class DisputesService {
       const created = await tx.litige.create({
         data: {
           reservationId,
+          motif: dto.motif,
           description: dto.description,
           coutEstime: dto.coutEstime ?? null,
         },

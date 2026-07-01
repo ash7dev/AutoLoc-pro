@@ -137,16 +137,28 @@ export class PaymentWebhookController {
         }
 
         try {
-            // 5. Dispatcher selon le statut
-            if (payload.status === 'SUCCESS') {
-                await this.handlePaymentSuccess(payload.transactionId, payload.referenceId);
-            } else if (payload.status === 'REFUNDED') {
-                this.logger.log(`WEBHOOK_REFUND [${routeName}] : txId=${payload.transactionId}`);
+            // 5. Dispatcher selon le statut et le type d'événement
+            const webhookType = (payload.rawPayload as any).type;
+
+            // Si c'est un payout (retrait Wave)
+            if (webhookType && webhookType.includes('payout')) {
+                if (payload.status === 'SUCCESS') {
+                    await this.handlePayoutSuccess(payload.transactionId, payload.referenceId);
+                } else {
+                    await this.handlePayoutFailure(payload.transactionId, payload.referenceId);
+                }
             } else {
-                this.logger.warn(
-                    `WEBHOOK_FAILED [${routeName}] : txId=${payload.transactionId}, ref=${payload.referenceId}`,
-                );
-                await this.handlePaymentFailure(payload.referenceId);
+                // Sinon c'est un payment (paiement classique)
+                if (payload.status === 'SUCCESS') {
+                    await this.handlePaymentSuccess(payload.transactionId, payload.referenceId);
+                } else if (payload.status === 'REFUNDED') {
+                    this.logger.log(`WEBHOOK_REFUND [${routeName}] : txId=${payload.transactionId}`);
+                } else {
+                    this.logger.warn(
+                        `WEBHOOK_FAILED [${routeName}] : txId=${payload.transactionId}, ref=${payload.referenceId}`,
+                    );
+                    await this.handlePaymentFailure(payload.referenceId);
+                }
             }
 
             // 6. Marquer le webhook comme traité (idempotence)
@@ -224,5 +236,117 @@ export class PaymentWebhookController {
                     `erreur=${err.message}`,
                 );
             });
+    }
+
+    // ── Succès payout (retrait Wave) ───────────────────────────────────────────
+
+    private async handlePayoutSuccess(
+        transactionId: string,
+        referenceId: string,
+    ): Promise<void> {
+        // Le referenceId = ID du retrait
+        const retrait = await this.prisma.retrait.findUnique({
+            where: { id: referenceId },
+            select: {
+                id: true,
+                montant: true,
+                destinataire: true,
+                wallet: {
+                    select: {
+                        utilisateur: {
+                            select: { prenom: true, nom: true },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!retrait) {
+            this.logger.warn(
+                `WEBHOOK_PAYOUT_INTROUVABLE : ref=${referenceId}, txId=${transactionId}`,
+            );
+            return;
+        }
+
+        // Marquer le retrait comme effectué
+        await this.prisma.retrait.update({
+            where: { id: referenceId },
+            data: {
+                statut: 'EFFECTUE',
+                traiteLe: new Date(),
+                idTransactionFournisseur: transactionId,
+            },
+        });
+
+        const ownerName = [
+            retrait.wallet.utilisateur?.prenom,
+            retrait.wallet.utilisateur?.nom,
+        ].filter(Boolean).join(' ') || 'Propriétaire';
+
+        this.logger.log(
+            `✅ PAYOUT_SUCCESS : ${Number(retrait.montant)} FCFA → ${retrait.destinataire} (owner: ${ownerName})`,
+        );
+    }
+
+    // ── Échec payout (retrait Wave) ────────────────────────────────────────────
+
+    private async handlePayoutFailure(
+        transactionId: string,
+        referenceId: string,
+    ): Promise<void> {
+        // Le referenceId = ID du retrait
+        const retrait = await this.prisma.retrait.findUnique({
+            where: { id: referenceId },
+            select: {
+                id: true,
+                montant: true,
+                destinataire: true,
+                walletId: true,
+                wallet: {
+                    select: {
+                        utilisateur: {
+                            select: { prenom: true, nom: true },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!retrait) {
+            this.logger.warn(
+                `WEBHOOK_PAYOUT_FAILURE_INTROUVABLE : ref=${referenceId}, txId=${transactionId}`,
+            );
+            return;
+        }
+
+        // Rembourser le solde du wallet (annuler le débit)
+        await this.prisma.wallet.update({
+            where: { id: retrait.walletId },
+            data: {
+                soldeDisponible: {
+                    increment: retrait.montant,
+                },
+            },
+        });
+
+        // Marquer le retrait comme rejeté
+        await this.prisma.retrait.update({
+            where: { id: referenceId },
+            data: {
+                statut: 'REJETE',
+                raisonRejet: 'Payout Wave échoué',
+                traiteLe: new Date(),
+                idTransactionFournisseur: transactionId,
+            },
+        });
+
+        const ownerName = [
+            retrait.wallet.utilisateur?.prenom,
+            retrait.wallet.utilisateur?.nom,
+        ].filter(Boolean).join(' ') || 'Propriétaire';
+
+        this.logger.error(
+            `❌ PAYOUT_FAILED : ${Number(retrait.montant)} FCFA → ${retrait.destinataire} (owner: ${ownerName}) — Solde remboursé`,
+        );
     }
 }

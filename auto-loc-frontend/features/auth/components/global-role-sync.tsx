@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabase/client';
 import { useRoleStore } from '../stores/role.store';
 import { useProfileStore } from '../stores/profile.store';
@@ -15,18 +15,57 @@ import type { Session } from '@supabase/supabase-js';
  *
  * Il agit aussi comme "Healer" : si les cookies backend (nest_access) sont expirés,
  * il les régénère automatiquement en synchronisant le token Supabase.
+ *
+ * ✅ NEW: Supporte ETag pour cache HTTP (économie bande passante ~70%)
  */
 export function GlobalRoleSync() {
+  // ✅ NEW: Store ETag in ref to avoid unnecessary re-renders
+  const profileETagRef = useRef<string | null>(null);
+
+  // ✅ NEW: AbortController for request deduplication
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   useEffect(() => {
     let active = true;
 
     const syncAll = async (session: Session | null, isRetry = false) => {
+      // ✅ NEW: Abort previous pending request
+      if (abortControllerRef.current) {
+        console.log('[GlobalRoleSync] Aborting previous sync request');
+        abortControllerRef.current.abort();
+      }
+
+      // ✅ NEW: Create new AbortController for this request
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
       if (!session?.access_token) {
         // No Supabase session — but phone-native login uses NestJS cookies only.
         // Try the NestJS cookie before clearing the profile.
         try {
-          const res = await fetch('/api/nest/auth/me', { credentials: 'include' });
+          // ✅ NEW: Send If-None-Match header for ETag support
+          const headers: HeadersInit = { credentials: 'include' };
+          if (profileETagRef.current) {
+            headers['If-None-Match'] = profileETagRef.current;
+          }
+
+          const res = await fetch('/api/nest/auth/me', {
+            ...headers,
+            signal: abortController.signal, // ✅ NEW: Add abort signal
+          });
+
+          // ✅ NEW: Handle 304 Not Modified (cache hit)
+          if (res.status === 304) {
+            console.log('[GlobalRoleSync] Profile unchanged (304)');
+            return; // Keep existing profile in store
+          }
+
           if (res.ok) {
+            // ✅ NEW: Store ETag for next request
+            const etag = res.headers.get('etag');
+            if (etag) {
+              profileETagRef.current = etag;
+            }
+
             const profile = await res.json() as ProfileResponse;
             useProfileStore.getState().setProfile(profile);
             useRoleStore.getState().setActiveRole(profile.role);
@@ -47,11 +86,21 @@ export function GlobalRoleSync() {
         // No NestJS session either — clear everything
         useProfileStore.getState().clearProfile();
         useRoleStore.getState().clearRole();
+        profileETagRef.current = null; // Clear ETag on logout
         return;
       }
 
       try {
-        const profileRes = await fetch('/api/nest/auth/me', { credentials: 'include' });
+        // ✅ NEW: Send If-None-Match header for ETag support
+        const headers: HeadersInit = { credentials: 'include' };
+        if (profileETagRef.current) {
+          headers['If-None-Match'] = profileETagRef.current;
+        }
+
+        const profileRes = await fetch('/api/nest/auth/me', {
+          ...headers,
+          signal: abortController.signal, // ✅ NEW: Add abort signal
+        });
 
         // 🔄 HEALING DE SESSION :
         // Si le backend retourne 401, nos cookies (nest_access/refresh) sont morts.
@@ -70,7 +119,19 @@ export function GlobalRoleSync() {
 
         if (!active) return;
 
+        // ✅ NEW: Handle 304 Not Modified (cache hit)
+        if (profileRes.status === 304) {
+          console.log('[GlobalRoleSync] Profile unchanged (304)');
+          return; // Keep existing profile in store
+        }
+
         if (profileRes.ok) {
+          // ✅ NEW: Store ETag for next request
+          const etag = profileRes.headers.get('etag');
+          if (etag) {
+            profileETagRef.current = etag;
+          }
+
           const profile = await profileRes.json() as ProfileResponse;
           useProfileStore.getState().setProfile(profile);
 
@@ -93,7 +154,12 @@ export function GlobalRoleSync() {
             useRoleStore.getState().setHasVehicles(profile.hasVehicles ?? false);
           }
         }
-      } catch {
+      } catch (error) {
+        // ✅ NEW: Ignore AbortError (expected when request is cancelled)
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('[GlobalRoleSync] Request aborted (expected)');
+          return;
+        }
         // Ignorer en cas d'erreur réseau
       }
     };

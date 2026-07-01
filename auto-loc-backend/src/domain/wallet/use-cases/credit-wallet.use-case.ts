@@ -37,8 +37,33 @@ export class CreditWalletUseCase {
                 id: true,
                 proprietaireId: true,
                 netProprietaire: true,
+                walletCredite: true,
+                paiement: {
+                    select: {
+                        fournisseur: true,
+                    },
+                },
             },
         });
+
+        // ── 1b. Check if already credited via flag (early return) ──────────
+        if (reservation.walletCredite) {
+            this.logger.warn(
+                `ALREADY_CREDITED (flag): Wallet already credited for reservation ${reservationId}`,
+            );
+
+            const wallet = await this.prisma.wallet.findUniqueOrThrow({
+                where: { utilisateurId: reservation.proprietaireId },
+                select: { id: true, soldeDisponible: true },
+            });
+
+            return {
+                walletId: wallet.id,
+                montantCredite: reservation.netProprietaire,
+                nouveauSolde: wallet.soldeDisponible,
+                alreadyCredited: true,
+            };
+        }
 
         const montant = reservation.netProprietaire;
 
@@ -83,6 +108,7 @@ export class CreditWalletUseCase {
                         montant,
                         sens: SensTransaction.CREDIT,
                         soldeApres: nouveauSolde, // Solde final après déduction pénalités
+                        fournisseur: reservation.paiement?.fournisseur,
                     },
                 });
 
@@ -109,6 +135,12 @@ export class CreditWalletUseCase {
                 await tx.wallet.update({
                     where: { id: wallet.id },
                     data: { soldeDisponible: nouveauSolde },
+                });
+
+                // ── 2f. Marquer la réservation comme wallet crédité ────────────
+                await tx.reservation.update({
+                    where: { id: reservationId },
+                    data: { walletCredite: true },
                 });
 
                 return {

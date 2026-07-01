@@ -13,7 +13,9 @@ import { BusinessRuleException } from '../../../common/exceptions/business-rule.
 import { ReservationStateMachine } from '../reservation.state-machine';
 
 export interface RefuseVehicleInput {
-    raison: string;
+    motif: string; // NON_CONFORMITE, DEGATS, ACCES_IMPOSSIBLE, AUTRE
+    commentaire: string; // Anciennement "raison"
+    raison?: string; // Deprecated - pour rétrocompatibilité
 }
 
 export interface RefuseVehicleResult {
@@ -109,10 +111,12 @@ export class RefuseVehicleUseCase {
                 });
 
                 // b. Créer le Litige
+                const description = input.commentaire || input.raison || 'Refus de check-in sans détails';
                 const litige = await tx.litige.create({
                     data: {
                         reservationId,
-                        description: `[REFUS AU CHECK-IN] ${input.raison}`,
+                        motif: input.motif || 'LOGEMENT_NON_CONFORME', // Motif envoyé par le frontend
+                        description: `[REFUS AU CHECK-IN] ${description}`,
                         statut: 'EN_ATTENTE',
                     },
                 });

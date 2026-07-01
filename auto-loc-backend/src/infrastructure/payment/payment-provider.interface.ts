@@ -71,6 +71,24 @@ export interface WebhookPayload {
     rawPayload: Record<string, unknown>;
 }
 
+export interface InitiatePayoutParams {
+    /** Montant en FCFA (XOF) — entier, pas de décimales */
+    amount: number;
+    /** Numéro de téléphone du bénéficiaire (format international) */
+    recipientPhone: string;
+    /** Notre référence interne (ID du retrait) */
+    referenceId: string;
+    /** Nom complet du bénéficiaire (optionnel) */
+    recipientName?: string;
+}
+
+export interface InitiatePayoutResult {
+    /** ID de transaction côté fournisseur */
+    transactionId: string;
+    /** Statut initial du payout */
+    status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+}
+
 export interface PaymentProviderInterface {
     /** Identifiant du fournisseur */
     readonly provider: 'WAVE' | 'ORANGE_MONEY' | 'INTOUCH';
@@ -100,4 +118,10 @@ export interface PaymentProviderInterface {
      * Initie un remboursement.
      */
     refundPayment(transactionId: string, amount?: number): Promise<void>;
+
+    /**
+     * Initie un payout (virement vers un compte mobile money).
+     * Disponible uniquement pour Wave (pas supporté par InTouch/Orange Money).
+     */
+    initiatePayout?(params: InitiatePayoutParams): Promise<InitiatePayoutResult>;
 }
