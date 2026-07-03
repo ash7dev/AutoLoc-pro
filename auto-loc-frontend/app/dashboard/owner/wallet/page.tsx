@@ -1,11 +1,25 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import { ApiError } from "@/lib/nestjs/api-client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { fetchWallet, fetchPenalties } from "@/lib/nestjs/wallet";
 import { OwnerHeader } from "@/features/dashboard/components/owner-header";
 import { WalletOverview } from "@/features/wallet/components/wallet-overview";
 import { PenaltiesSection } from "@/features/wallet/components/penalties-section";
+
+// ✅ OPTIMISATION: Cache wallet et penalties pour 30 secondes
+const getCachedWallet = unstable_cache(
+    async (token: string) => fetchWallet(token),
+    ['owner-wallet'],
+    { revalidate: 30, tags: ['owner-wallet'] }
+);
+
+const getCachedPenalties = unstable_cache(
+    async (token: string) => fetchPenalties(token),
+    ['owner-penalties'],
+    { revalidate: 30, tags: ['owner-penalties'] }
+);
 
 export default async function OwnerWalletPage() {
     const nestToken = cookies().get("nest_access")?.value ?? null;
@@ -21,8 +35,8 @@ export default async function OwnerWalletPage() {
     let penaltiesData;
     try {
         [walletData, penaltiesData] = await Promise.all([
-            fetchWallet(token),
-            fetchPenalties(token),
+            getCachedWallet(token),
+            getCachedPenalties(token),
         ]);
     } catch (err) {
         if (err instanceof ApiError && err.status === 401) redirect("/login?expired=1");

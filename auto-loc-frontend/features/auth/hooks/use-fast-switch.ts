@@ -47,10 +47,10 @@ export function useFastSwitch() {
       window.location.href = '/dashboard/owner?_=' + Date.now();
     } catch (err) {
       console.error('[FastSwitch] Failed to switch role:', err);
-      // En cas d'erreur, on tente quand même la navigation
-      window.location.href = '/dashboard/owner?_=' + Date.now();
-    } finally {
+      // ✅ SÉCURITÉ: Ne pas rediriger en cas d'erreur, retourner à la page d'accueil
+      // pour éviter que l'utilisateur accède au mauvais dashboard avec le mauvais rôle
       setLoading(false);
+      router.push('/?error=switch_failed');
     }
   };
 

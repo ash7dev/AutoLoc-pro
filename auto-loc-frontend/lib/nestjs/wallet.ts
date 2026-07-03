@@ -73,4 +73,9 @@ export async function requestWithdrawal(
         method: 'POST',
         body: { montant, methode, numeroDestinataire },
     });
+
+    // ✅ OPTIMISATION: Invalider les caches du wallet après retrait
+    const { revalidateTag } = await import('next/cache');
+    revalidateTag('owner-wallet');
+    revalidateTag('owner-transactions');
 }

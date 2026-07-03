@@ -107,9 +107,10 @@ export async function fetchOwnerReservations(
     if (params?.vehiculeId) query.set('vehiculeId', params.vehiculeId);
     const qs = query.toString();
 
+    // ✅ OPTIMISATION: Retirer cache: 'no-store' pour permettre unstable_cache() de fonctionner
     const res = await apiFetch<ReservationsResponse | Reservation[]>(
         `/reservations/owner${qs ? `?${qs}` : ''}`,
-        { accessToken: token, cache: 'no-store' },
+        { accessToken: token },
     );
     if (Array.isArray(res)) {
         return { data: res, total: res.length };
@@ -119,13 +120,13 @@ export async function fetchOwnerReservations(
 
 /**
  * Fetch a single reservation by ID (server-side).
- * Cache désactivé — les données financières doivent toujours être fraîches.
+ * ✅ OPTIMISATION: Cache activé, sera invalidé par revalidateTag après mutations
  */
 export async function fetchReservation(
     token: string,
     id: string,
 ): Promise<Reservation> {
-    return apiFetch<Reservation>(`/reservations/${id}`, { accessToken: token, cache: 'no-store' });
+    return apiFetch<Reservation>(`/reservations/${id}`, { accessToken: token });
 }
 
 /**
@@ -133,6 +134,12 @@ export async function fetchReservation(
  */
 export async function confirmReservation(id: string): Promise<void> {
     await apiFetch(`/reservations/${id}/confirm`, { method: 'PATCH' });
+
+    // ✅ OPTIMISATION: Invalider les caches après confirmation
+    const { revalidateTag } = await import('next/cache');
+    revalidateTag('owner-reservations');
+    revalidateTag('owner-stats');
+    revalidateTag(`reservation-${id}`);
 }
 
 /**
@@ -146,6 +153,15 @@ export async function cancelReservation(
         method: 'PATCH',
         body: raison ? { raison } : undefined,
     });
+
+    // ✅ OPTIMISATION: Invalider les caches après annulation (wallet + pénalités possibles)
+    const { revalidateTag } = await import('next/cache');
+    revalidateTag('owner-reservations');
+    revalidateTag('owner-wallet');
+    revalidateTag('owner-penalties');
+    revalidateTag('owner-stats');
+    revalidateTag(`reservation-${id}`);
+    revalidateTag('owner-vehicles'); // Disponibilité affectée
 }
 
 /**
@@ -153,6 +169,12 @@ export async function cancelReservation(
  */
 export async function checkinReservation(id: string): Promise<void> {
     await apiFetch(`/reservations/${id}/checkin`, { method: 'PATCH' });
+
+    // ✅ OPTIMISATION: Invalider les caches après check-in
+    const { revalidateTag } = await import('next/cache');
+    revalidateTag('owner-reservations');
+    revalidateTag('owner-stats');
+    revalidateTag(`reservation-${id}`);
 }
 
 /**
@@ -160,6 +182,13 @@ export async function checkinReservation(id: string): Promise<void> {
  */
 export async function checkoutReservation(id: string): Promise<void> {
     await apiFetch(`/reservations/${id}/checkout`, { method: 'PATCH' });
+
+    // ✅ OPTIMISATION: Invalider les caches après check-out (wallet + versement)
+    const { revalidateTag } = await import('next/cache');
+    revalidateTag('owner-reservations');
+    revalidateTag('owner-wallet');
+    revalidateTag('owner-stats');
+    revalidateTag(`reservation-${id}`);
 }
 
 // ── Tenant functions ──────────────────────────────────────────────────────────

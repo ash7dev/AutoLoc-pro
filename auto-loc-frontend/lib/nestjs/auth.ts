@@ -106,20 +106,34 @@ export async function submitKycLinks(body: {
   documentBackUrl: string;
   selfieUrl?: string;
 }): Promise<ProfileResponse> {
-  return apiFetch<ProfileResponse, any>(AUTH_ENDPOINTS.submitKycLinks, {
+  const result = await apiFetch<ProfileResponse, any>(AUTH_ENDPOINTS.submitKycLinks, {
     method: 'POST',
     body,
   });
+
+  // ✅ OPTIMISATION: Invalider les caches après soumission KYC
+  const { revalidateTag } = await import('next/cache');
+  revalidateTag('user-profile');
+  revalidateTag('owner-permissions');
+
+  return result;
 }
 
 export async function submitPermisLink(body: {
   url: string;
   publicId: string;
 }): Promise<{ url: string }> {
-  return apiFetch(AUTH_ENDPOINTS.linkPermis, {
+  const result = await apiFetch<{ url: string }, { url: string; publicId: string }>(AUTH_ENDPOINTS.linkPermis, {
     method: 'POST',
     body,
   });
+
+  // ✅ OPTIMISATION: Invalider les caches après upload permis
+  const { revalidateTag } = await import('next/cache');
+  revalidateTag('user-profile');
+  revalidateTag('tenant-permissions');
+
+  return result;
 }
 
 export async function checkAvailability(params: {

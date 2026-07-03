@@ -18,14 +18,27 @@ const NEST_COOKIE_BASE = {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as { 
+    // ✅ SÉCURITÉ: CSRF Protection - Vérifier que la requête vient de notre frontend
+    const origin = request.headers.get('origin');
+    const host = request.headers.get('host');
+
+    // Accepter les requêtes provenant du même domaine
+    if (origin && host) {
+      const originHost = new URL(origin).host;
+      if (originHost !== host) {
+        console.warn('[Auth Sync] CSRF tentative détectée:', { origin, host });
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+
+    const body = await request.json() as {
       supabaseToken?: string;
       accessToken?: string;
       refreshToken?: string;
       activeRole?: string;
       profile?: any;
     };
-    
+
     const { supabaseToken, accessToken, refreshToken, activeRole, profile } = body;
 
     let session: {

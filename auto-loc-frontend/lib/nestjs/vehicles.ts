@@ -559,11 +559,19 @@ export async function createIndisponibilite(
   body: { dateDebut: string; dateFin: string; motif?: string },
   accessToken: string,
 ): Promise<Indisponibilite> {
-  return apiFetch(VEHICLE_PATHS.indisponibilites(vehicleId), {
+  const result = await apiFetch<Indisponibilite, { dateDebut: string; dateFin: string; motif?: string }>(VEHICLE_PATHS.indisponibilites(vehicleId), {
     method: 'POST',
     body,
     accessToken,
   });
+
+  // ✅ OPTIMISATION: Invalider les caches après création d'indisponibilité
+  const { revalidateTag } = await import('next/cache');
+  revalidateTag(`vehicle-${vehicleId}-indisponibilites`);
+  revalidateTag(`vehicle-${vehicleId}-availability`);
+  revalidateTag('owner-vehicles');
+
+  return result;
 }
 
 export async function deleteIndisponibilite(
@@ -571,8 +579,16 @@ export async function deleteIndisponibilite(
   indispoId: string,
   accessToken: string,
 ): Promise<{ deleted: boolean }> {
-  return apiFetch(VEHICLE_PATHS.deleteIndisponibilite(vehicleId, indispoId), {
+  const result = await apiFetch<{ deleted: boolean }>(VEHICLE_PATHS.deleteIndisponibilite(vehicleId, indispoId), {
     method: 'DELETE',
     accessToken,
   });
+
+  // ✅ OPTIMISATION: Invalider les caches après suppression d'indisponibilité
+  const { revalidateTag } = await import('next/cache');
+  revalidateTag(`vehicle-${vehicleId}-indisponibilites`);
+  revalidateTag(`vehicle-${vehicleId}-availability`);
+  revalidateTag('owner-vehicles');
+
+  return result;
 }

@@ -150,7 +150,7 @@ export class PaymentWebhookController {
             } else {
                 // Sinon c'est un payment (paiement classique)
                 if (payload.status === 'SUCCESS') {
-                    await this.handlePaymentSuccess(payload.transactionId, payload.referenceId);
+                    await this.handlePaymentSuccess(payload.transactionId, payload.referenceId, payload.amount);
                 } else if (payload.status === 'REFUNDED') {
                     this.logger.log(`WEBHOOK_REFUND [${routeName}] : txId=${payload.transactionId}`);
                 } else {
@@ -188,11 +188,15 @@ export class PaymentWebhookController {
     private async handlePaymentSuccess(
         transactionId: string,
         referenceId: string,
+        paidAmount?: number,
     ): Promise<void> {
         // Le referenceId = paymentRef stocké dans Paiement.idTransactionFournisseur
         const paiement = await this.prisma.paiement.findFirst({
             where: { idTransactionFournisseur: referenceId },
-            select: { reservationId: true },
+            select: {
+                reservationId: true,
+                montant: true,
+            },
         });
 
         if (!paiement) {
@@ -200,6 +204,19 @@ export class PaymentWebhookController {
                 `WEBHOOK_PAIEMENT_INTROUVABLE : ref=${referenceId}, txId=${transactionId}`,
             );
             return;
+        }
+
+        // ✅ SÉCURITÉ: Vérifier que le montant payé correspond au montant attendu
+        if (paidAmount !== undefined) {
+            const expectedAmount = paiement.montant.toNumber();
+            if (paidAmount !== expectedAmount) {
+                this.logger.error(
+                    `WEBHOOK_MONTANT_INCORRECT : ref=${referenceId}, ` +
+                    `attendu=${expectedAmount}, reçu=${paidAmount}`,
+                );
+                // Ne pas confirmer le paiement si le montant est incorrect
+                return;
+            }
         }
 
         await this.confirmPayment

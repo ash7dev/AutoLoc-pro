@@ -1,10 +1,18 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import { ApiError } from "@/lib/nestjs/api-client";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { fetchMyVehicles, type Vehicle } from "@/lib/nestjs/vehicles";
 import { OwnerHeader } from "@/features/dashboard/components/owner-header";
 import { OwnerFleet } from "@/features/vehicles/owner/OwnerFleet";
+
+// ✅ OPTIMISATION: Cache des véhicules pour 30 secondes
+const getCachedVehicles = unstable_cache(
+  async (token: string) => fetchMyVehicles(token),
+  ['owner-vehicles'],
+  { revalidate: 30, tags: ['owner-vehicles'] }
+);
 
 export default async function OwnerVehiclesPage() {
   const nestToken = cookies().get("nest_access")?.value ?? null;
@@ -19,7 +27,7 @@ export default async function OwnerVehiclesPage() {
 
   let vehicles: Vehicle[];
   try {
-    vehicles = await fetchMyVehicles(token);
+    vehicles = await getCachedVehicles(token);
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) redirect("/login?expired=1");
     vehicles = [];
