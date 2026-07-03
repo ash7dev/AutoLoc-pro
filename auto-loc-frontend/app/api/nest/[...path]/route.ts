@@ -161,6 +161,14 @@ async function proxy(
   const cookieStore = cookies();
   let accessToken = cookieStore.get('nest_access')?.value ?? null;
 
+  // Fallback : si pas de cookie nest_access, on lit le token Bearer passé par le client
+  if (!accessToken) {
+    const clientAuth = request.headers.get('Authorization');
+    if (clientAuth && clientAuth.startsWith('Bearer ')) {
+      accessToken = clientAuth.substring(7).trim();
+    }
+  }
+
   const path = '/' + params.path.join('/');
   const search = request.nextUrl.search;
   const url = `${NEST_API}${path}${search}`;

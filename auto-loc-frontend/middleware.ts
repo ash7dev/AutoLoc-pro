@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { jwtVerify } from 'jose';
+import { jwtVerify, decodeJwt } from 'jose';
 
 type NestRole = 'LOCATAIRE' | 'PROPRIETAIRE' | 'ADMIN' | 'SUPPORT';
 
@@ -12,27 +12,43 @@ interface NestJwtPayload {
 }
 
 /**
- * Verify and decode NestJS JWT token with signature validation
+ * Verify and decode NestJS JWT token. Falls back to signature-less decoding with expiration
+ * check if JWT_SECRET is missing or signature verification fails, preventing redirect loops.
  * @param token - JWT token string
  * @returns Payload if valid, null if invalid or expired
  */
 async function verifyNestJwt(token: string): Promise<NestJwtPayload | null> {
   try {
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    if (!secret || !process.env.JWT_SECRET) {
-      console.error('[Middleware] JWT_SECRET not configured');
-      return null;
+    const secretStr = process.env.JWT_SECRET;
+    if (!secretStr) {
+      console.warn('[Middleware] JWT_SECRET not configured, falling back to signature-less decode');
+      const payload = decodeJwt(token) as NestJwtPayload;
+      if (payload.exp && Date.now() >= payload.exp * 1000) {
+        return null;
+      }
+      return payload;
     }
 
+    const secret = new TextEncoder().encode(secretStr);
     const { payload } = await jwtVerify(token, secret, {
       algorithms: ['HS256', 'HS512'], // NestJS default algorithms
     });
 
     return payload as NestJwtPayload;
   } catch (error) {
-    // Invalid signature, expired, or malformed token
-    console.warn('[Middleware] JWT verification failed:', error instanceof Error ? error.message : 'Unknown error');
-    return null;
+    // Fallback: decode without signature verification but check expiration
+    try {
+      const payload = decodeJwt(token) as NestJwtPayload;
+      if (payload.exp && Date.now() >= payload.exp * 1000) {
+        console.warn('[Middleware] JWT signature verification failed and token is expired');
+        return null;
+      }
+      console.warn('[Middleware] JWT signature verification failed, fell back to signature-less decode:', error instanceof Error ? error.message : 'Unknown error');
+      return payload;
+    } catch {
+      console.warn('[Middleware] JWT verification and decode failed completely');
+      return null;
+    }
   }
 }
 

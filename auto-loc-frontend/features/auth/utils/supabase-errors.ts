@@ -31,6 +31,11 @@ export function mapSupabaseError(message: string): string {
   // ── Inscription désactivée ──
   if (msg.includes('signup') && msg.includes('disabled')) return 'Les inscriptions sont temporairement désactivées.';
 
+  // ── Erreurs Réseau ──
+  if (msg.includes('load failed') || msg.includes('failed to fetch')) {
+    return 'Impossible de joindre le serveur. Vérifiez votre connexion.';
+  }
+
   // ── Fallback — log pour debug ──
   console.warn('[mapSupabaseError] Unmapped error:', message);
   return `Erreur : ${message}`;

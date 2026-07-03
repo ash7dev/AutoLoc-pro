@@ -7,6 +7,8 @@ import {
     InitiatePaymentParams,
     InitiatePaymentResult,
     WebhookPayload,
+    InitiatePayoutParams,
+    InitiatePayoutResult,
 } from '../payment-provider.interface';
 
 // ── Orange Money API Types ─────────────────────────────────────────────────────
@@ -48,6 +50,7 @@ export class OrangeMoneyProvider implements PaymentProviderInterface {
     private readonly webhookSecret: string;
     private readonly apiUrl: string;
     private readonly merchantKey: string;
+    private readonly webhookUrl: string;
     private readonly isSandbox: boolean;
 
     // 🚀 OPTIMISATION: Redis cache remplace le cache mémoire
@@ -66,6 +69,8 @@ export class OrangeMoneyProvider implements PaymentProviderInterface {
             'ORANGE_MONEY_API_URL',
             'https://api.orange.com/orange-money-webpay/dev/v1',
         );
+        const baseUrl = this.config.get<string>('APP_BASE_URL', 'http://localhost:3001');
+        this.webhookUrl = `${baseUrl}/payments/webhook/orange-money`;
         this.isSandbox = this.apiUrl.includes('dev') || this.apiUrl.includes('sandbox');
 
         if (this.isSandbox) {
@@ -181,7 +186,7 @@ export class OrangeMoneyProvider implements PaymentProviderInterface {
             amount: params.amount,
             return_url: params.callbackUrl,
             cancel_url: params.callbackUrl,
-            notif_url: params.callbackUrl,
+            notif_url: this.webhookUrl,  // URL webhook pour recevoir les notifications
             lang: 'fr',
         };
 
@@ -339,5 +344,32 @@ export class OrangeMoneyProvider implements PaymentProviderInterface {
         }
 
         this.logger.log(`Orange Money refund completed for ${transactionId}`);
+    }
+
+    // ── Payout (Retrait) ───────────────────────────────────────────────────────
+
+    async initiatePayout(params: InitiatePayoutParams): Promise<InitiatePayoutResult> {
+        // Mode stub si pas de credentials
+        if (!this.clientId) {
+            this.logger.warn('ORANGE_MONEY_CLIENT_ID not set — returning stub payout');
+            return {
+                transactionId: `om_payout_stub_${Date.now()}`,
+                status: 'PENDING',
+            };
+        }
+
+        // Note: L'API Orange Money QR Code/Deeplink ne supporte pas les payouts automatiques
+        // Pour les retraits, il faut utiliser l'API "Orange Money Distributeur" (agent/distributor)
+        this.logger.warn('Orange Money automatic payouts not supported via QR Code API');
+        this.logger.log(
+            `Payout request: ${params.amount} XOF → ${params.recipientPhone} (ref: ${params.referenceId})`,
+        );
+
+        // Pour l'instant, on retourne un statut PENDING
+        // Il faudra implémenter l'API Distributeur pour les vrais payouts
+        return {
+            transactionId: `om_payout_manual_${Date.now()}`,
+            status: 'PENDING',
+        };
     }
 }

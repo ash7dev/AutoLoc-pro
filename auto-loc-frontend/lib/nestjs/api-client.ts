@@ -62,9 +62,9 @@ export async function apiFetch<TResponse, TBody = undefined>(
     ...(options.headers ?? {}),
   };
 
-  // En mode serveur, on passe le token explicitement dans Authorization.
-  // En mode browser, le proxy /api/nest/* l'injecte depuis le cookie httpOnly — inutile ici.
-  if (typeof window === 'undefined' && options.accessToken) {
+  // En mode serveur ou si passé explicitement par le client (ex: switch-role avec Supabase token),
+  // on transmet le token dans Authorization.
+  if (options.accessToken) {
     headers.Authorization = `Bearer ${options.accessToken}`;
   }
 

@@ -240,14 +240,14 @@ export default function PaymentPage() {
                 setActiveRole('LOCATAIRE');
             }
 
-            // Utiliser Wave directement si l'utilisateur choisit Wave, sinon InTouch pour Orange Money
-            const fournisseur = method === 'WAVE' ? 'WAVE' : 'INTOUCH';
+            // Utiliser le provider correspondant directement (Wave ou Orange Money)
+            const fournisseur = method === 'WAVE' ? 'WAVE' : 'ORANGE_MONEY';
 
             const { reservationId, paymentUrl } = await authFetch<
                 { reservationId: string; paymentUrl: string | null },
                 {
                     vehiculeId: string; dateDebut: string; dateFin: string;
-                    fournisseur: 'INTOUCH' | 'WAVE'; idempotencyKey: string;
+                    fournisseur: 'ORANGE_MONEY' | 'WAVE'; idempotencyKey: string;
                     targetPayment: PaymentMethod; payerPhone: string;
                 }
             >('/reservations', {
@@ -488,7 +488,7 @@ export default function PaymentPage() {
                         </div>
                     </div>
 
-                    <p className="text-[10.5px] text-slate-300 mt-3 text-center">🔒 Paiement sécurisé via InTouch</p>
+                    <p className="text-[10.5px] text-slate-300 mt-3 text-center">🔒 Paiement sécurisé</p>
                 </div>
 
                 {/* Avertissement */}
