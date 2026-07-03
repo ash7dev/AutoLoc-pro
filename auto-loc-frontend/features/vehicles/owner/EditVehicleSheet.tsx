@@ -14,6 +14,12 @@ import { cn } from "@/lib/utils";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import type { Vehicle, VehicleType, FuelType, Transmission, VehiclePhoto } from "@/lib/nestjs/vehicles";
 import { VEHICLE_PATHS } from "@/lib/nestjs/vehicles";
+import {
+  updateVehicleAction,
+  deleteVehiclePhotoAction,
+  updatePhotoPositionAction,
+  linkVehiclePhotoAction,
+} from "@/features/vehicles/actions/update-vehicle";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -339,40 +345,34 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
       // 2. Opération principale : Mise à jour des champs (uniquement si changement)
       if (hasChanged) {
         operations.push(
-          authFetch<Vehicle, Record<string, unknown>>(
-            VEHICLE_PATHS.update(vehicle.id),
-            {
-              method: "PATCH",
-              body: {
-                marque: data.marque,
-                modele: data.modele,
-                annee: Number(data.annee),
-                immatriculation: data.immatriculation,
-                type: data.type,
-                nombrePlaces: data.nombrePlaces ? Number(data.nombrePlaces) : undefined,
-                carburant: data.carburant || undefined,
-                transmission: data.transmission || undefined,
-                ville: data.ville,
-                adresse: data.adresse,
-                prixParJour: Number(data.prixParJour),
-                joursMinimum: Number(data.joursMinimum),
-                tiers: (data.tiers ?? []).map((t) => ({
-                  joursMin: Number(t.joursMin),
-                  joursMax: t.joursMax ? Number(t.joursMax) : undefined,
-                  prix: Number(t.prix),
-                })),
-                ageMinimum: data.ageMinimum ? Number(data.ageMinimum) : undefined,
-                zoneConduite: data.zoneConduite || undefined,
-                assurance: data.assurance || undefined,
-                carburantCondition: data.carburantCondition || undefined,
-                reglesSpecifiques: data.reglesSpecifiques || undefined,
-                fraisLivraison: data.fraisLivraison ? Number(data.fraisLivraison) : undefined,
-                autoriseHorsDakar: data.autoriseHorsDakar || false,
-                supplementHorsDakarParJour: data.supplementHorsDakarParJour ? Number(data.supplementHorsDakarParJour) : undefined,
-                equipements,
-              },
-            }
-          )
+          updateVehicleAction(vehicle.id, {
+            marque: data.marque,
+            modele: data.modele,
+            annee: Number(data.annee),
+            immatriculation: data.immatriculation,
+            type: data.type,
+            nombrePlaces: data.nombrePlaces ? Number(data.nombrePlaces) : undefined,
+            carburant: (data.carburant || undefined) as FuelType | undefined,
+            transmission: (data.transmission || undefined) as Transmission | undefined,
+            ville: data.ville,
+            adresse: data.adresse,
+            prixParJour: Number(data.prixParJour),
+            joursMinimum: Number(data.joursMinimum),
+            tiers: (data.tiers ?? []).map((t) => ({
+              joursMin: Number(t.joursMin),
+              joursMax: t.joursMax ? Number(t.joursMax) : undefined,
+              prix: Number(t.prix),
+            })),
+            ageMinimum: data.ageMinimum ? Number(data.ageMinimum) : undefined,
+            zoneConduite: data.zoneConduite || undefined,
+            assurance: data.assurance || undefined,
+            carburantCondition: data.carburantCondition || undefined,
+            reglesSpecifiques: data.reglesSpecifiques || undefined,
+            fraisLivraison: data.fraisLivraison ? Number(data.fraisLivraison) : undefined,
+            autoriseHorsDakar: data.autoriseHorsDakar || false,
+            supplementHorsDakarParJour: data.supplementHorsDakarParJour ? Number(data.supplementHorsDakarParJour) : undefined,
+            equipements,
+          })
         );
       } else {
         // Si rien n'a changé, on simule une promesse résolue avec l'objet actuel
@@ -383,7 +383,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
       if (deletedPhotoIds.length > 0) {
         operations.push(
           Promise.all(
-            deletedPhotoIds.map((id) => authFetch(VEHICLE_PATHS.deletePhoto(vehicle.id, id), { method: "DELETE" }))
+            deletedPhotoIds.map((id) => deleteVehiclePhotoAction(vehicle.id, id))
           )
         );
       }
@@ -391,11 +391,8 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
       if (existingPhotos.length > 0) {
         operations.push(
           Promise.all(
-            existingPhotos.map((p, i) => 
-              authFetch(`/vehicles/${vehicle.id}/photos/${p.id}`, {
-                method: 'PATCH',
-                body: { position: i, estPrincipale: i === 0 }
-              })
+            existingPhotos.map((p, i) =>
+              updatePhotoPositionAction(vehicle.id, p.id, i, i === 0)
             )
           )
         );
@@ -404,11 +401,8 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
       if (newPhotos.length > 0) {
         operations.push(
           Promise.all(
-            newPhotos.map((p) => 
-              authFetch<VehiclePhoto>(VEHICLE_PATHS.linkPhoto(vehicle.id), {
-                method: 'POST',
-                body: { url: p.url, publicId: p.publicId } as unknown as undefined
-              })
+            newPhotos.map((p) =>
+              linkVehiclePhotoAction(vehicle.id, p.url, p.publicId)
             )
           )
         );

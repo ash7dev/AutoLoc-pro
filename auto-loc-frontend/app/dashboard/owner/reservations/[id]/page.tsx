@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect, notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import Image from "next/image";
 import { ApiError } from "@/lib/nestjs/api-client";
@@ -61,6 +62,15 @@ const STATUS: Record<string, { label: string; text: string; bg: string; border: 
 };
 
 /* ════════════════════════════════════════════════════════════════
+   CACHED FETCH
+════════════════════════════════════════════════════════════════ */
+const getCachedReservation = (id: string) => unstable_cache(
+    async (token: string) => fetchReservation(token, id),
+    [`reservation-${id}`],
+    { revalidate: 30, tags: [`reservation-${id}`] }
+);
+
+/* ════════════════════════════════════════════════════════════════
    PAGE
 ════════════════════════════════════════════════════════════════ */
 export default async function ReservationDetailPage({ params }: { params: { id: string } }) {
@@ -77,7 +87,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
     /* ── Fetch ── */
     let reservation;
     try {
-        reservation = await fetchReservation(token, params.id);
+        reservation = await getCachedReservation(params.id)(token);
     } catch (err) {
         if (err instanceof ApiError && err.status === 401) redirect("/login?expired=1");
         if (err instanceof ApiError && err.status === 404) notFound();

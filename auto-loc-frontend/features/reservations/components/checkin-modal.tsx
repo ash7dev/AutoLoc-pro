@@ -208,6 +208,7 @@ export function CheckinModal({ reservationId, open, onClose, dateDebut }: Checki
                                         <input
                                             type="file"
                                             accept="image/*"
+                                            capture="environment"
                                             className="hidden"
                                             onChange={e => {
                                                 const file = e.target.files?.[0];

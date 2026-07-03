@@ -114,6 +114,9 @@ export interface CreateVehicleInput {
   carburantCondition?: string;
   reglesSpecifiques?: string;
   fraisLivraison?: number;
+  autoriseHorsDakar?: boolean;
+  supplementHorsDakarParJour?: number;
+  equipements?: string[];
   tiers?: Array<{
     joursMin: number;
     joursMax?: number;
@@ -340,8 +343,11 @@ export async function uploadDocumentToCloudinary(
   form.append('folder', sig.folder);
 
   // ✅ DÉTECTION DE VISAGE (Cloudinary AI - Gratuit jusqu'à 25k images/mois)
-  if (options?.detectFace) {
-    form.append('detection', 'adv_face');
+  // Si la signature backend contient le param detection, on l'utilise (signé)
+  // Sinon on utilise l'option locale (pour rétro-compatibilité)
+  const detectionParam = (sig as any).detection || (options?.detectFace ? 'adv_face' : null);
+  if (detectionParam) {
+    form.append('detection', detectionParam);
   }
 
   // /auto/upload détecte automatiquement image vs raw (PDF)
@@ -589,6 +595,96 @@ export async function deleteIndisponibilite(
   revalidateTag(`vehicle-${vehicleId}-indisponibilites`);
   revalidateTag(`vehicle-${vehicleId}-availability`);
   revalidateTag('owner-vehicles');
+
+  return result;
+}
+
+// ── Mutations de véhicules avec cache invalidation ────────────────────────────
+
+/**
+ * Met à jour un véhicule et invalide les caches concernés.
+ * À utiliser dans les Server Actions ou Route Handlers.
+ */
+export async function updateVehicleWithRevalidation(
+  vehicleId: string,
+  data: UpdateVehicleInput,
+  accessToken: string,
+): Promise<Vehicle> {
+  const result = await apiFetch<Vehicle, UpdateVehicleInput>(
+    VEHICLE_PATHS.update(vehicleId),
+    { method: 'PATCH', body: data, accessToken }
+  );
+
+  const { revalidateTag } = await import('next/cache');
+  revalidateTag('owner-vehicles');
+  revalidateTag(`vehicle-${vehicleId}`);
+  revalidateTag('feed');
+  revalidateTag('mobile-feed');
+
+  return result;
+}
+
+/**
+ * Supprime une photo de véhicule et invalide les caches.
+ */
+export async function deleteVehiclePhotoWithRevalidation(
+  vehicleId: string,
+  photoId: string,
+  accessToken: string,
+): Promise<void> {
+  await apiFetch(
+    VEHICLE_PATHS.deletePhoto(vehicleId, photoId),
+    { method: 'DELETE', accessToken }
+  );
+
+  const { revalidateTag } = await import('next/cache');
+  revalidateTag('owner-vehicles');
+  revalidateTag(`vehicle-${vehicleId}`);
+  revalidateTag('feed');
+  revalidateTag('mobile-feed');
+}
+
+/**
+ * Lie une nouvelle photo à un véhicule et invalide les caches.
+ */
+export async function linkVehiclePhotoWithRevalidation(
+  vehicleId: string,
+  photoData: { url: string; publicId: string },
+  accessToken: string,
+): Promise<VehiclePhoto> {
+  const result = await apiFetch<VehiclePhoto, { url: string; publicId: string }>(
+    VEHICLE_PATHS.linkPhoto(vehicleId),
+    { method: 'POST', body: photoData, accessToken }
+  );
+
+  const { revalidateTag } = await import('next/cache');
+  revalidateTag('owner-vehicles');
+  revalidateTag(`vehicle-${vehicleId}`);
+  revalidateTag('feed');
+  revalidateTag('mobile-feed');
+
+  return result;
+}
+
+/**
+ * Met à jour la position d'une photo et invalide les caches.
+ */
+export async function updatePhotoPositionWithRevalidation(
+  vehicleId: string,
+  photoId: string,
+  data: { position: number; estPrincipale: boolean },
+  accessToken: string,
+): Promise<VehiclePhoto> {
+  const result = await apiFetch<VehiclePhoto, { position: number; estPrincipale: boolean }>(
+    `/vehicles/${vehicleId}/photos/${photoId}`,
+    { method: 'PATCH', body: data, accessToken }
+  );
+
+  const { revalidateTag } = await import('next/cache');
+  revalidateTag('owner-vehicles');
+  revalidateTag(`vehicle-${vehicleId}`);
+  revalidateTag('feed');
+  revalidateTag('mobile-feed');
 
   return result;
 }
