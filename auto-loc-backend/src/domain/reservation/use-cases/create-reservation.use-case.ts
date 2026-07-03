@@ -83,14 +83,6 @@ export class CreateReservationUseCase {
             input.dateFin,
         );
 
-        // ── 2.5 Validate dateDebut avec préavis minimum ───────────────────────────
-        const minStartTime = new Date(Date.now() + 1 * 60 * 60 * 1000); // +1h minimum
-        if (dates.debut < minStartTime) {
-            throw new BadRequestException(
-                'La réservation doit commencer au minimum 1 heure après la création',
-            );
-        }
-
         // ── 3. Validate vehicle & business rules ──────────────────────────────────
         const vehicule = await this.validateVehicle(
             input.vehiculeId,
