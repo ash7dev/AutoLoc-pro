@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { ArrowUpRight, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { requestWithdrawal } from '@/lib/nestjs/wallet';
 import { cn } from '@/lib/utils';
@@ -13,26 +14,26 @@ interface WithdrawalFormProps {
     soldeOrangeMoney: string;
 }
 
-const METHODS: { value: Methode; label: string; color: string; border: string; bg: string; activeBorder: string; activeBg: string; dot: string }[] = [
+const METHODS: { value: Methode; label: string; logo: string; color: string; border: string; bg: string; activeBorder: string; activeBg: string }[] = [
     {
         value: 'WAVE',
         label: 'Wave',
+        logo: '/wavelogo.jpeg',
         color: 'text-blue-700',
         border: 'border-slate-200',
         bg: 'bg-slate-50',
         activeBorder: 'border-blue-400',
         activeBg: 'bg-blue-50',
-        dot: 'bg-blue-500',
     },
     {
         value: 'ORANGE_MONEY',
         label: 'Orange Money',
+        logo: '/orangeMoneylogo.jpg',
         color: 'text-orange-700',
         border: 'border-slate-200',
         bg: 'bg-slate-50',
         activeBorder: 'border-orange-400',
         activeBg: 'bg-orange-50',
-        dot: 'bg-orange-500',
     },
 ];
 
@@ -148,7 +149,15 @@ export function WithdrawalForm({ soldeDisponible, soldeWave, soldeOrangeMoney }:
                                         active ? `${m.activeBorder} ${m.activeBg}` : `${m.border} ${m.bg} hover:border-slate-300`,
                                     )}
                                 >
-                                    <span className={cn('w-2 h-2 rounded-full flex-shrink-0', m.dot)} />
+                                    <div className="w-6 h-6 rounded-md overflow-hidden flex-shrink-0 relative">
+                                        <Image
+                                            src={m.logo}
+                                            alt={m.label}
+                                            width={24}
+                                            height={24}
+                                            className="object-contain"
+                                        />
+                                    </div>
                                     <span className={cn('text-[13px] font-bold', active ? m.color : 'text-slate-600')}>
                                         {m.label}
                                     </span>

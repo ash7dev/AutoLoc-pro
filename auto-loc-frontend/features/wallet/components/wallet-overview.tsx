@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WalletData, WalletTransaction } from "@/lib/nestjs/wallet";
@@ -41,8 +42,14 @@ export function WalletOverview({ data }: WalletOverviewProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="rounded-xl border border-[hsl(var(--border))] bg-card p-5">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                            <span className="text-blue-600 font-semibold text-sm">🌊</span>
+                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center overflow-hidden relative">
+                            <Image
+                                src="/wavelogo.jpeg"
+                                alt="Wave"
+                                width={40}
+                                height={40}
+                                className="object-contain"
+                            />
                         </div>
                         <div>
                             <p className="text-xs text-muted-foreground">Solde Wave</p>
@@ -52,8 +59,14 @@ export function WalletOverview({ data }: WalletOverviewProps) {
                 </div>
                 <div className="rounded-xl border border-[hsl(var(--border))] bg-card p-5">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
-                            <span className="text-orange-600 font-semibold text-sm">🟠</span>
+                        <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center overflow-hidden relative">
+                            <Image
+                                src="/orangeMoneylogo.jpg"
+                                alt="Orange Money"
+                                width={40}
+                                height={40}
+                                className="object-contain"
+                            />
                         </div>
                         <div>
                             <p className="text-xs text-muted-foreground">Solde Orange Money</p>
