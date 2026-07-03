@@ -49,14 +49,15 @@ export function PwaInstallPrompt() {
     // On ne montre pas si l'utilisateur a fermé il y a moins de 7 jours
     const isDismissedRecently = dismissedAt && (Date.now() - parseInt(dismissedAt, 10)) < 7 * 24 * 60 * 60 * 1000;
 
+    let timer: ReturnType<typeof setTimeout> | undefined;
     if (!isDismissedRecently) {
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setShowPrompt(true);
       }, 4000); // Délai de 4s pour ne pas agresser l'utilisateur au chargement
-      return () => clearTimeout(timer);
     }
 
     return () => {
+      if (timer) clearTimeout(timer);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);

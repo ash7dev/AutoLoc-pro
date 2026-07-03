@@ -9,7 +9,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notification: NotificationService,
-  ) {}
+  ) { }
 
   // ── Admin stats ─────────────────────────────────────────────────────────────
 
@@ -20,21 +20,21 @@ export class UsersService {
 
     const [users, total] = await Promise.all([
       this.prisma.utilisateur.findMany({
-      where,
-      orderBy: { creeLe: 'asc' },
-      take,
-      skip,
-      include: {
-        profile: { select: { role: true, createdAt: true } },
-        vehicules: {
-          include: {
-            photos: { orderBy: { position: 'asc' } },
-            equipements: { include: { equipement: true } },
+        where,
+        orderBy: { creeLe: 'asc' },
+        take,
+        skip,
+        include: {
+          profile: { select: { role: true, createdAt: true } },
+          vehicules: {
+            include: {
+              photos: { orderBy: { position: 'asc' } },
+              equipements: { include: { equipement: true } },
+            },
           },
+          _count: { select: { vehicules: true } },
         },
-        _count: { select: { vehicules: true } },
-      },
-    }),
+      }),
       this.prisma.utilisateur.count({ where }),
     ]);
 
@@ -48,8 +48,9 @@ export class UsersService {
       isBanned: !u.actif || (!!u.bloqueJusqua && u.bloqueJusqua > now),
       banRaison: null,
       kycStatus: u.statutKyc,
-      kyc: u.kycDocumentUrl || u.kycSelfieUrl || u.permisUrl ? {
+      kyc: u.kycDocumentUrl || u.kycDocumentBackUrl || u.kycSelfieUrl || u.permisUrl ? {
         documentUrl: u.kycDocumentUrl ?? null,
+        documentBackUrl: u.kycDocumentBackUrl ?? null,
         selfieUrl: u.kycSelfieUrl ?? null,
         permisUrl: u.permisUrl ?? null,
         soumisLe: u.misAJourLe.toISOString(),
@@ -112,7 +113,7 @@ export class UsersService {
         reservationsProprietaire: {
           orderBy: { creeLe: 'desc' },
           take: 5,
-          include: { 
+          include: {
             vehicule: { select: { marque: true, modele: true } },
             locataire: { select: { prenom: true, nom: true } }
           },
@@ -135,8 +136,9 @@ export class UsersService {
       banRaison: null,
       kycStatus: u.statutKyc,
       kycRejectionReason: u.kycRejectionReason,
-      kyc: u.kycDocumentUrl || u.kycSelfieUrl || u.permisUrl ? {
+      kyc: u.kycDocumentUrl || u.kycDocumentBackUrl || u.kycSelfieUrl || u.permisUrl ? {
         documentUrl: u.kycDocumentUrl ?? null,
+        documentBackUrl: u.kycDocumentBackUrl ?? null,
         selfieUrl: u.kycSelfieUrl ?? null,
         permisUrl: u.permisUrl ?? null,
         soumisLe: u.misAJourLe.toISOString(),
@@ -188,7 +190,7 @@ export class UsersService {
         netProprietaire: Number(r.netProprietaire),
         creeLe: r.creeLe,
       })),
-      _count: { 
+      _count: {
         vehicles: u._count.vehicules,
         reservationsLocataire: u._count.reservationsLocataire,
         reservationsProprietaire: u._count.reservationsProprietaire
@@ -395,10 +397,10 @@ export class UsersService {
       const name = [r.locataire.prenom, r.locataire.nom].filter(Boolean).join(' ') || 'Locataire';
       const vehicle = `${r.vehicule.marque} ${r.vehicule.modele}`;
       const map: Record<string, { action: string; status: string }> = {
-        EN_ATTENTE_PAIEMENT: { action: 'Nouvelle réservation',    status: 'warning' },
-        CONFIRMEE:           { action: 'Réservation confirmée',   status: 'success' },
-        TERMINEE:            { action: 'Location terminée',       status: 'success' },
-        ANNULEE:             { action: 'Réservation annulée',     status: 'error'   },
+        EN_ATTENTE_PAIEMENT: { action: 'Nouvelle réservation', status: 'warning' },
+        CONFIRMEE: { action: 'Réservation confirmée', status: 'success' },
+        TERMINEE: { action: 'Location terminée', status: 'success' },
+        ANNULEE: { action: 'Réservation annulée', status: 'error' },
       };
       const m = map[r.statut] ?? { action: 'Réservation mise à jour', status: 'info' };
       events.push({ id: `res-${r.id}`, date: r.creeLe, type: 'reservation', action: m.action, detail: `${name} — ${vehicle}`, status: m.status });
@@ -407,9 +409,9 @@ export class UsersService {
     for (const u of kycChanges) {
       const name = [u.prenom, u.nom].filter(Boolean).join(' ') || 'Utilisateur';
       const map: Record<string, { action: string; status: string }> = {
-        EN_ATTENTE: { action: 'KYC soumis',   status: 'warning' },
-        VERIFIE:    { action: 'KYC approuvé', status: 'success' },
-        REJETE:     { action: 'KYC rejeté',   status: 'error'   },
+        EN_ATTENTE: { action: 'KYC soumis', status: 'warning' },
+        VERIFIE: { action: 'KYC approuvé', status: 'success' },
+        REJETE: { action: 'KYC rejeté', status: 'error' },
       };
       const m = map[u.statutKyc] ?? { action: 'KYC mis à jour', status: 'info' };
       events.push({ id: `kyc-${u.id}`, date: u.misAJourLe, type: 'kyc', action: m.action, detail: name, status: m.status });
@@ -417,8 +419,8 @@ export class UsersService {
 
     for (const v of vehicleChanges) {
       const map: Record<string, { action: string; status: string }> = {
-        VERIFIE:  { action: 'Annonce validée',   status: 'success' },
-        SUSPENDU: { action: 'Annonce suspendue', status: 'error'   },
+        VERIFIE: { action: 'Annonce validée', status: 'success' },
+        SUSPENDU: { action: 'Annonce suspendue', status: 'error' },
       };
       const m = map[v.statut] ?? { action: 'Annonce mise à jour', status: 'info' };
       events.push({ id: `veh-${v.id}`, date: v.misAJourLe, type: 'vehicle', action: m.action, detail: `${v.marque} ${v.modele}`, status: m.status });
@@ -434,14 +436,14 @@ export class UsersService {
 
     return events.slice(0, limit).map((e) => {
       const diffMin = Math.floor((now.getTime() - e.date.getTime()) / 60000);
-      const diffH   = Math.floor(diffMin / 60);
-      const diffD   = Math.floor(diffH / 24);
+      const diffH = Math.floor(diffMin / 60);
+      const diffD = Math.floor(diffH / 24);
       const time =
-        diffMin < 1  ? "À l'instant" :
-        diffMin < 60 ? `${diffMin} min` :
-        diffH   < 24 ? `${diffH} h` :
-        diffD   === 1 ? 'Hier' :
-        `${diffD} j`;
+        diffMin < 1 ? "À l'instant" :
+          diffMin < 60 ? `${diffMin} min` :
+            diffH < 24 ? `${diffH} h` :
+              diffD === 1 ? 'Hier' :
+                `${diffD} j`;
       return { id: e.id, type: e.type, action: e.action, detail: e.detail, time, status: e.status };
     });
   }

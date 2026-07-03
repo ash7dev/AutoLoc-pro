@@ -167,8 +167,11 @@ export class AuthController {
    */
   @Get('kyc/upload-signature')
   @UseGuards(JwtAuthGuard, AccountStatusGuard)
-  async getKycUploadSignature() {
-    return this.authService.getKycUploadSignature();
+  async getKycUploadSignature(@Query('detection') detection?: string) {
+    // ✅ Whitelist des valeurs de détection autorisées (sécurité injection)
+    const ALLOWED_DETECTIONS = ['adv_face'];
+    const safeDetection = detection && ALLOWED_DETECTIONS.includes(detection) ? detection : undefined;
+    return this.authService.getKycUploadSignature(safeDetection);
   }
 
   /**
@@ -179,7 +182,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard, AccountStatusGuard)
   async submitKycLinks(
     @CurrentUser() user: RequestUser,
-    @Body() body: { documentFrontUrl: string; documentBackUrl: string },
+    @Body() body: { documentFrontUrl: string; documentBackUrl: string; selfieUrl?: string },
   ) {
     return this.authService.submitKycLinks(user, body);
   }

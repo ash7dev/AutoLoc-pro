@@ -36,11 +36,15 @@ export class CloudinaryService implements OnModuleInit {
     this.initialized = true;
   }
 
-  getUploadSignature(_p0?: string): { signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string } {
+  getUploadSignature(folderName?: string, detection?: string): { signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string; detection?: string } {
     const timestamp = Math.round(Date.now() / 1000);
-    const folder = VEHICLE_PHOTO_FOLDER;
-    const signature = cloudinary.utils.api_sign_request({ timestamp, folder }, this.apiSecret);
-    return { signature, timestamp, apiKey: this.apiKey, cloudName: this.cloudName, folder };
+    const folder = folderName || VEHICLE_PHOTO_FOLDER;
+    const paramsToSign: Record<string, any> = { timestamp, folder };
+    if (detection) {
+      paramsToSign.detection = detection;
+    }
+    const signature = cloudinary.utils.api_sign_request(paramsToSign, this.apiSecret);
+    return { signature, timestamp, apiKey: this.apiKey, cloudName: this.cloudName, folder, ...(detection ? { detection } : {}) };
   }
 
   getDocumentUploadSignature(vehicleId: string, docType: string): { signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string } {

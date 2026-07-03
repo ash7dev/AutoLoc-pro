@@ -31,7 +31,7 @@ export function GlobalRoleSync() {
     const syncAll = async (session: Session | null, isRetry = false) => {
       // ✅ NEW: Abort previous pending request
       if (abortControllerRef.current) {
-        console.log('[GlobalRoleSync] Aborting previous sync request');
+        // Silent abort — expected deduplication behavior
         abortControllerRef.current.abort();
       }
 
@@ -43,19 +43,20 @@ export function GlobalRoleSync() {
         // Try the NestJS cookie before clearing the profile.
         try {
           // ✅ NEW: Send If-None-Match header for ETag support
-          const headers: HeadersInit = { credentials: 'include' };
+          const headers: HeadersInit = {};
           if (profileETagRef.current) {
             headers['If-None-Match'] = profileETagRef.current;
           }
 
           const res = await fetch('/api/nest/auth/me', {
-            ...headers,
+            headers,
+            credentials: 'include',
             signal: abortController.signal, // ✅ NEW: Add abort signal
           });
 
           // ✅ NEW: Handle 304 Not Modified (cache hit)
           if (res.status === 304) {
-            console.log('[GlobalRoleSync] Profile unchanged (304)');
+            // 304 cache hit — profile unchanged, skip update
             return; // Keep existing profile in store
           }
 
@@ -69,15 +70,10 @@ export function GlobalRoleSync() {
             const profile = await res.json() as ProfileResponse;
             useProfileStore.getState().setProfile(profile);
             useRoleStore.getState().setActiveRole(profile.role);
-            if (profile.role === 'PROPRIETAIRE') {
-              const vehiclesRes = await fetch('/api/nest/vehicles/me', { credentials: 'include' });
-              if (vehiclesRes.ok) {
-                const data = await vehiclesRes.json() as unknown[];
-                useRoleStore.getState().setHasVehicles(Array.isArray(data) && data.length > 0);
-              }
-            } else {
-              useRoleStore.getState().setHasVehicles(profile.hasVehicles ?? false);
-            }
+
+            // ✅ OPTIMISATION: Utiliser profile.hasVehicles du backend (déjà calculé)
+            // au lieu de faire un fetch supplémentaire de /vehicles/me
+            useRoleStore.getState().setHasVehicles(profile.hasVehicles ?? false);
             return;
           }
         } catch {
@@ -92,13 +88,14 @@ export function GlobalRoleSync() {
 
       try {
         // ✅ NEW: Send If-None-Match header for ETag support
-        const headers: HeadersInit = { credentials: 'include' };
+        const headers: HeadersInit = {};
         if (profileETagRef.current) {
           headers['If-None-Match'] = profileETagRef.current;
         }
 
         const profileRes = await fetch('/api/nest/auth/me', {
-          ...headers,
+          headers,
+          credentials: 'include',
           signal: abortController.signal, // ✅ NEW: Add abort signal
         });
 
@@ -121,7 +118,7 @@ export function GlobalRoleSync() {
 
         // ✅ NEW: Handle 304 Not Modified (cache hit)
         if (profileRes.status === 304) {
-          console.log('[GlobalRoleSync] Profile unchanged (304)');
+          // 304 cache hit — profile unchanged, skip update
           return; // Keep existing profile in store
         }
 
@@ -140,24 +137,16 @@ export function GlobalRoleSync() {
           // rôle différent (ex: token PROPRIETAIRE stale → heal → profil LOCATAIRE en DB).
           useRoleStore.getState().setActiveRole(profile.role);
 
-          // Fetch vehicles uniquement pour les propriétaires — les autres rôles
-          // (ADMIN, LOCATAIRE, SUPPORT) n'ont pas de véhicules et retourneraient 403.
-          if (profile.role === 'PROPRIETAIRE') {
-            const vehiclesRes = await fetch('/api/nest/vehicles/me', { credentials: 'include' });
-            if (vehiclesRes.ok) {
-              const data = await vehiclesRes.json() as unknown[];
-              useRoleStore.getState().setHasVehicles(Array.isArray(data) && data.length > 0);
-            }
-          } else {
-            // Un utilisateur peut avoir des véhicules même avec le rôle LOCATAIRE actif
-            // (il a déjà été propriétaire). On lit profile.hasVehicles au lieu de forcer false.
-            useRoleStore.getState().setHasVehicles(profile.hasVehicles ?? false);
-          }
+          // ✅ OPTIMISATION: Utiliser profile.hasVehicles du backend (déjà calculé)
+          // Un utilisateur peut avoir des véhicules même avec le rôle LOCATAIRE actif
+          // (il a déjà été propriétaire). On lit profile.hasVehicles au lieu de faire
+          // un fetch supplémentaire de /vehicles/me.
+          useRoleStore.getState().setHasVehicles(profile.hasVehicles ?? false);
         }
       } catch (error) {
         // ✅ NEW: Ignore AbortError (expected when request is cancelled)
         if (error instanceof Error && error.name === 'AbortError') {
-          console.log('[GlobalRoleSync] Request aborted (expected)');
+          // AbortError — expected deduplication behavior
           return;
         }
         // Ignorer en cas d'erreur réseau

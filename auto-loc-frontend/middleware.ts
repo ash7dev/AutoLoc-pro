@@ -67,12 +67,13 @@ export async function middleware(request: NextRequest) {
   // directement vers son dashboard sans render de la landing page.
   if (pathname === '/') {
     if (nestAccess) {
-      // Si l'user vient de switcher de rôle (cookie < 5min), on ne redirige pas
+      // Si l'user vient de switcher de rôle (cookie < 10s), on ne redirige pas
       // vers son ancien dashboard — le token JWT n'est pas encore rafraîchi.
+      // Grace period réduit à 10s pour la sécurité (suffisant pour le hard reload).
       const roleSwitchAt = request.cookies.get('role_switch_at')?.value;
       if (roleSwitchAt) {
         const ageMs = Date.now() - parseInt(roleSwitchAt, 10);
-        if (ageMs < 5 * 60 * 1000) return NextResponse.next();
+        if (ageMs < 10 * 1000) return NextResponse.next(); // 10 secondes
       }
 
       // ✅ NEW: Verify JWT signature before trusting payload
@@ -104,6 +105,19 @@ export async function middleware(request: NextRequest) {
       loginUrl.searchParams.set('expired', '1');
       loginUrl.searchParams.set('next', pathname);
       return NextResponse.redirect(loginUrl);
+    }
+
+    // ✅ SECURITY: Vérification de rôle pour protéger les routes admin et owner
+    if (pathname.startsWith('/dashboard/admin')) {
+      if (payload.role !== 'ADMIN' && payload.role !== 'SUPPORT') {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
+    }
+
+    if (pathname.startsWith('/dashboard/owner')) {
+      if (payload.role !== 'PROPRIETAIRE' && payload.role !== 'ADMIN' && payload.role !== 'SUPPORT') {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
     }
 
     return NextResponse.next();

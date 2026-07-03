@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   BadgeCheck, CheckCircle2, Search, Clock,
   FileText, Loader2, XCircle, X, Eye, ZoomIn,
-  Square, CheckSquare, Zap, ArrowUpRight,
+  Square, CheckSquare, Zap, ArrowUpRight, User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminUser } from '../../../lib/nestjs/admin';
@@ -115,7 +115,8 @@ function KycModal({
 }) {
   const [lightbox, setLightbox] = useState<{ url: string; label: string } | null>(null);
   const hasPermis = !!user.kyc?.permisUrl;
-  const hasAnyDoc = !!user.kyc?.documentUrl || !!user.kyc?.selfieUrl;
+  const hasAnyDoc = !!user.kyc?.documentUrl || !!user.kyc?.documentBackUrl;
+  const hasSelfie = !!user.kyc?.selfieUrl;
 
   useEffect(() => {
     const fn = (e: KeyboardEvent) => { if (e.key === 'Escape' && !lightbox) onClose(); };
@@ -199,10 +200,45 @@ function KycModal({
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <DocSlot url={user.kyc.documentUrl} label="Recto" onZoom={(u, l) => setLightbox({ url: u, label: l })} />
-                      <DocSlot url={user.kyc.selfieUrl}   label="Verso" onZoom={(u, l) => setLightbox({ url: u, label: l })} />
+                      <DocSlot url={user.kyc.documentBackUrl ?? null} label="Verso" onZoom={(u, l) => setLightbox({ url: u, label: l })} />
                     </div>
                   </div>
                 )}
+
+                {/* Selfie en direct */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className={cn(
+                      'w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0',
+                      hasSelfie ? 'bg-blue-50' : 'bg-slate-100',
+                    )}>
+                      <User className={cn('w-3.5 h-3.5', hasSelfie ? 'text-blue-500' : 'text-slate-400')} strokeWidth={1.75} />
+                    </div>
+                    <p className="text-[12px] font-black text-black uppercase tracking-wide">
+                      Selfie en direct
+                    </p>
+                    {hasSelfie && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100
+                        px-2 py-0.5 text-[9.5px] font-bold text-blue-600">
+                        <span className="w-1 h-1 rounded-full bg-blue-500" />
+                        Fourni
+                      </span>
+                    )}
+                    <div className="flex-1 h-px bg-slate-100" />
+                  </div>
+                  {hasSelfie ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <DocSlot url={user.kyc!.selfieUrl} label="Selfie" onZoom={(u, l) => setLightbox({ url: u, label: l })} />
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3">
+                      <User className="w-4 h-4 text-slate-300 flex-shrink-0" strokeWidth={1.25} />
+                      <p className="text-[12px] font-medium text-slate-400">
+                        Aucun selfie soumis (ancienne soumission)
+                      </p>
+                    </div>
+                  )}
+                </div>
 
                 {/* Permis de conduire */}
                 <div>

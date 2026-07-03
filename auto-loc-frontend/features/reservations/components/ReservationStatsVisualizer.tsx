@@ -259,9 +259,11 @@ function EmptyState() {
 export function ReservationStatsVisualizer({
   reservations = [],
   className,
+  loading = false,
 }: {
   reservations?: Reservation[];
   className?: string;
+  loading?: boolean;
 }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
@@ -340,8 +342,8 @@ export function ReservationStatsVisualizer({
           <>
             {/* Chart Area */}
             <div className="flex flex-col sm:flex-row items-center gap-8 lg:gap-10">
-              <div className="relative w-[180px] h-[180px] shrink-0">
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="relative w-[180px] h-[180px] shrink-0" style={{ minWidth: 180, minHeight: 180 }}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <PieChart>
                     <Pie
                       data={chartData}

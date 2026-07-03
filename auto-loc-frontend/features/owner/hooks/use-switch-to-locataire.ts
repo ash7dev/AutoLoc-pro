@@ -37,13 +37,17 @@ export function useSwitchToLocataire() {
         }),
       });
 
+      // Ajouter un délai de 300ms pour que le backend finisse de mettre à jour
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       // Cookie de grâce conservé comme filet de sécurité.
-      document.cookie = `role_switch_at=${Date.now()}; path=/; max-age=300`;
+      document.cookie = `role_switch_at=${Date.now()}; path=/; max-age=300; SameSite=Lax`;
 
       clearProfile();
       setActiveRole('LOCATAIRE');
 
-      window.location.href = '/';
+      // Hard reload pour forcer Next.js à re-fetch le profil sans cache
+      window.location.href = '/?_=' + Date.now();
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Une erreur est survenue.';

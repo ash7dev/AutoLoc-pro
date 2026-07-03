@@ -88,6 +88,7 @@ export interface AdminUser {
   /** Présent si le backend joint la table Kyc */
   kyc?: {
     documentUrl: string | null;
+    documentBackUrl: string | null;
     selfieUrl: string | null;
     permisUrl: string | null;
     soumisLe: string;

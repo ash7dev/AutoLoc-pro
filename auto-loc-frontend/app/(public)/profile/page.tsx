@@ -6,6 +6,8 @@ import { ApiError } from '@/lib/nestjs/api-client';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchUserProfile, type UserProfile } from '@/lib/nestjs/auth';
 import { Footer } from '@/features/landing/Footer';
+import { AuthRequiredScreen } from '@/features/auth/components/auth-required-screen';
+import { DesktopAuthRedirect } from '@/features/auth/components/desktop-auth-redirect';
 import {
     User, Mail, Phone, CalendarDays,
     Star, Shield, CheckCircle2,
@@ -26,8 +28,23 @@ export default async function ProfilePage() {
         token = data.session?.access_token ?? null;
     }
 
+    // Non authentifié
     if (!token) {
-        redirect('/login?redirect=/profile');
+        return (
+            <>
+                <div className="md:hidden">
+                    <AuthRequiredScreen
+                        icon={User}
+                        title="Connectez-vous pour voir votre profil"
+                        description="Consultez vos informations personnelles, notes et statut de vérification."
+                        redirectTo="/profile"
+                    />
+                </div>
+                <div className="hidden md:block">
+                    <DesktopAuthRedirect redirectTo="/login?redirect=/profile" />
+                </div>
+            </>
+        );
     }
 
     let profile: UserProfile;

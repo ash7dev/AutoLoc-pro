@@ -603,29 +603,31 @@ export class AuthService {
 
   async submitKycLinks(
     user: RequestUser,
-    body: { documentFrontUrl: string; documentBackUrl: string },
+    body: { documentFrontUrl: string; documentBackUrl: string; selfieUrl?: string },
   ): Promise<ProfileResponse> {
     if (!user.sub) throw new BadRequestException('Utilisateur invalide');
     await this.ensureUtilisateurExists(user.sub);
 
     if (!body.documentFrontUrl || !body.documentBackUrl) {
-      throw new BadRequestException('Les URLs des documents sont requises');
+      throw new BadRequestException('Les URLs des documents recto et verso sont requises');
     }
 
-    return this.applyKycUpdate(user, body.documentFrontUrl, body.documentBackUrl);
+    return this.applyKycUpdate(user, body.documentFrontUrl, body.documentBackUrl, body.selfieUrl);
   }
 
   private async applyKycUpdate(
     user: RequestUser,
     frontUrl: string,
     backUrl: string,
+    selfieUrl?: string,
   ): Promise<ProfileResponse> {
     const updated = await this.prisma.utilisateur.update({
       where: { userId: user.sub },
       data: {
         statutKyc: StatutKyc.EN_ATTENTE,
         kycDocumentUrl: frontUrl,
-        kycSelfieUrl: backUrl,
+        kycDocumentBackUrl: backUrl,
+        kycSelfieUrl: selfieUrl ?? null,
         kycRejectionReason: null,
       },
     });
@@ -649,8 +651,8 @@ export class AuthService {
     });
   }
 
-  async getKycUploadSignature() {
-    return this.cloudinary.getUploadSignature('kyc-documents');
+  async getKycUploadSignature(detection?: string) {
+    return this.cloudinary.getUploadSignature('kyc-documents', detection);
   }
 
   /**

@@ -326,6 +326,7 @@ export async function uploadToCloudinary(
 export async function uploadDocumentToCloudinary(
   file: File,
   sig: CloudinarySignature,
+  options?: { detectFace?: boolean },
 ): Promise<{ url: string; publicId: string }> {
   // ── Optimization: Compress client-side if it's an image ──
   // Documents are often scanned in high res but don't need to be huge.
@@ -338,6 +339,11 @@ export async function uploadDocumentToCloudinary(
   form.append('signature', sig.signature);
   form.append('folder', sig.folder);
 
+  // ✅ DÉTECTION DE VISAGE (Cloudinary AI - Gratuit jusqu'à 25k images/mois)
+  if (options?.detectFace) {
+    form.append('detection', 'adv_face');
+  }
+
   // /auto/upload détecte automatiquement image vs raw (PDF)
   const res = await fetch(
     `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`,
@@ -347,7 +353,29 @@ export async function uploadDocumentToCloudinary(
     const text = await res.text().catch(() => '');
     throw new Error(`Cloudinary document upload failed: ${res.status} ${text}`);
   }
-  const data = await res.json() as { secure_url: string; public_id: string };
+  const data = await res.json() as {
+    secure_url: string;
+    public_id: string;
+    info?: {
+      detection?: {
+        adv_face?: {
+          status?: string;
+          data?: Array<{ x: number; y: number; w: number; h: number }>;
+        };
+      };
+    };
+  };
+
+  // ✅ Vérifier si un visage a été détecté (si option activée)
+  if (options?.detectFace) {
+    const faceDetection = data.info?.detection?.adv_face;
+    const hasFace = faceDetection?.data && faceDetection.data.length > 0;
+
+    if (!hasFace) {
+      throw new Error('Aucun visage détecté dans le selfie. Assurez-vous que votre visage est bien visible et éclairé.');
+    }
+  }
+
   return { url: data.secure_url, publicId: data.public_id };
 }
 

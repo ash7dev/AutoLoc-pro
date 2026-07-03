@@ -15,8 +15,12 @@ import {
   Loader2, 
   AlertCircle,
   FileText,
-  Image as ImageIcon
+  User,
+  ArrowRight,
+  ArrowLeft,
+  RotateCcw
 } from "lucide-react";
+import { KycSelfieCamera } from "./components/KycSelfieCamera";
 
 type KycStatus = ProfileResponse["kycStatus"];
 
@@ -43,6 +47,57 @@ function validateFile(file: File): string | null {
   return null;
 }
 
+// ── Step indicator ────────────────────────────────────────────────────────────
+
+function StepIndicator({ currentStep }: { currentStep: number }) {
+  const steps = [
+    { label: "Documents", icon: FileText },
+    { label: "Selfie", icon: Camera },
+  ];
+
+  return (
+    <div className="flex items-center justify-center gap-2 mb-6">
+      {steps.map((step, i) => {
+        const stepNum = i + 1;
+        const isActive = currentStep === stepNum;
+        const isDone = currentStep > stepNum;
+        const Icon = step.icon;
+
+        return (
+          <div key={step.label} className="flex items-center gap-2">
+            {i > 0 && (
+              <div className={cn(
+                "w-8 h-[2px] rounded-full transition-colors duration-300",
+                isDone ? "bg-emerald-400" : "bg-slate-200"
+              )} />
+            )}
+            <div className="flex items-center gap-1.5">
+              <div className={cn(
+                "w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300",
+                isDone && "bg-emerald-500 text-white",
+                isActive && "bg-slate-900 text-emerald-400 shadow-lg shadow-slate-200",
+                !isActive && !isDone && "bg-slate-100 text-slate-400",
+              )}>
+                {isDone ? (
+                  <CheckCircle2 className="w-4 h-4" strokeWidth={2.5} />
+                ) : (
+                  <Icon className="w-3.5 h-3.5" strokeWidth={2} />
+                )}
+              </div>
+              <span className={cn(
+                "text-[11px] font-bold transition-colors duration-300",
+                isActive ? "text-slate-900" : "text-slate-400"
+              )}>
+                {step.label}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function KycSubmitForm({
   initialStatus,
   onSubmitted,
@@ -51,8 +106,10 @@ export function KycSubmitForm({
   onSubmitted?: (profile: ProfileResponse) => void;
 }) {
   const [status, setStatus] = useState<KycStatus>(initialStatus);
+  const [currentStep, setCurrentStep] = useState(1);
   const [documentFrontSlot, setDocumentFrontSlot] = useState<FileSlot>(buildEmptySlot);
   const [documentBackSlot, setDocumentBackSlot] = useState<FileSlot>(buildEmptySlot);
+  const [selfieSlot, setSelfieSlot] = useState<FileSlot>(buildEmptySlot);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -60,9 +117,13 @@ export function KycSubmitForm({
   const frontInputRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);
 
-  const canSubmit = useMemo(() => {
+  const canGoToStep2 = useMemo(() => {
     return Boolean(documentFrontSlot.file && documentBackSlot.file);
   }, [documentFrontSlot.file, documentBackSlot.file]);
+
+  const canSubmit = useMemo(() => {
+    return Boolean(documentFrontSlot.file && documentBackSlot.file && selfieSlot.file);
+  }, [documentFrontSlot.file, documentBackSlot.file, selfieSlot.file]);
 
   const handleFileChange = (
     file: File | null,
@@ -84,13 +145,15 @@ export function KycSubmitForm({
     setSlot(buildEmptySlot());
   };
 
+  const handleSelfieCapture = (file: File, previewUrl: string) => {
+    setSelfieSlot({ file, previewUrl, error: null });
+  };
+
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const formData = new FormData();
-      
       // Compression des images avant envoi pour passer la limite Vercel de 4.5Mo
       const compressImage = async (file: File): Promise<File> => {
         if (file.size < 1024 * 1024) return file; // Moins de 1Mo, on ne touche à rien
@@ -133,21 +196,26 @@ export function KycSubmitForm({
         });
       };
 
-      const [compressedFront, compressedBack] = await Promise.all([
+      const [compressedFront, compressedBack, compressedSelfie] = await Promise.all([
         documentFrontSlot.file ? compressImage(documentFrontSlot.file) : null,
         documentBackSlot.file ? compressImage(documentBackSlot.file) : null,
+        selfieSlot.file ? compressImage(selfieSlot.file) : null,
       ]);
 
-      // 1. Obtenir la signature Cloudinary
-      const sig = await fetchKycUploadSignature();
+      // 1. Obtenir les signatures Cloudinary (séparées pour documents vs selfie)
+      const [docSig, selfieSig] = await Promise.all([
+        fetchKycUploadSignature(),
+        fetchKycUploadSignature('adv_face')
+      ]);
 
       // 2. Upload DIRECT vers Cloudinary (beaucoup plus rapide !)
-      const [frontResult, backResult] = await Promise.all([
-        compressedFront ? uploadDocumentToCloudinary(compressedFront, sig) : Promise.resolve(null),
-        compressedBack ? uploadDocumentToCloudinary(compressedBack, sig) : Promise.resolve(null),
+      const [frontResult, backResult, selfieResult] = await Promise.all([
+        compressedFront ? uploadDocumentToCloudinary(compressedFront, docSig) : Promise.resolve(null),
+        compressedBack ? uploadDocumentToCloudinary(compressedBack, docSig) : Promise.resolve(null),
+        compressedSelfie ? uploadDocumentToCloudinary(compressedSelfie, selfieSig, { detectFace: true }) : Promise.resolve(null),
       ]);
 
-      if (!frontResult || !backResult) {
+      if (!frontResult || !backResult || !selfieResult) {
         throw new Error("Échec de l'upload des images");
       }
 
@@ -155,6 +223,7 @@ export function KycSubmitForm({
       const profile = await submitKycLinks({
         documentFrontUrl: frontResult.url,
         documentBackUrl: backResult.url,
+        selfieUrl: selfieResult.url,
       });
 
       setStatus(profile.kycStatus);
@@ -288,72 +357,160 @@ export function KycSubmitForm({
   );
 
   return (
-    <div className="space-y-8 py-2">
+    <div className="space-y-6 py-2">
+      {/* Header */}
       <div className="space-y-1.5">
-        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Vérification d’identité</h2>
+        <h2 className="text-2xl font-black text-slate-900 tracking-tight">Vérification d&apos;identité</h2>
         <p className="text-[13px] text-slate-500 leading-relaxed font-medium">
-          Pour louer ou publier un véhicule, nous devons valider une pièce d'identité officielle (CNI, Passeport ou Permis).
+          Pour louer ou publier un véhicule, nous devons valider une pièce d'identité officielle et un selfie en direct.
         </p>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <UploadZone 
-          label="Recto du document"
-          slot={documentFrontSlot}
-          inputRef={frontInputRef}
-          onSelect={(f) => handleFileChange(f, setDocumentFrontSlot, documentFrontSlot)}
-          onRemove={() => removeFile(setDocumentFrontSlot, documentFrontSlot)}
-        />
-        <UploadZone 
-          label="Verso du document"
-          slot={documentBackSlot}
-          inputRef={backInputRef}
-          onSelect={(f) => handleFileChange(f, setDocumentBackSlot, documentBackSlot)}
-          onRemove={() => removeFile(setDocumentBackSlot, documentBackSlot)}
-        />
-      </div>
+      {/* Step indicator */}
+      <StepIndicator currentStep={currentStep} />
 
-      <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100 flex gap-3">
-        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-          <ShieldCheck className="w-5 h-5 text-emerald-500" />
-        </div>
-        <div className="flex-1">
-          <p className="text-[12px] font-bold text-slate-800">Données protégées</p>
-          <p className="text-[11px] text-slate-500 leading-relaxed mt-0.5">
-            Vos documents sont chiffrés et ne sont jamais partagés. Seul AutoLoc y a accès pour validation.
-          </p>
-        </div>
-      </div>
+      {/* ── STEP 1: Document upload ── */}
+      {currentStep === 1 && (
+        <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <UploadZone 
+              label="Recto du document"
+              slot={documentFrontSlot}
+              inputRef={frontInputRef}
+              onSelect={(f) => handleFileChange(f, setDocumentFrontSlot, documentFrontSlot)}
+              onRemove={() => removeFile(setDocumentFrontSlot, documentFrontSlot)}
+            />
+            <UploadZone 
+              label="Verso du document"
+              slot={documentBackSlot}
+              inputRef={backInputRef}
+              onSelect={(f) => handleFileChange(f, setDocumentBackSlot, documentBackSlot)}
+              onRemove={() => removeFile(setDocumentBackSlot, documentBackSlot)}
+            />
+          </div>
 
-      {submitError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 flex items-center gap-2.5">
-          <AlertCircle className="w-4 h-4 text-red-500" />
-          <p className="text-[12px] font-bold text-red-700">{submitError}</p>
+          <Button
+            onClick={() => setCurrentStep(2)}
+            disabled={!canGoToStep2}
+            className={cn(
+              "w-full h-14 rounded-2xl text-[14px] font-black tracking-tight shadow-lg transition-all active:scale-[0.98]",
+              canGoToStep2 
+                ? "bg-slate-900 text-emerald-400 hover:bg-slate-800 shadow-slate-200" 
+                : "bg-slate-100 text-slate-300"
+            )}
+          >
+            <div className="flex items-center gap-2">
+              Continuer vers le selfie
+              <ArrowRight className="w-4 h-4" />
+            </div>
+          </Button>
         </div>
       )}
 
-      <Button
-        onClick={handleSubmit}
-        disabled={!canSubmit || submitting}
-        className={cn(
-          "w-full h-14 rounded-2xl text-[14px] font-black tracking-tight shadow-lg transition-all active:scale-[0.98]",
-          canSubmit 
-            ? "bg-slate-900 text-emerald-400 hover:bg-slate-800 shadow-slate-200" 
-            : "bg-slate-100 text-slate-300"
-        )}
-      >
-        {submitting ? (
-          <div className="flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Envoi sécurisé...
+      {/* ── STEP 2: Selfie capture (Inline Circular Camera) ── */}
+      {currentStep === 2 && (
+        <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300">
+          {/* Selfie zone */}
+          <div className="space-y-3">
+            <p className="text-[13px] font-bold text-slate-700 ml-1 flex items-center gap-2">
+              <User className="w-3.5 h-3.5 text-slate-400" />
+              Selfie en direct
+            </p>
+
+            {selfieSlot.previewUrl ? (
+              /* Selfie captured and validated */
+              <div className="flex flex-col items-center justify-center p-6 border-2 border-emerald-500 bg-emerald-50/20 rounded-2xl gap-4">
+                <div className="w-36 h-36 rounded-full border-4 border-emerald-500 shadow-lg overflow-hidden relative">
+                  <img 
+                    src={selfieSlot.previewUrl} 
+                    alt="Selfie capturé" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-1.5 left-0 right-0 text-center">
+                    <span className="text-[9px] font-black text-white bg-emerald-500 px-2 py-0.5 rounded-full shadow">
+                      Prêt
+                    </span>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-[13.5px] font-bold text-slate-800">Selfie enregistré</p>
+                  <p className="text-[11.5px] text-slate-500 mt-0.5">Le selfie sera envoyé de manière sécurisée</p>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => removeFile(setSelfieSlot, selfieSlot)}
+                  className="flex items-center gap-1 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-bold text-slate-600 shadow-sm transition-all"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Reprendre la photo
+                </button>
+              </div>
+            ) : (
+              /* Inline camera widget directly running */
+              <div className="border border-slate-200/80 bg-slate-50/50 p-4 sm:p-6 rounded-2xl shadow-inner flex flex-col items-center">
+                <KycSelfieCamera
+                  onCapture={handleSelfieCapture}
+                />
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            Soumettre la vérification
-            <FileUp className="w-4 h-4" />
+
+          {/* Info box */}
+          <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100 flex gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm flex-shrink-0">
+              <ShieldCheck className="w-5 h-5 text-emerald-500" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[12px] font-bold text-slate-800">Pourquoi un selfie ?</p>
+              <p className="text-[11px] text-slate-500 leading-relaxed mt-0.5">
+                Le selfie en direct permet de confirmer que vous êtes bien la personne sur le document d&apos;identité. 
+                Vos données sont chiffrées et ne sont jamais partagées.
+              </p>
+            </div>
           </div>
-        )}
-      </Button>
+
+          {submitError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 text-red-500" />
+              <p className="text-[12px] font-bold text-red-700">{submitError}</p>
+            </div>
+          )}
+
+          {/* Navigation buttons */}
+          <div className="flex gap-3">
+            <Button
+              onClick={() => setCurrentStep(1)}
+              variant="outline"
+              className="h-14 rounded-2xl text-[13px] font-bold px-5 border-slate-200"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Retour
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={!canSubmit || submitting}
+              className={cn(
+                "flex-1 h-14 rounded-2xl text-[14px] font-black tracking-tight shadow-lg transition-all active:scale-[0.98]",
+                canSubmit 
+                  ? "bg-slate-900 text-emerald-400 hover:bg-slate-800 shadow-slate-200" 
+                  : "bg-slate-100 text-slate-300"
+              )}
+            >
+              {submitting ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Envoi sécurisé...
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  Soumettre la vérification
+                  <FileUp className="w-4 h-4" />
+                </div>
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

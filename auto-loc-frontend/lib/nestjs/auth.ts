@@ -96,13 +96,15 @@ export async function submitKyc(formData: FormData): Promise<ProfileResponse> {
   });
 }
 
-export async function fetchKycUploadSignature(): Promise<any> {
-  return apiFetch(AUTH_ENDPOINTS.kycUploadSignature);
+export async function fetchKycUploadSignature(detection?: string): Promise<any> {
+  const query = detection ? `?detection=${detection}` : '';
+  return apiFetch(`${AUTH_ENDPOINTS.kycUploadSignature}${query}`);
 }
 
 export async function submitKycLinks(body: {
   documentFrontUrl: string;
   documentBackUrl: string;
+  selfieUrl?: string;
 }): Promise<ProfileResponse> {
   return apiFetch<ProfileResponse, any>(AUTH_ENDPOINTS.submitKycLinks, {
     method: 'POST',
@@ -154,6 +156,10 @@ export interface UserProfile {
   noteProprietaire: number;
   totalAvis: number;
   creeLe: string;
+  permisUrl?: string | null;
+  kycDocumentUrl?: string | null;
+  kycDocumentBackUrl?: string | null;
+  kycSelfieUrl?: string | null;
 }
 
 /**

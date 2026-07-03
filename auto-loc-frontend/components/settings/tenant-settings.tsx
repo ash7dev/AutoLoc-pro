@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { PhoneEditModal } from '@/features/dashboard/components/phone-edit-modal';
 import { supabase } from '@/lib/supabase/client';
 import { useRoleStore } from '@/features/auth/stores/role.store';
+import { PermisGate } from '@/features/reservations/components/PermisGate';
 
 interface TenantSettingsProps {
   profile?: UserProfile | null;
@@ -201,18 +202,23 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
                 <p className="text-xs sm:text-sm text-emerald-700">{profile?.statutKyc === 'VERIFIE' ? 'Vérifiée avec succès' : profile?.statutKyc}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 sm:p-4 bg-blue-50/50 rounded-xl border border-blue-100 hover:bg-blue-50 transition-colors">
-              <Award className="w-5 h-5 text-blue-600 flex-shrink-0" />
+            <div className={cn(
+              "flex items-center gap-3 p-3 sm:p-4 rounded-xl border transition-colors",
+              profile?.permisUrl 
+                ? "bg-blue-50/50 border-blue-100 hover:bg-blue-50" 
+                : "bg-amber-50/50 border-amber-100 hover:bg-amber-50"
+            )}>
+              <Award className={cn("w-5 h-5 flex-shrink-0", profile?.permisUrl ? "text-blue-600" : "text-amber-600")} />
               <div className="min-w-0">
-                <p className="font-medium text-blue-900 text-sm sm:text-base truncate">Note Locataire</p>
-                <p className="text-xs sm:text-sm text-blue-700">{profile?.noteLocataire ? `${profile.noteLocataire.toFixed(1)} / 5 étoiles` : "Pas encore d'avis"}</p>
+                <p className="font-medium text-slate-900 text-sm sm:text-base truncate">Permis de conduire</p>
+                <p className="text-xs sm:text-sm text-slate-600">{profile?.permisUrl ? 'Fourni et enregistré' : 'Non renseigné'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 sm:p-4 bg-amber-50/50 rounded-xl border border-amber-100 hover:bg-amber-50 transition-colors lg:col-span-1">
-              <Zap className="w-5 h-5 text-amber-600 flex-shrink-0" />
+            <div className="flex items-center gap-3 p-3 sm:p-4 bg-slate-50 rounded-xl border border-slate-200/60 hover:bg-slate-100/50 transition-colors">
+              <Zap className="w-5 h-5 text-slate-500 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="font-medium text-amber-900 text-sm sm:text-base truncate">Fiable</p>
-                <p className="text-xs sm:text-sm text-amber-700">Excellente réputation</p>
+                <p className="font-medium text-slate-900 text-sm sm:text-base truncate">Note Locataire</p>
+                <p className="text-xs sm:text-sm text-slate-600">{profile?.noteLocataire ? `${profile.noteLocataire.toFixed(1)} / 5 étoiles` : "Nouveau"}</p>
               </div>
             </div>
           </div>
@@ -381,6 +387,47 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Permis de conduire section */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="px-4 sm:px-6 lg:px-8 py-4 border-b border-slate-100">
+          <h4 className="text-lg font-semibold text-slate-900">Permis de conduire</h4>
+        </div>
+        <div className="p-4 sm:p-6 lg:p-8">
+          {profile?.permisUrl ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl">
+                <CheckCircle2 className="w-6 h-6 text-emerald-600 flex-shrink-0" />
+                <div>
+                  <p className="text-emerald-900 font-bold text-[14px]">Permis de conduire enregistré</p>
+                  <p className="text-emerald-700 text-[12px] mt-0.5">Votre document a bien été enregistré et validé par notre équipe.</p>
+                </div>
+              </div>
+              <div className="max-w-md border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-slate-50">
+                <img 
+                  src={profile.permisUrl} 
+                  alt="Permis de conduire" 
+                  className="w-full h-auto max-h-[220px] object-cover"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="max-w-xl">
+              <p className="text-[13px] text-slate-500 mb-4 leading-relaxed">
+                Le permis de conduire est obligatoire pour réserver des véhicules sur AutoLoc. Veuillez téléverser une photo nette de votre permis.
+              </p>
+              <PermisGate 
+                onSubmitted={() => {
+                  setLoading(true);
+                  fetchUserProfile().then(p => {
+                    setProfile(p);
+                  }).catch(() => {}).finally(() => setLoading(false));
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 

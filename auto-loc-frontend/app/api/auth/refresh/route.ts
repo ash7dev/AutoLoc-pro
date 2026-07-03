@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${refreshToken}`, // Send refresh token
       },
+      body: JSON.stringify({ refreshToken }),
     });
 
     if (!nestRes.ok) {

@@ -61,6 +61,10 @@ export class ProfileController {
                 noteProprietaire: 0,
                 totalAvis: 0,
                 creeLe: profile.createdAt.toISOString(),
+                permisUrl: null,
+                kycDocumentUrl: null,
+                kycDocumentBackUrl: null,
+                kycSelfieUrl: null,
             };
         }
 
@@ -81,6 +85,10 @@ export class ProfileController {
             noteProprietaire: Number(utilisateur.noteProprietaire),
             totalAvis: utilisateur.totalAvis,
             creeLe: utilisateur.creeLe.toISOString(),
+            permisUrl: utilisateur.permisUrl,
+            kycDocumentUrl: utilisateur.kycDocumentUrl,
+            kycDocumentBackUrl: utilisateur.kycDocumentBackUrl,
+            kycSelfieUrl: utilisateur.kycSelfieUrl,
         };
     }
 
