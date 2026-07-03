@@ -205,21 +205,38 @@ export class WaveProvider implements PaymentProviderInterface {
             return true;
         }
 
+        // Wave envoie la signature au format: "t=timestamp,v1=hash"
+        // On doit extraire uniquement le hash v1
+        const v1Match = signature.match(/v1=([a-f0-9]+)/);
+        if (!v1Match) {
+            this.logger.warn('Wave webhook signature format invalide (v1 hash manquant)');
+            return false;
+        }
+
+        const receivedHash = v1Match[1];
+
+        // Calculer le hash attendu
         const expected = crypto
             .createHmac('sha256', this.webhookSecret)
             .update(rawBody)
             .digest('hex');
 
-        const isValid = crypto.timingSafeEqual(
-            Buffer.from(expected, 'hex'),
-            Buffer.from(signature, 'hex'),
-        );
+        // Comparer de manière sécurisée
+        try {
+            const isValid = crypto.timingSafeEqual(
+                Buffer.from(expected, 'hex'),
+                Buffer.from(receivedHash, 'hex'),
+            );
 
-        if (!isValid) {
-            this.logger.warn('Wave webhook signature INVALID');
+            if (!isValid) {
+                this.logger.warn('Wave webhook signature INVALID');
+            }
+
+            return isValid;
+        } catch (err) {
+            this.logger.error('Error comparing Wave webhook signatures', err);
+            return false;
         }
-
-        return isValid;
     }
 
     // ── Parse Webhook ──────────────────────────────────────────────────────────

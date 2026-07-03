@@ -50,13 +50,13 @@ export class PaymentWebhookController {
 
     /**
      * POST /payments/webhook/wave
-     * Webhook Wave — signature HMAC-SHA256 dans X-Wave-Signature.
+     * Webhook Wave — signature HMAC-SHA256 dans Wave-Signature.
      */
     @Post('wave')
     @HttpCode(HttpStatus.OK)
     async handleWaveWebhook(
         @RawBody() rawBody: Buffer,
-        @Headers('x-wave-signature') signature?: string,
+        @Headers('wave-signature') signature?: string,
     ) {
         return this.handleWebhook('wave', rawBody, signature ?? '');
     }
