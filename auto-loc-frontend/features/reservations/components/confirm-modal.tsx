@@ -133,7 +133,7 @@ export function ConfirmModal({ open, onClose, onConfirm, loading = false, dateDe
                         <button
                             onClick={() => !loading && onClose()}
                             disabled={loading}
-                            className="px-4 py-3 rounded-2xl text-[13px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 transition-all disabled:opacity-40 flex-shrink-0"
+                            className="px-4 py-3 rounded-2xl text-[13px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 border border-slate-200 transition-all disabled:opacity-40 flex-shrink-0 touch-manipulation"
                         >
                             Annuler
                         </button>
@@ -141,9 +141,9 @@ export function ConfirmModal({ open, onClose, onConfirm, loading = false, dateDe
                             onClick={() => canConfirm && onConfirm(heureDebut)}
                             disabled={!canConfirm}
                             className={cn(
-                                "flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[13.5px] font-bold transition-all duration-200",
+                                "flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-[13.5px] font-bold transition-all duration-200 touch-manipulation",
                                 canConfirm
-                                    ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:-translate-y-px active:translate-y-0"
+                                    ? "bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25"
                                     : "bg-slate-100 text-slate-400 cursor-not-allowed",
                             )}
                         >

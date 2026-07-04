@@ -66,6 +66,7 @@ export function CheckoutModal({ reservationId, open, onClose, dateFin }: Checkou
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [revalidating, setRevalidating] = useState(false);
 
     const photoCount = Object.keys(photos).length;
     const tooEarly = isTooEarlyForCheckout(dateFin);
@@ -77,6 +78,7 @@ export function CheckoutModal({ reservationId, open, onClose, dateFin }: Checkou
             setUploading(null);
             setError(null);
             setSuccess(false);
+            setRevalidating(false);
         }
     }, [open]);
 
@@ -113,23 +115,29 @@ export function CheckoutModal({ reservationId, open, onClose, dateFin }: Checkou
         try {
             await authFetch(`/reservations/${reservationId}/checkout`, { method: "PATCH" });
             setSuccess(true);
-            setTimeout(() => { onClose(); router.refresh(); }, 1500);
+            setSubmitting(false);
+            // Montrer un état de revalidation avant de fermer
+            setRevalidating(true);
+            await new Promise(resolve => setTimeout(resolve, 800));
+            router.refresh();
+            await new Promise(resolve => setTimeout(resolve, 800));
+            onClose();
         } catch (err) {
             setError(translateError(err));
-        } finally {
             setSubmitting(false);
         }
     }, [reservationId, authFetch, onClose, router, submitting, success, uploading]);
 
     if (!open) return null;
 
-    const canSubmit = !submitting && !success && uploading === null && !tooEarly;
+    const canSubmit = !submitting && !success && !revalidating && uploading === null && !tooEarly;
+    const isProcessing = submitting || revalidating;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !submitting && onClose()} />
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => !isProcessing && onClose()} />
 
-            <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-900 border border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-slate-900 border-t border-white/10 sm:border border-white/10 shadow-2xl animate-in fade-in slide-in-from-bottom sm:zoom-in-95 duration-200 pb-[env(safe-area-inset-bottom)]">
                 {/* Header */}
                 <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-slate-900/95 backdrop-blur-md border-b border-white/8">
                     <div>
@@ -139,8 +147,8 @@ export function CheckoutModal({ reservationId, open, onClose, dateFin }: Checkou
                         </p>
                     </div>
                     <button
-                        onClick={() => !submitting && onClose()}
-                        disabled={submitting}
+                        onClick={() => !isProcessing && onClose()}
+                        disabled={isProcessing}
                         className="w-8 h-8 rounded-lg bg-white/6 border border-white/8 flex items-center justify-center hover:bg-white/12 transition-colors disabled:opacity-40"
                     >
                         <X className="w-4 h-4 text-slate-400" strokeWidth={2} />
@@ -207,7 +215,7 @@ export function CheckoutModal({ reservationId, open, onClose, dateFin }: Checkou
                                             uploaded
                                                 ? "border-emerald-500/40 bg-emerald-500/5"
                                                 : "border-white/10 bg-white/3 hover:border-white/25 hover:bg-white/5",
-                                            (isUploading || submitting) && "pointer-events-none",
+                                            (isUploading || isProcessing) && "pointer-events-none opacity-50",
                                         )}
                                     >
                                         {uploaded ? (
@@ -262,20 +270,28 @@ export function CheckoutModal({ reservationId, open, onClose, dateFin }: Checkou
                     )}
 
                     {/* Succès */}
-                    {success && (
+                    {success && !revalidating && (
                         <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-[13px] font-bold text-emerald-400 animate-in fade-in duration-300">
                             <CheckCircle2 className="w-5 h-5" strokeWidth={2} />
-                            Check-out effectué ! Mise à jour en cours…
+                            Check-out effectué !
+                        </div>
+                    )}
+
+                    {/* Revalidation en cours */}
+                    {revalidating && (
+                        <div className="flex items-center gap-2 rounded-xl bg-blue-500/10 border border-blue-500/20 p-4 text-[13px] font-bold text-blue-400 animate-in fade-in duration-300">
+                            <Loader2 className="w-5 h-5 animate-spin" strokeWidth={2} />
+                            Actualisation de la page…
                         </div>
                     )}
                 </div>
 
                 {/* Footer */}
-                <div className="sticky bottom-0 flex items-center gap-3 px-6 py-4 bg-slate-900/95 backdrop-blur-md border-t border-white/8">
+                <div className="sticky bottom-0 flex items-center gap-3 px-6 py-4 pb-safe bg-slate-900/95 backdrop-blur-md border-t border-white/8">
                     <button
-                        onClick={() => !submitting && onClose()}
-                        disabled={submitting}
-                        className="px-5 py-2.5 rounded-xl text-[13px] font-semibold text-slate-400 hover:text-white hover:bg-white/6 border border-white/8 transition-all disabled:opacity-40"
+                        onClick={() => !isProcessing && onClose()}
+                        disabled={isProcessing}
+                        className="px-5 py-2.5 rounded-xl text-[13px] font-semibold text-slate-400 hover:text-white hover:bg-white/6 active:bg-white/10 border border-white/8 transition-all disabled:opacity-40 touch-manipulation"
                     >
                         Fermer
                     </button>
@@ -283,21 +299,25 @@ export function CheckoutModal({ reservationId, open, onClose, dateFin }: Checkou
                         onClick={handleSubmit}
                         disabled={!canSubmit}
                         className={cn(
-                            "flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-200",
+                            "flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-200 touch-manipulation",
                             canSubmit
-                                ? "bg-blue-500 hover:bg-blue-400 text-white shadow-lg shadow-blue-500/20"
+                                ? "bg-blue-500 hover:bg-blue-400 active:bg-blue-600 text-white shadow-lg shadow-blue-500/20"
                                 : "bg-blue-500/30 text-blue-400/60 cursor-not-allowed",
                         )}
                     >
-                        {submitting
+                        {submitting || revalidating
                             ? <Loader2 className="w-4 h-4 animate-spin" />
                             : <CheckCircle2 className="w-4 h-4" strokeWidth={2.5} />
                         }
-                        {tooEarly
-                            ? "Check-out pas encore disponible"
-                            : uploading
-                                ? "Upload en cours…"
-                                : "Valider le check-out"
+                        {revalidating
+                            ? "Actualisation…"
+                            : submitting
+                                ? "Confirmation…"
+                                : tooEarly
+                                    ? "Check-out pas encore disponible"
+                                    : uploading
+                                        ? "Upload en cours…"
+                                        : "Valider le check-out"
                         }
                     </button>
                 </div>

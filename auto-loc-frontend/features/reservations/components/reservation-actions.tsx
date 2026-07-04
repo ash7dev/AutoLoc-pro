@@ -584,8 +584,10 @@ export function ReservationActions({
         setError(null); setLoading("confirm"); setConfirmOpen(false);
         try {
             await authFetch(`/reservations/${reservationId}/confirm`, { method: "PATCH", body: { heureDebut } });
+            toast.success("Réservation confirmée", { description: "Actualisation de la page…" });
+            await new Promise(resolve => setTimeout(resolve, 500));
             router.refresh();
-            toast.success("Réservation confirmée");
+            await new Promise(resolve => setTimeout(resolve, 500));
         } catch (err) {
             const msg = translateError(err);
             setError(msg);
@@ -720,7 +722,7 @@ export function ReservationActions({
 
             {/* Floating Mobile Action Bar — only for primary action (first one) */}
             {!confirmingAction && !disputeOpen && !checkinOpen && !checkoutOpen && !confirmOpen && !cancelModalOpen && actions.length > 0 && (
-                <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-t border-slate-200 px-4 py-4 lg:hidden animate-in slide-in-from-bottom duration-300">
+                <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-slate-200 px-4 py-4 pb-safe lg:hidden animate-in slide-in-from-bottom duration-300">
                     {actions
                         .filter(action =>
                             // Appliquer le même filtre que pour les boutons desktop
@@ -735,9 +737,11 @@ export function ReservationActions({
                                 disabled={isLoading || (action.key === "confirm" && kycBlocked)}
                                 onClick={() => handleAction(action)}
                                 className={cn(
-                                    "w-full flex items-center justify-center gap-3 rounded-2xl px-6 py-4 font-black text-[15px] shadow-xl transition-all active:scale-[0.98]",
+                                    "w-full flex items-center justify-center gap-3 rounded-2xl px-6 py-4 font-black text-[15px] shadow-xl transition-all touch-manipulation",
                                     "bg-slate-900 text-white shadow-emerald-500/20",
-                                    (isLoading || (action.key === "confirm" && kycBlocked)) && "opacity-50 grayscale"
+                                    (isLoading || (action.key === "confirm" && kycBlocked))
+                                        ? "opacity-50 grayscale cursor-not-allowed"
+                                        : "active:scale-[0.98] active:bg-emerald-600"
                                 )}
                             >
                                 {loading === action.key ? (
@@ -745,11 +749,10 @@ export function ReservationActions({
                                 ) : (
                                     <action.icon className="w-5 h-5" strokeWidth={2.5} />
                                 )}
-                                {action.label}
+                                {loading === action.key ? "Traitement…" : action.label}
                             </button>
                         ))
                     }
-                    {/* Add padding to the bottom of the page content elsewhere or just assume it's fine */}
                 </div>
             )}
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -62,12 +62,25 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
   const deliveryAvailable = fraisLivraison != null && fraisLivraison > 0;
   const deliveryFee = wantsDelivery && deliveryAvailable ? fraisLivraison : 0;
 
-  const nbJours =
-    dateDebut && dateFin
-      ? Math.max(1, Math.round(
-        (new Date(dateFin).getTime() - new Date(dateDebut).getTime()) / 86_400_000,
-      ))
-      : 0;
+  const nbJours = useMemo(() => {
+    if (!dateDebut || !dateFin) return 0;
+
+    const debut = new Date(dateDebut);
+    const fin = new Date(dateFin);
+
+    // Validation : dateDebut ne peut pas être après dateFin
+    if (debut > fin) {
+      console.warn('⚠️ Date de début après date de fin', { dateDebut, dateFin });
+      return 0;
+    }
+
+    // Calcul identique au backend (Math.round)
+    // 4 juillet 00:00 → 5 juillet 00:00 = 1 jour
+    const diffMs = fin.getTime() - debut.getTime();
+    const diffDays = Math.max(1, Math.round(diffMs / 86_400_000));
+
+    return diffDays;
+  }, [dateDebut, dateFin]);
 
   const datesValid = nbJours >= joursMinimum;
 
@@ -102,7 +115,8 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
   useEffect(() => {
     clearTimeout(debounceRef.current);
     if (nbJours >= 1) {
-      debounceRef.current = setTimeout(() => fetchPricingData(nbJours), 300);
+      // Debounce réduit à 150ms pour une meilleure réactivité
+      debounceRef.current = setTimeout(() => fetchPricingData(nbJours), 150);
     } else {
       setPricing(null);
       setPricingError(false);
@@ -254,8 +268,17 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
           {/* Duration indicator */}
           {nbJours > 0 && datesValid && (
             <div className="flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 bg-slate-50 text-[12.5px] font-semibold text-slate-600">
-              <Clock className="w-3.5 h-3.5 flex-shrink-0 text-slate-400" strokeWidth={2} />
-              {nbJours} jour{nbJours > 1 ? 's' : ''} de location
+              {loadingPricing ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 flex-shrink-0 text-emerald-500 animate-spin" strokeWidth={2} />
+                  Calcul du prix pour {nbJours} jour{nbJours > 1 ? 's' : ''}…
+                </>
+              ) : (
+                <>
+                  <Clock className="w-3.5 h-3.5 flex-shrink-0 text-slate-400" strokeWidth={2} />
+                  {nbJours} jour{nbJours > 1 ? 's' : ''} de location
+                </>
+              )}
             </div>
           )}
 

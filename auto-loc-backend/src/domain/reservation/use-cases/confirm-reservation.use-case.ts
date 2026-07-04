@@ -10,6 +10,7 @@ import { QueueService } from '../../../infrastructure/queue/queue.service';
 import { RequestUser } from '../../../common/types/auth.types';
 import { ReservationStateMachine } from '../reservation.state-machine';
 import { BusinessRuleException } from '../../../common/exceptions/business-rule.exception';
+import { RevalidateService } from '../../../infrastructure/revalidate/revalidate.service';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -27,6 +28,7 @@ export class ConfirmReservationUseCase {
     constructor(
         private readonly prisma: PrismaService,
         private readonly queue: QueueService,
+        private readonly revalidate: RevalidateService,
     ) { }
 
     async execute(
@@ -161,6 +163,12 @@ export class ConfirmReservationUseCase {
             .catch((err) => {
                 this.logger.warn(`Failed to schedule contract regeneration for ${reservationId}: ${err.message}`);
             });
+
+        // 8. Revalidate Next.js cache
+        // Invalider le cache pour que les changements soient immédiatement visibles
+        this.revalidate.revalidateTag(`reservation-${reservationId}`).catch(() => { });
+        this.revalidate.revalidatePath(`/dashboard/owner/reservations/${reservationId}`).catch(() => { });
+        this.revalidate.revalidatePath(`/dashboard/renter/reservations/${reservationId}`).catch(() => { });
 
         return { reservationId: updated.id, statut: updated.statut };
     }
