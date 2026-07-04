@@ -301,7 +301,7 @@ export class QueueService implements OnModuleInit, OnModuleDestroy {
     reservationId: string,
     paiementId: string,
     amount: number,
-    delayMs: number = 20 * 60 * 1000, // 20 minutes
+    delayMs: number = 2 * 60 * 1000, // 2 minutes
   ): Promise<string> {
     const job = await this.reservationQueue.add(
       'reservation-wave-refund',
