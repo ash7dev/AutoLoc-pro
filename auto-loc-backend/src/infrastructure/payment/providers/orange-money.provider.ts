@@ -184,8 +184,8 @@ export class OrangeMoneyProvider implements PaymentProviderInterface {
             currency: 'OUV',       // Orange Money XOF
             order_id: params.referenceId,
             amount: params.amount,
-            return_url: params.callbackUrl,
-            cancel_url: params.callbackUrl,
+            return_url: params.successUrl || params.callbackUrl,
+            cancel_url: params.cancelUrl || params.callbackUrl,
             notif_url: this.webhookUrl,  // URL webhook pour recevoir les notifications
             lang: 'fr',
         };

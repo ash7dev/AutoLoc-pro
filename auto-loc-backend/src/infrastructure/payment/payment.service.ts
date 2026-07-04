@@ -52,6 +52,9 @@ export class PaymentService {
         const callbackUrl = `${this.appBaseUrl}/payments/webhook/${routeName}`;
 
         const nextjsUrl = this.config.get<string>('NEXTJS_URL', 'http://localhost:3000');
+        const successUrl = options?.reservationId
+            ? `${nextjsUrl}/dashboard/reservations/${options.reservationId}`
+            : `${nextjsUrl}/payment/success`;
 
         const result = await provider.initiatePayment({
             amount:        Number(montant),
@@ -63,7 +66,7 @@ export class PaymentService {
             payerEmail:    options?.payerEmail,
             payerFirstName: options?.payerFirstName,
             payerLastName:  options?.payerLastName,
-            successUrl:    `${nextjsUrl}/payment/success`,
+            successUrl,
             cancelUrl:     `${nextjsUrl}/payment/cancel`,
         });
 
