@@ -329,13 +329,14 @@ export class WaveProvider implements PaymentProviderInterface {
                 const headers: Record<string, string> = {
                     'Authorization': `Bearer ${this.apiKey}`,
                     'Content-Type': 'application/json',
+                    'Idempotency-Key': params.referenceId, // Requis par Wave pour éviter les doublons
                 };
 
                 if (waveSignature) {
                     headers['Wave-Signature'] = waveSignature;
                 }
 
-                const response = await fetch(`${this.apiUrl}/payout`, {
+                const response = await fetch(`${this.apiUrl}/payouts`, {
                     method: 'POST',
                     headers,
                     body: bodyString,
