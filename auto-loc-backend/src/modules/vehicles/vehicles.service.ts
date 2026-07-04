@@ -33,6 +33,8 @@ const SEARCH_CACHE_TTL = 60;    // secondes
 const SEARCH_CACHE_PREFIX = 'vehicles:search:';
 const DETAIL_CACHE_PREFIX = 'vehicles:detail:';
 const DETAIL_CACHE_TTL = 300;   // 5 minutes
+const PRICING_CACHE_PREFIX = 'vehicles:pricing:';
+const PRICING_CACHE_TTL = 300;  // 5 minutes - pricing change rarement
 
 interface VehicleSearchRow {
   id: string;
@@ -404,6 +406,19 @@ export class VehiclesService {
    * Utilise les TarifTier du véhicule pour résoudre le prix effectif.
    */
   async getPricing(vehicleId: string, nbJours: number, horsDakar: boolean = false) {
+    // Cache key unique par véhicule + nbJours + horsDakar
+    const cacheKey = `${PRICING_CACHE_PREFIX}${vehicleId}:${nbJours}:${horsDakar ? '1' : '0'}`;
+
+    // Tentative de récupération depuis le cache
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // Cache corrompu, on continue avec la DB
+      }
+    }
+
     const vehicle = await this.prisma.vehicule.findUnique({
       where: { id: vehicleId },
       select: {
@@ -429,7 +444,7 @@ export class VehiclesService {
       supplement,
     );
 
-    return {
+    const response = {
       nbJours,
       autoriseHorsDakar: vehicle.autoriseHorsDakar,
       supplementHorsDakar: supplement,
@@ -440,6 +455,11 @@ export class VehiclesService {
       totalLocataire: Number(result.totalLocataire),
       netProprietaire: Number(result.netProprietaire),
     };
+
+    // Mettre en cache pour 5 minutes
+    await this.redis.set(cacheKey, JSON.stringify(response), PRICING_CACHE_TTL);
+
+    return response;
   }
 
   /**
@@ -519,6 +539,10 @@ export class VehiclesService {
           },
         });
       }, { timeout: 15000 });
+
+      // Invalider le cache pricing pour ce véhicule (tous les variants)
+      const pattern = `${PRICING_CACHE_PREFIX}${vehicleId}:*`;
+      await this.redis.delPattern(pattern);
     } catch (err: unknown) {
       if ((err as { code?: string }).code !== 'P2002') throw err;
       const target = (err as { meta?: { target?: string[] } }).meta?.target ?? [];
