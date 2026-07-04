@@ -335,7 +335,7 @@ export class WaveProvider implements PaymentProviderInterface {
                     headers['Wave-Signature'] = waveSignature;
                 }
 
-                const response = await fetch(`${this.apiUrl}/payouts`, {
+                const response = await fetch(`${this.apiUrl}/payout`, {
                     method: 'POST',
                     headers,
                     body: bodyString,
