@@ -673,33 +673,40 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                     />
                   </FormField>
 
-                  <FormField label="Durée minimum (jours)">
-                    <input
-                      type="number"
-                      {...register("joursMinimum", { min: 1, valueAsNumber: true })}
-                      disabled={locked}
-                      placeholder="1"
-                      className={INPUT_CLASS}
-                    />
-                  </FormField>
+                  <div className="pt-4 border-t-2 border-slate-100">
+                    <FormField label="Durée minimum (jours)">
+                      <input
+                        type="number"
+                        {...register("joursMinimum", { min: 1, valueAsNumber: true })}
+                        disabled={locked}
+                        placeholder="1"
+                        className={INPUT_CLASS}
+                      />
+                    </FormField>
+                  </div>
                 </div>
 
                 {/* Hors Dakar */}
-                <div className="space-y-3 rounded-xl border border-[hsl(var(--border))] bg-slate-50 p-4">
-                  <div className="flex items-center gap-3">
+                <div className="space-y-4 rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="flex items-start gap-3.5">
                     <input
                       type="checkbox"
                       id="autoriseHorsDakar"
                       {...register("autoriseHorsDakar")}
                       disabled={locked}
-                      className="h-4 w-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500"
+                      className="mt-0.5 h-5 w-5 rounded-lg border-2 border-slate-300 text-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all"
                     />
-                    <label htmlFor="autoriseHorsDakar" className="text-[13px] font-bold text-slate-700 cursor-pointer">
-                      Autoriser les locataires à sortir de la région de Dakar ?
-                    </label>
+                    <div className="flex-1">
+                      <label htmlFor="autoriseHorsDakar" className="text-[14px] font-black text-slate-900 cursor-pointer block">
+                        Autoriser les locataires à sortir de la région de Dakar ?
+                      </label>
+                      <p className="text-[12px] text-slate-500 font-medium mt-1">
+                        Permet aux locataires de conduire en dehors de Dakar
+                      </p>
+                    </div>
                   </div>
                   {watch("autoriseHorsDakar") && (
-                    <div className="pt-2 pl-7">
+                    <div className="pt-2 pl-8 border-l-4 border-emerald-200 ml-1.5">
                       <FormField
                         label="Supplément par jour (FCFA)"
                         error={errors.supplementHorsDakarParJour ? "Montant invalide" : undefined}
@@ -717,66 +724,66 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                 </div>
 
                 {/* Progressive tiers */}
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between">
+                <div className="space-y-4 rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="flex items-center justify-between gap-3">
                     <div>
-                      <span className="text-[13px] font-bold text-slate-800 block">Tarification progressive</span>
-                      <span className="text-[11px] font-medium text-slate-500">Optionnel — Définissez des réductions pour les longues durées</span>
+                      <h4 className="text-[14px] font-black text-slate-900 block">Tarification progressive</h4>
+                      <p className="text-[12px] text-slate-500 font-medium mt-1">Optionnel — Définissez des réductions pour les longues durées</p>
                     </div>
                     {!locked && (
                       <button
                         type="button"
                         onClick={() => append({ joursMin: (tiersWatch?.length ?? 0) * 3 + 1, prix: 0 })}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-2 text-[11px] font-bold rounded-xl border-2 border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 transition-all shadow-sm"
                       >
                         <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-                        Ajouter un palier
+                        Ajouter
                       </button>
                     )}
                   </div>
 
                   {fields.length > 0 ? (
-                    <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                      <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 bg-slate-50 px-4 py-3 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                        <span>À partir de (j)</span>
-                        <span>Jusqu&apos;à (j)</span>
-                        <span>Prix/j (FCFA)</span>
+                    <div className="rounded-xl border-2 border-slate-200 overflow-hidden shadow-sm">
+                      <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 bg-gradient-to-br from-slate-50 to-slate-50/50 px-4 py-3.5 border-b-2 border-slate-200">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.12em]">À partir de (j)</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.12em]">Jusqu&apos;à (j)</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.12em]">Prix/j (FCFA)</span>
                         <span />
                       </div>
-                      <div className="divide-y divide-slate-100">
+                      <div className="divide-y divide-slate-200">
                         {fields.map((field, i) => (
                           <div
                             key={field.id}
-                            className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-center px-4 py-3 bg-white"
+                            className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-center px-4 py-3 bg-white hover:bg-slate-50/50 transition-colors"
                           >
                             <input
                               type="number"
                               {...register(`tiers.${i}.joursMin` as const, { required: true, min: 1, valueAsNumber: true })}
                               disabled={locked}
                               placeholder="1"
-                              className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-medium outline-none focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15 disabled:opacity-50"
+                              className="h-11 rounded-xl border-2 border-slate-200 bg-white px-3 text-[15px] font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 shadow-sm"
                             />
                             <input
                               type="number"
                               {...register(`tiers.${i}.joursMax` as const, { min: 1, valueAsNumber: true })}
                               disabled={locked}
                               placeholder="∞"
-                              className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-medium outline-none focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15 disabled:opacity-50"
+                              className="h-11 rounded-xl border-2 border-slate-200 bg-white px-3 text-[15px] font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 shadow-sm"
                             />
                             <input
                               type="number"
                               {...register(`tiers.${i}.prix` as const, { required: true, min: 1, valueAsNumber: true })}
                               disabled={locked}
                               placeholder="20 000"
-                              className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-[13px] font-medium outline-none focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15 disabled:opacity-50"
+                              className="h-11 rounded-xl border-2 border-slate-200 bg-white px-3 text-[15px] font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 shadow-sm"
                             />
                             {!locked && (
                               <button
                                 type="button"
                                 onClick={() => remove(i)}
-                                className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors"
+                                className="flex h-11 w-11 items-center justify-center rounded-xl border-2 border-slate-200 bg-white text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-300 transition-all shadow-sm"
                               >
-                                <Trash2 className="h-4 w-4" strokeWidth={2} />
+                                <Trash2 className="h-4 w-4" strokeWidth={2.5} />
                               </button>
                             )}
                             {locked && <div />}
@@ -785,9 +792,11 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-start gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4">
-                      <Info className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" strokeWidth={2} />
-                      <p className="text-[12px] font-medium text-slate-500 leading-relaxed">
+                    <div className="flex items-start gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-4">
+                      <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center flex-shrink-0">
+                        <Info className="h-4 w-4 text-slate-400" strokeWidth={2} />
+                      </div>
+                      <p className="text-[12px] font-medium text-slate-600 leading-relaxed pt-0.5">
                         Ex : 1–4 j → 25 000 FCFA/j, 5+ j → 20 000 FCFA/j. Attirez plus de longues réservations en ajoutant des paliers de réduction.
                       </p>
                     </div>

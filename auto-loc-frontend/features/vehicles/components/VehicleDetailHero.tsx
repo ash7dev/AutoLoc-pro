@@ -359,13 +359,93 @@ export function VehicleDetailHero({ vehicle }: Props): React.ReactElement {
             )}
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-            <div className="min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="min-w-0 flex-1">
               <h1 className="text-[28px] sm:text-[34px] font-black tracking-tight text-slate-900 leading-[1.1]">
                 {vehicle.marque}{' '}
                 <span className="text-emerald-500">{vehicle.modele}</span>
               </h1>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2.5">
+
+              {/* Mobile: Information Cards */}
+              <div className="lg:hidden space-y-3 mt-4">
+                {/* Location Card */}
+                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-4 h-4 text-emerald-500" strokeWidth={2} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Localisation</p>
+                    <p className="text-[14px] font-bold text-slate-900 leading-tight">
+                      {vehicle.ville}
+                    </p>
+                    {vehicle.adresse && (
+                      <p className="text-[13px] text-slate-600 font-medium mt-0.5 truncate">
+                        {vehicle.adresse}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Stats Row */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Rating */}
+                  {vehicle.note > 0 && (
+                    <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                      <div className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center flex-shrink-0">
+                        <Star className="w-4 h-4 fill-amber-400 text-amber-400" strokeWidth={0} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Note</p>
+                        <p className="text-[18px] font-black text-slate-900 leading-none tabular-nums">
+                          {Number(vehicle.note).toFixed(1)}
+                        </p>
+                        <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                          {vehicle.totalAvis} avis
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Locations */}
+                  {vehicle.totalLocations > 0 && (
+                    <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                      <div className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center flex-shrink-0">
+                        <Car className="w-4 h-4 text-slate-600" strokeWidth={2} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Locations</p>
+                        <p className="text-[18px] font-black text-slate-900 leading-none tabular-nums">
+                          {vehicle.totalLocations}
+                        </p>
+                        <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                          {vehicle.totalLocations > 1 ? 'Réservations' : 'Réservation'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Price Card */}
+                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-50/50 border-2 border-emerald-200 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-700/60 mb-1">
+                        Tarif de base
+                      </p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[32px] font-black text-emerald-600 tabular-nums leading-none tracking-tight">
+                          {formatPrice(Math.round(Number(vehicle.prixParJour) * 1.15))}
+                        </span>
+                        <span className="text-[14px] font-bold text-emerald-700/60">FCFA</span>
+                      </div>
+                      <p className="text-[12px] font-bold text-emerald-700/60 mt-1">/jour</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Desktop: Inline info */}
+              <div className="hidden lg:flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2.5">
                 <span className="flex items-center gap-1.5 text-[13px] font-semibold text-slate-800">
                   <MapPin className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
                   {vehicle.ville}{vehicle.adresse ? `, ${vehicle.adresse}` : ''}
@@ -383,14 +463,6 @@ export function VehicleDetailHero({ vehicle }: Props): React.ReactElement {
                   </span>
                 )}
               </div>
-            </div>
-
-            {/* Price mobile only */}
-            <div className="lg:hidden flex items-baseline gap-1.5 pt-1">
-              <span className="text-[30px] font-black text-emerald-500 tabular-nums leading-none">
-                {formatPrice(Math.round(Number(vehicle.prixParJour) * 1.15))}
-              </span>
-              <span className="text-[13px] font-semibold text-slate-600">/jour</span>
             </div>
           </div>
         </div>

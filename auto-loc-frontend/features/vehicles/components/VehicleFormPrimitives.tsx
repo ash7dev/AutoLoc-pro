@@ -4,12 +4,12 @@ import { cn } from "@/lib/utils";
 /* ── Shared premium input classes ─────────────────────────────────── */
 
 export const INPUT_CLASS =
-  "w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-[16px] font-medium text-slate-900 placeholder-slate-400 outline-none transition-all duration-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-50";
+  "w-full h-12 rounded-xl border-2 border-slate-200 bg-white px-4 text-[16px] font-bold text-slate-900 placeholder-slate-400 outline-none transition-all duration-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-50 shadow-sm";
 
 export const SELECT_CLASS =
-  "w-full h-12 rounded-xl border border-slate-200 bg-white px-3.5 text-[16px] font-medium text-slate-900 outline-none appearance-none cursor-pointer transition-all duration-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-50";
+  "w-full h-12 rounded-xl border-2 border-slate-200 bg-white px-4 text-[16px] font-bold text-slate-900 outline-none appearance-none cursor-pointer transition-all duration-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-50 shadow-sm";
 
-export const LABEL_CLASS = "text-[14px] sm:text-[13px] font-bold text-slate-700 uppercase tracking-[0.04em]";
+export const LABEL_CLASS = "text-[11px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.12em]";
 
 /* ═══════════════════════════════════════════════════════════════════
    Shared UI primitives
