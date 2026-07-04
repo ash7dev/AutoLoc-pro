@@ -25,12 +25,14 @@ import {
     Star,
     UserRound,
     Bell,
+    RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DateInput } from '@/features/shared/DateInput';
 import type { UserProfile } from '@/lib/nestjs/auth';
 import { updateUserProfile } from '@/lib/nestjs/auth';
 import { useSwitchToLocataire } from '@/features/owner/hooks/use-switch-to-locataire';
+import { useSwitchToProprietaire } from '@/features/owner/hooks/use-switch-to-proprietaire';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { PhoneEditModal } from './phone-edit-modal';
 
@@ -137,8 +139,8 @@ function EditableRow({
         )}>
             <div className="flex items-start gap-3">
                 {/* Icon */}
-                <span className="mt-0.5 w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-emerald-50 transition-colors duration-200">
-                    <Icon className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
+                <span className="mt-0.5 w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-slate-900 transition-colors duration-200">
+                    <Icon className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
                 </span>
 
                 <div className="flex-1 min-w-0">
@@ -237,8 +239,8 @@ function InfoRow({
     return (
         <div className="px-4 py-4 sm:px-5">
             <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
+                <span className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
                 </span>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
@@ -267,8 +269,8 @@ function CtaRow({
     buttonVariant = 'default',
 }: {
     icon: React.ElementType;
-    iconBg: string;
-    iconColor: string;
+    iconBg?: string;
+    iconColor?: string;
     title: string;
     subtitle: string;
     href: string;
@@ -278,8 +280,8 @@ function CtaRow({
     return (
         <div className="px-4 py-4 sm:px-5">
             <div className="flex items-center gap-3">
-                <span className={cn('w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0', iconBg)}>
-                    <Icon className={cn('w-3.5 h-3.5', iconColor)} strokeWidth={2} />
+                <span className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-slate-900">
+                    <Icon className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
                 </span>
                 <div className="flex-1 min-w-0">
                     <p className="text-[13.5px] font-bold text-black">{title}</p>
@@ -318,8 +320,8 @@ function NotificationRow() {
         return (
             <div className="px-4 py-4 sm:px-5 bg-black/[0.01]">
                 <div className="flex items-center gap-3 opacity-50">
-                    <span className="w-8 h-8 rounded-xl bg-black/[0.04] flex items-center justify-center flex-shrink-0">
-                        <Bell className="w-3.5 h-3.5 text-black/40" strokeWidth={2} />
+                    <span className="w-8 h-8 rounded-xl bg-slate-900/40 flex items-center justify-center flex-shrink-0">
+                        <Bell className="w-3.5 h-3.5 text-emerald-400/40" strokeWidth={2} />
                     </span>
                     <div className="flex-1 min-w-0">
                         <p className="text-[13.5px] font-bold text-black">Notifications Push</p>
@@ -335,11 +337,8 @@ function NotificationRow() {
     return (
         <div className="px-4 py-4 sm:px-5">
             <div className="flex items-center gap-3">
-                <span className={cn(
-                    'w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-300',
-                    subscription ? 'bg-emerald-50' : 'bg-black/[0.04]'
-                )}>
-                    <Bell className={cn('w-3.5 h-3.5 transition-colors duration-300', subscription ? 'text-emerald-500' : 'text-black/40')} strokeWidth={2} />
+                <span className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-slate-900 transition-colors duration-300">
+                    <Bell className="w-3.5 h-3.5 text-emerald-400 transition-colors duration-300" strokeWidth={2} />
                 </span>
                 <div className="flex-1 min-w-0">
                     <p className="text-[13.5px] font-bold text-black">Notifications Push</p>
@@ -403,8 +402,11 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
     const [globalError, setGlobalError] = useState('');
     const [showKycAlert, setShowKycAlert] = useState(false);
     const [phoneEditOpen, setPhoneEditOpen] = useState(false);
-    const { switchToLocataire, loading: switching } = useSwitchToLocataire();
+    const { switchToLocataire, loading: switchingToTenant } = useSwitchToLocataire();
+    const { switchToProprietaire, loading: switchingToOwner } = useSwitchToProprietaire();
     const router = useRouter();
+
+    const switching = switchingToTenant || switchingToOwner;
 
     const { percent, missing } = completionPercent({
         ...profile,
@@ -661,8 +663,6 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                 ) : (
                     <CtaRow
                         icon={profile.statutKyc === 'EN_ATTENTE' ? ShieldAlert : AlertTriangle}
-                        iconBg={profile.statutKyc === 'EN_ATTENTE' ? 'bg-amber-50' : 'bg-red-50'}
-                        iconColor={profile.statutKyc === 'EN_ATTENTE' ? 'text-amber-500' : 'text-red-400'}
                         title="Vérification d'identité"
                         subtitle={
                             profile.statutKyc === 'EN_ATTENTE'
@@ -705,11 +705,24 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                                 disabled={switching}
                                 className="flex items-center gap-1.5 text-[12px] font-bold text-black/40 bg-black/[0.04] hover:bg-black/[0.08] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50"
                             >
-                                {switching
+                                {switchingToTenant
                                     ? <Loader2 className="w-3 h-3 animate-spin" />
                                     : <UserRound className="w-3 h-3" strokeWidth={2.5} />
                                 }
                                 <span className="hidden sm:inline">Mode locataire</span>
+                            </button>
+                        ) : profile.role === 'LOCATAIRE' ? (
+                            <button
+                                type="button"
+                                onClick={switchToProprietaire}
+                                disabled={switching}
+                                className="flex items-center gap-1.5 text-[12px] font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                            >
+                                {switchingToOwner
+                                    ? <Loader2 className="w-3 h-3 animate-spin" />
+                                    : <RefreshCw className="w-3 h-3" strokeWidth={2.5} />
+                                }
+                                <span className="hidden sm:inline">Espace propriétaire</span>
                             </button>
                         ) : undefined
                     }

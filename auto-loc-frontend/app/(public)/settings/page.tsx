@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { UserCircle2 } from 'lucide-react';
+import { UserCircle2, ChevronRight, RefreshCw, LogOut, Loader2 } from 'lucide-react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchUserProfile, type UserProfile } from '@/lib/nestjs/auth';
 import { ApiError } from '@/lib/nestjs/api-client';
-import { TenantSettings } from '@/components/settings/tenant-settings';
+import { SettingsForm } from '@/features/dashboard/components/settings-form';
+import { SettingsShell } from '@/features/settings/components/settings-shell';
 import { Footer } from '@/features/landing/Footer';
 import { AuthRequiredScreen } from '@/features/auth/components/auth-required-screen';
 import { DesktopAuthRedirect } from '@/features/auth/components/desktop-auth-redirect';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
     title: 'Paramètres — AutoLoc',
@@ -50,15 +52,32 @@ export default async function SettingsPage() {
         if (err instanceof ApiError && err.status === 401) {
             redirect('/login?expired=1');
         }
-        // Erreur réseau — TenantSettings fera son propre fetch en fallback
+        redirect('/login');
     }
 
+    if (!profile) {
+        redirect('/login');
+    }
+
+    const memberSince = new Date(profile.creeLe).toLocaleDateString('fr-FR', {
+        month: 'long',
+        year: 'numeric',
+    });
+
     return (
-        <main className="min-h-screen bg-gray-50">
-            {/* Le profil est pré-chargé serveur : TenantSettings l'affiche immédiatement
-                sans passer par un useEffect. Après modification, il met à jour son state
-                local — pas besoin de router.refresh() pour les champs du formulaire. */}
-            <TenantSettings profile={profile} />
+        <main className="min-h-screen bg-slate-50">
+            <div className="min-h-full bg-slate-50">
+                <div className="max-w-3xl mx-auto px-4 py-6 lg:px-8 lg:py-10 space-y-5">
+                    {/* Page title */}
+                    <div>
+                        <h1 className="text-[24px] lg:text-[26px] font-black tracking-tight text-slate-900">Mon profil</h1>
+                        <p className="text-[13px] text-slate-400 mt-1 font-medium">Membre depuis {memberSince}</p>
+                    </div>
+
+                    {/* Form */}
+                    <SettingsForm profile={profile} />
+                </div>
+            </div>
             <Footer />
         </main>
     );

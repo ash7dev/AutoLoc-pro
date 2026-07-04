@@ -176,7 +176,7 @@ export function VehicleRevenueChart({ reservations }: VehicleRevenueChartProps) 
                                     padding: '12px'
                                 }}
                                 labelStyle={{ color: '#64748b', fontSize: '11px', marginBottom: '8px', fontWeight: 600 }}
-                                formatter={(value: any, name: string) => {
+                                formatter={(value: any, name?: string) => {
                                     const label = name === 'revenuTermine' ? 'Encaissé' : 'En cours';
                                     const color = name === 'revenuTermine' ? '#10b981' : '#f59e0b';
                                     return [
