@@ -86,27 +86,36 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
 
   const fetchPricingData = useCallback(async (days: number) => {
     if (days < 1) return;
+
+    // ── Optimisation Mobile : Afficher un prix estimé IMMÉDIATEMENT ──
+    // Évite le "blanc" pendant le fetch réseau
+    const supp = horsDakar && autoriseHorsDakar ? (supplementHorsDakarParJour ?? 0) : 0;
+    const estimatedPricing = {
+      nbJours: days,
+      autoriseHorsDakar,
+      supplementHorsDakar: supp,
+      prixParJour,
+      totalBase: (prixParJour + supp) * days,
+      tauxCommission: 0.15,
+      montantCommission: Math.round((prixParJour + supp) * days * 0.15),
+      totalLocataire: Math.round((prixParJour + supp) * days * 1.15),
+      netProprietaire: (prixParJour + supp) * days,
+    };
+
+    // Afficher immédiatement l'estimation
+    setPricing(estimatedPricing);
     setLoadingPricing(true);
     setPricingError(false);
+
     try {
+      // Fetch le vrai prix en arrière-plan (peut avoir tarifs progressifs)
       const result = await fetchVehiclePricing(vehicleId, days, horsDakar);
       setPricing(result);
+      setPricingError(false); // Prix réel récupéré
     } catch {
-      // Fallback local : permet à l'utilisateur de continuer vers le paiement
-      // où le vrai prix sera recalculé. On signale l'estimation via pricingError.
+      // Fallback : garder l'estimation, mais signaler que c'est une estimation
       setPricingError(true);
-      const supp = horsDakar && autoriseHorsDakar ? (supplementHorsDakarParJour ?? 0) : 0;
-      setPricing({
-        nbJours: days,
-        autoriseHorsDakar,
-        supplementHorsDakar: supp,
-        prixParJour,
-        totalBase: (prixParJour + supp) * days,
-        tauxCommission: 0.15,
-        montantCommission: Math.round((prixParJour + supp) * days * 0.15),
-        totalLocataire: Math.round((prixParJour + supp) * days * 1.15),
-        netProprietaire: (prixParJour + supp) * days,
-      });
+      // On garde déjà estimatedPricing qui a été set plus haut
     } finally {
       setLoadingPricing(false);
     }

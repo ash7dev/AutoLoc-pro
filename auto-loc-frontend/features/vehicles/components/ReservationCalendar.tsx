@@ -117,12 +117,23 @@ export function ReservationCalendar({
             });
     }, [vehicleId, initialBlockedRanges]);
 
-    /* Build a Set<string> of blocked dates for O(1) lookup */
+    /* Build a Set<string> of blocked dates for O(1) lookup - optimized for mobile */
     const blockedSet = useMemo(() => {
         const set = new Set<string>();
+
+        // Optimisation: limiter le nombre d'itérations pour éviter le lag
         for (const range of blockedRanges) {
             const start = parseDate(range.from);
             const end = parseDate(range.to);
+
+            // Protection: si range > 365 jours, skip (évite les boucles infinies)
+            const diffMs = end.getTime() - start.getTime();
+            const diffDays = diffMs / 86_400_000;
+            if (diffDays > 365) {
+                console.warn('⚠️ Blocked range > 365 days, skipping:', range);
+                continue;
+            }
+
             for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
                 set.add(toDateStr(new Date(d)));
             }
@@ -205,8 +216,9 @@ export function ReservationCalendar({
                     type="button"
                     className={cn(
                         'w-full flex items-center gap-0 rounded-xl overflow-hidden',
-                        'border text-[12.5px] font-medium transition-all duration-200',
+                        'border text-[12.5px] font-medium transition-all duration-200 touch-manipulation',
                         'focus:outline-none focus:ring-1 focus:ring-emerald-400/30',
+                        'active:scale-[0.98]',
                         hasRange ? 'border-emerald-300/60' : 'border-dashed border-slate-200',
                         open && 'border-emerald-400/60 ring-1 ring-emerald-400/20',
                     )}
@@ -269,6 +281,7 @@ export function ReservationCalendar({
                     'w-auto p-0 z-50',
                     'border border-slate-100 bg-white',
                     'shadow-2xl shadow-slate-200/60 rounded-2xl overflow-hidden',
+                    'animate-in fade-in slide-in-from-top-2 duration-200',
                 )}
                 align="start"
                 sideOffset={6}
