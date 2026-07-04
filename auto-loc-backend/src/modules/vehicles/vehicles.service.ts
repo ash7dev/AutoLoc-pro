@@ -543,6 +543,12 @@ export class VehiclesService {
       // Invalider le cache pricing pour ce véhicule (tous les variants)
       const pattern = `${PRICING_CACHE_PREFIX}${vehicleId}:*`;
       await this.redis.delPattern(pattern);
+
+      // Revalidate Next.js cache pour que les changements soient visibles immédiatement
+      this.revalidate.revalidateTag(`vehicle-${vehicleId}`).catch(() => { });
+      this.revalidate.revalidatePath(`/vehicle/${vehicleId}`).catch(() => { });
+      this.revalidate.revalidatePath(`/dashboard/owner/vehicles/${vehicleId}`).catch(() => { });
+      this.revalidate.revalidatePath(`/dashboard/owner/vehicles`).catch(() => { });
     } catch (err: unknown) {
       if ((err as { code?: string }).code !== 'P2002') throw err;
       const target = (err as { meta?: { target?: string[] } }).meta?.target ?? [];
