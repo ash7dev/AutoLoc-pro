@@ -1,16 +1,14 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { UserCircle2, ChevronRight, RefreshCw, LogOut, Loader2 } from 'lucide-react';
+import { UserCircle2 } from 'lucide-react';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchUserProfile, type UserProfile } from '@/lib/nestjs/auth';
 import { ApiError } from '@/lib/nestjs/api-client';
-import { SettingsForm } from '@/features/dashboard/components/settings-form';
-import { SettingsShell } from '@/features/settings/components/settings-shell';
+import { SettingsPageWrapper } from '@/features/settings/components/settings-page-wrapper';
 import { Footer } from '@/features/landing/Footer';
 import { AuthRequiredScreen } from '@/features/auth/components/auth-required-screen';
 import { DesktopAuthRedirect } from '@/features/auth/components/desktop-auth-redirect';
-import Link from 'next/link';
 
 export const metadata: Metadata = {
     title: 'Paramètres — AutoLoc',
@@ -66,18 +64,7 @@ export default async function SettingsPage() {
 
     return (
         <main className="min-h-screen bg-slate-50">
-            <div className="min-h-full bg-slate-50">
-                <div className="max-w-3xl mx-auto px-4 py-6 lg:px-8 lg:py-10 space-y-5">
-                    {/* Page title */}
-                    <div>
-                        <h1 className="text-[24px] lg:text-[26px] font-black tracking-tight text-slate-900">Mon profil</h1>
-                        <p className="text-[13px] text-slate-400 mt-1 font-medium">Membre depuis {memberSince}</p>
-                    </div>
-
-                    {/* Form */}
-                    <SettingsForm profile={profile} />
-                </div>
-            </div>
+            <SettingsPageWrapper profile={profile} memberSince={memberSince} />
             <Footer />
         </main>
     );
