@@ -8,6 +8,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { QueueService } from '../../../infrastructure/queue/queue.service';
 import { RequestUser } from '../../../common/types/auth.types';
 import { BusinessRuleException } from '../../../common/exceptions/business-rule.exception';
+import { RevalidateService } from '../../../infrastructure/revalidate/revalidate.service';
 
 import { CheckinSideEffectsService } from '../checkin-side-effects.service';
 import {
@@ -47,6 +48,7 @@ export class CheckInUseCase {
         private readonly prisma: PrismaService,
         private readonly queue: QueueService,
         private readonly checkinSideEffects: CheckinSideEffectsService,
+        private readonly revalidate: RevalidateService,
     ) { }
 
     async execute(
@@ -242,6 +244,12 @@ export class CheckInUseCase {
                 })
                 .catch(() => { });
         }
+
+        // ── 11. Revalidate Next.js cache ───────────────────────────────────
+        // Invalider le cache pour que les changements soient immédiatement visibles
+        this.revalidate.revalidateTag(`reservation-${reservationId}`).catch(() => { });
+        this.revalidate.revalidatePath(`/dashboard/owner/reservations/${reservationId}`).catch(() => { });
+        this.revalidate.revalidatePath(`/dashboard/renter/reservations/${reservationId}`).catch(() => { });
 
         return {
             reservationId,
