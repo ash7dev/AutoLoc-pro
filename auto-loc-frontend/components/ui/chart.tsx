@@ -389,7 +389,7 @@ export function LineChart() {
 
 export function BarChart() {
   return (
-    <RechartsPrimitive.ResponsiveContainer width="100%" height="100%"
+    <RechartsPrimitive.ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
       <RechartsBarChart
         data={data}
         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
