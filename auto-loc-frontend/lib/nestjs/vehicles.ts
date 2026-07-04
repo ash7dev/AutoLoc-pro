@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { apiFetch } from './api-client';
+import { CACHE_TAGS, getOwnerScopedTag } from '@/lib/cache-config';
 
 // ── Enums / Unions ────────────────────────────────────────────────────────────
 
@@ -575,7 +576,7 @@ export async function createIndisponibilite(
   const { revalidateTag } = await import('next/cache');
   revalidateTag(`vehicle-${vehicleId}-indisponibilites`);
   revalidateTag(`vehicle-${vehicleId}-availability`);
-  revalidateTag('owner-vehicles');
+  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
 
   return result;
 }
@@ -594,7 +595,7 @@ export async function deleteIndisponibilite(
   const { revalidateTag } = await import('next/cache');
   revalidateTag(`vehicle-${vehicleId}-indisponibilites`);
   revalidateTag(`vehicle-${vehicleId}-availability`);
-  revalidateTag('owner-vehicles');
+  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
 
   return result;
 }
@@ -616,7 +617,7 @@ export async function updateVehicleWithRevalidation(
   );
 
   const { revalidateTag } = await import('next/cache');
-  revalidateTag('owner-vehicles');
+  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
   revalidateTag(`vehicle-${vehicleId}`);
   revalidateTag('feed');
   revalidateTag('mobile-feed');
@@ -638,7 +639,7 @@ export async function deleteVehiclePhotoWithRevalidation(
   );
 
   const { revalidateTag } = await import('next/cache');
-  revalidateTag('owner-vehicles');
+  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
   revalidateTag(`vehicle-${vehicleId}`);
   revalidateTag('feed');
   revalidateTag('mobile-feed');
@@ -658,7 +659,7 @@ export async function linkVehiclePhotoWithRevalidation(
   );
 
   const { revalidateTag } = await import('next/cache');
-  revalidateTag('owner-vehicles');
+  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
   revalidateTag(`vehicle-${vehicleId}`);
   revalidateTag('feed');
   revalidateTag('mobile-feed');
@@ -681,7 +682,7 @@ export async function updatePhotoPositionWithRevalidation(
   );
 
   const { revalidateTag } = await import('next/cache');
-  revalidateTag('owner-vehicles');
+  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
   revalidateTag(`vehicle-${vehicleId}`);
   revalidateTag('feed');
   revalidateTag('mobile-feed');

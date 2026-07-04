@@ -7,19 +7,20 @@ import { fetchWallet, fetchPenalties } from "@/lib/nestjs/wallet";
 import { OwnerHeader } from "@/features/dashboard/components/owner-header";
 import { WalletOverview } from "@/features/wallet/components/wallet-overview";
 import { PenaltiesSection } from "@/features/wallet/components/penalties-section";
+import { CACHE_TAGS, getCacheKey, getOwnerCacheTags } from "@/lib/cache-config";
 
 // ✅ OPTIMISATION: Cache wallet et penalties pour 30 secondes
-const getCachedWallet = unstable_cache(
-    async (token: string) => fetchWallet(token),
-    ['owner-wallet'],
-    { revalidate: 30, tags: ['owner-wallet'] }
-);
+const getCachedWallet = (token: string) => unstable_cache(
+    async () => fetchWallet(token),
+    getCacheKey(CACHE_TAGS.owner_wallet, token),
+    { revalidate: 30, tags: getOwnerCacheTags(CACHE_TAGS.owner_wallet, token) }
+)();
 
-const getCachedPenalties = unstable_cache(
-    async (token: string) => fetchPenalties(token),
-    ['owner-penalties'],
-    { revalidate: 30, tags: ['owner-penalties'] }
-);
+const getCachedPenalties = (token: string) => unstable_cache(
+    async () => fetchPenalties(token),
+    getCacheKey(CACHE_TAGS.owner_penalties, token),
+    { revalidate: 30, tags: getOwnerCacheTags(CACHE_TAGS.owner_penalties, token) }
+)();
 
 export default async function OwnerWalletPage() {
     const nestToken = cookies().get("nest_access")?.value ?? null;

@@ -31,16 +31,12 @@ export function NearbyVehiclesSection({ initialVehicles, excludeIds }: NearbyVeh
     hasMoreRef.current = true;
   }, [initialVehicles, excludeIds, hasPermission]);
 
-  // Check if geolocation is already allowed or if we should keep the feed's initial list
+  // Keep the server-rendered recommendation feed by default. Geolocation is
+  // intentionally user-triggered to avoid an extra API request on first paint.
   useEffect(() => {
     if (typeof window !== 'undefined' && navigator.permissions) {
       navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-        if (result.state === 'granted') {
-          setHasPermission(true);
-          getLocationAndFetch();
-        } else {
-          setHasPermission(result.state === 'prompt' ? null : false);
-        }
+        setHasPermission(result.state === 'prompt' ? null : result.state === 'granted');
       });
     }
   }, []);
@@ -115,7 +111,7 @@ export function NearbyVehiclesSection({ initialVehicles, excludeIds }: NearbyVeh
           </p>
         </div>
 
-        {!hasPermission && (
+        {!coords && (
           <button
             type="button"
             onClick={getLocationAndFetch}

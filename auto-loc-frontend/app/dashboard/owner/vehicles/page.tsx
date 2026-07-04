@@ -6,13 +6,14 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { fetchMyVehicles, type Vehicle } from "@/lib/nestjs/vehicles";
 import { OwnerHeader } from "@/features/dashboard/components/owner-header";
 import { OwnerFleet } from "@/features/vehicles/owner/OwnerFleet";
+import { CACHE_TAGS, getCacheKey, getOwnerCacheTags } from "@/lib/cache-config";
 
 // ✅ OPTIMISATION: Cache des véhicules pour 30 secondes
-const getCachedVehicles = unstable_cache(
-  async (token: string) => fetchMyVehicles(token),
-  ['owner-vehicles'],
-  { revalidate: 30, tags: ['owner-vehicles'] }
-);
+const getCachedVehicles = (token: string) => unstable_cache(
+  async () => fetchMyVehicles(token),
+  getCacheKey(CACHE_TAGS.owner_vehicles, token),
+  { revalidate: 30, tags: getOwnerCacheTags(CACHE_TAGS.owner_vehicles, token) }
+)();
 
 export default async function OwnerVehiclesPage() {
   const nestToken = cookies().get("nest_access")?.value ?? null;

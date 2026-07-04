@@ -10,9 +10,12 @@ interface RoleState {
   // Préférence UI non-sensible : persiste en localStorage pour survivre au refresh.
   activeRole: Role | null;
   hasVehicles: boolean | null;
+  authChecked: boolean;
+  sessionValid: boolean;
   setSession: (input: { activeRole: Role }) => void;
   setActiveRole: (role: Role) => void;
   setHasVehicles: (hasVehicles: boolean) => void;
+  setAuthStatus: (input: { checked: boolean; valid: boolean }) => void;
   clearRole: () => void;
 }
 
@@ -30,10 +33,13 @@ export const useRoleStore = create<RoleState>()(
     (set) => ({
       activeRole: null,
       hasVehicles: null,
-      setSession: ({ activeRole }) => set({ activeRole }),
-      setActiveRole: (activeRole) => set({ activeRole }),
+      authChecked: false,
+      sessionValid: false,
+      setSession: ({ activeRole }) => set({ activeRole, authChecked: true, sessionValid: true }),
+      setActiveRole: (activeRole) => set({ activeRole, authChecked: true, sessionValid: true }),
       setHasVehicles: (hasVehicles) => set({ hasVehicles }),
-      clearRole: () => set({ activeRole: null, hasVehicles: null }),
+      setAuthStatus: ({ checked, valid }) => set({ authChecked: checked, sessionValid: valid }),
+      clearRole: () => set({ activeRole: null, hasVehicles: null, authChecked: true, sessionValid: false }),
     }),
     {
       name: 'autoloc-role',

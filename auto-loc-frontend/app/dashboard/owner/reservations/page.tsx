@@ -6,13 +6,14 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { fetchOwnerReservations, type Reservation } from "@/lib/nestjs/reservations";
 import { OwnerHeader } from "@/features/dashboard/components/owner-header";
 import { OwnerReservationsList } from "@/features/reservations/components/owner-reservations-list";
+import { CACHE_TAGS, getCacheKey, getOwnerCacheTags } from "@/lib/cache-config";
 
 // ✅ OPTIMISATION: Cache des réservations owner pour 15 secondes
-const getCachedReservations = unstable_cache(
-  async (token: string) => fetchOwnerReservations(token),
-  ['owner-reservations'],
-  { revalidate: 15, tags: ['owner-reservations'] }
-);
+const getCachedReservations = (token: string) => unstable_cache(
+  async () => fetchOwnerReservations(token),
+  getCacheKey(CACHE_TAGS.owner_reservations, token),
+  { revalidate: 15, tags: getOwnerCacheTags(CACHE_TAGS.owner_reservations, token) }
+)();
 
 export default async function OwnerReservationsPage() {
   const nestToken = cookies().get("nest_access")?.value ?? null;

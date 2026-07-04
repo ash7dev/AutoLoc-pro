@@ -8,8 +8,11 @@ export const CACHE_TAGS = {
   owner_reservations: 'owner-reservations',
   owner_vehicles: 'owner-vehicles',
   owner_wallet: 'owner-wallet',
+  owner_penalties: 'owner-penalties',
+  owner_transactions: 'owner-transactions',
   owner_reviews: 'owner-reviews',
   owner_profile: 'owner-profile',
+  tenant_reservations: 'tenant-reservations',
 } as const;
 
 export const CACHE_DURATIONS = {
@@ -25,6 +28,33 @@ export const CACHE_DURATIONS = {
   // Cache très long pour données rarement modifiées
   extended: 300, // 5 minutes
 } as const;
+
+function hashToken(token: string): string {
+  let hash = 5381;
+  for (let i = 0; i < token.length; i += 1) {
+    hash = (hash * 33) ^ token.charCodeAt(i);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+/**
+ * Tag privé par propriétaire. On ne met jamais le token brut dans le tag.
+ */
+export function getOwnerScopedTag(tag: string, token: string): string {
+  return `${tag}:${hashToken(token)}`;
+}
+
+export function getOwnerCacheTags(tag: string, token: string): string[] {
+  return [tag, getOwnerScopedTag(tag, token)];
+}
+
+export function getScopedTag(tag: string, token: string): string {
+  return `${tag}:${hashToken(token)}`;
+}
+
+export function getScopedCacheTags(tag: string, token: string): string[] {
+  return [tag, getScopedTag(tag, token)];
+}
 
 /**
  * Génère une clé de cache unique incluant le token et un timestamp optionnel

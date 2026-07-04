@@ -532,10 +532,14 @@ function PendingUserRow({
 
 // ── Section principale ─────────────────────────────────────────────────────────
 
-export function PendingKycWithListingSection() {
+export function PendingKycWithListingSection({
+  initialUsers,
+}: {
+  initialUsers?: AdminUser[];
+}) {
   const router = useRouter();
-  const [users, setUsers]         = useState<AdminUser[]>([]);
-  const [loading, setLoading]     = useState(true);
+  const [users, setUsers]         = useState<AdminUser[]>(initialUsers ?? []);
+  const [loading, setLoading]     = useState(initialUsers === undefined);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [toast, setToast]         = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
@@ -543,17 +547,12 @@ export function PendingKycWithListingSection() {
     setLoading(true);
     try {
       const res = await fetch('/api/nest/admin/users?kycStatus=EN_ATTENTE', { credentials: 'include' });
-      console.log('[PendingKycWithListing] Response status:', res.status);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const response = await res.json();
-      console.log('[PendingKycWithListing] Response:', response);
       const data: AdminUser[] = response.data || response;
-      console.log('[PendingKycWithListing] Total users:', data.length);
       const filtered = data.filter((u) =>
         u.vehicles?.some((v) => v.statut === 'BROUILLON' || v.statut === 'EN_ATTENTE_VALIDATION') ?? false,
       );
-      console.log('[PendingKycWithListing] Filtered users with vehicles:', filtered.length);
-      console.log('[PendingKycWithListing] Users:', filtered);
       setUsers(filtered);
     } catch (e) {
       console.error('[PendingKycWithListing] Error loading:', e);
@@ -563,7 +562,14 @@ export function PendingKycWithListingSection() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    if (initialUsers !== undefined) {
+      setUsers(initialUsers);
+      setLoading(false);
+      return;
+    }
+    void load();
+  }, [initialUsers, load]);
 
   function showToast(type: 'success' | 'error', msg: string) {
     setToast({ type, msg });

@@ -7,12 +7,10 @@ import {
   fetchOwnerReservations,
   fetchOwnerStats,
 } from "@/lib/nestjs/reservations";
-import { fetchMe } from "@/lib/nestjs/auth";
-import { fetchUserReviews } from "@/lib/nestjs/reviews";
 import { fetchMyVehicles } from "@/lib/nestjs/vehicles";
 import { fetchWallet, fetchPenalties } from "@/lib/nestjs/wallet";
 import { OwnerDashboardView } from "@/features/dashboard/components/owner-dashboard-view";
-import { CACHE_TAGS, CACHE_DURATIONS, getCacheKey } from "@/lib/cache-config";
+import { CACHE_TAGS, CACHE_DURATIONS, getCacheKey, getOwnerCacheTags } from "@/lib/cache-config";
 
 
 
@@ -24,7 +22,7 @@ async function getCachedStats(token: string) {
     getCacheKey(CACHE_TAGS.owner_stats, token),
     {
       revalidate: CACHE_DURATIONS.standard,
-      tags: [CACHE_TAGS.owner_stats],
+      tags: getOwnerCacheTags(CACHE_TAGS.owner_stats, token),
     }
   )();
 }
@@ -35,7 +33,7 @@ async function getCachedReservations(token: string, limit: number) {
     getCacheKey(CACHE_TAGS.owner_reservations, token, limit),
     {
       revalidate: CACHE_DURATIONS.critical,
-      tags: [CACHE_TAGS.owner_reservations],
+      tags: getOwnerCacheTags(CACHE_TAGS.owner_reservations, token),
     }
   )();
 }
@@ -46,7 +44,7 @@ async function getCachedVehicles(token: string) {
     getCacheKey(CACHE_TAGS.owner_vehicles, token),
     {
       revalidate: CACHE_DURATIONS.standard,
-      tags: [CACHE_TAGS.owner_vehicles],
+      tags: getOwnerCacheTags(CACHE_TAGS.owner_vehicles, token),
     }
   )();
 }
@@ -57,7 +55,7 @@ async function getCachedWallet(token: string) {
     getCacheKey(CACHE_TAGS.owner_wallet, token),
     {
       revalidate: CACHE_DURATIONS.critical,
-      tags: [CACHE_TAGS.owner_wallet],
+      tags: getOwnerCacheTags(CACHE_TAGS.owner_wallet, token),
     }
   )();
 }
@@ -71,33 +69,17 @@ async function FullDashboardData({ token }: { token: string }) {
   let vehicles: any[] = [];
   let wallet: any = null;
   let stats: any = null;
-  let reviews: any = null;
   let penalties: any = null;
-  let profile: any = null;
 
   try {
-    // ✅ OPTIMISATION: Extraire userId du JWT pour éviter le waterfall
-    // On decode le token JWT pour avoir le userId sans attendre fetchMe()
-    let userId: string | null = null;
-    try {
-      const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-      userId = payload.sub || null;
-    } catch {
-      // Si décodage échoue, on fera le fetch classique
-    }
-
-    // ✅ OPTIMISATION: Toutes les requêtes en PARALLÈLE (gain ~300-400ms)
-    const [profileResult, statsResult, walletResult, penaltiesResult, resResult, vehiclesResult, reviewsResult] = await Promise.allSettled([
-      fetchMe(token),
+    const [statsResult, walletResult, penaltiesResult, resResult, vehiclesResult] = await Promise.allSettled([
       getCachedStats(token),
       getCachedWallet(token),
       fetchPenalties(token),
       getCachedReservations(token, 5), // ✅ Réduit à 5 (on affiche que 3)
       getCachedVehicles(token),
-      userId ? fetchUserReviews(userId, token) : Promise.resolve(null),
     ]);
 
-    if (profileResult.status === "fulfilled") profile = profileResult.value;
     if (statsResult.status === "fulfilled") stats = statsResult.value;
     if (walletResult.status === "fulfilled") wallet = walletResult.value;
     if (penaltiesResult.status === "fulfilled") penalties = penaltiesResult.value;
@@ -106,7 +88,6 @@ async function FullDashboardData({ token }: { token: string }) {
       reservations = resResult.value.data.filter((r: any) => r.statut !== "INITIEE");
     }
     if (vehiclesResult.status === "fulfilled") vehicles = vehiclesResult.value;
-    if (reviewsResult.status === "fulfilled") reviews = reviewsResult.value;
   } catch (err) {
     console.error("Dashboard data fetch error:", err);
   }
@@ -118,7 +99,6 @@ async function FullDashboardData({ token }: { token: string }) {
       wallet={wallet}
       penalties={penalties}
       stats={stats}
-      reviews={reviews}
     />
   );
 }

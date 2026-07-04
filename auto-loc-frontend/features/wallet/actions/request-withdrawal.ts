@@ -2,6 +2,7 @@
 
 import { revalidateTag } from 'next/cache';
 import { cookies } from 'next/headers';
+import { CACHE_TAGS, getOwnerScopedTag } from '@/lib/cache-config';
 
 interface RequestWithdrawalInput {
   montant: number;
@@ -36,6 +37,6 @@ export async function requestWithdrawalAction(input: RequestWithdrawalInput): Pr
   }
 
   // Invalider les caches du wallet
-  revalidateTag('owner-wallet');
-  revalidateTag('owner-transactions');
+  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_wallet, token));
+  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_transactions, token));
 }

@@ -15,7 +15,6 @@ import { useState, useMemo } from "react";
 import type { Reservation, OwnerStats } from "@/lib/nestjs/reservations";
 import type { Vehicle } from "@/lib/nestjs/vehicles";
 import type { WalletData } from "@/lib/nestjs/wallet";
-import type { ReviewsResponse } from "@/lib/nestjs/reviews";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -25,7 +24,6 @@ interface OwnerDashboardViewProps {
     wallet: WalletData | null;
     penalties?: { totalDette: number; count: number } | null;
     stats?: OwnerStats | null;
-    reviews: ReviewsResponse | null;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -173,7 +171,6 @@ export function OwnerDashboardView({
     wallet,
     penalties,
     stats,
-    reviews,
 }: OwnerDashboardViewProps) {
     const [calendarDate, setCalendarDate] = useState(() => new Date());
     const [revenuePeriod, setRevenuePeriod] = useState("current"); // "current", "last", "2months"

@@ -294,7 +294,17 @@ function ResultsHeader({
 /* ════════════════════════════════════════════════════════════════
    MAIN ORCHESTRATOR
 ════════════════════════════════════════════════════════════════ */
-export function ExplorerGrid({ initialZone }: { initialZone?: string } = {}): React.ReactElement {
+export function ExplorerGrid({
+  initialZone,
+  initialVehicles = [],
+  initialTotal = 0,
+  initialLoaded = false,
+}: {
+  initialZone?: string;
+  initialVehicles?: VehicleGridItem[];
+  initialTotal?: number;
+  initialLoaded?: boolean;
+} = {}): React.ReactElement {
   const { formatPrice } = useCurrency();
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState<ExplorerFiltersState>(() => ({
@@ -302,9 +312,12 @@ export function ExplorerGrid({ initialZone }: { initialZone?: string } = {}): Re
     zone: initialZone || (searchParams.get('zone') ?? ''),
     type: searchParams.get('type') ?? '',
     budgetMin: searchParams.has('budgetMin') ? Number(searchParams.get('budgetMin')) : null,
-    budgetMax: searchParams.has('budget') ? Number(searchParams.get('budget')) : null,
+    budgetMax: searchParams.has('budgetMax')
+      ? Number(searchParams.get('budgetMax'))
+      : searchParams.has('budget') ? Number(searchParams.get('budget')) : null,
     fuel: searchParams.get('fuel') ?? '',
     transmission: searchParams.get('transmission') ?? '',
+    sort: searchParams.get('sort') ?? DEFAULT_FILTERS.sort,
     places: searchParams.has('places') ? Number(searchParams.get('places')) : null,
     noteMin: searchParams.has('noteMin') ? Number(searchParams.get('noteMin')) : null,
     equipements: searchParams.getAll('equipements'),
@@ -314,9 +327,9 @@ export function ExplorerGrid({ initialZone }: { initialZone?: string } = {}): Re
   }));
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') ?? '');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [vehicles, setVehicles] = useState<VehicleGridItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [vehicles, setVehicles] = useState<VehicleGridItem[]>(initialVehicles);
+  const [total, setTotal] = useState(initialTotal);
+  const [loading, setLoading] = useState(!initialLoaded);
   const [error, setError] = useState(false);
   const [kycStatus, setKycStatus] = useState<ProfileResponse['kycStatus']>(undefined);
 
@@ -356,6 +369,7 @@ export function ExplorerGrid({ initialZone }: { initialZone?: string } = {}): Re
   const pageRef = useRef(1);
   const hasMoreRef = useRef(true);
   const loadingMoreRef = useRef(false);
+  const skippedInitialFetchRef = useRef(false);
   const geoParamsRef = useRef<{ latitude?: number; longitude?: number; rayon?: number }>({});
 
   /* Construit les paramètres de recherche communs (hors page/géoloc) */
@@ -426,7 +440,14 @@ export function ExplorerGrid({ initialZone }: { initialZone?: string } = {}): Re
     }
   }, [filters, buildBaseParams]);
 
-  useEffect(() => { fetchVehicles(); }, [fetchVehicles]);
+  useEffect(() => {
+    if (initialLoaded && !skippedInitialFetchRef.current) {
+      skippedInitialFetchRef.current = true;
+      hasMoreRef.current = initialVehicles.length > 0 && initialVehicles.length < initialTotal;
+      return;
+    }
+    fetchVehicles();
+  }, [fetchVehicles, initialLoaded, initialTotal, initialVehicles.length]);
 
   /* Pagination invisible — charge la page suivante et l'ajoute sans re-trier le reste */
   const loadMore = useCallback(async () => {

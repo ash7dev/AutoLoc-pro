@@ -64,24 +64,31 @@ export default async function AdminOverviewPage(): Promise<React.ReactElement> {
 
   let stats: AdminStats | null = null;
   let activity: AdminActivityItem[] = [];
+  let pendingKycUsers: AdminUser[] = [];
 
   const cachedStats    = unstable_cache(() => fetchAdminStats(token),    ['admin-stats',    token], { revalidate: 60 });
   const cachedActivity = unstable_cache(() => fetchAdminActivity(token), ['admin-activity', token], { revalidate: 60 });
-  const cachedUsers    = unstable_cache(() => fetchAdminUsers(token),    ['admin-users',    token], { revalidate: 60 });
-  const cachedVehicles = unstable_cache(() => fetchAdminVehicles(token), ['admin-vehicles', token], { revalidate: 60 });
+  const cachedPendingKycUsers = unstable_cache(
+    () => fetchAdminUsers(token, 'EN_ATTENTE'),
+    ['admin-users-kyc-pending', token],
+    { revalidate: 60 },
+  );
 
   try {
-    const [statsResult, activityResult, usersResult, vehiclesResult] = await Promise.allSettled([
+    const [statsResult, activityResult, pendingKycResult] = await Promise.allSettled([
       cachedStats(),
       cachedActivity(),
-      cachedUsers(),
-      cachedVehicles(),
+      cachedPendingKycUsers(),
     ]);
     
     if (statsResult.status === 'fulfilled') {
       stats = statsResult.value;
     } else {
       // Fallback: reconstruct pending counts from users + vehicles
+      const [usersResult, vehiclesResult] = await Promise.allSettled([
+        fetchAdminUsers(token),
+        fetchAdminVehicles(token),
+      ]);
       if (usersResult.status === 'fulfilled' && vehiclesResult.status === 'fulfilled') {
         const users: AdminUser[] = usersResult.value;
         const vehicles: AdminVehicle[] = vehiclesResult.value;
@@ -102,6 +109,12 @@ export default async function AdminOverviewPage(): Promise<React.ReactElement> {
 
     if (activityResult.status === 'fulfilled') {
       activity = activityResult.value;
+    }
+
+    if (pendingKycResult.status === 'fulfilled') {
+      pendingKycUsers = pendingKycResult.value.filter((u) =>
+        u.vehicles?.some((v) => v.statut === 'BROUILLON' || v.statut === 'EN_ATTENTE_VALIDATION') ?? false,
+      );
     }
   } catch {
     // Silent fallback — UI renders with empty state
@@ -153,7 +166,7 @@ export default async function AdminOverviewPage(): Promise<React.ReactElement> {
       />
 
       {/* ── KYC + Annonce simultanés ── */}
-      <PendingKycWithListingSection />
+      <PendingKycWithListingSection initialUsers={pendingKycUsers} />
 
       {/* ── Body — 2 columns ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

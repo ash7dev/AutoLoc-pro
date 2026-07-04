@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { unstable_cache } from 'next/cache';
 import { notFound } from 'next/navigation';
 
 import Link from 'next/link';
@@ -15,6 +16,7 @@ import { SimilarVehicles } from '@/features/vehicles/components/SimilarVehicles'
 import { fetchUserReviews } from '@/lib/nestjs/reviews';
 import { Footer } from '@/features/landing/Footer';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CACHE_DURATIONS } from '@/lib/cache-config';
 
 /** ISR — revalidate every 60 seconds */
 export const revalidate = 60;
@@ -41,8 +43,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 // Sub-component for parallelized reviews
 async function ReviewsWrapper({ ownerId }: { ownerId: string }) {
-    const reviewsData = await fetchUserReviews(ownerId).catch(() => null);
+    const reviewsData = await unstable_cache(
+        () => fetchUserReviews(ownerId),
+        ['vehicle-owner-reviews', ownerId],
+        { revalidate: CACHE_DURATIONS.long, tags: [`user-reviews-${ownerId}`] },
+    )().catch(() => null);
     return <VehicleReviews reviewsData={reviewsData} />;
+}
+
+function getCachedBlockedDates(vehicleId: string) {
+    return unstable_cache(
+        () => fetchBlockedDates(vehicleId),
+        ['vehicle-blocked-dates', vehicleId],
+        {
+            revalidate: CACHE_DURATIONS.standard,
+            tags: [`vehicle-${vehicleId}-availability`],
+        },
+    )();
 }
 
 export default async function VehicleDetailPage({ params }: PageProps) {
@@ -53,7 +70,7 @@ export default async function VehicleDetailPage({ params }: PageProps) {
         // Parallel fetch for vehicle data and blocked dates
         const [vResult, bResult] = await Promise.allSettled([
             fetchVehicle(params.id),
-            fetchBlockedDates(params.id)
+            getCachedBlockedDates(params.id)
         ]);
         
         if (vResult.status === 'rejected') throw vResult.reason;

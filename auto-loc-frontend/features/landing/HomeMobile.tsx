@@ -1,22 +1,38 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { fetchMobileFeed, type MobileFeedResponse } from '@/lib/nestjs/vehicles';
 import { MobileSearchBar } from './mobile/MobileSearchBar';
 import { MobileIntroCard } from './mobile/MobileIntroCard';
 import { MobileCategoriesCarousel } from './mobile/MobileCategoriesCarousel';
 import { NearbyVehiclesSection } from './mobile/NearbyVehiclesSection';
 import { PremiumSelectionGrid } from './mobile/PremiumSelectionGrid';
-import { NouveautesSection } from './NouveautesSection';
-import { TopNotesSection } from './mobile/TopNotesSection';
-import { EconomiquesSection } from './mobile/EconomiquesSection';
-import { LuxeSection } from './mobile/LuxeSection';
-import { DakarSection } from './mobile/DakarSection';
-import { SUVSection } from './mobile/SUVSection';
-import { BerlinesSection } from './mobile/BerlinesSection';
-import { HowItWorksSection } from './HowItWorksSection';
-import { BecomeHostCTA } from './BecomeHostCTA';
-import { Footer } from './Footer';
+
+const NouveautesSection = dynamic(() => import('./NouveautesSection').then((m) => m.NouveautesSection), {
+  loading: () => <CarouselSkeleton />,
+});
+const TopNotesSection = dynamic(() => import('./mobile/TopNotesSection').then((m) => m.TopNotesSection), {
+  loading: () => <CarouselSkeleton />,
+});
+const EconomiquesSection = dynamic(() => import('./mobile/EconomiquesSection').then((m) => m.EconomiquesSection), {
+  loading: () => <GridSkeleton />,
+});
+const LuxeSection = dynamic(() => import('./mobile/LuxeSection').then((m) => m.LuxeSection), {
+  loading: () => <GridSkeleton />,
+});
+const DakarSection = dynamic(() => import('./mobile/DakarSection').then((m) => m.DakarSection), {
+  loading: () => <CarouselSkeleton />,
+});
+const SUVSection = dynamic(() => import('./mobile/SUVSection').then((m) => m.SUVSection), {
+  loading: () => <CarouselSkeleton />,
+});
+const BerlinesSection = dynamic(() => import('./mobile/BerlinesSection').then((m) => m.BerlinesSection), {
+  loading: () => <GridSkeleton />,
+});
+const HowItWorksSection = dynamic(() => import('./HowItWorksSection').then((m) => m.HowItWorksSection));
+const BecomeHostCTA = dynamic(() => import('./BecomeHostCTA').then((m) => m.BecomeHostCTA));
+const Footer = dynamic(() => import('./Footer').then((m) => m.Footer));
 
 // ─── Loading Skeletons ────────────────────────────────────────────────────────
 function CarouselSkeleton() {

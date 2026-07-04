@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { unstable_cache } from 'next/cache';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { CalendarRange } from 'lucide-react';
@@ -9,11 +10,23 @@ import { TenantReservationsList } from '@/features/reservations/components/tenan
 import { AuthRequiredScreen } from '@/features/auth/components/auth-required-screen';
 import { DesktopAuthRedirect } from '@/features/auth/components/desktop-auth-redirect';
 import { Footer } from '@/features/landing/Footer';
+import { CACHE_DURATIONS, CACHE_TAGS, getCacheKey, getScopedCacheTags } from '@/lib/cache-config';
 
 export const metadata: Metadata = {
     title: 'Mes réservations — AutoLoc',
     description: 'Consultez et gérez vos réservations de véhicules sur AutoLoc.',
 };
+
+async function getCachedTenantReservations(token: string) {
+    return unstable_cache(
+        () => fetchTenantReservations(token),
+        getCacheKey(CACHE_TAGS.tenant_reservations, token),
+        {
+            revalidate: CACHE_DURATIONS.critical,
+            tags: getScopedCacheTags(CACHE_TAGS.tenant_reservations, token),
+        },
+    )();
+}
 
 export default async function TenantReservationsPage() {
     // Lecture du cookie NestJS (connexion téléphone) ou session Supabase
@@ -48,7 +61,7 @@ export default async function TenantReservationsPage() {
     // Fetch server-side — données fraîches à chaque requête, zéro waterfall client
     let reservations: Awaited<ReturnType<typeof fetchTenantReservations>>['data'] = [];
     try {
-        const res = await fetchTenantReservations(token);
+        const res = await getCachedTenantReservations(token);
         reservations = res.data ?? [];
     } catch (err) {
         if (err instanceof ApiError && err.status === 401) {

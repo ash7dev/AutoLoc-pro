@@ -29,6 +29,8 @@ export function GlobalRoleSync() {
     let active = true;
 
     const syncAll = async (session: Session | null, isRetry = false) => {
+      useRoleStore.getState().setAuthStatus({ checked: false, valid: false });
+
       // ✅ NEW: Abort previous pending request
       if (abortControllerRef.current) {
         // Silent abort — expected deduplication behavior
@@ -57,6 +59,7 @@ export function GlobalRoleSync() {
           // ✅ NEW: Handle 304 Not Modified (cache hit)
           if (res.status === 304) {
             // 304 cache hit — profile unchanged, skip update
+            useRoleStore.getState().setAuthStatus({ checked: true, valid: true });
             return; // Keep existing profile in store
           }
 
@@ -111,6 +114,9 @@ export function GlobalRoleSync() {
           if (syncRes.ok) {
             return syncAll(session, true);
           }
+          useProfileStore.getState().clearProfile();
+          useRoleStore.getState().clearRole();
+          profileETagRef.current = null;
           return;
         }
 
@@ -119,6 +125,7 @@ export function GlobalRoleSync() {
         // ✅ NEW: Handle 304 Not Modified (cache hit)
         if (profileRes.status === 304) {
           // 304 cache hit — profile unchanged, skip update
+          useRoleStore.getState().setAuthStatus({ checked: true, valid: true });
           return; // Keep existing profile in store
         }
 
@@ -142,7 +149,12 @@ export function GlobalRoleSync() {
           // (il a déjà été propriétaire). On lit profile.hasVehicles au lieu de faire
           // un fetch supplémentaire de /vehicles/me.
           useRoleStore.getState().setHasVehicles(profile.hasVehicles ?? false);
+          return;
         }
+
+        useProfileStore.getState().clearProfile();
+        useRoleStore.getState().clearRole();
+        profileETagRef.current = null;
       } catch (error) {
         // ✅ NEW: Ignore AbortError (expected when request is cancelled)
         if (error instanceof Error && error.name === 'AbortError') {
@@ -150,6 +162,10 @@ export function GlobalRoleSync() {
           return;
         }
         // Ignorer en cas d'erreur réseau
+        useRoleStore.getState().setAuthStatus({
+          checked: true,
+          valid: Boolean(useRoleStore.getState().activeRole),
+        });
       }
     };
 

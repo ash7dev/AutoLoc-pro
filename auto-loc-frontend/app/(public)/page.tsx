@@ -3,7 +3,8 @@ import { BannerSection } from '@/features/landing/BannerSection';
 import { CategoriesSection } from '@/features/landing/CategoriesSection';
 import { TrustSection } from '@/features/landing/TrustSection';
 import { VehicleGridSection } from '@/features/landing/VehicleGridSection';
-import { searchVehicles, fetchHomeFeed, fetchMobileFeed, type VehicleSearchResult, type HomeFeedResponse, type MobileFeedResponse } from '@/lib/nestjs/vehicles';
+import { unstable_cache } from 'next/cache';
+import { fetchHomeFeed, fetchMobileFeed, searchVehicles, type HomeFeedResponse, type VehicleSearchResult } from '@/lib/nestjs/vehicles';
 import { HowItWorksSection } from '@/features/landing/HowItWorksSection';
 import { StatsSection } from '@/features/landing/StatsSection';
 import { ZonesSection } from '@/features/landing/ZonesSection';
@@ -13,6 +14,7 @@ import { BecomeHostCTA } from '@/features/landing/BecomeHostCTA';
 import { Footer } from '@/features/landing/Footer';
 import { HomeSessionRedirect } from '@/features/auth/components/home-session-redirect';
 import { HomeMobile } from '@/features/landing/HomeMobile';
+import { CACHE_DURATIONS } from '@/lib/cache-config';
 
 export const metadata: Metadata = {
   title: 'AutoLoc — Location de véhicules au Sénégal',
@@ -31,21 +33,53 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
+function buildInitialVehicles(feed: HomeFeedResponse | null): VehicleSearchResult[] {
+  if (!feed) return [];
+  const byId = new Map<string, VehicleSearchResult>();
+  for (const vehicle of [
+    ...feed.premium,
+    ...feed.recommended.items,
+    ...feed.nouveautes,
+  ]) {
+    if (!byId.has(vehicle.id)) byId.set(vehicle.id, vehicle);
+  }
+  return Array.from(byId.values());
+}
+
+const getCachedHomeFeed = unstable_cache(
+  () => fetchHomeFeed(),
+  ['home-feed'],
+  { revalidate: CACHE_DURATIONS.standard, tags: ['feed'] },
+);
+
+const getCachedMobileFeed = unstable_cache(
+  () => fetchMobileFeed(),
+  ['mobile-home-feed'],
+  { revalidate: CACHE_DURATIONS.standard, tags: ['mobile-feed'] },
+);
+
 export default async function HomePage() {
   let initialVehicles: VehicleSearchResult[] = [];
-  let homeFeed: HomeFeedResponse | null = null;
-  let mobileFeed: MobileFeedResponse | null = null;
+  const [homeFeedResult, mobileFeedResult] = await Promise.allSettled([
+    getCachedHomeFeed(),
+    getCachedMobileFeed(),
+  ]);
+  const homeFeed = homeFeedResult.status === 'fulfilled' ? homeFeedResult.value : null;
+  const mobileFeed = mobileFeedResult.status === 'fulfilled' ? mobileFeedResult.value : null;
+
   try {
-    const [vehiclesRes, feedRes, mobileFeedRes] = await Promise.all([
-      searchVehicles({ page: 1 }),
-      fetchHomeFeed().catch(() => null),
-      fetchMobileFeed().catch(() => null)
-    ]);
-    initialVehicles = vehiclesRes?.data ?? [];
-    homeFeed = feedRes;
-    mobileFeed = mobileFeedRes;
+    initialVehicles = buildInitialVehicles(homeFeed);
+    if (initialVehicles.length === 0) {
+      const vehiclesRes = await searchVehicles({ page: 1 });
+      initialVehicles = vehiclesRes?.data ?? [];
+    }
   } catch {
-    // fallback to client fetch
+    try {
+      const vehiclesRes = await searchVehicles({ page: 1 });
+      initialVehicles = vehiclesRes?.data ?? [];
+    } catch {
+      // fallback to client fetch
+    }
   }
 
   const websiteJsonLd = {

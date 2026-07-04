@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { unstable_cache } from 'next/cache';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -19,6 +20,7 @@ import {
     BadgeCheck, Wallet, Info, Truck,
 } from "lucide-react";
 import { ContratActions } from './contrat-actions';
+import { CACHE_DURATIONS, CACHE_TAGS, getCacheKey, getScopedCacheTags } from '@/lib/cache-config';
 
 /* ════════════════════════════════════════════════════════════════
    HELPERS
@@ -71,6 +73,20 @@ const STATUS: Record<string, { label: string; text: string; bg: string; border: 
     LITIGE:              { label: 'Litige ouvert',       text: 'text-orange-700',  bg: 'bg-orange-50',   border: 'border-orange-200', dot: 'bg-orange-500' },
 };
 
+function getCachedReservation(token: string, id: string) {
+    return unstable_cache(
+        () => fetchReservationById(token, id),
+        getCacheKey('tenant-reservation-detail', token, id),
+        {
+            revalidate: CACHE_DURATIONS.critical,
+            tags: [
+                `reservation-${id}`,
+                ...getScopedCacheTags(CACHE_TAGS.tenant_reservations, token),
+            ],
+        },
+    )();
+}
+
 /* ════════════════════════════════════════════════════════════════
    PAGE
 ════════════════════════════════════════════════════════════════ */
@@ -88,7 +104,7 @@ export default async function TenantReservationDetailPage({ params }: { params: 
     /* ── Fetch ── */
     let reservation;
     try {
-        reservation = await fetchReservationById(token, params.id);
+        reservation = await getCachedReservation(token, params.id);
     } catch (err) {
         if (err instanceof ApiError && err.status === 404) notFound();
         if (err instanceof ApiError && err.status === 401) redirect('/login?expired=1');

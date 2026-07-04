@@ -15,7 +15,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
+import { revalidateTag } from 'next/cache';
 import crypto from 'crypto';
+import { CACHE_TAGS, getScopedTag } from '@/lib/cache-config';
 
 const NEST_API = process.env.NEXT_PUBLIC_API_URL ?? '';
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -144,6 +146,18 @@ function toRedirectResponse(res: Response): NextResponse | null {
   return NextResponse.redirect(location, res.status as 301 | 302 | 303 | 307 | 308);
 }
 
+function revalidateReservationMutation(path: string, method: string, accessToken: string | null) {
+  if (!accessToken || !['POST', 'PATCH', 'PUT', 'DELETE'].includes(method)) return;
+  if (!path.startsWith('/reservations')) return;
+
+  revalidateTag(getScopedTag(CACHE_TAGS.tenant_reservations, accessToken));
+
+  const reservationId = path.match(/^\/reservations\/([^/]+)/)?.[1];
+  if (reservationId) {
+    revalidateTag(`reservation-${reservationId}`);
+  }
+}
+
 async function proxy(
   request: NextRequest,
   { params }: { params: { path: string[] } },
@@ -221,6 +235,10 @@ async function proxy(
           return nextRes;
         }
 
+        if (res.ok) {
+          revalidateReservationMutation(path, request.method, accessToken);
+        }
+
         const nextRes = await toNextResponse(res, {
           path,
           method: request.method,
@@ -247,6 +265,10 @@ async function proxy(
     const nextRes = NextResponse.json(toClientSession(session), { status: res.status });
     setCookies(nextRes, session);
     return nextRes;
+  }
+
+  if (res.ok) {
+    revalidateReservationMutation(path, request.method, accessToken);
   }
 
   return toNextResponse(res, { path, method: request.method, clientETag });

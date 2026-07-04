@@ -21,9 +21,7 @@ import {
   Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { supabase } from '../../lib/supabase/client';
 import { useHasVehiclesFromStore } from '../../features/auth/hooks/use-has-vehicles-from-store';
-import { fetchMe } from '../../lib/nestjs/auth';
 import { useRoleStore } from '../../features/auth/stores/role.store';
 import { useSwitchToProprietaire } from '../../features/owner/hooks/use-switch-to-proprietaire';
 import { useSignOut } from '../../features/auth/hooks/use-signout';
@@ -260,10 +258,6 @@ function SliderNav({ pathname }: { pathname: string }) {
   );
 }
 
-
-// Résultat en mémoire de la vérification cookie NestJS — évite un fetch réseau à chaque navigation
-let _cachedNestAuthResult: boolean | null = null;
-
 /* ── Main navbar ─────────────────────────────────────────────── */
 export function MarketplaceNavbar() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -273,6 +267,8 @@ export function MarketplaceNavbar() {
   const [mobileSearch, setMobileSearch] = useState('');
   const hasVehicles = useHasVehiclesFromStore();
   const activeRole = useRoleStore((s) => s.activeRole);
+  const authChecked = useRoleStore((s) => s.authChecked);
+  const sessionValid = useRoleStore((s) => s.sessionValid);
   const isAdmin = activeRole === 'ADMIN' || activeRole === 'SUPPORT';
   const pathname = usePathname();
   const router = useRouter();
@@ -291,46 +287,6 @@ export function MarketplaceNavbar() {
   };
 
   useEffect(() => {
-    let active = true;
-
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!active) return;
-      let isLoggedIn = Boolean(data.session?.access_token);
-
-      // Phone-native login has no Supabase session — check NestJS cookie as fallback
-      if (!isLoggedIn) {
-        const nestActive = Boolean(useRoleStore.getState().activeRole);
-        if (nestActive) {
-          if (_cachedNestAuthResult !== null) {
-            isLoggedIn = _cachedNestAuthResult;
-            if (!_cachedNestAuthResult) useRoleStore.getState().clearRole();
-          } else {
-            try {
-              const res = await fetch('/api/nest/auth/me', { credentials: 'include' });
-              _cachedNestAuthResult = res.ok;
-              isLoggedIn = res.ok;
-              if (!res.ok) useRoleStore.getState().clearRole();
-            } catch {
-              _cachedNestAuthResult = false;
-              isLoggedIn = false;
-            }
-          }
-        }
-      }
-
-      if (!active) return;
-      setLoggedIn(isLoggedIn);
-      setHydrated(true);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      const isLoggedIn = Boolean(session?.access_token);
-      // Only update from Supabase events; phone-login state is set above
-      if (session !== null || !useRoleStore.getState().activeRole) {
-        setLoggedIn(isLoggedIn);
-      }
-    });
-
     const onScroll = () => {
       setScrolled(window.scrollY > 8);
       setMobileSearchVisible(window.scrollY > 350);
@@ -338,11 +294,14 @@ export function MarketplaceNavbar() {
     window.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
-      active = false;
-      subscription.unsubscribe();
       window.removeEventListener('scroll', onScroll);
     };
   }, []);
+
+  useEffect(() => {
+    setLoggedIn(sessionValid && Boolean(activeRole));
+    setHydrated(authChecked);
+  }, [activeRole, authChecked, sessionValid]);
 
 
   // Hide navbar on dashboard pages (owner/admin have their own nav)
