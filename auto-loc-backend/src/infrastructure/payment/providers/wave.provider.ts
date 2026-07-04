@@ -217,10 +217,11 @@ export class WaveProvider implements PaymentProviderInterface {
         const timestamp = tMatch[1];
         const receivedHash = v1Match[1];
 
-        // Calculer le hash attendu : timestamp + rawBody
+        // Calculer le hash attendu : timestamp + "." + rawBody
         const expected = crypto
             .createHmac('sha256', this.webhookSecret)
             .update(timestamp)
+            .update('.')
             .update(rawBody)
             .digest('hex');
 
