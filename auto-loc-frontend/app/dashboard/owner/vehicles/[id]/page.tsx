@@ -13,6 +13,8 @@ import { ShareVehicleButton } from '@/features/vehicles/owner/ShareVehicleButton
 import { VehicleRevenueChart } from '@/features/vehicles/owner/VehicleRevenueChart';
 import { DocumentViewButton } from '@/features/vehicles/owner/DocumentViewButton';
 import { ReservationStatusBadge } from '@/features/reservations/components/reservation-status';
+import { VehiclePhotoGallery } from '@/features/vehicles/owner/VehiclePhotoGallery';
+import { cn } from '@/lib/utils';
 import {
   ArrowLeft, Car, Fuel, Settings2, Users, Star,
   Calendar, MapPin, Hash, Shield, TrendingUp,
@@ -77,20 +79,31 @@ function KpiCard({
   icon: React.ElementType; accent?: boolean;
 }) {
   return (
-    <div className={`rounded-2xl border p-5 flex flex-col gap-3 ${accent
-        ? 'bg-emerald-50 border-emerald-100'
-        : 'bg-white border-slate-100'
-      }`}>
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${accent ? 'bg-emerald-100' : 'bg-slate-100'
-        }`}>
-        <Icon className={`w-4.5 h-4.5 ${accent ? 'text-emerald-600' : 'text-slate-400'}`} strokeWidth={1.75} />
+    <div className={cn(
+      "rounded-2xl border p-4 sm:p-5 flex flex-col gap-3 shadow-sm transition-all hover:shadow-md",
+      accent
+        ? "bg-gradient-to-br from-emerald-50 to-emerald-50/50 border-emerald-200 hover:border-emerald-300"
+        : "bg-white border-slate-200 hover:border-slate-300"
+    )}>
+      <div className={cn(
+        "w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-sm",
+        accent
+          ? "bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-emerald-500/20"
+          : "bg-gradient-to-br from-slate-800 to-slate-900 shadow-slate-900/20"
+      )}>
+        <Icon className={cn(
+          "w-5 h-5 sm:w-5.5 sm:h-5.5",
+          accent ? "text-white" : "text-emerald-400"
+        )} strokeWidth={2} />
       </div>
-      <div>
-        <p className={`text-[26px] font-black tabular-nums tracking-tight leading-none ${accent ? 'text-emerald-700' : 'text-slate-900'
-          }`}>{value}</p>
-        {sub && <p className="text-[11px] text-slate-400 font-medium mt-0.5">{sub}</p>}
+      <div className="flex-1">
+        <p className={cn(
+          "text-[28px] sm:text-[32px] font-black tabular-nums tracking-tight leading-none",
+          accent ? "text-emerald-700" : "text-slate-900"
+        )}>{value}</p>
+        {sub && <p className="text-[12px] text-slate-500 font-semibold mt-1.5">{sub}</p>}
       </div>
-      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</p>
+      <p className="text-[10px] sm:text-[9px] font-black uppercase tracking-[0.16em] text-slate-400 leading-tight">{label}</p>
     </div>
   );
 }
@@ -103,17 +116,20 @@ function SectionCard({
   action?: React.ReactNode; children: React.ReactNode; className?: string;
 }) {
   return (
-    <div className={`rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm shadow-slate-100/50 ${className ?? ''}`}>
-      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-            <Icon className="w-3.5 h-3.5 text-emerald-600" strokeWidth={1.75} />
+    <div className={cn(
+      "rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-md shadow-slate-100/60",
+      className
+    )}>
+      <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center shadow-md shadow-slate-900/20">
+            <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-400" strokeWidth={2} />
           </div>
-          <h3 className="text-[13px] font-black text-slate-800 tracking-tight">{title}</h3>
+          <h3 className="text-[14px] sm:text-[15px] font-black text-slate-900 tracking-tight">{title}</h3>
         </div>
         {action}
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </div>
   );
 }
@@ -126,13 +142,16 @@ function ConditionItem({
   label: string; sub: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3">
-      <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 border ${iconBg}`}>
-        <Icon className={`w-4 h-4 ${iconColor}`} strokeWidth={1.75} />
+    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 shadow-sm hover:shadow-md hover:border-slate-300 transition-all">
+      <div className={cn(
+        "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border shadow-sm",
+        iconBg
+      )}>
+        <Icon className={cn("w-4.5 h-4.5", iconColor)} strokeWidth={2} />
       </div>
-      <div>
-        <p className="text-[12.5px] font-bold text-slate-800">{label}</p>
-        <p className="text-[11px] text-slate-400 mt-0.5">{sub}</p>
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-black text-slate-900 truncate">{label}</p>
+        <p className="text-[12px] text-slate-500 font-medium mt-0.5">{sub}</p>
       </div>
     </div>
   );
@@ -169,7 +188,11 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
   try {
     const res = await fetchVehicleReservations(token, params.id);
     reservations = res.data ?? [];
-  } catch { /* non-blocking */ }
+    console.log(`[Vehicle ${params.id}] Fetched ${reservations.length} reservations`);
+  } catch (err) {
+    console.error(`[Vehicle ${params.id}] Failed to fetch reservations:`, err);
+    reservations = [];
+  }
 
   /* ── Derived ── */
   const photos = vehicle.photos ?? [];
@@ -180,7 +203,12 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
   const hasConditions = vehicle.reglesSpecifiques || vehicle.zoneConduite ||
     vehicle.assurance || vehicle.carburantCondition || (vehicle.joursMinimum > 1) || (vehicle.ageMinimum > 18);
 
-  // Revenus générés (reservations TERMINEE uniquement)
+  // Locations actives et terminées (exclure ANNULEE, INITIEE, EN_ATTENTE_PAIEMENT)
+  const locationsValides = reservations.filter((r: any) =>
+    ['PAYEE', 'CONFIRMEE', 'EN_COURS', 'TERMINEE'].includes(r.statut)
+  );
+
+  // Revenus générés (uniquement locations terminées)
   const revenusGeneres = reservations
     .filter((r: any) => r.statut === 'TERMINEE')
     .reduce((sum: number, r: any) => sum + Number(r.montantProprietaire ?? 0), 0);
@@ -231,34 +259,14 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
         <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm shadow-slate-100/80">
           <div className="lg:grid lg:grid-cols-[480px_1fr]">
 
-            {/* Photo panel */}
-            <div className="relative h-[260px] lg:h-full bg-slate-100 overflow-hidden">
-              {heroPhoto ? (
-                <Image
-                  src={heroPhoto.url}
-                  alt={`${vehicle.marque} ${vehicle.modele}`}
-                  fill priority
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                  <Car className="w-12 h-12 text-slate-300" strokeWidth={1} />
-                  <p className="text-[11px] text-slate-400 font-medium">Aucune photo</p>
-                </div>
-              )}
-              {photos.length > 0 && (
-                <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-xl bg-black/60 backdrop-blur-sm px-2.5 py-1.5 text-[11px] font-bold text-white">
-                  <ImageIcon className="w-3 h-3" strokeWidth={2} />
-                  {photos.length} photo{photos.length > 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
+            {/* Photo panel - Galerie swipeable */}
+            <VehiclePhotoGallery photos={photos} marque={vehicle.marque} modele={vehicle.modele} />
 
             {/* Info panel */}
             <div className="flex flex-col justify-between gap-5 p-6 lg:p-8">
 
               {/* Name + status */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h1 className="text-[28px] font-black tracking-tight text-slate-900 leading-none">
@@ -272,73 +280,92 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
                   <VehicleStatusBadge statut={vehicle.statut} />
                 </div>
 
-                {/* Specs */}
-                <div className="flex flex-wrap gap-2">
-                  <SpecPill icon={MapPin} label={vehicle.ville} />
-                  {vehicle.adresse && vehicle.adresse !== vehicle.ville && (
-                    <SpecPill icon={MapPinned} label={vehicle.adresse} />
-                  )}
-                  {vehicle.carburant && (
-                    <SpecPill icon={Fuel} label={FUEL_LABEL[vehicle.carburant] ?? vehicle.carburant} />
-                  )}
-                  {vehicle.transmission && (
-                    <SpecPill icon={Settings2} label={TRANS_LABEL[vehicle.transmission] ?? vehicle.transmission} />
-                  )}
-                  {vehicle.nombrePlaces && (
-                    <SpecPill icon={Users} label={`${vehicle.nombrePlaces} places`} />
-                  )}
-                  {vehicle.immatriculation && (
-                    <SpecPill icon={Hash} label={vehicle.immatriculation} />
-                  )}
-                  <SpecPill icon={Clock} label={`Ajouté le ${new Date(vehicle.creeLe).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`} />
+                {/* Specs réorganisées */}
+                <div className="space-y-3">
+                  {/* Localisation */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" strokeWidth={1.75} />
+                      <span className="text-[13px] font-bold text-slate-800">{vehicle.ville}</span>
+                    </div>
+                    {vehicle.adresse && vehicle.adresse !== vehicle.ville && (
+                      <div className="flex items-center gap-2 ml-6">
+                        <MapPinned className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" strokeWidth={1.75} />
+                        <span className="text-[12px] font-medium text-slate-500">{vehicle.adresse}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Caractéristiques principales */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {vehicle.carburant && (
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 border border-slate-100">
+                        <Fuel className="w-4 h-4 text-slate-400 flex-shrink-0" strokeWidth={1.75} />
+                        <span className="text-[12.5px] font-semibold text-slate-700">{FUEL_LABEL[vehicle.carburant] ?? vehicle.carburant}</span>
+                      </div>
+                    )}
+                    {vehicle.transmission && (
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 border border-slate-100">
+                        <Settings2 className="w-4 h-4 text-slate-400 flex-shrink-0" strokeWidth={1.75} />
+                        <span className="text-[12.5px] font-semibold text-slate-700">{TRANS_LABEL[vehicle.transmission] ?? vehicle.transmission}</span>
+                      </div>
+                    )}
+                    {vehicle.nombrePlaces && (
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 border border-slate-100">
+                        <Users className="w-4 h-4 text-slate-400 flex-shrink-0" strokeWidth={1.75} />
+                        <span className="text-[12.5px] font-semibold text-slate-700">{vehicle.nombrePlaces} places</span>
+                      </div>
+                    )}
+                    {vehicle.immatriculation && (
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 border border-slate-100">
+                        <Hash className="w-4 h-4 text-slate-400 flex-shrink-0" strokeWidth={1.75} />
+                        <span className="text-[12.5px] font-semibold text-slate-700">{vehicle.immatriculation}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Date d'ajout */}
+                  <div className="flex items-center gap-2 text-[11px] text-slate-400 font-medium pt-1">
+                    <Clock className="w-3.5 h-3.5" strokeWidth={1.75} />
+                    Ajouté le {new Date(vehicle.creeLe).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </div>
                 </div>
               </div>
 
               {/* Price block */}
-              <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400 mb-0.5">
+              <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-50/50 border-2 border-emerald-200 p-4 sm:p-5 flex items-center justify-between gap-4 shadow-sm">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700/60 mb-1">
                     Tarif de base
                   </p>
-                  <p className="text-[32px] font-black text-emerald-600 tabular-nums leading-none tracking-tight">
-                    {fmtMoney(vehicle.prixParJour)}
-                    <span className="text-[14px] font-semibold text-slate-400 ml-1.5">FCFA / jour</span>
-                  </p>
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <p className="text-[32px] sm:text-[36px] font-black text-emerald-600 tabular-nums leading-none tracking-tight">
+                      {fmtMoney(vehicle.prixParJour)}
+                    </p>
+                    <span className="text-[14px] sm:text-[15px] font-bold text-emerald-700/60">FCFA / jour</span>
+                  </div>
                 </div>
                 {(vehicle.tarifsProgressifs?.length > 0) && (
-                  <div className="text-right">
-                    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400 mb-1">
-                      {vehicle.tarifsProgressifs.length} palier{vehicle.tarifsProgressifs.length > 1 ? 's' : ''}
-                    </p>
-                    <p className="text-[11px] font-semibold text-emerald-600">Tarif dégressif actif</p>
+                  <div className="text-right flex-shrink-0">
+                    <div className="inline-flex flex-col items-end gap-1 px-3 py-2 rounded-xl bg-emerald-100/50 border border-emerald-300/50">
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">
+                        {vehicle.tarifsProgressifs.length} palier{vehicle.tarifsProgressifs.length > 1 ? 's' : ''}
+                      </p>
+                      <p className="text-[11px] font-bold text-emerald-600">Dégressif actif</p>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
           </div>
-
-          {/* Thumbnail strip */}
-          {otherPhotos.length > 0 && (
-            <div className="border-t border-slate-100 px-4 py-3 flex gap-2 overflow-x-auto bg-slate-50/50">
-              {otherPhotos.map((photo: any) => (
-                <div key={photo.id} className="relative w-20 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100 border border-slate-100">
-                  <Image src={photo.url} alt="Photo véhicule" fill className="object-cover" />
-                </div>
-              ))}
-              {photos.length > 5 && (
-                <div className="w-20 h-14 rounded-xl bg-slate-100 border border-slate-100 flex items-center justify-center flex-shrink-0">
-                  <span className="text-[11px] font-bold text-slate-400">+{photos.length - 5}</span>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* ── KPI row ─────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <KpiCard
             label="Locations totales"
-            value={vehicle.totalLocations ?? 0}
+            value={locationsValides.length}
+            sub={locationsValides.length > 0 ? `${reservations.filter(r => r.statut === 'TERMINEE').length} terminée${reservations.filter(r => r.statut === 'TERMINEE').length > 1 ? 's' : ''}` : undefined}
             icon={TrendingUp}
             accent
           />
@@ -435,15 +462,17 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
         {/* ── Équipements ─────────────────────────────────────── */}
         {equipements.length > 0 && (
           <SectionCard title="Équipements inclus" icon={Package}>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
               {equipements.map((eq) => (
-                <span
+                <div
                   key={eq}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-100 text-[12px] font-semibold text-emerald-700"
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 hover:border-emerald-200 transition-colors"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
-                  {eq}
-                </span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" strokeWidth={2} />
+                  <span className="text-[12.5px] font-semibold text-emerald-700 truncate">
+                    {eq}
+                  </span>
+                </div>
               ))}
             </div>
           </SectionCard>

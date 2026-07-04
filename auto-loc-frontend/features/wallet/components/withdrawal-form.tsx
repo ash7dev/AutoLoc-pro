@@ -82,27 +82,27 @@ export function WithdrawalForm({ soldeDisponible, soldeWave, soldeOrangeMoney }:
 
     if (status === 'success') {
         return (
-            <div id="withdraw" className="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
-                <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-slate-100 bg-slate-50/40">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-emerald-50 text-emerald-600">
-                        <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.75} />
+            <div id="withdraw" className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+                <div className="flex items-center gap-3 px-5 sm:px-6 py-4 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-50 ring-1 ring-emerald-100">
+                        <ArrowUpRight className="w-4 h-4 text-emerald-600" strokeWidth={2} />
                     </div>
-                    <h3 className="text-[10.5px] font-black uppercase tracking-[0.14em] text-slate-400">Retrait</h3>
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">Retrait</h3>
                 </div>
-                <div className="px-5 py-8 flex flex-col items-center text-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-                        <CheckCircle2 className="w-6 h-6 text-emerald-500" strokeWidth={2} />
+                <div className="px-6 py-10 sm:py-8 flex flex-col items-center text-center gap-4">
+                    <div className="w-14 h-14 sm:w-12 sm:h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shadow-sm">
+                        <CheckCircle2 className="w-7 h-7 sm:w-6 sm:h-6 text-emerald-500" strokeWidth={2} />
                     </div>
                     <div>
-                        <p className="text-[14px] font-black text-slate-900">Demande envoyée</p>
-                        <p className="text-[12px] text-slate-400 mt-1 max-w-[260px] mx-auto">
+                        <p className="text-[16px] sm:text-[15px] font-black text-slate-900 tracking-tight">Demande envoyée</p>
+                        <p className="text-[13px] sm:text-[12px] text-slate-500 font-medium mt-2 max-w-[280px] sm:max-w-[260px] mx-auto leading-relaxed">
                             Votre retrait est en cours de traitement. Les fonds seront versés sous 24–48 h.
                         </p>
                     </div>
                     <button
                         type="button"
                         onClick={() => setStatus('idle')}
-                        className="mt-2 text-[12px] font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+                        className="mt-2 text-[13px] sm:text-[12px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors px-4 py-2 rounded-lg hover:bg-emerald-50"
                     >
                         Faire un autre retrait
                     </button>
@@ -112,31 +112,31 @@ export function WithdrawalForm({ soldeDisponible, soldeWave, soldeOrangeMoney }:
     }
 
     return (
-        <div id="withdraw" className="rounded-2xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-slate-100 bg-slate-50/40">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-emerald-50 text-emerald-600">
-                    <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.75} />
+        <div id="withdraw" className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-3 px-5 sm:px-6 py-4 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-50 ring-1 ring-emerald-100">
+                    <ArrowUpRight className="w-4 h-4 text-emerald-600" strokeWidth={2} />
                 </div>
-                <h3 className="text-[10.5px] font-black uppercase tracking-[0.14em] text-slate-400">Retrait</h3>
+                <h3 className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">Retrait</h3>
             </div>
 
-            <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
+            <form onSubmit={handleSubmit} className="px-5 sm:px-6 py-5 sm:py-4 space-y-5 sm:space-y-4">
                 {/* Solde disponible */}
-                <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-50 border border-emerald-100">
-                    <span className="text-[11.5px] font-semibold text-emerald-700">
+                <div className="flex items-center justify-between px-4 py-3 sm:px-3.5 sm:py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 shadow-sm">
+                    <span className="text-[12px] sm:text-[11.5px] font-bold text-emerald-700">
                         {methode === 'WAVE' ? 'Solde Wave disponible' : methode === 'ORANGE_MONEY' ? 'Solde Orange Money disponible' : 'Solde disponible'}
                     </span>
-                    <span className="text-[14px] font-black text-emerald-700 tabular-nums">
+                    <span className="text-[16px] sm:text-[14px] font-black text-emerald-700 tabular-nums tracking-tight">
                         {soldeMethode.toLocaleString('fr-FR')} FCFA
                     </span>
                 </div>
 
                 {/* Méthode */}
                 <div>
-                    <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2">
+                    <p className="text-[11px] sm:text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2.5 sm:mb-2">
                         Méthode de réception
                     </p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-2">
                         {METHODS.map((m) => {
                             const active = methode === m.value;
                             return (
@@ -145,20 +145,20 @@ export function WithdrawalForm({ soldeDisponible, soldeWave, soldeOrangeMoney }:
                                     type="button"
                                     onClick={() => { setMethode(m.value); setStatus('idle'); }}
                                     className={cn(
-                                        'flex items-center gap-2.5 px-3.5 py-3 rounded-xl border text-left transition-all',
-                                        active ? `${m.activeBorder} ${m.activeBg}` : `${m.border} ${m.bg} hover:border-slate-300`,
+                                        'flex items-center gap-3 sm:gap-2.5 px-4 py-3.5 sm:px-3.5 sm:py-3 rounded-xl border text-left transition-all shadow-sm',
+                                        active ? `${m.activeBorder} ${m.activeBg} ring-1 ${m.activeBorder}` : `${m.border} ${m.bg} hover:border-slate-300`,
                                     )}
                                 >
-                                    <div className="w-6 h-6 rounded-md overflow-hidden flex-shrink-0 relative">
+                                    <div className="w-7 h-7 sm:w-6 sm:h-6 rounded-lg overflow-hidden flex-shrink-0 relative">
                                         <Image
                                             src={m.logo}
                                             alt={m.label}
-                                            width={24}
-                                            height={24}
+                                            width={28}
+                                            height={28}
                                             className="object-contain"
                                         />
                                     </div>
-                                    <span className={cn('text-[13px] font-bold', active ? m.color : 'text-slate-600')}>
+                                    <span className={cn('text-[14px] sm:text-[13px] font-bold', active ? m.color : 'text-slate-600')}>
                                         {m.label}
                                     </span>
                                 </button>
@@ -169,7 +169,7 @@ export function WithdrawalForm({ soldeDisponible, soldeWave, soldeOrangeMoney }:
 
                 {/* Numéro */}
                 <div>
-                    <label className="block text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2">
+                    <label className="block text-[11px] sm:text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2.5 sm:mb-2">
                         {methode === 'WAVE' ? 'Numéro Wave' : methode === 'ORANGE_MONEY' ? 'Numéro Orange Money' : 'Numéro de réception'}
                     </label>
                     <input
@@ -178,31 +178,34 @@ export function WithdrawalForm({ soldeDisponible, soldeWave, soldeOrangeMoney }:
                         value={numero}
                         onChange={(e) => { setNumero(e.target.value); setStatus('idle'); }}
                         placeholder="ex : 77 000 00 00"
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[14px] font-bold text-slate-900 placeholder-slate-300 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all"
+                        className="w-full h-12 sm:h-11 rounded-xl border border-slate-200 bg-white px-4 py-3 text-[16px] font-bold text-slate-900 placeholder-slate-400 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-sm"
                     />
                     {numero && !numeroValid && (
-                        <p className="mt-1.5 text-[11px] font-medium text-red-500">Numéro invalide (9 à 12 chiffres)</p>
+                        <p className="mt-2 text-[12px] sm:text-[11px] font-bold text-red-600 flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                            <span className="w-4 h-4 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] font-black flex-shrink-0">!</span>
+                            Numéro invalide (9 à 12 chiffres)
+                        </p>
                     )}
                 </div>
 
                 {/* Montant */}
                 <div>
-                    <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2">Sélection rapide</p>
-                    <div className="grid grid-cols-4 gap-2 mb-3">
+                    <p className="text-[11px] sm:text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2.5 sm:mb-2">Sélection rapide</p>
+                    <div className="grid grid-cols-4 gap-2.5 sm:gap-2 mb-4 sm:mb-3">
                         {QUICK_PERCENTS.map((pct) => (
                             <button
                                 key={pct}
                                 type="button"
                                 onClick={() => applyPercent(pct)}
                                 disabled={soldeMethode === 0}
-                                className="py-2 rounded-xl border border-slate-200 bg-slate-50 text-[12px] font-bold text-slate-600 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                className="py-2.5 sm:py-2 rounded-xl border border-slate-200 bg-white text-[13px] sm:text-[12px] font-bold text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                             >
                                 {pct === 100 ? 'Tout' : `${pct}%`}
                             </button>
                         ))}
                     </div>
 
-                    <label className="block text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2">
+                    <label className="block text-[11px] sm:text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2.5 sm:mb-2">
                         Montant (FCFA)
                     </label>
                     <div className="relative">
@@ -214,22 +217,26 @@ export function WithdrawalForm({ soldeDisponible, soldeWave, soldeOrangeMoney }:
                             value={montant}
                             onChange={(e) => { setMontant(e.target.value); setStatus('idle'); setErrorMsg(''); }}
                             placeholder="ex : 25 000"
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[14px] font-bold text-slate-900 placeholder-slate-300 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all"
+                            className="w-full h-12 sm:h-11 rounded-xl border border-slate-200 bg-white px-4 py-3 text-[16px] font-bold text-slate-900 placeholder-slate-400 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-sm"
                         />
-                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 pointer-events-none">
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] sm:text-[11px] font-bold text-slate-400 pointer-events-none">
                             FCFA
                         </span>
                     </div>
                     {montant && amount < 500 && (
-                        <p className="mt-1.5 text-[11px] font-medium text-red-500">Montant minimum : 500 FCFA</p>
+                        <p className="mt-2 text-[12px] sm:text-[11px] font-bold text-red-600 flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                            <span className="w-4 h-4 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] font-black flex-shrink-0">!</span>
+                            Montant minimum : 500 FCFA
+                        </p>
                     )}
                     {montant && amount > soldeMethode && soldeMethode > 0 && (
-                        <p className="mt-1.5 text-[11px] font-medium text-red-500">
+                        <p className="mt-2 text-[12px] sm:text-[11px] font-bold text-red-600 flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                            <span className="w-4 h-4 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] font-black flex-shrink-0">!</span>
                             Montant supérieur au solde {methode === 'WAVE' ? 'Wave' : methode === 'ORANGE_MONEY' ? 'Orange Money' : ''} disponible
                         </p>
                     )}
                     {soldeMethode === 0 && methode && (
-                        <p className="mt-1.5 text-[11px] font-medium text-slate-400">
+                        <p className="mt-2 text-[12px] sm:text-[11px] font-medium text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
                             Aucun solde {methode === 'WAVE' ? 'Wave' : 'Orange Money'} disponible pour le moment
                         </p>
                     )}
@@ -237,9 +244,9 @@ export function WithdrawalForm({ soldeDisponible, soldeWave, soldeOrangeMoney }:
 
                 {/* Error */}
                 {status === 'error' && errorMsg && (
-                    <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-red-50 border border-red-100">
-                        <AlertCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" strokeWidth={2} />
-                        <p className="text-[12px] font-medium text-red-600">{errorMsg}</p>
+                    <div className="flex items-center gap-2.5 px-4 py-3 sm:px-3.5 sm:py-2.5 rounded-xl bg-red-50 border border-red-200 shadow-sm">
+                        <AlertCircle className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-red-500 flex-shrink-0" strokeWidth={2} />
+                        <p className="text-[13px] sm:text-[12px] font-bold text-red-600">{errorMsg}</p>
                     </div>
                 )}
 
@@ -247,16 +254,16 @@ export function WithdrawalForm({ soldeDisponible, soldeWave, soldeOrangeMoney }:
                 <button
                     type="submit"
                     disabled={!isValid || status === 'loading'}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-[13px] font-bold text-white shadow-sm shadow-emerald-500/20 hover:bg-emerald-600 hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
+                    className="w-full inline-flex items-center justify-center gap-2 h-12 sm:h-11 rounded-xl bg-slate-900 px-5 py-3 text-[14px] sm:text-[13px] font-black text-emerald-400 shadow-md shadow-slate-900/20 hover:bg-slate-800 hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0"
                 >
                     {status === 'loading' ? (
                         <>
-                            <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2.5} />
+                            <Loader2 className="w-4.5 h-4.5 sm:w-4 sm:h-4 animate-spin" strokeWidth={2.5} />
                             Traitement…
                         </>
                     ) : (
                         <>
-                            <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
+                            <ArrowUpRight className="w-4.5 h-4.5 sm:w-4 sm:h-4" strokeWidth={2.5} />
                             Demander le retrait
                         </>
                     )}

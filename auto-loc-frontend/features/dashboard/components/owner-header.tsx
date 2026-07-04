@@ -253,14 +253,30 @@ export function OwnerHeader({
 
           {/* CTA */}
           {ctaHref ? (
-            <Link
-              href={ctaHref}
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-sm px-3 sm:px-4 h-9 transition-all shadow-[0_0_20px_rgba(52,211,153,0.25)] hover:shadow-[0_0_28px_rgba(52,211,153,0.4)]"
-            >
-              {ctaVariant === 'withdraw' ? <ArrowUpRight className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-              <span className="hidden sm:inline">{ctaLabel ?? "Ajouter un véhicule"}</span>
-              <span className="sm:hidden">{ctaShortLabel ?? ctaLabel ?? "Ajouter"}</span>
-            </Link>
+            ctaHref.startsWith('#') ? (
+              <button
+                onClick={() => {
+                  const target = document.querySelector(ctaHref);
+                  if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-sm px-3 sm:px-4 h-9 transition-all shadow-[0_0_20px_rgba(52,211,153,0.25)] hover:shadow-[0_0_28px_rgba(52,211,153,0.4)]"
+              >
+                {ctaVariant === 'withdraw' ? <ArrowUpRight className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                <span className="hidden sm:inline">{ctaLabel ?? "Ajouter un véhicule"}</span>
+                <span className="sm:hidden">{ctaShortLabel ?? ctaLabel ?? "Ajouter"}</span>
+              </button>
+            ) : (
+              <Link
+                href={ctaHref}
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-sm px-3 sm:px-4 h-9 transition-all shadow-[0_0_20px_rgba(52,211,153,0.25)] hover:shadow-[0_0_28px_rgba(52,211,153,0.4)]"
+              >
+                {ctaVariant === 'withdraw' ? <ArrowUpRight className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                <span className="hidden sm:inline">{ctaLabel ?? "Ajouter un véhicule"}</span>
+                <span className="sm:hidden">{ctaShortLabel ?? ctaLabel ?? "Ajouter"}</span>
+              </Link>
+            )
           ) : (
             <Button
               onClick={() => router.push("/dashboard/owner/vehicles/new")}

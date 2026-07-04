@@ -38,7 +38,7 @@ function TodoItem({ item }: { item: OwnerTodoItem }) {
 
   const inner = (
     <div className={cn(
-      "group relative flex items-center gap-4 px-4 py-3.5 transition-all duration-150",
+      "group relative flex items-center gap-4 px-5 py-4 transition-all duration-150",
       isUrgent
         ? "bg-red-950/30 hover:bg-red-950/50"
         : "hover:bg-white/5",
@@ -168,13 +168,13 @@ export function OwnerTodoCard({
   const hasMore = visible < sorted.length;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-black shadow-xl flex flex-col h-full">
+    <div className="lg:hidden relative overflow-hidden rounded-2xl bg-black shadow-xl flex flex-col h-full min-h-[380px]">
 
       {/* Top highlight */}
       <div className="absolute top-0 left-6 right-6 h-px bg-white/10" />
 
       {/* ── Header ─────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-4">
+      <div className="flex items-center justify-between px-6 pt-6 pb-5">
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-bold tracking-tight text-white">
             {title}
@@ -209,20 +209,20 @@ export function OwnerTodoCard({
       {/* ── Stats strip ────────────────────────────────────── */}
       {!loading && items.length > 0 && (
         <>
-          <div className="mx-5 h-px bg-white/10" />
+          <div className="mx-6 h-px bg-white/10" />
           <div className="grid grid-cols-2 divide-x divide-white/10 mx-0 mt-0">
-            <div className="px-5 py-3">
-              <p className="text-[9.5px] font-black uppercase tracking-[0.2em] text-white/20 mb-1">Urgents</p>
+            <div className="px-6 py-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-1.5">Urgents</p>
               <p className={cn(
-                "text-[22px] font-black leading-none tracking-tight",
+                "text-[26px] font-black leading-none tracking-tight",
                 urgentItems.length > 0 ? "text-red-400" : "text-white/20",
               )}>
                 {urgentItems.length}
               </p>
             </div>
-            <div className="px-5 py-3">
-              <p className="text-[9.5px] font-black uppercase tracking-[0.2em] text-white/20 mb-1">À traiter</p>
-              <p className="text-[22px] font-black leading-none tracking-tight text-white/70">
+            <div className="px-6 py-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-1.5">À traiter</p>
+              <p className="text-[26px] font-black leading-none tracking-tight text-white/70">
                 {normalItems.length}
               </p>
             </div>
@@ -231,10 +231,10 @@ export function OwnerTodoCard({
       )}
 
       {/* ── Separator ──────────────────────────────────────── */}
-      <div className="mx-5 h-px bg-white/10" />
+      <div className="mx-6 h-px bg-white/10" />
 
       {/* ── Body ───────────────────────────────────────────── */}
-      <div className="flex flex-col py-2 flex-1">
+      <div className="flex flex-col py-3 flex-1">
 
         {/* Loading */}
         {loading && Array.from({ length: 3 }).map((_, i) => <TodoSkeleton key={i} />)}
@@ -282,8 +282,8 @@ export function OwnerTodoCard({
       {/* ── Footer ─────────────────────────────────────────── */}
       {hasMore && (
         <>
-          <div className="mx-5 h-px bg-white/10" />
-          <div className="px-4 py-3">
+          <div className="mx-6 h-px bg-white/10" />
+          <div className="px-5 py-4">
             <button
               type="button"
               onClick={() => setVisible(v => v + PAGE_SIZE)}

@@ -60,12 +60,12 @@ function ReservationRow({ r }: { r: ReservationItem }) {
 
   const inner = (
     <div className={cn(
-      "group flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 sm:py-4 transition-all duration-200",
+      "group flex items-center gap-4 px-5 sm:px-5 py-4 sm:py-4 transition-all duration-200",
       r.href && "hover:bg-slate-50/60 cursor-pointer",
     )}>
 
       {/* Vehicle Photo or Icon */}
-      <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-slate-50 ring-1 ring-slate-900/5 shrink-0 group-hover:ring-emerald-500/20 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+      <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-slate-50 ring-1 ring-slate-900/5 shrink-0 group-hover:ring-emerald-500/20 transition-all shadow-sm">
         {r.vehiclePhoto ? (
           <img
             src={r.vehiclePhoto}
@@ -81,8 +81,8 @@ function ReservationRow({ r }: { r: ReservationItem }) {
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
-          <p className="text-[13px] sm:text-[14px] font-bold text-slate-800 truncate tracking-tight">{r.vehicle}</p>
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-[14px] sm:text-[14px] font-bold text-slate-800 truncate tracking-tight">{r.vehicle}</p>
           {r.duration && (
             <span className="hidden sm:inline-block text-[10px] font-bold px-1.5 py-0.5 bg-slate-50 border border-slate-100 text-slate-500 rounded-md uppercase tracking-widest">
               {r.duration}
@@ -90,19 +90,19 @@ function ReservationRow({ r }: { r: ReservationItem }) {
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-2">
           {r.tenantName && (
-            <span className="text-[11px] sm:text-[12px] font-medium text-slate-500 truncate max-w-[80px] sm:max-w-[120px]">
+            <span className="text-[12px] sm:text-[12px] font-medium text-slate-500 truncate max-w-[100px] sm:max-w-[120px]">
               {r.tenantName}
             </span>
           )}
           {r.tenantPhone && r.status === "EN_COURS" && (
-            <span className="hidden xs:inline-block text-[10px] sm:text-[11px] font-bold text-slate-600 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 tabular-nums">
+            <span className="hidden xs:inline-block text-[11px] font-bold text-slate-600 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 tabular-nums">
               {r.tenantPhone}
             </span>
           )}
           <span className="hidden sm:block text-slate-200 text-[10px]">|</span>
-          <span className="text-[11px] sm:text-[12px] font-bold text-emerald-600 tabular-nums">
+          <span className="text-[12px] sm:text-[12px] font-bold text-emerald-600 tabular-nums">
             {r.amount}
           </span>
         </div>
@@ -196,9 +196,9 @@ export function RecentReservations({
 
   return (
     <div className={cn(
-      "relative overflow-hidden rounded-2xl flex flex-col",
+      "relative overflow-hidden rounded-2xl flex flex-col min-h-[420px] lg:min-h-0",
       "bg-white",
-      "ring-1 ring-slate-900/5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]",
+      "ring-1 ring-slate-900/5 shadow-md",
       className,
     )}>
 
@@ -206,19 +206,19 @@ export function RecentReservations({
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
 
       {/* Ambient glow */}
-      <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-emerald-500 opacity-[0.04] pointer-events-none blur-3xl" />
+      <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-emerald-500 opacity-[0.06] pointer-events-none blur-3xl" />
 
       {/* ── Header ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex items-center justify-between px-5 py-4 border-b border-slate-100/80">
+      <div className="relative z-10 flex items-center justify-between px-6 py-5 border-b border-slate-100/80">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20 flex items-center justify-center">
-            <CalendarDays className="w-4 h-4 text-emerald-600" strokeWidth={2} />
+          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20 flex items-center justify-center">
+            <CalendarDays className="w-4.5 h-4.5 text-emerald-600" strokeWidth={2} />
           </div>
-          <h3 className="text-[15px] font-black tracking-tight text-slate-800">
+          <h3 className="text-[16px] font-black tracking-tight text-slate-800">
             {effectiveTitle}
           </h3>
           {!loading && reservations.length > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-lg bg-emerald-50 text-[10px] font-bold text-emerald-700 tabular-nums">
+            <span className="inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-lg bg-emerald-50 text-[10px] font-bold text-emerald-700 tabular-nums">
               {reservations.length}
             </span>
           )}
@@ -228,7 +228,7 @@ export function RecentReservations({
           className="inline-flex items-center gap-1 text-[12px] font-bold text-slate-400 hover:text-emerald-600 transition-colors"
         >
           Voir tout
-          <ArrowRight className="w-3 h-3" strokeWidth={2.5} />
+          <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.5} />
         </Link>
       </div>
 

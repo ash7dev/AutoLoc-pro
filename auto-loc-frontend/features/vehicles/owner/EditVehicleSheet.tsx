@@ -20,6 +20,8 @@ import {
   updatePhotoPositionAction,
   linkVehiclePhotoAction,
 } from "@/features/vehicles/actions/update-vehicle";
+import { revalidateVehiclePaths } from "@/lib/nestjs/revalidate";
+import { LogoLoader } from "@/components/ui/logo-loader";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -410,15 +412,35 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
 
       // 4. Exécution de toutes les tâches en parallèle
       const results = await Promise.all(operations);
-      
+
       // Le premier résultat est toujours l'objet véhicule mis à jour (ou l'original si pas de PATCH)
       const updatedVehicle = results[0] as Vehicle;
+
+      // 5. Revalidate les chemins du véhicule pour mettre à jour le cache
+      await revalidateVehiclePaths(vehicle.id).catch(err => {
+        console.warn('Failed to revalidate vehicle paths:', err);
+      });
 
       console.log('Vehicle and assets updated successfully');
       onSaved(updatedVehicle);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur est survenue lors de l'enregistrement.");
+      console.error('Failed to update vehicle:', err);
+
+      // Gestion détaillée des erreurs
+      if (err instanceof Error) {
+        setError(err.message);
+      } else if (typeof err === 'object' && err !== null && 'message' in err) {
+        setError(String(err.message));
+      } else {
+        setError("Une erreur inattendue s'est produite. Veuillez réessayer ou contacter le support.");
+      }
+
+      // Scroll vers le haut pour voir l'erreur
+      const scrollContainer = document.querySelector('[data-scroll-container]');
+      if (scrollContainer) {
+        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } finally {
       setLoading(false);
     }
@@ -430,22 +452,26 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-6 animate-in fade-in duration-200"
-      onClick={() => onOpenChange(false)}
-    >
+    <>
+      {/* LogoLoader pendant la soumission */}
+      {loading && <LogoLoader />}
+
       <div
-        className="flex max-h-[calc(100dvh-3rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[var(--bg-page)] shadow-[0_24px_64px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-6 animate-in fade-in duration-200"
+        onClick={() => onOpenChange(false)}
       >
+        <div
+          className="flex max-h-[calc(100dvh-3rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/10 animate-in zoom-in-95 duration-200"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 bg-foreground px-6 py-4 shrink-0">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-6 py-4 shrink-0">
           <div>
-            <p className="text-xs uppercase tracking-widest text-white/40">Auto Loc · Propriétaire</p>
-            <h2 className="font-black tracking-tight text-base text-white">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Modification · Véhicule</p>
+            <h2 className="font-black tracking-tight text-[17px] text-slate-900 mt-1">
               {vehicle ? `${vehicle.marque} ${vehicle.modele}` : "Modifier le véhicule"}
             </h2>
-            <p className="text-[11px] font-medium text-white/40">
+            <p className="text-[12px] font-medium text-slate-500 mt-1">
               {locked
                 ? "Ce véhicule est verrouillé — il a une réservation active."
                 : "Modifiez les informations, la tarification, les conditions et les photos."}
@@ -454,15 +480,18 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-emerald-300 hover:text-emerald-200 hover:bg-white/10 transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-400 hover:text-slate-900 hover:bg-slate-50 hover:border-slate-300 transition-all"
             aria-label="Fermer"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" strokeWidth={2.5} />
           </button>
         </div>
 
         {/* Scrollable form */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-6 pb-4 overscroll-contain">
+        <div
+          data-scroll-container
+          className="min-h-0 flex-1 overflow-y-auto px-6 pt-6 pb-4 overscroll-contain"
+        >
           {/* Lock banner */}
           {locked && (
             <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
@@ -474,6 +503,24 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                   Les modifications seront disponibles une fois la location terminée.
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* Global error message */}
+          {error && (
+            <div className="flex items-start gap-3 rounded-xl border-2 border-red-300 bg-red-50 px-4 py-3.5 shadow-sm">
+              <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" strokeWidth={2} />
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-bold text-red-900">Erreur lors de l'enregistrement</p>
+                <p className="text-[12px] text-red-700 mt-1 leading-relaxed">{error}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setError(null)}
+                className="flex-shrink-0 w-6 h-6 rounded-full hover:bg-red-100 flex items-center justify-center text-red-500 transition-colors"
+              >
+                <X className="w-4 h-4" strokeWidth={2} />
+              </button>
             </div>
           )}
 
@@ -1001,38 +1048,39 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 border-t border-[hsl(var(--border))] px-6 py-4 flex items-center justify-between gap-3 bg-[var(--bg-page)]">
+        <div className="shrink-0 border-t border-slate-100 px-6 py-4 flex items-center justify-between gap-3 bg-white">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            className="h-10"
+            className="h-11 border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold"
           >
             Annuler
           </Button>
 
           {locked ? (
-            <div className="flex items-center gap-2 text-xs text-amber-700 font-medium">
-              <Lock className="h-3.5 w-3.5" strokeWidth={1.5} />
-              Véhicule verrouillé
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200">
+              <Lock className="h-4 w-4 text-amber-600" strokeWidth={2} />
+              <span className="text-[13px] text-amber-700 font-bold">Véhicule verrouillé</span>
             </div>
           ) : (
             <Button
               type="submit"
               form="edit-vehicle-form"
               disabled={loading}
-              className="gap-2 bg-emerald-500 text-black font-semibold hover:bg-emerald-400 h-10 shadow-[0_0_20px_rgba(52,211,153,0.25)] hover:shadow-[0_0_28px_rgba(52,211,153,0.4)] transition-all"
+              className="gap-2 bg-slate-900 text-emerald-400 font-black hover:bg-emerald-500 hover:text-white h-11 px-6 shadow-md hover:shadow-lg transition-all"
             >
               {loading ? (
                 <><Loader2 className="h-4 w-4 animate-spin" />Enregistrement…</>
               ) : (
-                <><Save className="h-4 w-4" strokeWidth={1.5} />Enregistrer</>
+                <><Save className="h-4 w-4" strokeWidth={2} />Enregistrer les modifications</>
               )}
             </Button>
           )}
         </div>
       </div>
     </div>
+    </>
   );
 }

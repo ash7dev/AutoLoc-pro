@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
     ChevronLeft, ChevronRight, CalendarX2,
-    Trash2, Loader2, CalendarDays, AlertTriangle,
+    Trash2, Loader2, CalendarDays, AlertTriangle, Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -12,6 +12,7 @@ import {
     deleteIndisponibilite,
     type Indisponibilite,
 } from '@/lib/nestjs/vehicles';
+import { revalidateVehiclePaths } from '@/lib/nestjs/revalidate';
 
 /* ════════════════════════════════════════════════════════════════
    TYPES
@@ -160,6 +161,9 @@ export function AvailabilityCalendar({ vehicleId, reservations = [] }: Availabil
             }, getToken());
             setSelectStart(null); setSelectEnd(null); setMotif('');
             await loadIndispos();
+
+            // Revalidate le calendrier public du véhicule
+            await revalidateVehiclePaths(vehicleId).catch(() => {});
         } catch (e: any) {
             setError(e?.message ?? 'Erreur lors du blocage');
         } finally { setSaving(false); }
@@ -171,6 +175,9 @@ export function AvailabilityCalendar({ vehicleId, reservations = [] }: Availabil
         try {
             await deleteIndisponibilite(vehicleId, id, getToken());
             await loadIndispos();
+
+            // Revalidate le calendrier public du véhicule
+            await revalidateVehiclePaths(vehicleId).catch(() => {});
         } catch (e: any) {
             setError(e?.message ?? 'Erreur lors de la suppression');
         } finally { setSaving(false); }
@@ -178,6 +185,17 @@ export function AvailabilityCalendar({ vehicleId, reservations = [] }: Availabil
 
     return (
         <div className="space-y-4">
+
+            {/* ── Help banner ────────────────────────────────────── */}
+            <div className="rounded-xl bg-blue-50 border border-blue-200 p-3 flex items-start gap-2.5">
+                <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" strokeWidth={2} />
+                <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-semibold text-blue-900 leading-relaxed">
+                        <span className="font-black">Cliquez sur une date</span> pour commencer, puis sur une deuxième pour créer une période.
+                        Vous pouvez bloquer votre véhicule pour entretien, usage personnel, etc.
+                    </p>
+                </div>
+            </div>
 
             {/* ── Calendar panel ─────────────────────────────────── */}
             <div className="rounded-2xl bg-slate-950 border border-white/8 overflow-hidden">

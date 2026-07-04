@@ -29,15 +29,15 @@ export function MobileRevenueCard({
 
   return (
     <div className={cn(
-      "lg:hidden relative overflow-hidden rounded-2xl p-5",
-      "border border-l-[3px] border-white/70 border-l-emerald-500",
+      "lg:hidden relative overflow-hidden rounded-2xl p-6 min-h-[160px]",
+      "border border-l-[4px] border-white/70 border-l-emerald-500",
       "bg-white/70 backdrop-blur-xl",
-      "shadow-sm",
+      "shadow-md",
     )}>
       {/* Decorative orb */}
-      <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-teal-400 opacity-[0.05] pointer-events-none blur-2xl" />
+      <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-teal-400 opacity-[0.08] pointer-events-none blur-2xl" />
 
-      <div className="relative z-10 flex items-start justify-between gap-3 mb-4">
+      <div className="relative z-10 flex items-start justify-between gap-3 mb-5">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200 flex items-center justify-center shadow-sm">
             <Banknote className="w-4 h-4 text-emerald-600" strokeWidth={1.75} />

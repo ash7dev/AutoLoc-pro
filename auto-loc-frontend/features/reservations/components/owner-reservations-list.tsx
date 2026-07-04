@@ -221,6 +221,155 @@ function EmptyFiltered({ label }: { label: string }) {
     );
 }
 
+/* ── Filter Dropdown ─────────────────────────────────────────── */
+function FilterDropdown({
+    activeFilter,
+    setActiveFilter,
+    reservations,
+}: {
+    activeFilter: ReservationStatut | "ALL";
+    setActiveFilter: (filter: ReservationStatut | "ALL") => void;
+    reservations: Reservation[];
+}) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const activeFilterConfig = FILTERS.find(f => f.value === activeFilter);
+    const ActiveIcon = activeFilterConfig?.icon || Car;
+
+    const activeCount = activeFilter === "ALL"
+        ? reservations.length
+        : reservations.filter(r => r.statut === activeFilter).length;
+
+    return (
+        <div className="relative ml-auto w-auto">
+            {/* Trigger button */}
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className={cn(
+                    "min-w-[240px] flex items-center justify-between gap-3",
+                    "px-4 py-3 rounded-xl",
+                    "bg-white border border-slate-200",
+                    "hover:border-emerald-300 hover:shadow-sm hover:shadow-emerald-500/5",
+                    "transition-all duration-200",
+                    "touch-manipulation active:scale-[0.98]",
+                    isOpen && "border-emerald-400 shadow-md shadow-emerald-500/10",
+                )}
+            >
+                <div className="flex items-center gap-2.5">
+                    {activeFilterConfig?.dot ? (
+                        <span className={cn("w-2 h-2 rounded-full flex-shrink-0", activeFilterConfig.dot)} />
+                    ) : (
+                        <ActiveIcon className="w-4 h-4 text-slate-700 flex-shrink-0" strokeWidth={2} />
+                    )}
+                    <span className="text-[13px] font-bold text-slate-800">
+                        {activeFilterConfig?.label}
+                    </span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-black text-slate-400 bg-slate-100 px-2 py-1 rounded-lg tabular-nums">
+                        {activeCount}
+                    </span>
+                    <ChevronDown
+                        className={cn(
+                            "w-4 h-4 text-slate-400 transition-transform duration-200",
+                            isOpen && "rotate-180 text-emerald-500",
+                        )}
+                        strokeWidth={2}
+                    />
+                </div>
+            </button>
+
+            {/* Dropdown menu */}
+            {isOpen && (
+                <>
+                    {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setIsOpen(false)}
+                    />
+
+                    {/* Menu */}
+                    <div className={cn(
+                        "absolute top-full right-0 mt-2 z-50",
+                        "min-w-[280px]",
+                        "bg-white rounded-xl border border-slate-200",
+                        "shadow-2xl shadow-slate-900/10",
+                        "overflow-hidden",
+                        "animate-in fade-in slide-in-from-top-2 duration-200",
+                    )}>
+                        <div className="max-h-[400px] overflow-y-auto py-1.5">
+                            {FILTERS.map(filter => {
+                                const count = filter.value === "ALL"
+                                    ? reservations.length
+                                    : reservations.filter(r => r.statut === filter.value).length;
+
+                                // Masquer les filtres sans résultats (sauf "Toutes")
+                                if (filter.value !== "ALL" && count === 0) return null;
+
+                                const isActive = activeFilter === filter.value;
+                                const Icon = filter.icon || Car;
+
+                                return (
+                                    <button
+                                        key={filter.value}
+                                        type="button"
+                                        onClick={() => {
+                                            setActiveFilter(filter.value);
+                                            setIsOpen(false);
+                                        }}
+                                        className={cn(
+                                            "w-full flex items-center justify-between gap-3",
+                                            "px-3.5 py-2.5 mx-1.5 rounded-lg",
+                                            "transition-all duration-150",
+                                            "touch-manipulation",
+                                            isActive
+                                                ? "bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md shadow-slate-900/20"
+                                                : "text-slate-700 hover:bg-slate-50 active:bg-slate-100",
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-2.5">
+                                            {filter.dot ? (
+                                                <span className={cn(
+                                                    "w-2 h-2 rounded-full flex-shrink-0",
+                                                    filter.dot,
+                                                    !isActive && "opacity-70",
+                                                )} />
+                                            ) : (
+                                                <Icon
+                                                    className={cn(
+                                                        "w-4 h-4 flex-shrink-0",
+                                                        isActive ? "text-emerald-400" : "text-slate-500",
+                                                    )}
+                                                    strokeWidth={2}
+                                                />
+                                            )}
+                                            <span className={cn(
+                                                "text-[12.5px] font-bold",
+                                                isActive ? "text-white" : "text-slate-700",
+                                            )}>
+                                                {filter.label}
+                                            </span>
+                                        </div>
+                                        <span className={cn(
+                                            "text-[11px] font-black tabular-nums px-2 py-1 rounded-lg",
+                                            isActive
+                                                ? "bg-white/15 text-emerald-300"
+                                                : "bg-slate-100 text-slate-500",
+                                        )}>
+                                            {count}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
 /* ════════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ════════════════════════════════════════════════════════════════ */
@@ -258,49 +407,12 @@ export function OwnerReservationsList({
 
             <StatsStrip reservations={initialReservations} />
 
-            {/* ── Filter tabs ────────────────────────────── */}
-            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
-                {FILTERS.map(f => {
-                    const count = f.value === "ALL"
-                        ? initialReservations.length
-                        : initialReservations.filter(r => r.statut === f.value).length;
-                    if (f.value !== "ALL" && count === 0) return null;
-                    const isActive = activeFilter === f.value;
-                    const Icon = f.icon;
-
-                    return (
-                        <button
-                            key={f.value}
-                            type="button"
-                            onClick={() => setActiveFilter(f.value)}
-                            className={cn(
-                                "flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold border transition-all duration-200",
-                                isActive
-                                    ? "bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/15"
-                                    : "bg-white/70 backdrop-blur-sm text-slate-500 border-slate-200/60 hover:border-slate-300 hover:text-slate-800 hover:bg-white",
-                            )}
-                        >
-                            {f.dot && (
-                                <span className={cn(
-                                    "w-1.5 h-1.5 rounded-full flex-shrink-0",
-                                    f.dot,
-                                    !isActive && "opacity-50",
-                                )} />
-                            )}
-                            {!f.dot && Icon && (
-                                <Icon className={cn("w-3 h-3 flex-shrink-0", isActive ? "text-emerald-400" : "text-slate-400")} strokeWidth={2} />
-                            )}
-                            {f.label}
-                            <span className={cn(
-                                "text-[10px] font-black tabular-nums px-1.5 py-0.5 rounded-full",
-                                isActive ? "bg-white/15 text-white/80" : "bg-slate-100 text-slate-400",
-                            )}>
-                                {count}
-                            </span>
-                        </button>
-                    );
-                })}
-            </div>
+            {/* ── Filter dropdown ────────────────────────────── */}
+            <FilterDropdown
+                activeFilter={activeFilter}
+                setActiveFilter={setActiveFilter}
+                reservations={initialReservations}
+            />
 
             {/* ══════════════════════════════════════════════
                 GROUPED VIEW (Toutes)
