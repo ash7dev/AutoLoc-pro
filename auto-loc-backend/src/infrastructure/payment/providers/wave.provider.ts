@@ -23,7 +23,8 @@ interface WaveWebhookBody {
     type: string;
     data: {
         id: string;
-        status: 'succeeded' | 'failed' | 'reversed';
+        status?: 'succeeded' | 'failed' | 'reversed' | 'completed';
+        payment_status?: 'succeeded' | 'failed' | 'reversed';
         amount: string;
         client_reference?: string;
         currency: string;
@@ -249,13 +250,16 @@ export class WaveProvider implements PaymentProviderInterface {
 
         const statusMap: Record<string, 'SUCCESS' | 'FAILED' | 'REFUNDED'> = {
             succeeded: 'SUCCESS',
+            completed: 'SUCCESS',
             failed: 'FAILED',
             reversed: 'REFUNDED',
         };
 
+        const rawStatus = body.data.payment_status ?? body.data.status ?? 'failed';
+
         return {
             transactionId: body.data.id,
-            status: statusMap[body.data.status] ?? 'FAILED',
+            status: statusMap[rawStatus] ?? 'FAILED',
             amount: parseFloat(body.data.amount),
             referenceId: body.data.client_reference ?? '',
             rawPayload: body as unknown as Record<string, unknown>,
@@ -265,35 +269,19 @@ export class WaveProvider implements PaymentProviderInterface {
     // ── Refund ─────────────────────────────────────────────────────────────────
 
     async refundPayment(transactionId: string, amount?: number): Promise<void> {
-        if (!this.apiKey) {
-            this.logger.warn(`STUB: Wave refund requested for ${transactionId}`);
-            return;
-        }
+        // ⚠️ IMPORTANT: Wave n'a pas d'API publique pour les remboursements automatiques
+        // Les remboursements doivent être effectués manuellement depuis le dashboard Wave Business
+        // Voir: https://business.wave.com/transactions
 
-        this.logger.log(
-            `Initiating Wave refund: ${transactionId}${amount ? ` (${amount} XOF)` : ''}`,
+        this.logger.warn(
+            `⚠️ Wave refund requested for ${transactionId}${amount ? ` (${amount} XOF)` : ''} - ` +
+            `Manual refund required via Wave Business dashboard. ` +
+            `Wave API does not support automatic refunds.`,
         );
 
-        // POST /v1/refunds (Wave API)
-        const response = await fetch(`${this.apiUrl}/refunds`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${this.apiKey}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                transaction_id: transactionId,
-                ...(amount ? { amount: amount.toString() } : {}),
-            }),
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            this.logger.error(`Wave refund error: ${response.status} — ${errorText}`);
-            throw new Error(`Wave refund error: ${response.status}`);
-        }
-
-        this.logger.log(`Wave refund completed for ${transactionId}`);
+        // On ne lance pas d'erreur pour ne pas bloquer le flux,
+        // mais le remboursement devra être fait manuellement
+        return;
     }
 
     // ── Payout (Retrait) ───────────────────────────────────────────────────────
