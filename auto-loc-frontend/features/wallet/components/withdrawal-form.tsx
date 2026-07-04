@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { ArrowUpRight, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
-import { requestWithdrawal } from '@/lib/nestjs/wallet';
+import { requestWithdrawalAction } from '@/features/wallet/actions/request-withdrawal';
 import { cn } from '@/lib/utils';
 
 type Methode = 'WAVE' | 'ORANGE_MONEY';
@@ -69,7 +69,7 @@ export function WithdrawalForm({ soldeDisponible, soldeWave, soldeOrangeMoney }:
         setStatus('loading');
         setErrorMsg('');
         try {
-            await requestWithdrawal(amount, methode, numeroClean);
+            await requestWithdrawalAction({ montant: amount, methode, numeroDestinataire: numeroClean });
             setStatus('success');
             setMontant('');
             setNumero('');

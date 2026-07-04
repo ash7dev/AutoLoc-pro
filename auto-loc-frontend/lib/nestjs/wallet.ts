@@ -63,6 +63,7 @@ export async function fetchPenalties(token: string): Promise<PenaltiesData> {
 
 /**
  * Request a withdrawal (client-side).
+ * @deprecated Use requestWithdrawalAction from features/wallet/actions/request-withdrawal.ts instead
  */
 export async function requestWithdrawal(
     montant: number,
@@ -73,9 +74,4 @@ export async function requestWithdrawal(
         method: 'POST',
         body: { montant, methode, numeroDestinataire },
     });
-
-    // ✅ OPTIMISATION: Invalider les caches du wallet après retrait
-    const { revalidateTag } = await import('next/cache');
-    revalidateTag('owner-wallet');
-    revalidateTag('owner-transactions');
 }
