@@ -11,6 +11,7 @@ import { TenantDocsViewer } from "@/features/reservations/components/tenant-docs
 import { PhotosEtatLieu } from "@/features/reservations/components/photos-etat-lieu";
 import { PhoneDisplay } from "@/features/reservations/components/phone-display";
 import { TenantReviewForm } from "@/features/reviews/components/tenant-review-form";
+import { ExistingReviewDisplay } from "@/features/reviews/components/existing-review-display";
 import { CACHE_DURATIONS, CACHE_TAGS, getCacheKey, getOwnerCacheTags } from "@/lib/cache-config";
 import {
     ArrowLeft, Car, FileText, Banknote, Clock, CheckCircle2,
@@ -276,12 +277,21 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                 {/* ══════════════════════════════════════════════════
                     REVIEW — Propriétaire note le locataire
                 ══════════════════════════════════════════════════ */}
-                {(r.statut === 'TERMINEE' || (isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) &&
-                 (!(r as any).avis || (r as any).avis.length === 0) && (
-                    <TenantReviewForm
-                        reservationId={r.id}
-                        tenantName={`${r.locataire.prenom} ${r.locataire.nom}`}
-                    />
+                {(r.statut === 'TERMINEE' || (isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) && (
+                    <>
+                        {(r as any).avis && (r as any).avis.length > 0 ? (
+                            <ExistingReviewDisplay
+                                review={(r as any).avis[0]}
+                                title="Avis sur le locataire"
+                                subtitle={`Vous avez noté ${r.locataire.prenom} ${r.locataire.nom}`}
+                            />
+                        ) : (
+                            <TenantReviewForm
+                                reservationId={r.id}
+                                tenantName={`${r.locataire.prenom} ${r.locataire.nom}`}
+                            />
+                        )}
+                    </>
                 )}
 
                 {/* ══════════════════════════════════════════════════

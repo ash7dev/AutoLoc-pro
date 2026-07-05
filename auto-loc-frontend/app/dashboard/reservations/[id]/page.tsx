@@ -13,6 +13,7 @@ import { PhotosEtatLieu } from '@/features/reservations/components/photos-etat-l
 import { PhoneDisplay } from '@/features/reservations/components/phone-display';
 import { ReviewForm } from '@/features/reviews/components/review-form';
 import { OwnerReviewForm } from '@/features/reviews/components/owner-review-form';
+import { ExistingReviewDisplay } from '@/features/reviews/components/existing-review-display';
 import {
     ArrowLeft, Car, FileText, Banknote, Clock, CheckCircle2,
     XCircle, LogIn, LogOut, Hash, AlertTriangle, ShieldCheck,
@@ -681,14 +682,23 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                 {/* ══════════════════════════════════════════════════
                     REVIEW
                 ══════════════════════════════════════════════════ */}
-                {(r.statut === 'TERMINEE' || (isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) &&
-                 (!(r as any).avis || (r as any).avis.length === 0) && (
+                {(r.statut === 'TERMINEE' || (isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) && (
                     <>
-                        <ReviewForm reservationId={r.id} />
-                        <OwnerReviewForm
-                            reservationId={r.id}
-                            ownerName={`${r.proprietaire.prenom} ${r.proprietaire.nom}`}
-                        />
+                        {(r as any).avis && (r as any).avis.length > 0 ? (
+                            <ExistingReviewDisplay
+                                review={(r as any).avis[0]}
+                                title="Votre avis"
+                                subtitle={`Vous avez évalué cette location`}
+                            />
+                        ) : (
+                            <>
+                                <ReviewForm reservationId={r.id} />
+                                <OwnerReviewForm
+                                    reservationId={r.id}
+                                    ownerName={`${r.proprietaire.prenom} ${r.proprietaire.nom}`}
+                                />
+                            </>
+                        )}
                     </>
                 )}
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Star, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
-import { createReview } from '@/lib/nestjs/reviews';
+import { createReviewAction } from '@/app/actions/reviews';
 
 interface ReviewFormProps {
     reservationId: string;
@@ -29,12 +29,18 @@ export function ReviewForm({ reservationId }: ReviewFormProps) {
         setStatus('loading');
         setErrorMsg('');
         try {
-            await createReview({
+            const result = await createReviewAction({
                 reservationId,
                 note,
                 commentaire: commentaire.trim() || undefined,
             });
-            setStatus('success');
+
+            if (result.success) {
+                setStatus('success');
+            } else {
+                setErrorMsg(result.error || 'Une erreur est survenue. Réessayez.');
+                setStatus('error');
+            }
         } catch (err: unknown) {
             setErrorMsg(err instanceof Error ? err.message : 'Une erreur est survenue. Réessayez.');
             setStatus('error');
