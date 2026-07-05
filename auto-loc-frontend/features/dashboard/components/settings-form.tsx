@@ -37,6 +37,7 @@ import { useSwitchToLocataire } from '@/features/owner/hooks/use-switch-to-locat
 import { useSwitchToProprietaire } from '@/features/owner/hooks/use-switch-to-proprietaire';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { PhoneEditModal } from './phone-edit-modal';
+import { AvatarUploadModal } from './avatar-upload-modal';
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 
@@ -406,7 +407,7 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
     const [globalError, setGlobalError] = useState('');
     const [showKycAlert, setShowKycAlert] = useState(false);
     const [phoneEditOpen, setPhoneEditOpen] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [avatarModalOpen, setAvatarModalOpen] = useState(false);
     const { switchToLocataire, loading: switchingToTenant } = useSwitchToLocataire();
     const { switchToProprietaire, loading: switchingToOwner } = useSwitchToProprietaire();
     const router = useRouter();
@@ -456,22 +457,7 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
         } catch { setGlobalError('Erreur lors de la mise à jour de la date'); }
     }
 
-    async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        // Validate file type
-        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-            setGlobalError('Format invalide. Utilisez JPEG, PNG ou WebP.');
-            return;
-        }
-
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            setGlobalError('La photo est trop volumineuse (max 5MB).');
-            return;
-        }
-
+    async function handleAvatarUpload(file: File) {
         setGlobalError('');
         setUploadingAvatar(true);
         try {
@@ -480,9 +466,9 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
             router.refresh();
         } catch (err) {
             setGlobalError(err instanceof Error ? err.message : 'Erreur lors de l\'upload');
+            throw err; // Re-throw to let modal handle the error display
         } finally {
             setUploadingAvatar(false);
-            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     }
 
@@ -555,17 +541,10 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                                 </span>
                             )}
                         </div>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            onChange={handleAvatarUpload}
-                            className="hidden"
-                        />
                         <button
                             type="button"
                             title="Changer la photo"
-                            onClick={() => fileInputRef.current?.click()}
+                            onClick={() => setAvatarModalOpen(true)}
                             disabled={uploadingAvatar}
                             className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-xl bg-white border border-black/[0.1] shadow-md flex items-center justify-center hover:bg-black/[0.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -867,6 +846,15 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                     onSuccess={() => { setPhoneEditOpen(false); router.refresh(); }}
                 />
             )}
+
+            {/* ── Modal upload photo de profil ── */}
+            <AvatarUploadModal
+                isOpen={avatarModalOpen}
+                onClose={() => setAvatarModalOpen(false)}
+                currentAvatarUrl={avatarUrl}
+                onUpload={handleAvatarUpload}
+                uploading={uploadingAvatar}
+            />
 
         </div>
     );

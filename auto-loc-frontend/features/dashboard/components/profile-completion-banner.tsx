@@ -140,20 +140,25 @@ export function ProfileCompletionBanner({ profile }: ProfileCompletionBannerProp
     const canDismiss = !completion.hasCriticalIssues; // Ne peut pas masquer si problèmes critiques
 
     return (
-        <div
+        <Link
+            href="/dashboard/settings/profile"
             className={cn(
-                "transition-all duration-300 ease-out",
+                "block transition-all duration-300 ease-out hover:scale-[1.01] active:scale-[0.99]",
                 isClosing && "opacity-0 scale-95 -translate-y-2"
             )}
         >
-            <div className="relative bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-2xl border-2 border-purple-200/60 p-4 sm:p-6 shadow-sm overflow-hidden">
+            <div className="relative bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-2xl border-2 border-purple-200/60 p-4 sm:p-6 shadow-sm overflow-hidden hover:border-purple-300 transition-colors cursor-pointer">
                 {/* Decorative gradient overlay */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-400/10 to-indigo-400/10 rounded-full blur-3xl pointer-events-none" />
 
                 {/* Close button (si pas critique) */}
                 {canDismiss && (
                     <button
-                        onClick={handleDismiss}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleDismiss();
+                        }}
                         className="absolute top-3 right-3 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/60 hover:bg-white border border-purple-200/40 flex items-center justify-center transition-all hover:scale-110 active:scale-95 group z-10"
                         aria-label="Masquer pour 7 jours"
                     >
@@ -263,6 +268,6 @@ export function ProfileCompletionBanner({ profile }: ProfileCompletionBannerProp
                     </div>
                 </div>
             </div>
-        </div>
+        </Link>
     );
 }

@@ -351,7 +351,7 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                 ══════════════════════════════════════════════════ */}
                 {(r.statut === 'TERMINEE' || (isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) && (
                     <>
-                        {(r as any).avis && (r as any).avis.length > 0 ? (
+                        {Array.isArray((r as any).avis) && (r as any).avis.length > 0 ? (
                             <ExistingReviewDisplay
                                 review={(r as any).avis[0]}
                                 title="Votre avis sur cette location"
