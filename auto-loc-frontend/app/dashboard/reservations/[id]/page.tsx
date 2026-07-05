@@ -304,6 +304,21 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                         </div>
                     )}
 
+                    {/* ═══ Date de fin dépassée — Alerte pour check-out ═══ */}
+                    {isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut) && (
+                        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3.5">
+                            <div className="w-7 h-7 rounded-lg bg-red-100 border border-red-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <Clock className="w-3.5 h-3.5 text-red-600" strokeWidth={2} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[12.5px] font-bold text-red-800">Date de fin dépassée</p>
+                                <p className="text-[11.5px] text-red-700 mt-0.5 leading-relaxed">
+                                    La date de fin prévue ({fmtDateTime(r.dateFin)}) est dépassée. Le propriétaire doit effectuer le check-out pour finaliser la location.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Check-in locataire — disponible quand CONFIRMEE */}
                     {r.statut === 'CONFIRMEE' && (
                         <TenantCheckinButton
@@ -330,6 +345,22 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                         />
                     )}
                 </div>
+
+                {/* ══════════════════════════════════════════════════
+                    AVIS — Évaluez votre expérience
+                ══════════════════════════════════════════════════ */}
+                {(r.statut === 'TERMINEE' || (isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) && (
+                    <>
+                        {/* Avis sur le véhicule */}
+                        <ReviewForm reservationId={r.id} />
+
+                        {/* Avis sur le propriétaire */}
+                        <OwnerReviewForm
+                            reservationId={r.id}
+                            ownerName={`${r.proprietaire.prenom} ${r.proprietaire.nom}`}
+                        />
+                    </>
+                )}
 
                 {/* ══════════════════════════════════════════════════
                     CONTRAT
@@ -680,42 +711,12 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                 </Card>
 
                 {/* ══════════════════════════════════════════════════
-                    REVIEW
-                ══════════════════════════════════════════════════ */}
-                {(r.statut === 'TERMINEE' || (isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) && (
-                    <>
-                        {(r as any).avis && (r as any).avis.length > 0 ? (
-                            <ExistingReviewDisplay
-                                review={(r as any).avis[0]}
-                                title="Votre avis"
-                                subtitle={`Vous avez évalué cette location`}
-                            />
-                        ) : (
-                            <>
-                                <ReviewForm reservationId={r.id} />
-                                <OwnerReviewForm
-                                    reservationId={r.id}
-                                    ownerName={`${r.proprietaire.prenom} ${r.proprietaire.nom}`}
-                                />
-                            </>
-                        )}
-                    </>
-                )}
-
-                {/* ══════════════════════════════════════════════════
                     ALERTS
                 ══════════════════════════════════════════════════ */}
                 {r.tacitCheckinDeadlineLe && !r.checkinLocataireLe && r.statut === 'CONFIRMEE' && (
                     <Alert icon={AlertTriangle} bg="bg-amber-50" border="border-amber-200" iconBg="bg-amber-100 border-amber-200" iconColor="text-amber-500"
                         title="Action requise : Validation Automatique"
                         text={`Le propriétaire a signalé que vous avez récupéré le véhicule. Sans action de votre part avant le ${fmtDateTime(r.tacitCheckinDeadlineLe)}, la location sera considérée comme démarrée automatiquement.`} />
-                )}
-
-                {/* Date de fin dépassée */}
-                {isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut) && (
-                    <Alert icon={Clock} bg="bg-red-50" border="border-red-200" iconBg="bg-red-100 border-red-200" iconColor="text-red-500"
-                        title="Date de fin dépassée"
-                        text={`La date de fin prévue (${fmtDateTime(r.dateFin)}) est dépassée. Veuillez effectuer le check-out dès que possible.`} />
                 )}
 
                 {r.statut === 'ANNULEE' && (

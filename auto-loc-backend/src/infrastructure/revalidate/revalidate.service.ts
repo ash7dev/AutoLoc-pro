@@ -15,7 +15,11 @@ export class RevalidateService {
         await this.callWebhook({ tag });
     }
 
-    private async callWebhook(payload: { path?: string; tag?: string }, retries = 3): Promise<void> {
+    async revalidateReservation(reservationId: string): Promise<void> {
+        await this.callWebhook({ reservationId } as any);
+    }
+
+    private async callWebhook(payload: { path?: string; tag?: string; reservationId?: string }, retries = 3): Promise<void> {
         const url = this.config.get<string>('NEXTJS_URL') + '/api/revalidate';
         const secret = this.config.get<string>('REVALIDATE_SECRET');
 

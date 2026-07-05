@@ -1,7 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createReview as apiCreateReview } from '@/lib/nestjs/reviews';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { apiFetch } from '@/lib/nestjs/api-client';
 
 export async function createReviewAction(data: {
     reservationId: string;
@@ -9,8 +10,20 @@ export async function createReviewAction(data: {
     commentaire?: string;
 }) {
     try {
-        // Appeler l'API pour créer l'avis
-        await apiCreateReview(data);
+        // Récupérer le token Supabase côté serveur
+        const supabase = createSupabaseServerClient();
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+            return { success: false, error: 'Non authentifié. Veuillez vous reconnecter.' };
+        }
+
+        // Appeler l'API avec le token
+        await apiFetch('/reviews', {
+            method: 'POST',
+            body: data,
+            accessToken: session.access_token,
+        });
 
         // Invalider le cache des pages de réservation
         revalidatePath(`/dashboard/owner/reservations/${data.reservationId}`);

@@ -6,6 +6,7 @@ import { QueueService } from '../infrastructure/queue/queue.service';
 import { NotificationService } from '../infrastructure/notifications/notification.service';
 import { TelegramService } from '../infrastructure/telegram/telegram.service';
 import { TacitCheckinUseCase } from '../domain/reservation/use-cases/tacit-checkin.use-case';
+import { RevalidateService } from '../infrastructure/revalidate/revalidate.service';
 import { isPastCheckoutInspectionWindow } from '../domain/reservation/reservation-checkin.constants';
 
 /**
@@ -30,6 +31,7 @@ export class ReservationAutoCloseJob {
         private readonly notification: NotificationService,
         private readonly telegram: TelegramService,
         private readonly tacitCheckinUseCase: TacitCheckinUseCase,
+        private readonly revalidate: RevalidateService,
     ) { }
 
     /**
@@ -172,6 +174,11 @@ export class ReservationAutoCloseJob {
                 // F4: Notifier les deux parties + demander avis après auto-close
                 await this.notifyAutoClose(r.id).catch((err) =>
                     this.logger.error(`Failed to notify auto-close for ${r.id}`, err),
+                );
+
+                // Invalider le cache frontend pour cette réservation
+                await this.revalidate.revalidateReservation(r.id).catch((err) =>
+                    this.logger.error(`Failed to revalidate cache for ${r.id}`, err),
                 );
             } catch (err) {
                 this.logger.error(`Failed to auto-close reservation ${r.id}`, err);

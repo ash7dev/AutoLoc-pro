@@ -80,7 +80,10 @@ export function ReviewForm({ reservationId }: ReviewFormProps) {
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-amber-50 text-amber-500">
                     <Star className="w-3.5 h-3.5" strokeWidth={1.75} />
                 </div>
-                <h3 className="text-[10.5px] font-black uppercase tracking-[0.14em] text-slate-400">Votre avis</h3>
+                <div className="flex-1 min-w-0">
+                    <h3 className="text-[10.5px] font-black uppercase tracking-[0.14em] text-slate-400">Notez le véhicule</h3>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Comment s'est passée votre expérience avec ce véhicule ?</p>
+                </div>
             </div>
 
             <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
