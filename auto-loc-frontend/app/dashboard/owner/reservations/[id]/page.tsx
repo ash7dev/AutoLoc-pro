@@ -273,6 +273,25 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                 />
 
                 {/* ══════════════════════════════════════════════════
+                    ALERT DATE DÉPASSÉE — Priorité haute
+                ══════════════════════════════════════════════════ */}
+                {isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut) && (
+                    <Alert icon={Clock} bg="bg-red-50" border="border-red-200" iconBg="bg-red-100 border-red-200" iconColor="text-red-500"
+                        title="Date de fin dépassée"
+                        text={`La date de fin prévue (${fmtDateTime(r.dateFin)}) est dépassée. Le locataire doit effectuer le check-out au plus vite.`} />
+                )}
+
+                {/* ══════════════════════════════════════════════════
+                    REVIEW — Propriétaire note le locataire
+                ══════════════════════════════════════════════════ */}
+                {(r.statut === 'TERMINEE' || (isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) && (
+                    <TenantReviewForm
+                        reservationId={r.id}
+                        tenantName={`${r.locataire.prenom} ${r.locataire.nom}`}
+                    />
+                )}
+
+                {/* ══════════════════════════════════════════════════
                     CONTRAT
                 ══════════════════════════════════════════════════ */}
                 {["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE", "ANNULEE"].includes(r.statut) && (
@@ -284,10 +303,10 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                             <p className="text-[13.5px] font-black text-slate-800">Contrat de location</p>
                             <p className="text-[11.5px] text-slate-400 mt-0.5">Généré automatiquement · Signé numériquement</p>
                         </div>
-                        <ContratActions 
-                            reservationId={r.id} 
-                            canPrint={canPrintContract(r.dateDebut)} 
-                            dateDebut={r.dateDebut} 
+                        <ContratActions
+                            reservationId={r.id}
+                            canPrint={canPrintContract(r.dateDebut)}
+                            dateDebut={r.dateDebut}
                             from="owner"
                             showPdf={false}
                         />
@@ -555,25 +574,8 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                 </Card>
 
                 {/* ══════════════════════════════════════════════════
-                    REVIEW
-                ══════════════════════════════════════════════════ */}
-                {r.statut === 'TERMINEE' && (
-                    <TenantReviewForm
-                        reservationId={r.id}
-                        tenantName={`${r.locataire.prenom} ${r.locataire.nom}`}
-                    />
-                )}
-
-                {/* ══════════════════════════════════════════════════
                     ALERTS
                 ══════════════════════════════════════════════════ */}
-                {/* Date de fin dépassée */}
-                {isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut) && (
-                    <Alert icon={Clock} bg="bg-red-50" border="border-red-200" iconBg="bg-red-100 border-red-200" iconColor="text-red-500"
-                        title="Date de fin dépassée"
-                        text={`La date de fin prévue (${fmtDateTime(r.dateFin)}) est dépassée. Le locataire doit effectuer le check-out au plus vite.`} />
-                )}
-
                 {r.statut === "ANNULEE" && (
                     <Alert icon={XCircle} bg="bg-red-50" border="border-red-200" iconBg="bg-red-100 border-red-200" iconColor="text-red-500"
                         title="Réservation annulée" text="Cette réservation a été annulée. Contactez le support si vous avez des questions." />

@@ -661,14 +661,14 @@ export function ReservationActions({
 
             {/* Location EN_COURS — informatif */}
             {statut === "EN_COURS" && checkinLocataireLe && (
-                <div className="flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3.5 mb-2">
-                    <div className="w-7 h-7 rounded-lg bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" strokeWidth={2} />
+                <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3.5 mb-2">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2} />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[12.5px] font-bold text-blue-800">Le locataire a validé le départ</p>
-                        <p className="text-[11.5px] text-blue-700 mt-0.5 leading-relaxed">
-                            La location a officiellement commencé. Préparez-vous à effectuer le Check-out lors de la restitution du véhicule.
+                        <p className="text-[12.5px] font-bold text-emerald-800">Location en cours</p>
+                        <p className="text-[11.5px] text-emerald-700 mt-0.5 leading-relaxed">
+                            Le locataire a validé le départ. Vous pourrez effectuer le check-out à la date de fin prévue pour récupérer le véhicule.
                         </p>
                     </div>
                 </div>
