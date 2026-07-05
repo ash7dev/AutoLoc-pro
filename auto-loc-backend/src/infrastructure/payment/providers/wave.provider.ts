@@ -33,15 +33,13 @@ interface WaveWebhookBody {
 
 interface WavePayoutResponse {
     id: string;
-    amount: string;
+    receive_amount: string;
     currency: string;
-    status: 'pending' | 'processing' | 'completed' | 'failed';
-    recipient: {
-        mobile: string;
-        name?: string;
-    };
+    status: 'pending' | 'processing' | 'succeeded' | 'failed';
+    mobile: string;
+    name?: string;
     client_reference?: string;
-    created_at: string;
+    timestamp: string;
 }
 
 // ── Provider ───────────────────────────────────────────────────────────────────
@@ -297,17 +295,24 @@ export class WaveProvider implements PaymentProviderInterface {
         }
 
         // Normaliser le numéro de téléphone (format international)
-        const phone = params.recipientPhone
-            .replace(/\s+/g, '')
-            .replace(/^00/, '+')
-            .replace(/^221/, '+221');
+        let phone = params.recipientPhone.replace(/\s+/g, '');
+        if (phone.startsWith('00')) {
+            phone = '+' + phone.slice(2);
+        }
+        if (!phone.startsWith('+')) {
+            if (phone.startsWith('221')) {
+                phone = '+' + phone;
+            } else {
+                phone = '+221' + phone;
+            }
+        }
 
         const body = {
-            amount: params.amount.toString(),
+            receive_amount: params.amount.toString(),
             currency: 'XOF',
             mobile: phone,
             client_reference: params.referenceId,
-            ...(params.recipientName ? { recipient_name: params.recipientName } : {}),
+            ...(params.recipientName ? { name: params.recipientName } : {}),
         };
 
         this.logger.log(
@@ -368,7 +373,7 @@ export class WaveProvider implements PaymentProviderInterface {
                 const statusMap: Record<string, 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'> = {
                     pending: 'PENDING',
                     processing: 'PROCESSING',
-                    completed: 'COMPLETED',
+                    succeeded: 'COMPLETED',
                     failed: 'FAILED',
                 };
 
