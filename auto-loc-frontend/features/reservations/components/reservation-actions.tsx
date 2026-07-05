@@ -703,9 +703,9 @@ export function ReservationActions({
                         <Clock className="w-3.5 h-3.5 text-red-600" strokeWidth={2} />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[12.5px] font-bold text-red-800">Date de fin dépassée</p>
+                        <p className="text-[12.5px] font-bold text-red-800">Date de fin dépassée — Action requise</p>
                         <p className="text-[11.5px] text-red-700 mt-0.5 leading-relaxed">
-                            La date de fin prévue ({new Date(dateFin).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}) est dépassée. Vous devez effectuer le check-out pour récupérer le véhicule.
+                            La date de fin prévue ({new Date(dateFin).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}) est dépassée. Vous devez effectuer le check-out pour récupérer le véhicule. <span className="font-bold">Si aucune action n'est effectuée, la réservation sera automatiquement clôturée et marquée comme terminée dans 24 heures après la date de fin</span> (le {new Date(new Date(dateFin).getTime() + 24 * 60 * 60 * 1000).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}).
                         </p>
                     </div>
                 </div>

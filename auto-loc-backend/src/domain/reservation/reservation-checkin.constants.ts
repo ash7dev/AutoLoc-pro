@@ -2,7 +2,7 @@
 export const TACIT_CHECKIN_MS = 6 * 60 * 60 * 1000;
 
 /** Délai inspection proprio / clôture auto après fin de location (dateFin). */
-export const CHECKOUT_INSPECTION_MS = 48 * 60 * 60 * 1000;
+export const CHECKOUT_INSPECTION_MS = 24 * 60 * 60 * 1000;
 
 /** Minimum de photos d'état des lieux CHECKIN avant validation propriétaire. */
 export const MIN_CHECKIN_ETAT_LIEU_PHOTOS = 1;

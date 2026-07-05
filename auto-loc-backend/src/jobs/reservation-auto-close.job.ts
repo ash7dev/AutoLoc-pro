@@ -124,7 +124,7 @@ export class ReservationAutoCloseJob {
     }
 
     /**
-     * Auto-close EN_COURS → TERMINEE après fin de location + 48h (fenêtre inspection proprio).
+     * Auto-close EN_COURS → TERMINEE après fin de location + 24h (fenêtre inspection proprio).
      * Runs every 30 minutes.
      */
     @Cron(CronExpression.EVERY_30_MINUTES)
