@@ -348,15 +348,27 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                                 reservationId={r.id}
                             />
 
-                            {/* Note */}
-                            {r.locataire.noteLocataire != null && (
-                                <InfoRow icon={Star} label="Note locataire" iconCls="bg-amber-50 border-amber-200" iconColor="text-amber-500">
+                            {/* Note locataire - toujours affichée */}
+                            <InfoRow icon={Star} label="Note locataire" iconCls="bg-amber-50 border-amber-200" iconColor="text-amber-500">
+                                <div className="flex items-center gap-2">
                                     <span className="text-[14px] font-black text-slate-800 tabular-nums">
-                                        {Number(r.locataire.noteLocataire).toFixed(1)}
+                                        {r.locataire.noteLocataire != null
+                                            ? Number(r.locataire.noteLocataire).toFixed(1)
+                                            : "0.0"}
                                         <span className="text-[11px] font-semibold text-slate-400 ml-1">/ 5</span>
                                     </span>
-                                </InfoRow>
-                            )}
+                                    {(r.locataire as any).totalAvis != null && (r.locataire as any).totalAvis > 0 && (
+                                        <span className="text-[10px] font-semibold text-slate-400">
+                                            ({(r.locataire as any).totalAvis} avis)
+                                        </span>
+                                    )}
+                                    {(r.locataire.noteLocataire == null || (r.locataire as any).totalAvis === 0 || (r.locataire as any).totalAvis == null) && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-bold text-slate-500">
+                                            Nouveau
+                                        </span>
+                                    )}
+                                </div>
+                            </InfoRow>
 
                         </div>
                     </Card>

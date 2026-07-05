@@ -374,8 +374,8 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-[12px] text-slate-500 font-medium">Téléphone</span>
-                                    <PhoneDisplay 
-                                        telephone={r.proprietaire?.telephone} 
+                                    <PhoneDisplay
+                                        telephone={r.proprietaire?.telephone}
                                         dateDebut={r.dateDebut}
                                         statut={r.statut}
                                         showLabel={false}
@@ -388,6 +388,30 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                                     <span className="text-[13px] font-mono text-slate-600 truncate max-w-[150px]">
                                         {r.proprietaire?.email}
                                     </span>
+                                </div>
+                                <div className="flex items-center justify-between pt-1 border-t border-slate-200">
+                                    <span className="text-[12px] text-slate-500 font-medium flex items-center gap-1">
+                                        <Star className="w-3 h-3 text-amber-500" strokeWidth={2} />
+                                        Note
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[13px] font-black text-slate-800 tabular-nums">
+                                            {(r.proprietaire as any)?.noteProprietaire != null
+                                                ? Number((r.proprietaire as any).noteProprietaire).toFixed(1)
+                                                : "0.0"}
+                                            <span className="text-[10px] font-semibold text-slate-400 ml-0.5">/5</span>
+                                        </span>
+                                        {(r.proprietaire as any)?.totalAvis != null && (r.proprietaire as any).totalAvis > 0 && (
+                                            <span className="text-[10px] font-semibold text-slate-400">
+                                                ({(r.proprietaire as any).totalAvis})
+                                            </span>
+                                        )}
+                                        {((r.proprietaire as any)?.noteProprietaire == null || (r.proprietaire as any)?.totalAvis === 0) && (
+                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[9px] font-bold text-slate-500">
+                                                Nouveau
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
