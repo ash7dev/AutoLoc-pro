@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import {
     ArrowUpRight, ArrowDownRight, Minus,
     Banknote, Car, Gauge, Shield, AlertTriangle,
+    TrendingUp, Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { OwnerStats } from "@/lib/nestjs/reservations";
@@ -92,27 +93,39 @@ const ACCENT_MAP: Record<StatItem["accent"], {
     glowColor: string;
     trendBg: string;
     trendText: string;
+    gradientFrom: string;
+    gradientTo: string;
+    borderGlow: string;
 }> = {
     emerald: {
-        iconBg: "bg-emerald-500/10 ring-1 ring-emerald-500/20",
-        iconColor: "text-emerald-600",
+        iconBg: "bg-gradient-to-br from-emerald-500 to-emerald-600",
+        iconColor: "text-white",
         glowColor: "bg-emerald-500",
         trendBg: "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-500/20",
         trendText: "text-emerald-600",
+        gradientFrom: "from-emerald-500/5",
+        gradientTo: "to-emerald-500/0",
+        borderGlow: "group-hover:shadow-emerald-500/10",
     },
     slate: {
-        iconBg: "bg-slate-500/10 ring-1 ring-slate-500/20",
-        iconColor: "text-slate-600",
+        iconBg: "bg-gradient-to-br from-slate-700 to-slate-800",
+        iconColor: "text-white",
         glowColor: "bg-slate-400",
         trendBg: "bg-slate-50 text-slate-500 ring-1 ring-slate-500/20",
         trendText: "text-slate-500",
+        gradientFrom: "from-slate-500/5",
+        gradientTo: "to-slate-500/0",
+        borderGlow: "group-hover:shadow-slate-500/10",
     },
     red: {
-        iconBg: "bg-red-500/10 ring-1 ring-red-500/20",
-        iconColor: "text-red-600",
+        iconBg: "bg-gradient-to-br from-red-500 to-red-600",
+        iconColor: "text-white",
         glowColor: "bg-red-500",
         trendBg: "bg-red-50 text-red-600 ring-1 ring-red-500/20",
         trendText: "text-red-600",
+        gradientFrom: "from-red-500/5",
+        gradientTo: "to-red-500/0",
+        borderGlow: "group-hover:shadow-red-500/10",
     },
 };
 
@@ -123,7 +136,7 @@ const TREND_CONFIG = {
 };
 
 /* ════════════════════════════════════════════════════════════════
-   STAT CARD — Ultra Premium Pro
+   STAT CARD — Ultra Premium Modern
 ════════════════════════════════════════════════════════════════ */
 function StatCard({ stat, loading }: { stat: StatItem; loading: boolean }) {
     const Icon = stat.icon;
@@ -132,69 +145,115 @@ function StatCard({ stat, loading }: { stat: StatItem; loading: boolean }) {
 
     return (
         <div className={cn(
-            "group relative overflow-hidden rounded-2xl",
-            "bg-white",
-            "ring-1 ring-slate-900/5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]",
-            "hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)] hover:ring-slate-900/10 hover:-translate-y-[1px]",
-            "transition-all duration-400 ease-out",
-            "p-5 sm:p-6",
+            "group relative overflow-hidden rounded-3xl",
+            "bg-gradient-to-br from-white via-white to-slate-50/30",
+            "border border-slate-200/60",
+            "shadow-[0_2px_8px_rgba(0,0,0,0.04)]",
+            "hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)]",
+            "hover:border-slate-300/60",
+            "hover:-translate-y-0.5",
+            "transition-all duration-500 ease-out",
+            "p-6",
+            a.borderGlow,
         )}>
-            {/* Top edge glare / reflection */}
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-80" />
-
-            {/* Subtle ambient hover glow in the top-right corner */}
+            {/* Animated gradient overlay on hover */}
             <div className={cn(
-                "absolute -top-12 -right-12 w-32 h-32 rounded-full opacity-0 blur-3xl transition-opacity duration-500 ease-out pointer-events-none",
-                "group-hover:opacity-[0.08]",
+                "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700",
+                "bg-gradient-to-br",
+                a.gradientFrom,
+                a.gradientTo,
+                "pointer-events-none"
+            )} />
+
+            {/* Shimmer effect */}
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none">
+                <div className="h-full w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
+            </div>
+
+            {/* Top decorative line */}
+            <div className={cn(
+                "absolute top-0 left-6 right-6 h-[2px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500",
                 a.glowColor
             )} />
 
-            <div className="relative z-10 flex flex-col gap-4">
-                {/* Header: Label + Icon */}
+            <div className="relative z-10 flex flex-col gap-5">
+                {/* Header: Icon + Label */}
                 <div className="flex items-start justify-between gap-3">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mt-1">
-                        {stat.label}
-                    </p>
                     <div className={cn(
-                        "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3",
+                        "relative w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0",
+                        "shadow-lg shadow-black/10",
+                        "transition-all duration-500",
+                        "group-hover:scale-110 group-hover:rotate-6 group-hover:shadow-xl",
                         a.iconBg,
                     )}>
-                        <Icon className={cn("w-4.5 h-4.5", a.iconColor)} strokeWidth={2} />
+                        <Icon className={cn("w-6 h-6", a.iconColor)} strokeWidth={2.5} />
+
+                        {/* Icon glow effect */}
+                        <div className={cn(
+                            "absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-30 blur-md transition-opacity duration-500",
+                            a.glowColor
+                        )} />
                     </div>
+
+                    {/* Sparkle indicator for positive trends */}
+                    {!loading && stat.trend === "up" && (
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200">
+                            <Sparkles className="w-4 h-4 text-emerald-500 animate-pulse" strokeWidth={2} />
+                        </div>
+                    )}
                 </div>
 
-                {/* Body: Value + Delta */}
+                {/* Label */}
+                <div>
+                    <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-slate-500 leading-tight">
+                        {stat.label}
+                    </p>
+                </div>
+
+                {/* Body: Value */}
                 <div>
                     {loading ? (
-                        <div className="h-10 w-24 rounded-lg bg-slate-100 animate-pulse mb-3" />
+                        <div className="h-12 w-28 rounded-xl bg-gradient-to-r from-slate-100 to-slate-200 animate-pulse mb-4" />
                     ) : (
-                        <div className="flex items-baseline gap-1.5 mb-3">
-                            <span className="text-[34px] sm:text-[40px] font-black tabular-nums tracking-tighter leading-none text-slate-900">
+                        <div className="flex items-baseline gap-2 mb-4">
+                            <span className={cn(
+                                "text-[42px] sm:text-[48px] font-black tabular-nums tracking-tighter leading-none",
+                                "bg-gradient-to-br from-slate-900 to-slate-700 bg-clip-text text-transparent"
+                            )}>
                                 {stat.value}
                             </span>
-                            <span className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">
+                            <span className="text-[13px] font-bold text-slate-400 uppercase tracking-wider mb-2">
                                 {stat.unit}
                             </span>
                         </div>
                     )}
 
+                    {/* Delta/Trend */}
                     {loading ? (
-                        <div className="h-5 w-28 rounded-md bg-slate-100 animate-pulse" />
+                        <div className="h-6 w-32 rounded-lg bg-gradient-to-r from-slate-100 to-slate-200 animate-pulse" />
                     ) : stat.delta ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2.5">
                             <div className={cn(
-                                "inline-flex items-center justify-center rounded-md p-0.5",
-                                a.trendBg
+                                "inline-flex items-center justify-center rounded-lg px-2 py-1",
+                                "shadow-sm",
+                                a.trendBg,
+                                "transition-transform duration-300 group-hover:scale-105"
                             )}>
-                                <TrendIcon className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                <TrendIcon className="w-4 h-4" strokeWidth={2.5} />
                             </div>
-                            <span className="text-[11.5px] font-semibold text-slate-500">
+                            <span className="text-[12px] font-bold text-slate-600 tracking-tight">
                                 {stat.delta}
                             </span>
                         </div>
                     ) : null}
                 </div>
             </div>
+
+            {/* Bottom right decorative element */}
+            <div className={cn(
+                "absolute -bottom-8 -right-8 w-24 h-24 rounded-full opacity-0 group-hover:opacity-5 blur-2xl transition-all duration-700 pointer-events-none",
+                a.glowColor
+            )} />
         </div>
     );
 }
@@ -212,9 +271,19 @@ export function OverviewStats({
     const stats = buildStats(data);
 
     return (
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-            {stats.map((stat) => (
-                <StatCard key={stat.label} stat={stat} loading={loading || !data} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
+            {stats.map((stat, index) => (
+                <div
+                    key={stat.label}
+                    className="animate-in fade-in slide-in-from-bottom-4"
+                    style={{
+                        animationDelay: `${index * 100}ms`,
+                        animationFillMode: 'backwards',
+                        animationDuration: '600ms',
+                    }}
+                >
+                    <StatCard stat={stat} loading={loading || !data} />
+                </div>
             ))}
         </div>
     );
