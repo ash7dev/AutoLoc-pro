@@ -8,12 +8,15 @@ import {
     HttpCode,
     HttpStatus,
     ParseUUIDPipe,
+    UseGuards,
 } from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { RequestUser } from '../../common/types/auth.types';
+import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 
 @Controller('reviews')
+@UseGuards(JwtAuthGuard)
 export class ReviewsController {
     constructor(private readonly reviewsService: ReviewsService) { }
 

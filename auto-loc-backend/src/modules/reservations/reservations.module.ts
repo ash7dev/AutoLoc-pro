@@ -11,6 +11,7 @@ import { ContractModule } from '../../infrastructure/contract/contract.module';
 import { QueueModule } from '../../infrastructure/queue/queue.module';
 import { AdminReservationsController } from './admin-reservations.controller';
 import { AdminCancellationsController } from './admin-cancellations.controller';
+import { CleanupPhotosTask } from './cleanup-photos.task';
 
 @Module({
   imports: [ReservationDomainModule, DisputesModule, CloudinaryModule, ContractModule, QueueModule],
@@ -20,6 +21,7 @@ import { AdminCancellationsController } from './admin-cancellations.controller';
     JwtAuthGuard,
     ReservationOwnerGuard,
     ReservationAutoCloseJob,
+    CleanupPhotosTask,
   ],
 })
 export class ReservationsModule { }

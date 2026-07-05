@@ -270,16 +270,8 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                     totalLocataire={totalLocataire}
                     totalBase={netAmt}
                     isOwner={true}
+                    showExpiredAlert={isReservationExpired(r.dateFin)}
                 />
-
-                {/* ══════════════════════════════════════════════════
-                    ALERT DATE DÉPASSÉE — Priorité haute
-                ══════════════════════════════════════════════════ */}
-                {isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut) && (
-                    <Alert icon={Clock} bg="bg-red-50" border="border-red-200" iconBg="bg-red-100 border-red-200" iconColor="text-red-500"
-                        title="Date de fin dépassée"
-                        text={`La date de fin prévue (${fmtDateTime(r.dateFin)}) est dépassée. Le locataire doit effectuer le check-out au plus vite.`} />
-                )}
 
                 {/* ══════════════════════════════════════════════════
                     REVIEW — Propriétaire note le locataire

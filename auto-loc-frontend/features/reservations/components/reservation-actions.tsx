@@ -40,6 +40,7 @@ interface ReservationActionsProps {
     totalLocataire?: number;
     totalBase?: number;
     isOwner?: boolean;
+    showExpiredAlert?: boolean;
     className?: string;
 }
 
@@ -481,6 +482,7 @@ export function ReservationActions({
     totalLocataire,
     totalBase,
     isOwner = true,
+    showExpiredAlert = false,
     className,
 }: ReservationActionsProps) {
     const router = useRouter();
@@ -690,6 +692,21 @@ export function ReservationActions({
                     <div className="flex-1 min-w-0">
                         <p className="text-[12.5px] font-bold text-amber-800">Confirmation bloquée</p>
                         <p className="text-[11.5px] text-amber-700 mt-0.5 leading-relaxed">{kycLabel} Vous pourrez confirmer une fois son identité vérifiée.</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Alerte date expirée — EN_COURS checkout requis */}
+            {isOwner && showExpiredAlert && statut === "EN_COURS" && dateFin && (
+                <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3.5">
+                    <div className="w-7 h-7 rounded-lg bg-red-100 border border-red-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Clock className="w-3.5 h-3.5 text-red-600" strokeWidth={2} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[12.5px] font-bold text-red-800">Date de fin dépassée</p>
+                        <p className="text-[11.5px] text-red-700 mt-0.5 leading-relaxed">
+                            La date de fin prévue ({new Date(dateFin).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}) est dépassée. Vous devez effectuer le check-out pour récupérer le véhicule.
+                        </p>
                     </div>
                 </div>
             )}

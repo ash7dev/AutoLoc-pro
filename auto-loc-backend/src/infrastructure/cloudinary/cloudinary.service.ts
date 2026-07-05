@@ -144,6 +144,37 @@ export class CloudinaryService implements OnModuleInit {
     await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' }).catch(() => { });
   }
 
+  /** Supprime plusieurs images à partir de leurs URLs Cloudinary. */
+  async deleteMultipleByUrl(urls: string[]): Promise<{ deleted: number; failed: number }> {
+    let deleted = 0;
+    let failed = 0;
+
+    for (const url of urls) {
+      try {
+        const publicId = this.extractPublicIdFromUrl(url);
+        if (publicId) {
+          await this.deleteByPublicId(publicId);
+          deleted++;
+        }
+      } catch (err) {
+        failed++;
+      }
+    }
+
+    return { deleted, failed };
+  }
+
+  /** Extrait le public_id d'une URL Cloudinary. */
+  private extractPublicIdFromUrl(url: string): string | null {
+    try {
+      // URL format: https://res.cloudinary.com/{cloud_name}/{resource_type}/upload/{transformations}/{folder}/{filename}
+      const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.\w+)?$/);
+      return match ? match[1] : null;
+    } catch {
+      return null;
+    }
+  }
+
   private uploadToFolder(
     buffer: Buffer,
     folder: string,
