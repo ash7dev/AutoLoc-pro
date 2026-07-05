@@ -12,6 +12,7 @@ import { TenantDisputeButton } from '@/features/reservations/components/tenant-d
 import { PhotosEtatLieu } from '@/features/reservations/components/photos-etat-lieu';
 import { PhoneDisplay } from '@/features/reservations/components/phone-display';
 import { ReviewForm } from '@/features/reviews/components/review-form';
+import { OwnerReviewForm } from '@/features/reviews/components/owner-review-form';
 import {
     ArrowLeft, Car, FileText, Banknote, Clock, CheckCircle2,
     XCircle, LogIn, LogOut, Hash, AlertTriangle, ShieldCheck,
@@ -59,6 +60,11 @@ function isWithin24Hours(dateDebut: string | Date): boolean {
     const diffMs = debut.getTime() - now.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
     return diffHours <= 24 && diffHours > 0;
+}
+
+// Helper pour vérifier si la date de fin est dépassée
+function isReservationExpired(dateFin: string | Date): boolean {
+    return new Date() > new Date(dateFin);
 }
 
 /* ── Status config ────────────────────────────────────────────── */
@@ -652,7 +658,13 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                     REVIEW
                 ══════════════════════════════════════════════════ */}
                 {r.statut === 'TERMINEE' && (
-                    <ReviewForm reservationId={r.id} />
+                    <>
+                        <ReviewForm reservationId={r.id} />
+                        <OwnerReviewForm
+                            reservationId={r.id}
+                            ownerName={`${r.proprietaire.prenom} ${r.proprietaire.nom}`}
+                        />
+                    </>
                 )}
 
                 {/* ══════════════════════════════════════════════════
@@ -663,6 +675,14 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                         title="Action requise : Validation Automatique"
                         text={`Le propriétaire a signalé que vous avez récupéré le véhicule. Sans action de votre part avant le ${fmtDateTime(r.tacitCheckinDeadlineLe)}, la location sera considérée comme démarrée automatiquement.`} />
                 )}
+
+                {/* Date de fin dépassée */}
+                {isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut) && (
+                    <Alert icon={Clock} bg="bg-red-50" border="border-red-200" iconBg="bg-red-100 border-red-200" iconColor="text-red-500"
+                        title="Date de fin dépassée"
+                        text={`La date de fin prévue (${fmtDateTime(r.dateFin)}) est dépassée. Veuillez effectuer le check-out dès que possible.`} />
+                )}
+
                 {r.statut === 'ANNULEE' && (
                     <Alert icon={XCircle} bg="bg-red-50" border="border-red-200" iconBg="bg-red-100 border-red-200" iconColor="text-red-500"
                         title="Réservation annulée"

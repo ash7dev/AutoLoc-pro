@@ -10,6 +10,7 @@ import { ReservationActions } from "@/features/reservations/components/reservati
 import { TenantDocsViewer } from "@/features/reservations/components/tenant-docs-viewer";
 import { PhotosEtatLieu } from "@/features/reservations/components/photos-etat-lieu";
 import { PhoneDisplay } from "@/features/reservations/components/phone-display";
+import { TenantReviewForm } from "@/features/reviews/components/tenant-review-form";
 import { CACHE_DURATIONS, CACHE_TAGS, getCacheKey, getOwnerCacheTags } from "@/lib/cache-config";
 import {
     ArrowLeft, Car, FileText, Banknote, Clock, CheckCircle2,
@@ -547,6 +548,16 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                         })}
                     </div>
                 </Card>
+
+                {/* ══════════════════════════════════════════════════
+                    REVIEW
+                ══════════════════════════════════════════════════ */}
+                {r.statut === 'TERMINEE' && (
+                    <TenantReviewForm
+                        reservationId={r.id}
+                        tenantName={`${r.locataire.prenom} ${r.locataire.nom}`}
+                    />
+                )}
 
                 {/* ══════════════════════════════════════════════════
                     ALERTS
