@@ -230,8 +230,134 @@ export default async function OwnerAnalyticsPage() {
       {/* Top KPIs */}
       <TopKPIsRow {...analytics.kpis} />
 
-      {/* Vehicle Performance Table */}
-      <VehiclePerformanceTable vehicles={analytics.vehiclePerformance} />
+      {/* Vehicle Performance Table with Legend */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6">
+        <VehiclePerformanceTable vehicles={analytics.vehiclePerformance} />
+
+        {/* Metrics Legend */}
+        <div className="relative overflow-hidden rounded-3xl border border-slate-950/[0.06] bg-gradient-to-br from-white via-slate-50/30 to-white shadow-xl shadow-slate-950/[0.04]">
+          {/* Top accent border */}
+          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
+
+          {/* Gradient mesh */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.02),transparent_50%)]" />
+
+          <div className="relative p-6 space-y-6">
+            {/* Header */}
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/10 to-blue-600/5 border border-blue-500/20">
+                <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+                </svg>
+                <span className="text-xs font-black uppercase tracking-wide text-blue-700">Guide des métriques</span>
+              </div>
+              <p className="text-xs font-semibold text-slate-500">
+                Comprendre chaque indicateur
+              </p>
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-slate-900/10 to-transparent" />
+
+            {/* Metrics */}
+            <div className="space-y-5">
+              {/* Revenue */}
+              <div className="group space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
+                    <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-sm font-black text-slate-900">Revenue</h4>
+                </div>
+                <p className="text-xs font-medium text-slate-600 leading-relaxed">
+                  Revenus totaux générés par le véhicule ce mois
+                </p>
+              </div>
+
+              {/* Locations */}
+              <div className="group space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
+                    <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                    </svg>
+                  </div>
+                  <h4 className="text-sm font-black text-slate-900">Locations</h4>
+                </div>
+                <p className="text-xs font-medium text-slate-600 leading-relaxed">
+                  Nombre total de réservations terminées
+                </p>
+              </div>
+
+              {/* Occupation */}
+              <div className="group space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
+                    <svg className="h-4 w-4 text-amber-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-sm font-black text-slate-900">Occupation</h4>
+                </div>
+                <p className="text-xs font-medium text-slate-600 leading-relaxed">
+                  % de jours loués sur total de jours disponibles
+                </p>
+                <div className="rounded-xl bg-slate-50/80 border border-slate-200/50 p-3">
+                  <p className="text-[11px] font-mono font-semibold text-slate-700">
+                    (Jours loués ÷ Jours mois) × 100
+                  </p>
+                </div>
+              </div>
+
+              {/* Note */}
+              <div className="group space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
+                    <svg className="h-4 w-4 text-amber-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-sm font-black text-slate-900">Note</h4>
+                </div>
+                <p className="text-xs font-medium text-slate-600 leading-relaxed">
+                  Note moyenne des locataires (sur 5 étoiles)
+                </p>
+              </div>
+
+              {/* RevPAD */}
+              <div className="group space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500/10 to-violet-600/5 border border-violet-500/20">
+                    <svg className="h-4 w-4 text-violet-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
+                    </svg>
+                  </div>
+                  <h4 className="text-sm font-black text-slate-900">RevPAD</h4>
+                </div>
+                <p className="text-xs font-medium text-slate-600 leading-relaxed">
+                  Revenue Per Available Day : revenu moyen par jour disponible
+                </p>
+                <div className="rounded-xl bg-slate-50/80 border border-slate-200/50 p-3">
+                  <p className="text-[11px] font-mono font-semibold text-slate-700">
+                    Revenue total ÷ Jours dispo.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom tip */}
+            <div className="pt-4 border-t border-slate-950/[0.06]">
+              <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-50/50 border border-blue-200/50 p-4">
+                <p className="text-[11px] font-bold text-blue-900 leading-relaxed">
+                  💡 <span className="font-black">Astuce :</span> Cliquez sur les en-têtes pour trier le tableau
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Bottom row: Heatmap + Funnel */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

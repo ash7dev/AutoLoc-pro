@@ -51,6 +51,11 @@ function canPrintContract(dateDebut: string | Date): boolean {
     return diffHours <= 24;
 }
 
+// Helper pour vérifier si la date de fin est dépassée
+function isReservationExpired(dateFin: string | Date): boolean {
+    return new Date() > new Date(dateFin);
+}
+
 /* ── Status config ────────────────────────────────────────────── */
 const STATUS: Record<string, { label: string; text: string; bg: string; border: string; dot: string; pulse?: boolean }> = {
     INITIEE:              { label: "Initiée",            text: "text-slate-500",   bg: "bg-slate-50",   border: "border-slate-200", dot: "bg-slate-400" },
@@ -562,6 +567,13 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                 {/* ══════════════════════════════════════════════════
                     ALERTS
                 ══════════════════════════════════════════════════ */}
+                {/* Date de fin dépassée */}
+                {isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut) && (
+                    <Alert icon={Clock} bg="bg-red-50" border="border-red-200" iconBg="bg-red-100 border-red-200" iconColor="text-red-500"
+                        title="Date de fin dépassée"
+                        text={`La date de fin prévue (${fmtDateTime(r.dateFin)}) est dépassée. Le locataire doit effectuer le check-out au plus vite.`} />
+                )}
+
                 {r.statut === "ANNULEE" && (
                     <Alert icon={XCircle} bg="bg-red-50" border="border-red-200" iconBg="bg-red-100 border-red-200" iconColor="text-red-500"
                         title="Réservation annulée" text="Cette réservation a été annulée. Contactez le support si vous avez des questions." />
