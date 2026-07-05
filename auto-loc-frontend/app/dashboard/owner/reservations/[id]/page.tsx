@@ -10,6 +10,7 @@ import { ReservationActions } from "@/features/reservations/components/reservati
 import { TenantDocsViewer } from "@/features/reservations/components/tenant-docs-viewer";
 import { PhotosEtatLieu } from "@/features/reservations/components/photos-etat-lieu";
 import { PhoneDisplay } from "@/features/reservations/components/phone-display";
+import { CACHE_DURATIONS, CACHE_TAGS, getCacheKey, getOwnerCacheTags } from "@/lib/cache-config";
 import {
     ArrowLeft, Car, FileText, Banknote, Clock, CheckCircle2,
     XCircle, LogIn, LogOut, Hash, AlertTriangle, ShieldCheck,
@@ -64,11 +65,19 @@ const STATUS: Record<string, { label: string; text: string; bg: string; border: 
 /* ════════════════════════════════════════════════════════════════
    CACHED FETCH
 ════════════════════════════════════════════════════════════════ */
-const getCachedReservation = (id: string) => unstable_cache(
-    async (token: string) => fetchReservation(token, id),
-    [`reservation-${id}`],
-    { revalidate: 30, tags: [`reservation-${id}`] }
-);
+function getCachedReservation(token: string, id: string) {
+    return unstable_cache(
+        () => fetchReservation(token, id),
+        getCacheKey("owner-reservation-detail", token, id),
+        {
+            revalidate: CACHE_DURATIONS.critical,
+            tags: [
+                `reservation-${id}`,
+                ...getOwnerCacheTags(CACHE_TAGS.owner_reservations, token),
+            ],
+        },
+    )();
+}
 
 /* ════════════════════════════════════════════════════════════════
    PAGE
@@ -87,7 +96,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
     /* ── Fetch ── */
     let reservation;
     try {
-        reservation = await getCachedReservation(params.id)(token);
+        reservation = await getCachedReservation(token, params.id);
     } catch (err) {
         if (err instanceof ApiError && err.status === 401) redirect("/login?expired=1");
         if (err instanceof ApiError && err.status === 404) notFound();

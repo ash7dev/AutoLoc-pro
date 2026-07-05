@@ -102,6 +102,17 @@ export class VehiclesController {
   }
 
   /**
+   * GET /vehicles/me/summary — Résumé léger pour le tableau de bord propriétaire.
+   * Doit être AVANT GET :id pour éviter que "me" soit capturé comme UUID.
+   */
+  @Get('me/summary')
+  @UseGuards(JwtAuthGuard, RolesGuard, ProfileCompletedGuard)
+  @Roles(RoleProfile.PROPRIETAIRE)
+  findMineSummary(@CurrentUser() user: RequestUser) {
+    return this.vehiclesService.findMyVehiclesSummary(user);
+  }
+
+  /**
    * GET /vehicles/:id/documents/upload-signature — OBSOLÈTE
    * Utiliser la création transaction unique avec documents inclus.
    * Gardé pour compatibilité temporaire.

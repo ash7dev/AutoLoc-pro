@@ -7,7 +7,7 @@ import {
   fetchOwnerReservations,
   fetchOwnerStats,
 } from "@/lib/nestjs/reservations";
-import { fetchMyVehicles } from "@/lib/nestjs/vehicles";
+import { fetchMyVehiclesSummary } from "@/lib/nestjs/vehicles";
 import { fetchWallet, fetchPenalties } from "@/lib/nestjs/wallet";
 import { OwnerDashboardView } from "@/features/dashboard/components/owner-dashboard-view";
 import { CACHE_TAGS, CACHE_DURATIONS, getCacheKey, getOwnerCacheTags } from "@/lib/cache-config";
@@ -38,10 +38,10 @@ async function getCachedReservations(token: string, limit: number) {
   )();
 }
 
-async function getCachedVehicles(token: string) {
+async function getCachedVehiclesSummary(token: string) {
   return unstable_cache(
-    () => fetchMyVehicles(token),
-    getCacheKey(CACHE_TAGS.owner_vehicles, token),
+    () => fetchMyVehiclesSummary(token),
+    getCacheKey(CACHE_TAGS.owner_vehicles, token, 'summary'),
     {
       revalidate: CACHE_DURATIONS.standard,
       tags: getOwnerCacheTags(CACHE_TAGS.owner_vehicles, token),
@@ -55,6 +55,17 @@ async function getCachedWallet(token: string) {
     getCacheKey(CACHE_TAGS.owner_wallet, token),
     {
       revalidate: CACHE_DURATIONS.critical,
+      tags: getOwnerCacheTags(CACHE_TAGS.owner_wallet, token),
+    }
+  )();
+}
+
+async function getCachedPenalties(token: string) {
+  return unstable_cache(
+    () => fetchPenalties(token),
+    getCacheKey(CACHE_TAGS.owner_wallet, token, 'penalties'),
+    {
+      revalidate: CACHE_DURATIONS.standard,
       tags: getOwnerCacheTags(CACHE_TAGS.owner_wallet, token),
     }
   )();
@@ -75,9 +86,9 @@ async function FullDashboardData({ token }: { token: string }) {
     const [statsResult, walletResult, penaltiesResult, resResult, vehiclesResult] = await Promise.allSettled([
       getCachedStats(token),
       getCachedWallet(token),
-      fetchPenalties(token),
+      getCachedPenalties(token), // ✅ Pénalités en cache
       getCachedReservations(token, 5), // ✅ Réduit à 5 (on affiche que 3)
-      getCachedVehicles(token),
+      getCachedVehiclesSummary(token), // ✅ Résumé léger au lieu de tout charger
     ]);
 
     if (statsResult.status === "fulfilled") stats = statsResult.value;

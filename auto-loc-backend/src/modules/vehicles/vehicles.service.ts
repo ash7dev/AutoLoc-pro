@@ -302,6 +302,27 @@ export class VehiclesService {
   }
 
   /**
+   * GET /vehicles/me/summary — Données minimales pour le dashboard propriétaire.
+   */
+  async findMyVehiclesSummary(user: RequestUser) {
+    const utilisateur = await this.getUtilisateurOrThrow(user.sub);
+
+    return this.prisma.vehicule.findMany({
+      where: { proprietaireId: utilisateur.id },
+      orderBy: { creeLe: 'desc' },
+      take: 100,
+      select: {
+        id: true,
+        marque: true,
+        modele: true,
+        statut: true,
+        totalLocations: true,
+        creeLe: true,
+      },
+    });
+  }
+
+  /**
    * GET /vehicles/:id — Détail véhicule.
    * - Propriétaire : toujours visible (quel que soit le statut).
    * - Public : uniquement si VERIFIE.

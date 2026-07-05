@@ -92,6 +92,11 @@ export interface Vehicle {
   _count?: { reservations: number };
 }
 
+export type OwnerVehicleSummary = Pick<
+  Vehicle,
+  'id' | 'marque' | 'modele' | 'statut' | 'totalLocations' | 'creeLe'
+>;
+
 // ── Input types ───────────────────────────────────────────────────────────────
 
 export interface CreateVehicleInput {
@@ -222,6 +227,7 @@ export const VEHICLE_PATHS = {
   feed: '/vehicles/feed',
   mobileFeed: '/vehicles/feed/mobile',
   me: '/vehicles/me',
+  meSummary: '/vehicles/me/summary',
   detail: (id: string) => `/vehicles/${id}`,
   update: (id: string) => `/vehicles/${id}`,
   archive: (id: string) => `/vehicles/${id}`,
@@ -408,6 +414,17 @@ export async function fetchBlockedDates(
  */
 export async function fetchMyVehicles(accessToken: string): Promise<Vehicle[]> {
   return apiFetch<Vehicle[]>(VEHICLE_PATHS.me, { accessToken });
+}
+
+/**
+ * Récupère un résumé léger des véhicules du propriétaire (pour dashboard).
+ * Évite de charger les photos et équipements inutiles.
+ */
+export async function fetchMyVehiclesSummary(accessToken: string): Promise<OwnerVehicleSummary[]> {
+  return apiFetch<OwnerVehicleSummary[]>(VEHICLE_PATHS.meSummary, {
+    accessToken,
+    next: { revalidate: 60, tags: [getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken)] }
+  });
 }
 
 /**
