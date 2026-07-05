@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import {
   Car,
   LayoutDashboard,
@@ -288,58 +289,49 @@ const NavContent = ({ compact }: { compact: boolean }) => (
       </div>
 
       {/* ══ MOBILE BOTTOM TAB BAR ══════════════════════════════════ */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 pb-safe">
-        <div className="mx-3 mb-2">
-          <nav className="flex bg-white rounded-2xl overflow-hidden
-            border border-slate-100
-            shadow-[0_-1px_0_0_rgba(0,0,0,0.04),0_4px_24px_rgba(0,0,0,0.10),0_16px_48px_rgba(0,0,0,0.06)]">
-            {MOBILE_NAV_ITEMS.map((item) => {
-              const isActive = item.href === '/dashboard/owner'
-                ? pathname === item.href
-                : pathname === item.href || pathname.startsWith(`${item.href}/`);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex-1 flex flex-col items-center justify-center py-3 gap-1.5 min-w-0 group relative"
+      <nav
+        className="fixed inset-x-0 z-50 flex justify-center px-4 lg:hidden"
+        style={{ bottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+      >
+        <div className="flex items-center gap-1 bg-white/90 backdrop-blur-xl border border-slate-100 rounded-full p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+          {MOBILE_NAV_ITEMS.map((item) => {
+            const isActive = item.href === '/dashboard/owner'
+              ? pathname === item.href
+              : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="relative flex items-center justify-center"
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId="owner-bottom-nav-active-pill"
+                    className="absolute inset-0 rounded-full bg-slate-950"
+                    transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                  />
+                )}
+                <span
+                  className={cn(
+                    'relative z-10 flex items-center gap-1.5 px-4 py-2.5 transition-colors duration-200',
+                    isActive ? 'text-emerald-400' : 'text-slate-400'
+                  )}
                 >
-                  {/* Indicateur actif en haut */}
-                  <span className={cn(
-                    'absolute top-0 inset-x-0 flex justify-center transition-all duration-300',
-                    isActive ? 'opacity-100' : 'opacity-0',
-                  )}>
-                    <span className="w-8 h-[3px] rounded-b-full bg-emerald-500 shadow-sm shadow-emerald-500/40" />
-                  </span>
-
-                  {/* Icône */}
-                  <span className={cn(
-                    'flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200',
-                    isActive
-                      ? 'bg-slate-950 shadow-md shadow-slate-900/25 scale-105'
-                      : 'group-active:bg-slate-100 group-active:scale-95',
-                  )}>
-                    <item.icon
-                      className={cn(
-                        'w-[18px] h-[18px] transition-colors duration-200',
-                        isActive ? 'text-emerald-400' : 'text-slate-400',
-                      )}
-                      strokeWidth={isActive ? 2 : 1.75}
-                    />
-                  </span>
-
-                  {/* Label */}
-                  <span className={cn(
-                    'text-[9.5px] font-bold tracking-tight leading-none transition-colors duration-200',
-                    isActive ? 'text-slate-900' : 'text-slate-400',
-                  )}>
-                    {item.label}
-                  </span>
-                </Link>
-              );
-            })}
-          </nav>
+                  <item.icon
+                    className="h-5 w-5 flex-shrink-0"
+                    strokeWidth={isActive ? 2.5 : 2}
+                  />
+                  {isActive && (
+                    <span className="text-[13px] font-bold whitespace-nowrap">
+                      {item.label}
+                    </span>
+                  )}
+                </span>
+              </Link>
+            );
+          })}
         </div>
-      </div>
+      </nav>
 
       {/* ══ DESKTOP SIDEBAR ════════════════════════════════════════ */}
       <aside className={cn(

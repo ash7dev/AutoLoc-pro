@@ -11,10 +11,12 @@ import { OverviewStats } from "@/features/dashboard/components/overview-stats";
 import { MobileQuickActions } from "@/features/dashboard/components/mobile-quick-actions";
 import { FleetPerformance } from "@/features/dashboard/components/fleet-performance";
 import { ReservationStatsVisualizer } from "@/features/reservations/components/ReservationStatsVisualizer";
+import { ProfileCompletionBanner } from "@/features/dashboard/components/profile-completion-banner";
 import { useState, useMemo } from "react";
 import type { Reservation, OwnerStats } from "@/lib/nestjs/reservations";
 import type { Vehicle } from "@/lib/nestjs/vehicles";
 import type { WalletData } from "@/lib/nestjs/wallet";
+import type { UserProfile } from "@/lib/nestjs/auth";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -24,6 +26,7 @@ interface OwnerDashboardViewProps {
     wallet: WalletData | null;
     penalties?: { totalDette: number; count: number } | null;
     stats?: OwnerStats | null;
+    profile?: UserProfile | null;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -171,6 +174,7 @@ export function OwnerDashboardView({
     wallet,
     penalties,
     stats,
+    profile,
 }: OwnerDashboardViewProps) {
     const [calendarDate, setCalendarDate] = useState(() => new Date());
     const [revenuePeriod, setRevenuePeriod] = useState("current"); // "current", "last", "2months"
@@ -363,6 +367,9 @@ export function OwnerDashboardView({
                     </div>
                 </div>
             )}
+
+            {/* Profile Completion Banner */}
+            {profile && <ProfileCompletionBanner profile={profile} />}
 
             {/* Stats row — visible on all breakpoints */}
             <OverviewStats data={stats} />

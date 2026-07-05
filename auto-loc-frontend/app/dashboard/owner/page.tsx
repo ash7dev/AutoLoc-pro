@@ -9,6 +9,7 @@ import {
 } from "@/lib/nestjs/reservations";
 import { fetchMyVehiclesSummary } from "@/lib/nestjs/vehicles";
 import { fetchWallet, fetchPenalties } from "@/lib/nestjs/wallet";
+import { fetchUserProfile } from "@/lib/nestjs/auth";
 import { OwnerDashboardView } from "@/features/dashboard/components/owner-dashboard-view";
 import { CACHE_TAGS, CACHE_DURATIONS, getCacheKey, getOwnerCacheTags } from "@/lib/cache-config";
 
@@ -81,19 +82,22 @@ async function FullDashboardData({ token }: { token: string }) {
   let wallet: any = null;
   let stats: any = null;
   let penalties: any = null;
+  let profile: any = null;
 
   try {
-    const [statsResult, walletResult, penaltiesResult, resResult, vehiclesResult] = await Promise.allSettled([
+    const [statsResult, walletResult, penaltiesResult, resResult, vehiclesResult, profileResult] = await Promise.allSettled([
       getCachedStats(token),
       getCachedWallet(token),
       getCachedPenalties(token), // ✅ Pénalités en cache
       getCachedReservations(token, 5), // ✅ Réduit à 5 (on affiche que 3)
       getCachedVehiclesSummary(token), // ✅ Résumé léger au lieu de tout charger
+      fetchUserProfile(token), // ✅ Profil pour le banner de complétion
     ]);
 
     if (statsResult.status === "fulfilled") stats = statsResult.value;
     if (walletResult.status === "fulfilled") wallet = walletResult.value;
     if (penaltiesResult.status === "fulfilled") penalties = penaltiesResult.value;
+    if (profileResult.status === "fulfilled") profile = profileResult.value;
 
     if (resResult.status === "fulfilled") {
       reservations = resResult.value.data.filter((r: any) => r.statut !== "INITIEE");
@@ -110,6 +114,7 @@ async function FullDashboardData({ token }: { token: string }) {
       wallet={wallet}
       penalties={penalties}
       stats={stats}
+      profile={profile}
     />
   );
 }
