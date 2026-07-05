@@ -289,8 +289,8 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                         </div>
                     )}
 
-                    {/* Location en cours — message informatif */}
-                    {r.statut === 'EN_COURS' && (
+                    {/* Location en cours — message informatif (seulement si date non expirée) */}
+                    {r.statut === 'EN_COURS' && !isReservationExpired(r.dateFin) && (
                         <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3.5">
                             <div className="w-7 h-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center flex-shrink-0 mt-0.5">
                                 <LogIn className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2} />
@@ -351,14 +351,23 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                 ══════════════════════════════════════════════════ */}
                 {(r.statut === 'TERMINEE' || (isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) && (
                     <>
-                        {/* Avis sur le véhicule */}
-                        <ReviewForm reservationId={r.id} />
-
-                        {/* Avis sur le propriétaire */}
-                        <OwnerReviewForm
-                            reservationId={r.id}
-                            ownerName={`${r.proprietaire.prenom} ${r.proprietaire.nom}`}
-                        />
+                        {(r as any).avis && (r as any).avis.length > 0 ? (
+                            <ExistingReviewDisplay
+                                review={(r as any).avis[0]}
+                                title="Votre avis sur cette location"
+                                subtitle="Merci d'avoir partagé votre expérience avec la communauté AutoLoc"
+                            />
+                        ) : (
+                            <>
+                                {/* Note : Un utilisateur ne peut donner qu'un seul avis par réservation */}
+                                {/* Le premier formulaire soumis empêchera le second (contrainte BD) */}
+                                <ReviewForm reservationId={r.id} />
+                                <OwnerReviewForm
+                                    reservationId={r.id}
+                                    ownerName={`${r.proprietaire.prenom} ${r.proprietaire.nom}`}
+                                />
+                            </>
+                        )}
                     </>
                 )}
 
