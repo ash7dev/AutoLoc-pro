@@ -6,15 +6,15 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
+  LayoutGrid,
   Car,
-  LayoutDashboard,
-  CalendarRange,
-  Banknote,
-  SlidersHorizontal,
-  UserRound,
+  Calendar,
+  Wallet,
+  BarChart3,
+  Settings,
+  Users,
   LogOut,
   Loader2,
-  ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -23,23 +23,25 @@ import { useSignOut } from '../../auth/hooks/use-signout';
 import { useRoleStore } from '../../auth/stores/role.store';
 import { LogoLoader } from '@/components/ui/logo-loader';
 
+
 /* ── Navigation config ────────────────────────────────────────── */
 const DESKTOP_NAV_ITEMS = [
-  { href: '/dashboard/owner', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/owner/vehicles', icon: Car, label: 'Véhicules' },
-  { href: '/dashboard/owner/reservations', icon: CalendarRange, label: 'Réservations' },
-  { href: '/dashboard/owner/wallet', icon: Banknote, label: 'Portefeuille' },
-  { href: '/dashboard/settings/profile', icon: SlidersHorizontal, label: 'Paramètres' },
+  { href: '/dashboard/owner', icon: LayoutGrid, label: 'Tableau de bord', badge: null },
+  { href: '/dashboard/owner/vehicles', icon: Car, label: 'Véhicules', badge: null },
+  { href: '/dashboard/owner/reservations', icon: Calendar, label: 'Réservations', badge: null },
+  { href: '/dashboard/owner/wallet', icon: Wallet, label: 'Portefeuille', badge: null },
+  { href: '/dashboard/owner/analytics', icon: BarChart3, label: 'Analytics', badge: 'NOUVEAU' },
+  { href: '/dashboard/settings/profile', icon: Settings, label: 'Paramètres', badge: null },
 ] as const;
 
 const MOBILE_NAV_ITEMS = [
-  { href: '/dashboard/owner', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/dashboard/owner', icon: LayoutGrid, label: 'Dashboard' },
   { href: '/dashboard/owner/vehicles', icon: Car, label: 'Véhicules' },
-  { href: '/dashboard/owner/reservations', icon: CalendarRange, label: 'Réservations' },
-  { href: '/dashboard/owner/wallet', icon: Banknote, label: 'Portefeuille' },
+  { href: '/dashboard/owner/reservations', icon: Calendar, label: 'Réservations' },
+  { href: '/dashboard/owner/wallet', icon: Wallet, label: 'Portefeuille' },
   {
     href: '/dashboard/settings/profile',
-    icon: SlidersHorizontal,
+    icon: Settings,
     label: 'Paramètres',
     submenu: [
       { name: 'Informations', href: '/dashboard/settings/profile' },
@@ -51,80 +53,21 @@ const MOBILE_NAV_ITEMS = [
   },
 ] as const;
 
-/* ── NavItem ──────────────────────────────────────────────────── */
-interface NavItemProps {
-  href: string;
-  icon?: React.ReactNode;
-  label: string;
-  active: boolean;
-  collapsed: boolean;
-  pending?: boolean;
-  subItem?: boolean;
-  onClick?: () => void;
-}
-
-function NavItem({ href, icon, label, active, collapsed, pending = false, subItem = false, onClick }: NavItemProps) {
-  const handleClick = onClick ? (e: React.MouseEvent) => {
-    e.preventDefault();
-    onClick();
-  } : undefined;
-
-  const displayIcon = pending
-    ? <Loader2 className="w-[18px] h-[18px] animate-spin" />
-    : icon;
-
-  return (
-    <Link
-      href={href}
-      title={collapsed ? label : undefined}
-      onClick={handleClick}
-      className={cn(
-        'group relative flex items-center gap-3 rounded-xl font-medium transition-all duration-200',
-        subItem
-          ? cn(
-            'py-2 pl-9 pr-4 text-[13.5px]',
-            active
-              ? 'text-emerald-400 font-semibold'
-              : 'text-black hover:text-black'
-          )
-          : collapsed
-            ? 'px-0 py-3.5 justify-center'
-            : 'px-3 py-2.5 text-[14.5px]',
-        !subItem && active
-          ? 'bg-black text-emerald-400'
-          : !subItem
-            ? 'text-black hover:bg-black/5 hover:text-black'
-            : '',
-        pending && 'opacity-70 pointer-events-none',
-      )}
-    >
-      {displayIcon && (
-        <span className="flex-shrink-0 transition-colors duration-200">
-          {displayIcon}
-        </span>
-      )}
-
-      {!collapsed && <span className="tracking-tight leading-none flex-1">{label}</span>}
-
-      {/* Tooltip collapsed */}
-      {collapsed && !subItem && (
-        <span className="absolute left-full ml-3 px-3 py-1.5 bg-black text-white text-xs rounded-xl
-          opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap
-          transition-opacity duration-150 z-50 shadow-xl border border-white/10">
-          {label}
-        </span>
-      )}
-    </Link>
-  );
-}
-
-/* ── Divider ─────────────────────────────────────────────────── */
-function SidebarDivider() {
-  return <div className="my-1 mx-3 border-t border-black/[0.06]" />;
-}
-
 /* ── Main Sidebar ─────────────────────────────────────────────── */
-export function OwnerSidebar() {
+/** Minimal profile shape the sidebar needs. Accepts both ProfileResponse and UserProfile. */
+interface SidebarProfile {
+  prenom?: string | null;
+  nom?: string | null;
+  email?: string | null;
+  avatarUrl?: string | null;
+  role?: string;
+}
+
+interface OwnerSidebarProps {
+  profile?: SidebarProfile | null;
+}
+
+export function OwnerSidebar({ profile }: OwnerSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const activeRole = useRoleStore((s) => s.activeRole);
@@ -132,7 +75,6 @@ export function OwnerSidebar() {
   const { switchToLocataire, loading: switching } = useSwitchToLocataire();
   const { signOut, loading: signingOut } = useSignOut();
 
-  const [collapsed, setCollapsed] = useState(true);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
@@ -147,125 +89,9 @@ export function OwnerSidebar() {
     });
   };
 
-const NavContent = ({ compact }: { compact: boolean }) => (
-    <div className="flex flex-col h-screen">
-
-      {/* ── STICKY HEADER: Logo ─────────────────────────────────── */}
-      <div className="flex-shrink-0 flex items-center justify-center px-3 py-5 border-b border-slate-100 bg-gradient-to-b from-white to-slate-50/30">
-        <button
-          onClick={isAdmin ? () => router.push('/dashboard/admin') : switchToLocataire}
-          disabled={!isAdmin && switching}
-          className="group hover:opacity-80 disabled:opacity-50 transition-all duration-200"
-        >
-          <Image
-            src="/logoAutoLoc.jpg"
-            alt="AutoLoc"
-            width={compact ? 45 : 180}
-            height={compact ? 45 : 90}
-            priority
-            className="object-contain"
-          />
-        </button>
-      </div>
-
-      {/* ── SCROLLABLE NAVIGATION ────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-        {/* Section label */}
-        {!compact && (
-          <div className="px-4 pt-4 pb-2">
-            <span className="text-[10.5px] font-semibold text-black/30 uppercase tracking-widest">
-              Navigation
-            </span>
-          </div>
-        )}
-
-        {/* Nav items */}
-        <nav className={cn(
-          'py-1 space-y-0.5',
-          compact ? 'px-2' : 'px-3'
-        )}>
-          {DESKTOP_NAV_ITEMS.map((item) => {
-            const isActive = item.href === '/dashboard/owner'
-              ? pathname === item.href
-              : pathname === item.href || pathname.startsWith(`${item.href}/`);
-            return (
-              <NavItem
-                key={item.href}
-                href={item.href}
-                icon={<item.icon className="w-[18px] h-[18px]" />}
-                label={item.label}
-                active={isActive}
-                collapsed={compact}
-                pending={pendingHref === item.href}
-                onClick={() => handleNavClick(item.href)}
-              />
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* ── STICKY FOOTER: Bottom actions ────────────────────────── */}
-      <div className={cn('flex-shrink-0 pb-5 pt-4 space-y-0.5 border-t border-slate-100 bg-gradient-to-b from-transparent to-slate-50/50', compact ? 'px-2' : 'px-3')}>
-        {/* <SidebarDivider /> */}
-
-        {/* Switch to locataire — masqué pour les admins */}
-        {!isAdmin && (
-          <button
-            type="button"
-            onClick={switchToLocataire}
-            disabled={switching}
-            title={compact ? 'Mode locataire' : undefined}
-            className={cn(
-              'group relative w-full flex items-center gap-3 rounded-xl text-[14.5px] font-medium',
-              'text-black hover:bg-black/5 hover:text-black',
-              'transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed',
-              compact ? 'px-0 py-3.5 justify-center' : 'px-3 py-2.5'
-            )}
-          >
-            {switching
-              ? <Loader2 className="w-[18px] h-[18px] animate-spin flex-shrink-0" />
-              : <UserRound className="w-[18px] h-[18px] flex-shrink-0" />
-            }
-            {!compact && <span className="tracking-tight flex-1 text-left">Mode locataire</span>}
-            {compact && (
-              <span className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs rounded-xl
-                opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap
-                transition-opacity duration-150 z-50 shadow-xl border border-slate-800">
-                Mode locataire
-              </span>
-            )}
-          </button>
-        )}
-
-        {/* Sign out */}
-        <button
-          type="button"
-          onClick={signOut}
-          disabled={signingOut}
-          title={compact ? 'Déconnexion' : undefined}
-          className={cn(
-            'group relative w-full flex items-center gap-3 rounded-xl text-[14.5px] font-medium',
-            'text-black hover:bg-red-50 hover:text-red-500',
-            'transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed',
-            compact ? 'px-0 py-3.5 justify-center' : 'px-3 py-2.5'
-          )}
-        >
-          {signingOut
-            ? <Loader2 className="w-[18px] h-[18px] animate-spin flex-shrink-0" />
-            : <LogOut className="w-[18px] h-[18px] flex-shrink-0" />
-          }
-          {!compact && <span className="tracking-tight flex-1 text-left">Déconnexion</span>}
-          {compact && (
-            <span className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs rounded-xl
-              opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap
-              transition-opacity duration-150 z-50 shadow-xl border border-slate-800">
-              Déconnexion
-            </span>
-          )}
-        </button>
-      </div>
-    </div>
-  );
+  const userInitials = profile
+    ? `${profile.prenom?.[0] || ''}${profile.nom?.[0] || ''}`.toUpperCase() || 'U'
+    : 'U';
 
   return (
     <>
@@ -337,31 +163,203 @@ const NavContent = ({ compact }: { compact: boolean }) => (
       </nav>
 
       {/* ══ DESKTOP SIDEBAR ════════════════════════════════════════ */}
-      <aside className={cn(
-        'relative hidden lg:flex flex-col flex-shrink-0',
-        'bg-white border-r border-slate-200 shadow-sm',
-        'transition-all duration-300 ease-in-out',
-        collapsed ? 'w-[65px]' : 'w-[230px]'
-      )}>
-        <NavContent compact={collapsed} />
+      <aside className="relative hidden lg:flex lg:flex-col lg:w-[280px] flex-shrink-0 bg-gradient-to-b from-[#2D1B69] via-[#1F1147] to-[#0F0A1F] border-r border-white/[0.08] shadow-2xl">
 
-        {/* Edge toggle button */}
-        <button
-          type="button"
-          onClick={() => setCollapsed(!collapsed)}
-          title={collapsed ? 'Agrandir' : 'Réduire'}
-          className="absolute right-0 top-[74px] translate-x-1/2 z-20
-            flex items-center justify-center w-5 h-5 rounded-full
-            bg-white border border-slate-200
-            shadow-md shadow-slate-200/80
-            hover:bg-slate-50 hover:shadow-lg hover:scale-110
-            transition-all duration-200"
-        >
-          {collapsed
-            ? <ChevronRight className="w-2.5 h-2.5 text-black/30" />
-            : <ChevronLeft className="w-2.5 h-2.5 text-black/30" />
-          }
-        </button>
+        {/* ── STICKY HEADER: Logo + User Profile ─────────────────────────────── */}
+        <div className="flex-shrink-0 border-b border-white/[0.08] bg-gradient-to-b from-white/[0.02] to-transparent">
+          {/* Logo */}
+          <div className="flex items-center justify-center px-6 py-5">
+            <button
+              onClick={isAdmin ? () => router.push('/dashboard/admin') : undefined}
+              className="group hover:opacity-90 transition-all duration-200"
+            >
+              <Image
+                src="/logoAutoLoc.jpg"
+                alt="AutoLoc"
+                width={160}
+                height={75}
+                priority
+                className="object-contain"
+              />
+            </button>
+          </div>
+
+          {/* User Profile Card */}
+          <div className="px-4 pb-4">
+            <div className="group relative overflow-hidden rounded-2xl bg-white/[0.04] border border-white/[0.08] p-4 hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-200 cursor-pointer">
+              {/* Subtle glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+              <div className="relative flex items-center gap-3">
+                {/* Avatar */}
+                <div className="relative flex-shrink-0">
+                  {profile?.avatarUrl ? (
+                    <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white/10 group-hover:ring-emerald-400/30 transition-all">
+                      <Image
+                        src={profile.avatarUrl}
+                        alt={profile.prenom || 'User'}
+                        width={48}
+                        height={48}
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center ring-2 ring-white/10 group-hover:ring-emerald-400/30 transition-all shadow-lg shadow-emerald-500/20">
+                      <span className="text-[16px] font-black text-white">
+                        {userInitials}
+                      </span>
+                    </div>
+                  )}
+                  {/* Online dot */}
+                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full ring-2 ring-[#1F1147]" />
+                </div>
+
+                {/* User Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-bold text-white truncate leading-tight">
+                    {profile?.prenom && profile?.nom
+                      ? `${profile.prenom} ${profile.nom}`
+                      : profile?.email || 'Utilisateur'
+                    }
+                  </p>
+                  <p className="text-[11px] font-medium text-emerald-400 mt-0.5">
+                    {profile?.role === 'PROPRIETAIRE' ? 'Propriétaire Pro' : profile?.role === 'ADMIN' ? 'Administrateur' : 'Utilisateur'}
+                  </p>
+                </div>
+
+                {/* Chevron */}
+                <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all flex-shrink-0" strokeWidth={2} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── SCROLLABLE NAVIGATION ────────────────────────────────── */}
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent hover:scrollbar-thumb-white/20">
+          <nav className="p-4 space-y-1.5">
+            {DESKTOP_NAV_ITEMS.map((item) => {
+              const isActive = item.href === '/dashboard/owner'
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const isPending = pendingHref === item.href;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavClick(item.href);
+                  }}
+                  className={cn(
+                    'group relative flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200',
+                    isActive
+                      ? 'bg-white/10 text-white shadow-lg shadow-black/10'
+                      : 'text-white/60 hover:bg-white/[0.04] hover:text-white/80'
+                  )}
+                >
+                  {/* Active indicator */}
+                  {isActive && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-emerald-400 to-emerald-500 rounded-r-full shadow-lg shadow-emerald-400/50" />
+                  )}
+
+                  {/* Icon */}
+                  <div className={cn(
+                    'w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200',
+                    isActive
+                      ? 'bg-white/10'
+                      : 'bg-white/[0.03] group-hover:bg-white/[0.06]'
+                  )}>
+                    {isPending ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-emerald-400" strokeWidth={2.5} />
+                    ) : (
+                      <item.icon className={cn(
+                        'w-5 h-5 transition-all duration-200',
+                        isActive ? 'text-emerald-400' : 'text-white/60 group-hover:text-white/80 group-hover:scale-110'
+                      )} strokeWidth={2.5} />
+                    )}
+                  </div>
+
+                  {/* Label */}
+                  <span className={cn(
+                    'flex-1 text-[14px] font-semibold tracking-tight',
+                    isActive ? 'text-white' : 'text-white/70 group-hover:text-white'
+                  )}>
+                    {item.label}
+                  </span>
+
+                  {/* Badge */}
+                  {item.badge && (
+                    <span className="px-2 py-0.5 rounded-md bg-amber-400/20 border border-amber-400/30 text-[9px] font-black text-amber-300 uppercase tracking-wider">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Divider + Plus d'outils */}
+          <div className="px-4 py-6">
+            <div className="h-px bg-white/[0.08]" />
+          </div>
+
+          <div className="px-4 pb-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-3 px-4">
+              Plus d'outils
+            </p>
+            <button
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/50 hover:bg-white/[0.04] hover:text-white/70 transition-all duration-200 group"
+            >
+              <div className="w-9 h-9 rounded-lg bg-white/[0.03] group-hover:bg-white/[0.06] flex items-center justify-center transition-all">
+                <span className="text-[18px]">📊</span>
+              </div>
+              <span className="flex-1 text-left text-[14px] font-semibold">Rapports</span>
+              <span className="text-[10px] font-bold text-white/20">Bientôt</span>
+            </button>
+          </div>
+        </div>
+
+        {/* ── STICKY FOOTER: Bottom actions ────────────────────────── */}
+        <div className="flex-shrink-0 p-4 pt-3 space-y-2 border-t border-white/[0.08] bg-gradient-to-b from-transparent to-black/10">
+
+
+
+          {/* Switch to locataire — masqué pour les admins */}
+          {!isAdmin && (
+            <button
+              type="button"
+              onClick={switchToLocataire}
+              disabled={switching}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/70 hover:bg-white/[0.06] hover:text-white transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <div className="w-9 h-9 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] flex items-center justify-center transition-all">
+                {switching
+                  ? <Loader2 className="w-5 h-5 animate-spin text-white/70" strokeWidth={2.5} />
+                  : <Users className="w-5 h-5 text-white/70" strokeWidth={2.5} />
+                }
+              </div>
+              <span className="flex-1 text-left text-[14px] font-semibold">Mode locataire</span>
+              <ChevronRight className="w-4 h-4 text-white/30" strokeWidth={2} />
+            </button>
+          )}
+
+          {/* Sign out */}
+          <button
+            type="button"
+            onClick={signOut}
+            disabled={signingOut}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/70 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed border border-transparent hover:border-red-500/20"
+          >
+            <div className="w-9 h-9 rounded-lg bg-white/[0.03] hover:bg-red-500/10 flex items-center justify-center transition-all">
+              {signingOut
+                ? <Loader2 className="w-5 h-5 animate-spin text-red-400" strokeWidth={2.5} />
+                : <LogOut className="w-5 h-5 text-white/70 group-hover:text-red-400" strokeWidth={2.5} />
+              }
+            </div>
+            <span className="flex-1 text-left text-[14px] font-semibold">Se déconnecter</span>
+          </button>
+        </div>
       </aside>
     </>
   );

@@ -168,7 +168,7 @@ export function OwnerTodoCard({
   const hasMore = visible < sorted.length;
 
   return (
-    <div className="lg:hidden relative overflow-hidden rounded-2xl bg-black shadow-xl flex flex-col h-full min-h-[380px]">
+    <div className="relative overflow-hidden rounded-2xl bg-black shadow-xl flex flex-col h-full min-h-[380px]">
 
       {/* Top highlight */}
       <div className="absolute top-0 left-6 right-6 h-px bg-white/10" />

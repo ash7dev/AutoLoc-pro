@@ -2,7 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { unstable_cache } from 'next/cache';
-import { fetchMe } from '../../../lib/nestjs/auth';
+import { fetchMe, fetchUserProfile } from '../../../lib/nestjs/auth';
 import { OwnerSidebar } from '../../../features/owner/components/owner-sidebar';
 
 /**
@@ -54,7 +54,7 @@ export default async function OwnerLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-page">
-      <OwnerSidebar />
+      <OwnerSidebar profile={profile} />
       <main className="flex-1 min-w-0 overflow-y-auto pt-14 pb-[90px] lg:pt-0 lg:pb-0">
         {children}
       </main>
