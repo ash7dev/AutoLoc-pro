@@ -19,6 +19,13 @@ import { LifecycleModal } from "./lifecycle-modal";
 import { CancelConfirmationModal } from "./cancel-confirmation-modal";
 
 /* ════════════════════════════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════════════════════════════ */
+function isDateExpired(dateFin: string): boolean {
+    return new Date() > new Date(dateFin);
+}
+
+/* ════════════════════════════════════════════════════════════════
    TYPES
 ════════════════════════════════════════════════════════════════ */
 interface ReservationActionsProps {
@@ -659,8 +666,8 @@ export function ReservationActions({
                 </div>
             )}
 
-            {/* Location EN_COURS — informatif */}
-            {statut === "EN_COURS" && checkinLocataireLe && (
+            {/* Location EN_COURS — informatif (masquer si date dépassée) */}
+            {statut === "EN_COURS" && checkinLocataireLe && dateFin && !isDateExpired(dateFin) && (
                 <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3.5 mb-2">
                     <div className="w-7 h-7 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2} />
@@ -722,7 +729,7 @@ export function ReservationActions({
 
             {/* Floating Mobile Action Bar — only for primary action (first one) */}
             {!confirmingAction && !disputeOpen && !checkinOpen && !checkoutOpen && !confirmOpen && !cancelModalOpen && actions.length > 0 && (
-                <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-slate-200 px-4 py-4 pb-safe lg:hidden animate-in slide-in-from-bottom duration-300">
+                <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-t border-slate-200 px-4 py-4 pb-safe lg:hidden animate-in slide-in-from-bottom duration-300">
                     {actions
                         .filter(action =>
                             // Appliquer le même filtre que pour les boutons desktop

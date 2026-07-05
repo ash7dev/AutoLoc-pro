@@ -55,6 +55,7 @@ export class CreateReviewUseCase {
             select: {
                 id: true,
                 statut: true,
+                dateFin: true,
                 locataireId: true,
                 proprietaireId: true,
                 vehiculeId: true,
@@ -64,10 +65,16 @@ export class CreateReviewUseCase {
             throw new NotFoundException('Réservation introuvable');
         }
 
-        // ── 3. Verify reservation is TERMINEE ──────────────────────────────
-        if (reservation.statut !== StatutReservation.TERMINEE) {
+        // ── 3. Verify reservation is TERMINEE OR date expired ──────────────────────────────
+        const isDateExpired = new Date() > new Date(reservation.dateFin);
+        const allowedStatuses: StatutReservation[] = [StatutReservation.EN_COURS, StatutReservation.CONFIRMEE];
+        const canReview =
+            reservation.statut === StatutReservation.TERMINEE ||
+            (isDateExpired && allowedStatuses.includes(reservation.statut));
+
+        if (!canReview) {
             throw new ForbiddenException(
-                `Cannot review a reservation with status '${reservation.statut}'. Must be TERMINEE.`,
+                `Cannot review a reservation with status '${reservation.statut}'. Must be TERMINEE or date expired.`,
             );
         }
 
