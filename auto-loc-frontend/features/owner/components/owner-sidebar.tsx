@@ -168,8 +168,9 @@ export function OwnerSidebar({ profile }: OwnerSidebarProps) {
         {/* ── Logo ─────────────────────────────── */}
         <div className="flex-shrink-0 px-6 pt-6 pb-4">
           <button
-            onClick={isAdmin ? () => router.push('/dashboard/admin') : undefined}
-            className="group hover:opacity-90 transition-all duration-200"
+            onClick={isAdmin ? () => router.push('/dashboard/admin') : switchToLocataire}
+            disabled={!isAdmin && switching}
+            className="group hover:opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Image
               src="/logoAutoLoc.jpg"

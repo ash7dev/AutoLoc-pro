@@ -277,13 +277,13 @@ export class WalletService {
     }
 
     // Créer la demande de retrait et débiter le wallet
-    const retrait = await this.prisma.$transaction(async (tx) => {
+    const { retrait, transactionWalletId } = await this.prisma.$transaction(async (tx) => {
       const newSolde = wallet.soldeDisponible.sub(amount);
       await tx.wallet.update({
         where: { id: wallet.id },
         data: { soldeDisponible: newSolde },
       });
-      await tx.transactionWallet.create({
+      const txWallet = await tx.transactionWallet.create({
         data: {
           walletId: wallet.id,
           montant: amount,
@@ -301,7 +301,7 @@ export class WalletService {
           destinataire: numeroDestinataire,
         },
       });
-      return retraitResult;
+      return { retrait: retraitResult, transactionWalletId: txWallet.id };
     });
 
     const retraitId = retrait.id;
@@ -333,6 +333,10 @@ export class WalletService {
           `✅ Wave payout initiated: ${payoutResult.transactionId} (status: ${payoutResult.status})`,
         );
 
+        if (payoutResult.status === 'FAILED') {
+          throw new Error('Transaction rejetée par Wave');
+        }
+
         // Mettre à jour le retrait avec l'ID de transaction Wave
         await this.prisma.retrait.update({
           where: { id: retraitId },
@@ -360,15 +364,46 @@ export class WalletService {
           `❌ Wave payout failed: ${errorMessage}`,
         );
 
-        // En cas d'erreur, notifier les admins pour traitement manuel
+        // 🔄 Restituer les fonds et annuler la transaction de débit en base de données
+        try {
+          await this.prisma.$transaction([
+            this.prisma.wallet.update({
+              where: { id: wallet.id },
+              data: { soldeDisponible: { increment: amount } },
+            }),
+            this.prisma.retrait.update({
+              where: { id: retraitId },
+              data: {
+                statut: StatutRetrait.REJETE,
+                raisonRejet: `Échec du virement automatique Wave : ${errorMessage}`,
+                traiteLe: new Date(),
+              },
+            }),
+            this.prisma.transactionWallet.delete({
+              where: { id: transactionWalletId },
+            }),
+          ]);
+          this.logger.log(
+            `🔄 Wallet restored and debit transaction deleted for failed withdrawal ${retraitId}`,
+          );
+        } catch (dbError) {
+          const dbErrMsg = dbError instanceof Error ? dbError.message : 'Unknown DB error';
+          this.logger.error(
+            `❌ Failed to restore wallet for failed withdrawal ${retraitId}: ${dbErrMsg}`,
+          );
+        }
+
+        // En cas d'erreur, notifier les admins pour information
         this.telegram.sendAdminAlert(
-          `⚠️ <b>Retrait Wave échoué - Action requise</b>\n` +
+          `⚠️ <b>Retrait Wave échoué - Remboursé automatiquement</b>\n` +
           `Propriétaire : ${ownerName}\n` +
           `Montant : <b>${montant.toLocaleString('fr-FR')} FCFA</b>\n` +
           `Numéro : <code>${numeroDestinataire}</code>\n` +
           `Erreur : ${errorMessage}\n` +
-          `<a href="https://autoloc.sn/dashboard/admin/withdrawals">Traiter manuellement →</a>`,
+          `Statut : REJETE (les fonds ont été restitués au portefeuille)`,
         ).catch(() => { });
+
+        throw new BadRequestException(`Échec du virement Wave : ${errorMessage}`);
       }
     }
 

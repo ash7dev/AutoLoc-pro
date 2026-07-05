@@ -416,6 +416,10 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
       // Le premier résultat est toujours l'objet véhicule mis à jour (ou l'original si pas de PATCH)
       const updatedVehicle = results[0] as Vehicle;
 
+      // Afficher immédiatement un message de succès avant le revalidate
+      // pour que l'utilisateur sache que la modification a réussi
+      setError(null);
+
       // 5. Revalidate les chemins du véhicule pour mettre à jour le cache
       await revalidateVehiclePaths(vehicle.id).catch(err => {
         console.warn('Failed to revalidate vehicle paths:', err);
