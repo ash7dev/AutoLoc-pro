@@ -130,6 +130,10 @@ export class CloudinaryService implements OnModuleInit {
     return this.uploadToFolder(buffer, `permis/${userId}`);
   }
 
+  async uploadAvatar(buffer: Buffer, userId: string): Promise<UploadResultDto> {
+    return this.uploadToFolder(buffer, `avatars/${userId}`);
+  }
+
   async deleteByPublicId(publicId: string): Promise<void> {
     await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
   }

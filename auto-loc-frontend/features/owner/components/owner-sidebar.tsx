@@ -148,10 +148,10 @@ export function OwnerSidebar() {
   };
 
 const NavContent = ({ compact }: { compact: boolean }) => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-screen">
 
-      {/* ── Logo ─────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-center px-3 py-5">
+      {/* ── STICKY HEADER: Logo ─────────────────────────────────── */}
+      <div className="flex-shrink-0 flex items-center justify-center px-3 py-5 border-b border-slate-100 bg-gradient-to-b from-white to-slate-50/30">
         <button
           onClick={isAdmin ? () => router.push('/dashboard/admin') : switchToLocataire}
           disabled={!isAdmin && switching}
@@ -168,42 +168,45 @@ const NavContent = ({ compact }: { compact: boolean }) => (
         </button>
       </div>
 
-      {/* ── Section label ────────────────────────────────────────── */}
-      {!compact && (
-        <div className="px-4 mb-2">
-          <span className="text-[10.5px] font-semibold text-black/30 uppercase tracking-widest">
-            Navigation
-          </span>
-        </div>
-      )}
+      {/* ── SCROLLABLE NAVIGATION ────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+        {/* Section label */}
+        {!compact && (
+          <div className="px-4 pt-4 pb-2">
+            <span className="text-[10.5px] font-semibold text-black/30 uppercase tracking-widest">
+              Navigation
+            </span>
+          </div>
+        )}
 
-      {/* ── Nav items ────────────────────────────────────────────── */}
-      <nav className={cn(
-        'flex-1 py-1 space-y-0.5 overflow-y-auto',
-        compact ? 'px-2' : 'px-3'
-      )}>
-        {DESKTOP_NAV_ITEMS.map((item) => {
-          const isActive = item.href === '/dashboard/owner'
-            ? pathname === item.href
-            : pathname === item.href || pathname.startsWith(`${item.href}/`);
-          return (
-            <NavItem
-              key={item.href}
-              href={item.href}
-              icon={<item.icon className="w-[18px] h-[18px]" />}
-              label={item.label}
-              active={isActive}
-              collapsed={compact}
-              pending={pendingHref === item.href}
-              onClick={() => handleNavClick(item.href)}
-            />
-          );
-        })}
-      </nav>
+        {/* Nav items */}
+        <nav className={cn(
+          'py-1 space-y-0.5',
+          compact ? 'px-2' : 'px-3'
+        )}>
+          {DESKTOP_NAV_ITEMS.map((item) => {
+            const isActive = item.href === '/dashboard/owner'
+              ? pathname === item.href
+              : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            return (
+              <NavItem
+                key={item.href}
+                href={item.href}
+                icon={<item.icon className="w-[18px] h-[18px]" />}
+                label={item.label}
+                active={isActive}
+                collapsed={compact}
+                pending={pendingHref === item.href}
+                onClick={() => handleNavClick(item.href)}
+              />
+            );
+          })}
+        </nav>
+      </div>
 
-      {/* ── Bottom actions ───────────────────────────────────────── */}
-      <div className={cn('pb-5 space-y-0.5', compact ? 'px-2' : 'px-3')}>
-        <SidebarDivider />
+      {/* ── STICKY FOOTER: Bottom actions ────────────────────────── */}
+      <div className={cn('flex-shrink-0 pb-5 pt-4 space-y-0.5 border-t border-slate-100 bg-gradient-to-b from-transparent to-slate-50/50', compact ? 'px-2' : 'px-3')}>
+        {/* <SidebarDivider /> */}
 
         {/* Switch to locataire — masqué pour les admins */}
         {!isAdmin && (
@@ -335,8 +338,8 @@ const NavContent = ({ compact }: { compact: boolean }) => (
 
       {/* ══ DESKTOP SIDEBAR ════════════════════════════════════════ */}
       <aside className={cn(
-        'relative hidden lg:flex flex-col flex-shrink-0 min-h-screen',
-        'bg-white border-r border-black/[0.06]',
+        'relative hidden lg:flex flex-col flex-shrink-0',
+        'bg-white border-r border-slate-200 shadow-sm',
         'transition-all duration-300 ease-in-out',
         collapsed ? 'w-[65px]' : 'w-[230px]'
       )}>

@@ -26,11 +26,13 @@ import {
     UserRound,
     Bell,
     RefreshCw,
+    Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DateInput } from '@/features/shared/DateInput';
 import type { UserProfile } from '@/lib/nestjs/auth';
 import { updateUserProfile } from '@/lib/nestjs/auth';
+import { uploadAvatar, deleteAvatar } from '@/lib/nestjs/profile';
 import { useSwitchToLocataire } from '@/features/owner/hooks/use-switch-to-locataire';
 import { useSwitchToProprietaire } from '@/features/owner/hooks/use-switch-to-proprietaire';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
@@ -399,9 +401,12 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
     const [dateNaissance, setDateNaissance] = useState(
         profile.dateNaissance ? profile.dateNaissance.split('T')[0] : '',
     );
+    const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [globalError, setGlobalError] = useState('');
     const [showKycAlert, setShowKycAlert] = useState(false);
     const [phoneEditOpen, setPhoneEditOpen] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const { switchToLocataire, loading: switchingToTenant } = useSwitchToLocataire();
     const { switchToProprietaire, loading: switchingToOwner } = useSwitchToProprietaire();
     const router = useRouter();
@@ -451,6 +456,53 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
         } catch { setGlobalError('Erreur lors de la mise à jour de la date'); }
     }
 
+    async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            setGlobalError('Format invalide. Utilisez JPEG, PNG ou WebP.');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setGlobalError('La photo est trop volumineuse (max 5MB).');
+            return;
+        }
+
+        setGlobalError('');
+        setUploadingAvatar(true);
+        try {
+            const result = await uploadAvatar(file);
+            setAvatarUrl(result.avatarUrl);
+            router.refresh();
+        } catch (err) {
+            setGlobalError(err instanceof Error ? err.message : 'Erreur lors de l\'upload');
+        } finally {
+            setUploadingAvatar(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    }
+
+    async function handleAvatarDelete() {
+        if (!avatarUrl) return;
+        if (!confirm('Voulez-vous vraiment supprimer votre photo de profil ?')) return;
+
+        setGlobalError('');
+        setUploadingAvatar(true);
+        try {
+            await deleteAvatar();
+            setAvatarUrl(null);
+            router.refresh();
+        } catch (err) {
+            setGlobalError(err instanceof Error ? err.message : 'Erreur lors de la suppression');
+        } finally {
+            setUploadingAvatar(false);
+        }
+    }
+
     const kycBadge = profile.statutKyc === 'VERIFIE' ? (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
             <BadgeCheck className="w-2.5 h-2.5" /> Vérifié
@@ -489,22 +541,47 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                 <div className="flex items-center gap-4 sm:gap-5">
                     {/* Avatar */}
                     <div className="relative flex-shrink-0">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/30 select-none">
-                            {profile.avatarUrl ? (
-                                <img src={profile.avatarUrl} alt="" className="w-full h-full rounded-2xl object-cover" />
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/30 select-none relative overflow-hidden">
+                            {uploadingAvatar && (
+                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                                </div>
+                            )}
+                            {avatarUrl ? (
+                                <img src={avatarUrl} alt="" className="w-full h-full rounded-2xl object-cover" />
                             ) : (
                                 <span className="text-xl sm:text-2xl font-black text-white tracking-tight">
                                     {getInitials(prenom, nom)}
                                 </span>
                             )}
                         </div>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleAvatarUpload}
+                            className="hidden"
+                        />
                         <button
                             type="button"
                             title="Changer la photo"
-                            className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-xl bg-white border border-black/[0.1] shadow-md flex items-center justify-center hover:bg-black/[0.02] active:scale-95 transition-all"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadingAvatar}
+                            className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-xl bg-white border border-black/[0.1] shadow-md flex items-center justify-center hover:bg-black/[0.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Camera className="w-3 h-3 text-black/40" strokeWidth={2} />
                         </button>
+                        {avatarUrl && (
+                            <button
+                                type="button"
+                                title="Supprimer la photo"
+                                onClick={handleAvatarDelete}
+                                disabled={uploadingAvatar}
+                                className="absolute -bottom-1.5 -left-1.5 w-7 h-7 rounded-xl bg-white border border-red-200 shadow-md flex items-center justify-center hover:bg-red-50 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <Trash2 className="w-3 h-3 text-red-500" strokeWidth={2} />
+                            </button>
+                        )}
                     </div>
 
                     {/* Name + completion */}

@@ -1,24 +1,40 @@
 import {
     Body,
     Controller,
+    Delete,
     Get,
     HttpCode,
     HttpStatus,
     Patch,
+    Post,
     Req,
+    UploadedFile,
     UseGuards,
+    UseInterceptors,
+    BadRequestException,
+    InternalServerErrorException,
+    Logger,
 } from '@nestjs/common';
 import { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { RequestUser } from '../../common/types/auth.types';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ForbiddenException } from '@nestjs/common';
+import { CloudinaryService } from '../../infrastructure/cloudinary/cloudinary.service';
+import { ALLOWED_MIMES, VEHICLE_PHOTO_MULTER_OPTIONS } from '../upload/upload.config';
+import { assertValidImageBuffer } from '../../infrastructure/cloudinary/utils/file-validator';
 
 @Controller('users/me')
 @UseGuards(JwtAuthGuard)
 export class ProfileController {
-    constructor(private readonly prisma: PrismaService) { }
+    private readonly logger = new Logger(ProfileController.name);
+
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly cloudinaryService: CloudinaryService,
+    ) { }
 
     /**
      * GET /users/me/profile
@@ -172,5 +188,115 @@ export class ProfileController {
             misAJourLe: updated.misAJourLe.toISOString(),
             kycReset: kycResetMsg,
         };
+    }
+
+    /**
+     * POST /users/me/avatar
+     * Upload une photo de profil pour l'utilisateur connecté.
+     */
+    @Post('avatar')
+    @HttpCode(HttpStatus.OK)
+    @UseInterceptors(FileInterceptor('file', VEHICLE_PHOTO_MULTER_OPTIONS))
+    async uploadAvatar(
+        @Req() req: Request & { user?: RequestUser },
+        @UploadedFile() file: Express.Multer.File | undefined,
+    ): Promise<{ avatarUrl: string; publicId: string }> {
+        const user = req.user!;
+
+        if (!file?.buffer) {
+            throw new BadRequestException('Fichier requis');
+        }
+
+        try {
+            await assertValidImageBuffer(file.buffer, ALLOWED_MIMES);
+        } catch {
+            throw new BadRequestException('Format de fichier invalide. Formats acceptés : JPEG, PNG, WebP.');
+        }
+
+        // Récupère l'utilisateur pour supprimer l'ancien avatar si existant
+        const utilisateur = await this.prisma.utilisateur.findUnique({
+            where: { userId: user.sub },
+            select: { id: true, avatarUrl: true, avatarPublicId: true },
+        });
+
+        if (!utilisateur) {
+            throw new ForbiddenException('Profil inexistant');
+        }
+
+        try {
+            // Upload le nouvel avatar
+            const result = await this.cloudinaryService.uploadAvatar(file.buffer, user.sub);
+
+            // Supprime l'ancien avatar si existant
+            if (utilisateur.avatarPublicId) {
+                await this.cloudinaryService.deleteByPublicId(utilisateur.avatarPublicId).catch((err) => {
+                    this.logger.warn(`Failed to delete old avatar: ${err.message}`);
+                });
+            }
+
+            // Met à jour l'URL de l'avatar dans la base de données
+            await this.prisma.utilisateur.update({
+                where: { id: utilisateur.id },
+                data: {
+                    avatarUrl: result.url,
+                    avatarPublicId: result.publicId,
+                },
+            });
+
+            return { avatarUrl: result.url, publicId: result.publicId };
+        } catch (err) {
+            this.logger.error(
+                err instanceof Error ? err.message : 'Avatar upload failed',
+                err instanceof Error ? err.stack : undefined,
+            );
+            throw new InternalServerErrorException("Échec de l'upload");
+        }
+    }
+
+    /**
+     * DELETE /users/me/avatar
+     * Supprime la photo de profil de l'utilisateur connecté.
+     */
+    @Delete('avatar')
+    @HttpCode(HttpStatus.OK)
+    async deleteAvatar(
+        @Req() req: Request & { user?: RequestUser },
+    ): Promise<{ message: string }> {
+        const user = req.user!;
+
+        const utilisateur = await this.prisma.utilisateur.findUnique({
+            where: { userId: user.sub },
+            select: { id: true, avatarPublicId: true },
+        });
+
+        if (!utilisateur) {
+            throw new ForbiddenException('Profil inexistant');
+        }
+
+        if (!utilisateur.avatarPublicId) {
+            throw new BadRequestException('Aucune photo de profil à supprimer');
+        }
+
+        try {
+            // Supprime l'avatar de Cloudinary
+            await this.cloudinaryService.deleteByPublicId(utilisateur.avatarPublicId);
+
+            // Met à jour la base de données
+            await this.prisma.utilisateur.update({
+                where: { id: utilisateur.id },
+                data: {
+                    avatarUrl: null,
+                    avatarPublicId: null,
+                },
+            });
+
+            return { message: 'Photo de profil supprimée avec succès' };
+        } catch (err) {
+            this.logger.error(
+                err instanceof Error ? err.message : 'Avatar deletion failed',
+                err instanceof Error ? err.stack : undefined,
+            );
+            throw new InternalServerErrorException('Échec de la suppression');
+        }
     }
 }

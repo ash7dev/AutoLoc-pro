@@ -27,6 +27,7 @@ model Utilisateur {
   prenom                   String
   nom                      String
   avatarUrl                String?
+  avatarPublicId           String?
   dateNaissance            DateTime?
   statutKyc                StatutKyc          @default(NON_VERIFIE)
   actif                    Boolean            @default(true)
