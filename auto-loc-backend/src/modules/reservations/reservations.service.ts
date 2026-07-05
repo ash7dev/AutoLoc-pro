@@ -131,6 +131,7 @@ function serializeReservation(r: Record<string, unknown> & {
     vehicule: r.vehicule,
     paiement: r.paiement,
     photosEtatLieu: (r as Record<string, unknown>).photosEtatLieu ?? undefined,
+    avis: (r as Record<string, unknown>).avis ?? undefined,
   };
 }
 
@@ -768,6 +769,15 @@ export class ReservationsService {
           orderBy: [{ type: 'asc' }, { position: 'asc' }],
         },
         litige: true,
+        avis: {
+          where: { auteurId: utilisateur.id },
+          select: {
+            id: true,
+            note: true,
+            commentaire: true,
+            creeLe: true,
+          },
+        },
       },
     });
     if (!reservation) throw new NotFoundException('Réservation introuvable');

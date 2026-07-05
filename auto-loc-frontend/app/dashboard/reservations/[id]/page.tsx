@@ -681,7 +681,8 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                 {/* ══════════════════════════════════════════════════
                     REVIEW
                 ══════════════════════════════════════════════════ */}
-                {(r.statut === 'TERMINEE' || (isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) && (
+                {(r.statut === 'TERMINEE' || (isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) &&
+                 (!(r as any).avis || (r as any).avis.length === 0) && (
                     <>
                         <ReviewForm reservationId={r.id} />
                         <OwnerReviewForm

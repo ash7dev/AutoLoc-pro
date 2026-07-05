@@ -276,7 +276,8 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                 {/* ══════════════════════════════════════════════════
                     REVIEW — Propriétaire note le locataire
                 ══════════════════════════════════════════════════ */}
-                {(r.statut === 'TERMINEE' || (isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) && (
+                {(r.statut === 'TERMINEE' || (isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) &&
+                 (!(r as any).avis || (r as any).avis.length === 0) && (
                     <TenantReviewForm
                         reservationId={r.id}
                         tenantName={`${r.locataire.prenom} ${r.locataire.nom}`}
