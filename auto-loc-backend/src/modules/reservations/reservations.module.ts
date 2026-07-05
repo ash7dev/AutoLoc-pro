@@ -9,12 +9,13 @@ import { DisputesModule } from '../disputes/disputes.module';
 import { CloudinaryModule } from '../../infrastructure/cloudinary/cloudinary.module';
 import { ContractModule } from '../../infrastructure/contract/contract.module';
 import { QueueModule } from '../../infrastructure/queue/queue.module';
+import { RevalidateModule } from '../../infrastructure/revalidate/revalidate.module';
 import { AdminReservationsController } from './admin-reservations.controller';
 import { AdminCancellationsController } from './admin-cancellations.controller';
 import { CleanupPhotosTask } from './cleanup-photos.task';
 
 @Module({
-  imports: [ReservationDomainModule, DisputesModule, CloudinaryModule, ContractModule, QueueModule],
+  imports: [ReservationDomainModule, DisputesModule, CloudinaryModule, ContractModule, QueueModule, RevalidateModule],
   controllers: [ReservationsController, AdminReservationsController, AdminCancellationsController],
   providers: [
     ReservationsService,
