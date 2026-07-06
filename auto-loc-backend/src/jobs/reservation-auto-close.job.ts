@@ -379,7 +379,7 @@ export class ReservationAutoCloseJob {
             });
         });
 
-        // 2b. Planifier le remboursement automatique Wave différé (20 minutes)
+        // 2b. Planifier le remboursement automatique Wave quasi-immédiat (10 secondes)
         if (hasRefund && reservation.paiement && reservation.paiement.fournisseur === FournisseurPaiement.WAVE) {
             try {
                 await this.queue.scheduleWaveRefund(
@@ -387,10 +387,10 @@ export class ReservationAutoCloseJob {
                     reservation.paiement.id,
                     montantRembourse,
                 );
-                this.logger.log(`Remboursement Wave différé de 20 minutes planifié (no-show) pour la réservation ${reservationId}`);
+                this.logger.log(`Remboursement Wave planifié (10s) pour no-show - Réservation ${reservationId}`);
             } catch (error) {
                 const errorMsg = error instanceof Error ? error.message : String(error);
-                this.logger.error(`Échec de la planification du remboursement Wave différé (no-show) : ${errorMsg}`);
+                this.logger.error(`Échec de la planification du remboursement Wave (no-show) : ${errorMsg}`);
             }
         }
 

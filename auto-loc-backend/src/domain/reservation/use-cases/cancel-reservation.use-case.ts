@@ -253,7 +253,7 @@ export class CancelReservationUseCase {
 
         // ── 7. Post-commit side effects ────────────────────────────────────────
 
-        // 7a. Remboursement automatique Wave différé si applicable (délai de 20 minutes)
+        // 7a. Remboursement automatique Wave quasi-immédiat si applicable (délai de 10 secondes)
         if (hasRefund && reservation.paiement && reservation.paiement.fournisseur === FournisseurPaiement.WAVE) {
             const refundVal = Number(policy.refundAmount);
             try {
@@ -262,10 +262,10 @@ export class CancelReservationUseCase {
                     reservation.paiement.id,
                     refundVal,
                 );
-                this.logger.log(`Remboursement Wave différé de 20 minutes planifié pour la réservation ${reservationId}`);
+                this.logger.log(`Remboursement Wave planifié (10s) pour la réservation ${reservationId} - Montant: ${refundVal} FCFA`);
             } catch (error) {
                 const errorMsg = error instanceof Error ? error.message : String(error);
-                this.logger.error(`Échec de la planification du remboursement Wave différé : ${errorMsg}`);
+                this.logger.error(`Échec de la planification du remboursement Wave : ${errorMsg}`);
             }
         }
 

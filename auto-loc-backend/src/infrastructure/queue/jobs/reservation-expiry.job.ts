@@ -126,7 +126,7 @@ export class ReservationExpiryProcessor {
       this.logger.error(`[Queue] Échec du remboursement automatique Wave différé : ${errorMsg}`);
 
       await this.telegram.sendAdminAlert(
-        `⚠️ <b>Échec remboursement automatique Wave différé (20min)</b>\n` +
+        `⚠️ <b>Échec remboursement automatique Wave</b>\n` +
         `Réservation : <code>${reservationId.slice(0, 8).toUpperCase()}</code>\n` +
         `Montant : ${amount} XOF\n` +
         `Erreur : ${errorMsg}\n` +
@@ -568,7 +568,7 @@ export class ReservationExpiryProcessor {
       }
     });
 
-    // Post-commit : planifier le remboursement Wave différé de 20 minutes
+    // Post-commit : planifier le remboursement Wave quasi-immédiat (10 secondes)
     if (paiementToRefund && (paiementToRefund as any).fournisseur === 'WAVE') {
       try {
         await this.queue.scheduleWaveRefund(
@@ -576,10 +576,10 @@ export class ReservationExpiryProcessor {
           (paiementToRefund as any).id,
           Number((paiementToRefund as any).montant),
         );
-        this.logger.log(`Remboursement Wave différé de 20 minutes planifié (signature expiry) pour la réservation ${reservationId}`);
+        this.logger.log(`Remboursement Wave planifié (10s) pour signature expiry - Réservation ${reservationId}`);
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        this.logger.error(`Échec de la planification du remboursement Wave différé (signature expiry) : ${errorMsg}`);
+        this.logger.error(`Échec de la planification du remboursement Wave (signature expiry) : ${errorMsg}`);
       }
     }
   }
