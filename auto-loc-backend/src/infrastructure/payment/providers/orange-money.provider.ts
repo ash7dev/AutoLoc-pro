@@ -312,14 +312,14 @@ export class OrangeMoneyProvider implements PaymentProviderInterface {
 
     // ── Refund ─────────────────────────────────────────────────────────────────
 
-    async refundPayment(transactionId: string, amount?: number): Promise<void> {
+    async refundPayment(transactionId: string, amount?: number, recipientPhone?: string, recipientName?: string): Promise<void> {
         if (!this.clientId) {
             this.logger.warn(`STUB: Orange Money refund requested for ${transactionId}`);
             return;
         }
 
         this.logger.log(
-            `Initiating Orange Money refund: ${transactionId}${amount ? ` (${amount} XOF)` : ''}`,
+            `Initiating Orange Money refund: ${transactionId}${amount ? ` (${amount} XOF)` : ''}, recipient=${recipientPhone}`,
         );
 
         // Orange Money refund endpoint (check docs for actual endpoint)

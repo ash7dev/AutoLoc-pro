@@ -158,6 +158,7 @@ export class CheckOutUseCase {
         this.revalidate.revalidateTag(`reservation-${reservationId}`).catch(() => { });
         this.revalidate.revalidatePath(`/dashboard/owner/reservations/${reservationId}`).catch(() => { });
         this.revalidate.revalidatePath(`/dashboard/renter/reservations/${reservationId}`).catch(() => { });
+        this.revalidate.revalidatePath('/reservations').catch(() => { });
 
         return {
             reservationId,

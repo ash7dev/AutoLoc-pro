@@ -84,7 +84,7 @@ export class WalletService {
       }
     }
 
-    const [pendingAgg, earnedAgg, transactions] = await Promise.all([
+    const [pendingAgg, earnedAgg, transactions, penalites] = await Promise.all([
       this.prisma.reservation.aggregate({
         where: {
           proprietaireId: utilisateur.id,
@@ -112,11 +112,32 @@ export class WalletService {
           fournisseur: true,
         },
       }),
+      this.prisma.penaliteProprietaire.findMany({
+        where: {
+          utilisateurId: utilisateur.id,
+          preleveleLe: null, // Pénalités en attente
+        },
+        select: {
+          montant: true,
+        },
+      }),
     ]);
+
+    const totalPenalites = penalites.reduce(
+      (sum, p) => sum + Number(p.montant),
+      0,
+    );
+
+    // Calculer le solde retirable (solde disponible - pénalités en attente)
+    const soldeRetirable = Math.max(
+      0,
+      Number(wallet.soldeDisponible) - totalPenalites,
+    );
 
     return {
       balance: {
         soldeDisponible: wallet.soldeDisponible.toString(),
+        soldeRetirable: soldeRetirable.toString(),
         soldeWave: soldeWave.toString(),
         soldeOrangeMoney: soldeOrangeMoney.toString(),
         enAttente: pendingAgg._sum?.netProprietaire?.toString() ?? '0',
@@ -132,6 +153,8 @@ export class WalletService {
         reservationId: t.reservationId ?? undefined,
         fournisseur: t.fournisseur ?? undefined,
       })),
+      totalPenalites,
+      penaltiesCount: penalites.length,
     };
   }
 
@@ -245,6 +268,28 @@ export class WalletService {
 
     const amount = new Prisma.Decimal(montant);
     if (amount.lte(0)) throw new BadRequestException('Montant invalide');
+
+    // ⚠️ IMPORTANT : Calculer le solde retirable après déduction des pénalités
+    const penalites = await this.prisma.penaliteProprietaire.findMany({
+      where: {
+        utilisateurId: utilisateur.id,
+        preleveleLe: null, // Pas encore prélevées
+      },
+    });
+
+    const totalPenalites = penalites.reduce(
+      (sum, p) => sum.add(p.montant),
+      new Prisma.Decimal(0),
+    );
+
+    // Calculer le solde retirable (solde - pénalités)
+    const soldeRetirable = wallet.soldeDisponible.sub(totalPenalites);
+
+    if (amount.gt(soldeRetirable)) {
+      throw new BadRequestException(
+        `Montant de retrait trop élevé. Solde retirable : ${soldeRetirable.toString()} FCFA (Solde : ${wallet.soldeDisponible.toString()} FCFA - Pénalités en attente : ${totalPenalites.toString()} FCFA)`,
+      );
+    }
 
     // Calculer le solde disponible pour le fournisseur sélectionné
     const allTransactions = await this.prisma.transactionWallet.findMany({

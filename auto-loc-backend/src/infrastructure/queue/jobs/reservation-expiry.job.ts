@@ -63,8 +63,22 @@ export class ReservationExpiryProcessor {
     const { reservationId, paiementId, amount } = job.data;
     this.logger.log(`[Queue] Processing delayed Wave refund for reservation ${reservationId} (Amount: ${amount} XOF)`);
 
+    // Récupérer le paiement avec le numéro de téléphone utilisé pour payer
     const paiement = await this.prisma.paiement.findUnique({
       where: { id: paiementId },
+      include: {
+        reservation: {
+          select: {
+            id: true,
+            locataire: {
+              select: {
+                prenom: true,
+                nom: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!paiement) {
@@ -77,11 +91,26 @@ export class ReservationExpiryProcessor {
       return;
     }
 
+    // Vérifier que le numéro de téléphone du paiement existe
+    if (!paiement.telephonePaiement) {
+      this.logger.error(`[Queue] Cannot refund - payment phone number not found for reservation ${reservationId}`);
+      await this.telegram.sendAdminAlert(
+        `⚠️ <b>Échec remboursement Wave - Téléphone de paiement manquant</b>\n` +
+        `Réservation : <code>${reservationId.slice(0, 8).toUpperCase()}</code>\n` +
+        `Montant : ${amount} XOF\n` +
+        `Erreur : Le numéro de téléphone utilisé pour le paiement n'est pas enregistré.\n` +
+        `Le remboursement doit être effectué manuellement.`
+      ).catch(() => {});
+      throw new Error('Payment phone number not found');
+    }
+
     try {
       await this.payment.refundPayment(
         'WAVE',
         paiement.idTransactionFournisseur || '',
         amount,
+        paiement.telephonePaiement,
+        `${paiement.reservation.locataire.prenom} ${paiement.reservation.locataire.nom}`,
       );
 
       await this.prisma.paiement.update({

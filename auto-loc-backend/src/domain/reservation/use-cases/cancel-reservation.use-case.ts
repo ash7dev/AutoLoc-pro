@@ -285,6 +285,7 @@ export class CancelReservationUseCase {
             this.revalidate.revalidatePath(`/vehicle/${reservation.vehiculeId}`).catch(() => { });
         }
         this.revalidate.revalidatePath('/explorer').catch(() => { });
+        this.revalidate.revalidatePath('/reservations').catch(() => { });
         if (city) {
             this.revalidate.revalidatePath(`/location/${encodeURIComponent(city)}`).catch(() => { });
         }

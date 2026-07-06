@@ -249,6 +249,7 @@ model Paiement {
   fournisseur              FournisseurPaiement
   idTransactionFournisseur String?             @unique
   statut                   StatutPaiement      @default(EN_ATTENTE)
+  telephonePaiement        String?             // Numéro de téléphone utilisé pour le paiement (pour remboursements)
   creeLe                   DateTime            @default(now())
   rembourseLe              DateTime?
   montantRembourse         Decimal?            @db.Decimal(10, 2)

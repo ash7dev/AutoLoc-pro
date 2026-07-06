@@ -4,6 +4,7 @@ import { apiFetch } from './api-client';
 
 export interface WalletBalance {
     soldeDisponible: string;
+    soldeRetirable: string;
     soldeWave: string;
     soldeOrangeMoney: string;
     enAttente: string;
@@ -27,6 +28,8 @@ export interface WalletTransaction {
 export interface WalletData {
     balance: WalletBalance;
     transactions: WalletTransaction[];
+    totalPenalites: number;
+    penaltiesCount: number;
 }
 
 export interface PenaltyItem {

@@ -266,20 +266,47 @@ export class WaveProvider implements PaymentProviderInterface {
 
     // ── Refund ─────────────────────────────────────────────────────────────────
 
-    async refundPayment(transactionId: string, amount?: number): Promise<void> {
-        // ⚠️ IMPORTANT: Wave n'a pas d'API publique pour les remboursements automatiques
-        // Les remboursements doivent être effectués manuellement depuis le dashboard Wave Business
-        // Voir: https://business.wave.com/transactions
+    async refundPayment(transactionId: string, amount?: number, recipientPhone?: string, recipientName?: string): Promise<void> {
+        // ⚠️ Wave n'a pas d'API publique pour les remboursements directs
+        // Solution: Utiliser l'API Payout pour envoyer l'argent au numéro qui a payé
 
-        this.logger.warn(
-            `⚠️ Wave refund requested for ${transactionId}${amount ? ` (${amount} XOF)` : ''} - ` +
-            `Manual refund required via Wave Business dashboard. ` +
-            `Wave API does not support automatic refunds.`,
+        if (!recipientPhone) {
+            this.logger.error(
+                `⚠️ Wave refund failed for ${transactionId}: recipient phone number is required`,
+            );
+            throw new Error('Recipient phone number is required for Wave refund');
+        }
+
+        if (!amount) {
+            this.logger.error(
+                `⚠️ Wave refund failed for ${transactionId}: amount is required`,
+            );
+            throw new Error('Refund amount is required');
+        }
+
+        this.logger.log(
+            `🔄 Wave refund via Payout API: ${amount} XOF → ${recipientPhone} (tx: ${transactionId})`,
         );
 
-        // On ne lance pas d'erreur pour ne pas bloquer le flux,
-        // mais le remboursement devra être fait manuellement
-        return;
+        // Utiliser l'API Payout pour rembourser
+        try {
+            const payoutResult = await this.initiatePayout({
+                amount,
+                recipientPhone,
+                referenceId: `refund-${transactionId}`,
+                recipientName,
+            });
+
+            this.logger.log(
+                `✅ Wave refund payout initiated: ${payoutResult.transactionId} (status: ${payoutResult.status})`,
+            );
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            this.logger.error(
+                `❌ Wave refund payout failed: ${errorMsg}`,
+            );
+            throw new Error(`Wave refund failed: ${errorMsg}`);
+        }
     }
 
     // ── Payout (Retrait) ───────────────────────────────────────────────────────

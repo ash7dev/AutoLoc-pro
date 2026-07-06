@@ -116,8 +116,12 @@ export interface PaymentProviderInterface {
 
     /**
      * Initie un remboursement.
+     * @param transactionId ID de transaction du fournisseur
+     * @param amount Montant à rembourser (optionnel - remboursement total si non spécifié)
+     * @param recipientPhone Numéro de téléphone du bénéficiaire du remboursement
+     * @param recipientName Nom du bénéficiaire (optionnel)
      */
-    refundPayment(transactionId: string, amount?: number): Promise<void>;
+    refundPayment(transactionId: string, amount?: number, recipientPhone?: string, recipientName?: string): Promise<void>;
 
     /**
      * Initie un payout (virement vers un compte mobile money).

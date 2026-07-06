@@ -51,7 +51,7 @@ export function WalletSnapshot({
 
       {/* Main balance */}
       <div className="mb-5">
-        <p className="text-xs text-white/30 font-medium mb-1.5">Solde disponible</p>
+        <p className="text-xs text-white/30 font-medium mb-1.5">Solde total</p>
         <p className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
           {loading ? (
             <span className="inline-flex align-middle">
@@ -61,10 +61,19 @@ export function WalletSnapshot({
             data.available
           )}
         </p>
-        <div className="mt-2 flex items-center gap-1.5">
-          <Banknote className="h-3 w-3 text-emerald-400" />
-          <span className="text-xs font-medium text-emerald-400">Retirable immédiatement</span>
-        </div>
+        {!loading && data.totalPenalties && data.totalPenalties > 0 ? (
+          <div className="mt-2 flex items-center gap-1.5">
+            <AlertTriangle className="h-3 w-3 text-yellow-400" />
+            <span className="text-xs font-medium text-yellow-400">
+              {data.totalPenalties.toLocaleString("fr-FR")} FCFA de pénalités en attente
+            </span>
+          </div>
+        ) : (
+          <div className="mt-2 flex items-center gap-1.5">
+            <Banknote className="h-3 w-3 text-emerald-400" />
+            <span className="text-xs font-medium text-emerald-400">Retirable immédiatement</span>
+          </div>
+        )}
       </div>
 
       <Separator className="bg-white/10 mb-5" />

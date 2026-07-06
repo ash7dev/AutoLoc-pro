@@ -89,9 +89,11 @@ export class PaymentService {
         fournisseur: FournisseurPaiement,
         transactionId: string,
         amount?: number,
+        recipientPhone?: string,
+        recipientName?: string,
     ): Promise<void> {
         const provider = this.factory.get(fournisseur);
-        await provider.refundPayment(transactionId, amount);
-        this.logger.log(`Remboursement via ${fournisseur} : txId=${transactionId}`);
+        await provider.refundPayment(transactionId, amount, recipientPhone, recipientName);
+        this.logger.log(`Remboursement via ${fournisseur} : txId=${transactionId}, phone=${recipientPhone}`);
     }
 }

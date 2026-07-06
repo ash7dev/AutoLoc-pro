@@ -311,10 +311,11 @@ export class IntouchProvider implements PaymentProviderInterface {
 
     // ── Refund ─────────────────────────────────────────────────────────────────
 
-    async refundPayment(transactionId: string, amount?: number): Promise<void> {
+    async refundPayment(transactionId: string, amount?: number, recipientPhone?: string, recipientName?: string): Promise<void> {
         this.logger.warn(
             `[REMBOURSEMENT MANUEL REQUIS] InTouch — ` +
-            `txId=${transactionId}, montant=${amount ?? 'total'} XOF`,
+            `txId=${transactionId}, montant=${amount ?? 'total'} XOF, ` +
+            `destinataire=${recipientPhone}`,
         );
     }
 }

@@ -200,6 +200,7 @@ export class CreateReservationUseCase {
                             fournisseur: input.fournisseur,
                             idTransactionFournisseur: paymentRef,
                             statut: 'EN_ATTENTE',
+                            telephonePaiement: input.payerPhone || locataire.telephone,
                         },
                     });
 
@@ -271,6 +272,7 @@ export class CreateReservationUseCase {
         // Invalidate Next.js cache for the affected vehicle and city/explorer
         this.revalidate.revalidatePath(`/vehicle/${input.vehiculeId}`).catch(() => { });
         this.revalidate.revalidatePath('/explorer').catch(() => { });
+        this.revalidate.revalidatePath('/reservations').catch(() => { });
         if (city) {
             this.revalidate.revalidatePath(`/location/${encodeURIComponent(city)}`).catch(() => { });
         }
@@ -288,6 +290,7 @@ export class CreateReservationUseCase {
                 email: true,
                 prenom: true,
                 nom: true,
+                telephone: true,
                 statutKyc: true,
                 dateNaissance: true,
                 actif: true,

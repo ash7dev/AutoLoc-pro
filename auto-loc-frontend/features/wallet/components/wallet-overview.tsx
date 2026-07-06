@@ -28,9 +28,11 @@ export function WalletOverview({ data }: WalletOverviewProps) {
     }
 
     const snapshotData = {
-        available: data.balance.soldeDisponible,
+        available: data.balance.soldeRetirable,
         pending: data.balance.enAttente,
         processing: "—",
+        totalPenalties: data.totalPenalites,
+        penaltiesCount: data.penaltiesCount,
     };
 
     return (
