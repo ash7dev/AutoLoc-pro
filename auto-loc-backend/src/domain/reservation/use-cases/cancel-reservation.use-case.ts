@@ -19,6 +19,7 @@ import { ContractGenerationService } from '../contract-generation.service';
 import { RevalidateService } from '../../../infrastructure/revalidate/revalidate.service';
 import { TelegramService } from '../../../infrastructure/telegram/telegram.service';
 import { NotificationService } from '../../../infrastructure/notifications/notification.service';
+import { PaymentService } from '../../../infrastructure/payment/payment.service';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,7 @@ export class CancelReservationUseCase {
         private readonly revalidate: RevalidateService,
         private readonly telegram: TelegramService,
         private readonly notifications: NotificationService,
+        private readonly payment: PaymentService,
     ) { }
 
     async execute(
@@ -94,9 +96,10 @@ export class CancelReservationUseCase {
                             montant: true,
                             fournisseur: true,
                             idTransactionFournisseur: true,
+                            telephonePaiement: true,
                         },
                     },
-                    locataire: { select: { telephone: true, prenom: true, email: true } },
+                    locataire: { select: { telephone: true, prenom: true, nom: true, email: true } },
                     proprietaire: { select: { telephone: true, prenom: true, email: true } },
                 },
             });
@@ -253,19 +256,61 @@ export class CancelReservationUseCase {
 
         // ── 7. Post-commit side effects ────────────────────────────────────────
 
-        // 7a. Remboursement automatique Wave quasi-immédiat si applicable (délai de 10 secondes)
+        // 7a. Remboursement automatique Wave IMMÉDIAT et SYNCHRONE
         if (hasRefund && reservation.paiement && reservation.paiement.fournisseur === FournisseurPaiement.WAVE) {
             const refundVal = Number(policy.refundAmount);
-            try {
-                await this.queue.scheduleWaveRefund(
-                    reservationId,
-                    reservation.paiement.id,
-                    refundVal,
-                );
-                this.logger.log(`Remboursement Wave planifié (10s) pour la réservation ${reservationId} - Montant: ${refundVal} FCFA`);
-            } catch (error) {
-                const errorMsg = error instanceof Error ? error.message : String(error);
-                this.logger.error(`Échec de la planification du remboursement Wave : ${errorMsg}`);
+            const paiementId = reservation.paiement.id;
+            const telephonePaiement = reservation.paiement.telephonePaiement;
+            const locataireNom = `${reservation.locataire.prenom} ${reservation.locataire.nom}`;
+
+            this.logger.log(`🔄 Remboursement Wave IMMÉDIAT - Réservation ${reservationId} - Montant: ${refundVal} FCFA`);
+
+            // Vérifier que le téléphone existe
+            if (!telephonePaiement) {
+                this.logger.error(`⚠️ Téléphone de paiement manquant pour ${reservationId} - Remboursement manuel requis`);
+                await this.telegram.sendAdminAlert(
+                    `⚠️ <b>Remboursement Wave impossible - Téléphone manquant</b>\n` +
+                    `Réservation : <code>${reservationId.slice(0, 8).toUpperCase()}</code>\n` +
+                    `Montant : ${refundVal} FCFA\n` +
+                    `Client : ${locataireNom}\n` +
+                    `Action : Rembourser manuellement via Wave Business`
+                ).catch(() => {});
+            } else {
+                // Exécuter le remboursement de manière synchrone
+                try {
+                    await this.payment.refundPayment(
+                        'WAVE',
+                        reservation.paiement.idTransactionFournisseur || '',
+                        refundVal,
+                        telephonePaiement,
+                        locataireNom,
+                    );
+
+                    // Marquer comme remboursé
+                    await this.prisma.paiement.update({
+                        where: { id: paiementId },
+                        data: {
+                            statut: StatutPaiement.REMBOURSE,
+                            rembourseLe: new Date(),
+                        },
+                    });
+
+                    this.logger.log(`✅ Remboursement Wave réussi pour ${reservationId} - ${refundVal} FCFA → ${telephonePaiement}`);
+                } catch (error) {
+                    const errorMsg = error instanceof Error ? error.message : String(error);
+                    this.logger.error(`❌ Échec remboursement Wave pour ${reservationId}: ${errorMsg}`);
+
+                    // Alerte admin en cas d'échec
+                    await this.telegram.sendAdminAlert(
+                        `❌ <b>Échec remboursement Wave automatique</b>\n` +
+                        `Réservation : <code>${reservationId.slice(0, 8).toUpperCase()}</code>\n` +
+                        `Montant : ${refundVal} FCFA\n` +
+                        `Client : ${locataireNom}\n` +
+                        `Téléphone : ${telephonePaiement}\n` +
+                        `Erreur : ${errorMsg}\n` +
+                        `Action : Rembourser manuellement`
+                    ).catch(() => {});
+                }
             }
         }
 
