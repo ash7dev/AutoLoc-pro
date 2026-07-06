@@ -14,7 +14,7 @@ import { BecomeHostCTA } from '@/features/landing/BecomeHostCTA';
 import { Footer } from '@/features/landing/Footer';
 import { HomeSessionRedirect } from '@/features/auth/components/home-session-redirect';
 import { HomeMobile } from '@/features/landing/HomeMobile';
-import { CACHE_DURATIONS } from '@/lib/cache-config';
+import { CACHE_DURATIONS, CACHE_TAGS } from '@/lib/cache-config';
 
 export const metadata: Metadata = {
   title: 'AutoLoc — Location de véhicules au Sénégal',
@@ -49,13 +49,13 @@ function buildInitialVehicles(feed: HomeFeedResponse | null): VehicleSearchResul
 const getCachedHomeFeed = unstable_cache(
   () => fetchHomeFeed(),
   ['home-feed'],
-  { revalidate: CACHE_DURATIONS.standard, tags: ['feed'] },
+  { revalidate: CACHE_DURATIONS.standard, tags: [CACHE_TAGS.public_feed] },
 );
 
 const getCachedMobileFeed = unstable_cache(
   () => fetchMobileFeed(),
   ['mobile-home-feed'],
-  { revalidate: CACHE_DURATIONS.standard, tags: ['mobile-feed'] },
+  { revalidate: CACHE_DURATIONS.standard, tags: [CACHE_TAGS.mobile_feed] },
 );
 
 export default async function HomePage() {

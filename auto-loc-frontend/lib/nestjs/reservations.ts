@@ -1,4 +1,5 @@
 import { apiFetch } from './api-client';
+import { CACHE_TAGS, getOwnerScopedTag } from '@/lib/cache-config';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -132,13 +133,14 @@ export async function fetchReservation(
 /**
  * Confirm a reservation (owner action).
  */
-export async function confirmReservation(id: string): Promise<void> {
+export async function confirmReservation(id: string, accessToken?: string): Promise<void> {
     await apiFetch(`/reservations/${id}/confirm`, { method: 'PATCH' });
 
     // ✅ OPTIMISATION: Invalider les caches après confirmation
     const { revalidateTag } = await import('next/cache');
-    revalidateTag('owner-reservations');
-    revalidateTag('owner-stats');
+    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_reservations, accessToken) : CACHE_TAGS.owner_reservations);
+    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_stats, accessToken) : CACHE_TAGS.owner_stats);
+    if (accessToken) revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_analytics, accessToken));
     revalidateTag(`reservation-${id}`);
 }
 
@@ -148,6 +150,7 @@ export async function confirmReservation(id: string): Promise<void> {
 export async function cancelReservation(
     id: string,
     raison?: string,
+    accessToken?: string,
 ): Promise<void> {
     await apiFetch(`/reservations/${id}/cancel`, {
         method: 'PATCH',
@@ -156,38 +159,42 @@ export async function cancelReservation(
 
     // ✅ OPTIMISATION: Invalider les caches après annulation (wallet + pénalités possibles)
     const { revalidateTag } = await import('next/cache');
-    revalidateTag('owner-reservations');
-    revalidateTag('owner-wallet');
-    revalidateTag('owner-penalties');
-    revalidateTag('owner-stats');
+    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_reservations, accessToken) : CACHE_TAGS.owner_reservations);
+    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_wallet, accessToken) : CACHE_TAGS.owner_wallet);
+    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_penalties, accessToken) : CACHE_TAGS.owner_penalties);
+    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_stats, accessToken) : CACHE_TAGS.owner_stats);
+    if (accessToken) revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_analytics, accessToken));
     revalidateTag(`reservation-${id}`);
-    revalidateTag('owner-vehicles'); // Disponibilité affectée
+    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken) : CACHE_TAGS.owner_vehicles); // Disponibilité affectée
+    revalidateTag(CACHE_TAGS.vehicle_search);
 }
 
 /**
  * Check-in a reservation.
  */
-export async function checkinReservation(id: string): Promise<void> {
+export async function checkinReservation(id: string, accessToken?: string): Promise<void> {
     await apiFetch(`/reservations/${id}/checkin`, { method: 'PATCH' });
 
     // ✅ OPTIMISATION: Invalider les caches après check-in
     const { revalidateTag } = await import('next/cache');
-    revalidateTag('owner-reservations');
-    revalidateTag('owner-stats');
+    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_reservations, accessToken) : CACHE_TAGS.owner_reservations);
+    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_stats, accessToken) : CACHE_TAGS.owner_stats);
+    if (accessToken) revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_analytics, accessToken));
     revalidateTag(`reservation-${id}`);
 }
 
 /**
  * Check-out a reservation.
  */
-export async function checkoutReservation(id: string): Promise<void> {
+export async function checkoutReservation(id: string, accessToken?: string): Promise<void> {
     await apiFetch(`/reservations/${id}/checkout`, { method: 'PATCH' });
 
     // ✅ OPTIMISATION: Invalider les caches après check-out (wallet + versement)
     const { revalidateTag } = await import('next/cache');
-    revalidateTag('owner-reservations');
-    revalidateTag('owner-wallet');
-    revalidateTag('owner-stats');
+    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_reservations, accessToken) : CACHE_TAGS.owner_reservations);
+    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_wallet, accessToken) : CACHE_TAGS.owner_wallet);
+    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_stats, accessToken) : CACHE_TAGS.owner_stats);
+    if (accessToken) revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_analytics, accessToken));
     revalidateTag(`reservation-${id}`);
 }
 

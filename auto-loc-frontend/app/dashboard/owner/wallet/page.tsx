@@ -2,7 +2,6 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { unstable_cache } from "next/cache";
 import { ApiError } from "@/lib/nestjs/api-client";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { fetchWallet, fetchPenalties } from "@/lib/nestjs/wallet";
 import { OwnerHeader } from "@/features/dashboard/components/owner-header";
 import { WalletOverview } from "@/features/wallet/components/wallet-overview";
@@ -23,13 +22,7 @@ const getCachedPenalties = (token: string) => unstable_cache(
 )();
 
 export default async function OwnerWalletPage() {
-    const nestToken = cookies().get("nest_access")?.value ?? null;
-    let token: string | null = nestToken;
-    if (!token) {
-        const supabase = createSupabaseServerClient();
-        const { data } = await supabase.auth.getSession();
-        token = data.session?.access_token ?? null;
-    }
+    const token = cookies().get("nest_access")?.value ?? null;
     if (!token) redirect("/login");
 
     let walletData;

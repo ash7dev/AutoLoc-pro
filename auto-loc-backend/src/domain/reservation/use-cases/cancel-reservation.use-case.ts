@@ -292,6 +292,7 @@ export class CancelReservationUseCase {
                         data: {
                             statut: StatutPaiement.REMBOURSE,
                             rembourseLe: new Date(),
+                            montantRembourse: refundVal,
                         },
                     });
 

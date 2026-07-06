@@ -2,7 +2,6 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { unstable_cache } from "next/cache";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   fetchOwnerReservations,
   fetchOwnerStats,
@@ -64,10 +63,10 @@ async function getCachedWallet(token: string) {
 async function getCachedPenalties(token: string) {
   return unstable_cache(
     () => fetchPenalties(token),
-    getCacheKey(CACHE_TAGS.owner_wallet, token, 'penalties'),
+    getCacheKey(CACHE_TAGS.owner_penalties, token),
     {
       revalidate: CACHE_DURATIONS.standard,
-      tags: getOwnerCacheTags(CACHE_TAGS.owner_wallet, token),
+      tags: getOwnerCacheTags(CACHE_TAGS.owner_penalties, token),
     }
   )();
 }
@@ -122,14 +121,7 @@ async function FullDashboardData({ token }: { token: string }) {
 // ── Page principale ────────────────────────────────────────────────────────────
 
 export default async function OwnerDashboardPage() {
-  const nestToken = cookies().get("nest_access")?.value ?? null;
-  let token: string | null = nestToken;
-
-  if (!token) {
-    const supabase = createSupabaseServerClient();
-    const { data } = await supabase.auth.getSession();
-    token = data.session?.access_token ?? null;
-  }
+  const token = cookies().get("nest_access")?.value ?? null;
 
   if (!token) redirect("/login");
 

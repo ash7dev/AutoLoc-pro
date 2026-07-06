@@ -438,7 +438,7 @@ export const fetchVehicle = cache(async (
 ): Promise<Vehicle> => {
   return apiFetch<Vehicle>(VEHICLE_PATHS.detail(id), {
     accessToken,
-    next: { revalidate: 60 },
+    next: { revalidate: 60, tags: [`vehicle-${id}`] },
   });
 });
 
@@ -480,7 +480,7 @@ export async function searchVehicles(
   const data = await apiFetch<SearchVehiclesResponse>(
     `${VEHICLE_PATHS.search}?${qs.toString()}`,
     {
-      next: { revalidate: 60 }
+      next: { revalidate: 60, tags: [CACHE_TAGS.vehicle_search] }
     }
   );
 
@@ -496,7 +496,7 @@ export async function searchVehicles(
  */
 export async function fetchHomeFeed(): Promise<HomeFeedResponse> {
   return apiFetch<HomeFeedResponse>(VEHICLE_PATHS.feed, {
-    next: { revalidate: 60 },
+    next: { revalidate: 60, tags: [CACHE_TAGS.public_feed] },
   });
 }
 
@@ -506,7 +506,7 @@ export async function fetchHomeFeed(): Promise<HomeFeedResponse> {
  */
 export async function fetchMobileFeed(): Promise<MobileFeedResponse> {
   return apiFetch<MobileFeedResponse>(VEHICLE_PATHS.mobileFeed, {
-    next: { revalidate: 60 },
+    next: { revalidate: 60, tags: [CACHE_TAGS.mobile_feed] },
   });
 }
 
@@ -636,8 +636,9 @@ export async function updateVehicleWithRevalidation(
   const { revalidateTag } = await import('next/cache');
   revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
   revalidateTag(`vehicle-${vehicleId}`);
-  revalidateTag('feed');
-  revalidateTag('mobile-feed');
+  revalidateTag(CACHE_TAGS.public_feed);
+  revalidateTag(CACHE_TAGS.mobile_feed);
+  revalidateTag(CACHE_TAGS.vehicle_search);
 
   return result;
 }
@@ -658,8 +659,9 @@ export async function deleteVehiclePhotoWithRevalidation(
   const { revalidateTag } = await import('next/cache');
   revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
   revalidateTag(`vehicle-${vehicleId}`);
-  revalidateTag('feed');
-  revalidateTag('mobile-feed');
+  revalidateTag(CACHE_TAGS.public_feed);
+  revalidateTag(CACHE_TAGS.mobile_feed);
+  revalidateTag(CACHE_TAGS.vehicle_search);
 }
 
 /**
@@ -678,8 +680,9 @@ export async function linkVehiclePhotoWithRevalidation(
   const { revalidateTag } = await import('next/cache');
   revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
   revalidateTag(`vehicle-${vehicleId}`);
-  revalidateTag('feed');
-  revalidateTag('mobile-feed');
+  revalidateTag(CACHE_TAGS.public_feed);
+  revalidateTag(CACHE_TAGS.mobile_feed);
+  revalidateTag(CACHE_TAGS.vehicle_search);
 
   return result;
 }
@@ -701,8 +704,9 @@ export async function updatePhotoPositionWithRevalidation(
   const { revalidateTag } = await import('next/cache');
   revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
   revalidateTag(`vehicle-${vehicleId}`);
-  revalidateTag('feed');
-  revalidateTag('mobile-feed');
+  revalidateTag(CACHE_TAGS.public_feed);
+  revalidateTag(CACHE_TAGS.mobile_feed);
+  revalidateTag(CACHE_TAGS.vehicle_search);
 
   return result;
 }

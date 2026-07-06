@@ -17,7 +17,7 @@ import type { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 import { revalidateTag } from 'next/cache';
 import crypto from 'crypto';
-import { CACHE_TAGS, getScopedTag } from '@/lib/cache-config';
+import { CACHE_TAGS, getOwnerScopedTag, getScopedTag } from '@/lib/cache-config';
 
 const NEST_API = process.env.NEXT_PUBLIC_API_URL ?? '';
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -151,10 +151,48 @@ function revalidateReservationMutation(path: string, method: string, accessToken
   if (!path.startsWith('/reservations')) return;
 
   revalidateTag(getScopedTag(CACHE_TAGS.tenant_reservations, accessToken));
+  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_reservations, accessToken));
+  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_stats, accessToken));
+  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_analytics, accessToken));
 
   const reservationId = path.match(/^\/reservations\/([^/]+)/)?.[1];
   if (reservationId) {
     revalidateTag(`reservation-${reservationId}`);
+  }
+
+  if (
+    path.includes('/cancel') ||
+    path.includes('/checkout') ||
+    path.includes('/confirm-payment')
+  ) {
+    revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_wallet, accessToken));
+  }
+
+  if (path.includes('/cancel')) {
+    revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_penalties, accessToken));
+    revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
+    revalidateTag(CACHE_TAGS.vehicle_search);
+  }
+}
+
+function revalidateVehicleMutation(path: string, method: string, accessToken: string | null) {
+  if (!accessToken || !['POST', 'PATCH', 'PUT', 'DELETE'].includes(method)) return;
+  if (!path.startsWith('/vehicles')) return;
+  if (path === '/vehicles/upload-signature') return;
+  if (path.includes('/documents/upload-signature')) return;
+
+  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
+  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_stats, accessToken));
+  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_analytics, accessToken));
+  revalidateTag(CACHE_TAGS.public_feed);
+  revalidateTag(CACHE_TAGS.mobile_feed);
+  revalidateTag(CACHE_TAGS.vehicle_search);
+
+  const vehicleId = path.match(/^\/vehicles\/([^/]+)/)?.[1];
+  if (vehicleId && !['me', 'search', 'feed'].includes(vehicleId)) {
+    revalidateTag(`vehicle-${vehicleId}`);
+    revalidateTag(`vehicle-${vehicleId}-availability`);
+    revalidateTag(`vehicle-${vehicleId}-indisponibilites`);
   }
 }
 
@@ -237,6 +275,7 @@ async function proxy(
 
         if (res.ok) {
           revalidateReservationMutation(path, request.method, accessToken);
+          revalidateVehicleMutation(path, request.method, accessToken);
         }
 
         const nextRes = await toNextResponse(res, {
@@ -269,6 +308,7 @@ async function proxy(
 
   if (res.ok) {
     revalidateReservationMutation(path, request.method, accessToken);
+    revalidateVehicleMutation(path, request.method, accessToken);
   }
 
   return toNextResponse(res, { path, method: request.method, clientETag });

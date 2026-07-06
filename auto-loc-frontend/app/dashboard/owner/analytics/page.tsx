@@ -179,7 +179,7 @@ const getCachedAnalytics = (token: string, reservations: Reservation[], vehicles
     [cacheKey],
     {
       revalidate: 60, // Cache pendant 60 secondes
-      tags: [`analytics-${token}`]
+      tags: getOwnerCacheTags(CACHE_TAGS.owner_analytics, token)
     }
   )();
 };

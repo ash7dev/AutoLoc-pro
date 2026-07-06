@@ -2,7 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { unstable_cache } from 'next/cache';
-import { fetchMe, fetchUserProfile } from '../../../lib/nestjs/auth';
+import { fetchMe } from '../../../lib/nestjs/auth';
 import { OwnerSidebar } from '../../../features/owner/components/owner-sidebar';
 
 /**

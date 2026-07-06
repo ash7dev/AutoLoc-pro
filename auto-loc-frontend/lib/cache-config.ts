@@ -12,7 +12,11 @@ export const CACHE_TAGS = {
   owner_transactions: 'owner-transactions',
   owner_reviews: 'owner-reviews',
   owner_profile: 'owner-profile',
+  owner_analytics: 'owner-analytics',
   tenant_reservations: 'tenant-reservations',
+  public_feed: 'feed',
+  mobile_feed: 'mobile-feed',
+  vehicle_search: 'vehicle-search',
 } as const;
 
 export const CACHE_DURATIONS = {
