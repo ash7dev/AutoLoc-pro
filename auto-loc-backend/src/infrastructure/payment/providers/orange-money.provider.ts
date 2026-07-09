@@ -19,14 +19,21 @@ interface OrangeTokenResponse {
     expires_in: number;
 }
 
+// API QR Code v2 Response
 interface OrangePaymentResponse {
-    status: number;
-    message: string;
-    data: {
-        id: number;
-        payment_url: string;
-        notif_token: string;
-        txnid: string;
+    deepLink: string;
+    deepLinks: {
+        MAXIT: string;
+        OM: string;
+    };
+    qrCode: string;  // Base64 image
+    validity: number;
+    metadata: Record<string, string>;
+    shortLink: string;
+    qrId: string;
+    validFor: {
+        startDateTime: string;
+        endDateTime: string;
     };
 }
 
@@ -179,18 +186,21 @@ export class OrangeMoneyProvider implements PaymentProviderInterface {
 
         const token = await this.getAccessToken();
 
+        // API QR Code v2 body structure
         const body = {
-            merchant_key: this.merchantKey,
-            currency: 'OUV',       // Orange Money XOF
-            order_id: params.referenceId,
+            code: this.merchantKey,  // Code marchand
             amount: params.amount,
-            return_url: params.successUrl || params.callbackUrl,
-            cancel_url: params.cancelUrl || params.callbackUrl,
-            notif_url: this.webhookUrl,  // URL webhook pour recevoir les notifications
-            lang: 'fr',
+            currency: 'XOF',
+            reference: params.referenceId,
+            metadata: {
+                description: params.description || 'Paiement AutoLoc',
+                customer_email: params.payerEmail || '',
+                customer_phone: params.payerPhone || '',
+                customer_name: `${params.payerFirstName || ''} ${params.payerLastName || ''}`.trim(),
+            },
         };
 
-        this.logger.log(`Initiating Orange Money payment: ${JSON.stringify(body)}`);
+        this.logger.log(`Initiating Orange Money QR Code payment: ${JSON.stringify(body)}`);
 
         // 🚀 OPTIMISATION: Timeout + Retry avec backoff exponentiel
         const maxRetries = 2;
@@ -201,7 +211,7 @@ export class OrangeMoneyProvider implements PaymentProviderInterface {
             const timeout = setTimeout(() => controller.abort(), 8_000); // 8s timeout
 
             try {
-                const response = await fetch(`${this.apiUrl}/webpayment`, {
+                const response = await fetch(`${this.apiUrl}/qrcode/generate`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -229,12 +239,12 @@ export class OrangeMoneyProvider implements PaymentProviderInterface {
                     throw new Error(`Orange Money API error: ${response.status}`);
                 }
 
-                // Success! Return response
+                // Success! Return response with deepLink
                 const data = (await response.json()) as OrangePaymentResponse;
-                this.logger.log(`Orange Money payment created: ${data.data.txnid}`);
+                this.logger.log(`Orange Money QR Code created: ${data.qrId}`);
                 return {
-                    paymentUrl: data.data.payment_url,
-                    transactionId: data.data.txnid,
+                    paymentUrl: data.deepLink,  // deepLink ouvre l'app Orange Money
+                    transactionId: data.qrId,
                 };
             } catch (error) {
                 clearTimeout(timeout);
