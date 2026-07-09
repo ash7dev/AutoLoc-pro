@@ -412,8 +412,14 @@ export async function fetchBlockedDates(
  * Récupère les véhicules du propriétaire connecté (RSC).
  * Passe le token explicitement pour l'appel serveur→NestJS.
  */
-export async function fetchMyVehicles(accessToken: string): Promise<Vehicle[]> {
-  return apiFetch<Vehicle[]>(VEHICLE_PATHS.me, { accessToken });
+export async function fetchMyVehicles(
+  accessToken: string,
+  params?: { limit?: number },
+): Promise<Vehicle[]> {
+  const query = new URLSearchParams();
+  if (params?.limit) query.set('limit', String(params.limit));
+  const qs = query.toString();
+  return apiFetch<Vehicle[]>(`${VEHICLE_PATHS.me}${qs ? `?${qs}` : ''}`, { accessToken });
 }
 
 /**

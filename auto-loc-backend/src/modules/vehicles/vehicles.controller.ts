@@ -97,8 +97,11 @@ export class VehiclesController {
   @Get('me')
   @UseGuards(JwtAuthGuard, RolesGuard, ProfileCompletedGuard)
   @Roles(RoleProfile.PROPRIETAIRE)
-  findMine(@CurrentUser() user: RequestUser) {
-    return this.vehiclesService.findMyVehicles(user);
+  findMine(
+    @CurrentUser() user: RequestUser,
+    @Query('limit') limit?: string,
+  ) {
+    return this.vehiclesService.findMyVehicles(user, limit ? Number(limit) : undefined);
   }
 
   /**

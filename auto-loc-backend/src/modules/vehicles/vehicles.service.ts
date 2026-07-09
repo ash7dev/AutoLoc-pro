@@ -268,13 +268,14 @@ export class VehiclesService {
   /**
    * GET /vehicles/me — Liste les véhicules du propriétaire avec nb réservations.
    */
-  async findMyVehicles(user: RequestUser) {
+  async findMyVehicles(user: RequestUser, limitOverride?: number) {
     const utilisateur = await this.getUtilisateurOrThrow(user.sub);
+    const take = Math.min(Math.max(limitOverride ?? 100, 1), 100);
 
     const vehicles = await this.prisma.vehicule.findMany({
       where: { proprietaireId: utilisateur.id },
       orderBy: { creeLe: 'desc' },
-      take: 100,
+      take,
       include: {
         photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
         tarifsProgressifs: { orderBy: { position: 'asc' } },
@@ -333,9 +334,15 @@ export class VehiclesService {
     // voit toujours son véhicule en temps réel (quel que soit son statut).
     if (!user) {
       const cacheKey = `${DETAIL_CACHE_PREFIX}${id}`;
-      const cached = await this.redis.get(cacheKey);
-      if (cached) {
-        return JSON.parse(cached);
+      try {
+        const cached = await this.redis.get(cacheKey);
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        this.logger.warn(`Redis fallback for findOne(${id}): ${errMsg}`);
+        // Continue vers DB
       }
 
       const vehicle = await this.prisma.vehicule.findUnique({
@@ -431,13 +438,19 @@ export class VehiclesService {
     const cacheKey = `${PRICING_CACHE_PREFIX}${vehicleId}:${nbJours}:${horsDakar ? '1' : '0'}`;
 
     // Tentative de récupération depuis le cache
-    const cached = await this.redis.get(cacheKey);
-    if (cached) {
-      try {
-        return JSON.parse(cached);
-      } catch {
-        // Cache corrompu, on continue avec la DB
+    try {
+      const cached = await this.redis.get(cacheKey);
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch {
+          // Cache corrompu, on continue avec la DB
+        }
       }
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Redis fallback for getPricing(${vehicleId}): ${errMsg}`);
+      // Continue vers DB
     }
 
     const vehicle = await this.prisma.vehicule.findUnique({
@@ -724,9 +737,15 @@ export class VehiclesService {
       `${SEARCH_CACHE_PREFIX}${cityKey}:` +
       crypto.createHash('sha256').update(cacheParams).digest('hex');
 
-    const cached = await this.redis.get(cacheKey);
-    if (cached) {
-      return JSON.parse(cached) as ReturnType<VehiclesService['search']> extends Promise<infer T> ? T : never;
+    try {
+      const cached = await this.redis.get(cacheKey);
+      if (cached) {
+        return JSON.parse(cached) as ReturnType<VehiclesService['search']> extends Promise<infer T> ? T : never;
+      }
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Redis fallback for search: ${errMsg}`);
+      // Continue vers DB
     }
 
     // ── Filtres dynamiques ────────────────────────────────────────────────────
@@ -959,9 +978,15 @@ export class VehiclesService {
    * qu'il existe au moins un véhicule VERIFIE (cascade de tri + backfill par doublon).
    */
   async getHomeFeed() {
-    const cached = await this.redis.get(FEED_CACHE_KEY);
-    if (cached) {
-      return JSON.parse(cached) as ReturnType<VehiclesService['buildHomeFeed']> extends Promise<infer T> ? T : never;
+    try {
+      const cached = await this.redis.get(FEED_CACHE_KEY);
+      if (cached) {
+        return JSON.parse(cached) as ReturnType<VehiclesService['buildHomeFeed']> extends Promise<infer T> ? T : never;
+      }
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Redis fallback for getHomeFeed: ${errMsg}`);
+      // Continue vers buildHomeFeed
     }
 
     try {
@@ -991,9 +1016,15 @@ export class VehiclesService {
     const MOBILE_FEED_CACHE_KEY = 'vehicles:feed:mobile';
     const MOBILE_FEED_CACHE_TTL = 180; // 3 minutes
 
-    const cached = await this.redis.get(MOBILE_FEED_CACHE_KEY);
-    if (cached) {
-      return JSON.parse(cached) as ReturnType<VehiclesService['buildMobileFeed']> extends Promise<infer T> ? T : never;
+    try {
+      const cached = await this.redis.get(MOBILE_FEED_CACHE_KEY);
+      if (cached) {
+        return JSON.parse(cached) as ReturnType<VehiclesService['buildMobileFeed']> extends Promise<infer T> ? T : never;
+      }
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Redis fallback for getMobileFeed: ${errMsg}`);
+      // Continue vers buildMobileFeed
     }
 
     try {

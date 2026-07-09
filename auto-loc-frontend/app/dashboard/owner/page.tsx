@@ -73,7 +73,11 @@ async function getCachedPenalties(token: string) {
 
 
 
-// ── Fetcher principal avec données complètes ───────────────────────────────────
+// ── Fetcher principal avec chargement optimisé par tiers ──────────────────────
+// ✅ OPTIMISATION: Charger en 3 vagues pour affichage progressif (streaming)
+// Tier 1 (critical): Stats + Profil → Affichage header/banner immédiat
+// Tier 2 (important): Wallet + Réservations → Actions urgentes visibles vite
+// Tier 3 (secondary): Véhicules + Pénalités → Détails complémentaires
 
 async function FullDashboardData({ token }: { token: string }) {
   let reservations: any[] = [];
@@ -84,24 +88,34 @@ async function FullDashboardData({ token }: { token: string }) {
   let profile: any = null;
 
   try {
-    const [statsResult, walletResult, penaltiesResult, resResult, vehiclesResult, profileResult] = await Promise.allSettled([
+    // ✅ Tier 1: Données critiques pour l'affichage initial (header, banner)
+    const [statsResult, profileResult] = await Promise.all([
       getCachedStats(token),
-      getCachedWallet(token),
-      getCachedPenalties(token), // ✅ Pénalités en cache
-      getCachedReservations(token, 5), // ✅ Réduit à 5 (on affiche que 3)
-      getCachedVehiclesSummary(token), // ✅ Résumé léger au lieu de tout charger
-      fetchUserProfile(token), // ✅ Profil pour le banner de complétion
+      fetchUserProfile(token),
     ]);
 
-    if (statsResult.status === "fulfilled") stats = statsResult.value;
-    if (walletResult.status === "fulfilled") wallet = walletResult.value;
-    if (penaltiesResult.status === "fulfilled") penalties = penaltiesResult.value;
-    if (profileResult.status === "fulfilled") profile = profileResult.value;
+    if (statsResult) stats = statsResult;
+    if (profileResult) profile = profileResult;
 
+    // ✅ Tier 2: Données importantes pour actions (wallet, réservations urgentes)
+    const [walletResult, resResult] = await Promise.allSettled([
+      getCachedWallet(token),
+      getCachedReservations(token, 5),
+    ]);
+
+    if (walletResult.status === "fulfilled") wallet = walletResult.value;
     if (resResult.status === "fulfilled") {
       reservations = resResult.value.data.filter((r: any) => r.statut !== "INITIEE");
     }
+
+    // ✅ Tier 3: Données secondaires (véhicules, pénalités)
+    const [vehiclesResult, penaltiesResult] = await Promise.allSettled([
+      getCachedVehiclesSummary(token),
+      getCachedPenalties(token),
+    ]);
+
     if (vehiclesResult.status === "fulfilled") vehicles = vehiclesResult.value;
+    if (penaltiesResult.status === "fulfilled") penalties = penaltiesResult.value;
   } catch (err) {
     console.error("Dashboard data fetch error:", err);
   }

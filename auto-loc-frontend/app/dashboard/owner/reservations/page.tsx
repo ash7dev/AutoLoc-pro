@@ -9,8 +9,8 @@ import { CACHE_TAGS, getCacheKey, getOwnerCacheTags } from "@/lib/cache-config";
 
 // ✅ OPTIMISATION: Cache des réservations owner pour 15 secondes
 const getCachedReservations = (token: string) => unstable_cache(
-  async () => fetchOwnerReservations(token, { limit: 20 }),
-  getCacheKey(CACHE_TAGS.owner_reservations, token, 20),
+  async () => fetchOwnerReservations(token, { limit: 10 }),
+  getCacheKey(CACHE_TAGS.owner_reservations, token, 10),
   { revalidate: 15, tags: getOwnerCacheTags(CACHE_TAGS.owner_reservations, token) }
 )();
 

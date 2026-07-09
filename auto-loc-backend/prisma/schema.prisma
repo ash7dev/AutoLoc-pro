@@ -503,7 +503,6 @@ enum FournisseurPaiement {
   WAVE
   ORANGE_MONEY
   STRIPE
-  INTOUCH
 }
 
 enum StatutPaiement {

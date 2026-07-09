@@ -209,6 +209,7 @@ export class AuthService {
           telephone: normalizedPhone,
           dateNaissance: dto.dateNaissance ? new Date(dto.dateNaissance) : undefined,
           phoneVerified: false,
+          profileCompleted: true,
         },
       });
       utilisateurId = existing.id;

@@ -21,13 +21,16 @@ export const CACHE_TAGS = {
 
 export const CACHE_DURATIONS = {
   // Cache court pour données critiques (statut wallet, réservations actives)
-  critical: 5, // 5 secondes
+  // ✅ Augmenté de 5s → 15s (wallet change rarement pendant navigation)
+  critical: 15, // 15 secondes
 
   // Cache moyen pour données semi-statiques (stats, véhicules)
-  standard: 30, // 30 secondes
+  // ✅ Augmenté de 30s → 60s (stats propriétaire stables)
+  standard: 60, // 1 minute
 
   // Cache long pour données statiques (profil, reviews)
-  long: 60, // 1 minute
+  // ✅ Augmenté de 60s → 120s (profil/reviews très stables)
+  long: 120, // 2 minutes
 
   // Cache très long pour données rarement modifiées
   extended: 300, // 5 minutes

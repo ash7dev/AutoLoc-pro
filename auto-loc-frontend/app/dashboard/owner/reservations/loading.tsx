@@ -117,7 +117,7 @@ function OwnerReservationsListSkeleton() {
 
       {/* Grid */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 10 }).map((_, i) => (
           <div key={i} className="group relative flex flex-col bg-white/70 backdrop-blur-xl rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-[240px]">
              {/* Header Shimmer */}
              <div className="p-5 space-y-3">
@@ -155,4 +155,3 @@ export default function OwnerReservationsLoading() {
     </div>
   );
 }
-

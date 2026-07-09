@@ -163,4 +163,54 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async setJSON<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
     await this.set(key, JSON.stringify(value), ttlSeconds);
   }
+
+  /**
+   * 🚀 OPTIMISATION: Get multiple keys in a single round-trip
+   * @returns Array of values (null for missing keys)
+   */
+  async mget(keys: string[]): Promise<(string | null)[]> {
+    if (keys.length === 0) return [];
+    return this.getClient().mget(keys);
+  }
+
+  /**
+   * 🚀 OPTIMISATION: Set multiple keys atomically
+   */
+  async mset(keyValues: [string, string][]): Promise<void> {
+    if (keyValues.length === 0) return;
+    const client = this.getClient();
+    const flatArgs = keyValues.flatMap(([k, v]) => [k, v]);
+    await client.mset(flatArgs);
+  }
+
+  /**
+   * 🚀 OPTIMISATION: Increment counter (for analytics/metrics)
+   * @returns New value after increment
+   */
+  async increment(key: string, amount: number = 1): Promise<number> {
+    return this.getClient().incrby(key, amount);
+  }
+
+  /**
+   * 🚀 OPTIMISATION: Set expiry on existing key
+   * @returns true if expiry was set, false if key doesn't exist
+   */
+  async expire(key: string, ttlSeconds: number): Promise<boolean> {
+    return (await this.getClient().expire(key, ttlSeconds)) === 1;
+  }
+
+  /**
+   * 🚀 MONITORING: Get Redis health with latency measurement
+   */
+  async getHealth(): Promise<{ status: 'UP' | 'DOWN'; latencyMs: number }> {
+    const start = Date.now();
+    try {
+      await this.ping();
+      const latencyMs = Date.now() - start;
+      return { status: 'UP', latencyMs };
+    } catch (err) {
+      const latencyMs = Date.now() - start;
+      return { status: 'DOWN', latencyMs };
+    }
+  }
 }

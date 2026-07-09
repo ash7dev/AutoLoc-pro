@@ -13,17 +13,16 @@ export class HealthController {
   async getHealth(): Promise<{
     ok: boolean;
     timestamp: string;
-    redis: 'ok' | 'error';
+    redis: {
+      status: 'UP' | 'DOWN';
+      latencyMs: number;
+    };
     queues: 'ok' | 'error';
   }> {
-    let redisStatus: 'ok' | 'error' = 'ok';
     let queueStatus: 'ok' | 'error' = 'ok';
 
-    try {
-      await this.redisService.ping();
-    } catch {
-      redisStatus = 'error';
-    }
+    // Utiliser la nouvelle méthode getHealth() avec latency
+    const redisHealth = await this.redisService.getHealth();
 
     try {
       await this.queueService.areQueuesReady();
@@ -32,9 +31,9 @@ export class HealthController {
     }
 
     return {
-      ok: redisStatus === 'ok' && queueStatus === 'ok',
+      ok: redisHealth.status === 'UP' && queueStatus === 'ok',
       timestamp: new Date().toISOString(),
-      redis: redisStatus,
+      redis: redisHealth,
       queues: queueStatus,
     };
   }

@@ -305,6 +305,7 @@ function VehicleCard({
                             src={photo}
                             alt={`${vehicle.marque} ${vehicle.modele}`}
                             fill
+                            loading="lazy"
                             className={cn(
                                 "object-cover transition-transform duration-700 group-hover:scale-[1.07]",
                                 isArchived && "grayscale-[50%]",
@@ -567,6 +568,7 @@ function VehicleRow({
                         src={photo}
                         alt={`${vehicle.marque} ${vehicle.modele}`}
                         fill
+                        loading="lazy"
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
                         sizes="72px"
                     />
@@ -648,7 +650,7 @@ function VehicleRow({
 function GridSkeleton() {
     return (
         <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
                 <div key={i} className="overflow-hidden rounded-2xl border border-slate-100 bg-white/70 backdrop-blur-sm">
                     <Skeleton className="h-[10.5rem] w-full rounded-none" />
                     <div className="flex flex-col gap-3 px-4 pt-3.5 pb-4">
