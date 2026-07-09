@@ -46,7 +46,6 @@ export class PaymentService {
         const routeMap: Partial<Record<FournisseurPaiement, string>> = {
             WAVE:         'wave',
             ORANGE_MONEY: 'orange-money',
-            INTOUCH:      'intouch',
         };
         const routeName  = routeMap[fournisseur] ?? fournisseur.toLowerCase();
         const callbackUrl = `${this.appBaseUrl}/payments/webhook/${routeName}`;
