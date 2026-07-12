@@ -212,6 +212,31 @@ export function Footer(): React.ReactElement {
           </div>
         </div>
 
+        {/* ── Legal info bar ── */}
+        <div className="border-t border-white/5 px-8 py-5 lg:px-16">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+            {/* Informations légales de l'entreprise */}
+            <div className="flex flex-col gap-1.5 lg:flex-row lg:items-center lg:gap-4">
+              <p className="text-[11px] font-semibold text-white/40 tracking-tight">
+                AutoLoc SAS
+              </p>
+              <span className="hidden lg:inline text-white/10">•</span>
+              <p className="text-[10.5px] font-medium text-white/25 tracking-tight">
+                RCCM : SN.DKR.2026.B.14368
+              </p>
+              <span className="hidden lg:inline text-white/10">•</span>
+              <p className="text-[10.5px] font-medium text-white/25 tracking-tight">
+                NINEA : 012989078
+              </p>
+            </div>
+
+            {/* Adresse - mobile: nouvelle ligne, desktop: même ligne */}
+            <p className="text-[10.5px] font-medium text-white/25 tracking-tight lg:text-right">
+              Parcelles Assainies Jaxaay, Unité 5, Villa 79 - Dakar, Sénégal
+            </p>
+          </div>
+        </div>
+
         {/* ── Bottom bar ── */}
         <div className="border-t border-white/5 px-8 py-5 lg:px-16">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
