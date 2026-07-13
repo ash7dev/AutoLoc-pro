@@ -6,13 +6,13 @@ import { submitKycLinks, fetchKycUploadSignature, type ProfileResponse } from "@
 import { ApiError } from "@/lib/nestjs/api-client";
 import { uploadDocumentToCloudinary } from "@/lib/nestjs/vehicles";
 import { cn } from "@/lib/utils";
-import { 
-  ShieldCheck, 
-  Camera, 
-  FileUp, 
-  X, 
-  CheckCircle2, 
-  Loader2, 
+import {
+  ShieldCheck,
+  Camera,
+  FileUp,
+  X,
+  CheckCircle2,
+  Loader2,
   AlertCircle,
   FileText,
   User,
@@ -157,14 +157,14 @@ export function KycSubmitForm({
       // Compression des images avant envoi pour passer la limite Vercel de 4.5Mo
       const compressImage = async (file: File): Promise<File> => {
         if (file.size < 1024 * 1024) return file; // Moins de 1Mo, on ne touche à rien
-        
+
         return new Promise((resolve) => {
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
             let width = img.width;
             let height = img.height;
-            
+
             // Max 1600px de large/haut pour garder une super qualité tout en étant léger
             const MAX_SIZE = 1600;
             if (width > height) {
@@ -178,12 +178,12 @@ export function KycSubmitForm({
                 height = MAX_SIZE;
               }
             }
-            
+
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx?.drawImage(img, 0, 0, width, height);
-            
+
             canvas.toBlob((blob) => {
               if (blob) {
                 resolve(new File([blob], file.name, { type: 'image/jpeg' }));
@@ -202,17 +202,14 @@ export function KycSubmitForm({
         selfieSlot.file ? compressImage(selfieSlot.file) : null,
       ]);
 
-      // 1. Obtenir les signatures Cloudinary (séparées pour documents vs selfie)
-      const [docSig, selfieSig] = await Promise.all([
-        fetchKycUploadSignature(),
-        fetchKycUploadSignature('adv_face')
-      ]);
+      // 1. Obtenir la signature Cloudinary standard pour les documents (utilisée aussi pour le selfie standard)
+      const docSig = await fetchKycUploadSignature();
 
-      // 2. Upload DIRECT vers Cloudinary (beaucoup plus rapide !)
+      // 2. Upload DIRECT vers Cloudinary (beaucoup plus rapide et sans paramètre de détection de visage restrictif)
       const [frontResult, backResult, selfieResult] = await Promise.all([
         compressedFront ? uploadDocumentToCloudinary(compressedFront, docSig) : Promise.resolve(null),
         compressedBack ? uploadDocumentToCloudinary(compressedBack, docSig) : Promise.resolve(null),
-        compressedSelfie ? uploadDocumentToCloudinary(compressedSelfie, selfieSig, { detectFace: true }) : Promise.resolve(null),
+        compressedSelfie ? uploadDocumentToCloudinary(compressedSelfie, docSig) : Promise.resolve(null),
       ]);
 
       if (!frontResult || !backResult || !selfieResult) {
@@ -231,7 +228,7 @@ export function KycSubmitForm({
       onSubmitted?.(profile);
     } catch (err: any) {
       console.error("KYC Submit error:", err);
-      
+
       // Traduction des erreurs techniques en messages "Pro"
       if (err instanceof ApiError) {
         if (err.status === 413) {
@@ -281,16 +278,16 @@ export function KycSubmitForm({
     );
   }
 
-  const UploadZone = ({ 
-    label, 
-    slot, 
-    onSelect, 
-    onRemove, 
-    inputRef 
-  }: { 
-    label: string, 
-    slot: FileSlot, 
-    onSelect: (f: File) => void, 
+  const UploadZone = ({
+    label,
+    slot,
+    onSelect,
+    onRemove,
+    inputRef
+  }: {
+    label: string,
+    slot: FileSlot,
+    onSelect: (f: File) => void,
     onRemove: () => void,
     inputRef: React.RefObject<HTMLInputElement>
   }) => (
@@ -299,12 +296,12 @@ export function KycSubmitForm({
         <FileText className="w-3.5 h-3.5 text-slate-400" />
         {label}
       </p>
-      <div 
+      <div
         onClick={() => !slot.file && inputRef.current?.click()}
         className={cn(
           "relative min-h-[160px] rounded-2xl border-2 transition-all duration-300 flex flex-col items-center justify-center p-4 cursor-pointer overflow-hidden",
-          slot.file 
-            ? "border-emerald-500 bg-emerald-50/20" 
+          slot.file
+            ? "border-emerald-500 bg-emerald-50/20"
             : "border-dashed border-slate-200 bg-slate-50 hover:border-emerald-300 hover:bg-emerald-50/10",
           slot.error && "border-red-200 bg-red-50/50"
         )}
@@ -327,7 +324,7 @@ export function KycSubmitForm({
               <p className="text-[12px] font-bold text-emerald-700 bg-white/80 px-3 py-1 rounded-full backdrop-blur-sm">
                 Document chargé
               </p>
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); onRemove(); }}
                 className="p-1.5 rounded-full bg-white text-slate-400 hover:text-red-500 shadow-sm border border-slate-100 transition-colors"
               >
@@ -373,14 +370,14 @@ export function KycSubmitForm({
       {currentStep === 1 && (
         <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300">
           <div className="grid gap-5 sm:grid-cols-2">
-            <UploadZone 
+            <UploadZone
               label="Recto du document"
               slot={documentFrontSlot}
               inputRef={frontInputRef}
               onSelect={(f) => handleFileChange(f, setDocumentFrontSlot, documentFrontSlot)}
               onRemove={() => removeFile(setDocumentFrontSlot, documentFrontSlot)}
             />
-            <UploadZone 
+            <UploadZone
               label="Verso du document"
               slot={documentBackSlot}
               inputRef={backInputRef}
@@ -394,8 +391,8 @@ export function KycSubmitForm({
             disabled={!canGoToStep2}
             className={cn(
               "w-full h-14 rounded-2xl text-[14px] font-black tracking-tight shadow-lg transition-all active:scale-[0.98]",
-              canGoToStep2 
-                ? "bg-slate-900 text-emerald-400 hover:bg-slate-800 shadow-slate-200" 
+              canGoToStep2
+                ? "bg-slate-900 text-emerald-400 hover:bg-slate-800 shadow-slate-200"
                 : "bg-slate-100 text-slate-300"
             )}
           >
@@ -421,9 +418,9 @@ export function KycSubmitForm({
               /* Selfie captured and validated */
               <div className="flex flex-col items-center justify-center p-6 border-2 border-emerald-500 bg-emerald-50/20 rounded-2xl gap-4">
                 <div className="w-36 h-36 rounded-full border-4 border-emerald-500 shadow-lg overflow-hidden relative">
-                  <img 
-                    src={selfieSlot.previewUrl} 
-                    alt="Selfie capturé" 
+                  <img
+                    src={selfieSlot.previewUrl}
+                    alt="Selfie capturé"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute bottom-1.5 left-0 right-0 text-center">
@@ -436,7 +433,7 @@ export function KycSubmitForm({
                   <p className="text-[13.5px] font-bold text-slate-800">Selfie enregistré</p>
                   <p className="text-[11.5px] text-slate-500 mt-0.5">Le selfie sera envoyé de manière sécurisée</p>
                 </div>
-                <button 
+                <button
                   type="button"
                   onClick={() => removeFile(setSelfieSlot, selfieSlot)}
                   className="flex items-center gap-1 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-bold text-slate-600 shadow-sm transition-all"
@@ -463,7 +460,7 @@ export function KycSubmitForm({
             <div className="flex-1">
               <p className="text-[12px] font-bold text-slate-800">Pourquoi un selfie ?</p>
               <p className="text-[11px] text-slate-500 leading-relaxed mt-0.5">
-                Le selfie en direct permet de confirmer que vous êtes bien la personne sur le document d&apos;identité. 
+                Le selfie en direct permet de confirmer que vous êtes bien la personne sur le document d&apos;identité.
                 Vos données sont chiffrées et ne sont jamais partagées.
               </p>
             </div>
@@ -491,8 +488,8 @@ export function KycSubmitForm({
               disabled={!canSubmit || submitting}
               className={cn(
                 "flex-1 h-14 rounded-2xl text-[14px] font-black tracking-tight shadow-lg transition-all active:scale-[0.98]",
-                canSubmit 
-                  ? "bg-slate-900 text-emerald-400 hover:bg-slate-800 shadow-slate-200" 
+                canSubmit
+                  ? "bg-slate-900 text-emerald-400 hover:bg-slate-800 shadow-slate-200"
                   : "bg-slate-100 text-slate-300"
               )}
             >
