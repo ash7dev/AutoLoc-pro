@@ -130,7 +130,8 @@ export class OrangeMoneyProvider implements PaymentProviderInterface {
             const timeout = setTimeout(() => controller.abort(), 10_000); // 10s timeout
 
             try {
-                const response = await fetch('https://api.orange.com/oauth/v3/token', {
+                const authUrl = this.config.get<string>('ORANGE_MONEY_AUTH_URL', 'https://api.orange-sonatel.com/oauth/v1/token');
+                const response = await fetch(authUrl, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Basic ${credentials}`,
@@ -186,18 +187,24 @@ export class OrangeMoneyProvider implements PaymentProviderInterface {
 
         const token = await this.getAccessToken();
 
-        // API QR Code v2 body structure
+        // API QR Code v4 body structure (Orange Sonatel)
         const body = {
-            code: this.merchantKey,  // Code marchand
-            amount: params.amount,
-            currency: 'XOF',
-            reference: params.referenceId,
+            amount: {
+                unit: 'XOF',
+                value: params.amount,
+            },
+            callbackCancelUrl: params.cancelUrl || `${this.webhookUrl}/cancel`,
+            callbackSuccessUrl: params.successUrl || `${this.webhookUrl}/success`,
+            code: this.merchantKey,  // Code marchand (614491)
             metadata: {
                 description: params.description || 'Paiement AutoLoc',
+                reference: params.referenceId,
                 customer_email: params.payerEmail || '',
                 customer_phone: params.payerPhone || '',
                 customer_name: `${params.payerFirstName || ''} ${params.payerLastName || ''}`.trim(),
             },
+            name: 'AutoLoc Reservation',
+            validity: 15, // 15 minutes
         };
 
         this.logger.log(`Initiating Orange Money QR Code payment: ${JSON.stringify(body)}`);
@@ -211,11 +218,12 @@ export class OrangeMoneyProvider implements PaymentProviderInterface {
             const timeout = setTimeout(() => controller.abort(), 8_000); // 8s timeout
 
             try {
-                const response = await fetch(`${this.apiUrl}/qrcode/generate`, {
+                const response = await fetch(`${this.apiUrl}/v4/qrcode`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
+                        'X-Callback-Url': this.webhookUrl,
                     },
                     body: JSON.stringify(body),
                     signal: controller.signal,
