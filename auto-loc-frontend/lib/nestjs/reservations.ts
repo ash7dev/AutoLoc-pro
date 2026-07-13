@@ -137,11 +137,17 @@ export async function confirmReservation(id: string, accessToken?: string): Prom
     await apiFetch(`/reservations/${id}/confirm`, { method: 'PATCH' });
 
     // ✅ OPTIMISATION: Invalider les caches après confirmation
-    const { revalidateTag } = await import('next/cache');
-    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_reservations, accessToken) : CACHE_TAGS.owner_reservations);
-    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_stats, accessToken) : CACHE_TAGS.owner_stats);
-    if (accessToken) revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_analytics, accessToken));
-    revalidateTag(`reservation-${id}`);
+    if (typeof window === 'undefined') {
+        try {
+            const { revalidateTag } = await import('next/cache');
+            revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_reservations, accessToken) : CACHE_TAGS.owner_reservations);
+            revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_stats, accessToken) : CACHE_TAGS.owner_stats);
+            if (accessToken) revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_analytics, accessToken));
+            revalidateTag(`reservation-${id}`);
+        } catch (e) {
+            console.warn('revalidateTag skipped on client:', e);
+        }
+    }
 }
 
 /**
@@ -158,15 +164,21 @@ export async function cancelReservation(
     });
 
     // ✅ OPTIMISATION: Invalider les caches après annulation (wallet + pénalités possibles)
-    const { revalidateTag } = await import('next/cache');
-    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_reservations, accessToken) : CACHE_TAGS.owner_reservations);
-    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_wallet, accessToken) : CACHE_TAGS.owner_wallet);
-    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_penalties, accessToken) : CACHE_TAGS.owner_penalties);
-    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_stats, accessToken) : CACHE_TAGS.owner_stats);
-    if (accessToken) revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_analytics, accessToken));
-    revalidateTag(`reservation-${id}`);
-    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken) : CACHE_TAGS.owner_vehicles); // Disponibilité affectée
-    revalidateTag(CACHE_TAGS.vehicle_search);
+    if (typeof window === 'undefined') {
+        try {
+            const { revalidateTag } = await import('next/cache');
+            revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_reservations, accessToken) : CACHE_TAGS.owner_reservations);
+            revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_wallet, accessToken) : CACHE_TAGS.owner_wallet);
+            revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_penalties, accessToken) : CACHE_TAGS.owner_penalties);
+            revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_stats, accessToken) : CACHE_TAGS.owner_stats);
+            if (accessToken) revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_analytics, accessToken));
+            revalidateTag(`reservation-${id}`);
+            revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken) : CACHE_TAGS.owner_vehicles); // Disponibilité affectée
+            revalidateTag(CACHE_TAGS.vehicle_search);
+        } catch (e) {
+            console.warn('revalidateTag skipped on client:', e);
+        }
+    }
 }
 
 /**
@@ -176,11 +188,17 @@ export async function checkinReservation(id: string, accessToken?: string): Prom
     await apiFetch(`/reservations/${id}/checkin`, { method: 'PATCH' });
 
     // ✅ OPTIMISATION: Invalider les caches après check-in
-    const { revalidateTag } = await import('next/cache');
-    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_reservations, accessToken) : CACHE_TAGS.owner_reservations);
-    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_stats, accessToken) : CACHE_TAGS.owner_stats);
-    if (accessToken) revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_analytics, accessToken));
-    revalidateTag(`reservation-${id}`);
+    if (typeof window === 'undefined') {
+        try {
+            const { revalidateTag } = await import('next/cache');
+            revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_reservations, accessToken) : CACHE_TAGS.owner_reservations);
+            revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_stats, accessToken) : CACHE_TAGS.owner_stats);
+            if (accessToken) revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_analytics, accessToken));
+            revalidateTag(`reservation-${id}`);
+        } catch (e) {
+            console.warn('revalidateTag skipped on client:', e);
+        }
+    }
 }
 
 /**
@@ -190,12 +208,18 @@ export async function checkoutReservation(id: string, accessToken?: string): Pro
     await apiFetch(`/reservations/${id}/checkout`, { method: 'PATCH' });
 
     // ✅ OPTIMISATION: Invalider les caches après check-out (wallet + versement)
-    const { revalidateTag } = await import('next/cache');
-    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_reservations, accessToken) : CACHE_TAGS.owner_reservations);
-    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_wallet, accessToken) : CACHE_TAGS.owner_wallet);
-    revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_stats, accessToken) : CACHE_TAGS.owner_stats);
-    if (accessToken) revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_analytics, accessToken));
-    revalidateTag(`reservation-${id}`);
+    if (typeof window === 'undefined') {
+        try {
+            const { revalidateTag } = await import('next/cache');
+            revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_reservations, accessToken) : CACHE_TAGS.owner_reservations);
+            revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_wallet, accessToken) : CACHE_TAGS.owner_wallet);
+            revalidateTag(accessToken ? getOwnerScopedTag(CACHE_TAGS.owner_stats, accessToken) : CACHE_TAGS.owner_stats);
+            if (accessToken) revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_analytics, accessToken));
+            revalidateTag(`reservation-${id}`);
+        } catch (e) {
+            console.warn('revalidateTag skipped on client:', e);
+        }
+    }
 }
 
 // ── Tenant functions ──────────────────────────────────────────────────────────

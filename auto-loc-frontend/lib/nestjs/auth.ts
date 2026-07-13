@@ -112,9 +112,15 @@ export async function submitKycLinks(body: {
   });
 
   // ✅ OPTIMISATION: Invalider les caches après soumission KYC
-  const { revalidateTag } = await import('next/cache');
-  revalidateTag('user-profile');
-  revalidateTag('owner-permissions');
+  if (typeof window === 'undefined') {
+    try {
+      const { revalidateTag } = await import('next/cache');
+      revalidateTag('user-profile');
+      revalidateTag('owner-permissions');
+    } catch (e) {
+      console.warn('revalidateTag skipped on client:', e);
+    }
+  }
 
   return result;
 }
@@ -129,9 +135,15 @@ export async function submitPermisLink(body: {
   });
 
   // ✅ OPTIMISATION: Invalider les caches après upload permis
-  const { revalidateTag } = await import('next/cache');
-  revalidateTag('user-profile');
-  revalidateTag('tenant-permissions');
+  if (typeof window === 'undefined') {
+    try {
+      const { revalidateTag } = await import('next/cache');
+      revalidateTag('user-profile');
+      revalidateTag('tenant-permissions');
+    } catch (e) {
+      console.warn('revalidateTag skipped on client:', e);
+    }
+  }
 
   return result;
 }

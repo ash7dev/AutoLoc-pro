@@ -596,10 +596,16 @@ export async function createIndisponibilite(
   });
 
   // ✅ OPTIMISATION: Invalider les caches après création d'indisponibilité
-  const { revalidateTag } = await import('next/cache');
-  revalidateTag(`vehicle-${vehicleId}-indisponibilites`);
-  revalidateTag(`vehicle-${vehicleId}-availability`);
-  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
+  if (typeof window === 'undefined') {
+    try {
+      const { revalidateTag } = await import('next/cache');
+      revalidateTag(`vehicle-${vehicleId}-indisponibilites`);
+      revalidateTag(`vehicle-${vehicleId}-availability`);
+      revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
+    } catch (e) {
+      console.warn('revalidateTag skipped on client:', e);
+    }
+  }
 
   return result;
 }
@@ -615,10 +621,16 @@ export async function deleteIndisponibilite(
   });
 
   // ✅ OPTIMISATION: Invalider les caches après suppression d'indisponibilité
-  const { revalidateTag } = await import('next/cache');
-  revalidateTag(`vehicle-${vehicleId}-indisponibilites`);
-  revalidateTag(`vehicle-${vehicleId}-availability`);
-  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
+  if (typeof window === 'undefined') {
+    try {
+      const { revalidateTag } = await import('next/cache');
+      revalidateTag(`vehicle-${vehicleId}-indisponibilites`);
+      revalidateTag(`vehicle-${vehicleId}-availability`);
+      revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
+    } catch (e) {
+      console.warn('revalidateTag skipped on client:', e);
+    }
+  }
 
   return result;
 }
@@ -639,12 +651,18 @@ export async function updateVehicleWithRevalidation(
     { method: 'PATCH', body: data, accessToken }
   );
 
-  const { revalidateTag } = await import('next/cache');
-  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
-  revalidateTag(`vehicle-${vehicleId}`);
-  revalidateTag(CACHE_TAGS.public_feed);
-  revalidateTag(CACHE_TAGS.mobile_feed);
-  revalidateTag(CACHE_TAGS.vehicle_search);
+  if (typeof window === 'undefined') {
+    try {
+      const { revalidateTag } = await import('next/cache');
+      revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
+      revalidateTag(`vehicle-${vehicleId}`);
+      revalidateTag(CACHE_TAGS.public_feed);
+      revalidateTag(CACHE_TAGS.mobile_feed);
+      revalidateTag(CACHE_TAGS.vehicle_search);
+    } catch (e) {
+      console.warn('revalidateTag skipped on client:', e);
+    }
+  }
 
   return result;
 }
@@ -662,12 +680,18 @@ export async function deleteVehiclePhotoWithRevalidation(
     { method: 'DELETE', accessToken }
   );
 
-  const { revalidateTag } = await import('next/cache');
-  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
-  revalidateTag(`vehicle-${vehicleId}`);
-  revalidateTag(CACHE_TAGS.public_feed);
-  revalidateTag(CACHE_TAGS.mobile_feed);
-  revalidateTag(CACHE_TAGS.vehicle_search);
+  if (typeof window === 'undefined') {
+    try {
+      const { revalidateTag } = await import('next/cache');
+      revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
+      revalidateTag(`vehicle-${vehicleId}`);
+      revalidateTag(CACHE_TAGS.public_feed);
+      revalidateTag(CACHE_TAGS.mobile_feed);
+      revalidateTag(CACHE_TAGS.vehicle_search);
+    } catch (e) {
+      console.warn('revalidateTag skipped on client:', e);
+    }
+  }
 }
 
 /**
@@ -683,12 +707,18 @@ export async function linkVehiclePhotoWithRevalidation(
     { method: 'POST', body: photoData, accessToken }
   );
 
-  const { revalidateTag } = await import('next/cache');
-  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
-  revalidateTag(`vehicle-${vehicleId}`);
-  revalidateTag(CACHE_TAGS.public_feed);
-  revalidateTag(CACHE_TAGS.mobile_feed);
-  revalidateTag(CACHE_TAGS.vehicle_search);
+  if (typeof window === 'undefined') {
+    try {
+      const { revalidateTag } = await import('next/cache');
+      revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
+      revalidateTag(`vehicle-${vehicleId}`);
+      revalidateTag(CACHE_TAGS.public_feed);
+      revalidateTag(CACHE_TAGS.mobile_feed);
+      revalidateTag(CACHE_TAGS.vehicle_search);
+    } catch (e) {
+      console.warn('revalidateTag skipped on client:', e);
+    }
+  }
 
   return result;
 }
@@ -707,12 +737,18 @@ export async function updatePhotoPositionWithRevalidation(
     { method: 'PATCH', body: data, accessToken }
   );
 
-  const { revalidateTag } = await import('next/cache');
-  revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
-  revalidateTag(`vehicle-${vehicleId}`);
-  revalidateTag(CACHE_TAGS.public_feed);
-  revalidateTag(CACHE_TAGS.mobile_feed);
-  revalidateTag(CACHE_TAGS.vehicle_search);
+  if (typeof window === 'undefined') {
+    try {
+      const { revalidateTag } = await import('next/cache');
+      revalidateTag(getOwnerScopedTag(CACHE_TAGS.owner_vehicles, accessToken));
+      revalidateTag(`vehicle-${vehicleId}`);
+      revalidateTag(CACHE_TAGS.public_feed);
+      revalidateTag(CACHE_TAGS.mobile_feed);
+      revalidateTag(CACHE_TAGS.vehicle_search);
+    } catch (e) {
+      console.warn('revalidateTag skipped on client:', e);
+    }
+  }
 
   return result;
 }
