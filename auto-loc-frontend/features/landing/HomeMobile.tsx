@@ -98,11 +98,11 @@ export function HomeMobile({ initialFeed }: HomeMobileProps): React.ReactElement
 
   return (
     <div className="w-full bg-slate-50 min-h-screen pb-12 flex flex-col gap-2">
-      {/* Search Bar on top */}
-      <MobileSearchBar />
-
-      {/* Intro presentation card */}
+      {/* Intro presentation card - Hero noir EN PREMIER */}
       <MobileIntroCard />
+
+      {/* Search Bar with dates - Formulaire APRÈS le hero */}
+      <MobileSearchBar />
 
       {/* Horizontal categories */}
       <MobileCategoriesCarousel />
