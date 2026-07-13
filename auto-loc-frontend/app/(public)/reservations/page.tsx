@@ -8,7 +8,6 @@ import { fetchTenantReservations } from '@/lib/nestjs/reservations';
 import { ApiError } from '@/lib/nestjs/api-client';
 import { TenantReservationsList } from '@/features/reservations/components/tenant-reservations-list';
 import { AuthRequiredScreen } from '@/features/auth/components/auth-required-screen';
-import { DesktopAuthRedirect } from '@/features/auth/components/desktop-auth-redirect';
 import { Footer } from '@/features/landing/Footer';
 import { CACHE_DURATIONS, CACHE_TAGS, getCacheKey, getScopedCacheTags } from '@/lib/cache-config';
 
@@ -42,19 +41,12 @@ export default async function TenantReservationsPage() {
     // Non authentifié
     if (!token) {
         return (
-            <>
-                <div className="md:hidden">
-                    <AuthRequiredScreen
-                        icon={CalendarRange}
-                        title="Connectez-vous pour voir vos réservations"
-                        description="Retrouvez l'historique et le suivi de toutes vos réservations."
-                        redirectTo="/reservations"
-                    />
-                </div>
-                <div className="hidden md:block">
-                    <DesktopAuthRedirect redirectTo="/login?redirect=/reservations" />
-                </div>
-            </>
+            <AuthRequiredScreen
+                icon={CalendarRange}
+                title="Connectez-vous pour voir vos réservations"
+                description="Retrouvez l'historique et le suivi de toutes vos réservations."
+                redirectTo="/reservations"
+            />
         );
     }
 

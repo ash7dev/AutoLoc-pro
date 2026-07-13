@@ -25,8 +25,7 @@ import { fetchUserProfile, updateUserProfile, type UserProfile } from '@/lib/nes
 import { useSwitchToLocataire } from '@/features/owner/hooks/use-switch-to-locataire';
 import { Button } from '@/components/ui/button';
 import { PhoneEditModal } from '@/features/dashboard/components/phone-edit-modal';
-import { supabase } from '@/lib/supabase/client';
-import { useRoleStore } from '@/features/auth/stores/role.store';
+import { useSignOut } from '@/features/auth/hooks/use-signout';
 
 interface OwnerSettingsProps {
   profile?: UserProfile | null;
@@ -36,6 +35,7 @@ export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
   const { switchToLocataire, loading: switchingRole } = useSwitchToLocataire();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { signOut: handleLogout, loading: loggingOut } = useSignOut();
 
   const [activeTab, setActiveTab] = useState('profile');
   const [editingField, setEditingField] = useState<keyof typeof formData | null>(null);
@@ -421,11 +421,7 @@ export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
     </div>
   );
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    useRoleStore.getState().clearRole();
-    router.push('/login');
-  };
+
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -458,11 +454,16 @@ export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
               </Button>
               <Button
                 onClick={handleLogout}
+                disabled={loggingOut}
                 variant="secondary"
                 className="bg-emerald-800 hover:bg-red-700 text-white border-none shadow-none shrink-0"
                 title="Se déconnecter"
               >
-                <LogOut className="w-4 h-4 sm:mr-2" />
+                {loggingOut ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin text-white" />
+                ) : (
+                  <LogOut className="w-4 h-4 sm:mr-2" />
+                )}
                 <span className="hidden sm:inline">Déconnexion</span>
               </Button>
             </div>

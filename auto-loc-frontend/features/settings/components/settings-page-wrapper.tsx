@@ -4,8 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, LogOut, Loader2 } from 'lucide-react';
 import { useSwitchToProprietaire } from '@/features/owner/hooks/use-switch-to-proprietaire';
-import { supabase } from '@/lib/supabase/client';
-import { useRoleStore } from '@/features/auth/stores/role.store';
+import { useSignOut } from '@/features/auth/hooks/use-signout';
 import { SettingsForm } from '@/features/dashboard/components/settings-form';
 import type { UserProfile } from '@/lib/nestjs/auth';
 
@@ -18,12 +17,7 @@ export function SettingsPageWrapper({ profile, memberSince }: SettingsPageWrappe
     const { switchToProprietaire, loading: switchingRole, error: hookError } = useSwitchToProprietaire();
     const router = useRouter();
     const [switchError, setSwitchError] = React.useState<string | null>(null);
-
-    const handleLogout = async () => {
-        await supabase.auth.signOut();
-        useRoleStore.getState().clearRole();
-        router.push('/login');
-    };
+    const { signOut: handleLogout, loading: loggingOut } = useSignOut();
 
     const handleSwitchToOwner = async () => {
         setSwitchError(null);
@@ -64,9 +58,14 @@ export function SettingsPageWrapper({ profile, memberSince }: SettingsPageWrappe
                         )}
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-1.5 px-4 py-2.5 text-[12px] font-black uppercase tracking-widest text-white bg-slate-900 hover:bg-black rounded-xl transition-all shadow-lg shadow-black/10 hover:-translate-y-0.5"
+                            disabled={loggingOut}
+                            className="flex items-center gap-1.5 px-4 py-2.5 text-[12px] font-black uppercase tracking-widest text-white bg-slate-900 hover:bg-black rounded-xl transition-all shadow-lg shadow-black/10 hover:-translate-y-0.5 disabled:opacity-50"
                         >
-                            <LogOut className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            {loggingOut ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                                <LogOut className="w-3.5 h-3.5" strokeWidth={2.5} />
+                            )}
                             <span>Déconnexion</span>
                         </button>
                     </div>

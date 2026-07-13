@@ -8,7 +8,6 @@ import { ApiError } from '@/lib/nestjs/api-client';
 import { SettingsPageWrapper } from '@/features/settings/components/settings-page-wrapper';
 import { Footer } from '@/features/landing/Footer';
 import { AuthRequiredScreen } from '@/features/auth/components/auth-required-screen';
-import { DesktopAuthRedirect } from '@/features/auth/components/desktop-auth-redirect';
 
 export const metadata: Metadata = {
     title: 'Paramètres — AutoLoc',
@@ -27,19 +26,12 @@ export default async function SettingsPage() {
 
     if (!token) {
         return (
-            <>
-                <div className="md:hidden">
-                    <AuthRequiredScreen
-                        icon={UserCircle2}
-                        title="Connectez-vous pour accéder à votre compte"
-                        description="Gérez vos informations personnelles, votre vérification d'identité et vos préférences."
-                        redirectTo="/settings"
-                    />
-                </div>
-                <div className="hidden md:block">
-                    <DesktopAuthRedirect redirectTo="/login?redirect=/settings" />
-                </div>
-            </>
+            <AuthRequiredScreen
+                icon={UserCircle2}
+                title="Connectez-vous pour accéder à votre compte"
+                description="Gérez vos informations personnelles, votre vérification d'identité et vos préférences."
+                redirectTo="/settings"
+            />
         );
     }
 

@@ -26,8 +26,7 @@ import { fetchUserProfile, updateUserProfile, type UserProfile } from '@/lib/nes
 import { useSwitchToProprietaire } from '@/features/owner/hooks/use-switch-to-proprietaire';
 import { Button } from '@/components/ui/button';
 import { PhoneEditModal } from '@/features/dashboard/components/phone-edit-modal';
-import { supabase } from '@/lib/supabase/client';
-import { useRoleStore } from '@/features/auth/stores/role.store';
+import { useSignOut } from '@/features/auth/hooks/use-signout';
 import { PermisGate } from '@/features/reservations/components/PermisGate';
 
 interface TenantSettingsProps {
@@ -37,6 +36,7 @@ interface TenantSettingsProps {
 export function TenantSettings({ profile: initialProfile }: TenantSettingsProps) {
   const { switchToProprietaire, loading: switchingRole, error: hookError } = useSwitchToProprietaire();
   const router = useRouter();
+  const { signOut: handleLogout, loading: loggingOut } = useSignOut();
   const [activeTab, setActiveTab] = useState('profile');
   const [editingField, setEditingField] = useState<keyof typeof formData | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(initialProfile || null);
@@ -487,11 +487,7 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
     </div>
   );
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    useRoleStore.getState().clearRole();
-    router.push('/login');
-  };
+
 
   const handleSwitchToOwner = async () => {
     console.log('Switch to owner button clicked');
@@ -555,11 +551,16 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
               </Button>
               <Button
                 onClick={handleLogout}
+                disabled={loggingOut}
                 variant="outline"
-                className="flex-1 sm:flex-none bg-white hover:bg-red-50 text-red-600 border-red-200 shadow-sm min-h-[44px] touch-manipulation transition-all duration-200 hover:shadow-md active:scale-[0.98] relative z-20"
+                className="flex-1 sm:flex-none bg-white hover:bg-red-50 text-red-600 border-red-200 shadow-sm min-h-[44px] touch-manipulation transition-all duration-200 hover:shadow-md active:scale-[0.98] relative z-20 disabled:opacity-50"
                 type="button"
               >
-                <LogOut className="w-4 h-4 mr-2" />
+                {loggingOut ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin text-red-600" />
+                ) : (
+                  <LogOut className="w-4 h-4 mr-2" />
+                )}
                 <span className="hidden sm:inline">Déconnexion</span>
               </Button>
             </div>
