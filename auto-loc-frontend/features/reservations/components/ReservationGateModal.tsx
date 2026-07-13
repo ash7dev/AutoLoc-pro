@@ -801,7 +801,11 @@ export function ReservationGateModal({
             <KycGate
               kycStatus={currentProfile.kycStatus}
               onProceed={() => onOpenChange(false)}
-              onSubmitted={refreshProfile}
+              onSubmitted={() => {
+                // Mise à jour immédiate du profil local pour naviguer vers le permis
+                // sans dépendre d'un appel réseau supplémentaire à /auth/me
+                setCurrentProfile(prev => prev ? { ...prev, kycStatus: 'EN_ATTENTE' } : prev);
+              }}
               pendingMode="continue"
             />
           )}
