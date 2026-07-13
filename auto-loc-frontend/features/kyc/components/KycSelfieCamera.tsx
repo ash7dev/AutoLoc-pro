@@ -125,6 +125,9 @@ export function KycSelfieCamera({ onCapture, onCancel }: KycSelfieCameraProps) {
 
   return (
     <div className="flex flex-col items-center justify-center space-y-5 py-4 w-full">
+      {/* Hidden canvas for video frame capture */}
+      <canvas ref={canvasRef} className="hidden" />
+
       {/* ── Circular Viewport Container ── */}
       <div className="relative w-56 h-56 sm:w-64 sm:h-64 rounded-full border-4 border-slate-900 shadow-2xl bg-black overflow-hidden flex items-center justify-center">
         
