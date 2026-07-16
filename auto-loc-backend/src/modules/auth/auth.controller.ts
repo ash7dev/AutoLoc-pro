@@ -87,7 +87,7 @@ export class AuthController {
   async switchRole(
     @CurrentUser() user: RequestUser,
     @Body() dto: SwitchRoleDto,
-  ): Promise<{ role: RoleProfile; accessToken: string; refreshToken: string }> {
+  ): Promise<{ role: RoleProfile; accessToken: string; refreshToken: string; profile: ProfileResponse }> {
     return this.authService.switchRole(user, dto);
   }
 

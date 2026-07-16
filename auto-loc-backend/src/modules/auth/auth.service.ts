@@ -269,7 +269,7 @@ export class AuthService {
   async switchRole(
     user: RequestUser,
     dto: SwitchRoleDto,
-  ): Promise<{ role: RoleProfile; accessToken: string; refreshToken: string }> {
+  ): Promise<{ role: RoleProfile; accessToken: string; refreshToken: string; profile: ProfileResponse }> {
     if (!user.sub) {
       throw new BadRequestException('Utilisateur invalide');
     }
@@ -306,7 +306,13 @@ export class AuthService {
     });
     await this.storeRefreshSession(user.sub, refreshToken);
 
-    return { role: newRole, accessToken, refreshToken };
+    const profile = await this.getOrCreateProfile({
+      sub: user.sub,
+      email: user.email,
+      phone: user.phone,
+    });
+
+    return { role: newRole, accessToken, refreshToken, profile };
   }
 
   async requestPhoneOtp(user: RequestUser): Promise<{ expiresIn: number }> {
@@ -846,6 +852,7 @@ export class AuthService {
     hasPermis?: boolean;
     prenom?: string | null;
     nom?: string | null;
+    avatarUrl?: string | null;
     dateNaissance?: string | null;
     bloqueJusqua?: string | null;
   }> {
@@ -860,6 +867,7 @@ export class AuthService {
         dateNaissance: true,
         prenom: true,
         nom: true,
+        avatarUrl: true,
         bloqueJusqua: true,
         _count: { select: { vehicules: true } },
       },
@@ -874,6 +882,7 @@ export class AuthService {
       hasPermis: !!found.permisUrl,
       prenom: found.prenom,
       nom: found.nom,
+      avatarUrl: found.avatarUrl,
       dateNaissance: found.dateNaissance ? found.dateNaissance.toISOString() : null,
       bloqueJusqua: found.bloqueJusqua ? found.bloqueJusqua.toISOString() : null,
     };
@@ -948,6 +957,7 @@ export class AuthService {
       hasPermis?: boolean;
       prenom?: string | null;
       nom?: string | null;
+      avatarUrl?: string | null;
       dateNaissance?: string | null;
       bloqueJusqua?: string | null;
     } = {},
@@ -967,6 +977,7 @@ export class AuthService {
       hasPermis: flags.hasPermis,
       prenom: flags.prenom,
       nom: flags.nom,
+      avatarUrl: flags.avatarUrl,
       dateNaissance: flags.dateNaissance,
       bloqueJusqua: flags.bloqueJusqua,
     };

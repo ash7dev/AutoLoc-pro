@@ -46,6 +46,7 @@ export interface ProfileResponse {
   hasPermis?: boolean;
   prenom?: string | null;
   nom?: string | null;
+  avatarUrl?: string | null;
   dateNaissance?: string | null;
   bloqueJusqua?: string | null;
 }
