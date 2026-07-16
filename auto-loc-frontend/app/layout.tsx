@@ -43,7 +43,7 @@ export const metadata: Metadata = {
       'Louez un véhicule vérifié au Sénégal en quelques clics. SUV, berlines, pick-ups disponibles à Dakar et partout au Sénégal.',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/footerlogo.jpg',
         width: 1200,
         height: 630,
         alt: 'AutoLoc — Location de véhicules au Sénégal',
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     title: 'AutoLoc — Location de véhicules au Sénégal',
     description:
       'Louez un véhicule vérifié au Sénégal en quelques clics.',
-    images: ['/og-image.jpg'],
+    images: ['/footerlogo.jpg'],
   },
   alternates: {
     canonical: BASE_URL,
@@ -103,7 +103,7 @@ const jsonLd = {
     'Plateforme de location de véhicules vérifiés au Sénégal. SUV, berlines, pick-ups et utilitaires disponibles à Dakar et partout au Sénégal.',
   url: BASE_URL,
   logo: `${BASE_URL}/logoAutoLoc.jpg`,
-  image: `${BASE_URL}/og-image.jpg`,
+  image: `${BASE_URL}/footerlogo.jpg`,
   telephone: '+221 78 663 77 05',
   email: 'contact@autoloc.sn',
   address: {
