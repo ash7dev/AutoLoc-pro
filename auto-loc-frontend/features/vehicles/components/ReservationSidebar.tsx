@@ -344,10 +344,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
                         Livraison à domicile
                       </span>
                     </div>
-                    <span className={cn(
-                      "text-[15px] font-black tabular-nums",
-                      wantsDelivery ? "text-emerald-600" : "text-slate-900"
-                    )}>
+                    <span className="text-[15px] font-black tabular-nums text-emerald-600">
                       + {formatPrice(fraisLivraison)}
                     </span>
                   </div>
@@ -416,10 +413,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
                         Voyage Hors Dakar
                       </span>
                     </div>
-                    <span className={cn(
-                      "text-[15px] font-black tabular-nums",
-                      horsDakar ? "text-blue-600" : "text-slate-900"
-                    )}>
+                    <span className="text-[15px] font-black tabular-nums text-emerald-600">
                       + {formatPrice(supplementHorsDakarParJour)}<span className="text-[11px] font-semibold text-slate-400"> /jour</span>
                     </span>
                   </div>
@@ -551,15 +545,15 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
               'group relative w-full flex items-center justify-center gap-3 rounded-2xl px-5 py-[18px]',
               'text-[16px] font-black tracking-tight transition-all duration-300 overflow-hidden',
               canReserve
-                ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 text-white shadow-xl shadow-emerald-600/40 hover:shadow-2xl hover:shadow-emerald-600/50 hover:-translate-y-0.5 active:translate-y-0 active:shadow-lg active:scale-[0.98]'
+                ? 'bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-emerald-400 shadow-xl shadow-slate-900/40 hover:shadow-2xl hover:shadow-slate-900/50 hover:-translate-y-0.5 active:translate-y-0 active:shadow-lg active:scale-[0.98]'
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed',
             )}
           >
             {/* Shine effect */}
             {canReserve && (
               <>
-                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
-                <span className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+                <span className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
               </>
             )}
             {loadingPricing
