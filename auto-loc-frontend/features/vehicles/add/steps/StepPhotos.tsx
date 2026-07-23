@@ -180,7 +180,7 @@ export function StepPhotos({ onNext, onBack }: Props) {
                 {/* Preview */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={URL.createObjectURL(photo.file)}
+                  src={photo.url || URL.createObjectURL(photo.file)}
                   alt={`Photo ${i + 1}`}
                   className={cn("w-full h-full object-cover", photo.status !== 'done' && "opacity-50")}
                 />

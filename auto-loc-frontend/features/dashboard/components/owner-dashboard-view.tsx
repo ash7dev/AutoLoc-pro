@@ -344,30 +344,6 @@ export function OwnerDashboardView({
                 subtitle={`Vue d'ensemble — ${vehicles.length} véhicule${vehicles.length !== 1 ? "s" : ""} · ${activeReservations} réservation${activeReservations !== 1 ? "s" : ""} active${activeReservations !== 1 ? "s" : ""}`}
             />
 
-            {/* Welcome Banner for 100% New Owners */}
-            {vehicles.length === 0 && reservations.length === 0 && (
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 p-6 sm:p-8 text-white shadow-xl shadow-violet-500/10">
-                    <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="text-center md:text-left space-y-2">
-                            <h2 className="text-[22px] sm:text-[26px] font-black tracking-tight leading-tight">
-                                Bienvenue sur <span className="text-violet-200">AutoLoc</span> ! 🚀
-                            </h2>
-                            <p className="text-[14px] font-medium text-violet-100 max-w-[480px]">
-                                Votre espace propriétaire est prêt. Commencez par ajouter votre premier véhicule pour commencer à recevoir des demandes de location.
-                            </p>
-                        </div>
-                        <div className="shrink-0">
-                            <a
-                                href="/dashboard/owner/vehicles/new"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-violet-600 rounded-xl font-bold text-[14px] shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-100 transition-all"
-                            >
-                                Ajouter mon premier véhicule
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* Profile Completion Banner */}
             {profile && <ProfileCompletionBanner profile={profile} />}
 

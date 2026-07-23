@@ -107,7 +107,7 @@ export class VehiclesService {
     private readonly telegram: TelegramService,
     private readonly queue: QueueService,
     private readonly feedScoring: FeedScoringService,
-    private readonly feedPersonalization: FeedPersonalizationService,
+    // private readonly feedPersonalization: FeedPersonalizationService, // Pour usage futur
     private readonly feedOptimizer: FeedOptimizerService,
   ) { }
 
@@ -227,6 +227,7 @@ export class VehiclesService {
 
         // Photos uploadées directement
         if (dto.photos?.length) {
+          this.logger.log(`Création véhicule ${vehicle.id}: ${dto.photos.length} photos reçues`);
           await tx.photoVehicule.createMany({
             data: dto.photos.map((p, i) => ({
               vehiculeId: vehicle.id,
@@ -262,6 +263,17 @@ export class VehiclesService {
         `<a href="https://autoloc.sn/dashboard/admin/vehicles">Valider →</a>`,
       ).catch(() => { });
     }
+
+    // Invalider les caches pour que la page d'accueil et les feeds se mettent à jour
+    this.revalidate.revalidateTag('feed').catch(() => { });
+    this.revalidate.revalidateTag('mobile-feed').catch(() => { });
+    this.revalidate.revalidateTag('vehicle-search').catch(() => { });
+    this.revalidate.revalidatePath('/').catch(() => { });
+    this.revalidate.revalidatePath('/explorer').catch(() => { });
+
+    // Invalider le cache du propriétaire pour que sa page de véhicules se mette à jour
+    this.revalidate.revalidateTag('owner-vehicles').catch(() => { });
+    this.revalidate.revalidatePath('/dashboard/owner/vehicles').catch(() => { });
 
     return result!;
   }
@@ -361,6 +373,8 @@ export class VehiclesService {
         throw new NotFoundException('Véhicule introuvable');
       }
 
+      this.logger.log(`Récupération véhicule ${id}: ${vehicle.photos.length} photos trouvées`);
+
       // Stockage fire-and-forget : une erreur Redis ne bloque pas la réponse.
       this.redis.set(cacheKey, JSON.stringify(vehicle), DETAIL_CACHE_TTL).catch(() => { });
       return vehicle;
@@ -381,6 +395,8 @@ export class VehiclesService {
     if (!vehicle) {
       throw new NotFoundException('Véhicule introuvable');
     }
+
+    this.logger.log(`Récupération véhicule auth ${id}: ${vehicle.photos.length} photos trouvées`);
 
     // Le propriétaire ou l'admin peut voir les documents via des URLs signées.
     const profile = await this.prisma.profile.findUnique({
@@ -502,6 +518,17 @@ export class VehiclesService {
    * Interdit si une location est EN_COURS.
    */
   async update(vehicleId: string, dto: UpdateVehicleDto) {
+    // Vérifier que le véhicule existe
+    const existingVehicle = await this.prisma.vehicule.findUnique({
+      where: { id: vehicleId },
+      select: { id: true, immatriculation: true },
+    });
+
+    if (!existingVehicle) {
+      throw new NotFoundException('Véhicule introuvable');
+    }
+
+    this.logger.log(`Modification véhicule ${vehicleId} par propriétaire`);
 
     try {
       // Si des tiers sont fournis, on remplace tout (delete + recreate).
@@ -590,7 +617,8 @@ export class VehiclesService {
       if (target.includes('immatriculation')) {
         throw new ConflictException('Un véhicule avec cette immatriculation existe déjà');
       }
-      throw new ConflictException('Contrainte d\'unicité violée : ' + target.join(', '));
+      // Message d'erreur plus compréhensible pour l'utilisateur
+      throw new ConflictException('Une erreur de conflit est survenue. Veuillez réessayer.');
     }
 
     await this.invalidateDetailCache(vehicleId);
@@ -1778,9 +1806,13 @@ export class VehiclesService {
     await this.invalidateSearchCache(vehicle.ville);
     await this.invalidateDetailCache(vehicleId);
 
-    // Invalidate Next.js cache
-    this.revalidate.revalidatePath(`/vehicle/${vehicleId}`).catch(() => { });
+    // Invalidate Next.js cache - including homepage feeds since vehicle is now public
+    this.revalidate.revalidateTag('feed').catch(() => { });
+    this.revalidate.revalidateTag('mobile-feed').catch(() => { });
+    this.revalidate.revalidateTag('vehicle-search').catch(() => { });
+    this.revalidate.revalidatePath('/').catch(() => { });
     this.revalidate.revalidatePath('/explorer').catch(() => { });
+    this.revalidate.revalidatePath(`/vehicle/${vehicleId}`).catch(() => { });
     if (vehicle.ville) {
       this.revalidate.revalidatePath(`/location/${encodeURIComponent(vehicle.ville.toLowerCase())}`).catch(() => { });
     }
@@ -1827,9 +1859,13 @@ export class VehiclesService {
     await this.invalidateSearchCache(vehicle.ville);
     await this.invalidateDetailCache(vehicleId);
 
-    // Invalidate Next.js cache
-    this.revalidate.revalidatePath(`/vehicle/${vehicleId}`).catch(() => { });
+    // Invalidate Next.js cache - including homepage feeds since vehicle is removed from public view
+    this.revalidate.revalidateTag('feed').catch(() => { });
+    this.revalidate.revalidateTag('mobile-feed').catch(() => { });
+    this.revalidate.revalidateTag('vehicle-search').catch(() => { });
+    this.revalidate.revalidatePath('/').catch(() => { });
     this.revalidate.revalidatePath('/explorer').catch(() => { });
+    this.revalidate.revalidatePath(`/vehicle/${vehicleId}`).catch(() => { });
     if (vehicle.ville) {
       this.revalidate.revalidatePath(`/location/${encodeURIComponent(vehicle.ville.toLowerCase())}`).catch(() => { });
     }

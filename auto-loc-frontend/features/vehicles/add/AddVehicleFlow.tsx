@@ -299,7 +299,7 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
 
   // Remonter en haut de page à chaque changement d'étape
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentStep]);
 
   const onPhoneVerified = useCallback(() => setPhoneVerified(true), []);
@@ -414,7 +414,7 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
             data-tour="step-form"
             className="rounded-2xl border border-slate-200 bg-white shadow-sm
               hover:shadow-md transition-shadow duration-300
-              p-4 sm:p-8 max-w-3xl mx-auto"
+              p-4 sm:p-8 max-w-3xl mx-auto overflow-visible"
           >
             {currentStep === 1 && <StepVehicleInfo onNext={goNext} />}
             {currentStep === 2 && <StepPricing onNext={goNext} onBack={goBack} />}
@@ -439,9 +439,9 @@ function PageShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50/50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 via-white to-slate-50/50">
       {/* Sticky header */}
-      <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/80 border-b border-slate-100">
+      <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/80 border-b border-slate-100 flex-shrink-0">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
           <button
             type="button"
@@ -466,7 +466,7 @@ function PageShell({
       </header>
 
       {/* Content */}
-      <main className="px-3 sm:px-6 py-4 sm:py-10">
+      <main className="flex-1 px-3 sm:px-6 py-4 sm:py-10">
         {children}
       </main>
     </div>

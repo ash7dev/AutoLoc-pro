@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useAddVehicleStore } from "../store";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import { VEHICLE_PATHS, Vehicle, uploadDocumentToCloudinary } from "@/lib/nestjs/vehicles";
+import { revalidateVehiclePaths } from "@/lib/nestjs/revalidate";
 
 interface Props {
   onBack: () => void;
@@ -45,6 +46,10 @@ export function StepReview({ onBack }: Props) {
           : (assurance ? uploadDocumentToCloudinaryWithRetry(assurance, 'assurance') : Promise.resolve(null)),
       ]);
 
+      // ── Photos : filtre et log pour debug ─────────────────────────────────────────────
+      const validPhotos = photos.filter((p) => p.status === 'done' && p.url && p.publicId);
+      console.log('Photos envoyées au backend:', validPhotos.length, 'sur', photos.length);
+      
       // ── Transaction unique : créer véhicule avec tous les documents ─────────────────────
       const vehicle = await authFetch<Vehicle, Record<string, unknown>>(VEHICLE_PATHS.create, {
         method: "POST",
@@ -65,16 +70,14 @@ export function StepReview({ onBack }: Props) {
           tiers: step2.tiers.length > 0 ? step2.tiers : undefined,
           ageMinimum: step3?.ageMinimum,
           zoneConduite: step3?.zoneConduite || undefined,
-          assurance: step3?.assurance || undefined,
+          assurance: step3?.assurance || "Locataire responsable",
           carburantCondition: step3?.carburantCondition || undefined,
           reglesSpecifiques: step3?.reglesSpecifiques || undefined,
           equipements: step1.equipements?.length ? step1.equipements : undefined,
           fraisLivraison: step2.fraisLivraison || undefined,
           autoriseHorsDakar: step2.autoriseHorsDakar || false,
           supplementHorsDakarParJour: step2.supplementHorsDakarParJour || undefined,
-          photos: photos
-            .filter((p) => p.status === 'done' && p.url && p.publicId)
-            .map((p) => ({ url: p.url!, publicId: p.publicId! })),
+          photos: validPhotos.map((p) => ({ url: p.url!, publicId: p.publicId! })),
           carteGriseUrl: carteGriseResult?.url,
           carteGrisePublicId: carteGriseResult?.publicId,
           assuranceDocUrl: assuranceResult?.url,
@@ -83,6 +86,12 @@ export function StepReview({ onBack }: Props) {
       });
 
       setVehicleId(vehicle.id);
+
+      // Revalidate all vehicle-related paths + homepage and explorer
+      await revalidateVehiclePaths(vehicle.id, true).catch(err => {
+        console.warn('Failed to revalidate paths:', err);
+      });
+
       reset();
       router.replace(`/dashboard/owner/vehicles/${vehicle.id}`);
       return; // Navigation démarrée — on ne touche plus à l'état du composant

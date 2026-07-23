@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Patch, Query, UseGuards, HttpCode, HttpSt
 import { UsersService } from './users.service';
 import { BanUserDto } from './dto/ban-user.dto';
 import { GetAdminUsersDto } from './dto/get-admin-users.dto';
+import { RejectKycDto } from './dto/reject-kyc.dto';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/guards/roles.guard';
 import { Roles } from '../../shared/decorators/roles.decorator';
@@ -49,7 +50,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async rejectKyc(
     @Param('id') id: string,
-    @Body() body: { raison?: string },
+    @Body() body: RejectKycDto,
   ) {
     return this.usersService.rejectKyc(id, body.raison);
   }

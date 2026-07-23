@@ -33,6 +33,9 @@ import { CreateReservationDto } from './dto/create-reservation.dto';
 import { CancelReservationDto } from './dto/cancel-reservation.dto';
 import { SignalTenantNoshowDto } from './dto/signal-tenant-noshow.dto';
 import { SignalOverloadDto } from './dto/signal-overload.dto';
+import { ConfirmReservationDto } from './dto/confirm-reservation.dto';
+import { RefusCheckinDto } from './dto/refus-checkin.dto';
+import { LinkPhotoEtatDto } from './dto/link-photo-etat.dto';
 import { DisputesService } from '../disputes/disputes.service';
 import { CreateDisputeDto } from '../disputes/dto/create-dispute.dto';
 import { VEHICLE_PHOTO_MULTER_OPTIONS } from '../upload/upload.config';
@@ -75,7 +78,7 @@ export class ReservationsController {
   async confirm(
     @Req() req: Request & { user?: RequestUser },
     @Param('id', ParseUUIDPipe) reservationId: string,
-    @Body() body: { heureDebut: string }
+    @Body() body: ConfirmReservationDto
   ) {
     const user = req.user!;
     return this.reservationsService.confirm(user, reservationId, body);
@@ -143,7 +146,7 @@ export class ReservationsController {
   async refuseCheckin(
     @Req() req: Request & { user?: RequestUser },
     @Param('id', ParseUUIDPipe) reservationId: string,
-    @Body() body: { motif: string; commentaire: string; raison?: string },
+    @Body() body: RefusCheckinDto,
   ) {
     const user = req.user!;
     return this.reservationsService.refuseCheckin(user, reservationId, {
@@ -215,7 +218,7 @@ export class ReservationsController {
   async linkPhotoEtatLieu(
     @Req() req: Request & { user?: RequestUser },
     @Param('id', ParseUUIDPipe) reservationId: string,
-    @Body() body: { url: string; publicId: string; type: string; categorie?: string },
+    @Body() body: LinkPhotoEtatDto,
   ) {
     const user = req.user!;
     return this.reservationsService.linkPhotoEtatLieu(user, reservationId, {

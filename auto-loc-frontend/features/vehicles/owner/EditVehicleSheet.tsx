@@ -10,7 +10,7 @@ import {
   Settings2, GripVertical, CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, lockScroll, unlockScroll } from "@/lib/utils";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import type { Vehicle, VehicleType, FuelType, Transmission, VehiclePhoto } from "@/lib/nestjs/vehicles";
 import { VEHICLE_PATHS } from "@/lib/nestjs/vehicles";
@@ -220,13 +220,9 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    const originalBody = document.body.style.overflow;
-    const originalHtml = document.documentElement.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
+    lockScroll();
     return () => {
-      document.body.style.overflow = originalBody;
-      document.documentElement.style.overflow = originalHtml;
+      unlockScroll();
     };
   }, [open]);
 
@@ -282,7 +278,10 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
     if (!files.length) return;
     const allowed = Math.min(files.length, 8 - existingPhotos.length - newPhotos.length);
     const toUpload = files.filter((f) => f.type.startsWith('image/')).slice(0, allowed);
-    if (!toUpload.length) return;
+    if (!toUpload.length) {
+      setError("Veuillez sélectionner des fichiers images valides.");
+      return;
+    }
     setUploadingPhotos(true);
     setError(null);
     try {
@@ -298,7 +297,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
       );
       setNewPhotos((prev) => [...prev, ...uploaded]);
     } catch {
-      setError("Erreur lors de l'upload des photos. Réessayez.");
+      setError("Erreur lors de l'upload des photos. Vérifiez votre connexion et réessayez.");
     } finally {
       setUploadingPhotos(false);
     }
@@ -319,6 +318,15 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
 
     try {
       // 1. Déterminer si les champs textes ont changé (Optimisation de bande passante/vitesse)
+      // Normaliser les équipements pour comparaison
+      const normalizedEquipements = equipements.sort();
+      const normalizedVehicleEquipements = (vehicle.equipements ?? [])
+        .map(e => typeof e === 'string' ? e : e.equipement?.nom)
+        .filter(Boolean)
+        .sort() as string[];
+      
+      const equipementsChanged = JSON.stringify(normalizedEquipements) !== JSON.stringify(normalizedVehicleEquipements);
+      
       const hasChanged = 
         data.marque !== vehicle.marque ||
         data.modele !== vehicle.modele ||
@@ -339,7 +347,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
         data.reglesSpecifiques !== vehicle.reglesSpecifiques ||
         data.autoriseHorsDakar !== vehicle.autoriseHorsDakar ||
         data.supplementHorsDakarParJour !== vehicle.supplementHorsDakarParJour ||
-        JSON.stringify(equipements.sort()) !== JSON.stringify((vehicle.equipements ?? []).sort()) ||
+        equipementsChanged ||
         JSON.stringify(data.tiers) !== JSON.stringify(vehicle.tarifsProgressifs.map(t => ({ joursMin: t.joursMin, joursMax: t.joursMax ?? undefined, prix: Number(t.prix) })));
 
       const operations = [];
@@ -413,8 +421,21 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
       // 4. Exécution de toutes les tâches en parallèle
       const results = await Promise.all(operations);
 
-      // Le premier résultat est toujours l'objet véhicule mis à jour (ou l'original si pas de PATCH)
-      const updatedVehicle = results[0] as Vehicle;
+      // Vérification approfondie des erreurs retournées par les Server Actions
+      for (const res of results) {
+        if (Array.isArray(res)) {
+          for (const r of res) {
+            if (r && typeof r === 'object' && 'success' in r && !r.success) {
+              throw new Error((r as any).error);
+            }
+          }
+        } else if (res && typeof res === 'object' && 'success' in res && !res.success) {
+          throw new Error((res as any).error);
+        }
+      }
+
+      // Le premier résultat est l'objet véhicule mis à jour (ou l'original si pas de PATCH)
+      const updatedVehicle = (results[0] as { success: true; data: Vehicle }).data;
 
       // Afficher immédiatement un message de succès avant le revalidate
       // pour que l'utilisateur sache que la modification a réussi

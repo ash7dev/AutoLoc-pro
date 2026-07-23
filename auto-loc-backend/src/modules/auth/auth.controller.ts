@@ -20,6 +20,8 @@ import { RoleProfile } from '@prisma/client';
 import { VerifyPhoneOtpDto } from './dto/verify-phone-otp.dto';
 import { UpdatePhoneDto } from './dto/update-phone.dto';
 import { PhoneLoginSendOtpDto, PhoneLoginVerifyOtpDto } from './dto/phone-login.dto';
+import { SubmitKycLinksDto } from './dto/submit-kyc-links.dto';
+import { LinkPermisDto } from './dto/link-permis.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -182,7 +184,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard, AccountStatusGuard)
   async submitKycLinks(
     @CurrentUser() user: RequestUser,
-    @Body() body: { documentFrontUrl: string; documentBackUrl: string; selfieUrl?: string },
+    @Body() body: SubmitKycLinksDto,
   ) {
     return this.authService.submitKycLinks(user, body);
   }
@@ -216,7 +218,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard, AccountStatusGuard)
   async linkPermis(
     @CurrentUser() user: RequestUser,
-    @Body() body: { url: string; publicId: string },
+    @Body() body: LinkPermisDto,
   ) {
     return this.authService.linkPermis(user, body);
   }

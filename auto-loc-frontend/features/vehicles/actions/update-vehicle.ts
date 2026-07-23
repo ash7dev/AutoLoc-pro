@@ -11,6 +11,14 @@ import {
   type VehiclePhoto,
 } from '@/lib/nestjs/vehicles';
 
+type ServerActionResponse<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
+type VoidServerActionResponse =
+  | { success: true }
+  | { success: false; error: string };
+
 /**
  * Server Action pour mettre à jour un véhicule avec invalidation de cache automatique.
  * Utilisé par EditVehicleSheet.tsx côté client.
@@ -18,13 +26,22 @@ import {
 export async function updateVehicleAction(
   vehicleId: string,
   data: UpdateVehicleInput,
-): Promise<Vehicle> {
-  const token = cookies().get('nest_access')?.value;
-  if (!token) {
-    throw new Error('Non authentifié');
-  }
+): Promise<ServerActionResponse<Vehicle>> {
+  try {
+    const token = cookies().get('nest_access')?.value;
+    if (!token) {
+      return { success: false, error: 'Votre session a expiré. Veuillez vous reconnecter.' };
+    }
 
-  return updateVehicleWithRevalidation(vehicleId, data, token);
+    const result = await updateVehicleWithRevalidation(vehicleId, data, token);
+    return { success: true, data: result };
+  } catch (err: any) {
+    console.error('[updateVehicleAction] Error:', err);
+    return {
+      success: false,
+      error: err?.message || 'Erreur lors de la mise à jour des informations du véhicule.',
+    };
+  }
 }
 
 /**
@@ -33,13 +50,22 @@ export async function updateVehicleAction(
 export async function deleteVehiclePhotoAction(
   vehicleId: string,
   photoId: string,
-): Promise<void> {
-  const token = cookies().get('nest_access')?.value;
-  if (!token) {
-    throw new Error('Non authentifié');
-  }
+): Promise<VoidServerActionResponse> {
+  try {
+    const token = cookies().get('nest_access')?.value;
+    if (!token) {
+      return { success: false, error: 'Votre session a expiré. Veuillez vous reconnecter.' };
+    }
 
-  return deleteVehiclePhotoWithRevalidation(vehicleId, photoId, token);
+    await deleteVehiclePhotoWithRevalidation(vehicleId, photoId, token);
+    return { success: true };
+  } catch (err: any) {
+    console.error('[deleteVehiclePhotoAction] Error:', err);
+    return {
+      success: false,
+      error: err?.message || 'Erreur lors de la suppression de la photo.',
+    };
+  }
 }
 
 /**
@@ -50,18 +76,27 @@ export async function updatePhotoPositionAction(
   photoId: string,
   position: number,
   estPrincipale: boolean,
-): Promise<VehiclePhoto> {
-  const token = cookies().get('nest_access')?.value;
-  if (!token) {
-    throw new Error('Non authentifié');
-  }
+): Promise<ServerActionResponse<VehiclePhoto>> {
+  try {
+    const token = cookies().get('nest_access')?.value;
+    if (!token) {
+      return { success: false, error: 'Votre session a expiré. Veuillez vous reconnecter.' };
+    }
 
-  return updatePhotoPositionWithRevalidation(
-    vehicleId,
-    photoId,
-    { position, estPrincipale },
-    token
-  );
+    const result = await updatePhotoPositionWithRevalidation(
+      vehicleId,
+      photoId,
+      { position, estPrincipale },
+      token
+    );
+    return { success: true, data: result };
+  } catch (err: any) {
+    console.error('[updatePhotoPositionAction] Error:', err);
+    return {
+      success: false,
+      error: err?.message || 'Erreur lors de la mise à jour de l\'organisation des photos.',
+    };
+  }
 }
 
 /**
@@ -71,11 +106,20 @@ export async function linkVehiclePhotoAction(
   vehicleId: string,
   url: string,
   publicId: string,
-): Promise<VehiclePhoto> {
-  const token = cookies().get('nest_access')?.value;
-  if (!token) {
-    throw new Error('Non authentifié');
-  }
+): Promise<ServerActionResponse<VehiclePhoto>> {
+  try {
+    const token = cookies().get('nest_access')?.value;
+    if (!token) {
+      return { success: false, error: 'Votre session a expiré. Veuillez vous reconnecter.' };
+    }
 
-  return linkVehiclePhotoWithRevalidation(vehicleId, { url, publicId }, token);
+    const result = await linkVehiclePhotoWithRevalidation(vehicleId, { url, publicId }, token);
+    return { success: true, data: result };
+  } catch (err: any) {
+    console.error('[linkVehiclePhotoAction] Error:', err);
+    return {
+      success: false,
+      error: err?.message || 'Erreur lors de l\'enregistrement de la nouvelle photo.',
+    };
+  }
 }

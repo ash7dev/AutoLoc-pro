@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { Vehicle } from "@/lib/nestjs/vehicles";
 import { StatusChip, TYPE_LABELS, formatPrice, mainPhoto } from "./vehicle-helpers";
+import { lockScroll, unlockScroll } from "@/lib/utils";
 
 // ── Tiny helpers ───────────────────────────────────────────────────────────────
 
@@ -74,12 +75,9 @@ export function VehicleDetailModal({
 
   useEffect(() => {
     if (!vehicle) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
+    lockScroll();
     return () => {
-      document.body.style.overflow = prev;
-      document.documentElement.style.overflow = "";
+      unlockScroll();
     };
   }, [vehicle]);
 

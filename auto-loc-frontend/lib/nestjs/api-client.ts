@@ -130,7 +130,7 @@ export async function apiFetch<TResponse, TBody = undefined>(
     const message =
       typeof payload === 'string'
         ? payload
-        : (payload?.message as string) || 'Erreur réseau';
+        : formatFriendlyErrorMessage(payload);
     const apiErr = new ApiError(message, res.status, payload);
 
     // Décider si on retry :
@@ -153,3 +153,145 @@ export async function apiFetch<TResponse, TBody = undefined>(
   // Ne devrait pas être atteint, mais TypeScript l'exige.
   throw lastError;
 }
+
+/**
+ * Traduit et formate les messages d'erreur techniques du backend NestJS
+ * (notamment les validations de classe class-validator en anglais)
+ * en messages professionnels, clairs et conviviaux en français pour les clients.
+ */
+function formatFriendlyErrorMessage(payload: any): string {
+  if (!payload || typeof payload !== 'object') {
+    return 'Une erreur réseau ou serveur s\'est produite.';
+  }
+
+  // Si c'est un tableau de messages de validation NestJS (class-validator)
+  if (Array.isArray(payload.message)) {
+    const cleanList = payload.message.map((msg: string) => {
+      const lower = msg.toLowerCase();
+      
+      // Traduction des règles class-validator communes
+      let ruleTranslation = msg;
+      if (lower.includes('must be an integer') || lower.includes('must be an int')) {
+        ruleTranslation = 'doit être un nombre entier';
+      } else if (lower.includes('must be a number')) {
+        ruleTranslation = 'doit être un nombre valide';
+      } else if (lower.includes('should not be empty') || lower.includes('must not be empty') || lower.includes('is required')) {
+        ruleTranslation = 'est obligatoire';
+      } else if (lower.includes('must be a string')) {
+        ruleTranslation = 'doit être une chaîne de caractères';
+      } else if (lower.includes('must be a valid email') || lower.includes('email must be an email')) {
+        ruleTranslation = 'doit être une adresse e-mail valide';
+      } else if (lower.includes('must be a boolean') || lower.includes('must be a bool')) {
+        ruleTranslation = 'doit être un booléen (oui/non)';
+      } else if (lower.includes('must conform to the specified constraints')) {
+        ruleTranslation = 'est invalide ou non conforme';
+      } else if (lower.includes('must be a valid enum value')) {
+        ruleTranslation = 'contient une valeur non autorisée';
+      } else if (lower.includes('must be a positive number')) {
+        ruleTranslation = 'doit être un nombre positif';
+      } else if (lower.includes('must not be less than')) {
+        const matches = lower.match(/less than (\d+)/);
+        const limit = matches ? matches[1] : '';
+        ruleTranslation = `doit être supérieur ou égal à ${limit}`;
+      } else if (lower.includes('must not be greater than')) {
+        const matches = lower.match(/greater than (\d+)/);
+        const limit = matches ? matches[1] : '';
+        ruleTranslation = `doit être inférieur ou égal à ${limit}`;
+      }
+
+      // Extraction et traduction des noms de propriétés pour le français
+      const firstWord = msg.split(' ')[0];
+      const fieldTranslations: Record<string, string> = {
+        marque: 'La marque',
+        modele: 'Le modèle',
+        annee: 'L\'année',
+        immatriculation: 'L\'immatriculation',
+        type: 'Le type de véhicule',
+        nombreplaces: 'Le nombre de places',
+        carburant: 'Le carburant',
+        transmission: 'La transmission',
+        ville: 'La ville',
+        adresse: 'L\'adresse',
+        prixparjour: 'Le prix par jour',
+        joursminimum: 'La durée minimale',
+        ageminimum: 'L\'âge minimum',
+        zoneconduite: 'La zone de conduite',
+        assurance: 'L\'assurance',
+        carburantcondition: 'La condition de carburant',
+        reglesspecifiques: 'Les règles spécifiques',
+        fraislivraison: 'Les frais de livraison',
+        autorisehorsdakar: 'L\'autorisation hors Dakar',
+        supplementhorsdakarparjour: 'Le supplément hors Dakar',
+        equipements: 'Les équipements',
+        telephone: 'Le numéro de téléphone',
+        phone: 'Le numéro de téléphone',
+        code: 'Le code de validation',
+        url: 'Le lien du fichier',
+        publicid: 'L\'identifiant du fichier',
+        documentfronturl: 'Le document (recto)',
+        documentbackurl: 'Le document (verso)',
+        selfieurl: 'La photo selfie',
+        motif: 'Le motif',
+        commentaire: 'Le commentaire',
+        raison: 'La raison',
+        heuredebut: 'L\'heure de début',
+      };
+
+      const translatedField = fieldTranslations[firstWord.toLowerCase()];
+      if (translatedField) {
+        // Si la règle a été traduite séparément, on combine proprement.
+        // Sinon, on retourne juste le message traduit sans le premier mot technique.
+        if (ruleTranslation !== msg) {
+          return `${translatedField} ${ruleTranslation}`;
+        }
+        const restOfMsg = msg.substring(firstWord.length).trim();
+        return `${translatedField} ${restOfMsg}`;
+      }
+
+      return ruleTranslation;
+    });
+
+    return `Erreur de validation :\n- ${cleanList.join('\n- ')}`;
+  }
+
+  // Si c'est un message texte simple
+  if (payload.message && typeof payload.message === 'string') {
+    const msg = payload.message;
+    // Traduction de quelques erreurs globales courantes
+    if (msg.includes('Unauthorized') || msg.includes('unauthorized') || msg.includes('Credentials')) {
+      return 'Accès non autorisé ou session expirée. Veuillez vous reconnecter.';
+    }
+    if (msg.includes('Forbidden') || msg.includes('forbidden')) {
+      return 'Vous n\'avez pas les permissions nécessaires pour effectuer cette action.';
+    }
+    if (msg.includes('Not Found') || msg.includes('not found')) {
+      return 'La ressource demandée est introuvable.';
+    }
+    if (msg.includes('Internal Server Error')) {
+      return 'Une erreur interne du serveur s\'est produite. Veuillez réessayer plus tard.';
+    }
+    
+    // Traduction française de messages métiers connus du backend :
+    const businessTranslations: Record<string, string> = {
+      'vehicle with this registration already exists': 'Un véhicule avec cette immatriculation existe déjà.',
+      'user has pending kyc': 'Votre dossier de vérification d\'identité est déjà en cours d\'examen.',
+      'phone number already in use': 'Ce numéro de téléphone est déjà utilisé par un autre compte.',
+      'email already in use': 'Cette adresse e-mail est déjà utilisée par un autre compte.',
+      'invalid otp code': 'Le code de vérification est incorrect ou a expiré.',
+      'reservation conflict': 'Ce véhicule n\'est pas disponible aux dates sélectionnées.',
+      'invalid transition': 'Cette action n\'est pas autorisée dans l\'état actuel.',
+    };
+
+    const lowerMsg = msg.toLowerCase();
+    for (const [english, french] of Object.entries(businessTranslations)) {
+      if (lowerMsg.includes(english)) {
+        return french;
+      }
+    }
+
+    return msg;
+  }
+
+  return payload.error || 'Une erreur inconnue s\'est produite.';
+}
+

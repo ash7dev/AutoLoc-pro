@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, lockScroll, unlockScroll } from "@/lib/utils";
 
 export function ModalShell({
   title,
@@ -20,13 +20,9 @@ export function ModalShell({
   children: React.ReactNode;
 }) {
   useEffect(() => {
-    const originalBody = document.body.style.overflow;
-    const originalHtml = document.documentElement.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
+    lockScroll();
     return () => {
-      document.body.style.overflow = originalBody;
-      document.documentElement.style.overflow = originalHtml;
+      unlockScroll();
     };
   }, []);
 

@@ -32,6 +32,8 @@ import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { SearchVehiclesDto } from './dto/search-vehicles.dto';
 import { CreateIndisponibiliteDto } from './dto/create-indisponibilite.dto';
+import { LinkPhotoDto } from './dto/link-photo.dto';
+import { UpdatePhotoDto } from './dto/update-photo.dto';
 import { VEHICLE_DOCUMENT_MULTER_OPTIONS, VEHICLE_PHOTO_MULTER_OPTIONS } from '../upload/upload.config';
 import { MulterExceptionFilter } from '../upload/multer-exception.filter';
 
@@ -307,7 +309,7 @@ export class VehiclesController {
   @Roles(RoleProfile.PROPRIETAIRE)
   linkPhoto(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: { url: string; publicId: string },
+    @Body() body: LinkPhotoDto,
   ) {
     return this.vehiclesService.linkPhoto(id, body.url, body.publicId);
   }
@@ -321,7 +323,7 @@ export class VehiclesController {
   updatePhoto(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('photoId', ParseUUIDPipe) photoId: string,
-    @Body() body: { position?: number; estPrincipale?: boolean },
+    @Body() body: UpdatePhotoDto,
   ) {
     return this.vehiclesService.updatePhoto(id, photoId, body);
   }

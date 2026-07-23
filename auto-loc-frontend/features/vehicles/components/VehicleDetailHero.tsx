@@ -25,36 +25,97 @@ function Lightbox({
   onClose: () => void;
   onChange: (i: number) => void;
 }) {
+  const [touchStart, setTouchStart] = React.useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = React.useState<number | null>(null);
+
+  // Minimum swipe distance (in px)
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      // Swipe left -> next photo
+      onChange(index < photos.length - 1 ? index + 1 : 0);
+    } else if (isRightSwipe) {
+      // Swipe right -> previous photo
+      onChange(index > 0 ? index - 1 : photos.length - 1);
+    }
+  };
+
+  // Keyboard navigation
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      } else if (e.key === 'ArrowLeft') {
+        onChange(index > 0 ? index - 1 : photos.length - 1);
+      } else if (e.key === 'ArrowRight') {
+        onChange(index < photos.length - 1 ? index + 1 : 0);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [index, photos.length, onClose, onChange]);
+
+  const goToPrevious = () => onChange(index > 0 ? index - 1 : photos.length - 1);
+  const goToNext = () => onChange(index < photos.length - 1 ? index + 1 : 0);
+
   return (
-    <div className="fixed inset-0 z-[100] bg-black/96 backdrop-blur-sm flex flex-col" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-[100] bg-black/96 backdrop-blur-sm flex flex-col"
+      onClick={onClose}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       {/* Top bar */}
       <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" onClick={e => e.stopPropagation()}>
-        <span className="text-white/40 text-[13px] font-medium tabular-nums">
+        <span className="text-white/60 text-[13px] font-semibold tabular-nums">
           {index + 1} / {photos.length}
         </span>
         <button type="button" onClick={onClose}
-          className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-          <X className="w-4 h-4 text-white" />
+          className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center transition-all">
+          <X className="w-5 h-5 text-white" strokeWidth={2.5} />
         </button>
       </div>
 
-      {/* Image */}
-      <div className="flex-1 relative flex items-center justify-center px-14 md:px-20 min-h-0"
-        onClick={e => e.stopPropagation()}>
-        <div className="relative w-full h-full">
+      {/* Image with navigation */}
+      <div className="flex-1 relative flex items-center justify-center min-h-0" onClick={e => e.stopPropagation()}>
+        {/* Main image */}
+        <div className="relative w-full h-full px-4 md:px-20">
           <Image src={photos[index].url} alt="" fill sizes="100vw" className="object-contain" />
         </div>
+
+        {/* Navigation buttons - Always visible with better styling */}
         {photos.length > 1 && (
           <>
-            <button type="button"
-              onClick={() => onChange(index > 0 ? index - 1 : photos.length - 1)}
-              className="absolute left-3 md:left-5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-              <ChevronLeft className="w-5 h-5 text-white" />
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); goToPrevious(); }}
+              className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 hover:bg-white shadow-xl hover:shadow-2xl flex items-center justify-center transition-all active:scale-95"
+            >
+              <ChevronLeft className="w-6 h-6 md:w-7 md:h-7 text-slate-900" strokeWidth={2.5} />
             </button>
-            <button type="button"
-              onClick={() => onChange(index < photos.length - 1 ? index + 1 : 0)}
-              className="absolute right-3 md:right-5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-              <ChevronRight className="w-5 h-5 text-white" />
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); goToNext(); }}
+              className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 hover:bg-white shadow-xl hover:shadow-2xl flex items-center justify-center transition-all active:scale-95"
+            >
+              <ChevronRight className="w-6 h-6 md:w-7 md:h-7 text-slate-900" strokeWidth={2.5} />
             </button>
           </>
         )}
@@ -62,12 +123,12 @@ function Lightbox({
 
       {/* Thumb strip */}
       {photos.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto px-5 py-4 scrollbar-none flex-shrink-0 justify-center">
+        <div className="flex gap-2 overflow-x-auto px-5 py-4 scrollbar-none flex-shrink-0 justify-center" onClick={e => e.stopPropagation()}>
           {photos.map((p, i) => (
             <button key={p.id} type="button" onClick={() => onChange(i)}
               className={cn(
-                'relative h-20 w-20 rounded-xl overflow-hidden transition-all duration-200',
-                i === index ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900' : 'ring-1 ring-white/40 hover:ring-white/60'
+                'relative h-16 w-16 md:h-20 md:w-20 rounded-xl overflow-hidden transition-all duration-200 flex-shrink-0',
+                i === index ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-900 scale-110' : 'ring-1 ring-white/40 hover:ring-white/60 opacity-60 hover:opacity-100'
               )}
             >
               <Image src={p.url} alt="" fill sizes="80px" className="object-cover" />
@@ -184,13 +245,14 @@ function DesktopGallery({
       </div>
       {/* 2×2 right */}
       <div className="grid grid-cols-2 grid-rows-2 gap-2">
-        {[1, 2, 3, 4].map(i => {
-          const isLast = i === 4;
+        {photos.slice(1, 5).map((photo, idx) => {
+          const i = idx + 1; // Index original dans le tableau photos
+          const isLast = idx === 3 && n > 5;
           const hasMore = isLast && n > 5;
           return (
-            <div key={photos[i]?.id ?? i} className={cell}
-              onClick={() => onOpen(Math.min(i, n - 1))}>
-              {photos[i] && img(photos[i], i, '25vw')}
+            <div key={photo.id} className={cell}
+              onClick={() => onOpen(i)}>
+              {img(photo, i, '25vw')}
               <div className={dim} />
               {hasMore && (
                 <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
