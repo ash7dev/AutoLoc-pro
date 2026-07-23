@@ -1,0 +1,58 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../models/{{FEATURE}}_model.dart';
+
+/// **{{Feature}}LocalDataSource** - DataSource local pour {{FEATURE_DESC}}
+///
+/// ## Responsabilité
+/// Gérer le cache local de {{FEATURE_DESC}} (optionnel).
+///
+/// NOTE: Ce fichier est optionnel - supprimez-le si vous n'en avez pas besoin
+///
+/// ## Utilisation
+/// - Cache les données pour une utilisation offline
+/// - Réduit les appels API
+abstract class {{Feature}}LocalDataSource {
+  Future<{{Feature}}Model?> getCached{{Feature}}();
+  Future<void> cache{{Feature}}({{Feature}}Model model);
+  Future<void> clearCache();
+}
+
+/// **{{Feature}}LocalDataSourceImpl** - Implémentation du DataSource local
+class {{Feature}}LocalDataSourceImpl implements {{Feature}}LocalDataSource {
+  {{Feature}}LocalDataSourceImpl({required this.sharedPreferences});
+
+  final SharedPreferences sharedPreferences;
+
+  static const String _cacheKey = 'CACHED_{{FEATURE}}';
+
+  @override
+  Future<{{Feature}}Model?> getCached{{Feature}}() async {
+    try {
+      final jsonString = sharedPreferences.getString(_cacheKey);
+
+      if (jsonString != null) {
+        final json = jsonDecode(jsonString) as Map<String, dynamic>;
+        return {{Feature}}Model.fromJson(json);
+      }
+
+      return null;
+    } catch (e) {
+      // Si erreur de parsing, supprimer le cache corrompu
+      await clearCache();
+      return null;
+    }
+  }
+
+  @override
+  Future<void> cache{{Feature}}({{Feature}}Model model) async {
+    final jsonString = jsonEncode(model.toJson());
+    await sharedPreferences.setString(_cacheKey, jsonString);
+  }
+
+  @override
+  Future<void> clearCache() async {
+    await sharedPreferences.remove(_cacheKey);
+  }
+}

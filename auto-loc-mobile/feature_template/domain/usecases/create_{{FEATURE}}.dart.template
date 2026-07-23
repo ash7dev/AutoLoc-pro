@@ -1,0 +1,40 @@
+import '../../../../core/utils/result.dart';
+import '../entities/{{FEATURE}}_entity.dart';
+import '../repositories/{{FEATURE}}_repository.dart';
+
+/// **Create{{Feature}}** - UseCase pour créer {{FEATURE_DESC}}
+///
+/// ## Responsabilité
+/// Créer un nouveau {{FEATURE_DESC}} via le repository.
+///
+/// ## Usage
+/// ```dart
+/// final useCase = Create{{Feature}}(repository: {{feature}}Repository);
+/// final result = await useCase({{feature}}: new{{Feature}});
+///
+/// result.fold(
+///   (failure) => print('Erreur: ${failure.message}'),
+///   (success) => print('{{Feature}} créé avec succès'),
+/// );
+/// ```
+///
+/// NOTE: Ce fichier est optionnel - supprimez-le si vous n'en avez pas besoin
+class Create{{Feature}} {
+  Create{{Feature}}({required this.repository});
+
+  final {{Feature}}Repository repository;
+
+  /// **Appeler le UseCase**
+  ///
+  /// Paramètres:
+  /// - `{{feature}}`: {{Feature}} à créer
+  ///
+  /// Retourne `Result<void>`:
+  /// - Success: {{Feature}} créé
+  /// - Failure: Erreur (validation, réseau, serveur, etc.)
+  Future<Result<void>> call({required {{Feature}} {{feature}}}) async {
+    // TODO: Implémenter la logique de validation si nécessaire
+
+    return await repository.create{{Feature}}({{feature}});
+  }
+}

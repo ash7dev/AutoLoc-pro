@@ -1,0 +1,33 @@
+import '../../../../core/utils/result.dart';
+import '../entities/{{FEATURE}}_entity.dart';
+import '../repositories/{{FEATURE}}_repository.dart';
+
+/// **Get{{Feature}}** - UseCase pour récupérer {{FEATURE_DESC}}
+///
+/// ## Responsabilité
+/// Récupérer {{FEATURE_DESC}} via le repository.
+///
+/// ## Usage
+/// ```dart
+/// final useCase = Get{{Feature}}(repository: {{feature}}Repository);
+/// final result = await useCase();
+///
+/// result.fold(
+///   (failure) => print('Erreur: ${failure.message}'),
+///   ({{feature}}) => print('{{Feature}}: ${{{feature}}.name}'),
+/// );
+/// ```
+class Get{{Feature}} {
+  Get{{Feature}}({required this.repository});
+
+  final {{Feature}}Repository repository;
+
+  /// **Appeler le UseCase**
+  ///
+  /// Retourne `Result<{{Feature}}>`:
+  /// - Success: {{Feature}} récupéré
+  /// - Failure: Erreur (réseau, serveur, etc.)
+  Future<Result<{{Feature}}>> call() async {
+    return await repository.get{{Feature}}();
+  }
+}

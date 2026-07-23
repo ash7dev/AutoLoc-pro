@@ -1,0 +1,34 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part '{{FEATURE}}_entity.freezed.dart';
+part '{{FEATURE}}_entity.g.dart';
+
+/// **{{Feature}}** - Entity pour {{FEATURE_DESC}}
+///
+/// ## Responsabilité
+/// Représenter les données métier de {{FEATURE_DESC}}.
+///
+/// ## Propriétés
+/// - TODO: Documenter chaque propriété
+///
+/// ## Exemple
+/// ```dart
+/// final {{feature}} = {{Feature}}(
+///   // TODO: Ajouter exemple
+/// );
+/// ```
+@freezed
+class {{Feature}} with _${{Feature}} {
+  const factory {{Feature}}({
+    // TODO: Définir les propriétés de votre entity
+    required String id,
+    required String name,
+    // Exemples:
+    // required DateTime createdAt,
+    // String? description,
+    // @Default(false) bool isActive,
+  }) = _{{Feature}};
+
+  factory {{Feature}}.fromJson(Map<String, dynamic> json) =>
+      _${{Feature}}FromJson(json);
+}

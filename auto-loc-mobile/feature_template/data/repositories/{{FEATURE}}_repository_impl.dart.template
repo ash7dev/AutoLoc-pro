@@ -1,0 +1,129 @@
+import 'package:dio/dio.dart';
+
+import '../../../../core/errors/failures.dart';
+import '../../../../core/utils/result.dart';
+import '../../domain/entities/{{FEATURE}}_entity.dart';
+import '../../domain/repositories/{{FEATURE}}_repository.dart';
+import '../datasources/{{FEATURE}}_remote_datasource.dart';
+// import '../datasources/{{FEATURE}}_local_datasource.dart'; // Décommenter si vous utilisez le cache local
+
+/// **{{Feature}}RepositoryImpl** - Implémentation du repository {{FEATURE_DESC}}
+///
+/// ## Responsabilité
+/// - Orchestrer les datasources (remote, local)
+/// - Gérer les erreurs et les convertir en Failures
+/// - Mapper Model → Entity
+class {{Feature}}RepositoryImpl implements {{Feature}}Repository {
+  {{Feature}}RepositoryImpl({
+    required this.remoteDataSource,
+    // this.localDataSource, // Décommenter si vous utilisez le cache local
+  });
+
+  final {{Feature}}RemoteDataSource remoteDataSource;
+  // final {{Feature}}LocalDataSource? localDataSource; // Décommenter si vous utilisez le cache local
+
+  @override
+  Future<Result<{{Feature}}>> get{{Feature}}() async {
+    try {
+      // TODO (Optionnel): Essayer de charger depuis le cache local d'abord
+      // if (localDataSource != null) {
+      //   final cached = await localDataSource!.getCached{{Feature}}();
+      //   if (cached != null) {
+      //     return Success(cached.toEntity());
+      //   }
+      // }
+
+      // Charger depuis l'API
+      final model = await remoteDataSource.get{{Feature}}();
+
+      // TODO (Optionnel): Mettre en cache
+      // if (localDataSource != null) {
+      //   await localDataSource!.cache{{Feature}}(model);
+      // }
+
+      // Convertir Model → Entity
+      return Success(model.toEntity());
+    } on DioException catch (e) {
+      return Failure(_handleDioError(e));
+    } catch (e) {
+      return Failure(
+        UnknownFailure(
+          message: 'Une erreur inattendue est survenue',
+          originalError: e.toString(),
+        ),
+      );
+    }
+  }
+
+  // TODO: Implémenter les autres méthodes du repository
+
+  // =========================================================================
+  // ERROR HANDLING
+  // =========================================================================
+
+  /// **Gérer les erreurs Dio**
+  ///
+  /// Convertit les DioException en Failures appropriés.
+  FailureType _handleDioError(DioException error) {
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return NetworkFailure(
+          message: 'Délai d\'attente dépassé. Vérifiez votre connexion.',
+        );
+
+      case DioExceptionType.badResponse:
+        final statusCode = error.response?.statusCode;
+
+        if (statusCode == 400) {
+          return ValidationFailure(
+            message: error.response?.data['message'] as String? ??
+                'Requête invalide',
+          );
+        } else if (statusCode == 401) {
+          return AuthFailure(
+            message: 'Session expirée. Veuillez vous reconnecter.',
+          );
+        } else if (statusCode == 403) {
+          return AuthFailure(
+            message: 'Accès non autorisé',
+          );
+        } else if (statusCode == 404) {
+          return NotFoundFailure(
+            message: '{{Feature_DESC}} introuvable',
+          );
+        } else if (statusCode == 500) {
+          return ServerFailure(
+            message: 'Erreur serveur. Veuillez réessayer plus tard.',
+          );
+        } else {
+          return ServerFailure(
+            message: 'Erreur serveur (${statusCode ?? 'unknown'})',
+          );
+        }
+
+      case DioExceptionType.cancel:
+        return UnknownFailure(
+          message: 'Requête annulée',
+        );
+
+      case DioExceptionType.connectionError:
+        return NetworkFailure(
+          message: 'Pas de connexion internet',
+        );
+
+      case DioExceptionType.badCertificate:
+        return NetworkFailure(
+          message: 'Erreur de certificat SSL',
+        );
+
+      case DioExceptionType.unknown:
+      default:
+        return UnknownFailure(
+          message: 'Une erreur est survenue: ${error.message}',
+          originalError: error.toString(),
+        );
+    }
+  }
+}

@@ -1,0 +1,39 @@
+import '../../../../core/utils/result.dart';
+import '../entities/{{FEATURE}}_entity.dart';
+
+/// **{{Feature}}Repository** - Interface du repository pour {{FEATURE_DESC}}
+///
+/// ## Responsabilité
+/// Définir le contrat pour accéder aux données de {{FEATURE_DESC}}.
+///
+/// ## Méthodes
+/// - `get{{Feature}}()`: Récupérer {{FEATURE_DESC}}
+/// - TODO: Ajouter d'autres méthodes selon les besoins
+///
+/// ## Implémentation
+/// Implémentée dans `data/repositories/{{FEATURE}}_repository_impl.dart`
+abstract class {{Feature}}Repository {
+  /// **Récupérer {{FEATURE_DESC}}**
+  ///
+  /// Retourne `Result<{{Feature}}>`:
+  /// - Success: {{Feature}} récupéré
+  /// - Failure: Erreur (réseau, serveur, etc.)
+  ///
+  /// Exemple:
+  /// ```dart
+  /// final result = await repository.get{{Feature}}();
+  /// result.fold(
+  ///   (failure) => print('Erreur: ${failure.message}'),
+  ///   ({{feature}}) => print('{{Feature}}: ${{{feature}}.name}'),
+  /// );
+  /// ```
+  Future<Result<{{Feature}}>> get{{Feature}}();
+
+  // TODO: Ajouter d'autres méthodes selon les besoins
+  // Exemples:
+  // Future<Result<List<{{Feature}}>>> get{{Feature}}List();
+  // Future<Result<{{Feature}}>> get{{Feature}}ById(String id);
+  // Future<Result<void>> create{{Feature}}({{Feature}} {{feature}});
+  // Future<Result<void>> update{{Feature}}({{Feature}} {{feature}});
+  // Future<Result<void>> delete{{Feature}}(String id);
+}

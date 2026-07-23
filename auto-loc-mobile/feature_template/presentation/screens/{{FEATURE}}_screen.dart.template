@@ -1,0 +1,193 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../shared/presentation/base/effect_handler.dart';
+import '../providers/{{FEATURE}}_providers.dart';
+
+/// **{{Feature}}Screen** - Screen pour {{FEATURE_DESC}}
+///
+/// ## Responsabilité
+/// - Afficher l'UI de {{FEATURE_DESC}}
+/// - Watcher le State du ViewModel
+/// - Écouter les Effects du ViewModel
+/// - Appeler les méthodes du ViewModel en réponse aux actions utilisateur
+class {{Feature}}Screen extends ConsumerStatefulWidget {
+  const {{Feature}}Screen({super.key});
+
+  @override
+  ConsumerState<{{Feature}}Screen> createState() => _{{Feature}}ScreenState();
+}
+
+class _{{Feature}}ScreenState extends ConsumerState<{{Feature}}Screen>
+    with EffectHandler {
+  // =========================================================================
+  // LIFECYCLE
+  // =========================================================================
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Écouter les effects du ViewModel
+    listenToEffects({{feature}}EffectsProvider);
+  }
+
+  // =========================================================================
+  // BUILD
+  // =========================================================================
+
+  @override
+  Widget build(BuildContext context) {
+    // Watcher le state du ViewModel
+    final state = ref.watch({{feature}}StateProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('{{FEATURE_DESC}}'),
+        // TODO: Ajouter actions si nécessaire
+      ),
+      body: state.map(
+        // État initial (avant premier chargement)
+        initial: (_) => const SizedBox.shrink(),
+
+        // Chargement initial
+        loading: (_) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+
+        // Rafraîchissement (avec données existantes)
+        refreshing: (s) => _buildContent(context, s.data),
+
+        // Succès (données chargées)
+        success: (s) => _buildContent(context, s.data),
+
+        // Vide (pas de données)
+        empty: (e) => _buildEmptyState(context, e.message),
+
+        // Erreur
+        failure: (f) => _buildErrorState(context, f.message),
+      ),
+    );
+  }
+
+  // =========================================================================
+  // UI BUILDERS
+  // =========================================================================
+
+  /// **Construire le contenu principal**
+  Widget _buildContent(BuildContext context, dynamic data) {
+    return RefreshIndicator(
+      onRefresh: _onRefresh,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // TODO: Construire votre UI ici
+            Text('TODO: Afficher ${data.toString()}'),
+
+            // Exemple de widget
+            // Text(
+            //   data.name,
+            //   style: Theme.of(context).textTheme.headlineMedium,
+            // ),
+
+            const SizedBox(height: 16),
+
+            // TODO: Ajouter vos widgets
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// **État vide**
+  Widget _buildEmptyState(BuildContext context, String? message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.inbox_outlined, // TODO: Choisir icône appropriée
+              size: 64,
+              color: Colors.grey,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              message ?? 'Aucune donnée',
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            // TODO: Ajouter action si nécessaire
+            // ElevatedButton(
+            //   onPressed: _onRetry,
+            //   child: const Text('Réessayer'),
+            // ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// **État d'erreur**
+  Widget _buildErrorState(BuildContext context, String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Erreur',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _onRetry,
+              child: const Text('Réessayer'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =========================================================================
+  // USER ACTIONS
+  // =========================================================================
+
+  /// **Pull-to-Refresh**
+  Future<void> _onRefresh() async {
+    final viewModel = ref.read({{feature}}ViewModelProvider.notifier);
+    await viewModel.refresh();
+  }
+
+  /// **Réessayer après erreur**
+  Future<void> _onRetry() async {
+    final viewModel = ref.read({{feature}}ViewModelProvider.notifier);
+    await viewModel.retry();
+  }
+
+  // TODO: Ajouter vos méthodes d'action utilisateur
+  // Exemple:
+  // void _onButtonPressed() {
+  //   final viewModel = ref.read({{feature}}ViewModelProvider.notifier);
+  //   viewModel.doSomething();
+  // }
+}

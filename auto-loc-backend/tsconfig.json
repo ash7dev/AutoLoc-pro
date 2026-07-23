@@ -23,5 +23,7 @@
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "paths": {}
-  }
+  },
+  "include": ["src/**/*", "prisma/**/*"],
+  "exclude": ["node_modules", "dist", "scripts"]
 }

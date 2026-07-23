@@ -60,7 +60,7 @@ export function OtpForm({
             accessToken: (session as any).access_token,
             refreshToken: (session as any).refresh_token,
             activeRole: (session as any).active_role || 'LOCATAIRE',
-            profile: (session as any).user
+            profile: (session as any).profile
           } : undefined
         );
 

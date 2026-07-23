@@ -1,0 +1,143 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../shared/presentation/base/view_effect.dart';
+import '../../../../shared/presentation/base/view_state.dart';
+import '../../domain/entities/{{FEATURE}}_entity.dart';
+import '../../domain/usecases/get_{{FEATURE}}.dart';
+import '../viewmodels/{{FEATURE}}_view_model.dart';
+
+// TODO: Importer les providers des UseCases depuis data layer
+// import '../../data/repositories/{{FEATURE}}_repository_impl.dart';
+// import '../../domain/repositories/{{FEATURE}}_repository.dart';
+
+/// **{{Feature}}Providers** - Providers Riverpod pour {{FEATURE_DESC}}
+///
+/// ## Providers Disponibles
+/// - `{{feature}}ViewModelProvider`: Le ViewModel
+/// - `{{feature}}StateProvider`: Le State (alias pour lisibilité)
+/// - `{{feature}}EffectsProvider`: Le Stream d'Effects
+///
+/// ## Utilisation dans le Screen
+/// ```dart
+/// class {{Feature}}Screen extends ConsumerStatefulWidget {
+///   @override
+///   ConsumerState<{{Feature}}Screen> createState() => _{{Feature}}ScreenState();
+/// }
+///
+/// class _{{Feature}}ScreenState extends ConsumerState<{{Feature}}Screen>
+///     with EffectHandler {
+///   @override
+///   void initState() {
+///     super.initState();
+///     listenToEffects({{feature}}EffectsProvider);
+///   }
+///
+///   @override
+///   Widget build(BuildContext context) {
+///     final state = ref.watch({{feature}}StateProvider);
+///     // ...
+///   }
+/// }
+/// ```
+
+// ============================================================================
+// VIEWMODEL
+// ============================================================================
+
+/// **{{Feature}}ViewModel Provider**
+///
+/// Provider du ViewModel pour {{FEATURE_DESC}}.
+final {{feature}}ViewModelProvider = StateNotifierProvider<{{Feature}}ViewModel, ViewState<{{Feature}}>>((ref) {
+  return {{Feature}}ViewModel(
+    get{{Feature}}UseCase: ref.read(get{{Feature}}UseCaseProvider),
+    // TODO: Injecter les autres UseCases
+  );
+});
+
+// ============================================================================
+// STATE (Alias pour lisibilité)
+// ============================================================================
+
+/// **{{Feature}}State Provider**
+///
+/// Alias du state du ViewModel pour une meilleure lisibilité.
+///
+/// Utilisation:
+/// ```dart
+/// final state = ref.watch({{feature}}StateProvider);
+/// ```
+final {{feature}}StateProvider = Provider<ViewState<{{Feature}}>>((ref) {
+  return ref.watch({{feature}}ViewModelProvider);
+});
+
+// ============================================================================
+// EFFECTS
+// ============================================================================
+
+/// **{{Feature}}Effects Provider**
+///
+/// Stream d'Effects émis par le ViewModel.
+///
+/// Utilisation avec EffectHandler:
+/// ```dart
+/// @override
+/// void initState() {
+///   super.initState();
+///   listenToEffects({{feature}}EffectsProvider);
+/// }
+/// ```
+final {{feature}}EffectsProvider = StreamProvider<ViewEffect>((ref) {
+  final viewModel = ref.watch({{feature}}ViewModelProvider.notifier);
+  return viewModel.effects;
+});
+
+// ============================================================================
+// USECASES (TODO: À déplacer dans data layer providers)
+// ============================================================================
+
+// TODO: Créer un fichier data/providers/{{feature}}_data_providers.dart
+// et y définir ces providers
+
+/// **Get{{Feature}}UseCase Provider**
+///
+/// Provider du UseCase Get{{Feature}}.
+///
+/// TODO: Déplacer dans data/providers/{{feature}}_data_providers.dart
+final get{{Feature}}UseCaseProvider = Provider<Get{{Feature}}>((ref) {
+  // return Get{{Feature}}(
+  //   repository: ref.read({{feature}}RepositoryProvider),
+  // );
+  throw UnimplementedError('Get{{Feature}}UseCase provider not implemented yet');
+});
+
+// TODO: Ajouter les providers pour les autres UseCases
+// final create{{Feature}}UseCaseProvider = Provider<Create{{Feature}}>((ref) {
+//   return Create{{Feature}}(
+//     repository: ref.read({{feature}}RepositoryProvider),
+//   );
+// });
+
+// ============================================================================
+// REPOSITORY (TODO: À déplacer dans data layer providers)
+// ============================================================================
+
+// TODO: Créer ces providers dans data/providers/{{feature}}_data_providers.dart
+
+// final {{feature}}RepositoryProvider = Provider<{{Feature}}Repository>((ref) {
+//   return {{Feature}}RepositoryImpl(
+//     remoteDataSource: ref.read({{feature}}RemoteDataSourceProvider),
+//     // localDataSource: ref.read({{feature}}LocalDataSourceProvider), // Si utilisé
+//   );
+// });
+
+// final {{feature}}RemoteDataSourceProvider = Provider<{{Feature}}RemoteDataSource>((ref) {
+//   return {{Feature}}RemoteDataSourceImpl(
+//     dio: ref.read(dioProvider), // Provider global pour Dio
+//   );
+// });
+
+// final {{feature}}LocalDataSourceProvider = Provider<{{Feature}}LocalDataSource>((ref) {
+//   return {{Feature}}LocalDataSourceImpl(
+//     sharedPreferences: ref.read(sharedPreferencesProvider), // Provider global
+//   );
+// });

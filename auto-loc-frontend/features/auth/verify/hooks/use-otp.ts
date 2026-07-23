@@ -36,14 +36,14 @@ export function useOtp() {
         }
         setLoading(false);
         // On renvoie un objet compatible "session" pour OtpForm
-        return { 
-          session: { 
-            access_token: data.accessToken, 
+        return {
+          session: {
+            access_token: data.accessToken,
             refresh_token: data.refreshToken,
-            user: data.profile,
+            profile: data.profile,
             active_role: data.activeRole,
-          }, 
-          error: null 
+          },
+          error: null
         };
       } catch (err) {
         setError('Connexion impossible. Vérifiez votre réseau et réessayez.');

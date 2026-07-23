@@ -1,0 +1,102 @@
+import 'package:dio/dio.dart';
+
+import '../models/{{FEATURE}}_model.dart';
+
+/// **{{Feature}}RemoteDataSource** - DataSource distant pour {{FEATURE_DESC}}
+///
+/// ## Responsabilité
+/// Effectuer les appels API pour {{FEATURE_DESC}}.
+///
+/// ## Méthodes
+/// - `get{{Feature}}()`: Récupérer {{FEATURE_DESC}} depuis l'API
+/// - TODO: Ajouter d'autres méthodes selon les besoins
+abstract class {{Feature}}RemoteDataSource {
+  Future<{{Feature}}Model> get{{Feature}}();
+  // TODO: Ajouter d'autres méthodes
+  // Future<List<{{Feature}}Model>> get{{Feature}}List();
+  // Future<{{Feature}}Model> get{{Feature}}ById(String id);
+  // Future<void> create{{Feature}}({{Feature}}Model model);
+  // Future<void> update{{Feature}}({{Feature}}Model model);
+  // Future<void> delete{{Feature}}(String id);
+}
+
+/// **{{Feature}}RemoteDataSourceImpl** - Implémentation du DataSource distant
+class {{Feature}}RemoteDataSourceImpl implements {{Feature}}RemoteDataSource {
+  {{Feature}}RemoteDataSourceImpl({required this.dio});
+
+  final Dio dio;
+
+  // TODO: Définir les endpoints API
+  static const String _baseUrl = '/api/{{FEATURE}}'; // Adapter selon votre API
+
+  @override
+  Future<{{Feature}}Model> get{{Feature}}() async {
+    try {
+      // TODO: Adapter l'endpoint et les headers selon votre API
+      final response = await dio.get(_baseUrl);
+
+      if (response.statusCode == 200) {
+        return {{Feature}}Model.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load {{FEATURE}}',
+        );
+      }
+    } on DioException {
+      rethrow;
+    } catch (e) {
+      throw DioException(
+        requestOptions: RequestOptions(path: _baseUrl),
+        error: e,
+        type: DioExceptionType.unknown,
+      );
+    }
+  }
+
+  // TODO: Implémenter les autres méthodes
+
+  // Exemple: Get List
+  // @override
+  // Future<List<{{Feature}}Model>> get{{Feature}}List() async {
+  //   try {
+  //     final response = await dio.get(_baseUrl);
+  //
+  //     if (response.statusCode == 200) {
+  //       final List<dynamic> data = response.data as List<dynamic>;
+  //       return data.map((json) => {{Feature}}Model.fromJson(json as Map<String, dynamic>)).toList();
+  //     } else {
+  //       throw DioException(
+  //         requestOptions: response.requestOptions,
+  //         response: response,
+  //         type: DioExceptionType.badResponse,
+  //       );
+  //     }
+  //   } on DioException {
+  //     rethrow;
+  //   }
+  // }
+
+  // Exemple: Create
+  // @override
+  // Future<void> create{{Feature}}({{Feature}}Model model) async {
+  //   try {
+  //     final response = await dio.post(
+  //       _baseUrl,
+  //       data: model.toJson(),
+  //     );
+  //
+  //     if (response.statusCode != 201) {
+  //       throw DioException(
+  //         requestOptions: response.requestOptions,
+  //         response: response,
+  //         type: DioExceptionType.badResponse,
+  //       );
+  //     }
+  //   } on DioException {
+  //     rethrow;
+  //   }
+  // }
+}

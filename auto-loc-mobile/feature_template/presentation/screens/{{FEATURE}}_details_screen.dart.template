@@ -1,0 +1,158 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../shared/presentation/base/effect_handler.dart';
+
+/// **{{Feature}}DetailsScreen** - Screen de détails pour {{FEATURE_DESC}}
+///
+/// ## Responsabilité
+/// - Afficher les détails d'un {{Feature}}
+/// - Permettre des actions sur {{Feature}} (modifier, supprimer, etc.)
+///
+/// NOTE: Ce fichier est optionnel - supprimez-le si vous n'avez pas besoin
+/// d'une page de détails.
+///
+/// ## Usage
+/// ```dart
+/// context.push('/{{FEATURE}}/details/$id');
+/// ```
+class {{Feature}}DetailsScreen extends ConsumerStatefulWidget {
+  const {{Feature}}DetailsScreen({
+    super.key,
+    required this.{{feature}}Id,
+  });
+
+  final String {{feature}}Id;
+
+  @override
+  ConsumerState<{{Feature}}DetailsScreen> createState() => _{{Feature}}DetailsScreenState();
+}
+
+class _{{Feature}}DetailsScreenState extends ConsumerState<{{Feature}}DetailsScreen>
+    with EffectHandler {
+  // =========================================================================
+  // LIFECYCLE
+  // =========================================================================
+
+  @override
+  void initState() {
+    super.initState();
+
+    // TODO: Créer un provider pour {{Feature}}DetailsViewModel
+    // listenToEffects({{feature}}DetailsEffectsProvider);
+
+    // TODO: Initialiser le ViewModel avec l'ID
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   final viewModel = ref.read({{feature}}DetailsViewModelProvider.notifier);
+    //   viewModel.initialize(widget.{{feature}}Id);
+    // });
+  }
+
+  // =========================================================================
+  // BUILD
+  // =========================================================================
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: Watcher le state du DetailsViewModel
+    // final state = ref.watch({{feature}}DetailsStateProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Détails {{FEATURE_DESC}}'),
+        // TODO: Ajouter actions (modifier, supprimer, etc.)
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('TODO: Afficher détails de ${widget.{{feature}}Id}'),
+            const SizedBox(height: 16),
+            const Text('TODO: Implémenter DetailsViewModel et UI'),
+          ],
+        ),
+      ),
+    );
+
+    // TODO: Implémenter la gestion des states
+    // return state.map(
+    //   initial: (_) => const SizedBox.shrink(),
+    //   loading: (_) => const Center(child: CircularProgressIndicator()),
+    //   refreshing: (s) => _buildContent(context, s.data),
+    //   success: (s) => _buildContent(context, s.data),
+    //   empty: (_) => const Center(child: Text('{{Feature}} introuvable')),
+    //   failure: (f) => _buildErrorState(context, f.message),
+    // );
+  }
+
+  // =========================================================================
+  // UI BUILDERS
+  // =========================================================================
+
+  // TODO: Implémenter les builders
+  // Widget _buildContent(BuildContext context, {{Feature}}Details details) {
+  //   return SingleChildScrollView(
+  //     padding: const EdgeInsets.all(16),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         // Détails du {{Feature}}
+  //         Text(
+  //           details.name,
+  //           style: Theme.of(context).textTheme.headlineMedium,
+  //         ),
+  //         // ... plus de détails
+  //
+  //         const SizedBox(height: 24),
+  //
+  //         // Actions
+  //         ElevatedButton(
+  //           onPressed: _onEdit,
+  //           child: const Text('Modifier'),
+  //         ),
+  //         const SizedBox(height: 8),
+  //         OutlinedButton(
+  //           onPressed: _onDelete,
+  //           style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+  //           child: const Text('Supprimer'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  // =========================================================================
+  // USER ACTIONS
+  // =========================================================================
+
+  // TODO: Implémenter les actions
+  // Future<void> _onEdit() async {
+  //   final viewModel = ref.read({{feature}}DetailsViewModelProvider.notifier);
+  //   viewModel.edit();
+  // }
+  //
+  // Future<void> _onDelete() async {
+  //   final confirmed = await showDialog<bool>(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: const Text('Supprimer {{FEATURE_DESC}}?'),
+  //       content: const Text('Cette action est irréversible'),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context, false),
+  //           child: const Text('Annuler'),
+  //         ),
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context, true),
+  //           child: const Text('Supprimer'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  //
+  //   if (confirmed == true) {
+  //     final viewModel = ref.read({{feature}}DetailsViewModelProvider.notifier);
+  //     await viewModel.delete();
+  //   }
+  // }
+}

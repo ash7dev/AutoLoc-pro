@@ -305,7 +305,7 @@ export function StepPhotos({ onNext, onBack }: Props) {
                   </button>
                 </div>
                 <span className="text-[10px] font-medium text-slate-400">ou glisser-déposer</span>
-                <input ref={galleryRef} type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }} />
+                <input ref={galleryRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }} />
               </div>
             )}
           </div>

@@ -18,7 +18,7 @@ import { TelegramService } from '../../infrastructure/telegram/telegram.service'
 const DEFAULT_ROLE = 'LOCATAIRE';
 const ACCESS_TOKEN_TTL_DEFAULT = '15m';
 const REFRESH_TOKEN_TTL_DEFAULT = '30d';
-const OTP_TTL_SECONDS = 5 * 60;
+const OTP_TTL_SECONDS = 10 * 60; // 10 minutes pour donner plus de temps
 const OTP_KEY_PREFIX = 'auth:phone-otp:';
 const OTP_COOLDOWN_SECONDS = 60;
 const OTP_COOLDOWN_PREFIX = 'auth:phone-otp:cooldown:';

@@ -1,0 +1,85 @@
+import 'package:flutter/material.dart';
+
+import '../../domain/entities/{{FEATURE}}_entity.dart';
+
+/// **{{Feature}}Card** - Widget card pour afficher un {{Feature}}
+///
+/// ## Responsabilité
+/// Afficher les informations d'un {{Feature}} dans une card.
+///
+/// NOTE: Ce fichier est optionnel - supprimez-le si vous n'en avez pas besoin.
+///
+/// ## Usage
+/// ```dart
+/// {{Feature}}Card(
+///   {{feature}}: my{{Feature}},
+///   onTap: () => print('Tapped'),
+/// );
+/// ```
+class {{Feature}}Card extends StatelessWidget {
+  const {{Feature}}Card({
+    super.key,
+    required this.{{feature}},
+    this.onTap,
+  });
+
+  final {{Feature}} {{feature}};
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // TODO: Personnaliser le contenu de la card
+
+              // Exemple: Titre
+              Text(
+                {{feature}}.name,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Exemple: ID
+              Text(
+                'ID: ${{{feature}}.id}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+              ),
+
+              // TODO: Ajouter plus de contenu
+
+              // Exemple: Badge de statut
+              // const SizedBox(height: 8),
+              // Container(
+              //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              //   decoration: BoxDecoration(
+              //     color: {{feature}}.isActive ? Colors.green : Colors.grey,
+              //     borderRadius: BorderRadius.circular(12),
+              //   ),
+              //   child: Text(
+              //     {{feature}}.isActive ? 'Actif' : 'Inactif',
+              //     style: const TextStyle(
+              //       color: Colors.white,
+              //       fontSize: 12,
+              //     ),
+              //   ),
+              // ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

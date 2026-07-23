@@ -1,0 +1,88 @@
+import '../../../../../shared/presentation/base/base_view_model.dart';
+import '../../../../../shared/presentation/base/view_state.dart';
+import '../../domain/entities/{{FEATURE}}_entity.dart';
+import '../../domain/usecases/get_{{FEATURE}}.dart';
+
+/// **{{Feature}}ViewModel** - ViewModel pour {{FEATURE_DESC}}
+///
+/// ## Responsabilité
+/// - Gérer le state de {{FEATURE_DESC}}
+/// - Appeler les UseCases
+/// - Émettre des Effects (navigation, messages)
+///
+/// ## State
+/// - `ViewState<{{Feature}}>`: État de {{FEATURE_DESC}}
+///
+/// ## Méthodes Publiques
+/// - `load()`: Charger {{FEATURE_DESC}} (appelé automatiquement dans onInit)
+/// - `refresh()`: Rafraîchir {{FEATURE_DESC}} (pull-to-refresh)
+/// - `retry()`: Réessayer après erreur
+/// - TODO: Ajouter vos méthodes métier
+class {{Feature}}ViewModel extends BaseViewModel<{{Feature}}> {
+  {{Feature}}ViewModel({
+    required this.get{{Feature}}UseCase,
+    // TODO: Injecter les autres UseCases
+  });
+
+  final Get{{Feature}} get{{Feature}}UseCase;
+  // TODO: Déclarer les autres UseCases
+  // final Create{{Feature}} create{{Feature}}UseCase;
+  // final Update{{Feature}} update{{Feature}}UseCase;
+
+  // =========================================================================
+  // LIFECYCLE
+  // =========================================================================
+
+  /// **Charger {{FEATURE_DESC}}**
+  ///
+  /// Appelé automatiquement dans `onInit()`.
+  ///
+  /// Transitions:
+  /// - Initial → Loading → Success/Failure
+  /// - Failure → Loading → Success/Failure (retry)
+  @override
+  Future<void> load() async {
+    state = const ViewState.loading();
+
+    final result = await get{{Feature}}UseCase();
+
+    result.fold(
+      (failure) => state = ViewState.failure(
+        failure.message,
+        code: failure.code,
+      ),
+      ({{feature}}) => state = ViewState.success({{feature}}),
+    );
+  }
+
+  // =========================================================================
+  // BUSINESS LOGIC
+  // =========================================================================
+
+  // TODO: Ajouter vos méthodes métier ici
+
+  // Exemple: Naviguer vers les détails
+  // void goToDetails(String id) {
+  //   navigateTo('/{{FEATURE}}/details/$id');
+  // }
+
+  // Exemple: Créer {{Feature}}
+  // Future<void> create{{Feature}}({required {{Feature}} {{feature}}}) async {
+  //   // Validation
+  //   if ({{feature}}.name.isEmpty) {
+  //     showError('Le nom est requis');
+  //     return;
+  //   }
+  //
+  //   // Appel UseCase
+  //   final result = await create{{Feature}}UseCase({{feature}}: {{feature}});
+  //
+  //   result.fold(
+  //     (failure) => showError(failure.message),
+  //     (success) {
+  //       showSuccess('{{Feature}} créé avec succès');
+  //       load(); // Recharger la liste
+  //     },
+  //   );
+  // }
+}

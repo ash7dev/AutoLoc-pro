@@ -1,0 +1,61 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+import '../../domain/entities/{{FEATURE}}_entity.dart';
+
+part '{{FEATURE}}_model.freezed.dart';
+part '{{FEATURE}}_model.g.dart';
+
+/// **{{Feature}}Model** - DTO pour {{FEATURE_DESC}}
+///
+/// ## Responsabilité
+/// Mapper les données JSON ↔ Entity {{Feature}}.
+///
+/// ## Utilisation
+/// ```dart
+/// // JSON → Model
+/// final model = {{Feature}}Model.fromJson(json);
+///
+/// // Model → Entity
+/// final entity = model.toEntity();
+///
+/// // Entity → Model
+/// final model = {{Feature}}Model.fromEntity(entity);
+///
+/// // Model → JSON
+/// final json = model.toJson();
+/// ```
+@freezed
+class {{Feature}}Model with _${{Feature}}Model {
+  const {{Feature}}Model._();
+
+  const factory {{Feature}}Model({
+    // TODO: Mapper les champs JSON
+    required String id,
+    required String name,
+    // Exemples avec @JsonKey pour mapper des noms différents:
+    // @JsonKey(name: 'created_at') required String createdAt,
+    // @JsonKey(name: 'is_active') @Default(false) bool isActive,
+  }) = _{{Feature}}Model;
+
+  /// **JSON → Model**
+  factory {{Feature}}Model.fromJson(Map<String, dynamic> json) =>
+      _${{Feature}}ModelFromJson(json);
+
+  /// **Entity → Model**
+  factory {{Feature}}Model.fromEntity({{Feature}} entity) {
+    return {{Feature}}Model(
+      id: entity.id,
+      name: entity.name,
+      // TODO: Mapper tous les champs
+    );
+  }
+
+  /// **Model → Entity**
+  {{Feature}} toEntity() {
+    return {{Feature}}(
+      id: id,
+      name: name,
+      // TODO: Mapper tous les champs
+    );
+  }
+}
