@@ -126,8 +126,9 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
   // Photo state
   const [existingPhotos, setExistingPhotos] = useState<VehiclePhoto[]>([]);
   const [deletedPhotoIds, setDeletedPhotoIds] = useState<string[]>([]);
-  const [newPhotos, setNewPhotos] = useState<{ file: File; url: string; publicId: string }[]>([]);
+  const [newPhotos, setNewPhotos] = useState<{ file: File; url: string; publicId: string; status?: 'uploading' | 'done' | 'error' }[]>([]);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number }>({ current: 0, total: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Drag & drop state
@@ -284,22 +285,62 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
     }
     setUploadingPhotos(true);
     setError(null);
+    setUploadProgress({ current: 0, total: toUpload.length });
+
     try {
+      // Créer des placeholders immédiats pour montrer les photos en cours d'upload
+      const placeholders = toUpload.map((file) => ({
+        file,
+        url: URL.createObjectURL(file),
+        publicId: '',
+        status: 'uploading' as const,
+      }));
+      setNewPhotos((prev) => [...prev, ...placeholders]);
+
+      // Obtenir la signature une seule fois
       const sig = await authFetch<{ signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string }>(
         VEHICLE_PATHS.uploadSignature,
       );
-      const uploaded = await Promise.all(
-        toUpload.map(async (file) => {
-          const { uploadToCloudinary } = await import('@/lib/nestjs/vehicles');
-          const result = await uploadToCloudinary(file, sig);
-          return { file, url: result.url, publicId: result.publicId };
-        }),
-      );
-      setNewPhotos((prev) => [...prev, ...uploaded]);
-    } catch {
+
+      // Upload par chunks de 2 photos à la fois (au lieu de toutes en même temps)
+      const CHUNK_SIZE = 2;
+      const uploaded: { file: File; url: string; publicId: string; status: 'done' }[] = [];
+
+      for (let i = 0; i < toUpload.length; i += CHUNK_SIZE) {
+        const chunk = toUpload.slice(i, i + CHUNK_SIZE);
+        const chunkResults = await Promise.all(
+          chunk.map(async (file) => {
+            const { uploadToCloudinary } = await import('@/lib/nestjs/vehicles');
+            const result = await uploadToCloudinary(file, sig);
+            return { file, url: result.url, publicId: result.publicId, status: 'done' as const };
+          })
+        );
+        uploaded.push(...chunkResults);
+
+        // Mettre à jour la progression
+        setUploadProgress({ current: uploaded.length, total: toUpload.length });
+
+        // Mettre à jour les photos uploadées en temps réel
+        setNewPhotos((prev) => {
+          const updated = [...prev];
+          chunkResults.forEach((result) => {
+            const index = updated.findIndex((p) => p.status === 'uploading' && p.file === result.file);
+            if (index !== -1) {
+              updated[index] = result;
+            }
+          });
+          return updated;
+        });
+      }
+
+    } catch (err) {
+      console.error('Upload error:', err);
       setError("Erreur lors de l'upload des photos. Vérifiez votre connexion et réessayez.");
+      // Retirer les photos en erreur
+      setNewPhotos((prev) => prev.filter((p) => p.status !== 'uploading'));
     } finally {
       setUploadingPhotos(false);
+      setUploadProgress({ current: 0, total: 0 });
     }
   };
 
@@ -944,6 +985,29 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
 
             {/* ── Photos ───────────────────────────────────────────────── */}
             <SectionCard icon={Camera} title="Photos" subtitle="Gérez les photos de votre véhicule (jusqu'à 8)">
+              {/* Upload progress indicator */}
+              {uploadProgress.total > 0 && (
+                <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+                      <span className="text-[13px] font-bold text-blue-900">
+                        Upload en cours... ({uploadProgress.current}/{uploadProgress.total})
+                      </span>
+                    </div>
+                    <span className="text-[12px] font-semibold text-blue-600">
+                      {Math.round((uploadProgress.current / uploadProgress.total) * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-blue-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500 transition-all duration-300 rounded-full"
+                      style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Existing photos */}
               {(existingPhotos.length > 0 || newPhotos.length > 0) && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
@@ -999,14 +1063,24 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                     <div key={i} className="relative group aspect-[4/3] overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={URL.createObjectURL(photo.file)}
+                        src={photo.url}
                         alt="preview"
-                        className="h-full w-full object-cover"
+                        className={cn(
+                          "h-full w-full object-cover transition-opacity",
+                          photo.status === 'uploading' && "opacity-50"
+                        )}
                       />
-                      <div className="absolute bottom-1.5 left-1.5 rounded-lg bg-emerald-500 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-white shadow-sm">
-                        Nouveau
-                      </div>
-                      {!locked && (
+                      {photo.status === 'uploading' ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
+                          <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
+                          <div className="text-[11px] font-bold text-white">Upload...</div>
+                        </div>
+                      ) : (
+                        <div className="absolute bottom-1.5 left-1.5 rounded-lg bg-emerald-500 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-white shadow-sm">
+                          Nouveau
+                        </div>
+                      )}
+                      {!locked && photo.status !== 'uploading' && (
                         <button
                           type="button"
                           onClick={() => handleRemoveNew(i)}

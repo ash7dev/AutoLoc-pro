@@ -512,60 +512,62 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header avec action rapide - Responsive */}
-      <div className="bg-white border-b border-slate-200 shadow-sm">
+      {/* Header avec action rapide - Responsive FIXED */}
+      <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 h-auto sm:h-20 py-4 sm:py-0">
+          <div className="flex flex-col gap-3 py-4 sm:py-5">
+            {/* Ligne 1 : Titre */}
             <div className="flex items-center gap-3 min-w-0">
               <Link href="/reservations" className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition-colors h-9 w-9 flex items-center justify-center rounded-xl hover:bg-slate-100">
                 <ChevronRight className="w-5 h-5 rotate-180" />
               </Link>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">Paramètres</h1>
                 <p className="hidden sm:block text-sm text-slate-500 mt-0.5">Gérez vos informations personnelles et votre sécurité.</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto relative z-10">
-              <Button
+
+            {/* Ligne 2 : Boutons d'action - TOUJOURS VISIBLES */}
+            <div className="flex items-stretch gap-2.5 w-full">
+              <button
                 onClick={(e) => {
                   console.log('Button onClick fired');
                   e.preventDefault();
                   e.stopPropagation();
                   handleSwitchToOwner();
                 }}
-                onTouchEnd={(e) => {
-                  console.log('Button onTouchEnd fired');
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleSwitchToOwner();
-                }}
                 disabled={switchingRole}
-                className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/25 border-0 group min-h-[44px] touch-manipulation transition-all duration-200 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98] relative z-20"
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-blue-400 disabled:to-indigo-400 text-white shadow-lg shadow-blue-500/20 rounded-xl px-4 py-3 font-semibold text-[14px] tracking-tight touch-manipulation transition-all duration-200 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
                 type="button"
               >
                 {switchingRole
-                  ? <Loader2 className="w-4 h-4 mr-2 animate-spin text-white/80" />
-                  : <RefreshCw className="w-4 h-4 mr-2 text-white/90 group-hover:rotate-180 transition-transform duration-500" />
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <RefreshCw className="w-4 h-4" />
                 }
-                <span className="hidden sm:inline font-semibold">Espace </span>Propriétaire
-              </Button>
-              <Button
-                onClick={handleLogout}
+                <span className="hidden xs:inline">Espace </span>Propriétaire
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleLogout();
+                }}
                 disabled={loggingOut}
-                variant="outline"
-                className="flex-1 sm:flex-none bg-white hover:bg-red-50 text-red-600 border-red-200 shadow-sm min-h-[44px] touch-manipulation transition-all duration-200 hover:shadow-md active:scale-[0.98] relative z-20 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-red-50 text-red-600 border-2 border-red-200 hover:border-red-300 shadow-sm rounded-xl px-4 py-3 font-semibold text-[14px] tracking-tight touch-manipulation transition-all duration-200 hover:shadow-md active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 type="button"
               >
                 {loggingOut ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin text-red-600" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <LogOut className="w-4 h-4 mr-2" />
+                  <LogOut className="w-4 h-4" />
                 )}
-                <span className="hidden sm:inline">Déconnexion</span>
-              </Button>
+                <span className="hidden xs:inline">Déconnexion</span>
+              </button>
             </div>
+
+            {/* Message d'erreur si présent */}
             {(switchError || hookError) && (
-              <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+              <div className="p-3 bg-red-50 border-2 border-red-200 rounded-xl text-red-700 text-sm font-medium animate-in slide-in-from-top-2 duration-300">
                 {switchError || hookError}
               </div>
             )}
@@ -574,9 +576,9 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
       </div>
 
       {/* Navigation Tabs (Epurée) - Responsive */}
-      <div className="bg-white shadow-sm sticky top-0 z-10 border-b border-slate-200">
+      <div className="bg-white shadow-sm border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto py-0">
+          <div className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto py-0 scrollbar-none">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
