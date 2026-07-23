@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   Archive, CalendarDays, Car, ExternalLink, MapPin,
   Pencil, Star, Users, X, Shield, Clock, Gauge,
-  ChevronRight, ChevronLeft,
+  ChevronRight, ChevronLeft, Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Vehicle } from "@/lib/nestjs/vehicles";
@@ -59,11 +59,13 @@ export function VehicleDetailModal({
   onClose,
   onEdit,
   onArchive,
+  onDelete,
 }: {
   vehicle: Vehicle | null;
   onClose: () => void;
   onEdit: (v: Vehicle) => void;
   onArchive: (v: Vehicle) => void;
+  onDelete?: (v: Vehicle) => void;
 }) {
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
 
@@ -434,11 +436,27 @@ export function VehicleDetailModal({
                 onClick={() => onArchive(vehicle)}
                 className="inline-flex items-center gap-2 h-10 rounded-xl px-4
                   text-[13px] font-semibold text-black/40 tracking-tight
-                  hover:text-red-500 hover:bg-red-50
+                  hover:text-amber-600 hover:bg-amber-50
                   transition-all duration-150"
               >
                 <Archive className="h-3.5 w-3.5" strokeWidth={1.5} />
                 Archiver
+              </button>
+            )}
+
+            {/* Supprimer définitivement — danger */}
+            {(vehicle.statut === "BROUILLON" || vehicle.statut === "ARCHIVE") && onDelete && (
+              <button
+                type="button"
+                onClick={() => onDelete(vehicle)}
+                className="inline-flex items-center gap-2 h-10 rounded-xl px-4
+                  text-[13px] font-semibold text-red-600 tracking-tight
+                  border border-red-200 bg-red-50
+                  hover:bg-red-100 hover:border-red-300
+                  transition-all duration-150"
+              >
+                <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                Supprimer définitivement
               </button>
             )}
           </div>

@@ -10,7 +10,7 @@ import {
     AlertCircle, ArrowRight, Users, Lock,
     TrendingUp, Fuel, Settings2, CalendarCheck,
     Eye, Zap, CheckCircle2, Clock, ShieldOff,
-    ChevronDown, Banknote, Gauge, Sparkles,
+    ChevronDown, Banknote, Gauge, Sparkles, Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -167,10 +167,12 @@ function VehicleActions({
     vehicle,
     onEdit,
     onArchive,
+    onDelete,
 }: {
     vehicle: Vehicle;
     onEdit: (v: Vehicle) => void;
     onArchive: (v: Vehicle) => void;
+    onDelete?: (v: Vehicle) => void;
 }) {
     const locked = vehicle.estVerrouille === true;
 
@@ -232,10 +234,23 @@ function VehicleActions({
                         <DropdownMenuSeparator className="my-1.5 bg-slate-100" />
                         <DropdownMenuItem
                             onClick={() => onArchive(vehicle)}
-                            className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-red-500 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                            className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-amber-600 focus:text-amber-700 focus:bg-amber-50 cursor-pointer"
                         >
                             <Archive className="h-3.5 w-3.5" strokeWidth={1.5} />
                             Archiver ce véhicule
+                        </DropdownMenuItem>
+                    </>
+                )}
+
+                {(vehicle.statut === "BROUILLON" || vehicle.statut === "ARCHIVE") && onDelete && (
+                    <>
+                        {vehicle.statut !== "ARCHIVE" && <DropdownMenuSeparator className="my-1.5 bg-slate-100" />}
+                        <DropdownMenuItem
+                            onClick={() => onDelete(vehicle)}
+                            className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                            Supprimer définitivement
                         </DropdownMenuItem>
                     </>
                 )}
@@ -251,12 +266,14 @@ function VehicleCard({
     archiving,
     onEdit,
     onArchive,
+    onDelete,
     onOpen,
 }: {
     vehicle: Vehicle;
     archiving: boolean;
     onEdit: (v: Vehicle) => void;
     onArchive: (v: Vehicle) => void;
+    onDelete?: (v: Vehicle) => void;
     onOpen: (v: Vehicle) => void;
 }) {
     const photo = mainPhoto(vehicle);
@@ -346,7 +363,7 @@ function VehicleCard({
                 {/* Actions — toujours visible sur mobile, hover reveal sur desktop */}
                 <div className="absolute top-3 right-3 z-10 sm:opacity-0 sm:translate-y-1 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 transition-all duration-300">
                     <div className="rounded-xl bg-white/90 backdrop-blur-xl shadow-lg border border-white/30" onClick={(e) => e.stopPropagation()}>
-                        <VehicleActions vehicle={vehicle} onEdit={onEdit} onArchive={onArchive} />
+                        <VehicleActions vehicle={vehicle} onEdit={onEdit} onArchive={onArchive} onDelete={onDelete} />
                     </div>
                 </div>
 
@@ -528,12 +545,14 @@ function VehicleRow({
     archiving,
     onEdit,
     onArchive,
+    onDelete,
     onOpen,
 }: {
     vehicle: Vehicle;
     archiving: boolean;
     onEdit: (v: Vehicle) => void;
     onArchive: (v: Vehicle) => void;
+    onDelete?: (v: Vehicle) => void;
     onOpen: (v: Vehicle) => void;
 }) {
     const photo = mainPhoto(vehicle);
@@ -639,7 +658,7 @@ function VehicleRow({
 
             {/* Actions */}
             <div className="flex justify-end sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300" onClick={(e) => e.stopPropagation()}>
-                <VehicleActions vehicle={vehicle} onEdit={onEdit} onArchive={onArchive} />
+                <VehicleActions vehicle={vehicle} onEdit={onEdit} onArchive={onArchive} onDelete={onDelete} />
             </div>
         </div>
     );
@@ -716,7 +735,9 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
     const [view, setView] = useState<"grid" | "list">("grid");
     const [filter, setFilter] = useState<FilterKey>("all");
     const [confirmVehicle, setConfirmVehicle] = useState<Vehicle | null>(null);
+    const [confirmDeleteVehicle, setConfirmDeleteVehicle] = useState<Vehicle | null>(null);
     const [archivingId, setArchivingId] = useState<string | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
     const [editVehicle, setEditVehicle] = useState<Vehicle | null>(null);
     const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
         Object.fromEntries(SECTIONS.map(s => [s.id, s.defaultOpen])),
@@ -770,6 +791,21 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
             setConfirmVehicle(null);
         }
     }, [confirmVehicle, authFetch]);
+
+    const handleDeleteConfirm = useCallback(async () => {
+        if (!confirmDeleteVehicle) return;
+        setDeletingId(confirmDeleteVehicle.id);
+        try {
+            await authFetch(VEHICLE_PATHS.purgeDraft(confirmDeleteVehicle.id), { method: "DELETE" });
+            setVehicles(prev => prev.filter(v => v.id !== confirmDeleteVehicle.id));
+            toast.success('Véhicule supprimé définitivement.');
+        } catch (err: any) {
+            toast.error(err?.message || 'Impossible de supprimer ce véhicule.');
+        } finally {
+            setDeletingId(null);
+            setConfirmDeleteVehicle(null);
+        }
+    }, [confirmDeleteVehicle, authFetch]);
 
     // Filter tab list (only show statuses with vehicles, plus "all")
     const visibleFilters: FilterKey[] = useMemo(() => [
@@ -882,6 +918,7 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                                                         archiving={archivingId === v.id}
                                                         onEdit={setEditVehicle}
                                                         onArchive={setConfirmVehicle}
+                                                        onDelete={setConfirmDeleteVehicle}
                                                         onOpen={handleOpenVehicle}
                                                     />
                                                 ))}
@@ -895,6 +932,7 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                                                         archiving={archivingId === v.id}
                                                         onEdit={setEditVehicle}
                                                         onArchive={setConfirmVehicle}
+                                                        onDelete={setConfirmDeleteVehicle}
                                                         onOpen={handleOpenVehicle}
                                                     />
                                                 ))}
@@ -921,6 +959,7 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                                 archiving={archivingId === v.id}
                                 onEdit={setEditVehicle}
                                 onArchive={setConfirmVehicle}
+                                onDelete={setConfirmDeleteVehicle}
                                 onOpen={handleOpenVehicle}
                             />
                         ))}
@@ -939,6 +978,7 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                                 archiving={archivingId === v.id}
                                 onEdit={setEditVehicle}
                                 onArchive={setConfirmVehicle}
+                                onDelete={setConfirmDeleteVehicle}
                                 onOpen={handleOpenVehicle}
                             />
                         ))}
@@ -970,8 +1010,8 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                                     <strong className="font-bold text-slate-800">
                                         {confirmVehicle.marque} {confirmVehicle.modele}
                                     </strong>{" "}
-                                    sera retiré de la recherche et ses photos supprimées de Cloudinary.
-                                    Cette action ne peut pas être annulée.
+                                    sera retiré de la recherche et ses photos supprimées de Cloudinary dans 24h.
+                                    Vous pourrez toujours le supprimer définitivement depuis les véhicules archivés.
                                 </>
                             )}
                         </AlertDialogDescription>
@@ -980,10 +1020,49 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                         <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleArchiveConfirm}
-                            className="rounded-xl bg-red-500 text-white hover:bg-red-600 gap-2 shadow-lg shadow-red-500/20"
+                            className="rounded-xl bg-amber-500 text-white hover:bg-amber-600 gap-2 shadow-lg shadow-amber-500/20"
                         >
                             <Archive className="h-3.5 w-3.5" strokeWidth={1.5} />
                             {archivingId ? "Archivage…" : "Archiver"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Delete confirmation */}
+            <AlertDialog
+                open={!!confirmDeleteVehicle}
+                onOpenChange={(open: boolean) => { if (!open) setConfirmDeleteVehicle(null); }}
+            >
+                <AlertDialogContent className="rounded-2xl border border-red-200 shadow-2xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="font-black tracking-tight text-lg text-red-900 flex items-center gap-2">
+                            <Trash2 className="h-5 w-5 text-red-600" strokeWidth={2} />
+                            Supprimer définitivement ?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm leading-relaxed text-slate-600">
+                            {confirmDeleteVehicle && (
+                                <>
+                                    <strong className="font-bold text-slate-900">
+                                        {confirmDeleteVehicle.marque} {confirmDeleteVehicle.modele}
+                                    </strong>{" "}
+                                    sera supprimé de manière <strong className="text-red-600">irréversible</strong>.
+                                    <br /><br />
+                                    <span className="text-red-700 font-semibold">
+                                        ⚠️ Toutes les données (photos, historique, réservations) seront perdues définitivement.
+                                    </span>
+                                </>
+                            )}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-2">
+                        <AlertDialogCancel className="rounded-xl">Annuler</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteConfirm}
+                            className="rounded-xl bg-red-600 text-white hover:bg-red-700 gap-2 shadow-lg shadow-red-600/30"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
+                            {deletingId ? "Suppression…" : "Supprimer définitivement"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

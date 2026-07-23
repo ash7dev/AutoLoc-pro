@@ -92,7 +92,7 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum, age
     return (
         <>
             {/* ── Bottom bar ─────────────────────────────────────────── */}
-            <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white/90 backdrop-blur-md border-t border-slate-100 px-4 py-3 pb-safe flex items-center justify-between gap-4">
+            <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur-xl border-t border-slate-200/80 px-4 py-3 pb-safe flex items-center justify-between gap-4 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
                 <div>
                     <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Dès</p>
                     <p className="text-[20px] font-black text-slate-900 tabular-nums leading-tight">
@@ -103,37 +103,45 @@ export function MobileReservationBar({ vehicleId, prixParJour, joursMinimum, age
                 <button
                     type="button"
                     onClick={() => setSheetOpen(true)}
-                    className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-emerald-400 text-[14px] font-bold px-6 py-3.5 rounded-2xl transition-all duration-150 active:scale-95"
+                    className="group flex items-center gap-2 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 hover:from-slate-800 hover:via-slate-700 hover:to-slate-800 text-emerald-400 text-[14px] font-bold px-6 py-3.5 rounded-2xl transition-all duration-200 active:scale-95 shadow-lg shadow-slate-900/30 hover:shadow-xl hover:shadow-slate-900/40"
                 >
                     Réserver
-                    <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" strokeWidth={2.5} />
                 </button>
             </div>
 
             {/* ── Bottom sheet ─────────────────────────────────────── */}
             {sheetOpen && (
                 <>
-                    {/* Backdrop */}
+                    {/* Backdrop with fade-in */}
                     <div
-                        className="lg:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+                        className="lg:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
                         onClick={() => setSheetOpen(false)}
                     />
-                    {/* Sheet */}
-                    <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white rounded-t-3xl shadow-2xl flex flex-col max-h-[92dvh]">
+                    {/* Sheet with slide-up animation */}
+                    <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white rounded-t-3xl shadow-2xl flex flex-col max-h-[92dvh] animate-in slide-in-from-bottom duration-300">
                         {/* Handle */}
-                        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-                            <div className="w-10 h-1 rounded-full bg-slate-200" />
+                        <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
+                            <div className="w-12 h-1.5 rounded-full bg-slate-200 transition-colors hover:bg-slate-300" />
                         </div>
-                        {/* Title */}
-                        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 flex-shrink-0">
-                            <h3 className="text-[16px] font-black text-slate-900">Réserver ce véhicule</h3>
-                            <button
-                                type="button"
-                                onClick={() => setSheetOpen(false)}
-                                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"
-                            >
-                                <ChevronUp className="w-4 h-4 text-slate-500" strokeWidth={2.5} />
-                            </button>
+                        {/* Premium Header with gradient */}
+                        <div className="relative flex-shrink-0 px-5 py-4 border-b border-slate-100 bg-gradient-to-b from-slate-50/50 to-white">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-[18px] font-black text-slate-900 tracking-tight">Réserver ce véhicule</h3>
+                                    <p className="text-[12px] text-slate-500 font-medium mt-0.5 flex items-center gap-1.5">
+                                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
+                                        Paiement sécurisé • Confirmation instantanée
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setSheetOpen(false)}
+                                    className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors active:scale-95"
+                                >
+                                    <ChevronUp className="w-4.5 h-4.5 text-slate-600" strokeWidth={2.5} />
+                                </button>
+                            </div>
                         </div>
                         {/* Content + sticky footer */}
                         <SheetReservationForm
@@ -322,181 +330,300 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
             />
 
             {/* Scrollable content */}
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 pt-4 pb-4 space-y-4">
-                <ReservationCalendar
-                    vehicleId={vehicleId}
-                    joursMinimum={joursMinimum}
-                    dateDebut={dateDebut}
-                    dateFin={dateFin}
-                    onDateDebutChange={setDateDebut}
-                    onDateFinChange={setDateFin}
-                    initialBlockedRanges={blockedRanges}
-                />
-
-                {datesValid && pricing && !loadingPricing && (
-                    <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 space-y-2.5">
-                        <div className="flex justify-between text-[13px]">
-                            <span className="text-slate-500">{currencyFormat(Math.round(pricing.totalLocataire / nbJours))} × {nbJours}j</span>
-                            <span className="font-semibold text-slate-700 tabular-nums">{currencyFormat(pricing.totalLocataire)}</span>
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 pt-5 pb-4 space-y-5">
+                {/* Section: Dates */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/30">
+                            <span className="text-white text-[14px]">📅</span>
                         </div>
-                        {deliveryFee > 0 && (
-                            <div className="flex justify-between text-[13px]">
-                                <span className="text-slate-500 flex items-center gap-1">
-                                    <Truck className="w-3 h-3" strokeWidth={2} />
-                                    Livraison
-                                </span>
-                                <span className="font-semibold text-slate-700 tabular-nums">{currencyFormat(deliveryFee)}</span>
+                        <h4 className="text-[14px] font-black text-slate-900">Choisir vos dates</h4>
+                    </div>
+                    <ReservationCalendar
+                        vehicleId={vehicleId}
+                        joursMinimum={joursMinimum}
+                        dateDebut={dateDebut}
+                        dateFin={dateFin}
+                        onDateDebutChange={setDateDebut}
+                        onDateFinChange={setDateFin}
+                        initialBlockedRanges={blockedRanges}
+                    />
+                </div>
+
+                {/* Section: Pricing Summary with premium design */}
+                {datesValid && pricing && !loadingPricing && (
+                    <div className="relative rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-50 border-2 border-slate-100 p-5 space-y-3 shadow-sm">
+                        {/* Decorative element */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-400/5 to-transparent rounded-full blur-2xl pointer-events-none" />
+
+                        <div className="relative space-y-2.5">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-slate-900 to-slate-700 flex items-center justify-center shadow-md">
+                                    <CreditCard className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+                                </div>
+                                <h4 className="text-[13px] font-black text-slate-900 uppercase tracking-wide">Résumé de la réservation</h4>
                             </div>
-                        )}
-                        {pricing.supplementHorsDakar != null && pricing.supplementHorsDakar > 0 && (
-                            <div className="flex justify-between text-[13px]">
-                                <span className="text-slate-500 flex items-center gap-1">
-                                    🗺️ Supplément Hors Dakar
-                                </span>
-                                <span className="font-semibold text-slate-700 tabular-nums">
-                                    {currencyFormat(pricing.supplementHorsDakar * nbJours)}
-                                </span>
+
+                            <div className="flex justify-between items-center text-[13.5px]">
+                                <span className="text-slate-600 font-medium">{currencyFormat(Math.round(pricing.totalLocataire / nbJours))} × {nbJours} jour{nbJours > 1 ? 's' : ''}</span>
+                                <span className="font-bold text-slate-900 tabular-nums">{currencyFormat(pricing.totalLocataire)}</span>
                             </div>
-                        )}
-                        <div className="pt-2.5 border-t border-slate-200 flex justify-between items-center">
-                            <span className="font-bold text-slate-900">Total</span>
-                            <span className="font-black text-emerald-600 text-[16px] tabular-nums">{currencyFormat(pricing.totalLocataire + deliveryFee)}</span>
+
+                            {deliveryFee > 0 && (
+                                <div className="flex justify-between items-center text-[13.5px]">
+                                    <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                                        <Truck className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
+                                        Livraison
+                                    </span>
+                                    <span className="font-bold text-slate-900 tabular-nums">{currencyFormat(deliveryFee)}</span>
+                                </div>
+                            )}
+
+                            {pricing.supplementHorsDakar != null && pricing.supplementHorsDakar > 0 && (
+                                <div className="flex justify-between items-center text-[13.5px]">
+                                    <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                                        <MapPin className="w-3.5 h-3.5 text-blue-500" strokeWidth={2} />
+                                        Supplément Hors Dakar
+                                    </span>
+                                    <span className="font-bold text-slate-900 tabular-nums">
+                                        {currencyFormat(pricing.supplementHorsDakar * nbJours)}
+                                    </span>
+                                </div>
+                            )}
+
+                            <div className="pt-3 mt-1 border-t-2 border-dashed border-slate-200 flex justify-between items-center">
+                                <span className="font-black text-slate-900 text-[14px]">Total à payer</span>
+                                <div className="text-right">
+                                    <div className="font-black text-emerald-600 text-[20px] tabular-nums leading-none">
+                                        {currencyFormat(pricing.totalLocataire + deliveryFee)}
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 font-semibold mt-0.5">FCFA</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
                 {loadingPricing && (
-                    <div className="flex justify-center py-3">
-                        <ArrowRight className="w-4 h-4 animate-spin text-emerald-400" />
+                    <div className="flex flex-col items-center justify-center py-6 space-y-2">
+                        <div className="w-8 h-8 border-3 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+                        <p className="text-[12px] font-semibold text-slate-400">Calcul du tarif...</p>
                     </div>
                 )}
 
-                {/* Delivery toggle */}
-                {deliveryAvailable && (
-                    <div className="rounded-xl border border-slate-200 p-3.5 space-y-2.5">
-                        <label className="flex items-start gap-3 cursor-pointer group">
-                            <button
-                                type="button"
-                                onClick={() => setWantsDelivery(!wantsDelivery)}
-                                className={cn(
-                                    'mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
-                                    wantsDelivery
-                                        ? 'bg-emerald-500 border-emerald-500'
-                                        : 'border-slate-300 group-hover:border-slate-400 bg-white',
-                                )}
-                            >
-                                {wantsDelivery && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
-                            </button>
-                            <div>
-                                <span className="text-[12.5px] font-semibold text-slate-700 flex items-center gap-1.5">
-                                    <Truck className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
-                                    Se faire livrer le véhicule
-                                </span>
-                                <p className="text-[11px] text-slate-400 mt-0.5">
-                                    + {currencyFormat(fraisLivraison)} de frais de livraison
-                                </p>
+                {/* Section: Options supplémentaires */}
+                {(deliveryAvailable || (autoriseHorsDakar && supplementHorsDakarParJour != null)) && (
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md shadow-blue-500/30">
+                                <span className="text-white text-[14px]">⚡</span>
                             </div>
-                        </label>
-                        {wantsDelivery && (
-                            <div className="space-y-1.5 pl-8">
-                                <div className="relative">
-                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
-                                    <input
-                                        type="text"
-                                        value={deliveryAddress}
-                                        onChange={(e) => setDeliveryAddress(e.target.value)}
-                                        placeholder="Votre adresse de livraison…"
-                                        className="w-full h-9 rounded-lg border border-slate-200 bg-white pl-9 pr-3
-                                            text-[12.5px] font-medium text-slate-800 placeholder-slate-400
-                                            focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
-                                    />
-                                </div>
-                                {wantsDelivery && !deliveryAddress.trim() && (
-                                    <p className="text-[10.5px] text-amber-600 font-medium">Adresse requise pour la livraison</p>
+                            <h4 className="text-[14px] font-black text-slate-900">Options</h4>
+                        </div>
+
+                        {/* Delivery toggle */}
+                        {deliveryAvailable && (
+                            <div className={cn(
+                                "relative rounded-2xl border-2 p-4 space-y-3 transition-all duration-300",
+                                wantsDelivery
+                                    ? "bg-emerald-50/50 border-emerald-200 shadow-sm shadow-emerald-500/10"
+                                    : "bg-white border-slate-200 hover:border-slate-300"
+                            )}>
+                                <label className="flex items-start gap-3.5 cursor-pointer group">
+                                    <button
+                                        type="button"
+                                        onClick={() => setWantsDelivery(!wantsDelivery)}
+                                        className={cn(
+                                            'mt-0.5 w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 shadow-sm',
+                                            wantsDelivery
+                                                ? 'bg-emerald-500 border-emerald-500 scale-110'
+                                                : 'border-slate-300 group-hover:border-emerald-400 bg-white',
+                                        )}
+                                    >
+                                        {wantsDelivery && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
+                                    </button>
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Truck className={cn(
+                                                "w-4 h-4 transition-colors",
+                                                wantsDelivery ? "text-emerald-600" : "text-slate-500"
+                                            )} strokeWidth={2} />
+                                            <span className={cn(
+                                                "text-[13.5px] font-bold transition-colors",
+                                                wantsDelivery ? "text-emerald-900" : "text-slate-700"
+                                            )}>
+                                                Livraison à domicile
+                                            </span>
+                                        </div>
+                                        <p className="text-[11.5px] text-slate-500 font-medium">
+                                            Le véhicule vous sera livré à l'adresse de votre choix
+                                        </p>
+                                        <div className={cn(
+                                            "inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-lg text-[11px] font-bold",
+                                            wantsDelivery ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
+                                        )}>
+                                            + {currencyFormat(fraisLivraison)}
+                                        </div>
+                                    </div>
+                                </label>
+                                {wantsDelivery && (
+                                    <div className="space-y-2 pl-9 animate-in slide-in-from-top-2 duration-300">
+                                        <div className="relative">
+                                            <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" strokeWidth={2} />
+                                            <input
+                                                type="text"
+                                                value={deliveryAddress}
+                                                onChange={(e) => setDeliveryAddress(e.target.value)}
+                                                placeholder="Entrez votre adresse complète…"
+                                                className="w-full h-11 rounded-xl border-2 border-emerald-200 bg-white pl-11 pr-4
+                                                    text-[13px] font-semibold text-slate-800 placeholder-slate-400
+                                                    focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition-all"
+                                            />
+                                        </div>
+                                        {wantsDelivery && !deliveryAddress.trim() && (
+                                            <div className="flex items-center gap-1.5 text-amber-600">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                                <p className="text-[11px] font-bold">Adresse requise pour continuer</p>
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* Hors Dakar toggle */}
+                        {autoriseHorsDakar && supplementHorsDakarParJour != null && (
+                            <div className={cn(
+                                "relative rounded-2xl border-2 p-4 transition-all duration-300",
+                                horsDakar
+                                    ? "bg-blue-50/50 border-blue-200 shadow-sm shadow-blue-500/10"
+                                    : "bg-white border-slate-200 hover:border-slate-300"
+                            )}>
+                                <label className="flex items-start gap-3.5 cursor-pointer group">
+                                    <button
+                                        type="button"
+                                        onClick={() => setHorsDakar(!horsDakar)}
+                                        className={cn(
+                                            'mt-0.5 w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 shadow-sm',
+                                            horsDakar
+                                                ? 'bg-blue-500 border-blue-500 scale-110'
+                                                : 'border-slate-300 group-hover:border-blue-400 bg-white',
+                                        )}
+                                    >
+                                        {horsDakar && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
+                                    </button>
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <MapPin className={cn(
+                                                "w-4 h-4 transition-colors",
+                                                horsDakar ? "text-blue-600" : "text-slate-500"
+                                            )} strokeWidth={2} />
+                                            <span className={cn(
+                                                "text-[13.5px] font-bold transition-colors",
+                                                horsDakar ? "text-blue-900" : "text-slate-700"
+                                            )}>
+                                                Voyage Hors Dakar
+                                            </span>
+                                        </div>
+                                        <p className="text-[11.5px] text-slate-500 font-medium">
+                                            Partez explorer les régions du Sénégal
+                                        </p>
+                                        <div className={cn(
+                                            "inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-lg text-[11px] font-bold",
+                                            horsDakar ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600"
+                                        )}>
+                                            + {currencyFormat(supplementHorsDakarParJour)} / jour
+                                        </div>
+                                    </div>
+                                </label>
                             </div>
                         )}
                     </div>
                 )}
-
-                {/* Hors Dakar toggle */}
-                {autoriseHorsDakar && supplementHorsDakarParJour != null && (
-                    <div className="rounded-xl border border-slate-200 p-3.5 space-y-2.5">
-                        <label className="flex items-start gap-3 cursor-pointer group">
-                            <button
-                                type="button"
-                                onClick={() => setHorsDakar(!horsDakar)}
-                                className={cn(
-                                    'mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
-                                    horsDakar
-                                        ? 'bg-emerald-500 border-emerald-500'
-                                        : 'border-slate-300 group-hover:border-slate-400 bg-white',
-                                )}
-                            >
-                                {horsDakar && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
-                            </button>
-                            <div>
-                                <span className="text-[12.5px] font-semibold text-slate-700 flex items-center gap-1.5">
-                                    <MapPin className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
-                                    Voyage Hors Dakar
-                                </span>
-                                <p className="text-[11px] text-slate-400 mt-0.5">
-                                    + {currencyFormat(supplementHorsDakarParJour)} / jour
-                                </p>
-                            </div>
-                        </label>
-                    </div>
-                )}
             </div>
 
-            {/* Sticky footer */}
-            <div className="flex-shrink-0 border-t border-slate-100 px-5 pt-4 pb-8 space-y-3 bg-white">
+            {/* Sticky footer with premium design */}
+            <div className="flex-shrink-0 border-t-2 border-slate-100 bg-gradient-to-b from-white to-slate-50/30 px-5 pt-5 pb-8 space-y-4">
+                {/* Error message with animation */}
                 {inlineError && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 p-3.5">
-                        <div className="flex items-start gap-2.5">
-                            <div className="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <ShieldCheck className="w-3.5 h-3.5 text-red-500" strokeWidth={2} />
+                    <div className="rounded-2xl border-2 border-red-200 bg-gradient-to-br from-red-50 to-red-50/50 p-4 animate-in slide-in-from-top-2 duration-300">
+                        <div className="flex items-start gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <ShieldCheck className="w-4.5 h-4.5 text-red-600" strokeWidth={2.5} />
                             </div>
-                            <div>
-                                <p className="text-[12.5px] font-bold text-red-800">Réservation impossible</p>
-                                <p className="text-[11.5px] text-red-700 mt-0.5 leading-relaxed">{inlineError}</p>
+                            <div className="flex-1">
+                                <p className="text-[13px] font-black text-red-900">Impossible de continuer</p>
+                                <p className="text-[12px] text-red-700 mt-1 leading-relaxed font-medium">{inlineError}</p>
                             </div>
                         </div>
                     </div>
                 )}
-                <label className="flex items-start gap-3 cursor-pointer">
-                    <div className={cn('mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all',
-                        contractAccepted ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300')}>
-                        {contractAccepted && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                    </div>
-                    <input type="checkbox" checked={contractAccepted} onChange={e => setContractAccepted(e.target.checked)} className="sr-only" />
-                    <span className="text-[12px] text-slate-500 leading-relaxed">
-                        J&apos;accepte les <span className="text-emerald-600 underline decoration-dotted">conditions</span> et le <span className="text-emerald-600 underline decoration-dotted">contrat</span>.
+
+                {/* Terms checkbox with premium style */}
+                <label className="flex items-start gap-3.5 cursor-pointer group">
+                    <button
+                        type="button"
+                        onClick={() => setContractAccepted(!contractAccepted)}
+                        className={cn(
+                            'mt-0.5 w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 shadow-sm',
+                            contractAccepted
+                                ? 'bg-emerald-500 border-emerald-500 scale-105'
+                                : 'border-slate-300 group-hover:border-emerald-400 bg-white'
+                        )}
+                    >
+                        {contractAccepted && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
+                    </button>
+                    <input
+                        type="checkbox"
+                        checked={contractAccepted}
+                        onChange={e => setContractAccepted(e.target.checked)}
+                        className="sr-only"
+                    />
+                    <span className="text-[12.5px] text-slate-600 leading-relaxed font-medium">
+                        J&apos;accepte les{' '}
+                        <span className="text-emerald-600 font-bold underline decoration-emerald-600/30 decoration-2 underline-offset-2">
+                            conditions générales
+                        </span>
+                        {' '}et le{' '}
+                        <span className="text-emerald-600 font-bold underline decoration-emerald-600/30 decoration-2 underline-offset-2">
+                            contrat de location
+                        </span>
                     </span>
                 </label>
 
+                {/* Premium CTA button */}
                 <button
                     type="button"
                     disabled={!canReserve}
                     onClick={handleReserve}
                     className={cn(
-                        'relative w-full flex items-center justify-center gap-2.5 rounded-2xl py-4 text-[15px] font-black tracking-tight transition-all duration-200 overflow-hidden',
+                        'group relative w-full flex items-center justify-center gap-3 rounded-2xl py-4.5 text-[15px] font-black tracking-tight transition-all duration-300 overflow-hidden',
                         canReserve
-                            ? 'bg-slate-900 text-emerald-400 shadow-lg shadow-slate-900/30 hover:shadow-xl hover:shadow-slate-900/40 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md active:scale-[0.99]'
-                            : 'bg-slate-100 text-slate-300 cursor-not-allowed',
+                            ? 'bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-emerald-400 shadow-xl shadow-slate-900/40 hover:shadow-2xl hover:shadow-slate-900/50 hover:-translate-y-1 active:translate-y-0 active:shadow-lg active:scale-[0.98]'
+                            : 'bg-slate-100 text-slate-400 cursor-not-allowed',
                     )}
                 >
+                    {/* Shine effect */}
                     {canReserve && (
-                        <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 pointer-events-none" />
+                        <>
+                            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+                            <span className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+                        </>
                     )}
-                    <CreditCard className="w-4.5 h-4.5 flex-shrink-0" strokeWidth={2} />
-                    Confirmer et réserver
-                    <ArrowRight className="w-4 h-4 flex-shrink-0" strokeWidth={2.5} />
+                    <CreditCard className="w-5 h-5 flex-shrink-0 relative z-10" strokeWidth={2.5} />
+                    <span className="relative z-10">Confirmer et réserver</span>
+                    <ArrowRight className={cn(
+                        "w-5 h-5 flex-shrink-0 relative z-10 transition-transform",
+                        canReserve && "group-hover:translate-x-1"
+                    )} strokeWidth={2.5} />
                 </button>
 
-                <p className="text-[11px] text-center text-slate-400">
-                    <ShieldCheck className="w-3 h-3 inline mr-1" strokeWidth={1.75} />
-                    Débité après confirmation du propriétaire
-                </p>
+                {/* Security badge */}
+                <div className="flex items-center justify-center gap-2 text-slate-400">
+                    <ShieldCheck className="w-4 h-4" strokeWidth={2} />
+                    <p className="text-[11.5px] font-semibold">
+                        Paiement sécurisé • Débité après validation
+                    </p>
+                </div>
             </div>
         </>
     );

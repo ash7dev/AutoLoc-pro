@@ -83,7 +83,7 @@ export function useAuthFlow() {
 
     // ── Redirection Rapide (sans attendre les tâches de fond) ──
     if (profile.role === 'ADMIN' || profile.role === 'SUPPORT') {
-      router.replace('/dashboard/admin');
+      window.location.href = '/dashboard/admin';
       inFlight.current = false;
       return true;
     }
@@ -93,7 +93,7 @@ export function useAuthFlow() {
 
     if (next && next.startsWith('/')) {
       // Rediriger immédiatement
-      router.replace(next);
+      window.location.href = next;
       inFlight.current = false;
 
       // Switch de rôle en tâche de fond si nécessaire
@@ -114,7 +114,7 @@ export function useAuthFlow() {
 
     // Redirection par défaut selon le rôle
     const target = profile.role === 'PROPRIETAIRE' ? '/dashboard/owner' : '/';
-    router.replace(target);
+    window.location.href = target;
 
     inFlight.current = false;
 

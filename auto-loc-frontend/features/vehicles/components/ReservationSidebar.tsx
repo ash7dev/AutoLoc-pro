@@ -363,143 +363,196 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
             </div>
           )}
 
-          {/* Delivery toggle */}
+          {/* Delivery toggle - Premium design */}
           {deliveryAvailable && (
-            <div className="rounded-xl border border-slate-200 p-3.5 space-y-2.5">
-              <label className="flex items-start gap-3 cursor-pointer group">
+            <div className={cn(
+              "relative rounded-2xl border-2 p-4 space-y-3 transition-all duration-300",
+              wantsDelivery
+                ? "bg-emerald-50/50 border-emerald-200 shadow-sm shadow-emerald-500/10"
+                : "bg-white border-slate-200 hover:border-slate-300"
+            )}>
+              <label className="flex items-start gap-3.5 cursor-pointer group">
                 <button
                   type="button"
                   onClick={() => setWantsDelivery(!wantsDelivery)}
                   className={cn(
-                    'mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                    'mt-0.5 w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 shadow-sm',
                     wantsDelivery
-                      ? 'bg-emerald-500 border-emerald-500'
-                      : 'border-slate-300 group-hover:border-slate-400 bg-white',
+                      ? 'bg-emerald-500 border-emerald-500 scale-110'
+                      : 'border-slate-300 group-hover:border-emerald-400 bg-white',
                   )}
                 >
-                  {wantsDelivery && <CheckCircle2 className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                  {wantsDelivery && <CheckCircle2 className="w-4 h-4 text-white" strokeWidth={3} />}
                 </button>
-                <div>
-                  <span className="text-[12.5px] font-semibold text-slate-700 flex items-center gap-1.5">
-                    <Truck className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
-                    Se faire livrer le véhicule
-                  </span>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    + {formatPrice(fraisLivraison)} de frais de livraison
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Truck className={cn(
+                      "w-4 h-4 transition-colors",
+                      wantsDelivery ? "text-emerald-600" : "text-slate-500"
+                    )} strokeWidth={2} />
+                    <span className={cn(
+                      "text-[13.5px] font-bold transition-colors",
+                      wantsDelivery ? "text-emerald-900" : "text-slate-700"
+                    )}>
+                      Livraison à domicile
+                    </span>
+                  </div>
+                  <p className="text-[11.5px] text-slate-500 font-medium">
+                    Le véhicule vous sera livré à l'adresse de votre choix
                   </p>
+                  <div className={cn(
+                    "inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-lg text-[11px] font-bold",
+                    wantsDelivery ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
+                  )}>
+                    + {formatPrice(fraisLivraison)}
+                  </div>
                 </div>
               </label>
               {wantsDelivery && (
-                <div className="space-y-1.5 pl-8">
+                <div className="space-y-2 pl-9 animate-in slide-in-from-top-2 duration-300">
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" strokeWidth={2} />
+                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" strokeWidth={2} />
                     <input
                       type="text"
                       value={deliveryAddress}
                       onChange={(e) => setDeliveryAddress(e.target.value)}
-                      placeholder="Votre adresse de livraison…"
-                      className="w-full h-9 rounded-lg border border-slate-200 bg-white pl-9 pr-3
-                        text-[12.5px] font-medium text-slate-800 placeholder-slate-400
-                        focus:border-emerald-400/50 focus:outline-none focus:ring-1 focus:ring-emerald-400/20 transition-all"
+                      placeholder="Entrez votre adresse complète…"
+                      className="w-full h-11 rounded-xl border-2 border-emerald-200 bg-white pl-11 pr-4
+                        text-[13px] font-semibold text-slate-800 placeholder-slate-400
+                        focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 transition-all"
                     />
                   </div>
                   {wantsDelivery && !deliveryAddress.trim() && (
-                    <p className="text-[10.5px] text-amber-600 font-medium">Adresse requise pour la livraison</p>
+                    <div className="flex items-center gap-1.5 text-amber-600">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      <p className="text-[11px] font-bold">Adresse requise pour continuer</p>
+                    </div>
                   )}
                 </div>
               )}
             </div>
           )}
 
-          {/* Hors Dakar toggle */}
+          {/* Hors Dakar toggle - Premium design */}
           {autoriseHorsDakar && supplementHorsDakarParJour != null && (
-            <div className="rounded-xl border border-slate-200 p-3.5 space-y-2.5">
-              <label className="flex items-start gap-3 cursor-pointer group">
+            <div className={cn(
+              "relative rounded-2xl border-2 p-4 transition-all duration-300",
+              horsDakar
+                ? "bg-blue-50/50 border-blue-200 shadow-sm shadow-blue-500/10"
+                : "bg-white border-slate-200 hover:border-slate-300"
+            )}>
+              <label className="flex items-start gap-3.5 cursor-pointer group">
                 <button
                   type="button"
                   onClick={() => setHorsDakar(!horsDakar)}
                   className={cn(
-                    'mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                    'mt-0.5 w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 shadow-sm',
                     horsDakar
-                      ? 'bg-emerald-500 border-emerald-500'
-                      : 'border-slate-300 group-hover:border-slate-400 bg-white',
+                      ? 'bg-blue-500 border-blue-500 scale-110'
+                      : 'border-slate-300 group-hover:border-blue-400 bg-white',
                   )}
                 >
-                  {horsDakar && <CheckCircle2 className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                  {horsDakar && <CheckCircle2 className="w-4 h-4 text-white" strokeWidth={3} />}
                 </button>
-                <div>
-                  <span className="text-[12.5px] font-semibold text-slate-700 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
-                    Voyage Hors Dakar
-                  </span>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    + {formatPrice(supplementHorsDakarParJour)} / jour
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <MapPin className={cn(
+                      "w-4 h-4 transition-colors",
+                      horsDakar ? "text-blue-600" : "text-slate-500"
+                    )} strokeWidth={2} />
+                    <span className={cn(
+                      "text-[13.5px] font-bold transition-colors",
+                      horsDakar ? "text-blue-900" : "text-slate-700"
+                    )}>
+                      Voyage Hors Dakar
+                    </span>
+                  </div>
+                  <p className="text-[11.5px] text-slate-500 font-medium">
+                    Partez explorer les régions du Sénégal
                   </p>
+                  <div className={cn(
+                    "inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-lg text-[11px] font-bold",
+                    horsDakar ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600"
+                  )}>
+                    + {formatPrice(supplementHorsDakarParJour)} / jour
+                  </div>
                 </div>
               </label>
             </div>
           )}
 
-          {/* Contract checkbox */}
-          <label className="flex items-start gap-3 cursor-pointer group">
+          {/* Contract checkbox - Premium */}
+          <label className="flex items-start gap-3.5 cursor-pointer group">
             <button
               type="button"
               onClick={() => setContractAccepted(!contractAccepted)}
               className={cn(
-                'mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                'mt-0.5 w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 shadow-sm',
                 contractAccepted
-                  ? 'bg-emerald-500 border-emerald-500'
-                  : 'border-slate-300 group-hover:border-slate-400 bg-white',
+                  ? 'bg-emerald-500 border-emerald-500 scale-105'
+                  : 'border-slate-300 group-hover:border-emerald-400 bg-white',
               )}
             >
-              {contractAccepted && <CheckCircle2 className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+              {contractAccepted && <CheckCircle2 className="w-4 h-4 text-white" strokeWidth={3} />}
             </button>
-            <span className="text-[12px] leading-relaxed font-medium text-slate-500 group-hover:text-slate-700 transition-colors">
+            <span className="text-[12.5px] leading-relaxed font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
               J&apos;accepte les{' '}
-              <a href="#" className="text-emerald-600 underline decoration-dotted underline-offset-2 hover:text-emerald-700">
-                conditions de location
+              <a href="#" className="text-emerald-600 font-bold underline decoration-emerald-600/30 decoration-2 underline-offset-2 hover:text-emerald-700">
+                conditions générales
               </a>{' '}
               et le{' '}
-              <a href="#" className="text-emerald-600 underline decoration-dotted underline-offset-2 hover:text-emerald-700">
-                contrat de réservation
-              </a>.
+              <a href="#" className="text-emerald-600 font-bold underline decoration-emerald-600/30 decoration-2 underline-offset-2 hover:text-emerald-700">
+                contrat de location
+              </a>
             </span>
           </label>
 
-          {/* Erreur inline âge / profil */}
+          {/* Erreur inline âge / profil - Premium */}
           {inlineError && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3.5">
-              <div className="flex items-start gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-red-500" strokeWidth={2} />
+            <div className="rounded-2xl border-2 border-red-200 bg-gradient-to-br from-red-50 to-red-50/50 p-4 animate-in slide-in-from-top-2 duration-300">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <AlertTriangle className="w-4.5 h-4.5 text-red-600" strokeWidth={2.5} />
                 </div>
-                <div>
-                  <p className="text-[12.5px] font-bold text-red-800">Réservation impossible</p>
-                  <p className="text-[11.5px] text-red-700 mt-0.5 leading-relaxed">{inlineError}</p>
+                <div className="flex-1">
+                  <p className="text-[13px] font-black text-red-900">Impossible de continuer</p>
+                  <p className="text-[12px] text-red-700 mt-1 leading-relaxed font-medium">{inlineError}</p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* CTA */}
+          {/* CTA - Premium with shine effect */}
           <button
             type="button"
             disabled={!canReserve}
             onClick={handleReserve}
             className={cn(
-              'w-full flex items-center justify-center gap-2.5 rounded-xl px-5 py-4',
-              'text-[14px] font-bold tracking-tight transition-all duration-200',
+              'group relative w-full flex items-center justify-center gap-3 rounded-2xl px-5 py-4.5',
+              'text-[15px] font-black tracking-tight transition-all duration-300 overflow-hidden',
               canReserve
-                ? 'bg-slate-900 text-emerald-400 hover:bg-slate-800 active:scale-[0.98]'
+                ? 'bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-emerald-400 shadow-xl shadow-slate-900/40 hover:shadow-2xl hover:shadow-slate-900/50 hover:-translate-y-1 active:translate-y-0 active:shadow-lg active:scale-[0.98]'
                 : 'bg-slate-100 text-slate-400 cursor-not-allowed',
             )}
           >
+            {/* Shine effect */}
+            {canReserve && (
+              <>
+                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+                <span className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+              </>
+            )}
             {loadingPricing
-              ? <Loader2 className="w-4 h-4 animate-spin" />
-              : <CreditCard className="w-4 h-4" strokeWidth={2} />
+              ? <Loader2 className="w-5 h-5 animate-spin relative z-10" strokeWidth={2.5} />
+              : <CreditCard className="w-5 h-5 relative z-10" strokeWidth={2.5} />
             }
-            Réserver maintenant
-            {!loadingPricing && <ArrowRight className="w-4 h-4" strokeWidth={2.5} />}
+            <span className="relative z-10">Réserver maintenant</span>
+            {!loadingPricing && (
+              <ArrowRight className={cn(
+                "w-5 h-5 relative z-10 transition-transform",
+                canReserve && "group-hover:translate-x-1"
+              )} strokeWidth={2.5} />
+            )}
           </button>
 
           {/* Trust note */}
