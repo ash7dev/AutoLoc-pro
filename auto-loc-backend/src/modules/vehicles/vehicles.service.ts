@@ -1554,7 +1554,7 @@ export class VehiclesService {
 
     const { url, publicId } = await this.cloudinary.uploadVehiclePhoto(file.buffer);
 
-    return this.prisma.photoVehicule.create({
+    const photo = await this.prisma.photoVehicule.create({
       data: {
         vehiculeId,
         url,
@@ -1563,6 +1563,16 @@ export class VehiclesService {
         estPrincipale: count === 0,
       },
     });
+
+    // Invalidate Next.js cache - homepage feeds, explorer, and vehicle detail page
+    this.revalidate.revalidateTag('feed').catch(() => { });
+    this.revalidate.revalidateTag('mobile-feed').catch(() => { });
+    this.revalidate.revalidateTag('vehicle-search').catch(() => { });
+    this.revalidate.revalidatePath('/').catch(() => { });
+    this.revalidate.revalidatePath('/explorer').catch(() => { });
+    this.revalidate.revalidatePath(`/vehicle/${vehiculeId}`).catch(() => { });
+
+    return photo;
   }
 
   /**
@@ -1574,7 +1584,7 @@ export class VehiclesService {
     if (count >= MAX_PHOTOS) {
       throw new BadRequestException('Maximum 8 photos atteint');
     }
-    return this.prisma.photoVehicule.create({
+    const photo = await this.prisma.photoVehicule.create({
       data: {
         vehiculeId,
         url,
@@ -1583,6 +1593,16 @@ export class VehiclesService {
         estPrincipale: count === 0,
       },
     });
+
+    // Invalidate Next.js cache - homepage feeds, explorer, and vehicle detail page
+    this.revalidate.revalidateTag('feed').catch(() => { });
+    this.revalidate.revalidateTag('mobile-feed').catch(() => { });
+    this.revalidate.revalidateTag('vehicle-search').catch(() => { });
+    this.revalidate.revalidatePath('/').catch(() => { });
+    this.revalidate.revalidatePath('/explorer').catch(() => { });
+    this.revalidate.revalidatePath(`/vehicle/${vehiculeId}`).catch(() => { });
+
+    return photo;
   }
 
   /**
@@ -1603,13 +1623,23 @@ export class VehiclesService {
       });
     }
 
-    return this.prisma.photoVehicule.update({
+    const updated = await this.prisma.photoVehicule.update({
       where: { id: photoId },
       data: {
         ...(dto.position !== undefined && { position: dto.position }),
         ...(dto.estPrincipale !== undefined && { estPrincipale: dto.estPrincipale }),
       },
     });
+
+    // Invalidate Next.js cache - homepage feeds, explorer, and vehicle detail page
+    this.revalidate.revalidateTag('feed').catch(() => { });
+    this.revalidate.revalidateTag('mobile-feed').catch(() => { });
+    this.revalidate.revalidateTag('vehicle-search').catch(() => { });
+    this.revalidate.revalidatePath('/').catch(() => { });
+    this.revalidate.revalidatePath('/explorer').catch(() => { });
+    this.revalidate.revalidatePath(`/vehicle/${vehiculeId}`).catch(() => { });
+
+    return updated;
   }
 
   async deletePhoto(vehiculeId: string, photoId: string) {
@@ -1643,6 +1673,14 @@ export class VehiclesService {
         });
       }
     }
+
+    // Invalidate Next.js cache - homepage feeds, explorer, and vehicle detail page
+    this.revalidate.revalidateTag('feed').catch(() => { });
+    this.revalidate.revalidateTag('mobile-feed').catch(() => { });
+    this.revalidate.revalidateTag('vehicle-search').catch(() => { });
+    this.revalidate.revalidatePath('/').catch(() => { });
+    this.revalidate.revalidatePath('/explorer').catch(() => { });
+    this.revalidate.revalidatePath(`/vehicle/${vehiculeId}`).catch(() => { });
 
     return { deleted: true };
   }
