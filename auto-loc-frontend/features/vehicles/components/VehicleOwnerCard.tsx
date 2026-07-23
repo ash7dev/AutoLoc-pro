@@ -350,59 +350,6 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                     />
                 </div>
 
-                {/* Section: Pricing Summary with premium design */}
-                {datesValid && pricing && !loadingPricing && (
-                    <div className="relative rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-50 border-2 border-slate-100 p-5 space-y-3 shadow-sm">
-                        {/* Decorative element */}
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-400/5 to-transparent rounded-full blur-2xl pointer-events-none" />
-
-                        <div className="relative space-y-2.5">
-                            <div className="flex items-center gap-2 mb-3">
-                                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-slate-900 to-slate-700 flex items-center justify-center shadow-md">
-                                    <CreditCard className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
-                                </div>
-                                <h4 className="text-[13px] font-black text-slate-900 uppercase tracking-wide">Résumé de la réservation</h4>
-                            </div>
-
-                            <div className="flex justify-between items-center text-[13.5px]">
-                                <span className="text-slate-600 font-medium">{currencyFormat(Math.round(pricing.totalLocataire / nbJours))} × {nbJours} jour{nbJours > 1 ? 's' : ''}</span>
-                                <span className="font-bold text-slate-900 tabular-nums">{currencyFormat(pricing.totalLocataire)}</span>
-                            </div>
-
-                            {deliveryFee > 0 && (
-                                <div className="flex justify-between items-center text-[13.5px]">
-                                    <span className="text-slate-600 font-medium flex items-center gap-1.5">
-                                        <Truck className="w-3.5 h-3.5 text-emerald-500" strokeWidth={2} />
-                                        Livraison
-                                    </span>
-                                    <span className="font-bold text-slate-900 tabular-nums">{currencyFormat(deliveryFee)}</span>
-                                </div>
-                            )}
-
-                            {pricing.supplementHorsDakar != null && pricing.supplementHorsDakar > 0 && (
-                                <div className="flex justify-between items-center text-[13.5px]">
-                                    <span className="text-slate-600 font-medium flex items-center gap-1.5">
-                                        <MapPin className="w-3.5 h-3.5 text-blue-500" strokeWidth={2} />
-                                        Supplément Hors Dakar
-                                    </span>
-                                    <span className="font-bold text-slate-900 tabular-nums">
-                                        {currencyFormat(pricing.supplementHorsDakar * nbJours)}
-                                    </span>
-                                </div>
-                            )}
-
-                            <div className="pt-3 mt-1 border-t-2 border-dashed border-slate-200 flex justify-between items-center">
-                                <span className="font-black text-slate-900 text-[14px]">Total à payer</span>
-                                <div className="text-right">
-                                    <div className="font-black text-emerald-600 text-[20px] tabular-nums leading-none">
-                                        {currencyFormat(pricing.totalLocataire + deliveryFee)}
-                                    </div>
-                                    <div className="text-[10px] text-slate-400 font-semibold mt-0.5">FCFA</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
                 {loadingPricing && (
                     <div className="flex flex-col items-center justify-center py-6 space-y-2">
                         <div className="w-8 h-8 border-3 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
@@ -442,27 +389,29 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                                         {wantsDelivery && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
                                     </button>
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Truck className={cn(
-                                                "w-4 h-4 transition-colors",
-                                                wantsDelivery ? "text-emerald-600" : "text-slate-500"
-                                            )} strokeWidth={2} />
+                                        <div className="flex items-center justify-between mb-1">
+                                            <div className="flex items-center gap-2">
+                                                <Truck className={cn(
+                                                    "w-4 h-4 transition-colors",
+                                                    wantsDelivery ? "text-emerald-600" : "text-slate-500"
+                                                )} strokeWidth={2} />
+                                                <span className={cn(
+                                                    "text-[13.5px] font-bold transition-colors",
+                                                    wantsDelivery ? "text-emerald-900" : "text-slate-700"
+                                                )}>
+                                                    Livraison à domicile
+                                                </span>
+                                            </div>
                                             <span className={cn(
-                                                "text-[13.5px] font-bold transition-colors",
-                                                wantsDelivery ? "text-emerald-900" : "text-slate-700"
+                                                "text-[15px] font-black tabular-nums",
+                                                wantsDelivery ? "text-emerald-600" : "text-slate-900"
                                             )}>
-                                                Livraison à domicile
+                                                + {currencyFormat(fraisLivraison)}
                                             </span>
                                         </div>
                                         <p className="text-[11.5px] text-slate-500 font-medium">
                                             Le véhicule vous sera livré à l'adresse de votre choix
                                         </p>
-                                        <div className={cn(
-                                            "inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-lg text-[11px] font-bold",
-                                            wantsDelivery ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
-                                        )}>
-                                            + {currencyFormat(fraisLivraison)}
-                                        </div>
                                     </div>
                                 </label>
                                 {wantsDelivery && (
@@ -512,37 +461,96 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                                         {horsDakar && <Check className="w-4 h-4 text-white" strokeWidth={3} />}
                                     </button>
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <MapPin className={cn(
-                                                "w-4 h-4 transition-colors",
-                                                horsDakar ? "text-blue-600" : "text-slate-500"
-                                            )} strokeWidth={2} />
+                                        <div className="flex items-center justify-between mb-1">
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className={cn(
+                                                    "w-4 h-4 transition-colors",
+                                                    horsDakar ? "text-blue-600" : "text-slate-500"
+                                                )} strokeWidth={2} />
+                                                <span className={cn(
+                                                    "text-[13.5px] font-bold transition-colors",
+                                                    horsDakar ? "text-blue-900" : "text-slate-700"
+                                                )}>
+                                                    Voyage Hors Dakar
+                                                </span>
+                                            </div>
                                             <span className={cn(
-                                                "text-[13.5px] font-bold transition-colors",
-                                                horsDakar ? "text-blue-900" : "text-slate-700"
+                                                "text-[15px] font-black tabular-nums",
+                                                horsDakar ? "text-blue-600" : "text-slate-900"
                                             )}>
-                                                Voyage Hors Dakar
+                                                + {currencyFormat(supplementHorsDakarParJour)}<span className="text-[11px] font-semibold text-slate-400"> /jour</span>
                                             </span>
                                         </div>
                                         <p className="text-[11.5px] text-slate-500 font-medium">
                                             Partez explorer les régions du Sénégal
                                         </p>
-                                        <div className={cn(
-                                            "inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-lg text-[11px] font-bold",
-                                            horsDakar ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600"
-                                        )}>
-                                            + {currencyFormat(supplementHorsDakarParJour)} / jour
-                                        </div>
                                     </div>
                                 </label>
                             </div>
                         )}
                     </div>
                 )}
+
+                {/* Section: Pricing Summary — AFTER options, dark glass+blur */}
+                {datesValid && pricing && !loadingPricing && (
+                    <div className="relative rounded-2xl overflow-hidden p-5 space-y-3 shadow-xl">
+                        {/* Dark glass background */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl" />
+                        {/* Decorative glow */}
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                        <div className="relative space-y-2.5">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                    <CreditCard className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+                                </div>
+                                <h4 className="text-[13px] font-black text-white/90 uppercase tracking-wide">Résumé de la réservation</h4>
+                            </div>
+
+                            <div className="flex justify-between items-center text-[13.5px]">
+                                <span className="text-slate-300 font-medium">{currencyFormat(Math.round(pricing.totalLocataire / nbJours))} × {nbJours} jour{nbJours > 1 ? 's' : ''}</span>
+                                <span className="font-bold text-white tabular-nums">{currencyFormat(pricing.totalLocataire)}</span>
+                            </div>
+
+                            {deliveryFee > 0 && (
+                                <div className="flex justify-between items-center text-[13.5px]">
+                                    <span className="text-slate-300 font-medium flex items-center gap-1.5">
+                                        <Truck className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+                                        Livraison
+                                    </span>
+                                    <span className="font-bold text-white tabular-nums">{currencyFormat(deliveryFee)}</span>
+                                </div>
+                            )}
+
+                            {pricing.supplementHorsDakar != null && pricing.supplementHorsDakar > 0 && (
+                                <div className="flex justify-between items-center text-[13.5px]">
+                                    <span className="text-slate-300 font-medium flex items-center gap-1.5">
+                                        <MapPin className="w-3.5 h-3.5 text-blue-400" strokeWidth={2} />
+                                        Supplément Hors Dakar
+                                    </span>
+                                    <span className="font-bold text-white tabular-nums">
+                                        {currencyFormat(pricing.supplementHorsDakar * nbJours)}
+                                    </span>
+                                </div>
+                            )}
+
+                            <div className="pt-3 mt-1 border-t border-white/15 flex justify-between items-center">
+                                <span className="font-black text-white text-[14px]">Total à payer</span>
+                                <div className="text-right">
+                                    <div className="font-black text-emerald-400 text-[22px] tabular-nums leading-none">
+                                        {currencyFormat(pricing.totalLocataire + deliveryFee)}
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 font-semibold mt-0.5">FCFA</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Sticky footer with premium design */}
-            <div className="flex-shrink-0 border-t-2 border-slate-100 bg-gradient-to-b from-white to-slate-50/30 px-5 pt-5 pb-8 space-y-4">
+            <div className="flex-shrink-0 border-t-2 border-slate-100 bg-gradient-to-b from-white to-slate-50/30 px-5 pt-4 pb-8 space-y-3">
                 {/* Error message with animation */}
                 {inlineError && (
                     <div className="rounded-2xl border-2 border-red-200 bg-gradient-to-br from-red-50 to-red-50/50 p-4 animate-in slide-in-from-top-2 duration-300">
@@ -590,23 +598,23 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                     </span>
                 </label>
 
-                {/* Premium CTA button */}
+                {/* Premium CTA button — full width, taller, high contrast */}
                 <button
                     type="button"
                     disabled={!canReserve}
                     onClick={handleReserve}
                     className={cn(
-                        'group relative w-full flex items-center justify-center gap-3 rounded-2xl py-4.5 text-[15px] font-black tracking-tight transition-all duration-300 overflow-hidden',
+                        'group relative w-full flex items-center justify-center gap-3 rounded-2xl py-[18px] text-[16px] font-black tracking-tight transition-all duration-300 overflow-hidden',
                         canReserve
-                            ? 'bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-emerald-400 shadow-xl shadow-slate-900/40 hover:shadow-2xl hover:shadow-slate-900/50 hover:-translate-y-1 active:translate-y-0 active:shadow-lg active:scale-[0.98]'
-                            : 'bg-slate-100 text-slate-400 cursor-not-allowed',
+                            ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 text-white shadow-xl shadow-emerald-600/40 hover:shadow-2xl hover:shadow-emerald-600/50 hover:-translate-y-0.5 active:translate-y-0 active:shadow-lg active:scale-[0.98]'
+                            : 'bg-slate-200 text-slate-400 cursor-not-allowed',
                     )}
                 >
                     {/* Shine effect */}
                     {canReserve && (
                         <>
-                            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
-                            <span className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+                            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+                            <span className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
                         </>
                     )}
                     <CreditCard className="w-5 h-5 flex-shrink-0 relative z-10" strokeWidth={2.5} />

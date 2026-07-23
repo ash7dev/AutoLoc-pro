@@ -309,61 +309,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
             </div>
           )}
 
-          {/* Price breakdown — commission masquée, prix tout compris */}
-          {pricing && datesValid && (
-            <div className="space-y-2 rounded-xl bg-slate-50 p-4">
-              <div className="flex justify-between items-center text-[13px]">
-                <span className="text-slate-500 font-medium">
-                  {formatPrice(Math.round(pricing.totalLocataire / nbJours))} × {nbJours}j
-                </span>
-                <span className="font-semibold text-slate-700 tabular-nums">
-                  {formatPrice(pricing.totalLocataire)}
-                </span>
-              </div>
-              {deliveryFee > 0 && (
-                <div className="flex justify-between items-center text-[13px]">
-                  <span className="text-slate-500 font-medium flex items-center gap-1">
-                    <Truck className="w-3 h-3" strokeWidth={2} />
-                    Livraison
-                  </span>
-                  <span className="font-semibold text-slate-700 tabular-nums">
-                    {formatPrice(deliveryFee)}
-                  </span>
-                </div>
-              )}
-              {pricing.supplementHorsDakar != null && pricing.supplementHorsDakar > 0 && (
-                <div className="flex justify-between items-center text-[13px]">
-                  <span className="text-slate-500 font-medium flex items-center gap-1">
-                    🗺️ Supplément Hors Dakar
-                  </span>
-                  <span className="font-semibold text-slate-700 tabular-nums">
-                    {formatPrice(pricing.supplementHorsDakar * nbJours)}
-                  </span>
-                </div>
-              )}
-              <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
-                <span className="text-[14px] font-bold text-slate-900">Total</span>
-                <span className="text-[18px] font-black text-emerald-600 tabular-nums">
-                  {formatPrice(pricing.totalLocataire + deliveryFee)}
-                </span>
-              </div>
-              {loadingPricing && (
-                <div className="flex justify-center pt-1">
-                  <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
-                </div>
-              )}
-              {pricingError && !loadingPricing && (
-                <div className="flex items-center gap-2 pt-2 border-t border-amber-100">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" strokeWidth={2} />
-                  <p className="text-[11px] font-medium text-amber-600">
-                    Prix estimé — le montant exact sera confirmé à l&apos;étape suivante.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Delivery toggle - Premium design */}
+          {/* ── Options — Delivery toggle ── */}
           {deliveryAvailable && (
             <div className={cn(
               "relative rounded-2xl border-2 p-4 space-y-3 transition-all duration-300",
@@ -385,27 +331,29 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
                   {wantsDelivery && <CheckCircle2 className="w-4 h-4 text-white" strokeWidth={3} />}
                 </button>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Truck className={cn(
-                      "w-4 h-4 transition-colors",
-                      wantsDelivery ? "text-emerald-600" : "text-slate-500"
-                    )} strokeWidth={2} />
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <Truck className={cn(
+                        "w-4 h-4 transition-colors",
+                        wantsDelivery ? "text-emerald-600" : "text-slate-500"
+                      )} strokeWidth={2} />
+                      <span className={cn(
+                        "text-[13.5px] font-bold transition-colors",
+                        wantsDelivery ? "text-emerald-900" : "text-slate-700"
+                      )}>
+                        Livraison à domicile
+                      </span>
+                    </div>
                     <span className={cn(
-                      "text-[13.5px] font-bold transition-colors",
-                      wantsDelivery ? "text-emerald-900" : "text-slate-700"
+                      "text-[15px] font-black tabular-nums",
+                      wantsDelivery ? "text-emerald-600" : "text-slate-900"
                     )}>
-                      Livraison à domicile
+                      + {formatPrice(fraisLivraison)}
                     </span>
                   </div>
                   <p className="text-[11.5px] text-slate-500 font-medium">
                     Le véhicule vous sera livré à l'adresse de votre choix
                   </p>
-                  <div className={cn(
-                    "inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-lg text-[11px] font-bold",
-                    wantsDelivery ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
-                  )}>
-                    + {formatPrice(fraisLivraison)}
-                  </div>
                 </div>
               </label>
               {wantsDelivery && (
@@ -433,7 +381,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
             </div>
           )}
 
-          {/* Hors Dakar toggle - Premium design */}
+          {/* ── Options — Hors Dakar toggle ── */}
           {autoriseHorsDakar && supplementHorsDakarParJour != null && (
             <div className={cn(
               "relative rounded-2xl border-2 p-4 transition-all duration-300",
@@ -455,29 +403,101 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
                   {horsDakar && <CheckCircle2 className="w-4 h-4 text-white" strokeWidth={3} />}
                 </button>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <MapPin className={cn(
-                      "w-4 h-4 transition-colors",
-                      horsDakar ? "text-blue-600" : "text-slate-500"
-                    )} strokeWidth={2} />
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <MapPin className={cn(
+                        "w-4 h-4 transition-colors",
+                        horsDakar ? "text-blue-600" : "text-slate-500"
+                      )} strokeWidth={2} />
+                      <span className={cn(
+                        "text-[13.5px] font-bold transition-colors",
+                        horsDakar ? "text-blue-900" : "text-slate-700"
+                      )}>
+                        Voyage Hors Dakar
+                      </span>
+                    </div>
                     <span className={cn(
-                      "text-[13.5px] font-bold transition-colors",
-                      horsDakar ? "text-blue-900" : "text-slate-700"
+                      "text-[15px] font-black tabular-nums",
+                      horsDakar ? "text-blue-600" : "text-slate-900"
                     )}>
-                      Voyage Hors Dakar
+                      + {formatPrice(supplementHorsDakarParJour)}<span className="text-[11px] font-semibold text-slate-400"> /jour</span>
                     </span>
                   </div>
                   <p className="text-[11.5px] text-slate-500 font-medium">
                     Partez explorer les régions du Sénégal
                   </p>
-                  <div className={cn(
-                    "inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-lg text-[11px] font-bold",
-                    horsDakar ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600"
-                  )}>
-                    + {formatPrice(supplementHorsDakarParJour)} / jour
-                  </div>
                 </div>
               </label>
+            </div>
+          )}
+
+          {/* ── Résumé de la réservation — dark glass+blur — AFTER options ── */}
+          {pricing && datesValid && (
+            <div className="relative rounded-2xl overflow-hidden p-5 space-y-3 shadow-xl">
+              {/* Dark glass background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl" />
+              {/* Decorative glows */}
+              <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="relative space-y-2.5">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                    <CreditCard className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+                  </div>
+                  <h4 className="text-[13px] font-black text-white/90 uppercase tracking-wide">Résumé de la réservation</h4>
+                </div>
+
+                <div className="flex justify-between items-center text-[13px]">
+                  <span className="text-slate-300 font-medium">
+                    {formatPrice(Math.round(pricing.totalLocataire / nbJours))} × {nbJours}j
+                  </span>
+                  <span className="font-semibold text-white tabular-nums">
+                    {formatPrice(pricing.totalLocataire)}
+                  </span>
+                </div>
+                {deliveryFee > 0 && (
+                  <div className="flex justify-between items-center text-[13px]">
+                    <span className="text-slate-300 font-medium flex items-center gap-1.5">
+                      <Truck className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+                      Livraison
+                    </span>
+                    <span className="font-semibold text-white tabular-nums">
+                      {formatPrice(deliveryFee)}
+                    </span>
+                  </div>
+                )}
+                {pricing.supplementHorsDakar != null && pricing.supplementHorsDakar > 0 && (
+                  <div className="flex justify-between items-center text-[13px]">
+                    <span className="text-slate-300 font-medium flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-blue-400" strokeWidth={2} />
+                      Supplément Hors Dakar
+                    </span>
+                    <span className="font-semibold text-white tabular-nums">
+                      {formatPrice(pricing.supplementHorsDakar * nbJours)}
+                    </span>
+                  </div>
+                )}
+                <div className="pt-2.5 mt-1 border-t border-white/15 flex justify-between items-center">
+                  <span className="text-[14px] font-black text-white">Total</span>
+                  <span className="text-[20px] font-black text-emerald-400 tabular-nums">
+                    {formatPrice(pricing.totalLocataire + deliveryFee)}
+                  </span>
+                </div>
+                {loadingPricing && (
+                  <div className="flex justify-center pt-1">
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                  </div>
+                )}
+                {pricingError && !loadingPricing && (
+                  <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" strokeWidth={2} />
+                    <p className="text-[11px] font-medium text-amber-300">
+                      Prix estimé — le montant exact sera confirmé à l&apos;étape suivante.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -522,31 +542,31 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
             </div>
           )}
 
-          {/* CTA - Premium with shine effect */}
+          {/* CTA - Premium emerald button */}
           <button
             type="button"
             disabled={!canReserve}
             onClick={handleReserve}
             className={cn(
-              'group relative w-full flex items-center justify-center gap-3 rounded-2xl px-5 py-4.5',
-              'text-[15px] font-black tracking-tight transition-all duration-300 overflow-hidden',
+              'group relative w-full flex items-center justify-center gap-3 rounded-2xl px-5 py-[18px]',
+              'text-[16px] font-black tracking-tight transition-all duration-300 overflow-hidden',
               canReserve
-                ? 'bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-emerald-400 shadow-xl shadow-slate-900/40 hover:shadow-2xl hover:shadow-slate-900/50 hover:-translate-y-1 active:translate-y-0 active:shadow-lg active:scale-[0.98]'
-                : 'bg-slate-100 text-slate-400 cursor-not-allowed',
+                ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 text-white shadow-xl shadow-emerald-600/40 hover:shadow-2xl hover:shadow-emerald-600/50 hover:-translate-y-0.5 active:translate-y-0 active:shadow-lg active:scale-[0.98]'
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed',
             )}
           >
             {/* Shine effect */}
             {canReserve && (
               <>
-                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
-                <span className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
+                <span className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
               </>
             )}
             {loadingPricing
               ? <Loader2 className="w-5 h-5 animate-spin relative z-10" strokeWidth={2.5} />
               : <CreditCard className="w-5 h-5 relative z-10" strokeWidth={2.5} />
             }
-            <span className="relative z-10">Réserver maintenant</span>
+            <span className="relative z-10">Confirmer et réserver</span>
             {!loadingPricing && (
               <ArrowRight className={cn(
                 "w-5 h-5 relative z-10 transition-transform",
