@@ -8,18 +8,21 @@ export class RevalidateService {
     constructor(private readonly config: ConfigService) { }
 
     async revalidatePath(path: string): Promise<void> {
-        await this.callWebhook({ path });
+        // Fire-and-forget: ne bloque pas le thread NestJS
+        this.callWebhook({ path }).catch(() => { });
     }
 
     async revalidateTag(tag: string): Promise<void> {
-        await this.callWebhook({ tag });
+        // Fire-and-forget: ne bloque pas le thread NestJS
+        this.callWebhook({ tag }).catch(() => { });
     }
 
     async revalidateReservation(reservationId: string): Promise<void> {
-        await this.callWebhook({ reservationId } as any);
+        // Fire-and-forget: ne bloque pas le thread NestJS
+        this.callWebhook({ reservationId } as any).catch(() => { });
     }
 
-    private async callWebhook(payload: { path?: string; tag?: string; reservationId?: string }, retries = 3): Promise<void> {
+    private async callWebhook(payload: { path?: string; tag?: string; reservationId?: string }, retries = 2): Promise<void> {
         const url = this.config.get<string>('NEXTJS_URL') + '/api/revalidate';
         const secret = this.config.get<string>('REVALIDATE_SECRET');
 
@@ -30,6 +33,9 @@ export class RevalidateService {
 
         for (let i = 0; i < retries; i++) {
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 1500); // Max 1.5s par tentative
+
                 const res = await fetch(url, {
                     method: 'POST',
                     headers: {
@@ -37,19 +43,15 @@ export class RevalidateService {
                         'x-revalidate-secret': secret,
                     },
                     body: JSON.stringify(payload),
+                    signal: controller.signal,
                 });
+                clearTimeout(timeoutId);
 
                 if (res.ok) return;
-
-                if (i === retries - 1) {
-                    this.logger.error(`Revalidation failed with status ${res.status} for ${JSON.stringify(payload)}`);
-                }
             } catch (err: any) {
-                if (i === retries - 1) {
-                    this.logger.error(`Revalidation failed for ${JSON.stringify(payload)}: ${err.message}`);
-                }
+                // Silencieusement ignoré en arrière-plan
             }
-            await new Promise(res => setTimeout(res, 500));
+            await new Promise(res => setTimeout(res, 200));
         }
     }
 }

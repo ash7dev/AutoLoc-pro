@@ -430,7 +430,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
         operations.push(Promise.resolve(vehicle));
       }
 
-      // 3. Opérations sur les photos (parallélisées pour la vitesse)
+      // 3. Opérations sur les photos (parallélisées pour la vitesse, uniquement si modifiées)
       if (deletedPhotoIds.length > 0) {
         operations.push(
           Promise.all(
@@ -439,7 +439,12 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
         );
       }
 
-      if (existingPhotos.length > 0) {
+      // N'appeler updatePhotoPositionAction QUE si l'ordre des photos a réellement été modifié
+      const initialPhotosOrder = (vehicle.photos ?? []).map((p) => p.id).join(',');
+      const currentPhotosOrder = existingPhotos.map((p) => p.id).join(',');
+      const photoOrderChanged = initialPhotosOrder !== currentPhotosOrder;
+
+      if (photoOrderChanged && existingPhotos.length > 0) {
         operations.push(
           Promise.all(
             existingPhotos.map((p, i) =>
@@ -478,18 +483,17 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
       // Le premier résultat est l'objet véhicule mis à jour (ou l'original si pas de PATCH)
       const updatedVehicle = (results[0] as { success: true; data: Vehicle }).data;
 
-      // Afficher immédiatement un message de succès avant le revalidate
-      // pour que l'utilisateur sache que la modification a réussi
+      // Afficher immédiatement un message de succès et fermer le modal
       setError(null);
+      onSaved(updatedVehicle);
+      onClose();
 
-      // 5. Revalidate les chemins du véhicule pour mettre à jour le cache
-      await revalidateVehiclePaths(vehicle.id).catch(err => {
+      // 5. Revalidate les chemins du véhicule en arrière-plan (non-bloquant)
+      revalidateVehiclePaths(vehicle.id).catch(err => {
         console.warn('Failed to revalidate vehicle paths:', err);
       });
 
       console.log('Vehicle and assets updated successfully');
-      onSaved(updatedVehicle);
-      onClose();
     } catch (err) {
       console.error('Failed to update vehicle:', err);
 
