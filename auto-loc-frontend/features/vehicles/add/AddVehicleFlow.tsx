@@ -7,7 +7,7 @@ import { ProfileResponse } from "@/lib/nestjs/auth";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Sparkles, Phone, ShieldCheck,
-  Check, Clock, AlertCircle, Circle, ArrowRight,
+  Check, Clock, AlertCircle, Circle, ArrowRight, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PhoneVerifyGate } from "./PhoneVerifyGate";
@@ -19,6 +19,7 @@ import { StepConditions } from "./steps/StepConditions";
 import { StepPhotos } from "./steps/StepPhotos";
 import { StepDocuments } from "./steps/StepDocuments";
 import { StepReview } from "./steps/StepReview";
+import { useAddVehicleStore } from "./store";
 
 const Joyride = dynamic(() => import("react-joyride"), { ssr: false });
 
@@ -252,11 +253,13 @@ const STEP_TITLES = [
 
 export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
   const router = useRouter();
+  const store = useAddVehicleStore();
   const [kycStatus, setKycStatus] = useState(profile.kycStatus);
   const [phoneVerified, setPhoneVerified] = useState(Boolean(profile.phoneVerified && profile.phone));
   const [currentStep, setCurrentStep] = useState(1);
   const [runTour, setRunTour] = useState(false);
   const [preGateDismissed, setPreGateDismissed] = useState(false);
+  const [showDraftBanner, setShowDraftBanner] = useState(false);
 
   const effectiveGate: Gate = !phoneVerified
     ? "phone"
@@ -273,8 +276,14 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
     if (effectiveGate === "wizard") {
       const seen = localStorage.getItem("vehicle_wizard_tour_seen");
       if (!seen) setRunTour(true);
+
+      // Vérifier si un brouillon existe
+      const hasDraft = store.step1 || store.step2 || store.step3 || store.photos.length > 0;
+      if (hasDraft) {
+        setShowDraftBanner(true);
+      }
     }
-  }, [effectiveGate]);
+  }, [effectiveGate, store.step1, store.step2, store.step3, store.photos.length]);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
     if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
@@ -393,6 +402,43 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
 
       <PageShell onBack={() => router.push("/dashboard/owner/vehicles")}>
         <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
+
+          {/* ── Banner brouillon récupéré ──────────────────────── */}
+          {showDraftBanner && (
+            <div className="mx-4 sm:mx-0 flex items-center gap-3 rounded-xl border-2 border-emerald-200 bg-emerald-50 px-4 py-3 shadow-sm">
+              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
+                <AlertCircle className="w-4 h-4 text-white" strokeWidth={2.5} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-bold text-emerald-900">
+                  Brouillon récupéré
+                </p>
+                <p className="text-[11px] text-emerald-700 mt-0.5">
+                  Vos données ont été sauvegardées automatiquement. Continuez là où vous en étiez !
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm('Êtes-vous sûr de vouloir supprimer ce brouillon ? Cette action est irréversible.')) {
+                    store.reset();
+                    setShowDraftBanner(false);
+                    setCurrentStep(1);
+                  }
+                }}
+                className="flex-shrink-0 text-[11px] font-bold text-emerald-700 hover:text-emerald-900 underline"
+              >
+                Supprimer
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDraftBanner(false)}
+                className="flex-shrink-0 text-emerald-500 hover:text-emerald-700"
+              >
+                <X className="w-4 h-4" strokeWidth={2.5} />
+              </button>
+            </div>
+          )}
 
           {/* ── Stepper ─────────────────────────────────────────── */}
           <div data-tour="wizard-progress" className="px-1 sm:px-0">

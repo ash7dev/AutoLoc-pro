@@ -267,38 +267,69 @@ export async function compressImage(file: File, maxSize = 1600): Promise<File> {
   // Skip if not an image or already small
   if (!file.type.startsWith('image/') || file.size < 512 * 1024) return file;
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      let width = img.width;
-      let height = img.height;
+    const timeoutId = setTimeout(() => {
+      console.warn('[Compress] Timeout - utilisation fichier original');
+      resolve(file);
+    }, 10000); // 10s timeout
 
-      if (width > height) {
-        if (width > maxSize) {
-          height *= maxSize / width;
-          width = maxSize;
-        }
-      } else {
-        if (height > maxSize) {
-          width *= maxSize / height;
-          height = maxSize;
-        }
-      }
-
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx?.drawImage(img, 0, 0, width, height);
-      canvas.toBlob((blob) => {
-        if (blob) {
-          resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg' }));
-        } else {
-          resolve(file);
-        }
-      }, 'image/jpeg', 0.85);
+    img.onerror = () => {
+      clearTimeout(timeoutId);
+      console.error('[Compress] Erreur chargement image - utilisation fichier original');
+      resolve(file); // Fallback au fichier original plutôt que rejeter
     };
-    img.src = URL.createObjectURL(file);
+
+    img.onload = () => {
+      clearTimeout(timeoutId);
+      try {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          console.error('[Compress] Impossible de créer contexte canvas');
+          resolve(file);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg' }));
+          } else {
+            console.error('[Compress] Échec création blob');
+            resolve(file);
+          }
+        }, 'image/jpeg', 0.85);
+      } catch (err) {
+        console.error('[Compress] Erreur:', err);
+        resolve(file); // Fallback au fichier original
+      }
+    };
+
+    try {
+      img.src = URL.createObjectURL(file);
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.error('[Compress] Erreur création URL:', err);
+      resolve(file);
+    }
   });
 }
 
@@ -309,27 +340,60 @@ export async function uploadToCloudinary(
 ): Promise<{ url: string; publicId: string }> {
   const TRANSFORM = 'w_800,h_600,c_fill,f_webp,q_auto';
 
-  // ── Optimization: Compress client-side if it's an image ──
-  const optimizedFile = await compressImage(file);
+  try {
+    // ── Optimization: Compress client-side if it's an image ──
+    const optimizedFile = await compressImage(file);
+    console.log('[Upload] Fichier optimisé:', {
+      original: `${(file.size / 1024).toFixed(1)}KB`,
+      optimized: `${(optimizedFile.size / 1024).toFixed(1)}KB`,
+      name: file.name,
+    });
 
-  const form = new FormData();
-  form.append('file', optimizedFile);
-  form.append('timestamp', String(sig.timestamp));
-  form.append('api_key', sig.apiKey);
-  form.append('signature', sig.signature);
-  form.append('folder', sig.folder);
+    const form = new FormData();
+    form.append('file', optimizedFile);
+    form.append('timestamp', String(sig.timestamp));
+    form.append('api_key', sig.apiKey);
+    form.append('signature', sig.signature);
+    form.append('folder', sig.folder);
 
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`,
-    { method: 'POST', body: form },
-  );
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`Cloudinary upload failed: ${res.status} ${text}`);
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`,
+      { method: 'POST', body: form },
+    );
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      console.error('[Upload] Échec Cloudinary:', {
+        status: res.status,
+        statusText: res.statusText,
+        response: text.substring(0, 500),
+        file: file.name,
+      });
+
+      // Messages d'erreur plus spécifiques
+      if (res.status === 401 || res.status === 403) {
+        throw new Error('Signature expirée ou invalide. Veuillez réessayer.');
+      }
+      if (res.status === 413) {
+        throw new Error('Fichier trop volumineux. Maximum 10MB.');
+      }
+      if (res.status === 429) {
+        throw new Error('Trop de requêtes. Attendez quelques secondes.');
+      }
+      throw new Error(`Erreur d'upload: ${res.status} - ${text.substring(0, 100)}`);
+    }
+
+    const data = await res.json() as { secure_url: string; public_id: string };
+    const url = data.secure_url.replace('/upload/', `/upload/${TRANSFORM}/`);
+    console.log('[Upload] Succès:', { publicId: data.public_id, file: file.name });
+    return { url, publicId: data.public_id };
+  } catch (error) {
+    console.error('[Upload] Erreur complète:', error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Erreur inconnue lors de l\'upload');
   }
-  const data = await res.json() as { secure_url: string; public_id: string };
-  const url = data.secure_url.replace('/upload/', `/upload/${TRANSFORM}/`);
-  return { url, publicId: data.public_id };
 }
 
 /** Upload un document (image ou PDF) directement vers Cloudinary via l'endpoint auto. */

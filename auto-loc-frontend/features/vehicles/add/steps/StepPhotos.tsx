@@ -47,14 +47,24 @@ export function StepPhotos({ onNext, onBack }: Props) {
 
     // Ensure we have a fresh signature (re-fetch if missing)
     if (!sigRef.current) {
-      try { sigRef.current = await fetchUploadSignature(); }
-      catch { setSigError(true); return; }
+      try {
+        console.log('[StepPhotos] Récupération signature...');
+        sigRef.current = await fetchUploadSignature();
+        console.log('[StepPhotos] Signature obtenue');
+      }
+      catch (err) {
+        console.error('[StepPhotos] Erreur signature:', err);
+        setSigError(true);
+        return;
+      }
     }
 
     const remaining = MAX_PHOTOS - photos.length;
     const toUpload = files.slice(0, remaining);
     const ids = addPhotos(toUpload);
     const sig = sigRef.current;
+
+    console.log(`[StepPhotos] Upload de ${toUpload.length} photo(s)...`);
 
     // Upload all in parallel
     await Promise.all(
@@ -63,7 +73,8 @@ export function StepPhotos({ onNext, onBack }: Props) {
         try {
           const result = await uploadToCloudinary(file, sig);
           updatePhoto(id, { url: result.url, publicId: result.publicId, status: 'done' });
-        } catch {
+        } catch (err) {
+          console.error(`[StepPhotos] Échec upload ${file.name}:`, err);
           updatePhoto(id, { status: 'error' });
         }
       }),
@@ -71,7 +82,12 @@ export function StepPhotos({ onNext, onBack }: Props) {
 
     // Signature is consumed — pre-fetch a new one for the next batch
     sigRef.current = null;
-    fetchUploadSignature().then((s) => { sigRef.current = s; }).catch(() => {});
+    fetchUploadSignature().then((s) => {
+      sigRef.current = s;
+      console.log('[StepPhotos] Nouvelle signature pré-chargée');
+    }).catch((err) => {
+      console.error('[StepPhotos] Erreur pré-chargement signature:', err);
+    });
   }, [photos.length, addPhotos, updatePhoto]);
 
   const handleFiles = (files: FileList | null) => {
