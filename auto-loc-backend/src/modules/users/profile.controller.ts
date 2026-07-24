@@ -341,9 +341,9 @@ export class ProfileController {
                 id: true,
                 avatarPublicId: true,
                 permisPublicId: true,
-                kycDocumentPublicId: true,
-                kycDocumentBackPublicId: true,
-                kycSelfiePublicId: true,
+                kycDocumentUrl: true,
+                kycDocumentBackUrl: true,
+                kycSelfieUrl: true,
             },
         });
 
@@ -402,26 +402,43 @@ export class ProfileController {
                     })
                 );
             }
-            if (utilisateur.kycDocumentPublicId) {
-                cloudinaryDeletions.push(
-                    this.cloudinaryService.deleteByPublicId(utilisateur.kycDocumentPublicId).catch((err) => {
-                        this.logger.warn(`Failed to delete KYC document: ${err.message}`);
-                    })
-                );
+            // Extraire les publicIds depuis les URLs Cloudinary
+            const extractPublicId = (url: string | null): string | null => {
+                if (!url) return null;
+                // Format Cloudinary: https://res.cloudinary.com/cloudname/image/upload/v123456/folder/publicId.ext
+                const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
+                return match ? match[1] : null;
+            };
+
+            if (utilisateur.kycDocumentUrl) {
+                const publicId = extractPublicId(utilisateur.kycDocumentUrl);
+                if (publicId) {
+                    cloudinaryDeletions.push(
+                        this.cloudinaryService.deleteByPublicId(publicId).catch((err) => {
+                            this.logger.warn(`Failed to delete KYC document: ${err.message}`);
+                        })
+                    );
+                }
             }
-            if (utilisateur.kycDocumentBackPublicId) {
-                cloudinaryDeletions.push(
-                    this.cloudinaryService.deleteByPublicId(utilisateur.kycDocumentBackPublicId).catch((err) => {
-                        this.logger.warn(`Failed to delete KYC document back: ${err.message}`);
-                    })
-                );
+            if (utilisateur.kycDocumentBackUrl) {
+                const publicId = extractPublicId(utilisateur.kycDocumentBackUrl);
+                if (publicId) {
+                    cloudinaryDeletions.push(
+                        this.cloudinaryService.deleteByPublicId(publicId).catch((err) => {
+                            this.logger.warn(`Failed to delete KYC document back: ${err.message}`);
+                        })
+                    );
+                }
             }
-            if (utilisateur.kycSelfiePublicId) {
-                cloudinaryDeletions.push(
-                    this.cloudinaryService.deleteByPublicId(utilisateur.kycSelfiePublicId).catch((err) => {
-                        this.logger.warn(`Failed to delete KYC selfie: ${err.message}`);
-                    })
-                );
+            if (utilisateur.kycSelfieUrl) {
+                const publicId = extractPublicId(utilisateur.kycSelfieUrl);
+                if (publicId) {
+                    cloudinaryDeletions.push(
+                        this.cloudinaryService.deleteByPublicId(publicId).catch((err) => {
+                            this.logger.warn(`Failed to delete KYC selfie: ${err.message}`);
+                        })
+                    );
+                }
             }
 
             if (cloudinaryDeletions.length > 0) {
