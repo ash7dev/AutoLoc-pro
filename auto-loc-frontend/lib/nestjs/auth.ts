@@ -199,7 +199,7 @@ export async function fetchUserProfile(accessToken?: string): Promise<UserProfil
  * Update the authenticated user's profile (client-side via proxy).
  */
 export async function updateUserProfile(
-  data: Partial<Pick<UserProfile, 'prenom' | 'nom' | 'avatarUrl' | 'dateNaissance'>>,
+  data: Partial<Pick<UserProfile, 'prenom' | 'nom' | 'email' | 'avatarUrl' | 'dateNaissance'>>,
 ): Promise<{ kycReset?: boolean;[key: string]: any }> {
   return apiFetch('/users/me/profile', {
     method: 'PATCH',

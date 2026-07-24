@@ -121,7 +121,7 @@ export class ProfileController {
         const user = req.user!;
         let utilisateur = await this.prisma.utilisateur.findUnique({
             where: { userId: user.sub },
-            select: { id: true, prenom: true, nom: true, dateNaissance: true, statutKyc: true },
+            select: { id: true, prenom: true, nom: true, email: true, dateNaissance: true, statutKyc: true },
         });
 
         // 1. Création à la volée si absent (cas Google login sans onboarding fini)
@@ -140,13 +140,27 @@ export class ProfileController {
                     nom: dto.nom || '',
                     profileCompleted: !!(dto.prenom && dto.nom),
                 },
-                select: { id: true, prenom: true, nom: true, dateNaissance: true, statutKyc: true },
+                select: { id: true, prenom: true, nom: true, email: true, dateNaissance: true, statutKyc: true },
             });
+        }
+
+        // Vérifier si l'email est déjà utilisé par un autre utilisateur
+        if (dto.email !== undefined && dto.email !== utilisateur.email) {
+            const existingWithEmail = await this.prisma.utilisateur.findFirst({
+                where: {
+                    email: dto.email,
+                    userId: { not: user.sub },
+                },
+            });
+            if (existingWithEmail) {
+                throw new ForbiddenException('Cet email est déjà utilisé par un autre compte');
+            }
         }
 
         const data: Record<string, unknown> = {};
         if (dto.prenom !== undefined) data.prenom = dto.prenom;
         if (dto.nom !== undefined) data.nom = dto.nom;
+        if (dto.email !== undefined) data.email = dto.email;
         if (dto.avatarUrl !== undefined) data.avatarUrl = dto.avatarUrl;
         if (dto.dateNaissance !== undefined) {
             data.dateNaissance = new Date(dto.dateNaissance);

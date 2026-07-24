@@ -1,4 +1,4 @@
-import { IsDateString, IsOptional, IsString, IsUrl } from 'class-validator';
+import { IsDateString, IsEmail, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class UpdateProfileDto {
     @IsOptional()
@@ -8,6 +8,10 @@ export class UpdateProfileDto {
     @IsOptional()
     @IsString()
     nom?: string;
+
+    @IsOptional()
+    @IsEmail()
+    email?: string;
 
     @IsOptional()
     @IsUrl()

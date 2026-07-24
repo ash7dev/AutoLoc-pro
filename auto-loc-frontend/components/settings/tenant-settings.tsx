@@ -106,15 +106,16 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
   // 2. Sauvegarde des données
   const handleSave = async (field: keyof typeof formData) => {
     if (!profile) return;
-    
+
     setSaving(true);
     setErrorSync(null);
 
     try {
       // Préparation du payload précis
-      const payload: Partial<Pick<UserProfile, 'prenom' | 'nom' | 'dateNaissance'>> = {};
+      const payload: Partial<Pick<UserProfile, 'prenom' | 'nom' | 'email' | 'dateNaissance'>> = {};
       if (field === 'firstName') payload.prenom = formData.firstName;
       if (field === 'lastName') payload.nom = formData.lastName;
+      if (field === 'email') payload.email = formData.email;
       if (field === 'birthDate') payload.dateNaissance = formData.birthDate;
 
       // Appel au vrai endpoint NestJS
@@ -122,11 +123,11 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
 
       // Mise à jour de l'état local du proxy `profile`
       setProfile((prev) => prev ? { ...prev, ...payload } : prev);
-      
+
       // Fin d'édition
       setEditingField(null);
-    } catch (err) {
-      setErrorSync("Erreur lors de la mise à jour des informations.");
+    } catch (err: any) {
+      setErrorSync(err?.message || "Erreur lors de la mise à jour des informations.");
     } finally {
       setSaving(false);
     }
@@ -137,9 +138,10 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
     if (profile) {
       setFormData({
         ...formData,
-        [editingField as string]: 
-          editingField === 'firstName' ? profile.prenom : 
-          editingField === 'lastName' ? profile.nom : 
+        [editingField as string]:
+          editingField === 'firstName' ? profile.prenom :
+          editingField === 'lastName' ? profile.nom :
+          editingField === 'email' ? profile.email :
           editingField === 'birthDate' ? profile.dateNaissance : '',
       });
     }
@@ -338,17 +340,37 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
               </div>
             </div>
 
-            {/* EMAIL (Read Only) */}
+            {/* EMAIL */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Email de contact</label>
               <div className="relative">
                 <input
                   type="email"
                   value={formData.email}
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 opacity-80 cursor-not-allowed text-sm sm:text-base"
-                  readOnly
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className={cn(
+                    "w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base",
+                    editingField === 'email' ? "bg-white border-blue-300" : "bg-slate-50 border-slate-200 text-slate-700"
+                  )}
+                  readOnly={editingField !== 'email'}
                 />
-                <Mail className="absolute right-3 top-2.5 sm:top-3.5 w-4 h-4 text-slate-400" />
+                {editingField !== 'email' ? (
+                  <button
+                    onClick={() => setEditingField('email')}
+                    className="absolute right-3 top-2.5 sm:top-3.5 text-slate-400 hover:text-blue-600 transition-colors"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <div className="flex gap-2 pt-2">
+                    <Button onClick={() => handleSave('email')} disabled={saving} size="sm" className="bg-blue-600 hover:bg-blue-700 flex-1 text-xs sm:text-sm">
+                      {saving ? <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> : 'Valider'}
+                    </Button>
+                    <Button onClick={cancelEdit} disabled={saving} size="sm" variant="outline" className="flex-1 text-xs sm:text-sm">
+                      Annuler
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
