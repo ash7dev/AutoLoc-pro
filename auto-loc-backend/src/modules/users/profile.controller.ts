@@ -25,6 +25,7 @@ import { ForbiddenException } from '@nestjs/common';
 import { CloudinaryService } from '../../infrastructure/cloudinary/cloudinary.service';
 import { ALLOWED_MIMES, VEHICLE_PHOTO_MULTER_OPTIONS } from '../upload/upload.config';
 import { assertValidImageBuffer } from '../../infrastructure/cloudinary/utils/file-validator';
+import { RevalidateService } from '../../infrastructure/revalidate/revalidate.service';
 
 @Controller('users/me')
 @UseGuards(JwtAuthGuard)
@@ -34,6 +35,7 @@ export class ProfileController {
     constructor(
         private readonly prisma: PrismaService,
         private readonly cloudinaryService: CloudinaryService,
+        private readonly revalidate: RevalidateService,
     ) { }
 
     /**
@@ -196,6 +198,11 @@ export class ProfileController {
             },
         });
 
+        // Invalider le cache du profil utilisateur
+        this.revalidate.revalidatePath('/dashboard/owner').catch(() => { });
+        this.revalidate.revalidatePath('/dashboard/tenant').catch(() => { });
+        this.revalidate.revalidatePath('/parametres').catch(() => { });
+
         return {
             ...updated,
             dateNaissance: updated.dateNaissance?.toISOString() ?? null,
@@ -311,6 +318,143 @@ export class ProfileController {
                 err instanceof Error ? err.stack : undefined,
             );
             throw new InternalServerErrorException('Échec de la suppression');
+        }
+    }
+
+    /**
+     * DELETE /users/me/account
+     * Supprime définitivement le compte de l'utilisateur et toutes ses données associées.
+     * Cette action est irréversible.
+     */
+    @Delete('account')
+    @HttpCode(HttpStatus.OK)
+    async deleteAccount(
+        @Req() req: Request & { user?: RequestUser },
+    ): Promise<{ message: string }> {
+        const user = req.user!;
+
+        this.logger.log(`[DELETE ACCOUNT] User ${user.sub} requested account deletion`);
+
+        const utilisateur = await this.prisma.utilisateur.findUnique({
+            where: { userId: user.sub },
+            select: {
+                id: true,
+                avatarPublicId: true,
+                permisPublicId: true,
+                kycDocumentPublicId: true,
+                kycDocumentBackPublicId: true,
+                kycSelfiePublicId: true,
+            },
+        });
+
+        if (!utilisateur) {
+            // Si pas d'utilisateur métier, on supprime quand même le profil
+            await this.prisma.profile.delete({
+                where: { userId: user.sub },
+            }).catch((err) => {
+                this.logger.error(`Failed to delete profile for ${user.sub}:`, err);
+            });
+            return { message: 'Compte supprimé avec succès' };
+        }
+
+        try {
+            // 1. Supprimer les photos des véhicules de Cloudinary
+            const vehicules = await this.prisma.vehicule.findMany({
+                where: { proprietaireId: utilisateur.id },
+                select: { photos: true },
+            });
+
+            const photoPublicIds: string[] = [];
+            for (const v of vehicules) {
+                if (v.photos && Array.isArray(v.photos)) {
+                    for (const photo of v.photos as any[]) {
+                        if (photo.publicId) photoPublicIds.push(photo.publicId);
+                    }
+                }
+            }
+
+            // Supprimer toutes les photos de véhicules en parallèle
+            if (photoPublicIds.length > 0) {
+                this.logger.log(`[DELETE ACCOUNT] Deleting ${photoPublicIds.length} vehicle photos from Cloudinary`);
+                await Promise.allSettled(
+                    photoPublicIds.map((publicId) =>
+                        this.cloudinaryService.deleteByPublicId(publicId).catch((err) => {
+                            this.logger.warn(`Failed to delete vehicle photo ${publicId}: ${err.message}`);
+                        })
+                    )
+                );
+            }
+
+            // 2. Supprimer les documents KYC et avatar de Cloudinary
+            const cloudinaryDeletions: Promise<any>[] = [];
+
+            if (utilisateur.avatarPublicId) {
+                cloudinaryDeletions.push(
+                    this.cloudinaryService.deleteByPublicId(utilisateur.avatarPublicId).catch((err) => {
+                        this.logger.warn(`Failed to delete avatar: ${err.message}`);
+                    })
+                );
+            }
+            if (utilisateur.permisPublicId) {
+                cloudinaryDeletions.push(
+                    this.cloudinaryService.deleteByPublicId(utilisateur.permisPublicId).catch((err) => {
+                        this.logger.warn(`Failed to delete permis: ${err.message}`);
+                    })
+                );
+            }
+            if (utilisateur.kycDocumentPublicId) {
+                cloudinaryDeletions.push(
+                    this.cloudinaryService.deleteByPublicId(utilisateur.kycDocumentPublicId).catch((err) => {
+                        this.logger.warn(`Failed to delete KYC document: ${err.message}`);
+                    })
+                );
+            }
+            if (utilisateur.kycDocumentBackPublicId) {
+                cloudinaryDeletions.push(
+                    this.cloudinaryService.deleteByPublicId(utilisateur.kycDocumentBackPublicId).catch((err) => {
+                        this.logger.warn(`Failed to delete KYC document back: ${err.message}`);
+                    })
+                );
+            }
+            if (utilisateur.kycSelfiePublicId) {
+                cloudinaryDeletions.push(
+                    this.cloudinaryService.deleteByPublicId(utilisateur.kycSelfiePublicId).catch((err) => {
+                        this.logger.warn(`Failed to delete KYC selfie: ${err.message}`);
+                    })
+                );
+            }
+
+            if (cloudinaryDeletions.length > 0) {
+                this.logger.log(`[DELETE ACCOUNT] Deleting ${cloudinaryDeletions.length} user documents from Cloudinary`);
+                await Promise.allSettled(cloudinaryDeletions);
+            }
+
+            // 3. Supprimer toutes les données en base de données
+            // Les relations CASCADE vont gérer la suppression des données liées
+            this.logger.log(`[DELETE ACCOUNT] Deleting database records for user ${utilisateur.id}`);
+
+            await this.prisma.$transaction(async (tx) => {
+                // Supprimer l'utilisateur (les relations CASCADE vont supprimer les véhicules, réservations, avis, etc.)
+                await tx.utilisateur.delete({
+                    where: { id: utilisateur.id },
+                });
+
+                // Supprimer le profil d'authentification
+                await tx.profile.delete({
+                    where: { userId: user.sub },
+                });
+            });
+
+            this.logger.log(`[DELETE ACCOUNT] Account ${user.sub} successfully deleted`);
+
+            return { message: 'Compte supprimé avec succès' };
+        } catch (err) {
+            this.logger.error(
+                `[DELETE ACCOUNT] Failed to delete account ${user.sub}:`,
+                err instanceof Error ? err.message : 'Unknown error',
+                err instanceof Error ? err.stack : undefined,
+            );
+            throw new InternalServerErrorException('Échec de la suppression du compte. Veuillez réessayer.');
         }
     }
 }

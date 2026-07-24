@@ -452,7 +452,8 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
         setGlobalError('');
         try {
             await updateUserProfile({ email: v });
-            // L'email sera mis à jour lors du prochain refresh du profil
+            // Forcer le rechargement du profil pour afficher le nouvel email
+            router.refresh();
         } catch (err: any) {
             setGlobalError(err?.message || 'Erreur lors de la mise à jour de l\'email');
         }
@@ -633,14 +634,6 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                 )}
             </div>
 
-            {/* Global error */}
-            {globalError && (
-                <div className="flex items-center gap-3 rounded-2xl bg-red-50 border border-red-100 px-4 py-3">
-                    <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                    <p className="text-[13px] text-red-700 font-medium">{globalError}</p>
-                </div>
-            )}
-
             {/* ── Identité ──────────────────────────────────────────── */}
             <Section title="Identité" subtitle="Ces informations sont visibles par les locataires.">
                 <EditableRow
@@ -794,6 +787,93 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                     icon={Calendar}
                 />
             </Section>
+
+            {/* ── Zone Dangereuse ──────────────────────────────────────── */}
+            <Section
+                title="Zone Dangereuse"
+                subtitle="Actions irréversibles sur votre compte."
+            >
+                <div className="rounded-2xl border-2 border-red-100 bg-red-50/50 p-4">
+                    <div className="flex items-start gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                            <AlertTriangle className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div className="flex-1">
+                            <h4 className="text-[14px] font-bold text-red-900 mb-1">
+                                Supprimer définitivement mon compte
+                            </h4>
+                            <p className="text-[12px] text-red-700 leading-relaxed">
+                                Cette action supprimera toutes vos données : profil, véhicules, réservations, avis et documents KYC.
+                                Cette action est <span className="font-bold">irréversible</span>.
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={async () => {
+                            const confirmed = confirm(
+                                '⚠️ ATTENTION ⚠️\n\n' +
+                                'Êtes-vous absolument certain de vouloir supprimer votre compte ?\n\n' +
+                                'Cette action va :\n' +
+                                '• Supprimer votre profil et toutes vos informations personnelles\n' +
+                                '• Supprimer tous vos véhicules et annonces\n' +
+                                '• Supprimer toutes vos réservations\n' +
+                                '• Supprimer tous vos avis et commentaires\n' +
+                                '• Supprimer vos documents KYC\n\n' +
+                                'Cette action est IRRÉVERSIBLE et vous serez déconnecté immédiatement.\n\n' +
+                                'Tapez OK pour confirmer la suppression.'
+                            );
+
+                            if (!confirmed) return;
+
+                            // Double confirmation
+                            const doubleConfirm = confirm(
+                                'Dernière confirmation :\n\n' +
+                                'Voulez-vous vraiment supprimer définitivement votre compte ?\n\n' +
+                                'Cette action ne peut pas être annulée.'
+                            );
+
+                            if (!doubleConfirm) return;
+
+                            setGlobalError('');
+                            try {
+                                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/account`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${document.cookie.split('token=')[1]?.split(';')[0]}`,
+                                    },
+                                    credentials: 'include',
+                                });
+
+                                if (!res.ok) {
+                                    const data = await res.json().catch(() => ({}));
+                                    throw new Error(data.message || 'Erreur lors de la suppression du compte');
+                                }
+
+                                // Clear auth cookies and redirect to homepage
+                                document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                                document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+                                window.location.href = '/';
+                            } catch (err: any) {
+                                setGlobalError(err?.message || 'Erreur lors de la suppression du compte');
+                            }
+                        }}
+                        className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold text-[13px] py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-red-600/20"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Supprimer définitivement mon compte
+                    </button>
+                </div>
+            </Section>
+
+            {/* Global error - moved to bottom */}
+            {globalError && (
+                <div className="flex items-center gap-3 rounded-2xl bg-red-50 border border-red-100 px-4 py-3">
+                    <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                    <p className="text-[13px] text-red-700 font-medium">{globalError}</p>
+                </div>
+            )}
 
             {/* KYC Reset Alert */}
             <Dialog open={showKycAlert} onOpenChange={setShowKycAlert}>
