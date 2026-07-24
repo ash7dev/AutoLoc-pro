@@ -446,17 +446,85 @@ export class ProfileController {
                 await Promise.allSettled(cloudinaryDeletions);
             }
 
-            // 3. Supprimer toutes les données en base de données
-            // Les relations CASCADE vont gérer la suppression des données liées
+            // 3. Supprimer toutes les données en base de données dans le bon ordre
             this.logger.log(`[DELETE ACCOUNT] Deleting database records for user ${utilisateur.id}`);
 
             await this.prisma.$transaction(async (tx) => {
-                // Supprimer l'utilisateur (les relations CASCADE vont supprimer les véhicules, réservations, avis, etc.)
+                // 1. Supprimer les pénalités (référence Utilisateur sans CASCADE)
+                const penalitesCount = await tx.penaliteProprietaire.deleteMany({
+                    where: { utilisateurId: utilisateur.id },
+                });
+                if (penalitesCount.count > 0) {
+                    this.logger.log(`[DELETE ACCOUNT] Deleted ${penalitesCount.count} penalties`);
+                }
+
+                // 2. Supprimer les push subscriptions (référence Utilisateur avec CASCADE mais on le fait quand même)
+                const subscriptionsCount = await tx.pushSubscription.deleteMany({
+                    where: { userId: user.sub },
+                });
+                if (subscriptionsCount.count > 0) {
+                    this.logger.log(`[DELETE ACCOUNT] Deleted ${subscriptionsCount.count} push subscriptions`);
+                }
+
+                // 3. Supprimer le wallet et ses relations
+                const wallet = await tx.wallet.findUnique({
+                    where: { utilisateurId: utilisateur.id },
+                });
+
+                if (wallet) {
+                    // Supprimer les retraits et transactions liés au wallet
+                    const retraitsCount = await tx.retrait.deleteMany({
+                        where: { walletId: wallet.id },
+                    });
+                    const transactionsCount = await tx.transactionWallet.deleteMany({
+                        where: { walletId: wallet.id },
+                    });
+
+                    // Ensuite supprimer le wallet
+                    await tx.wallet.delete({
+                        where: { id: wallet.id },
+                    });
+
+                    this.logger.log(`[DELETE ACCOUNT] Deleted wallet with ${retraitsCount.count} withdrawals and ${transactionsCount.count} transactions`);
+                }
+
+                // 4. Supprimer les avis donnés et reçus (référence Utilisateur sans CASCADE)
+                const avisEnvoyesCount = await tx.avis.deleteMany({
+                    where: { auteurId: utilisateur.id },
+                });
+                const avisRecusCount = await tx.avis.deleteMany({
+                    where: { cibleId: utilisateur.id },
+                });
+                if (avisEnvoyesCount.count > 0 || avisRecusCount.count > 0) {
+                    this.logger.log(`[DELETE ACCOUNT] Deleted ${avisEnvoyesCount.count} sent reviews and ${avisRecusCount.count} received reviews`);
+                }
+
+                // 5. Supprimer les réservations (comme locataire et propriétaire)
+                // Les relations CASCADE vont gérer : paiements, historique, photos état des lieux, litiges, etc.
+                const reservationsLocataireCount = await tx.reservation.deleteMany({
+                    where: { locataireId: utilisateur.id },
+                });
+                const reservationsProprioCount = await tx.reservation.deleteMany({
+                    where: { proprietaireId: utilisateur.id },
+                });
+                if (reservationsLocataireCount.count > 0 || reservationsProprioCount.count > 0) {
+                    this.logger.log(`[DELETE ACCOUNT] Deleted ${reservationsLocataireCount.count} renter reservations and ${reservationsProprioCount.count} owner reservations`);
+                }
+
+                // 6. Supprimer les véhicules (les relations CASCADE vont gérer photos, équipements, etc.)
+                const vehiculesCount = await tx.vehicule.deleteMany({
+                    where: { proprietaireId: utilisateur.id },
+                });
+                if (vehiculesCount.count > 0) {
+                    this.logger.log(`[DELETE ACCOUNT] Deleted ${vehiculesCount.count} vehicles`);
+                }
+
+                // 7. Supprimer l'utilisateur
                 await tx.utilisateur.delete({
                     where: { id: utilisateur.id },
                 });
 
-                // Supprimer le profil d'authentification
+                // 8. Supprimer le profil d'authentification
                 await tx.profile.delete({
                     where: { userId: user.sub },
                 });
