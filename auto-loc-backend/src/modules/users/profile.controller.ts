@@ -519,15 +519,27 @@ export class ProfileController {
                     this.logger.log(`[DELETE ACCOUNT] Deleted ${vehiculesCount.count} vehicles`);
                 }
 
-                // 7. Supprimer l'utilisateur
-                await tx.utilisateur.delete({
-                    where: { id: utilisateur.id },
-                });
+                // 7. Supprimer d'abord l'utilisateur (car il a une FK vers Profile)
+                try {
+                    await tx.utilisateur.delete({
+                        where: { id: utilisateur.id },
+                    });
+                    this.logger.log(`[DELETE ACCOUNT] Deleted Utilisateur record`);
+                } catch (err) {
+                    this.logger.error(`[DELETE ACCOUNT] Failed to delete Utilisateur:`, err);
+                    throw err;
+                }
 
-                // 8. Supprimer le profil d'authentification
-                await tx.profile.delete({
-                    where: { userId: user.sub },
-                });
+                // 8. Ensuite supprimer le profil d'authentification
+                try {
+                    const deletedProfile = await tx.profile.delete({
+                        where: { userId: user.sub },
+                    });
+                    this.logger.log(`[DELETE ACCOUNT] Deleted Profile record: ${deletedProfile.id}`);
+                } catch (err) {
+                    this.logger.error(`[DELETE ACCOUNT] Failed to delete Profile with userId ${user.sub}:`, err);
+                    throw err;
+                }
             });
 
             this.logger.log(`[DELETE ACCOUNT] Account ${user.sub} successfully deleted`);
