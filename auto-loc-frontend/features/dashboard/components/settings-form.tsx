@@ -31,7 +31,7 @@ import {
 import { cn } from '@/lib/utils';
 import { DateInput } from '@/features/shared/DateInput';
 import type { UserProfile } from '@/lib/nestjs/auth';
-import { updateUserProfile } from '@/lib/nestjs/auth';
+import { updateUserProfile, deleteAccount } from '@/lib/nestjs/auth';
 import { uploadAvatar, deleteAvatar } from '@/lib/nestjs/profile';
 import { useSwitchToLocataire } from '@/features/owner/hooks/use-switch-to-locataire';
 import { useSwitchToProprietaire } from '@/features/owner/hooks/use-switch-to-proprietaire';
@@ -837,19 +837,7 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
 
                             setGlobalError('');
                             try {
-                                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/account`, {
-                                    method: 'DELETE',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Authorization': `Bearer ${document.cookie.split('token=')[1]?.split(';')[0]}`,
-                                    },
-                                    credentials: 'include',
-                                });
-
-                                if (!res.ok) {
-                                    const data = await res.json().catch(() => ({}));
-                                    throw new Error(data.message || 'Erreur lors de la suppression du compte');
-                                }
+                                await deleteAccount();
 
                                 // Clear auth cookies and redirect to homepage
                                 document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';

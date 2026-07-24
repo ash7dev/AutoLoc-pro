@@ -206,3 +206,13 @@ export async function updateUserProfile(
     body: data,
   });
 }
+
+/**
+ * Delete the authenticated user's account permanently.
+ * This will delete all user data including vehicles, reservations, reviews, and KYC documents.
+ */
+export async function deleteAccount(): Promise<{ message: string }> {
+  return apiFetch('/users/me/account', {
+    method: 'DELETE',
+  });
+}
