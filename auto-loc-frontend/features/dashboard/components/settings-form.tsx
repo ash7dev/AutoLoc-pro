@@ -448,6 +448,16 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
         } catch { setGlobalError('Erreur lors de la mise à jour du nom'); }
     }
 
+    async function saveEmail(v: string) {
+        setGlobalError('');
+        try {
+            await updateUserProfile({ email: v });
+            // L'email sera mis à jour lors du prochain refresh du profil
+        } catch (err: any) {
+            setGlobalError(err?.message || 'Erreur lors de la mise à jour de l\'email');
+        }
+    }
+
     async function saveDateNaissance(v: string) {
         setGlobalError('');
         try {
@@ -663,19 +673,14 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
 
             {/* ── Contact ───────────────────────────────────────────── */}
             <Section title="Contact" subtitle="Vos coordonnées de contact.">
-                <InfoRow
+                <EditableRow
                     label="Adresse email"
                     value={profile.email}
+                    onSave={saveEmail}
+                    type="email"
                     icon={Mail}
-                    action={
-                        <a
-                            href="mailto:support@autoloc.sn?subject=Modification email"
-                            className="flex items-center gap-1 text-[12px] font-bold text-black/40 hover:text-black bg-black/[0.04] hover:bg-black/[0.08] px-2.5 py-1.5 rounded-lg transition-colors"
-                        >
-                            <Mail className="w-3 h-3" strokeWidth={2.5} />
-                            <span className="hidden sm:inline">Support</span>
-                        </a>
-                    }
+                    placeholder="votre@email.com"
+                    description={profile.email || undefined}
                 />
                 <InfoRow
                     label="Numéro de téléphone"
