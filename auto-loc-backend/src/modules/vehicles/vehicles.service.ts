@@ -532,23 +532,43 @@ export class VehiclesService {
 
     try {
       // Si des tiers sont fournis, on remplace tout (delete + recreate).
-      return await this.prisma.$transaction(async (tx) => {
+      const updated = await this.prisma.$transaction(async (tx) => {
         if (dto.tiers !== undefined) {
           await tx.tarifTier.deleteMany({ where: { vehiculeId: vehicleId } });
         }
 
-        // Handle equipements: delete existing + recreate
+        // Handle equipements: delete existing + recreate (bulk optimisé)
         if (dto.equipements !== undefined) {
           await tx.vehiculeEquipement.deleteMany({ where: { vehiculeId: vehicleId } });
           if (dto.equipements.length > 0) {
-            const eqRecords = await Promise.all(
-              dto.equipements.map((nom) =>
-                tx.equipement.upsert({ where: { nom }, create: { nom }, update: {} }),
-              ),
-            );
-            await tx.vehiculeEquipement.createMany({
-              data: eqRecords.map((eq) => ({ vehiculeId: vehicleId, equipementId: eq.id })),
+            const existingEqs = await tx.equipement.findMany({
+              where: { nom: { in: dto.equipements } },
+              select: { id: true, nom: true },
             });
+            const existingMap = new Map(existingEqs.map((e) => [e.nom, e.id]));
+            const missingNoms = dto.equipements.filter((nom) => !existingMap.has(nom));
+
+            if (missingNoms.length > 0) {
+              await tx.equipement.createMany({
+                data: missingNoms.map((nom) => ({ nom })),
+                skipDuplicates: true,
+              });
+              const newEqs = await tx.equipement.findMany({
+                where: { nom: { in: missingNoms } },
+                select: { id: true, nom: true },
+              });
+              newEqs.forEach((e) => existingMap.set(e.nom, e.id));
+            }
+
+            const equipementIds = dto.equipements
+              .map((nom) => existingMap.get(nom))
+              .filter((id): id is string => Boolean(id));
+
+            if (equipementIds.length > 0) {
+              await tx.vehiculeEquipement.createMany({
+                data: equipementIds.map((equipementId) => ({ vehiculeId: vehicleId, equipementId })),
+              });
+            }
           }
         }
 
@@ -602,15 +622,18 @@ export class VehiclesService {
         });
       }, { timeout: 15000 });
 
-      // Invalider le cache pricing pour ce véhicule (tous les variants)
+      // Invalider le cache pricing en arrière-plan (non-bloquant)
       const pattern = `${PRICING_CACHE_PREFIX}${vehicleId}:*`;
-      await this.redis.delPattern(pattern);
+      this.redis.delPattern(pattern).catch(() => { });
 
-      // Revalidate Next.js cache pour que les changements soient visibles immédiatement
+      // Revalidate Next.js cache (non-bloquant)
       this.revalidate.revalidateTag(`vehicle-${vehicleId}`).catch(() => { });
       this.revalidate.revalidatePath(`/vehicle/${vehicleId}`).catch(() => { });
       this.revalidate.revalidatePath(`/dashboard/owner/vehicles/${vehicleId}`).catch(() => { });
       this.revalidate.revalidatePath(`/dashboard/owner/vehicles`).catch(() => { });
+      this.invalidateDetailCache(vehicleId).catch(() => { });
+
+      return updated;
     } catch (err: unknown) {
       if ((err as { code?: string }).code !== 'P2002') throw err;
       const target = (err as { meta?: { target?: string[] } }).meta?.target ?? [];
@@ -620,8 +643,6 @@ export class VehiclesService {
       // Message d'erreur plus compréhensible pour l'utilisateur
       throw new ConflictException('Une erreur de conflit est survenue. Veuillez réessayer.');
     }
-
-    await this.invalidateDetailCache(vehicleId);
   }
 
   /**
