@@ -198,6 +198,15 @@ export class ProfileController {
             },
         });
 
+        // Si l'email a changé, mettre à jour aussi le Profile
+        if (dto.email !== undefined && dto.email !== utilisateur.email) {
+            await this.prisma.profile.update({
+                where: { userId: user.sub },
+                data: { email: dto.email },
+            });
+            this.logger.log(`[UPDATE PROFILE] Email updated in Profile table: ${dto.email}`);
+        }
+
         // Invalider le cache du profil utilisateur
         this.revalidate.revalidatePath('/dashboard/owner').catch(() => { });
         this.revalidate.revalidatePath('/dashboard/tenant').catch(() => { });

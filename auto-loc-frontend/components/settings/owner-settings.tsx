@@ -73,6 +73,15 @@ export function OwnerSettings({ profile: initialProfile }: OwnerSettingsProps) {
     mutationFn: (payload: Partial<Pick<UserProfile, 'prenom' | 'nom' | 'email' | 'dateNaissance'>>) =>
       updateUserProfile(payload),
     onSuccess: (_, variables) => {
+      // Si l'email a changé, déconnecter l'utilisateur pour regénérer le token
+      if (variables.email) {
+        alert('Email modifié avec succès ! Vous allez être déconnecté pour que les changements prennent effet.');
+        document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        window.location.href = '/';
+        return;
+      }
+
       queryClient.setQueryData(['userProfile'], (old: UserProfile | undefined) => {
         if (!old) return old;
         return { ...old, ...variables };

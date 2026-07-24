@@ -121,6 +121,15 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
       // Appel au vrai endpoint NestJS
       await updateUserProfile(payload);
 
+      // Si l'email a changé, déconnecter l'utilisateur pour regénérer le token
+      if (field === 'email') {
+        alert('Email modifié avec succès ! Vous allez être déconnecté pour que les changements prennent effet.');
+        document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        window.location.href = '/';
+        return;
+      }
+
       // Mise à jour de l'état local du proxy `profile`
       setProfile((prev) => prev ? { ...prev, ...payload } : prev);
 

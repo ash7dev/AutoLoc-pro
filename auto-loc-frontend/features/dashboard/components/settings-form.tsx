@@ -452,8 +452,16 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
         setGlobalError('');
         try {
             await updateUserProfile({ email: v });
-            // Forcer le rechargement du profil pour afficher le nouvel email
-            router.refresh();
+
+            // L'email a changé, il faut déconnecter l'utilisateur pour regénérer le token
+            alert('Email modifié avec succès ! Vous allez être déconnecté pour que les changements prennent effet.');
+
+            // Supprimer les tokens
+            document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+
+            // Rediriger vers la page de connexion
+            window.location.href = '/';
         } catch (err: any) {
             setGlobalError(err?.message || 'Erreur lors de la mise à jour de l\'email');
         }
