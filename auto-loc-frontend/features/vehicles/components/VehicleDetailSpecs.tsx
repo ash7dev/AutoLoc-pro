@@ -6,6 +6,7 @@ import {
   MapPinned, ShieldCheck, FileText,
   Snowflake, Navigation, Bluetooth, Camera, Baby, Disc3, Armchair, Gauge,
   CheckCircle2, Hash, Truck, Globe, MapPin, Layers, Shield,
+  CreditCard, Banknote, Wallet,
 } from 'lucide-react';
 
 import type { Vehicle } from '@/lib/nestjs/vehicles';
@@ -145,6 +146,58 @@ export function VehicleDetailSpecs({ vehicle }: Props): React.ReactElement {
         {vehicle.nombrePlaces && <QuickStat icon={Users} label="Places" value={`${vehicle.nombrePlaces}`} />}
         {vehicle.joursMinimum && <QuickStat icon={CalendarDays} label="Durée min." value={`${vehicle.joursMinimum}j`} />}
         {vehicle.ageMinimum && <QuickStat icon={UserCheck} label="Âge min." value={`${vehicle.ageMinimum} ans`} />}
+      </div>
+
+      {/* ── Payment Options Cards (Premium) ── */}
+      <div className="space-y-3 pt-1">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+            <Wallet className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2} />
+          </div>
+          <h3 className="text-[15px] font-bold text-slate-900">Options de paiement au choix</h3>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Card 1: Total 100% */}
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-slate-50/50 to-emerald-50/20 p-4 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <CreditCard className="w-5 h-5 text-emerald-600" strokeWidth={2} />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[13.5px] font-black text-slate-900">Payer 100% en ligne</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md">
+                    Instantané
+                  </span>
+                </div>
+                <p className="text-[11.5px] text-slate-500 leading-relaxed font-medium">
+                  Réglez l&apos;intégralité de la location en ligne. Confirmation immédiate et aucun règlement supplémentaire lors du départ.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Acompte 30% */}
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-slate-50/50 to-amber-50/20 p-4 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Banknote className="w-5 h-5 text-amber-600" strokeWidth={2} />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[13.5px] font-black text-slate-900">Acompte 30% + Solde</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-md">
+                    Flexible
+                  </span>
+                </div>
+                <p className="text-[11.5px] text-slate-500 leading-relaxed font-medium">
+                  Bloquez le véhicule avec seulement 30% d&apos;acompte. Réglez les 70% restants au propriétaire lors de la remise des clés.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Important vehicle info */}

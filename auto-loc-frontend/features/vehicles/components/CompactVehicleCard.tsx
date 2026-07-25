@@ -42,7 +42,7 @@ export function CompactVehicleCard({ vehicle: v }: CompactVehicleCardProps): Rea
     <Link
       href={`/vehicle/${v.id}`}
       className={cn(
-        'group relative flex flex-col bg-white rounded-2xl border border-slate-100/80 overflow-hidden',
+        'group relative flex flex-col bg-white rounded-2xl border border-slate-100/80 overflow-hidden h-full',
         'shadow-sm shadow-slate-100/50 transition-all active:scale-[0.98]'
       )}
     >
@@ -90,23 +90,23 @@ export function CompactVehicleCard({ vehicle: v }: CompactVehicleCardProps): Rea
         </p>
 
         <div className="mt-3.5 pt-3 border-t border-slate-50 flex items-end justify-between gap-2">
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider leading-none">À partir de</p>
-            <p className="text-[18px] font-black text-slate-900 leading-none mt-1.5">
-              {formatPrice(basePrice)}
-              <span className="text-[10.5px] font-medium text-slate-400">/j</span>
-            </p>
+            <div className="flex items-baseline gap-1 flex-wrap mt-1.5">
+              <span className="text-[18px] font-black text-slate-900 leading-none tabular-nums whitespace-nowrap">{formatPrice(basePrice)}</span>
+              <span className="text-[10.5px] font-medium text-slate-400 whitespace-nowrap">/j</span>
+            </div>
             {/* Hauteur réservée même sans réduction, pour que toutes les cartes soient alignées */}
-            <div className="mt-1.5 h-[19px]">
+            <div className="mt-1.5 h-[19px] flex items-center">
               {savings > 0 && minDays != null && (
-                <p className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
-                  <TrendingDown className="h-2.5 w-2.5" strokeWidth={3} />
+                <p className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md whitespace-nowrap">
+                  <TrendingDown className="h-2.5 w-2.5 flex-shrink-0" strokeWidth={3} />
                   −{savings}% dès {minDays}j
                 </p>
               )}
             </div>
           </div>
-          <span className="w-7 h-7 rounded-lg bg-slate-950 flex items-center justify-center text-emerald-400 shrink-0">
+          <span className="w-7 h-7 rounded-lg bg-slate-950 flex items-center justify-center text-emerald-400 shrink-0 self-end">
             <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
           </span>
         </div>

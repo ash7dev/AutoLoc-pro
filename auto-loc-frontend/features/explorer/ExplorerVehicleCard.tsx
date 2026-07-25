@@ -238,7 +238,7 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
     <Link
       href={`/vehicle/${vehicle.id}`}
       className={cn(
-        'group relative flex flex-col bg-white rounded-2xl overflow-hidden',
+        'group relative flex flex-col bg-white rounded-2xl overflow-hidden h-full',
         'border border-slate-100',
         'shadow-[0_2px_10px_rgba(0,0,0,0.05)]',
         'hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(5,150,105,0.13)] hover:border-emerald-200',
@@ -396,18 +396,19 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
 
         {/* Price + CTA row */}
         <div className="flex items-end justify-between gap-3 mt-auto">
-          <div className="relative group/price">
+          <div className="relative group/price flex-1 min-w-0">
             <div className="absolute -inset-3 bg-emerald-500/5 rounded-2xl blur-xl opacity-0 group-hover/price:opacity-100 transition duration-500"></div>
             <div className="relative">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-0.5">À partir de</p>
-              <div className="flex items-baseline gap-1">
-                <span className="text-[24px] font-black text-slate-900 tabular-nums leading-none tracking-tight">{formatPrice(base)}</span>
-                <span className="text-[12px] font-bold text-slate-400">/j</span>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-0.5 leading-none">À partir de</p>
+              <div className="flex items-baseline gap-1 flex-wrap">
+                <span className="text-[24px] font-black text-slate-900 tabular-nums leading-none tracking-tight whitespace-nowrap">{formatPrice(base)}</span>
+                <span className="text-[12px] font-bold text-slate-400 whitespace-nowrap">/j</span>
               </div>
-              <div className="flex items-center gap-1.5 mt-1 h-4">
+              {/* Hauteur fixe pour aligner toutes les cards */}
+              <div className="flex items-center gap-1.5 mt-1 h-5">
                 {savings > 0 && minDays != null && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">
-                    <TrendingDown className="h-3 w-3" strokeWidth={3} />
+                  <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg whitespace-nowrap">
+                    <TrendingDown className="h-3 w-3 flex-shrink-0" strokeWidth={3} />
                     −{savings}% dès {minDays}j
                   </span>
                 )}
@@ -417,8 +418,8 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
 
           <span
             className={cn(
-              'inline-flex items-center gap-2 rounded-xl px-5 py-3 flex-shrink-0',
-              'text-[13px] font-black text-white',
+              'inline-flex items-center gap-2 rounded-xl px-5 py-3 flex-shrink-0 self-end',
+              'text-[13px] font-black text-white whitespace-nowrap',
               'bg-slate-900 shadow-lg shadow-slate-900/10 hover:bg-emerald-500 hover:shadow-emerald-500/30',
               'transition-all duration-300 transform active:scale-95',
             )}
