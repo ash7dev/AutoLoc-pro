@@ -143,6 +143,12 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
 
   const locked = vehicle?.estVerrouille === true;
 
+  // Verrouillage granulaire : seuls les champs critiques sont bloqués
+  const lockedCritical = locked; // Immatriculation, Prix de base
+  const lockedPricing = false; // Paliers tarifaires TOUJOURS modifiables
+  const lockedPhotos = false; // Photos TOUJOURS modifiables
+  const lockedConditions = false; // Conditions TOUJOURS modifiables
+
   // ── Form ────────────────────────────────────────────────────────────────────
 
   const {
@@ -353,7 +359,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
   // ── Submit ──────────────────────────────────────────────────────────────────
 
   const onSubmit = async (data: EditFormData) => {
-    if (!vehicle || locked) return;
+    if (!vehicle) return;
     setLoading(true);
     setError(null);
 
@@ -517,7 +523,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
   };
 
   const totalPhotoCount = existingPhotos.length + newPhotos.length;
-  const canAddMore = !locked && totalPhotoCount < 8 && !uploadingPhotos;
+  const canAddMore = !lockedPhotos && totalPhotoCount < 8 && !uploadingPhotos;
 
   if (!open) return null;
 
@@ -606,7 +612,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                   <FormField label="Marque" required error={errors.marque?.message}>
                     <input
                       {...register("marque", { required: "Requis" })}
-                      disabled={locked}
+                      disabled={lockedCritical}
                       placeholder="Toyota, BMW, Peugeot…"
                       className={INPUT_CLASS}
                     />
@@ -615,7 +621,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                   <FormField label="Modèle" required error={errors.modele?.message}>
                     <input
                       {...register("modele", { required: "Requis" })}
-                      disabled={locked}
+                      disabled={lockedCritical}
                       placeholder="Corolla, X5, 3008…"
                       className={INPUT_CLASS}
                     />
@@ -625,7 +631,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                     <input
                       type="number"
                       {...register("annee", { required: true, min: 1990, max: new Date().getFullYear() + 1, valueAsNumber: true })}
-                      disabled={locked}
+                      disabled={lockedCritical}
                       className={INPUT_CLASS}
                     />
                   </FormField>
@@ -633,7 +639,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                   <FormField label="Immatriculation" required error={errors.immatriculation?.message}>
                     <input
                       {...register("immatriculation", { required: "Requis" })}
-                      disabled={locked}
+                      disabled={lockedCritical}
                       placeholder="DK 1234 AB"
                       className={cn(INPUT_CLASS, "font-mono uppercase tracking-wider")}
                     />
@@ -643,7 +649,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                     <input
                       type="number"
                       {...register("nombrePlaces", { min: 1, max: 50, valueAsNumber: true })}
-                      disabled={locked}
+                      disabled={lockedCritical}
                       placeholder="5"
                       className={INPUT_CLASS}
                     />
@@ -664,14 +670,14 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                             active
                               ? "border-emerald-400 bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-500/10 ring-1 ring-emerald-400/30"
                               : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50",
-                            locked && "opacity-50 cursor-not-allowed",
+                            lockedCritical && "opacity-50 cursor-not-allowed",
                           )}
                         >
                           <input
                             type="radio"
                             value={t.value}
                             {...register("type", { required: true })}
-                            disabled={locked}
+                            disabled={lockedCritical}
                             className="sr-only"
                           />
                           <span className="text-[12px] font-bold">{t.label}</span>
@@ -683,7 +689,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <FormField label="Carburant">
-                    <select {...register("carburant")} disabled={locked} className={SELECT_CLASS}>
+                    <select {...register("carburant")} disabled={lockedCritical} className={SELECT_CLASS}>
                       <option value="">— Sélectionner —</option>
                       {FUEL_TYPES.map((f) => (
                         <option key={f.value} value={f.value}>{f.label}</option>
@@ -692,7 +698,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                   </FormField>
 
                   <FormField label="Transmission">
-                    <select {...register("transmission")} disabled={locked} className={SELECT_CLASS}>
+                    <select {...register("transmission")} disabled={lockedCritical} className={SELECT_CLASS}>
                       <option value="">— Sélectionner —</option>
                       {TRANSMISSIONS.map((t) => (
                         <option key={t.value} value={t.value}>{t.label}</option>
@@ -703,7 +709,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                   <FormField label="Zone / Ville" required error={errors.ville?.message}>
                     <select
                       {...register("ville", { required: "Requis" })}
-                      disabled={locked}
+                      disabled={lockedCritical}
                       className={SELECT_CLASS}
                     >
                       <option value="">Sélectionner une zone</option>
@@ -716,7 +722,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                   <FormField label="Adresse" required error={errors.adresse?.message}>
                     <input
                       {...register("adresse", { required: "Requis" })}
-                      disabled={locked}
+                      disabled={lockedCritical}
                       placeholder="Rue, quartier…"
                       className={INPUT_CLASS}
                     />
@@ -737,7 +743,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                     <input
                       type="number"
                       {...register("prixParJour", { required: true, min: 1000, valueAsNumber: true })}
-                      disabled={locked}
+                      disabled={lockedCritical}
                       placeholder="25 000"
                       className={INPUT_CLASS}
                     />
@@ -748,7 +754,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                       <input
                         type="number"
                         {...register("joursMinimum", { min: 1, valueAsNumber: true })}
-                        disabled={locked}
+                        disabled={lockedConditions}
                         placeholder="1"
                         className={INPUT_CLASS}
                       />
@@ -763,7 +769,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                       type="checkbox"
                       id="autoriseHorsDakar"
                       {...register("autoriseHorsDakar")}
-                      disabled={locked}
+                      disabled={lockedConditions}
                       className="mt-0.5 h-5 w-5 rounded-lg border-2 border-slate-300 text-emerald-500 focus:ring-4 focus:ring-emerald-500/20 transition-all"
                     />
                     <div className="flex-1">
@@ -784,7 +790,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                         <input
                           type="number"
                           {...register("supplementHorsDakarParJour", { min: 0, valueAsNumber: true })}
-                          disabled={locked}
+                          disabled={lockedConditions}
                           placeholder="Ex : 5 000"
                           className={INPUT_CLASS}
                         />
@@ -800,7 +806,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                       <h4 className="text-[14px] font-black text-slate-900 block">Tarification progressive</h4>
                       <p className="text-[12px] text-slate-500 font-medium mt-1">Optionnel — Définissez des réductions pour les longues durées</p>
                     </div>
-                    {!locked && (
+                    {!lockedPricing && (
                       <button
                         type="button"
                         onClick={() => append({ joursMin: (tiersWatch?.length ?? 0) * 3 + 1, prix: 0 })}
@@ -829,25 +835,25 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                             <input
                               type="number"
                               {...register(`tiers.${i}.joursMin` as const, { required: true, min: 1, valueAsNumber: true })}
-                              disabled={locked}
+                              disabled={lockedPricing}
                               placeholder="1"
                               className="h-11 rounded-xl border-2 border-slate-200 bg-white px-3 text-[15px] font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 shadow-sm"
                             />
                             <input
                               type="number"
                               {...register(`tiers.${i}.joursMax` as const, { min: 1, valueAsNumber: true })}
-                              disabled={locked}
+                              disabled={lockedPricing}
                               placeholder="∞"
                               className="h-11 rounded-xl border-2 border-slate-200 bg-white px-3 text-[15px] font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 shadow-sm"
                             />
                             <input
                               type="number"
                               {...register(`tiers.${i}.prix` as const, { required: true, min: 1, valueAsNumber: true })}
-                              disabled={locked}
+                              disabled={lockedPricing}
                               placeholder="20 000"
                               className="h-11 rounded-xl border-2 border-slate-200 bg-white px-3 text-[15px] font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 shadow-sm"
                             />
-                            {!locked && (
+                            {!lockedPricing && (
                               <button
                                 type="button"
                                 onClick={() => remove(i)}
@@ -856,7 +862,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                                 <Trash2 className="h-4 w-4" strokeWidth={2.5} />
                               </button>
                             )}
-                            {locked && <div />}
+                            {lockedPricing && <div />}
                           </div>
                         ))}
                       </div>
@@ -883,14 +889,14 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                     <input
                       type="number"
                       {...register("ageMinimum", { min: 18, max: 99, valueAsNumber: true })}
-                      disabled={locked}
+                      disabled={lockedConditions}
                       placeholder="21"
                       className={INPUT_CLASS}
                     />
                   </FormField>
 
                   <FormField label="Zone de conduite">
-                    <select {...register("zoneConduite")} disabled={locked} className={SELECT_CLASS}>
+                    <select {...register("zoneConduite")} disabled={lockedConditions} className={SELECT_CLASS}>
                       <option value="">— Sélectionner —</option>
                       {ZONES.map((z) => (
                         <option key={z} value={z}>{z}</option>
@@ -900,7 +906,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
 
                   <div className="sm:col-span-2">
                     <FormField label="Couverture assurance">
-                      <select {...register("assurance")} disabled={locked} className={SELECT_CLASS}>
+                      <select {...register("assurance")} disabled={lockedConditions} className={SELECT_CLASS}>
                         <option value="">— Sélectionner —</option>
                         {ASSURANCES.map((a) => (
                           <option key={a} value={a}>{a}</option>
@@ -911,7 +917,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
 
                   <div className="sm:col-span-2">
                     <FormField label="Politique Carburant">
-                      <select {...register("carburantCondition")} disabled={locked} className={SELECT_CLASS}>
+                      <select {...register("carburantCondition")} disabled={lockedConditions} className={SELECT_CLASS}>
                         <option value="">— Sélectionner —</option>
                         <option value="Plein à plein">Plein à plein (restitution avec le plein)</option>
                         <option value="Niveau identique">Niveau identique (même niveau qu'au départ)</option>
@@ -923,7 +929,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                     <FormField label="Règles spécifiques">
                       <textarea
                         {...register("reglesSpecifiques")}
-                        disabled={locked}
+                        disabled={lockedConditions}
                         rows={3}
                         placeholder="Ex : Non-fumeur, pas d'animaux, restitution avec plein…"
                         className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[16px] font-medium text-slate-900 placeholder-slate-300 outline-none resize-none transition-all duration-200 focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
@@ -943,14 +949,14 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                     <button
                       key={eq.value}
                       type="button"
-                      disabled={locked}
+                      disabled={lockedConditions}
                       onClick={() => toggleEquipment(eq.value)}
                       className={cn(
                         "group relative flex items-center gap-3 px-3.5 py-3 rounded-xl border text-left transition-all duration-200",
                         active
                           ? "border-emerald-400 bg-emerald-50 shadow-sm shadow-emerald-500/10 ring-1 ring-emerald-400/30"
                           : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
-                        locked && "opacity-50 cursor-not-allowed",
+                        lockedConditions && "opacity-50 cursor-not-allowed",
                       )}
                     >
                       <span
@@ -1051,7 +1057,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                           Principale
                         </div>
                       )}
-                      {!locked && (
+                      {!lockedPhotos && (
                         <button
                           type="button"
                           onClick={() => handleRemoveExisting(photo.id)}
@@ -1084,7 +1090,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                           Nouveau
                         </div>
                       )}
-                      {!locked && photo.status !== 'uploading' && (
+                      {!lockedPhotos && photo.status !== 'uploading' && (
                         <button
                           type="button"
                           onClick={() => handleRemoveNew(i)}
@@ -1141,7 +1147,7 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                 </p>
               )}
 
-              {!locked && totalPhotoCount >= 8 && (
+              {!lockedPhotos && totalPhotoCount >= 8 && (
                 <p className="text-[11px] font-bold text-slate-400 text-center mt-3 uppercase tracking-wider">
                   Maximum 8 photos atteint.
                 </p>
