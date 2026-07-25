@@ -89,26 +89,28 @@ export function CompactVehicleCard({ vehicle: v }: CompactVehicleCardProps): Rea
           {v.ville}
         </p>
 
-        <div className="mt-auto pt-2.5 border-t border-slate-100 flex items-end justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <p className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wide leading-none mb-0.5">À partir de</p>
-            <div className="flex items-baseline gap-0.5 mb-1">
-              <span className="text-[20px] font-black text-slate-900 leading-none tabular-nums">{formatPrice(basePrice)}</span>
-              <span className="text-[10px] font-bold text-slate-400">/j</span>
+        <div className="mt-auto pt-2.5 border-t border-slate-100">
+          <div className="flex items-end justify-between gap-2 mb-1">
+            <div className="flex-1 min-w-0">
+              <p className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wide leading-none mb-1">À partir de</p>
+              <p className="text-[18px] font-black text-slate-900 leading-none tabular-nums">
+                {formatPrice(basePrice)}
+                <span className="text-[9px] font-bold text-slate-400 ml-0.5">/j</span>
+              </p>
             </div>
-            {/* Hauteur réservée même sans réduction, pour que toutes les cartes soient alignées */}
-            <div className="h-[18px] flex items-center">
-              {savings > 0 && minDays != null && (
-                <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md whitespace-nowrap">
-                  <TrendingDown className="h-2.5 w-2.5 flex-shrink-0" strokeWidth={2.5} />
-                  −{savings}% dès {minDays}j
-                </span>
-              )}
-            </div>
+            <span className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center text-emerald-400 shrink-0 active:scale-95 transition-transform">
+              <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+            </span>
           </div>
-          <span className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center text-emerald-400 shrink-0 self-end active:scale-95 transition-transform">
-            <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
-          </span>
+          {/* Hauteur réservée même sans réduction, pour que toutes les cartes soient alignées */}
+          <div className="h-[18px] flex items-center">
+            {savings > 0 && minDays != null && (
+              <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md whitespace-nowrap">
+                <TrendingDown className="h-2.5 w-2.5 flex-shrink-0" strokeWidth={2.5} />
+                −{savings}% dès {minDays}j
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </Link>
