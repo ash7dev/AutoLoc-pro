@@ -9,7 +9,7 @@ import {
   ArrowRight, Loader2, Shield, Info, Truck, MapPin, AlertTriangle, UserCheck, CalendarDays,
   Wallet, Banknote,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getCommissionRate, getTenantPricePerDay } from '@/lib/utils';
 import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles';
 import { useCurrency } from '@/providers/currency-provider';
 import { apiFetch, ApiError } from '@/lib/nestjs/api-client';
@@ -92,15 +92,16 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
     // ── Optimisation Mobile : Afficher un prix estimé IMMÉDIATEMENT ──
     // Évite le "blanc" pendant le fetch réseau
     const supp = horsDakar && autoriseHorsDakar ? (supplementHorsDakarParJour ?? 0) : 0;
+    const rate = getCommissionRate(prixParJour + supp);
     const estimatedPricing = {
       nbJours: days,
       autoriseHorsDakar,
       supplementHorsDakar: supp,
       prixParJour,
       totalBase: (prixParJour + supp) * days,
-      tauxCommission: 0.15,
-      montantCommission: Math.round((prixParJour + supp) * days * 0.15),
-      totalLocataire: Math.round((prixParJour + supp) * days * 1.15),
+      tauxCommission: rate,
+      montantCommission: Math.round((prixParJour + supp) * days * rate),
+      totalLocataire: Math.round((prixParJour + supp) * days * (1 + rate)),
       netProprietaire: (prixParJour + supp) * days,
     };
 
@@ -239,7 +240,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
         <div className="px-5 pt-5 pb-4 border-b border-slate-50">
           <div className="flex items-baseline gap-2">
             <span className="text-[30px] font-black text-slate-900 tabular-nums leading-none">
-              {formatPrice(pricing ? Math.round(pricing.totalLocataire / pricing.nbJours) : Math.round(prixParJour * 1.15))}
+              {formatPrice(pricing ? Math.round(pricing.totalLocataire / pricing.nbJours) : getTenantPricePerDay(prixParJour))}
             </span>
             <span className="text-[13px] font-semibold text-slate-600">/ jour</span>
           </div>

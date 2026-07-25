@@ -13,7 +13,7 @@ import {
   Settings2, Clock, Zap, Car, TrendingUp, Loader2,
   Rocket, PlusCircle, AlertTriangle,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getTenantPricePerDay } from '@/lib/utils';
 import { searchVehicles, type VehicleType } from '@/lib/nestjs/vehicles';
 import { TYPE_LABELS } from '@/features/vehicles/owner/vehicle-helpers';
 import { useCurrency } from '@/providers/currency-provider';
@@ -45,7 +45,7 @@ export function EnhancedVehicleCard({
   isVisible: boolean;
 }): React.ReactElement {
   const { formatPrice } = useCurrency();
-  const tenantPrice = Math.round(Number(vehicle.prixParJour) * 1.15);
+  const tenantPrice = getTenantPricePerDay(Number(vehicle.prixParJour));
 
   return (
     <Link
@@ -195,7 +195,7 @@ export function EnhancedFeaturedVehicleCard({
   isVisible: boolean;
 }): React.ReactElement {
   const { formatPrice } = useCurrency();
-  const tenantPrice = Math.round(Number(vehicle.prixParJour) * 1.15);
+  const tenantPrice = getTenantPricePerDay(Number(vehicle.prixParJour));
 
   return (
     <Link

@@ -4,17 +4,19 @@
  */
 
 import type { Vehicle, VehicleSearchResult, TarifTier } from './vehicles';
+import { getCommissionRate } from '@/lib/utils';
 
 // ── Fallbacks pour les données manquantes ─────────────────────────────────────
 
 export function createFallbackPricing(basePrice: number, days: number) {
+  const rate = getCommissionRate(basePrice);
   return {
     nbJours: days,
     prixParJour: basePrice,
     totalBase: basePrice * days,
-    tauxCommission: 0.15,
-    montantCommission: Math.round(basePrice * days * 0.15),
-    totalLocataire: Math.round(basePrice * days * 1.15),
+    tauxCommission: rate,
+    montantCommission: Math.round(basePrice * days * rate),
+    totalLocataire: Math.round(basePrice * days * (1 + rate)),
     netProprietaire: basePrice * days,
   };
 }

@@ -6,7 +6,7 @@ import {
   MapPin, Star, Shield, ChevronLeft, ChevronRight,
   Car, Images, X,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getTenantPricePerDay } from '@/lib/utils';
 import type { Vehicle } from '@/lib/nestjs/vehicles';
 import { TYPE_LABELS } from '@/features/vehicles/owner/vehicle-helpers';
 import { useCurrency } from '@/providers/currency-provider';
@@ -496,7 +496,7 @@ export function VehicleDetailHero({ vehicle }: Props): React.ReactElement {
                       </p>
                       <div className="flex items-baseline gap-2">
                         <span className="text-[32px] font-black text-emerald-600 tabular-nums leading-none tracking-tight">
-                          {formatPrice(Math.round(Number(vehicle.prixParJour) * 1.15))}
+                          {formatPrice(getTenantPricePerDay(Number(vehicle.prixParJour)))}
                         </span>
                         <span className="text-[14px] font-bold text-emerald-700/60">FCFA</span>
                       </div>

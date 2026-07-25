@@ -8,7 +8,7 @@ import {
   Fuel, Settings2, Zap, Car,
   TrendingDown, Heart, Shield, Sparkles,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getTenantPricePerDay } from '@/lib/utils';
 import type { VehicleSearchResult, VehicleStatus, FuelType, Transmission } from '@/lib/nestjs/vehicles';
 import { TYPE_LABELS } from '@/features/vehicles/owner/vehicle-helpers';
 import { useCurrency } from '@/providers/currency-provider';
@@ -74,7 +74,7 @@ function FeaturedCard({ vehicle }: { vehicle: VehicleCardItem }) {
   const photo = mainPhoto(vehicle);
   const tiers = vehicle.tarifsProgressifs ?? []; // tarifs progressifs du véhicule, s'il y en a
   const ownerBase = Number(vehicle.prixParJour);
-  const base = Math.round(ownerBase * 1.15); // 15% sur le prix de location
+  const base = getTenantPricePerDay(ownerBase);
   const hasTiers = tiers.length > 0;
   const minDays = bestTierMinDays(tiers);
   const reservations = vehicle.totalLocations ?? 0;
@@ -223,7 +223,7 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
   const [liked, setLiked] = useState(false);
   const { formatPrice } = useCurrency();
   const photo = mainPhoto(vehicle);
-  const base = Math.round(Number(vehicle.prixParJour) * 1.15);
+  const base = getTenantPricePerDay(Number(vehicle.prixParJour));
   const tiers = vehicle.tarifsProgressifs ?? [];
   const reservations = vehicle.totalLocations ?? 0;
   const savings = tiers.length > 0 ? maxSavings(Number(vehicle.prixParJour), tiers) : 0;

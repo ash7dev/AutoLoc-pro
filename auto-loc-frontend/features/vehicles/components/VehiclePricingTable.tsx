@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Tag, TrendingDown, Zap, Clock } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getTenantPricePerDay } from '@/lib/utils';
 import type { TarifTier } from '@/lib/nestjs/vehicles';
 import { useCurrency } from '@/providers/currency-provider';
 import { createFallbackTiers } from '@/lib/nestjs/vehicle-fallbacks';
@@ -30,7 +30,7 @@ export function VehiclePricingTable({ prixParJour, tiers }: Props): React.ReactE
           </span>
           <div>
             <p className="text-[22px] font-black text-emerald-700 tabular-nums leading-tight">
-              {formatPrice(Math.round(prixParJour * 1.15))}
+              {formatPrice(getTenantPricePerDay(prixParJour))}
             </p>
             <p className="text-[12px] font-semibold text-emerald-600 mt-0.5">par jour · tarif fixe</p>
           </div>
@@ -39,8 +39,8 @@ export function VehiclePricingTable({ prixParJour, tiers }: Props): React.ReactE
     );
   }
 
-  // Apply 15% tenant commission to all tier prices for display
-  const tenantTiers = displayTiers.map((t) => ({ ...t, tenantPrix: Math.round(t.prix * 1.15) }));
+  // Apply tenant commission to all tier prices for display
+  const tenantTiers = displayTiers.map((t) => ({ ...t, tenantPrix: getTenantPricePerDay(t.prix) }));
   const basePrice = Math.max(...tenantTiers.map((t) => t.tenantPrix));
   const minPrice = Math.min(...tenantTiers.map((t) => t.tenantPrix));
   const hasDiscount = tenantTiers.length > 1 && basePrice > minPrice;

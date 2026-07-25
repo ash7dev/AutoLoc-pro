@@ -4,7 +4,22 @@ import { Prisma } from '@prisma/client';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const TAUX_COMMISSION = new Prisma.Decimal('0.1500');
+/**
+ * Calcule le taux de commission dégressif selon le barème officiel :
+ * - ≤ 20 000 FCFA / jour        : 17,5% (0.1750)
+ * - 20 001 à 35 000 FCFA / jour : 15,5% (0.1550)
+ * - 35 001 à 60 000 FCFA / jour : 13,5% (0.1350)
+ * - 60 001 à 100 000 FCFA / jour: 11,5% (0.1150)
+ * - > 100 000 FCFA / jour       : 10,0% (0.1000)
+ */
+export function calculateCommissionRate(prixParJour: Prisma.Decimal | number): Prisma.Decimal {
+    const val = typeof prixParJour === 'number' ? prixParJour : prixParJour.toNumber();
+    if (val <= 20000) return new Prisma.Decimal('0.1750');
+    if (val <= 35000) return new Prisma.Decimal('0.1550');
+    if (val <= 60000) return new Prisma.Decimal('0.1350');
+    if (val <= 100000) return new Prisma.Decimal('0.1150');
+    return new Prisma.Decimal('0.1000');
+}
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -87,7 +102,7 @@ export class ReservationPricingService {
      * Calcule tous les montants de la réservation.
      * Utilise les tarifs progressifs si fournis, sinon le prix par jour de base.
      * Ajoute le supplément hors Dakar le cas échéant.
-     * Commission 15% ajoutée côté locataire ; propriétaire reçoit 100% du prix base.
+     * Commission dégressive selon le barème officiel.
      */
     calculate(
         prixParJour: Prisma.Decimal,
@@ -99,8 +114,9 @@ export class ReservationPricingService {
         const finalPriceParJour = effectivePrice.add(new Prisma.Decimal(supplementHorsDakar));
 
         const totalBase = finalPriceParJour.mul(nbJours);
+        const tauxCommission = calculateCommissionRate(finalPriceParJour);
         const montantCommission = totalBase
-            .mul(TAUX_COMMISSION)
+            .mul(tauxCommission)
             .toDecimalPlaces(2);
         const totalLocataire = totalBase.add(montantCommission);
         const netProprietaire = totalBase;
@@ -108,7 +124,7 @@ export class ReservationPricingService {
         return {
             prixParJour: finalPriceParJour,
             totalBase,
-            tauxCommission: TAUX_COMMISSION,
+            tauxCommission,
             montantCommission,
             totalLocataire,
             netProprietaire,

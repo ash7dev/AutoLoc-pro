@@ -6,9 +6,7 @@ import Link from 'next/link';
 import { Star, ShieldCheck, ArrowRight, TrendingDown } from 'lucide-react';
 import type { VehicleSearchResult, TarifTier } from '@/lib/nestjs/vehicles';
 import { useCurrency } from '@/providers/currency-provider';
-import { cn } from '@/lib/utils';
-
-const PRIX_COEFFICIENT_AFFICHAGE = 1.15;
+import { cn, getTenantPricePerDay } from '@/lib/utils';
 
 function bestTier(tiers: TarifTier[]): TarifTier | null {
   if (tiers.length === 0) return null;
@@ -32,7 +30,7 @@ interface CompactVehicleCardProps {
  */
 export function CompactVehicleCard({ vehicle: v }: CompactVehicleCardProps): React.ReactElement {
   const { formatPrice } = useCurrency();
-  const basePrice = Math.round(Number(v.prixParJour) * PRIX_COEFFICIENT_AFFICHAGE);
+  const basePrice = getTenantPricePerDay(Number(v.prixParJour));
   const photo = v.photoUrl;
   const tiers = v.tarifsProgressifs ?? [];
   const savings = maxSavings(Number(v.prixParJour), tiers);
