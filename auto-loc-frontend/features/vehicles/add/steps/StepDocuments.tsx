@@ -6,8 +6,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAddVehicleStore } from "../store";
-import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
-import { VEHICLE_PATHS, uploadDocumentToCloudinary } from "@/lib/nestjs/vehicles";
+import { VEHICLE_PATHS, uploadDocumentToCloudinary, fetchUploadSignature } from "@/lib/nestjs/vehicles";
 
 type DocUploadStatus = 'idle' | 'uploading' | 'done' | 'error';
 
@@ -18,7 +17,6 @@ interface Props {
 
 export function StepDocuments({ onNext, onBack }: Props) {
     const { carteGrise, assurance, carteGriseUploadResult, assuranceUploadResult, setDocument, setDocumentUploadResult } = useAddVehicleStore();
-    const { authFetch } = useAuthFetch();
 
     const [uploadStatus, setUploadStatus] = useState<{ carteGrise: DocUploadStatus; assurance: DocUploadStatus }>({
         carteGrise: carteGriseUploadResult ? 'done' : 'idle',
@@ -34,9 +32,7 @@ export function StepDocuments({ onNext, onBack }: Props) {
         setUploadStatus(prev => ({ ...prev, [type]: 'uploading' }));
 
         try {
-            const sig = await authFetch<{ signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string }>(
-                VEHICLE_PATHS.uploadSignature,
-            );
+            const sig = await fetchUploadSignature();
             const result = await uploadDocumentToCloudinary(file, sig);
             setDocumentUploadResult(type, { url: result.url, publicId: result.publicId });
             setUploadStatus(prev => ({ ...prev, [type]: 'done' }));

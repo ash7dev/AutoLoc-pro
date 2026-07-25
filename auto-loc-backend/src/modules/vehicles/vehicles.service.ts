@@ -281,14 +281,16 @@ export class VehiclesService {
   /**
    * GET /vehicles/me — Liste les véhicules du propriétaire avec nb réservations.
    */
-  async findMyVehicles(user: RequestUser, limitOverride?: number) {
+  async findMyVehicles(user: RequestUser, limitOverride?: number, offsetOverride?: number) {
     const utilisateur = await this.getUtilisateurOrThrow(user.sub);
-    const take = Math.min(Math.max(limitOverride ?? 100, 1), 100);
+    const take = Math.min(Math.max(limitOverride ?? 10, 1), 100);
+    const skip = Math.max(offsetOverride ?? 0, 0);
 
     const vehicles = await this.prisma.vehicule.findMany({
       where: { proprietaireId: utilisateur.id },
       orderBy: { creeLe: 'desc' },
       take,
+      skip,
       include: {
         photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
         tarifsProgressifs: { orderBy: { position: 'asc' } },
@@ -299,6 +301,11 @@ export class VehiclesService {
         },
         _count: { select: { reservations: true } },
       },
+    });
+
+    // Get total count for pagination
+    const total = await this.prisma.vehicule.count({
+      where: { proprietaireId: utilisateur.id },
     });
 
     // Batch-check active/confirmed reservations to compute per-vehicle lock flag.
@@ -312,7 +319,9 @@ export class VehiclesService {
     });
     const lockedIds = new Set(activeResa.map((r) => r.vehiculeId));
 
-    return vehicles.map((v) => ({ ...v, estVerrouille: lockedIds.has(v.id) }));
+    const data = vehicles.map((v) => ({ ...v, estVerrouille: lockedIds.has(v.id) }));
+
+    return { data, total, limit: take, offset: skip };
   }
 
   /**

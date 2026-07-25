@@ -102,8 +102,13 @@ export class VehiclesController {
   findMine(
     @CurrentUser() user: RequestUser,
     @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
   ) {
-    return this.vehiclesService.findMyVehicles(user, limit ? Number(limit) : undefined);
+    return this.vehiclesService.findMyVehicles(
+      user,
+      limit ? Number(limit) : undefined,
+      offset ? Number(offset) : undefined,
+    );
   }
 
   /**

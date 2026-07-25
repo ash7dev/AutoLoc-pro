@@ -36,7 +36,7 @@ async function DashboardDataFetcher({ token }: { token: string }) {
     if (resResult.status === "fulfilled") {
       reservations = resResult.value.data.filter((r: any) => r.statut !== "INITIEE");
     }
-    if (vehiclesResult.status === "fulfilled") vehicles = vehiclesResult.value;
+    if (vehiclesResult.status === "fulfilled") vehicles = vehiclesResult.value.data;
     if (walletResult.status === "fulfilled") wallet = walletResult.value;
     if (statsResult.status === "fulfilled") stats = statsResult.value;
 

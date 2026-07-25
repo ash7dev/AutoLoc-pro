@@ -258,7 +258,10 @@ export interface CloudinarySignature {
 }
 
 export async function fetchUploadSignature(): Promise<CloudinarySignature> {
-  return apiFetch<CloudinarySignature>('/vehicles/upload-signature');
+  return apiFetch<CloudinarySignature>('/vehicles/upload-signature', {
+    maxRetries: 3,
+    timeoutMs: 20_000,
+  });
 }
 
 /** Helper to compress image client-side before upload */
@@ -476,14 +479,22 @@ export async function fetchBlockedDates(
  * Récupère les véhicules du propriétaire connecté (RSC).
  * Passe le token explicitement pour l'appel serveur→NestJS.
  */
+export interface PaginatedVehicles {
+  data: Vehicle[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export async function fetchMyVehicles(
   accessToken: string,
-  params?: { limit?: number },
-): Promise<Vehicle[]> {
+  params?: { limit?: number; offset?: number },
+): Promise<PaginatedVehicles> {
   const query = new URLSearchParams();
   if (params?.limit) query.set('limit', String(params.limit));
+  if (params?.offset) query.set('offset', String(params.offset));
   const qs = query.toString();
-  return apiFetch<Vehicle[]>(`${VEHICLE_PATHS.me}${qs ? `?${qs}` : ''}`, { accessToken });
+  return apiFetch<PaginatedVehicles>(`${VEHICLE_PATHS.me}${qs ? `?${qs}` : ''}`, { accessToken });
 }
 
 /**

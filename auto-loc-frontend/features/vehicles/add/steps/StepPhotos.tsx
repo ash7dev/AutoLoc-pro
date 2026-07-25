@@ -24,49 +24,54 @@ export function StepPhotos({ onNext, onBack }: Props) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  // Pre-fetch a Cloudinary signature when the step mounts.
-  // Retry une fois silencieusement avant d'afficher l'erreur — évite le bandeau
-  // rouge sur un simple ralentissement réseau au montage du composant.
-  const loadSignature = useCallback(async (showErrorOnFail = true) => {
+  // Pre-fetch/refresh Cloudinary signature robustement avec retries
+  const getOrFetchSignature = useCallback(async (showErrorOnFail = true): Promise<CloudinarySignature | null> => {
+    if (sigRef.current) return sigRef.current;
+
     setSigError(false);
-    try {
-      sigRef.current = await fetchUploadSignature();
-    } catch {
+    for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        sigRef.current = await fetchUploadSignature();
-      } catch {
-        if (showErrorOnFail) setSigError(true);
+        const sig = await fetchUploadSignature();
+        sigRef.current = sig;
+        setSigError(false);
+        return sig;
+      } catch (err) {
+        console.warn(`[StepPhotos] Tentative ${attempt + 1} signature échouée:`, err);
+        if (attempt < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 800 * (attempt + 1)));
+        }
       }
     }
+
+    if (showErrorOnFail) {
+      setSigError(true);
+    }
+    return null;
   }, []);
+
+  const loadSignature = useCallback(async (showErrorOnFail = true) => {
+    await getOrFetchSignature(showErrorOnFail);
+  }, [getOrFetchSignature]);
 
   useEffect(() => { loadSignature(false); }, [loadSignature]);
 
   const uploadFiles = useCallback(async (files: File[]) => {
     if (!files.length) return;
 
-    // Ensure we have a fresh signature (re-fetch if missing)
-    if (!sigRef.current) {
-      try {
-        console.log('[StepPhotos] Récupération signature...');
-        sigRef.current = await fetchUploadSignature();
-        console.log('[StepPhotos] Signature obtenue');
-      }
-      catch (err) {
-        console.error('[StepPhotos] Erreur signature:', err);
-        setSigError(true);
-        return;
-      }
+    // Récupérer une signature valide avec retries automatiques
+    const sig = await getOrFetchSignature(true);
+    if (!sig) {
+      console.error('[StepPhotos] Impossible d\'obtenir la signature Cloudinary');
+      return;
     }
 
     const remaining = MAX_PHOTOS - photos.length;
     const toUpload = files.slice(0, remaining);
     const ids = addPhotos(toUpload);
-    const sig = sigRef.current;
 
     console.log(`[StepPhotos] Upload de ${toUpload.length} photo(s)...`);
 
-    // Upload all in parallel
+    // Upload en parallèle
     await Promise.all(
       toUpload.map(async (file, i) => {
         const id = ids[i];
@@ -80,15 +85,10 @@ export function StepPhotos({ onNext, onBack }: Props) {
       }),
     );
 
-    // Signature is consumed — pre-fetch a new one for the next batch
+    // Réinitialiser la signature consommée et pré-charger la suivante silencieusement
     sigRef.current = null;
-    fetchUploadSignature().then((s) => {
-      sigRef.current = s;
-      console.log('[StepPhotos] Nouvelle signature pré-chargée');
-    }).catch((err) => {
-      console.error('[StepPhotos] Erreur pré-chargement signature:', err);
-    });
-  }, [photos.length, addPhotos, updatePhoto]);
+    getOrFetchSignature(false).catch(() => {});
+  }, [photos.length, addPhotos, updatePhoto, getOrFetchSignature]);
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
@@ -217,12 +217,13 @@ export function StepPhotos({ onNext, onBack }: Props) {
                       type="button"
                       onClick={async () => {
                         updatePhoto(photo.id, { status: 'uploading' });
-                        if (!sigRef.current) {
-                          try { sigRef.current = await fetchUploadSignature(); }
-                          catch { updatePhoto(photo.id, { status: 'error' }); return; }
+                        const sig = await getOrFetchSignature(true);
+                        if (!sig) {
+                          updatePhoto(photo.id, { status: 'error' });
+                          return;
                         }
                         try {
-                          const result = await uploadToCloudinary(photo.file, sigRef.current);
+                          const result = await uploadToCloudinary(photo.file, sig);
                           updatePhoto(photo.id, { url: result.url, publicId: result.publicId, status: 'done' });
                         } catch {
                           updatePhoto(photo.id, { status: 'error' });

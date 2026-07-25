@@ -206,7 +206,7 @@ export default async function OwnerAnalyticsPage() {
     ]);
 
     reservations = reservationsResult?.data ?? [];
-    vehicles = vehiclesResult ?? [];
+    vehicles = vehiclesResult?.data ?? [];
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) {
       redirect("/login?expired=1");
