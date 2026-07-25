@@ -339,12 +339,12 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
       <div className="flex flex-col flex-1 px-4 pt-3 pb-4">
 
         {/* Vehicle name */}
-        <h3 className="text-[21px] lg:text-[23px] font-black text-slate-800 leading-tight tracking-tight mb-1">
+        <h3 className="text-[18px] lg:text-[20px] font-black text-slate-800 leading-tight tracking-tight mb-1">
           {vehicle.marque} <span className="text-emerald-600">{vehicle.modele}</span>
         </h3>
 
         {/* Location + reservations */}
-        <div className="flex items-center gap-1.5 mb-4">
+        <div className="flex items-center gap-1.5 mb-3">
           <MapPin className="h-3 w-3 text-slate-300 flex-shrink-0" strokeWidth={2} />
           <span className="text-[11px] font-medium text-slate-400">{vehicle.ville}</span>
           {reservations > 0 && (
@@ -357,7 +357,7 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
         </div>
 
         {/* Specs 2×2 grid */}
-        <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 mb-4">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-2 mb-3">
           {vehicle.carburant && (
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
@@ -392,40 +392,37 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
           )}
         </div>
 
-        <div className="h-px bg-slate-100 mb-3" />
+        <div className="h-px bg-slate-100 mb-4" />
 
         {/* Price + CTA row */}
         <div className="flex items-end justify-between gap-3 mt-auto">
-          <div className="relative group/price flex-1 min-w-0">
-            <div className="absolute -inset-3 bg-emerald-500/5 rounded-2xl blur-xl opacity-0 group-hover/price:opacity-100 transition duration-500"></div>
-            <div className="relative">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] mb-0.5 leading-none">À partir de</p>
-              <div className="flex items-baseline gap-1 flex-wrap">
-                <span className="text-[24px] font-black text-slate-900 tabular-nums leading-none tracking-tight whitespace-nowrap">{formatPrice(base)}</span>
-                <span className="text-[12px] font-bold text-slate-400 whitespace-nowrap">/j</span>
-              </div>
-              {/* Hauteur fixe pour aligner toutes les cards */}
-              <div className="flex items-center gap-1.5 mt-1 h-5">
-                {savings > 0 && minDays != null && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg whitespace-nowrap">
-                    <TrendingDown className="h-3 w-3 flex-shrink-0" strokeWidth={3} />
-                    −{savings}% dès {minDays}j
-                  </span>
-                )}
-              </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.12em] mb-1 leading-none">À partir de</p>
+            <div className="flex items-baseline gap-1 mb-1.5">
+              <span className="text-[26px] font-black text-slate-900 tabular-nums leading-none tracking-tight">{formatPrice(base)}</span>
+              <span className="text-[13px] font-bold text-slate-400">/j</span>
+            </div>
+            {/* Hauteur fixe pour aligner toutes les cards */}
+            <div className="h-[22px] flex items-center">
+              {savings > 0 && minDays != null && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg whitespace-nowrap">
+                  <TrendingDown className="h-3 w-3 flex-shrink-0" strokeWidth={2.5} />
+                  −{savings}% dès {minDays}j
+                </span>
+              )}
             </div>
           </div>
 
           <span
             className={cn(
-              'inline-flex items-center gap-2 rounded-xl px-5 py-3 flex-shrink-0 self-end',
-              'text-[13px] font-black text-white whitespace-nowrap',
-              'bg-slate-900 shadow-lg shadow-slate-900/10 hover:bg-emerald-500 hover:shadow-emerald-500/30',
-              'transition-all duration-300 transform active:scale-95',
+              'inline-flex items-center gap-2 rounded-xl px-4 py-2.5 flex-shrink-0 self-end',
+              'text-[12px] font-black text-white whitespace-nowrap',
+              'bg-slate-900 shadow-md hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20',
+              'transition-all duration-200 transform active:scale-95',
             )}
           >
-            Réserver
-            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" strokeWidth={3} />
+            Voir
+            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform duration-200" strokeWidth={2.5} />
           </span>
         </div>
       </div>
@@ -438,15 +435,15 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
 ════════════════════════════════════════════════════════════════ */
 export function ExplorerVehicleCard({ vehicle }: Props): React.ReactElement {
   return (
-    <>
+    <div className="h-full">
       {/* Mobile/tablette : carte compacte (même style que Sélection Premium) */}
-      <div className="lg:hidden">
+      <div className="lg:hidden h-full">
         <CompactVehicleCard vehicle={vehicle} />
       </div>
       {/* Desktop : carte détaillée (specs, badges) */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:block h-full">
         <StandardCard vehicle={vehicle} />
       </div>
-    </>
+    </div>
   );
 }

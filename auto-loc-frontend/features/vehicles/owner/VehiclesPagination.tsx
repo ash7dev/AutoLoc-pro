@@ -62,35 +62,37 @@ export function VehiclesPagination({ currentPage, totalPages, total }: VehiclesP
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 bg-white/60 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-sm">
+      {/* Stats */}
       <div className="flex items-center gap-2 text-sm text-slate-600">
-        <span className="font-medium">{total}</span>
-        <span>véhicule{total > 1 ? 's' : ''} au total</span>
-        <span className="text-slate-400">•</span>
-        <span>Page {currentPage} sur {totalPages}</span>
+        <span className="text-[16px] font-black text-slate-900 tabular-nums">{total}</span>
+        <span className="font-medium">véhicule{total > 1 ? 's' : ''} au total</span>
+        <span className="hidden sm:inline text-slate-300">•</span>
+        <span className="hidden sm:inline text-slate-400 text-xs">Page {currentPage} sur {totalPages}</span>
       </div>
 
+      {/* Navigation */}
       <div className="flex items-center gap-2">
         {/* Bouton Précédent */}
         <button
           onClick={() => goToPage(currentPage - 1)}
           disabled={currentPage === 1}
           className={cn(
-            'flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg transition-all',
+            'flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-bold rounded-xl transition-all border',
             currentPage === 1
-              ? 'text-slate-300 cursor-not-allowed'
-              : 'text-slate-700 hover:bg-slate-100'
+              ? 'text-slate-300 bg-slate-50 border-slate-200 cursor-not-allowed'
+              : 'text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-300 border-slate-200 active:scale-95'
           )}
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="w-4 h-4" strokeWidth={2.5} />
           <span className="hidden sm:inline">Précédent</span>
         </button>
 
         {/* Numéros de pages */}
-        <div className="hidden md:flex items-center gap-1">
+        <div className="hidden md:flex items-center gap-1.5">
           {pageNumbers.map((page, idx) => (
             page === '...' ? (
-              <span key={`ellipsis-${idx}`} className="px-3 py-2 text-slate-400">
+              <span key={`ellipsis-${idx}`} className="px-3 py-2 text-slate-400 font-bold">
                 ...
               </span>
             ) : (
@@ -98,10 +100,10 @@ export function VehiclesPagination({ currentPage, totalPages, total }: VehiclesP
                 key={page}
                 onClick={() => goToPage(page as number)}
                 className={cn(
-                  'px-3 py-2 text-sm font-medium rounded-lg transition-all',
+                  'min-w-[40px] px-3 py-2.5 text-[13px] font-black rounded-xl transition-all border',
                   currentPage === page
-                    ? 'bg-emerald-500 text-white'
-                    : 'text-slate-700 hover:bg-slate-100'
+                    ? 'bg-slate-900 text-emerald-400 border-slate-900 shadow-lg shadow-slate-900/20'
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300 active:scale-95'
                 )}
               >
                 {page}
@@ -110,19 +112,24 @@ export function VehiclesPagination({ currentPage, totalPages, total }: VehiclesP
           ))}
         </div>
 
+        {/* Indicateur mobile */}
+        <div className="md:hidden px-4 py-2 rounded-xl bg-white border border-slate-200 text-[13px] font-bold text-slate-600 tabular-nums">
+          {currentPage} / {totalPages}
+        </div>
+
         {/* Bouton Suivant */}
         <button
           onClick={() => goToPage(currentPage + 1)}
           disabled={currentPage === totalPages}
           className={cn(
-            'flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg transition-all',
+            'flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-bold rounded-xl transition-all border',
             currentPage === totalPages
-              ? 'text-slate-300 cursor-not-allowed'
-              : 'text-slate-700 hover:bg-slate-100'
+              ? 'text-slate-300 bg-slate-50 border-slate-200 cursor-not-allowed'
+              : 'text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-300 border-slate-200 active:scale-95'
           )}
         >
           <span className="hidden sm:inline">Suivant</span>
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
         </button>
       </div>
     </div>

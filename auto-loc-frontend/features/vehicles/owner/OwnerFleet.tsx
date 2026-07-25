@@ -825,6 +825,11 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
         ARCHIVE: "Archivés",
     };
 
+    // Correct count for "all" filter (excludes archived vehicles)
+    const activeVehiclesCount = useMemo(() =>
+        vehicles.filter(v => v.statut !== "ARCHIVE").length,
+    [vehicles]);
+
     return (
         <div className="space-y-6">
 
@@ -833,7 +838,7 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                 {/* Filter tabs */}
                 <div className="flex items-center gap-1 rounded-xl border border-slate-200/60 bg-white/60 backdrop-blur-sm p-1 overflow-x-auto scrollbar-none">
                     {visibleFilters.map((f) => {
-                        const count = f === "all" ? vehicles.length : (counts[f as VehicleStatus] ?? 0);
+                        const count = f === "all" ? activeVehiclesCount : (counts[f as VehicleStatus] ?? 0);
                         const isActive = filter === f;
                         return (
                             <button

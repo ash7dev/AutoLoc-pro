@@ -81,32 +81,32 @@ export function CompactVehicleCard({ vehicle: v }: CompactVehicleCardProps): Rea
       </div>
 
       {/* Body */}
-      <div className="p-3.5 flex flex-col flex-1">
-        <h4 className="text-[14px] font-bold text-slate-800 truncate leading-tight">
+      <div className="p-3 flex flex-col flex-1">
+        <h4 className="text-[13px] font-black text-slate-800 truncate leading-tight tracking-tight">
           {v.marque} <span className="text-emerald-600">{v.modele}</span>
         </h4>
-        <p className="text-[11px] font-medium text-slate-400 mt-1 leading-none">
+        <p className="text-[10px] font-medium text-slate-400 mt-0.5 leading-none">
           {v.ville}
         </p>
 
-        <div className="mt-3.5 pt-3 border-t border-slate-50 flex items-end justify-between gap-2">
+        <div className="mt-auto pt-2.5 border-t border-slate-100 flex items-end justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <p className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider leading-none">À partir de</p>
-            <div className="flex items-baseline gap-1 flex-wrap mt-1.5">
-              <span className="text-[18px] font-black text-slate-900 leading-none tabular-nums whitespace-nowrap">{formatPrice(basePrice)}</span>
-              <span className="text-[10.5px] font-medium text-slate-400 whitespace-nowrap">/j</span>
+            <p className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wide leading-none mb-0.5">À partir de</p>
+            <div className="flex items-baseline gap-0.5 mb-1">
+              <span className="text-[20px] font-black text-slate-900 leading-none tabular-nums">{formatPrice(basePrice)}</span>
+              <span className="text-[10px] font-bold text-slate-400">/j</span>
             </div>
             {/* Hauteur réservée même sans réduction, pour que toutes les cartes soient alignées */}
-            <div className="mt-1.5 h-[19px] flex items-center">
+            <div className="h-[18px] flex items-center">
               {savings > 0 && minDays != null && (
-                <p className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md whitespace-nowrap">
-                  <TrendingDown className="h-2.5 w-2.5 flex-shrink-0" strokeWidth={3} />
+                <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md whitespace-nowrap">
+                  <TrendingDown className="h-2.5 w-2.5 flex-shrink-0" strokeWidth={2.5} />
                   −{savings}% dès {minDays}j
-                </p>
+                </span>
               )}
             </div>
           </div>
-          <span className="w-7 h-7 rounded-lg bg-slate-950 flex items-center justify-center text-emerald-400 shrink-0 self-end">
+          <span className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center text-emerald-400 shrink-0 self-end active:scale-95 transition-transform">
             <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
           </span>
         </div>
