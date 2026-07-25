@@ -33,9 +33,11 @@ export function PremiumSelectionGrid({ vehicles }: PremiumSelectionGridProps): R
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-3 mb-4 auto-rows-fr">
         {vehicles.slice(0, 4).map((v) => (
-          <CompactVehicleCard key={v.id} vehicle={v} />
+          <div key={v.id} className="h-full">
+            <CompactVehicleCard vehicle={v} />
+          </div>
         ))}
       </div>
 
