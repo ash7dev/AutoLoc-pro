@@ -330,7 +330,7 @@ export class OrangeMoneyProvider implements PaymentProviderInterface {
 
     // ── Refund ─────────────────────────────────────────────────────────────────
 
-    async refundPayment(transactionId: string, amount?: number, recipientPhone?: string, recipientName?: string): Promise<void> {
+    async refundPayment(transactionId: string, amount?: number, recipientPhone?: string, _recipientName?: string): Promise<void> {
         if (!this.clientId) {
             this.logger.warn(`STUB: Orange Money refund requested for ${transactionId}`);
             return;

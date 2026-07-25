@@ -6,6 +6,7 @@ import Image from 'next/image';
 import {
     ArrowLeft, Loader2, Shield,
     Clock, Check, Truck, Phone, Smartphone,
+    CreditCard, Banknote, Wallet,
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -138,6 +139,9 @@ export default function PaymentPage() {
     const horsDakar         = searchParams.get('horsDakar') === '1';
     const wantsDelivery     = searchParams.get('livraison') === '1';
     const adresseLivraison  = searchParams.get('adresseLivraison') ?? '';
+    const modePaiement      = (searchParams.get('modePaiement') === 'ACOMPTE_SOLDE_CHECKIN'
+        ? 'ACOMPTE_SOLDE_CHECKIN'
+        : 'TOTAL_EN_LIGNE') as 'TOTAL_EN_LIGNE' | 'ACOMPTE_SOLDE_CHECKIN';
 
     const [vehicle,           setVehicle]          = useState<Vehicle | null>(null);
     const [pricing,           setPricing]          = useState<PricingResponse | null>(null);
@@ -249,6 +253,7 @@ export default function PaymentPage() {
                     vehiculeId: string; dateDebut: string; dateFin: string;
                     fournisseur: 'ORANGE_MONEY' | 'WAVE'; idempotencyKey: string;
                     targetPayment: PaymentMethod; payerPhone: string;
+                    modePaiement?: 'TOTAL_EN_LIGNE' | 'ACOMPTE_SOLDE_CHECKIN';
                 }
             >('/reservations', {
                 method: 'POST',
@@ -260,6 +265,7 @@ export default function PaymentPage() {
                     idempotencyKey: crypto.randomUUID(),
                     targetPayment:  method,
                     payerPhone:     phoneClean,
+                    modePaiement,
                     ...(wantsDelivery && adresseLivraison ? { adresseLivraison } : {}),
                     ...(horsDakar ? { horsDakar: true } : {}),
                 },
@@ -294,6 +300,12 @@ export default function PaymentPage() {
     const fmtDate     = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
     const deliveryFee = wantsDelivery && vehicle?.fraisLivraison ? Number(vehicle.fraisLivraison) : 0;
     const grandTotal  = pricing ? pricing.totalLocataire + deliveryFee : 0;
+    const amountToPay = modePaiement === 'ACOMPTE_SOLDE_CHECKIN'
+        ? Math.round(grandTotal * 0.3)
+        : grandTotal;
+    const balanceAtCheckin = modePaiement === 'ACOMPTE_SOLDE_CHECKIN'
+        ? Math.round(grandTotal * 0.7)
+        : 0;
     const methodInfo  = PAYMENT_METHODS.find((m) => m.id === method)!;
 
     /* ── Loading ── */
@@ -452,9 +464,42 @@ export default function PaymentPage() {
                     )}
                     <div className="h-px bg-slate-100 mb-3" />
                     <div className="flex items-center justify-between">
-                        <span className="text-[15px] font-black text-slate-800">Total à payer</span>
+                        <span className="text-[15px] font-black text-slate-800">Total</span>
                         <span className="text-[22px] font-black text-emerald-600 tabular-nums">{formatPrice(grandTotal)}</span>
                     </div>
+
+                    {/* Mode de paiement badge */}
+                    <div className="h-px bg-slate-100 my-3" />
+                    <div className="flex items-center gap-2 mb-2">
+                        <Wallet className="w-4 h-4 text-violet-500" strokeWidth={2} />
+                        <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">Mode de paiement</span>
+                    </div>
+                    {modePaiement === 'TOTAL_EN_LIGNE' ? (
+                        <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50/60 p-3">
+                            <div className="flex items-center gap-2">
+                                <CreditCard className="w-4 h-4 text-emerald-600" strokeWidth={2} />
+                                <span className="text-[13px] font-bold text-emerald-900">Paiement total en ligne</span>
+                            </div>
+                            <p className="text-[11.5px] text-emerald-700 mt-1 ml-6">Le montant total est débité maintenant.</p>
+                        </div>
+                    ) : (
+                        <div className="rounded-xl border-2 border-violet-200 bg-violet-50/60 p-3 space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Banknote className="w-4 h-4 text-violet-600" strokeWidth={2} />
+                                <span className="text-[13px] font-bold text-violet-900">Accompte 30% + Solde à la remise</span>
+                            </div>
+                            <div className="ml-6 space-y-1.5">
+                                <div className="flex justify-between items-center text-[12.5px]">
+                                    <span className="text-violet-700 font-semibold">À payer maintenant (30%)</span>
+                                    <span className="font-black text-violet-700 tabular-nums">{formatPrice(amountToPay)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-[12.5px]">
+                                    <span className="text-slate-500 font-semibold">Solde à la remise (70%)</span>
+                                    <span className="font-semibold text-slate-500 tabular-nums">{formatPrice(balanceAtCheckin)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Méthode de paiement + numéro */}
@@ -557,7 +602,7 @@ export default function PaymentPage() {
                         />
                     )}
                     <MethodLogo method={method} size={22} />
-                    Payer {formatPrice(grandTotal)}
+                    Payer {formatPrice(amountToPay)}
                 </button>
 
                 <p className="text-center text-[11px] text-slate-300 mt-4">
@@ -582,7 +627,7 @@ export default function PaymentPage() {
                     style={contractAccepted ? { background: 'linear-gradient(135deg, #34D399 0%, #059669 55%, #047857 100%)' } : {}}
                 >
                     <MethodLogo method={method} size={22} />
-                    Payer {formatPrice(grandTotal)}
+                    Payer {formatPrice(amountToPay)}
                 </button>
             </div>
         </main>

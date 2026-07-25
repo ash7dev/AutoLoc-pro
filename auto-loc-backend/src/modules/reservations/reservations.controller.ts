@@ -35,6 +35,7 @@ import { SignalTenantNoshowDto } from './dto/signal-tenant-noshow.dto';
 import { SignalOverloadDto } from './dto/signal-overload.dto';
 import { ConfirmReservationDto } from './dto/confirm-reservation.dto';
 import { RefusCheckinDto } from './dto/refus-checkin.dto';
+import { CheckinDto } from './dto/checkin.dto';
 import { LinkPhotoEtatDto } from './dto/link-photo-etat.dto';
 import { DisputesService } from '../disputes/disputes.service';
 import { CreateDisputeDto } from '../disputes/dto/create-dispute.dto';
@@ -130,9 +131,13 @@ export class ReservationsController {
     @Req() req: Request & { user?: RequestUser },
     @Param('id', ParseUUIDPipe) reservationId: string,
     @Query('role', new ParseEnumPipe(CheckInRole)) role: CheckInRole,
+    @Body() body: CheckinDto,
   ) {
     const user = req.user!;
-    return this.reservationsService.checkin(user, reservationId, { role });
+    return this.reservationsService.checkin(user, reservationId, {
+      role,
+      soldeRecu: body.soldeRecu,
+    });
   }
 
   /**

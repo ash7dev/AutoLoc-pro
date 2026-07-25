@@ -4,7 +4,7 @@ import {
     Logger,
     NotFoundException,
 } from '@nestjs/common';
-import { Prisma, StatutReservation, StatutPaiement, SensTransaction, TypeTransactionWallet, FournisseurPaiement } from '@prisma/client';
+import { Prisma, StatutReservation, StatutPaiement, SensTransaction, TypeTransactionWallet, FournisseurPaiement, ModePaiementReservation } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { RedisService } from '../../../infrastructure/redis/redis.service';
 import { QueueService } from '../../../infrastructure/queue/queue.service';
@@ -36,8 +36,14 @@ export interface CancelReservationResultDto {
     statut: StatutReservation;
     refundAmount: string;
     refundPercentage: number;
+    commissionRetained: string;
+    ownerCompensationAmount: string;
     ownerPenaltyAmount: string;
     warnings: string[];
+}
+
+interface EffectiveCancellationResult extends CancellationResult {
+    ownerCompensationAmount: Prisma.Decimal;
 }
 
 // ── Use Case ───────────────────────────────────────────────────────────────────
@@ -88,6 +94,11 @@ export class CancelReservationUseCase {
                     totalBase: true,
                     montantCommission: true,
                     netProprietaire: true,
+                    modePaiement: true,
+                    montantPayeEnLigne: true,
+                    montantSoldeCheckin: true,
+                    montantCommissionEnLigne: true,
+                    montantProprietaireEnLigne: true,
                     vehicule: { select: { marque: true, modele: true, ville: true } },
                     paiement: {
                         select: {
@@ -167,9 +178,15 @@ export class CancelReservationUseCase {
             );
         }
 
+        const effectivePolicy = this.applyCapturedPaymentPolicy(
+            policy,
+            reservation,
+            isLocataire,
+        );
+
         // ── 6. Atomic transaction (RepeatableRead) ─────────────────────────────
 
-        const hasRefund = policy.refundAmount.gt(0) &&
+        const hasRefund = effectivePolicy.refundAmount.gt(0) &&
             reservation.paiement &&
             reservation.paiement.statut === StatutPaiement.CONFIRME;
 
@@ -203,8 +220,44 @@ export class CancelReservationUseCase {
                         where: { id: reservation.paiement.id },
                         data: {
                             statut: StatutPaiement.EN_ATTENTE_REMBOURSEMENT,
-                            montantRembourse: policy.refundAmount,
+                            montantRembourse: effectivePolicy.refundAmount,
                         },
+                    });
+                }
+
+                if (
+                    isLocataire &&
+                    effectivePolicy.ownerCompensationAmount.gt(0)
+                ) {
+                    const wallet = await tx.wallet.upsert({
+                        where: { utilisateurId: reservation.proprietaireId },
+                        create: {
+                            utilisateurId: reservation.proprietaireId,
+                            soldeDisponible: 0,
+                        },
+                        update: {},
+                        select: { id: true, soldeDisponible: true },
+                    });
+
+                    const nouveauSolde = wallet.soldeDisponible
+                        .add(effectivePolicy.ownerCompensationAmount)
+                        .toDecimalPlaces(2);
+
+                    await tx.transactionWallet.create({
+                        data: {
+                            walletId: wallet.id,
+                            reservationId,
+                            type: TypeTransactionWallet.CREDIT_LOCATION,
+                            montant: effectivePolicy.ownerCompensationAmount,
+                            sens: SensTransaction.CREDIT,
+                            soldeApres: nouveauSolde,
+                            fournisseur: reservation.paiement?.fournisseur,
+                        },
+                    });
+
+                    await tx.wallet.update({
+                        where: { id: wallet.id },
+                        data: { soldeDisponible: nouveauSolde },
                     });
                 }
 
@@ -258,7 +311,7 @@ export class CancelReservationUseCase {
 
         // 7a. Remboursement automatique Wave IMMÉDIAT et SYNCHRONE
         if (hasRefund && reservation.paiement && reservation.paiement.fournisseur === FournisseurPaiement.WAVE) {
-            const refundVal = Number(policy.refundAmount);
+            const refundVal = Number(effectivePolicy.refundAmount);
             const paiementId = reservation.paiement.id;
             const telephonePaiement = reservation.paiement.telephonePaiement;
             const locataireNom = `${reservation.locataire.prenom} ${reservation.locataire.nom}`;
@@ -341,8 +394,8 @@ export class CancelReservationUseCase {
             reservationId,
             cancelledBy: isLocataire ? 'LOCATAIRE' : 'PROPRIETAIRE',
             raison: input.raison,
-            refundAmount: policy.refundAmount.toString(),
-            refundPercentage: policy.refundPercentage,
+            refundAmount: effectivePolicy.refundAmount.toString(),
+            refundPercentage: effectivePolicy.refundPercentage,
             ownerPenaltyAmount: policy.ownerPenaltyAmount.toString(),
             locatairePhone: reservation.locataire?.telephone ?? null,
             locatairePrenom: reservation.locataire?.prenom ?? null,
@@ -388,7 +441,7 @@ export class CancelReservationUseCase {
                 `💸 <b>REMBOURSEMENT À TRAITER</b>\n` +
                 `Par : Locataire\n` +
                 `Motif : ${input.raison.slice(0, 100)}\n` +
-                `Montant : ${policy.refundAmount} FCFA (${policy.refundPercentage}%)\n` +
+                `Montant : ${effectivePolicy.refundAmount} FCFA (${effectivePolicy.refundPercentage}%)\n` +
                 `⚠️ ACTION REQUISE : Faire le virement InTouch puis valider\n` +
                 `<a href="https://autoloc.sn/dashboard/admin/refunds">Traiter le remboursement →</a>`,
             ).catch(() => { });
@@ -416,8 +469,9 @@ export class CancelReservationUseCase {
                     dateDebut: reservation.dateDebut,
                     dateFin: reservation.dateFin,
                     raison: input.raison,
-                    refundAmount: policy.refundAmount.toString(),
-                    refundPercentage: policy.refundPercentage.toString(),
+                    refundAmount: effectivePolicy.refundAmount.toString(),
+                    refundPercentage: effectivePolicy.refundPercentage.toString(),
+                    commissionRetained: effectivePolicy.commissionRetained.toString(),
                     ownerPenaltyAmount: policy.ownerPenaltyAmount.toString(),
                     ownerPenaltyPercentage: policy.ownerPenaltyPercentage.toString(),
                     cancelledAt: now.toLocaleDateString('fr-FR'),
@@ -440,10 +494,79 @@ export class CancelReservationUseCase {
         return {
             reservationId,
             statut: StatutReservation.ANNULEE,
-            refundAmount: policy.refundAmount.toString(),
-            refundPercentage: policy.refundPercentage,
+            refundAmount: effectivePolicy.refundAmount.toString(),
+            refundPercentage: effectivePolicy.refundPercentage,
+            commissionRetained: effectivePolicy.commissionRetained.toString(),
+            ownerCompensationAmount: effectivePolicy.ownerCompensationAmount.toString(),
             ownerPenaltyAmount: policy.ownerPenaltyAmount.toString(),
             warnings: policy.warnings,
+        };
+    }
+
+    private applyCapturedPaymentPolicy(
+        policy: CancellationResult,
+        reservation: {
+            modePaiement: ModePaiementReservation;
+            totalLocataire: Prisma.Decimal;
+            montantCommission: Prisma.Decimal;
+            montantProprietaireEnLigne: Prisma.Decimal;
+            paiement: { statut: StatutPaiement; montant: Prisma.Decimal } | null;
+        },
+        isLocataire: boolean,
+    ): EffectiveCancellationResult {
+        const zero = new Prisma.Decimal(0);
+        const confirmedOnlineAmount =
+            reservation.paiement?.statut === StatutPaiement.CONFIRME
+                ? reservation.paiement.montant.toDecimalPlaces(2)
+                : zero;
+
+        if (confirmedOnlineAmount.eq(0)) {
+            return {
+                ...policy,
+                refundAmount: zero,
+                commissionRetained: zero,
+                ownerCompensationAmount: zero,
+            };
+        }
+
+        if (reservation.modePaiement !== ModePaiementReservation.ACOMPTE_SOLDE_CHECKIN) {
+            return {
+                ...policy,
+                ownerCompensationAmount: zero,
+            };
+        }
+
+        const refundRatio = reservation.totalLocataire.gt(0)
+            ? Prisma.Decimal.min(
+                new Prisma.Decimal(1),
+                Prisma.Decimal.max(zero, policy.refundAmount.div(reservation.totalLocataire)),
+            )
+            : zero;
+        const refundAmount = Prisma.Decimal.min(
+            confirmedOnlineAmount,
+            confirmedOnlineAmount.mul(refundRatio),
+        )
+            .toDecimalPlaces(2);
+        const retainedOnline = Prisma.Decimal.max(
+            zero,
+            confirmedOnlineAmount.sub(refundAmount),
+        ).toDecimalPlaces(2);
+        const commissionRetained = Prisma.Decimal.min(
+            policy.commissionRetained,
+            retainedOnline,
+        ).toDecimalPlaces(2);
+        const ownerCompensationAmount = isLocataire
+            ? Prisma.Decimal.min(
+                reservation.montantProprietaireEnLigne,
+                Prisma.Decimal.max(zero, retainedOnline.sub(commissionRetained)),
+            ).toDecimalPlaces(2)
+            : zero;
+
+        return {
+            ...policy,
+            refundAmount,
+            commissionRetained,
+            ownerCompensationAmount,
         };
     }
 }

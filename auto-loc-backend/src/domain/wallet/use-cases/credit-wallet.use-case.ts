@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Prisma, TypeTransactionWallet, SensTransaction } from '@prisma/client';
+import { ModePaiementReservation, Prisma, TypeTransactionWallet, SensTransaction } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -22,7 +22,9 @@ export class CreditWalletUseCase {
 
     /**
      * Crédite le wallet du propriétaire après un check-in finalisé.
-     * Montant = netProprietaire (total - commission 15%).
+     * Montant = netProprietaire pour un paiement total en ligne.
+     * Pour un acompte, montant = part propriétaire réellement encaissée en ligne
+     * car le solde est encaissé directement à la remise.
      *
      * IMPORTANT : Avant de créditer, prélève automatiquement les pénalités en attente.
      *
@@ -37,6 +39,8 @@ export class CreditWalletUseCase {
                 id: true,
                 proprietaireId: true,
                 netProprietaire: true,
+                modePaiement: true,
+                montantProprietaireEnLigne: true,
                 walletCredite: true,
                 paiement: {
                     select: {
@@ -59,13 +63,13 @@ export class CreditWalletUseCase {
 
             return {
                 walletId: wallet.id,
-                montantCredite: reservation.netProprietaire,
+                montantCredite: this.getWalletCreditAmount(reservation),
                 nouveauSolde: wallet.soldeDisponible,
                 alreadyCredited: true,
             };
         }
 
-        const montant = reservation.netProprietaire;
+        const montant = this.getWalletCreditAmount(reservation);
 
         // ── 2. Transaction atomique : upsert wallet + créer transaction ────
         try {
@@ -90,14 +94,8 @@ export class CreditWalletUseCase {
                     orderBy: { creeLe: 'asc' }, // FIFO
                 });
 
-                const totalPenalites = penalites.reduce(
-                    (sum, p) => sum.add(p.montant),
-                    new Prisma.Decimal(0),
-                );
-
-                // ── 2b. Calculer le montant net après déduction pénalités ──────
-                const montantNet = montant.sub(totalPenalites).toDecimalPlaces(2);
-                const nouveauSolde = wallet.soldeDisponible.add(montantNet).toDecimalPlaces(2);
+                let runningSolde = wallet.soldeDisponible.add(montant).toDecimalPlaces(2);
+                let totalPenalitesPrelevees = new Prisma.Decimal(0);
 
                 // ── 2c. Créer la transaction CREDIT_LOCATION (montant brut) ────
                 await tx.transactionWallet.create({
@@ -107,13 +105,25 @@ export class CreditWalletUseCase {
                         type: TypeTransactionWallet.CREDIT_LOCATION,
                         montant,
                         sens: SensTransaction.CREDIT,
-                        soldeApres: nouveauSolde, // Solde final après déduction pénalités
+                        soldeApres: runningSolde,
                         fournisseur: reservation.paiement?.fournisseur,
                     },
                 });
 
-                // ── 2d. Créer les transactions DEBIT_PENALITE et marquer prélevées ──
+                // ── 2d. Prélever les pénalités couvertes par le solde disponible ──
                 for (const penalite of penalites) {
+                    if (runningSolde.lt(penalite.montant)) {
+                        this.logger.warn(
+                            `Penalty ${penalite.id} left pending: wallet balance ${runningSolde} < penalty ${penalite.montant}`,
+                        );
+                        break;
+                    }
+
+                    runningSolde = runningSolde.sub(penalite.montant).toDecimalPlaces(2);
+                    totalPenalitesPrelevees = totalPenalitesPrelevees
+                        .add(penalite.montant)
+                        .toDecimalPlaces(2);
+
                     await tx.transactionWallet.create({
                         data: {
                             walletId: wallet.id,
@@ -121,7 +131,7 @@ export class CreditWalletUseCase {
                             type: TypeTransactionWallet.DEBIT_PENALITE,
                             montant: penalite.montant,
                             sens: SensTransaction.DEBIT,
-                            soldeApres: nouveauSolde, // Même solde final
+                            soldeApres: runningSolde,
                         },
                     });
 
@@ -134,7 +144,7 @@ export class CreditWalletUseCase {
                 // ── 2e. Mettre à jour le solde wallet ──────────────────────────
                 await tx.wallet.update({
                     where: { id: wallet.id },
-                    data: { soldeDisponible: nouveauSolde },
+                    data: { soldeDisponible: runningSolde },
                 });
 
                 // ── 2f. Marquer la réservation comme wallet crédité ────────────
@@ -145,8 +155,11 @@ export class CreditWalletUseCase {
 
                 return {
                     walletId: wallet.id,
-                    montantCredite: montantNet, // Montant net après pénalités
-                    nouveauSolde,
+                    montantCredite: Prisma.Decimal.max(
+                        new Prisma.Decimal(0),
+                        montant.sub(totalPenalitesPrelevees),
+                    ).toDecimalPlaces(2),
+                    nouveauSolde: runningSolde,
                     alreadyCredited: false,
                 };
             });
@@ -186,5 +199,17 @@ export class CreditWalletUseCase {
             }
             throw err;
         }
+    }
+
+    private getWalletCreditAmount(reservation: {
+        modePaiement: ModePaiementReservation;
+        netProprietaire: Prisma.Decimal;
+        montantProprietaireEnLigne: Prisma.Decimal;
+    }): Prisma.Decimal {
+        if (reservation.modePaiement === ModePaiementReservation.ACOMPTE_SOLDE_CHECKIN) {
+            return reservation.montantProprietaireEnLigne.toDecimalPlaces(2);
+        }
+
+        return reservation.netProprietaire.toDecimalPlaces(2);
     }
 }

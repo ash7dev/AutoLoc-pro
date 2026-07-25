@@ -6,7 +6,7 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { FournisseurPaiement, Prisma, StatutReservation } from '@prisma/client';
+import { FournisseurPaiement, ModePaiementReservation, Prisma, StatutReservation } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { RedisService } from '../../../infrastructure/redis/redis.service';
 import { QueueService } from '../../../infrastructure/queue/queue.service';
@@ -25,6 +25,7 @@ import { TelegramService } from '../../../infrastructure/telegram/telegram.servi
 
 const SIGNATURE_DEADLINE_MS = 48 * 60 * 60 * 1000;
 const SEARCH_CACHE_PREFIX = 'vehicles:search:';
+const DEPOSIT_RATE = new Prisma.Decimal('0.3000');
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ export interface CreateReservationInput {
     idempotencyKey?: string;
     adresseLivraison?: string;
     fraisLivraison?: number;
+    modePaiement?: ModePaiementReservation;
     horsDakar?: boolean;
     /** Méthode de paiement cible (ex: 'WAVE', 'ORANGE_MONEY', 'FREE_MONEY'). */
     targetPayment?: string;
@@ -45,6 +47,12 @@ export interface CreateReservationInput {
 
 export interface CreateReservationResult {
     reservationId: string;
+    modePaiement: ModePaiementReservation;
+    totalLocataire: string;
+    montantPayeEnLigne: string;
+    montantSoldeCheckin: string;
+    montantCommissionEnLigne: string;
+    montantProprietaireEnLigne: string;
     /** URL de redirection — null si le paiement passe par le widget InTouch */
     paymentUrl: string | null;
     /** Config widget TouchPay — présent uniquement pour le fournisseur INTOUCH */
@@ -114,6 +122,13 @@ export class CreateReservationUseCase {
             ? Number(vehicule.fraisLivraison)
             : 0;
         const totalAvecLivraison = price.totalLocataire.add(new Prisma.Decimal(fraisLivraison));
+        const modePaiement = input.modePaiement ?? ModePaiementReservation.TOTAL_EN_LIGNE;
+        const paymentBreakdown = this.calculatePaymentBreakdown(
+            modePaiement,
+            totalAvecLivraison,
+            price.montantCommission,
+            price.netProprietaire,
+        );
 
         // ── 6. Initiate payment ───────────────────────────────────────────────────
         // Pre-generate reservation UUID so the success/cancel URLs can include it.
@@ -121,7 +136,7 @@ export class CreateReservationUseCase {
         const paymentRef = `${input.vehiculeId.slice(0, 8)}-${Date.now()}`;
         const { paymentUrl, widgetConfig } = await this.payment.initiatePayment(
             input.fournisseur,
-            totalAvecLivraison,
+            paymentBreakdown.montantPayeEnLigne,
             paymentRef,
             {
                 targetPayment: input.targetPayment,
@@ -181,6 +196,12 @@ export class CreateReservationUseCase {
                             montantCommission: price.montantCommission,
                             totalLocataire: totalAvecLivraison,
                             netProprietaire: price.netProprietaire,
+                            modePaiement,
+                            tauxAcompte: paymentBreakdown.tauxAcompte,
+                            montantPayeEnLigne: paymentBreakdown.montantPayeEnLigne,
+                            montantSoldeCheckin: paymentBreakdown.montantSoldeCheckin,
+                            montantCommissionEnLigne: paymentBreakdown.montantCommissionEnLigne,
+                            montantProprietaireEnLigne: paymentBreakdown.montantProprietaireEnLigne,
                             statut: StatutReservation.EN_ATTENTE_PAIEMENT,
                             paymentUrl,
                             delaiSignature,
@@ -195,7 +216,7 @@ export class CreateReservationUseCase {
                     await tx.paiement.create({
                         data: {
                             reservationId: res.id,
-                            montant: totalAvecLivraison,
+                            montant: paymentBreakdown.montantPayeEnLigne,
                             devise: 'XOF',
                             fournisseur: input.fournisseur,
                             idTransactionFournisseur: paymentRef,
@@ -252,6 +273,12 @@ export class CreateReservationUseCase {
         // ── 8. Post-commit side effects ───────────────────────────────────────────
         const result: IdempotencyResult = {
             reservationId: reservation.id,
+            modePaiement,
+            totalLocataire: totalAvecLivraison.toString(),
+            montantPayeEnLigne: paymentBreakdown.montantPayeEnLigne.toString(),
+            montantSoldeCheckin: paymentBreakdown.montantSoldeCheckin.toString(),
+            montantCommissionEnLigne: paymentBreakdown.montantCommissionEnLigne.toString(),
+            montantProprietaireEnLigne: paymentBreakdown.montantProprietaireEnLigne.toString(),
             paymentUrl: reservation.paymentUrl ?? paymentUrl ?? null,
             widgetConfig,
         };
@@ -278,6 +305,49 @@ export class CreateReservationUseCase {
         }
 
         return result;
+    }
+
+    private calculatePaymentBreakdown(
+        modePaiement: ModePaiementReservation,
+        totalLocataire: Prisma.Decimal,
+        montantCommission: Prisma.Decimal,
+        netProprietaire: Prisma.Decimal,
+    ) {
+        if (modePaiement === ModePaiementReservation.ACOMPTE_SOLDE_CHECKIN) {
+            const montantPayeEnLigne = totalLocataire
+                .mul(DEPOSIT_RATE)
+                .toDecimalPlaces(2);
+            const montantSoldeCheckin = totalLocataire
+                .sub(montantPayeEnLigne)
+                .toDecimalPlaces(2);
+            const montantCommissionEnLigne = Prisma.Decimal.min(
+                montantCommission,
+                montantPayeEnLigne,
+            ).toDecimalPlaces(2);
+            const montantProprietaireEnLigne = Prisma.Decimal.min(
+                netProprietaire,
+                Prisma.Decimal.max(
+                    new Prisma.Decimal(0),
+                    montantPayeEnLigne.sub(montantCommissionEnLigne),
+                ),
+            ).toDecimalPlaces(2);
+
+            return {
+                tauxAcompte: DEPOSIT_RATE,
+                montantPayeEnLigne,
+                montantSoldeCheckin,
+                montantCommissionEnLigne,
+                montantProprietaireEnLigne,
+            };
+        }
+
+        return {
+            tauxAcompte: null,
+            montantPayeEnLigne: totalLocataire.toDecimalPlaces(2),
+            montantSoldeCheckin: new Prisma.Decimal(0),
+            montantCommissionEnLigne: montantCommission.toDecimalPlaces(2),
+            montantProprietaireEnLigne: netProprietaire.toDecimalPlaces(2),
+        };
     }
 
     // ── Private validators ────────────────────────────────────────────────────────

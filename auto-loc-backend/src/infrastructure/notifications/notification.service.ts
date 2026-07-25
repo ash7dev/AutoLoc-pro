@@ -263,6 +263,8 @@ export class NotificationService {
 
     // Détection du rôle (Propriétaire vs Locataire) pour les messages partagés
     const isOwner = data.isOwner === true || type.includes('.owner');
+    const isDeposit = data.modePaiement === 'ACOMPTE_SOLDE_CHECKIN' || (Number(data.montantSoldeCheckin ?? 0) > 0);
+    const soldeStr = data.montantSoldeCheckin ? `${Number(data.montantSoldeCheckin).toLocaleString('fr-FR')} FCFA` : '';
 
     const mappings: Partial<Record<NotificationType, any>> = {
       // --- AUTH ---
@@ -289,10 +291,10 @@ export class NotificationService {
           '4': String(data.netProprietaire || '0'),
           '5': data.reservationId as string
         },
-        fallbackText: `💰 AutoLoc — Nouvelle réservation payée pour ${data.vehicule} ! Confirmez ici.`,
+        fallbackText: isDeposit
+          ? `💰 AutoLoc — Réservation payée par acompte (30%) pour ${data.vehicule} ! Solde à percevoir en main propre au check-in : ${soldeStr}. Confirmez la réservation.`
+          : `💰 AutoLoc — Nouvelle réservation payée 100% en ligne pour ${data.vehicule} ! Confirmez ici.`,
       },
-      // reservation.paid — pas de WhatsApp au locataire (email suffit, pas prioritaire)
-      // Le message "en attente de confirmation" génère de l'anxiété sans valeur ajoutée.
       'reservation.confirmed': {
         contentSid: 'HX0d287413da68b4f90bd00fbca59a941a', // locataire_resa_validee_bouton
         variables: {
@@ -300,7 +302,9 @@ export class NotificationService {
           '2': dateDeb, '3': dateFin,
           '4': data.reservationId as string
         },
-        fallbackText: `🎉 AutoLoc — Votre réservation pour ${data.vehicule} est CONFIRMÉE !`,
+        fallbackText: isDeposit
+          ? `🎉 AutoLoc — Votre réservation pour ${data.vehicule} (#${resId}) est CONFIRMÉE ! Acompte 30% payé. Préparez le solde de ${soldeStr} à remettre au propriétaire le jour J.`
+          : `🎉 AutoLoc — Votre réservation pour ${data.vehicule} (#${resId}) est CONFIRMÉE ! (Paiement 100% en ligne effectué).`,
       },
 
       // --- RAPPELS ---
@@ -314,7 +318,9 @@ export class NotificationService {
           '5': String(data.dateFin || ''),
           '6': data.reservationId as string,
         },
-        fallbackText: `📅 AutoLoc — Demain commence la location de ${data.vehicule || 'votre véhicule'} (#${resId}).\n⏰ Début : ${data.dateDebut || 'à confirmer'} → Fin : ${data.dateFin || 'à confirmer'}\n📞 Contact : ${data.otherPartyPhone || 'N/A'}`,
+        fallbackText: isDeposit
+          ? `📅 AutoLoc — Demain commence la location de ${data.vehicule || 'votre véhicule'} (#${resId}).${isOwner ? ` N'oubliez pas de percevoir le solde de ${soldeStr}.` : ` N'oubliez pas de préparer le solde de ${soldeStr} à remettre au propriétaire.`}\n⏰ Début : ${data.dateDebut || 'à confirmer'} → Fin : ${data.dateFin || 'à confirmer'}\n📞 Contact : ${data.otherPartyPhone || 'N/A'}`
+          : `📅 AutoLoc — Demain commence la location de ${data.vehicule || 'votre véhicule'} (#${resId}).\n⏰ Début : ${data.dateDebut || 'à confirmer'} → Fin : ${data.dateFin || 'à confirmer'}\n📞 Contact : ${data.otherPartyPhone || 'N/A'}`,
       },
       'reservation.checkin.reminder_jour': {
         contentSid: isOwner ? 'HX83b935cb406574f0fbbf866b1b6d4b86' : 'HX4ec154df382ce08b5322a09074ddbbfe',
@@ -325,7 +331,9 @@ export class NotificationService {
           '4': String(data.dateDebut || ''),
           '5': data.reservationId as string,
         },
-        fallbackText: `🚗 AutoLoc — La location de ${data.vehicule || 'votre véhicule'} commence aujourd'hui (#${resId}).\n⏰ Heure : ${data.dateDebut || 'à confirmer'}\n📞 Contact : ${data.otherPartyPhone || 'N/A'}`,
+        fallbackText: isDeposit
+          ? `🚗 AutoLoc — La location de ${data.vehicule || 'votre véhicule'} commence aujourd'hui (#${resId}).${isOwner ? ` Pensez à percevoir le solde de ${soldeStr}.` : ` Pensez au solde de ${soldeStr} à remettre.`}\n⏰ Heure : ${data.dateDebut || 'à confirmer'}\n📞 Contact : ${data.otherPartyPhone || 'N/A'}`
+          : `🚗 AutoLoc — La location de ${data.vehicule || 'votre véhicule'} commence aujourd'hui (#${resId}).\n⏰ Heure : ${data.dateDebut || 'à confirmer'}\n📞 Contact : ${data.otherPartyPhone || 'N/A'}`,
       },
       // Pas de template WhatsApp dédié pour l'urgent → free-form (fallback SMS garanti)
       'reservation.checkin.reminder_urgent': {
@@ -406,18 +414,26 @@ export class NotificationService {
     const vehicule = String(data.vehicule || data.vehicle || 'véhicule');
     const prenom = String(data.prenom || data.locatairePrenom || data.proprietairePrenom || '').trim();
     const prefix = prenom ? ` ${prenom}` : '';
+    const isDeposit = data.modePaiement === 'ACOMPTE_SOLDE_CHECKIN' || (Number(data.montantSoldeCheckin ?? 0) > 0);
+    const soldeStr = data.montantSoldeCheckin ? `${Number(data.montantSoldeCheckin).toLocaleString('fr-FR')} FCFA` : '';
 
     const fallbackTextByType: Record<NotificationType, string> = {
-      'reservation.created': `⏳ AutoLoc${prefix} : votre réservation #${resId} est en attente de paiement pour ${vehicule}. Finalisez le paiement pour la confirmer.`,
-      'reservation.confirmed': `🎉 AutoLoc${prefix} : votre réservation #${resId} pour ${vehicule} est confirmée. Début prévu ${dateDeb}${dateFin ? `, fin ${dateFin}` : ''}.`,
+      'reservation.created': isDeposit
+        ? `⏳ AutoLoc${prefix} : réservation #${resId} initiée pour ${vehicule} (Acompte 30%). Finalisez le paiement de l'acompte pour la valider.`
+        : `⏳ AutoLoc${prefix} : votre réservation #${resId} est en attente de paiement pour ${vehicule}. Finalisez le paiement pour la confirmer.`,
+      'reservation.confirmed': isDeposit
+        ? `🎉 AutoLoc${prefix} : réservation #${resId} pour ${vehicule} CONFIRMÉE ! Acompte payé. Reste à payer au check-in : ${soldeStr}.`
+        : `🎉 AutoLoc${prefix} : votre réservation #${resId} pour ${vehicule} est confirmée. Début prévu ${dateDeb}${dateFin ? `, fin ${dateFin}` : ''}.`,
       'reservation.paid': `💰 AutoLoc${prefix} : votre paiement pour ${vehicule} est validé. Réservation #${resId} en attente de confirmation.`,
-      'reservation.paid.owner': `💰 AutoLoc${prefix} : une réservation payée concerne ${vehicule}. Réservation #${resId}.`,
+      'reservation.paid.owner': isDeposit
+        ? `💰 AutoLoc${prefix} : réservation payée (Acompte 30%) pour ${vehicule} (#${resId}). Solde à percevoir au check-in : ${soldeStr}.`
+        : `💰 AutoLoc${prefix} : une réservation payée concerne ${vehicule}. Réservation #${resId}.`,
       'reservation.cancelled': `❌ AutoLoc${prefix} : la réservation #${resId} pour ${vehicule} a été annulée.`,
       'reservation.checkin': `🚗 AutoLoc${prefix} : le check-in de la réservation #${resId} est validé. La location est en cours.`,
       'reservation.checkin.owner_confirmed': `⏳ AutoLoc${prefix} : le propriétaire a confirmé le check-in pour la réservation #${resId}.`,
       'reservation.checkin.tenant_confirmed': `⏳ AutoLoc${prefix} : le locataire a confirmé le check-in pour la réservation #${resId}.`,
-      'reservation.checkin.reminder_veille': `📅 AutoLoc${prefix} : rappel check-in demain pour ${vehicule}. Réservation #${resId}.`,
-      'reservation.checkin.reminder_jour': `🚨 AutoLoc${prefix} : check-in à finaliser aujourd'hui pour ${vehicule}. Réservation #${resId}.`,
+      'reservation.checkin.reminder_veille': `📅 AutoLoc${prefix} : rappel check-in demain pour ${vehicule}. Réservation #${resId}.${isDeposit ? ` Solde à la remise : ${soldeStr}.` : ''}`,
+      'reservation.checkin.reminder_jour': `🚨 AutoLoc${prefix} : check-in à finaliser aujourd'hui pour ${vehicule}. Réservation #${resId}.${isDeposit ? ` Solde à la remise : ${soldeStr}.` : ''}`,
       'reservation.checkin.reminder_urgent': `⏰ AutoLoc${prefix} : check-in non effectué pour ${vehicule} (#${resId}). Effectuez le check-in avant minuit pour éviter l'annulation automatique.`,
       'reservation.checkin.tacit_window': `⏱️ AutoLoc${prefix} : vous avez 24h pour valider le check-in de la réservation #${resId}.`,
       'reservation.checkin.tacit_applied': `🟢 AutoLoc${prefix} : la réservation #${resId} est démarrée par validation tacite.`,

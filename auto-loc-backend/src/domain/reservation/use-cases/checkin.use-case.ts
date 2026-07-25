@@ -3,7 +3,7 @@ import {
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
-import { CheckinLocataireSource, StatutReservation, TypeEtatLieu } from '@prisma/client';
+import { CheckinLocataireSource, ModePaiementReservation, StatutReservation, TypeEtatLieu } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { QueueService } from '../../../infrastructure/queue/queue.service';
 import { RequestUser } from '../../../common/types/auth.types';
@@ -26,6 +26,7 @@ export enum CheckInRole {
 export interface CheckInInput {
     role: CheckInRole;
     photoIds?: string[];
+    soldeRecu?: boolean;
 }
 
 export interface CheckInResult {
@@ -38,6 +39,7 @@ export interface CheckInResult {
     finalized: boolean;
     /** Crédit wallet résultat (seulement si finalized) */
     walletCredited?: boolean;
+    soldeConfirmeLe?: Date | null;
 }
 
 // ── Use Case ───────────────────────────────────────────────────────────────────
@@ -76,6 +78,9 @@ export class CheckInUseCase {
                 checkinProprietaireLe: true,
                 checkinLocataireLe: true,
                 checkinLe: true,
+                modePaiement: true,
+                montantSoldeCheckin: true,
+                soldeConfirmeLe: true,
                 tacitCheckinDeadlineLe: true,
                 locataire: { select: { telephone: true, prenom: true, email: true } },
                 proprietaire: { select: { telephone: true, prenom: true } },
@@ -147,6 +152,17 @@ export class CheckInUseCase {
                     'CHECKIN_OWNER_PHOTOS_REQUIRED',
                 );
             }
+
+            if (
+                reservation.modePaiement === ModePaiementReservation.ACOMPTE_SOLDE_CHECKIN &&
+                reservation.montantSoldeCheckin.gt(0) &&
+                !input.soldeRecu
+            ) {
+                throw new BusinessRuleException(
+                    'Le solde à la remise doit être confirmé comme reçu avant le check-in propriétaire.',
+                    'CHECKIN_BALANCE_NOT_CONFIRMED',
+                );
+            }
         }
 
         // ── 7c. Locataire : le propriétaire doit avoir confirmé ────────────
@@ -172,6 +188,13 @@ export class CheckInUseCase {
         const updateData: Record<string, unknown> = {};
         if (input.role === 'PROPRIETAIRE') {
             updateData.checkinProprietaireLe = confirmationTime;
+            if (
+                reservation.modePaiement === ModePaiementReservation.ACOMPTE_SOLDE_CHECKIN &&
+                reservation.montantSoldeCheckin.gt(0)
+            ) {
+                updateData.soldeConfirmeLe = confirmationTime;
+                updateData.soldeConfirmeParId = utilisateur.id;
+            }
         } else {
             updateData.checkinLocataireLe = confirmationTime;
             updateData.checkinLocataireSource = CheckinLocataireSource.USER;
@@ -260,6 +283,9 @@ export class CheckInUseCase {
             checkinLe: willFinalize ? confirmationTime : null,
             finalized: willFinalize,
             walletCredited: willFinalize ? walletCredited : undefined,
+            soldeConfirmeLe: input.role === 'PROPRIETAIRE' && reservation.modePaiement === ModePaiementReservation.ACOMPTE_SOLDE_CHECKIN
+                ? confirmationTime
+                : reservation.soldeConfirmeLe,
         };
     }
 }

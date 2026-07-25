@@ -337,53 +337,70 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
   // ── Paiement confirmé (Propriétaire) ───────────────────────────────────────
   'reservation.paid.owner': {
     subject: '💰 Nouvelle réservation payée — Action requise sous 24h',
-    body: (data) => baseLayout({
-      title: 'Félicitations ! Votre véhicule est réservé',
-      subtitle: 'Le paiement est sécurisé. Confirmez pour finaliser la location.',
-      badge: { text: 'Nouvelle réservation', color: EMERALD_DARK, bg: EMERALD_BG },
-      cta: {
-        label: 'Confirmer la réservation →',
-        href: `${FRONTEND_URL}/login?next=${encodeURIComponent(`/dashboard/owner/reservations/${data.reservationId ?? ''}`)}&role=PROPRIETAIRE`,
-      },
-      content: [
-        infoCard([
-          { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
-          { label: 'Paiement', value: 'Reçu et sécurisé', icon: '🔒' },
-          { label: 'Délai de réponse', value: '24 heures', icon: '⏰' },
-        ]),
-        alertBox(
-          '⏰ <strong>Important :</strong> Vous avez <strong>24 heures</strong> pour confirmer. ' +
-          'Passé ce délai, la réservation sera annulée et le locataire remboursé automatiquement.',
-          'warning'
-        ),
-        divider(),
-        p('<strong>Prochaines étapes :</strong>'),
-        `<ol style="margin:0 0 16px;padding-left:20px;color:#374151;font-size:15px;line-height:1.8;">
-                  <li>Confirmez la réservation</li>
-                  <li>Contactez le locataire si besoin</li>
-                  <li>Préparez le véhicule pour le check-in</li>
-                </ol>`,
-      ].join(''),
-    }),
+    body: (data) => {
+      const isDeposit = data.modePaiement === 'ACOMPTE_SOLDE_CHECKIN' || Number(data.montantSoldeCheckin ?? 0) > 0;
+      const soldeStr = data.montantSoldeCheckin ? `${Number(data.montantSoldeCheckin).toLocaleString('fr-FR')} FCFA` : null;
+
+      return baseLayout({
+        title: 'Félicitations ! Votre véhicule est réservé',
+        subtitle: 'Le paiement est sécurisé. Confirmez pour finaliser la location.',
+        badge: { text: 'Nouvelle réservation', color: EMERALD_DARK, bg: EMERALD_BG },
+        cta: {
+          label: 'Confirmer la réservation →',
+          href: `${FRONTEND_URL}/login?next=${encodeURIComponent(`/dashboard/owner/reservations/${data.reservationId ?? ''}`)}&role=PROPRIETAIRE`,
+        },
+        content: [
+          infoCard([
+            { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
+            { label: 'Modalité de paiement', value: isDeposit ? 'Acompte 30% en ligne' : 'Paiement 100% en ligne', icon: '💳' },
+            ...(isDeposit && soldeStr ? [{ label: 'Solde à percevoir au check-in (en main propre)', value: soldeStr, icon: '💵' }] : []),
+            { label: 'Délai de réponse', value: '24 heures', icon: '⏰' },
+          ]),
+          alertBox(
+            '⏰ <strong>Important :</strong> Vous avez <strong>24 heures</strong> pour confirmer. ' +
+            'Passé ce délai, la réservation sera annulée et le locataire remboursé automatiquement.',
+            'warning'
+          ),
+          ...(isDeposit && soldeStr ? [alertBox(`💡 <strong>Rappel Acompte :</strong> Le locataire a réglé l'acompte de 30% en ligne. N'oubliez pas de percevoir le solde de <strong>${soldeStr}</strong> lors de la remise des clés et de cocher la confirmation sur l'application lors du check-in.`, 'info')] : []),
+          divider(),
+          p('<strong>Prochaines étapes :</strong>'),
+          `<ol style="margin:0 0 16px;padding-left:20px;color:#374151;font-size:15px;line-height:1.8;">
+                    <li>Confirmez la réservation</li>
+                    <li>Contactez le locataire si besoin</li>
+                    <li>Préparez le véhicule pour le check-in</li>
+                  </ol>`,
+        ].join(''),
+      });
+    },
   },
 
   // ── Réservation confirmée ────────────────────────────────────────────────────
   'reservation.confirmed': {
     subject: '🎉 C\'est confirmé — Préparez-vous !',
-    body: (data) => baseLayout({
-      title: `C'est confirmé${data.locatairePrenom ? `, ${data.locatairePrenom}` : ''} !`,
-      subtitle: 'Le propriétaire a validé. Votre location est officielle.',
-      badge: { text: 'Confirmée', color: EMERALD_DARK, bg: EMERALD_BG },
-      cta: { label: 'Voir les détails', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
-      content: [
-        infoCard([
-          { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
-          ...(data.locatairePhone ? [{ label: 'Contact propriétaire', value: String(data.locatairePhone), icon: '📞' }] : []),
-          { label: 'Prochaine étape', value: 'Check-in le jour J', icon: '🔑' },
-        ]),
-        alertBox('Le jour de la prise en charge, <strong>les deux parties doivent confirmer le check-in</strong> sur AutoLoc pour démarrer officiellement la location et libérer le paiement.', 'info'),
-      ].join(''),
-    }),
+    body: (data) => {
+      const isDeposit = data.modePaiement === 'ACOMPTE_SOLDE_CHECKIN' || Number(data.montantSoldeCheckin ?? 0) > 0;
+      const soldeStr = data.montantSoldeCheckin ? `${Number(data.montantSoldeCheckin).toLocaleString('fr-FR')} FCFA` : null;
+
+      return baseLayout({
+        title: `C'est confirmé${data.locatairePrenom ? `, ${data.locatairePrenom}` : ''} !`,
+        subtitle: 'Le propriétaire a validé. Votre location est officielle.',
+        badge: { text: 'Confirmée', color: EMERALD_DARK, bg: EMERALD_BG },
+        cta: { label: 'Voir les détails', href: `${FRONTEND_URL}/dashboard/reservations/${data.reservationId ?? ''}` },
+        content: [
+          infoCard([
+            { label: 'Réservation', value: `#${String(data.reservationId ?? '').slice(0, 8).toUpperCase()}`, icon: '📋' },
+            { label: 'Modalité de paiement', value: isDeposit ? 'Acompte 30% réglé' : '100% réglé en ligne', icon: '💳' },
+            ...(isDeposit && soldeStr ? [{ label: 'Solde restant dû au check-in', value: soldeStr, icon: '💵' }] : []),
+            ...(data.locatairePhone ? [{ label: 'Contact propriétaire', value: String(data.locatairePhone), icon: '📞' }] : []),
+            { label: 'Prochaine étape', value: 'Check-in le jour J', icon: '🔑' },
+          ]),
+          ...(isDeposit && soldeStr
+            ? [alertBox(`💵 <strong>Rappel Solde :</strong> Vous avez réglé un acompte de 30%. Veuillez prévoir le solde de <strong>${soldeStr}</strong> à remettre directement au propriétaire lors de la remise des clés.`, 'warning')]
+            : []),
+          alertBox('Le jour de la prise en charge, <strong>les deux parties doivent confirmer le check-in</strong> sur AutoLoc pour démarrer officiellement la location et libérer le paiement.', 'info'),
+        ].join(''),
+      });
+    },
   },
 
   // ── Réservation annulée ──────────────────────────────────────────────────────

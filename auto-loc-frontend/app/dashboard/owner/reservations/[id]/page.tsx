@@ -21,6 +21,7 @@ import {
     BadgeCheck, Wallet, Info, Truck,
 } from "lucide-react";
 import { ContratActions } from "../../../reservations/[id]/contrat-actions";
+import { cn } from "@/lib/utils";
 
 /* ════════════════════════════════════════════════════════════════
    HELPERS
@@ -120,6 +121,16 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
     const totalLocataire  = Number(r.prixTotal) || 0;
     const commissionAmt   = Number(r.commission) || 0;
     const netAmt          = Number(r.montantProprietaire) || 0;
+    const isAcompte       = r.modePaiement === 'ACOMPTE_SOLDE_CHECKIN';
+    const montantPayeEnLigne = isAcompte
+        ? (Number(r.montantPayeEnLigne) || Math.round(totalLocataire * 0.3))
+        : totalLocataire;
+    const montantSoldeCheckin = isAcompte
+        ? (Number(r.montantSoldeCheckin) || Math.round(totalLocataire * 0.7))
+        : 0;
+    const versementWallet = isAcompte
+        ? Math.max(0, montantPayeEnLigne - commissionAmt)
+        : netAmt;
     // Taux contractuel fixe selon la politique tarifaire AutoLoc
     const COMMISSION_RATE = 15;
     const NET_RATE        = 100 - COMMISSION_RATE; // 85
@@ -227,11 +238,26 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
 
                             {/* Net revenue pill */}
                             <div className="flex-shrink-0 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 px-5 py-4">
-                                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400/60">Votre revenu net</p>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400/60">Votre revenu net total</p>
                                 <p className="text-[2rem] font-black text-emerald-400 tabular-nums leading-none mt-1">
-                                    {fmtMoney(netAmt)}
+                                    {fmtMoney(netAmt)} <span className="text-[14px]">FCFA</span>
                                 </p>
-                                <p className="text-[11px] text-emerald-400/50 font-semibold mt-1">FCFA ·</p>
+                                {isAcompte ? (
+                                    <div className="mt-2.5 pt-2 border-t border-emerald-500/20 space-y-1 text-[11px] font-semibold">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <span className="text-emerald-300/70">En espèces au check-in (70%) :</span>
+                                            <span className="font-bold text-white tabular-nums">{fmtMoney(montantSoldeCheckin)} FCFA</span>
+                                        </div>
+                                        <div className="flex items-center justify-between gap-4 text-[10px]">
+                                            <span className="text-emerald-400/50">Sur votre Wallet AutoLoc :</span>
+                                            <span className="font-bold text-emerald-400/80 tabular-nums">{fmtMoney(versementWallet)} FCFA</span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-[11px] text-emerald-400/50 font-semibold mt-1">
+                                        Versé sur votre Wallet · {nbJours} jour{nbJours > 1 ? 's' : ''}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -255,6 +281,26 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                         </div>
                     </div>
                 </div>
+
+                {/* ── Banner d'encaissement du solde pour acompte ── */}
+                {isAcompte && ['PAYEE', 'CONFIRMEE'].includes(r.statut) && (
+                    <div className="flex items-start gap-3.5 rounded-2xl border border-amber-200 bg-amber-50/80 px-5 py-4 shadow-sm">
+                        <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Banknote className="w-5 h-5 text-amber-700" strokeWidth={2} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-[13.5px] font-black text-amber-900">Rappel encaissement solde à la remise</p>
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-amber-100 border border-amber-300/60 text-[11px] font-bold text-amber-800">
+                                    {fmtMoney(montantSoldeCheckin)} FCFA à percevoir
+                                </span>
+                            </div>
+                            <p className="text-[12px] text-amber-800 mt-1 leading-relaxed font-medium">
+                                Le locataire a versé un acompte de {fmtMoney(montantPayeEnLigne)} FCFA en ligne. Vous devez percevoir le solde de <strong>{fmtMoney(montantSoldeCheckin)} FCFA</strong> directement en mains propres / espèces lors du check-in au moment de la remise des clés.
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 {/* ══════════════════════════════════════════════════
                     ACTIONS
@@ -451,6 +497,19 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                     <Card icon={CreditCard} title="Paiement" accent="emerald">
                         <div className="space-y-3.5">
 
+                            {/* Mode de paiement */}
+                            <div className="flex items-center gap-3.5 px-3.5 py-3 rounded-xl bg-slate-50 border border-slate-200">
+                                <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                                    <Wallet className="w-4.5 h-4.5 text-emerald-600" strokeWidth={2} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Mode de paiement</p>
+                                    <p className="text-[13.5px] font-black text-slate-800">
+                                        {isAcompte ? 'Acompte 30% + Solde à la remise' : 'Paiement 100% en ligne'}
+                                    </p>
+                                </div>
+                            </div>
+
                             {/* Provider */}
                             <div className="flex items-center gap-3.5 px-3.5 py-3 rounded-xl bg-slate-50 border border-slate-200">
                                 {providerLogo ? (
@@ -462,11 +521,11 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                                     />
                                 ) : (
                                     <div className="w-9 h-9 rounded-xl bg-slate-200 border border-slate-300 flex items-center justify-center">
-                                        <Wallet className="w-4 h-4 text-slate-500" strokeWidth={2} />
+                                        <CreditCard className="w-4 h-4 text-slate-500" strokeWidth={2} />
                                     </div>
                                 )}
                                 <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Moyen de paiement</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Moyen de paiement en ligne</p>
                                     <p className="text-[14px] font-black text-slate-800">{providerLabel}</p>
                                 </div>
                             </div>
@@ -478,9 +537,10 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2.5} />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Statut</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Statut du paiement en ligne</p>
                                         <p className="text-[13px] font-bold text-emerald-700">
-                                            {paiement.statut === "CONFIRME" || paiement.statut === "COMPLETE" ? "Paiement confirmé"
+                                            {paiement.statut === "CONFIRME" || paiement.statut === "COMPLETE"
+                                                ? isAcompte ? "Acompte (30%) payé en ligne" : "Paiement (100%) confirmé"
                                                 : paiement.statut === "EN_ATTENTE" ? "En attente"
                                                 : paiement.statut}
                                         </p>
@@ -488,13 +548,36 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                                 </div>
                             )}
 
-                            {/* Amount */}
-                            <InfoRow icon={Receipt} label="Montant total reçu">
-                                <span className="text-[14px] font-black text-slate-800 tabular-nums">
-                                    {fmtMoney(totalLocataire)}
-                                    <span className="text-[11px] font-semibold text-slate-400 ml-1">FCFA</span>
-                                </span>
-                            </InfoRow>
+                            {/* Amounts summary */}
+                            <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden divide-y divide-slate-100">
+                                <div className="flex items-center justify-between px-3.5 py-2.5">
+                                    <span className="text-[12px] text-slate-500 font-medium">Prix total réservation</span>
+                                    <span className="text-[13.5px] font-bold text-slate-800 tabular-nums">{fmtMoney(totalLocataire)} FCFA</span>
+                                </div>
+                                {isAcompte ? (
+                                    <>
+                                        <div className="flex items-center justify-between px-3.5 py-2.5 bg-emerald-50/70">
+                                            <span className="text-[12px] font-bold text-emerald-900 flex items-center gap-1.5">
+                                                <CreditCard className="w-3.5 h-3.5 text-emerald-600" />
+                                                Acompte reçu en ligne (30%)
+                                            </span>
+                                            <span className="text-[13.5px] font-black text-emerald-700 tabular-nums">{fmtMoney(montantPayeEnLigne)} FCFA</span>
+                                        </div>
+                                        <div className="flex items-center justify-between px-3.5 py-2.5 bg-amber-50/70">
+                                            <span className="text-[12px] font-bold text-amber-900 flex items-center gap-1.5">
+                                                <Banknote className="w-3.5 h-3.5 text-amber-600" />
+                                                Solde à percevoir au check-in (70%)
+                                            </span>
+                                            <span className="text-[13.5px] font-black text-amber-800 tabular-nums">{fmtMoney(montantSoldeCheckin)} FCFA</span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex items-center justify-between px-3.5 py-2.5 bg-emerald-50/70">
+                                        <span className="text-[12px] font-bold text-emerald-900">Total payé en ligne</span>
+                                        <span className="text-[13.5px] font-black text-emerald-700 tabular-nums">{fmtMoney(totalLocataire)} FCFA</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </Card>
 
@@ -504,33 +587,63 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
 
                             {/* 4 cells */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                <FinCell icon={Receipt}   label="Total locataire"   value={fmtMoney(totalLocataire)} accent={false} />
-                                <FinCell icon={TrendingUp} label="Votre revenu net"  value={fmtMoney(netAmt)}         accent={true}  />
-                                <FinCell icon={Percent}   label="Commission AutoLoc" value={fmtMoney(commissionAmt)} accent={false} sub={`${commPct}%`} />
-                                <FinCell icon={CalendarDays} label="Prix / jour"     value={fmtMoney(r.prixParJour)} accent={false} />
+                                <FinCell icon={Receipt}     label="Total location"     value={fmtMoney(totalLocataire)} accent={false} />
+                                <FinCell icon={TrendingUp}  label="Votre revenu net"   value={fmtMoney(netAmt)}         accent={true}  />
+                                <FinCell icon={Percent}     label="Commission AutoLoc" value={fmtMoney(commissionAmt)} accent={false} sub={`${commPct}%`} />
+                                <FinCell icon={CalendarDays} label="Prix / jour"       value={fmtMoney(r.prixParJour)} accent={false} />
                             </div>
 
-                            {/* Split bar */}
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between text-[10.5px] font-bold text-slate-500">
-                                    <span className="flex items-center gap-1.5">
-                                        <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                                        Votre part — {netPct}%
-                                    </span>
-                                    <span className="flex items-center gap-1.5">
-                                        Commission — {commPct}%
-                                        <span className="w-2 h-2 rounded-full bg-slate-300 inline-block" />
-                                    </span>
+                            {/* Repartition de l'encaissement si acompte */}
+                            {isAcompte ? (
+                                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                                    <p className="text-[12px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                                        <Banknote className="w-4 h-4 text-emerald-600" />
+                                        Ventilation des encaissements
+                                    </p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="rounded-xl bg-emerald-50/80 border border-emerald-200 p-3.5">
+                                            <p className="text-[10.5px] font-bold text-emerald-800 uppercase tracking-wide">1. Crédité sur votre Wallet AutoLoc</p>
+                                            <p className="text-[18px] font-black text-emerald-700 tabular-nums mt-0.5">{fmtMoney(versementWallet)} FCFA</p>
+                                            <p className="text-[11px] text-emerald-700/80 font-medium mt-1">
+                                                Acompte en ligne ({fmtMoney(montantPayeEnLigne)}) - Commission ({fmtMoney(commissionAmt)})
+                                            </p>
+                                        </div>
+                                        <div className="rounded-xl bg-amber-50/80 border border-amber-200 p-3.5">
+                                            <p className="text-[10.5px] font-bold text-amber-900 uppercase tracking-wide">2. Perçu en mains propres (Espèces)</p>
+                                            <p className="text-[18px] font-black text-amber-800 tabular-nums mt-0.5">{fmtMoney(montantSoldeCheckin)} FCFA</p>
+                                            <p className="text-[11px] text-amber-800/80 font-medium mt-1">
+                                                Solde de 70% à réclamer au locataire lors du check-in
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[12.5px]">
+                                        <span className="font-bold text-slate-700">Total net perçu (Wallet + Espèces)</span>
+                                        <span className="font-black text-emerald-600 text-[15px] tabular-nums">{fmtMoney(netAmt)} FCFA</span>
+                                    </div>
                                 </div>
-                                <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden flex">
-                                    <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-l-full transition-all duration-700" style={{ width: `${netPct}%` }} />
-                                    <div className="h-full bg-slate-200 flex-1 rounded-r-full" />
+                            ) : (
+                                /* Split bar standard pour 100% en ligne */
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-[10.5px] font-bold text-slate-500">
+                                        <span className="flex items-center gap-1.5">
+                                            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                                            Votre part (Wallet) — {netPct}%
+                                        </span>
+                                        <span className="flex items-center gap-1.5">
+                                            Commission — {commPct}%
+                                            <span className="w-2 h-2 rounded-full bg-slate-300 inline-block" />
+                                        </span>
+                                    </div>
+                                    <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden flex">
+                                        <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-l-full transition-all duration-700" style={{ width: `${netPct}%` }} />
+                                        <div className="h-full bg-slate-200 flex-1 rounded-r-full" />
+                                    </div>
+                                    <p className="text-[11px] text-slate-400 font-medium">
+                                        Revenu Net crédité sur le Wallet {" "}
+                                        <span className="font-black text-emerald-600">{fmtMoney(netAmt)} FCFA</span>.
+                                    </p>
                                 </div>
-                                <p className="text-[11px] text-slate-400 font-medium">
-                                    Revenu Net {" "}
-                                    <span className="font-black text-emerald-600">{fmtMoney(netAmt)} FCFA</span>.
-                                </p>
-                            </div>
+                            )}
 
                             {/* Service fee notice */}
                             <div className="px-3.5 py-3 bg-blue-50/60 border border-blue-100 rounded-xl">

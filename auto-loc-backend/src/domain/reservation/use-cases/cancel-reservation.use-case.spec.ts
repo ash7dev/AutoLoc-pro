@@ -1,16 +1,18 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { Prisma, StatutReservation, StatutPaiement, TypeTransactionWallet } from '@prisma/client';
+import { ModePaiementReservation, Prisma, StatutReservation, StatutPaiement, TypeTransactionWallet } from '@prisma/client';
 import { CancelReservationUseCase } from './cancel-reservation.use-case';
 import { BusinessRuleException } from '../../../common/exceptions/business-rule.exception';
 
 // ── Mocks ──────────────────────────────────────────────────────────────────────
 
 const mockTx = {
-    reservation: { update: jest.fn() },
+    reservation: { findUnique: jest.fn(), update: jest.fn() },
     reservationHistorique: { create: jest.fn() },
     paiement: { update: jest.fn() },
-    wallet: { findUnique: jest.fn(), update: jest.fn() },
+    wallet: { findUnique: jest.fn(), update: jest.fn(), upsert: jest.fn() },
     transactionWallet: { findUnique: jest.fn(), create: jest.fn() },
+    penaliteProprietaire: { create: jest.fn() },
+    $executeRaw: jest.fn(),
 };
 
 const mockPrisma = {
@@ -35,6 +37,7 @@ const mockStateMachine = {
 const mockCancellationPolicy = {
     calculateForTenant: jest.fn(),
     calculateForOwner: jest.fn(),
+    daysUntilStart: jest.fn().mockReturnValue(10),
 };
 
 const mockContractGeneration = {
@@ -54,6 +57,10 @@ const mockNotifications = {
     send: jest.fn().mockResolvedValue(undefined),
 };
 
+const mockPayment = {
+    refundPayment: jest.fn().mockResolvedValue(undefined),
+};
+
 function createUseCase(): CancelReservationUseCase {
     return new CancelReservationUseCase(
         mockPrisma as any,
@@ -65,6 +72,7 @@ function createUseCase(): CancelReservationUseCase {
         mockRevalidateService as any,
         mockTelegram as any,
         mockNotifications as any,
+        mockPayment as any,
     );
 }
 
@@ -84,6 +92,11 @@ const baseReservation = {
     totalBase: new Prisma.Decimal('75000'),
     montantCommission: new Prisma.Decimal('11250'),
     netProprietaire: new Prisma.Decimal('75000'),
+    modePaiement: ModePaiementReservation.TOTAL_EN_LIGNE,
+    montantPayeEnLigne: new Prisma.Decimal('86250'),
+    montantSoldeCheckin: new Prisma.Decimal('0'),
+    montantCommissionEnLigne: new Prisma.Decimal('11250'),
+    montantProprietaireEnLigne: new Prisma.Decimal('75000'),
     vehicule: { ville: 'Dakar' },
     paiement: { id: 'pay-1', statut: StatutPaiement.CONFIRME, montant: new Prisma.Decimal('86250') },
     locataire: { telephone: '+221771234567', prenom: 'Amadou' },
@@ -108,6 +121,7 @@ describe('CancelReservationUseCase', () => {
         useCase = createUseCase();
         mockPrisma.utilisateur.findUnique.mockResolvedValue({ id: LOCATAIRE_ID });
         mockPrisma.reservation.findUnique.mockResolvedValue(baseReservation);
+        mockTx.reservation.findUnique.mockResolvedValue(baseReservation);
         mockCancellationPolicy.calculateForTenant.mockReturnValue(tenantPolicy);
         mockStateMachine.isCancellable.mockReturnValue(true);
         mockStateMachine.transition.mockImplementation(() => { });
@@ -126,6 +140,39 @@ describe('CancelReservationUseCase', () => {
         expect(mockStateMachine.isCancellable).toHaveBeenCalledWith(StatutReservation.PAYEE);
         expect(mockTx.reservation.update).toHaveBeenCalled();
         expect(mockTx.reservationHistorique.create).toHaveBeenCalled();
+    });
+
+    it('should prorate refund on captured deposit amount', async () => {
+        const depositReservation = {
+            ...baseReservation,
+            modePaiement: ModePaiementReservation.ACOMPTE_SOLDE_CHECKIN,
+            montantPayeEnLigne: new Prisma.Decimal('25875'),
+            montantSoldeCheckin: new Prisma.Decimal('60375'),
+            montantCommissionEnLigne: new Prisma.Decimal('11250'),
+            montantProprietaireEnLigne: new Prisma.Decimal('14625'),
+            paiement: {
+                ...baseReservation.paiement,
+                montant: new Prisma.Decimal('25875'),
+            },
+        };
+        mockTx.reservation.findUnique.mockResolvedValue(depositReservation);
+
+        const result = await useCase.execute(
+            { sub: 'user-sub' } as any,
+            RESERVATION_ID,
+            { raison: 'Changement de plans' },
+        );
+
+        expect(result.refundAmount).toBe('22500');
+        expect(result.commissionRetained).toBe('3375');
+        expect(result.ownerCompensationAmount).toBe('0');
+        expect(mockTx.paiement.update).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    montantRembourse: new Prisma.Decimal('22500'),
+                }),
+            }),
+        );
     });
 
     it('should cancel for proprietaire with penalty', async () => {
@@ -174,7 +221,7 @@ describe('CancelReservationUseCase', () => {
     });
 
     it('should throw NotFoundException for missing reservation', async () => {
-        mockPrisma.reservation.findUnique.mockResolvedValue(null);
+        mockTx.reservation.findUnique.mockResolvedValue(null);
 
         await expect(
             useCase.execute(
@@ -203,8 +250,8 @@ describe('CancelReservationUseCase', () => {
     });
 
     it('should debit wallet if owner already credited', async () => {
-        mockPrisma.utilisateur.findUnique.mockResolvedValue({ id: LOCATAIRE_ID });
-        mockCancellationPolicy.calculateForTenant.mockReturnValue({
+        mockPrisma.utilisateur.findUnique.mockResolvedValue({ id: PROPRIETAIRE_ID });
+        mockCancellationPolicy.calculateForOwner.mockReturnValue({
             ...tenantPolicy,
             ownerPenaltyAmount: new Prisma.Decimal('15000'),
             ownerPenaltyPercentage: 20,

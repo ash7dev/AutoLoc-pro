@@ -7,6 +7,7 @@ import Link from 'next/link';
 import {
   Clock, CreditCard, CheckCircle2,
   ArrowRight, Loader2, Shield, Info, Truck, MapPin, AlertTriangle, UserCheck, CalendarDays,
+  Wallet, Banknote,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles';
@@ -57,6 +58,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
   const [horsDakar, setHorsDakar] = useState(false);
   const [wantsDelivery, setWantsDelivery] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [modePaiement, setModePaiement] = useState<'TOTAL_EN_LIGNE' | 'ACOMPTE_SOLDE_CHECKIN'>('TOTAL_EN_LIGNE');
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const deliveryAvailable = fraisLivraison != null && fraisLivraison > 0;
@@ -145,6 +147,9 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
     if (horsDakar) {
       params.set('horsDakar', '1');
     }
+    if (modePaiement !== 'TOTAL_EN_LIGNE') {
+      params.set('modePaiement', modePaiement);
+    }
     return params;
   }
 
@@ -219,6 +224,9 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
           }
           if (horsDakar) {
             params.set('horsDakar', '1');
+          }
+          if (modePaiement !== 'TOTAL_EN_LIGNE') {
+            params.set('modePaiement', modePaiement);
           }
           router.push(`/vehicle/${vehicleId}/payment?${params.toString()}`);
         }}
@@ -425,6 +433,108 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
             </div>
           )}
 
+          {/* ── Mode de paiement — toggle cards ── */}
+          {pricing && datesValid && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-1">
+              <div className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <Wallet className="w-3.5 h-3.5 text-slate-600" strokeWidth={2} />
+                </div>
+                <h4 className="text-[12.5px] font-black text-slate-700 uppercase tracking-wide">Mode de paiement</h4>
+              </div>
+
+              {/* Option: Paiement Total */}
+              <button
+                type="button"
+                onClick={() => setModePaiement('TOTAL_EN_LIGNE')}
+                className={cn(
+                  'w-full text-left rounded-2xl border-2 p-3.5 transition-all duration-300',
+                  modePaiement === 'TOTAL_EN_LIGNE'
+                    ? 'bg-emerald-50/60 border-emerald-300 shadow-sm shadow-emerald-500/10'
+                    : 'bg-white border-slate-200 hover:border-slate-300',
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={cn(
+                    'mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                    modePaiement === 'TOTAL_EN_LIGNE'
+                      ? 'bg-emerald-500 border-emerald-500'
+                      : 'border-slate-300',
+                  )}>
+                    {modePaiement === 'TOTAL_EN_LIGNE' && <CheckCircle2 className="w-3 h-3 text-white" strokeWidth={3} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <CreditCard className={cn(
+                        'w-3.5 h-3.5 transition-colors',
+                        modePaiement === 'TOTAL_EN_LIGNE' ? 'text-emerald-600' : 'text-slate-400'
+                      )} strokeWidth={2} />
+                      <span className={cn(
+                        'text-[13px] font-bold transition-colors',
+                        modePaiement === 'TOTAL_EN_LIGNE' ? 'text-emerald-900' : 'text-slate-700'
+                      )}>
+                        Payer 100% en ligne
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                      Payez la totalité maintenant. Réservation confirmée instantanément.
+                    </p>
+                  </div>
+                </div>
+              </button>
+
+              {/* Option: Accompte 30% */}
+              <button
+                type="button"
+                onClick={() => setModePaiement('ACOMPTE_SOLDE_CHECKIN')}
+                className={cn(
+                  'w-full text-left rounded-2xl border-2 p-3.5 transition-all duration-300',
+                  modePaiement === 'ACOMPTE_SOLDE_CHECKIN'
+                    ? 'bg-emerald-50/60 border-emerald-300 shadow-sm shadow-emerald-500/10'
+                    : 'bg-white border-slate-200 hover:border-slate-300',
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={cn(
+                    'mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                    modePaiement === 'ACOMPTE_SOLDE_CHECKIN'
+                      ? 'bg-emerald-500 border-emerald-500'
+                      : 'border-slate-300',
+                  )}>
+                    {modePaiement === 'ACOMPTE_SOLDE_CHECKIN' && <CheckCircle2 className="w-3 h-3 text-white" strokeWidth={3} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <Banknote className={cn(
+                        'w-3.5 h-3.5 transition-colors',
+                        modePaiement === 'ACOMPTE_SOLDE_CHECKIN' ? 'text-emerald-600' : 'text-slate-400'
+                      )} strokeWidth={2} />
+                      <span className={cn(
+                        'text-[13px] font-bold transition-colors',
+                        modePaiement === 'ACOMPTE_SOLDE_CHECKIN' ? 'text-emerald-900' : 'text-slate-700'
+                      )}>
+                        Accompte 30% + Solde à la remise
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                      Payez 30% maintenant, le reste au propriétaire lors de la remise des clés.
+                    </p>
+                    {modePaiement === 'ACOMPTE_SOLDE_CHECKIN' && pricing && (
+                      <div className="mt-2 flex items-center gap-3 text-[11px] font-bold animate-in fade-in duration-300">
+                        <span className="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
+                          En ligne : {formatPrice(Math.round((pricing.totalLocataire + deliveryFee) * 0.3))}
+                        </span>
+                        <span className="text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
+                          À la remise : {formatPrice(Math.round((pricing.totalLocataire + deliveryFee) * 0.7))}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </button>
+            </div>
+          )}
+
           {/* ── Résumé de la réservation — dark glass+blur — AFTER options ── */}
           {pricing && datesValid && (
             <div className="relative rounded-2xl overflow-hidden p-5 space-y-3 shadow-xl">
@@ -478,6 +588,31 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
                     {formatPrice(pricing.totalLocataire + deliveryFee)}
                   </span>
                 </div>
+
+                {/* ── Breakdown accompte if deposit mode ── */}
+                {modePaiement === 'ACOMPTE_SOLDE_CHECKIN' && (
+                  <div className="pt-2.5 mt-0.5 border-t border-white/10 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex justify-between items-center text-[12.5px]">
+                      <span className="text-emerald-300 font-semibold flex items-center gap-1.5">
+                        <CreditCard className="w-3 h-3" strokeWidth={2} />
+                        À payer maintenant (30%)
+                      </span>
+                      <span className="font-black text-emerald-300 tabular-nums">
+                        {formatPrice(Math.round((pricing.totalLocataire + deliveryFee) * 0.3))}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-[12.5px]">
+                      <span className="text-slate-400 font-semibold flex items-center gap-1.5">
+                        <Banknote className="w-3 h-3" strokeWidth={2} />
+                        Solde à la remise (70%)
+                      </span>
+                      <span className="font-semibold text-slate-400 tabular-nums">
+                        {formatPrice(Math.round((pricing.totalLocataire + deliveryFee) * 0.7))}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {loadingPricing && (
                   <div className="flex justify-center pt-1">
                     <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
@@ -560,7 +695,12 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
               ? <Loader2 className="w-5 h-5 animate-spin relative z-10" strokeWidth={2.5} />
               : <CreditCard className="w-5 h-5 relative z-10" strokeWidth={2.5} />
             }
-            <span className="relative z-10">Confirmer et réserver</span>
+            <span className="relative z-10">
+              {modePaiement === 'ACOMPTE_SOLDE_CHECKIN' && pricing
+                ? `Payer l'accompte ${formatPrice(Math.round((pricing.totalLocataire + deliveryFee) * 0.3))}`
+                : 'Confirmer et réserver'
+              }
+            </span>
             {!loadingPricing && (
               <ArrowRight className={cn(
                 "w-5 h-5 relative z-10 transition-transform",

@@ -8,7 +8,7 @@
 import React, { useState } from 'react';
 import {
     ShieldCheck, Star, ChevronUp, CreditCard, ArrowRight,
-    Check, MapPin, Truck,
+    Check, MapPin, Truck, Wallet, Banknote,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Vehicle } from '@/lib/nestjs/vehicles';
@@ -198,6 +198,7 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
     const [horsDakar, setHorsDakar] = useState(false);
     const [wantsDelivery, setWantsDelivery] = useState(false);
     const [deliveryAddress, setDeliveryAddress] = useState('');
+    const [modePaiement, setModePaiement] = useState<'TOTAL_EN_LIGNE' | 'ACOMPTE_SOLDE_CHECKIN'>('TOTAL_EN_LIGNE');
     const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
     const deliveryAvailable = fraisLivraison != null && fraisLivraison > 0;
@@ -219,6 +220,9 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
         }
         if (horsDakar) {
             params.set('horsDakar', '1');
+        }
+        if (modePaiement !== 'TOTAL_EN_LIGNE') {
+            params.set('modePaiement', modePaiement);
         }
         return params;
     };
@@ -324,6 +328,9 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                     }
                     if (horsDakar) {
                         params.set('horsDakar', '1');
+                    }
+                    if (modePaiement !== 'TOTAL_EN_LIGNE') {
+                        params.set('modePaiement', modePaiement);
                     }
                     router.push(`/vehicle/${vehicleId}/payment?${params.toString()}`);
                 }}
@@ -487,6 +494,108 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
 
                 {/* Section: Pricing Summary — AFTER options, dark glass+blur */}
                 {datesValid && pricing && !loadingPricing && (
+                    <>
+                    {/* Mode de paiement toggle */}
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center shadow-md shadow-slate-500/30">
+                                <Wallet className="w-4 h-4 text-white" strokeWidth={2} />
+                            </div>
+                            <h4 className="text-[14px] font-black text-slate-900">Mode de paiement</h4>
+                        </div>
+
+                        {/* Option: Paiement Total */}
+                        <button
+                            type="button"
+                            onClick={() => setModePaiement('TOTAL_EN_LIGNE')}
+                            className={cn(
+                                'w-full text-left rounded-2xl border-2 p-3.5 transition-all duration-300',
+                                modePaiement === 'TOTAL_EN_LIGNE'
+                                    ? 'bg-emerald-50/60 border-emerald-300 shadow-sm shadow-emerald-500/10'
+                                    : 'bg-white border-slate-200 hover:border-slate-300',
+                            )}
+                        >
+                            <div className="flex items-start gap-3">
+                                <div className={cn(
+                                    'mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                                    modePaiement === 'TOTAL_EN_LIGNE'
+                                        ? 'bg-emerald-500 border-emerald-500'
+                                        : 'border-slate-300',
+                                )}>
+                                    {modePaiement === 'TOTAL_EN_LIGNE' && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <CreditCard className={cn(
+                                            'w-3.5 h-3.5 transition-colors',
+                                            modePaiement === 'TOTAL_EN_LIGNE' ? 'text-emerald-600' : 'text-slate-400'
+                                        )} strokeWidth={2} />
+                                        <span className={cn(
+                                            'text-[13px] font-bold transition-colors',
+                                            modePaiement === 'TOTAL_EN_LIGNE' ? 'text-emerald-900' : 'text-slate-700'
+                                        )}>
+                                            Payer 100% en ligne
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                                        Payez la totalité maintenant. Réservation confirmée instantanément.
+                                    </p>
+                                </div>
+                            </div>
+                        </button>
+
+                        {/* Option: Accompte 30% */}
+                        <button
+                            type="button"
+                            onClick={() => setModePaiement('ACOMPTE_SOLDE_CHECKIN')}
+                            className={cn(
+                                'w-full text-left rounded-2xl border-2 p-3.5 transition-all duration-300',
+                                modePaiement === 'ACOMPTE_SOLDE_CHECKIN'
+                                    ? 'bg-emerald-50/60 border-emerald-300 shadow-sm shadow-emerald-500/10'
+                                    : 'bg-white border-slate-200 hover:border-slate-300',
+                            )}
+                        >
+                            <div className="flex items-start gap-3">
+                                <div className={cn(
+                                    'mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                                    modePaiement === 'ACOMPTE_SOLDE_CHECKIN'
+                                        ? 'bg-emerald-500 border-emerald-500'
+                                        : 'border-slate-300',
+                                )}>
+                                    {modePaiement === 'ACOMPTE_SOLDE_CHECKIN' && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <Banknote className={cn(
+                                            'w-3.5 h-3.5 transition-colors',
+                                            modePaiement === 'ACOMPTE_SOLDE_CHECKIN' ? 'text-emerald-600' : 'text-slate-400'
+                                        )} strokeWidth={2} />
+                                        <span className={cn(
+                                            'text-[13px] font-bold transition-colors',
+                                            modePaiement === 'ACOMPTE_SOLDE_CHECKIN' ? 'text-emerald-900' : 'text-slate-700'
+                                        )}>
+                                            Accompte 30% + Solde à la remise
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                                        Payez 30% maintenant, le reste au propriétaire lors de la remise des clés.
+                                    </p>
+                                    {modePaiement === 'ACOMPTE_SOLDE_CHECKIN' && pricing && (
+                                        <div className="mt-2 flex items-center gap-3 text-[11px] font-bold animate-in fade-in duration-300">
+                                            <span className="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
+                                                En ligne : {currencyFormat(Math.round((pricing.totalLocataire + deliveryFee) * 0.3))}
+                                            </span>
+                                            <span className="text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                                À la remise : {currencyFormat(Math.round((pricing.totalLocataire + deliveryFee) * 0.7))}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+
+                    {/* Pricing summary dark card */}
                     <div className="relative rounded-2xl overflow-hidden p-5 space-y-3 shadow-xl">
                         {/* Dark glass background */}
                         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl" />
@@ -538,8 +647,33 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                                     <div className="text-[10px] text-slate-400 font-semibold mt-0.5">FCFA</div>
                                 </div>
                             </div>
+
+                            {/* Breakdown accompte if deposit mode */}
+                            {modePaiement === 'ACOMPTE_SOLDE_CHECKIN' && (
+                                <div className="pt-2.5 mt-0.5 border-t border-white/10 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="flex justify-between items-center text-[12.5px]">
+                                        <span className="text-emerald-300 font-semibold flex items-center gap-1.5">
+                                            <CreditCard className="w-3 h-3" strokeWidth={2} />
+                                            À payer maintenant (30%)
+                                        </span>
+                                        <span className="font-black text-emerald-300 tabular-nums">
+                                            {currencyFormat(Math.round((pricing.totalLocataire + deliveryFee) * 0.3))}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[12.5px]">
+                                        <span className="text-slate-400 font-semibold flex items-center gap-1.5">
+                                            <Banknote className="w-3 h-3" strokeWidth={2} />
+                                            Solde à la remise (70%)
+                                        </span>
+                                        <span className="font-semibold text-slate-400 tabular-nums">
+                                            {currencyFormat(Math.round((pricing.totalLocataire + deliveryFee) * 0.7))}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
+                    </>
                 )}
             </div>
 
@@ -600,7 +734,9 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                     className={cn(
                         'group relative w-full flex items-center justify-center gap-3 rounded-2xl py-[18px] text-[16px] font-black tracking-tight transition-all duration-300 overflow-hidden',
                         canReserve
-                            ? 'bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-emerald-400 shadow-xl shadow-slate-900/40 hover:shadow-2xl hover:shadow-slate-900/50 hover:-translate-y-0.5 active:translate-y-0 active:shadow-lg active:scale-[0.98]'
+                            ? modePaiement === 'ACOMPTE_SOLDE_CHECKIN'
+                                ? 'bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-emerald-400 shadow-xl shadow-slate-900/40 hover:shadow-2xl hover:shadow-slate-900/50 hover:-translate-y-0.5 active:translate-y-0 active:shadow-lg active:scale-[0.98]'
+                                : 'bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-emerald-400 shadow-xl shadow-slate-900/40 hover:shadow-2xl hover:shadow-slate-900/50 hover:-translate-y-0.5 active:translate-y-0 active:shadow-lg active:scale-[0.98]'
                             : 'bg-slate-200 text-slate-400 cursor-not-allowed',
                     )}
                 >
@@ -612,7 +748,12 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                         </>
                     )}
                     <CreditCard className="w-5 h-5 flex-shrink-0 relative z-10" strokeWidth={2.5} />
-                    <span className="relative z-10">Confirmer et réserver</span>
+                    <span className="relative z-10">
+                        {modePaiement === 'ACOMPTE_SOLDE_CHECKIN' && pricing
+                            ? `Payer l'accompte ${currencyFormat(Math.round((pricing.totalLocataire + deliveryFee) * 0.3))}`
+                            : 'Confirmer et réserver'
+                        }
+                    </span>
                     <ArrowRight className={cn(
                         "w-5 h-5 flex-shrink-0 relative z-10 transition-transform",
                         canReserve && "group-hover:translate-x-1"

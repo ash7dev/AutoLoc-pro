@@ -29,6 +29,11 @@ const mockCheckinSideEffects = {
 
 
 
+const mockRevalidate = {
+    revalidatePath: jest.fn().mockResolvedValue(undefined),
+    revalidateTag: jest.fn().mockResolvedValue(undefined),
+};
+
 const PROPRIETAIRE_ID = 'prop-123';
 const LOCATAIRE_ID = 'loc-456';
 const RESERVATION_ID = 'res-789';
@@ -56,6 +61,7 @@ describe('CheckInUseCase — Double Confirmation', () => {
             mockPrisma as any,
             mockQueue as any,
             mockCheckinSideEffects as any,
+            mockRevalidate as any,
         );
         mockPrisma.utilisateur.findUnique.mockResolvedValue({ id: PROPRIETAIRE_ID });
         mockPrisma.reservation.findUnique.mockResolvedValue({ ...baseReservation });

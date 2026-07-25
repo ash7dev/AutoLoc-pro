@@ -12,6 +12,11 @@ import {
 import { Type } from 'class-transformer';
 import { FournisseurPaiement } from '@prisma/client';
 
+export enum ModePaiementReservationDto {
+  TOTAL_EN_LIGNE = 'TOTAL_EN_LIGNE',
+  ACOMPTE_SOLDE_CHECKIN = 'ACOMPTE_SOLDE_CHECKIN',
+}
+
 export class CreateReservationDto {
   @IsUUID()
   vehiculeId!: string;
@@ -26,6 +31,10 @@ export class CreateReservationDto {
 
   @IsEnum(FournisseurPaiement)
   fournisseur!: FournisseurPaiement;
+
+  @IsOptional()
+  @IsEnum(ModePaiementReservationDto)
+  modePaiement?: ModePaiementReservationDto;
 
   /** Clé d'idempotence côté body (alternative au header Idempotency-Key). */
   @IsOptional()

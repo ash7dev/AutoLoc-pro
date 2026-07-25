@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { ContratActions } from './contrat-actions';
 import { CACHE_DURATIONS, CACHE_TAGS, getCacheKey, getScopedCacheTags } from '@/lib/cache-config';
+import { cn } from '@/lib/utils';
 
 /* ════════════════════════════════════════════════════════════════
    HELPERS
@@ -125,7 +126,14 @@ export default async function TenantReservationDetailPage({ params }: { params: 
         ? r.nbJours
         : Math.max(1, Math.round((new Date(r.dateFin).getTime() - new Date(r.dateDebut).getTime()) / 86_400_000));
 
-    const totalPaye = Number(r.prixTotal) || 0;
+    const totalReservation = Number(r.prixTotal) || 0;
+    const isAcompte = r.modePaiement === 'ACOMPTE_SOLDE_CHECKIN';
+    const montantPayeEnLigne = isAcompte
+        ? (Number(r.montantPayeEnLigne) || Math.round(totalReservation * 0.3))
+        : totalReservation;
+    const montantSoldeCheckin = isAcompte
+        ? (Number(r.montantSoldeCheckin) || Math.round(totalReservation * 0.7))
+        : 0;
 
     // Logique de visibilité pour l'adresse (identique à PhoneDisplay)
     const canShowAddress = (() => {
@@ -237,15 +245,36 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                                 </p>
                             </div>
 
-                            {/* Total paid pill */}
+                            {/* Total / Acompte paid pill */}
                             <div className="flex-shrink-0 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 px-5 py-4">
-                                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400/60">Montant payé</p>
-                                <p className="text-[2rem] font-black text-emerald-400 tabular-nums leading-none mt-1">
-                                    {fmtMoney(totalPaye)}
-                                </p>
-                                <p className="text-[11px] text-emerald-400/50 font-semibold mt-1">
-                                    FCFA · {nbJours} jour{nbJours > 1 ? 's' : ''}
-                                </p>
+                                {isAcompte ? (
+                                    <>
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400/60">Acompte payé en ligne (30%)</p>
+                                        <p className="text-[1.8rem] font-black text-emerald-400 tabular-nums leading-none mt-1">
+                                            {fmtMoney(montantPayeEnLigne)} <span className="text-[13px] font-bold">FCFA</span>
+                                        </p>
+                                        <div className="mt-2.5 pt-2 border-t border-emerald-500/20 space-y-1 text-[11px] font-semibold">
+                                            <div className="flex items-center justify-between gap-4">
+                                                <span className="text-emerald-300/70">Solde à la remise (70%) :</span>
+                                                <span className="font-bold text-white tabular-nums">{fmtMoney(montantSoldeCheckin)} FCFA</span>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-4 text-[10px]">
+                                                <span className="text-emerald-400/50">Total location :</span>
+                                                <span className="font-bold text-emerald-400/80 tabular-nums">{fmtMoney(totalReservation)} FCFA</span>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400/60">Montant payé</p>
+                                        <p className="text-[2rem] font-black text-emerald-400 tabular-nums leading-none mt-1">
+                                            {fmtMoney(totalReservation)}
+                                        </p>
+                                        <p className="text-[11px] text-emerald-400/50 font-semibold mt-1">
+                                            FCFA · {nbJours} jour{nbJours > 1 ? 's' : ''}
+                                        </p>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -340,8 +369,8 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                             vehicleName={v ? `${v.marque} ${v.modele}` : undefined}
                             statut={r.statut}
                             dateDebut={r.dateDebut}
-                            totalLocataire={totalPaye}
-                            totalBase={Math.round(totalPaye * 0.85)}
+                            totalLocataire={totalReservation}
+                            totalBase={Math.round(totalReservation * 0.85)}
                         />
                     )}
                 </div>
@@ -580,6 +609,19 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                     <Card icon={CreditCard} title="Paiement" accent="emerald">
                         <div className="space-y-3.5">
 
+                            {/* Mode de paiement */}
+                            <div className="flex items-center gap-3.5 px-3.5 py-3 rounded-xl bg-slate-50 border border-slate-200">
+                                <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                                    <Wallet className="w-4.5 h-4.5 text-emerald-600" strokeWidth={2} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Mode de paiement</p>
+                                    <p className="text-[13.5px] font-black text-slate-800">
+                                        {isAcompte ? 'Acompte 30% + Solde à la remise' : 'Paiement 100% en ligne'}
+                                    </p>
+                                </div>
+                            </div>
+
                             {/* Provider */}
                             <div className="flex items-center gap-3.5 px-3.5 py-3 rounded-xl bg-slate-50 border border-slate-200">
                                 {providerLogo ? (
@@ -591,11 +633,11 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                                     />
                                 ) : (
                                     <div className="w-9 h-9 rounded-xl bg-slate-200 border border-slate-300 flex items-center justify-center">
-                                        <Wallet className="w-4 h-4 text-slate-500" strokeWidth={2} />
+                                        <CreditCard className="w-4 h-4 text-slate-500" strokeWidth={2} />
                                     </div>
                                 )}
                                 <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Moyen de paiement</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Moyen de paiement en ligne</p>
                                     <p className="text-[14px] font-black text-slate-800">{providerLabel}</p>
                                 </div>
                             </div>
@@ -607,10 +649,10 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2.5} />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Statut</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Statut du paiement en ligne</p>
                                         <p className="text-[13px] font-bold text-emerald-700">
                                             {paiement.statut === 'CONFIRME' || paiement.statut === 'COMPLETE'
-                                                ? 'Paiement confirmé'
+                                                ? isAcompte ? 'Acompte (30%) payé en ligne' : 'Paiement (100%) confirmé'
                                                 : paiement.statut === 'EN_ATTENTE' ? 'En attente'
                                                 : paiement.statut}
                                         </p>
@@ -640,15 +682,68 @@ export default async function TenantReservationDetailPage({ params }: { params: 
                                         </span>
                                     </div>
                                 )}
-                                <div className="flex items-center justify-between px-3.5 py-3 bg-white">
-                                    <span className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-700">Total payé</span>
-                                    <span className="text-[15px] font-black text-emerald-600 tabular-nums">
-                                        {fmtMoney(totalPaye)} FCFA
+                                <div className="flex items-center justify-between px-3.5 py-3 bg-slate-100/80">
+                                    <span className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-700">Total Réservation</span>
+                                    <span className="text-[15px] font-black text-slate-900 tabular-nums">
+                                        {fmtMoney(totalReservation)} FCFA
                                     </span>
                                 </div>
 
-
+                                {isAcompte && (
+                                    <>
+                                        <div className="flex items-center justify-between px-3.5 py-2.5 bg-emerald-50/70">
+                                            <span className="text-[12.5px] font-bold text-emerald-900 flex items-center gap-1.5">
+                                                <CreditCard className="w-3.5 h-3.5 text-emerald-600" />
+                                                Payé en ligne (Acompte 30%)
+                                            </span>
+                                            <span className="text-[14px] font-black text-emerald-700 tabular-nums">
+                                                {fmtMoney(montantPayeEnLigne)} FCFA
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between px-3.5 py-2.5 bg-amber-50/70">
+                                            <span className="text-[12.5px] font-bold text-amber-900 flex items-center gap-1.5">
+                                                <Banknote className="w-3.5 h-3.5 text-amber-600" />
+                                                Solde à la remise (70%)
+                                            </span>
+                                            <span className="text-[14px] font-black text-amber-800 tabular-nums">
+                                                {fmtMoney(montantSoldeCheckin)} FCFA
+                                            </span>
+                                        </div>
+                                    </>
+                                )}
                             </div>
+
+                            {/* Solde confirmation status for acompte mode */}
+                            {isAcompte && (
+                                <div className={cn(
+                                    "flex items-start gap-3 p-3.5 rounded-xl border text-[12px] font-medium",
+                                    r.soldeConfirmeLe
+                                        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                                        : "bg-amber-50 border-amber-200 text-amber-900"
+                                )}>
+                                    {r.soldeConfirmeLe ? (
+                                        <>
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" strokeWidth={2} />
+                                            <div>
+                                                <p className="font-bold text-emerald-900">Solde encaissé et confirmé</p>
+                                                <p className="text-[11px] text-emerald-700 mt-0.5 leading-relaxed">
+                                                    Le propriétaire a confirmé l&apos;encaissement du solde de {fmtMoney(montantSoldeCheckin)} FCFA lors du check-in le {fmtDate(r.soldeConfirmeLe)}.
+                                                </p>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Banknote className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" strokeWidth={2} />
+                                            <div>
+                                                <p className="font-bold text-amber-900">Règlement du solde lors de la remise des clés</p>
+                                                <p className="text-[11.5px] text-amber-800 mt-0.5 leading-relaxed">
+                                                    Vous devrez remettre <strong>{fmtMoney(montantSoldeCheckin)} FCFA</strong> en mains propres au propriétaire lors de la prise en charge du véhicule.
+                                                </p>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </Card>
 

@@ -6,6 +6,7 @@ const RESERVATION_ID = 'res-456';
 
 const mockReservation = {
     id: RESERVATION_ID,
+    creeLe: new Date('2026-03-01'),
     dateDebut: new Date('2026-03-01'),
     dateFin: new Date('2026-03-05'),
     prixParJour: { toString: () => '25000' },

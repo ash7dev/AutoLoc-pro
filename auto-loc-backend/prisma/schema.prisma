@@ -178,6 +178,14 @@ model Reservation {
   montantCommission      Decimal                 @db.Decimal(10, 2)
   totalLocataire         Decimal                 @db.Decimal(10, 2)
   netProprietaire        Decimal                 @db.Decimal(10, 2)
+  modePaiement           ModePaiementReservation @default(TOTAL_EN_LIGNE)
+  tauxAcompte            Decimal?                @db.Decimal(5, 4)
+  montantPayeEnLigne     Decimal                 @default(0) @db.Decimal(10, 2)
+  montantSoldeCheckin    Decimal                 @default(0) @db.Decimal(10, 2)
+  montantCommissionEnLigne Decimal               @default(0) @db.Decimal(10, 2)
+  montantProprietaireEnLigne Decimal             @default(0) @db.Decimal(10, 2)
+  soldeConfirmeLe        DateTime?
+  soldeConfirmeParId     String?
   statut                 StatutReservation       @default(EN_ATTENTE_PAIEMENT)
   paymentUrl             String?
   delaiSignature         DateTime
@@ -503,6 +511,11 @@ enum FournisseurPaiement {
   WAVE
   ORANGE_MONEY
   STRIPE
+}
+
+enum ModePaiementReservation {
+  TOTAL_EN_LIGNE
+  ACOMPTE_SOLDE_CHECKIN
 }
 
 enum StatutPaiement {

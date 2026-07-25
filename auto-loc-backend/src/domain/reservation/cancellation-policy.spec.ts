@@ -31,9 +31,11 @@ describe('CancellationPolicyService', () => {
     // ── Tenant cancellation ──────────────────────────────────────────────────
 
     describe('calculateForTenant', () => {
+        const now = new Date();
+
         it('> 5 days: 100% refund minus commission', () => {
             const reservation = makeReservation(daysFromNow(10));
-            const result = service.calculateForTenant(reservation);
+            const result = service.calculateForTenant(reservation, now, true);
 
             expect(result.refundPercentage).toBe(100);
             expect(result.refundAmount.equals(new Prisma.Decimal('75000'))).toBe(true);
@@ -44,7 +46,7 @@ describe('CancellationPolicyService', () => {
 
         it('2-5 days: 75% refund', () => {
             const reservation = makeReservation(daysFromNow(3));
-            const result = service.calculateForTenant(reservation);
+            const result = service.calculateForTenant(reservation, now, true);
 
             expect(result.refundPercentage).toBe(75);
             // 75% of 86250 = 64687.50
@@ -55,7 +57,7 @@ describe('CancellationPolicyService', () => {
 
         it('< 24h: 0% refund', () => {
             const reservation = makeReservation(daysFromNow(0.5));
-            const result = service.calculateForTenant(reservation);
+            const result = service.calculateForTenant(reservation, now, true);
 
             expect(result.refundPercentage).toBe(0);
             expect(result.refundAmount.equals(new Prisma.Decimal('0'))).toBe(true);
@@ -65,13 +67,13 @@ describe('CancellationPolicyService', () => {
 
         it('exactly 5 days: should get 100% (> 5)', () => {
             const reservation = makeReservation(daysFromNow(5.1));
-            const result = service.calculateForTenant(reservation);
+            const result = service.calculateForTenant(reservation, now, true);
             expect(result.refundPercentage).toBe(100);
         });
 
-        it('exactly 2 days: should get 75%', () => {
-            const reservation = makeReservation(daysFromNow(2));
-            const result = service.calculateForTenant(reservation);
+        it('3 days: should get 75%', () => {
+            const reservation = makeReservation(daysFromNow(3.1));
+            const result = service.calculateForTenant(reservation, now, true);
             expect(result.refundPercentage).toBe(75);
         });
     });

@@ -78,6 +78,10 @@ export interface Reservation {
     proprietaireId: string;
     adresseLivraison?: string | null;
     fraisLivraison?: string | null;
+    modePaiement?: 'TOTAL_EN_LIGNE' | 'ACOMPTE_SOLDE_CHECKIN';
+    montantPayeEnLigne?: string;
+    montantSoldeCheckin?: string;
+    soldeConfirmeLe?: string | null;
     paiement?: {
         statut: string;
         fournisseur: string;

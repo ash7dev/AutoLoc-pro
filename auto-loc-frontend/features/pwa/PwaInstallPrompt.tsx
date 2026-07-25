@@ -84,7 +84,7 @@ export function PwaInstallPrompt() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[60] p-4 pointer-events-none">
-      <div className="pointer-events-auto mx-auto max-w-sm rounded-2xl bg-[#0F172A] border border-white/10 p-5 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.8)] backdrop-blur-xl text-white relative animate-in slide-in-from-bottom-8 fade-in duration-500">
+      <div className="pointer-events-auto mx-auto max-w-sm rounded-2xl bg-[#0F172A] border border-emerald-500/30 p-5 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.8),0_0_48px_-12px_rgba(16,185,129,0.4)] backdrop-blur-xl text-white relative animate-in slide-in-from-bottom-8 fade-in duration-500">
         
         {/* Bouton fermer */}
         <button

@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Prisma, SensTransaction, StatutReservation, StatutRetrait, TypeTransactionWallet } from '@prisma/client';
+import { ModePaiementReservation, Prisma, SensTransaction, StatutReservation, StatutRetrait, TypeTransactionWallet } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TelegramService } from '../../infrastructure/telegram/telegram.service';
 import { NotificationService } from '../../infrastructure/notifications/notification.service';
@@ -84,18 +84,26 @@ export class WalletService {
       }
     }
 
-    const [pendingAgg, earnedAgg, transactions, penalites] = await Promise.all([
-      this.prisma.reservation.aggregate({
+    const [pendingReservations, earnedReservations, transactions, penalites] = await Promise.all([
+      this.prisma.reservation.findMany({
         where: {
           proprietaireId: utilisateur.id,
           statut: { in: pendingStatuses },
           id: { notIn: Array.from(creditedReservationIds).filter((id): id is string => id !== null) }, // Exclure les réservations déjà créditées
         },
-        _sum: { netProprietaire: true },
+        select: {
+          modePaiement: true,
+          netProprietaire: true,
+          montantProprietaireEnLigne: true,
+        },
       }),
-      this.prisma.reservation.aggregate({
+      this.prisma.reservation.findMany({
         where: { proprietaireId: utilisateur.id, statut: { in: earnedStatuses } },
-        _sum: { netProprietaire: true },
+        select: {
+          modePaiement: true,
+          netProprietaire: true,
+          montantProprietaireEnLigne: true,
+        },
       }),
       this.prisma.transactionWallet.findMany({
         where: { walletId: wallet.id },
@@ -128,10 +136,13 @@ export class WalletService {
       0,
     );
 
+    const pendingOnlineAmount = this.sumOwnerOnlineAmounts(pendingReservations);
+    const earnedOnlineAmount = this.sumOwnerOnlineAmounts(earnedReservations);
+
     // Calculer le solde retirable (solde disponible - pénalités en attente)
-    const soldeRetirable = Math.max(
-      0,
-      Number(wallet.soldeDisponible) - totalPenalites,
+    const soldeRetirable = Prisma.Decimal.max(
+      new Prisma.Decimal(0),
+      wallet.soldeDisponible.sub(new Prisma.Decimal(totalPenalites)),
     );
 
     return {
@@ -140,8 +151,8 @@ export class WalletService {
         soldeRetirable: soldeRetirable.toString(),
         soldeWave: soldeWave.toString(),
         soldeOrangeMoney: soldeOrangeMoney.toString(),
-        enAttente: pendingAgg._sum?.netProprietaire?.toString() ?? '0',
-        totalGagne: earnedAgg._sum.netProprietaire?.toString() ?? '0',
+        enAttente: pendingOnlineAmount.toString(),
+        totalGagne: earnedOnlineAmount.toString(),
       },
       transactions: transactions.map((t) => ({
         id: t.id,
@@ -283,7 +294,10 @@ export class WalletService {
     );
 
     // Calculer le solde retirable (solde - pénalités)
-    const soldeRetirable = wallet.soldeDisponible.sub(totalPenalites);
+    const soldeRetirable = Prisma.Decimal.max(
+      new Prisma.Decimal(0),
+      wallet.soldeDisponible.sub(totalPenalites),
+    );
 
     if (amount.gt(soldeRetirable)) {
       throw new BadRequestException(
@@ -479,6 +493,22 @@ export class WalletService {
         }).catch(() => { });
       }
     }
+  }
+
+  private sumOwnerOnlineAmounts(
+    reservations: Array<{
+      modePaiement: ModePaiementReservation;
+      netProprietaire: Prisma.Decimal;
+      montantProprietaireEnLigne: Prisma.Decimal;
+    }>,
+  ): Prisma.Decimal {
+    return reservations.reduce((sum, reservation) => {
+      const amount = reservation.modePaiement === ModePaiementReservation.ACOMPTE_SOLDE_CHECKIN
+        ? reservation.montantProprietaireEnLigne
+        : reservation.netProprietaire;
+
+      return sum.add(amount);
+    }, new Prisma.Decimal(0)).toDecimalPlaces(2);
   }
 
   async adminApproveWithdrawal(retraitId: string) {

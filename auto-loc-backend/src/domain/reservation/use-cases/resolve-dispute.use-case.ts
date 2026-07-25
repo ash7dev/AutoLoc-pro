@@ -3,7 +3,7 @@ import {
     Logger,
     NotFoundException,
 } from '@nestjs/common';
-import { StatutReservation, StatutLitige, StatutPaiement, SensTransaction, TypeTransactionWallet } from '@prisma/client';
+import { ModePaiementReservation, StatutReservation, StatutLitige, StatutPaiement, SensTransaction, TypeTransactionWallet } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { RequestUser } from '../../../common/types/auth.types';
 import { BusinessRuleException } from '../../../common/exceptions/business-rule.exception';
@@ -91,7 +91,7 @@ export class ResolveDisputeUseCase {
                         data: {
                             statut: StatutPaiement.REMBOURSE,
                             rembourseLe: now,
-                            montantRembourse: reservation.totalLocataire,
+                            montantRembourse: reservation.paiement.montant,
                         }
                     });
                 }
@@ -105,7 +105,10 @@ export class ResolveDisputeUseCase {
                     });
 
                     if (wallet) {
-                        const newSolde = wallet.soldeDisponible.add(reservation.netProprietaire);
+                        const montantProprietaire = reservation.modePaiement === ModePaiementReservation.ACOMPTE_SOLDE_CHECKIN
+                            ? reservation.montantProprietaireEnLigne
+                            : reservation.netProprietaire;
+                        const newSolde = wallet.soldeDisponible.add(montantProprietaire);
                         await tx.wallet.update({
                             where: { id: wallet.id },
                             data: { soldeDisponible: newSolde },
@@ -116,7 +119,7 @@ export class ResolveDisputeUseCase {
                                 walletId: wallet.id,
                                 reservationId: reservation.id,
                                 type: TypeTransactionWallet.CREDIT_LOCATION,
-                                montant: reservation.netProprietaire,
+                                montant: montantProprietaire,
                                 sens: SensTransaction.CREDIT,
                                 soldeApres: newSolde,
                                 fournisseur: reservation.paiement?.fournisseur,

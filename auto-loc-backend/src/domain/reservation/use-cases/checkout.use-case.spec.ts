@@ -19,10 +19,16 @@ const mockPrisma = {
 const mockQueue = {
     schedulePostCheckout: jest.fn().mockResolvedValue('job-id'),
     scheduleNotification: jest.fn().mockResolvedValue('notif-id'),
+    scheduleAvisRequest: jest.fn().mockResolvedValue('avis-id'),
 };
 
 const mockStateMachine = {
     transition: jest.fn(),
+};
+
+const mockRevalidate = {
+    revalidatePath: jest.fn().mockResolvedValue(undefined),
+    revalidateTag: jest.fn().mockResolvedValue(undefined),
 };
 
 const PROPRIETAIRE_ID = 'prop-123';
@@ -44,6 +50,7 @@ describe('CheckOutUseCase', () => {
             mockPrisma as any,
             mockQueue as any,
             mockStateMachine as any,
+            mockRevalidate as any,
         );
         mockPrisma.utilisateur.findUnique.mockResolvedValue({ id: PROPRIETAIRE_ID });
         mockPrisma.reservation.findUnique.mockResolvedValue(baseReservation);

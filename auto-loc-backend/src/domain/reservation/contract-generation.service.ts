@@ -53,6 +53,9 @@ export class ContractGenerationService {
                 montantCommission: true,
                 totalLocataire: true,
                 netProprietaire: true,
+                modePaiement: true,
+                montantPayeEnLigne: true,
+                montantSoldeCheckin: true,
                 contratPublicId: true,
                 confirmeeLe: true,
                 locataire: {
@@ -146,12 +149,15 @@ export class ContractGenerationService {
                 commission: reservation.montantCommission.toString(),
                 totalLocataire: reservation.totalLocataire.toString(),
                 netProprietaire: reservation.netProprietaire.toString(),
+                modePaiement: reservation.modePaiement ?? 'TOTAL_EN_LIGNE',
+                montantPayeEnLigne: (reservation.montantPayeEnLigne ?? reservation.totalLocataire).toString(),
+                montantSoldeCheckin: (reservation.montantSoldeCheckin ?? 0).toString(),
             },
-            dateReservation: reservation.creeLe.toLocaleDateString('fr-FR', {
+            dateReservation: reservation.creeLe ? new Date(reservation.creeLe).toLocaleDateString('fr-FR', {
                 day: '2-digit',
                 month: 'long',
                 year: 'numeric',
-            }),
+            }) : new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }),
             dateConfirmation: reservation.confirmeeLe ? reservation.confirmeeLe.toLocaleDateString('fr-FR', {
                 day: '2-digit',
                 month: 'long',

@@ -387,17 +387,24 @@ function TenantReservationCard({ reservation }: { reservation: Reservation }) {
                 <div className="px-4 py-3 flex-1 space-y-2.5">
                     {/* Status badge */}
                     <div className="flex items-center justify-between gap-2">
-                        <span className={cn(
-                            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] font-bold border border-transparent',
-                            st.badgeBg, st.badgeText,
-                        )}>
+                        <div className="flex items-center gap-1.5 flex-wrap">
                             <span className={cn(
-                                'w-1.5 h-1.5 rounded-full flex-shrink-0',
-                                st.badgeDot,
-                                st.pulse && 'animate-pulse',
-                            )} />
-                            {st.label}
-                        </span>
+                                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] font-bold border border-transparent',
+                                st.badgeBg, st.badgeText,
+                            )}>
+                                <span className={cn(
+                                    'w-1.5 h-1.5 rounded-full flex-shrink-0',
+                                    st.badgeDot,
+                                    st.pulse && 'animate-pulse',
+                                )} />
+                                {st.label}
+                            </span>
+                            {reservation.modePaiement === 'ACOMPTE_SOLDE_CHECKIN' && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200/60 text-[10px] font-bold text-amber-800">
+                                    Acompte 30%
+                                </span>
+                            )}
+                        </div>
 
                         {/* Dates */}
                         <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400">

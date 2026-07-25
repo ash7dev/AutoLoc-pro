@@ -60,6 +60,14 @@ function serializeReservation(r: Record<string, unknown> & {
   totalLocataire: unknown;
   montantCommission: unknown;
   netProprietaire: unknown;
+  modePaiement?: unknown;
+  tauxAcompte?: unknown;
+  montantPayeEnLigne?: unknown;
+  montantSoldeCheckin?: unknown;
+  montantCommissionEnLigne?: unknown;
+  montantProprietaireEnLigne?: unknown;
+  soldeConfirmeLe?: Date | string | null;
+  soldeConfirmeParId?: string | null;
   creeLe: Date | string;
   confirmeeLe?: Date | string | null;
   checkinProprietaireLe?: Date | string | null;
@@ -88,6 +96,14 @@ function serializeReservation(r: Record<string, unknown> & {
     prixTotal: String(r.totalLocataire ?? '0'),
     commission: String(r.montantCommission ?? '0'),
     montantProprietaire: String(r.netProprietaire ?? '0'),
+    modePaiement: r.modePaiement ?? 'TOTAL_EN_LIGNE',
+    tauxAcompte: r.tauxAcompte != null ? String(r.tauxAcompte) : null,
+    montantPayeEnLigne: String(r.montantPayeEnLigne ?? r.totalLocataire ?? '0'),
+    montantSoldeCheckin: String(r.montantSoldeCheckin ?? '0'),
+    montantCommissionEnLigne: String(r.montantCommissionEnLigne ?? r.montantCommission ?? '0'),
+    montantProprietaireEnLigne: String(r.montantProprietaireEnLigne ?? r.netProprietaire ?? '0'),
+    soldeConfirmeLe: r.soldeConfirmeLe ?? undefined,
+    soldeConfirmeParId: r.soldeConfirmeParId ?? undefined,
     creeLe: r.creeLe,
     confirmeeLe: r.confirmeeLe ?? undefined,
     checkinProprietaireLe: (r as Record<string, unknown>).checkinProprietaireLe ?? undefined,
@@ -243,6 +259,9 @@ export class ReservationsService {
         montantCommission: true,
         totalLocataire: true,
         netProprietaire: true,
+        modePaiement: true,
+        montantPayeEnLigne: true,
+        montantSoldeCheckin: true,
         annuleLe: true,
         raisonAnnulation: true,
         creeLe: true,
@@ -310,6 +329,9 @@ export class ReservationsService {
         commission: String(reservation.montantCommission),
         totalLocataire: String(reservation.totalLocataire),
         netProprietaire: String(reservation.netProprietaire),
+        modePaiement: reservation.modePaiement ?? 'TOTAL_EN_LIGNE',
+        montantPayeEnLigne: String(reservation.montantPayeEnLigne ?? reservation.totalLocataire),
+        montantSoldeCheckin: String(reservation.montantSoldeCheckin ?? '0'),
       },
       dateReservation: new Date(reservation.creeLe).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }),
       dateConfirmation: reservation.confirmeeLe
@@ -676,10 +698,9 @@ export class ReservationsService {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [revenuResult, reservationsActives, litigesOuverts, vehiculesActifs] =
+    const [reservationsRevenus, reservationsActives, litigesOuverts, vehiculesActifs] =
       await Promise.all([
-        this.prisma.reservation.aggregate({
-          _sum: { netProprietaire: true },
+        this.prisma.reservation.findMany({
           where: {
             proprietaireId: proprietaire.id,
             statut: {
@@ -691,6 +712,11 @@ export class ReservationsService {
               ],
             },
             creeLe: { gte: startOfMonth },
+          },
+          select: {
+            modePaiement: true,
+            netProprietaire: true,
+            montantProprietaireEnLigne: true,
           },
         }),
         this.prisma.reservation.count({
@@ -721,7 +747,13 @@ export class ReservationsService {
         }),
       ]);
 
-    const revenusMois = Number(revenuResult._sum.netProprietaire ?? 0);
+    const revenusMois = reservationsRevenus.reduce((sum, reservation) => {
+      const amount = reservation.modePaiement === 'ACOMPTE_SOLDE_CHECKIN'
+        ? reservation.montantProprietaireEnLigne
+        : reservation.netProprietaire;
+
+      return sum + Number(amount);
+    }, 0);
     const tauxOccupation = vehiculesActifs > 0
       ? Math.min(100, Math.round((reservationsActives / vehiculesActifs) * 100))
       : 0;
@@ -965,7 +997,7 @@ export class ReservationsService {
           data: {
             statut: 'REMBOURSE',
             rembourseLe: new Date(),
-            montantRembourse: reservation.totalLocataire,
+            montantRembourse: reservation.paiement.montant,
           },
         });
       }

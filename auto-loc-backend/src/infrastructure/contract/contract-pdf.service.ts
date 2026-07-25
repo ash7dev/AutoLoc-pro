@@ -34,6 +34,9 @@ export interface ContractPricing {
     commission: string;
     totalLocataire: string;
     netProprietaire: string;
+    modePaiement?: string;
+    montantPayeEnLigne?: string;
+    montantSoldeCheckin?: string;
 }
 
 export interface ContractData {
@@ -326,10 +329,55 @@ export class ContractPdfService {
         // Pricing table
         const tableY = doc.y;
         const prixJourTTC = Math.round(Number(t.totalLocataire) / t.nbJours);
-        const rows: Array<{ label: string; value: string; bold?: boolean; accent?: boolean; bg?: string; large?: boolean }> = [
-            { label: `Prix journalier (${prixJourTTC.toLocaleString('fr-FR')} FCFA) × ${t.nbJours} jour${t.nbJours > 1 ? 's' : ''}`, value: `${Number(t.totalLocataire).toLocaleString('fr-FR')} FCFA` },
-            { label: 'Total réglé par le locataire', value: `${Number(t.totalLocataire).toLocaleString('fr-FR')} FCFA`, bold: true, accent: true, bg: C.emeraldBg, large: true },
+        const isDeposit = t.modePaiement === 'ACOMPTE_SOLDE_CHECKIN' || Number(t.montantSoldeCheckin ?? 0) > 0;
+
+        const rows: Array<{ label: string; value: string; bold?: boolean; accent?: boolean; bg?: string; large?: boolean; accentColor?: string }> = [
+            {
+                label: `Modalité de paiement`,
+                value: isDeposit ? 'Acompte 30% en ligne + Solde à la remise' : 'Paiement 100% en ligne',
+                bold: true,
+            },
+            {
+                label: `Prix total de la location (${t.nbJours}j à ~${prixJourTTC.toLocaleString('fr-FR')} FCFA/j)`,
+                value: `${Number(t.totalLocataire).toLocaleString('fr-FR')} FCFA`,
+                bold: true,
+            },
         ];
+
+        if (isDeposit) {
+            const payeEnLigne = Number(t.montantPayeEnLigne ?? Math.round(Number(t.totalLocataire) * 0.3));
+            const soldeCheckin = Number(t.montantSoldeCheckin ?? (Number(t.totalLocataire) - payeEnLigne));
+            rows.push(
+                {
+                    label: 'Acompte réglé en ligne (30%)',
+                    value: `${payeEnLigne.toLocaleString('fr-FR')} FCFA`,
+                    bold: true,
+                    accent: true,
+                    bg: C.emeraldBg,
+                    large: true,
+                    accentColor: C.emerald,
+                },
+                {
+                    label: 'Solde dû à la remise des clés (70% en main propre)',
+                    value: `${soldeCheckin.toLocaleString('fr-FR')} FCFA`,
+                    bold: true,
+                    accent: true,
+                    bg: C.amberBg,
+                    large: true,
+                    accentColor: C.amber,
+                },
+            );
+        } else {
+            rows.push({
+                label: 'Total réglé en ligne par le locataire',
+                value: `${Number(t.totalLocataire).toLocaleString('fr-FR')} FCFA`,
+                bold: true,
+                accent: true,
+                bg: C.emeraldBg,
+                large: true,
+                accentColor: C.emerald,
+            });
+        }
 
         rows.forEach((row, i) => {
             const rh = row.large ? rowH + 6 : rowH;
@@ -339,15 +387,15 @@ export class ContractPdfService {
             doc.rect(M, y, CW, rh).strokeColor(C.border).lineWidth(0.3).stroke();
 
             const labelFont = row.bold ? 'Helvetica-Bold' : 'Helvetica';
-            const textColor = row.accent ? C.emerald : C.body;
+            const textColor = row.accentColor ?? (row.accent ? C.emerald : C.body);
             const labelSize = row.large ? 9 : 8.5;
-            const valueSize = row.large ? 12 : 9;
+            const valueSize = row.large ? 11 : 8.5;
             const vPad = Math.floor((rh - labelSize) / 2) - 1;
 
             doc.fontSize(labelSize).fillColor(C.body).font(labelFont)
-                .text(row.label, M + 14, y + vPad, { width: CW - 130 });
+                .text(row.label, M + 14, y + vPad, { width: CW - 170 });
             doc.fontSize(valueSize).fillColor(textColor).font('Helvetica-Bold')
-                .text(row.value, M + CW - 125, y + Math.floor((rh - valueSize) / 2) - 1, { width: 115, align: 'right' });
+                .text(row.value, M + CW - 165, y + Math.floor((rh - valueSize) / 2) - 1, { width: 155, align: 'right' });
         });
 
         const totalRowH = rows.reduce((acc, r) => acc + (r.large ? rowH + 6 : rowH), 0);

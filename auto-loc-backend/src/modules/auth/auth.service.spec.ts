@@ -71,6 +71,8 @@ describe('AuthService', () => {
 
     expect(result).toEqual({
       available: false,
+      exists: true,
+      hasUtilisateur: false,
       message: 'Cet email est déjà associé à un compte',
     });
   });
@@ -82,7 +84,7 @@ describe('AuthService', () => {
 
     await expect(
       service.verifyPhoneOtp({ sub: 'auth-user-1' }, '123456'),
-    ).rejects.toThrow(new BadRequestException('Code expiré ou introuvable'));
+    ).rejects.toThrow(new BadRequestException('Ce code a expiré ou n’est plus valide.'));
   });
 
   it('blocks access when the business account is suspended', async () => {
@@ -108,6 +110,6 @@ describe('AuthService', () => {
 
     await expect(
       service.getOrCreateProfile({ sub: 'auth-user-1', email: 'tester@autoloc.sn' }),
-    ).rejects.toThrow(new ForbiddenException('Votre compte est suspendu'));
+    ).rejects.toThrow(new ForbiddenException('Votre compte a été désactivé. Veuillez contacter le support.'));
   });
 });
