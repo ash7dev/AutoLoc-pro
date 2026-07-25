@@ -9,8 +9,8 @@ import { CACHE_TAGS, getCacheKey, getOwnerCacheTags } from "@/lib/cache-config";
 
 // ✅ OPTIMISATION: Cache des véhicules pour 30 secondes
 const getCachedVehicles = (token: string) => unstable_cache(
-  async () => fetchMyVehicles(token, { limit: 10 }),
-  getCacheKey(CACHE_TAGS.owner_vehicles, token, 10),
+  async () => fetchMyVehicles(token, { limit: 100 }),
+  getCacheKey(CACHE_TAGS.owner_vehicles, token, 100),
   { revalidate: 30, tags: getOwnerCacheTags(CACHE_TAGS.owner_vehicles, token) }
 )();
 
