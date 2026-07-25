@@ -30,6 +30,13 @@ export function unlockScroll() {
 }
 
 /**
+ * Arrondit un montant aux 100 FCFA les plus proches.
+ */
+export function roundToNearest100(amount: number): number {
+  return Math.round(amount / 100) * 100;
+}
+
+/**
  * Taux de commission dégressif officiel AutoLoc :
  * - ≤ 20 000 FCFA / jour        : 17,5% (0.175)
  * - 20 001 à 35 000 FCFA / jour : 15,5% (0.155)
@@ -46,11 +53,12 @@ export function getCommissionRate(prixParJour: number): number {
 }
 
 /**
- * Calcule le prix locataire à partir du prix propriétaire par jour
+ * Calcule le prix locataire à partir du prix propriétaire par jour,
+ * arrondi aux 100 FCFA les plus proches.
  */
 export function getTenantPricePerDay(prixParJour: number): number {
   const rate = getCommissionRate(prixParJour);
-  return Math.round(prixParJour * (1 + rate));
+  return roundToNearest100(prixParJour * (1 + rate));
 }
 
 

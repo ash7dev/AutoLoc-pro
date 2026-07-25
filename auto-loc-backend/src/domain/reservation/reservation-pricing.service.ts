@@ -5,6 +5,13 @@ import { Prisma } from '@prisma/client';
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 /**
+ * Arrondit un montant aux 100 FCFA les plus proches.
+ */
+export function roundToNearest100(amount: number): number {
+    return Math.round(amount / 100) * 100;
+}
+
+/**
  * Calcule le taux de commission dégressif selon le barème officiel :
  * - ≤ 20 000 FCFA / jour        : 17,5% (0.1750)
  * - 20 001 à 35 000 FCFA / jour : 15,5% (0.1550)
@@ -102,7 +109,7 @@ export class ReservationPricingService {
      * Calcule tous les montants de la réservation.
      * Utilise les tarifs progressifs si fournis, sinon le prix par jour de base.
      * Ajoute le supplément hors Dakar le cas échéant.
-     * Commission dégressive selon le barème officiel.
+     * Commission dégressive selon le barème officiel, arrondie aux 100 FCFA les plus proches.
      */
     calculate(
         prixParJour: Prisma.Decimal,
@@ -115,9 +122,10 @@ export class ReservationPricingService {
 
         const totalBase = finalPriceParJour.mul(nbJours);
         const tauxCommission = calculateCommissionRate(finalPriceParJour);
-        const montantCommission = totalBase
-            .mul(tauxCommission)
-            .toDecimalPlaces(2);
+        const rawCommission = totalBase.mul(tauxCommission).toNumber();
+        
+        const montantCommissionNum = roundToNearest100(rawCommission);
+        const montantCommission = new Prisma.Decimal(montantCommissionNum);
         const totalLocataire = totalBase.add(montantCommission);
         const netProprietaire = totalBase;
 

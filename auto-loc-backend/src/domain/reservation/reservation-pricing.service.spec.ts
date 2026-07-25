@@ -35,21 +35,21 @@ describe('ReservationPricingService', () => {
     });
 
     describe('calculate', () => {
-        it('should calculate correct totals for 15,000 FCFA/day (17.5% commission)', () => {
+        it('should calculate correct totals for 15,000 FCFA/day (17.5% commission rounded to 100 FCFA)', () => {
             const res = service.calculate(new Prisma.Decimal(15000), 2);
             expect(res.totalBase.toString()).toBe('30000'); // 15000 * 2
             expect(res.tauxCommission.toString()).toBe('0.175');
-            expect(res.montantCommission.toString()).toBe('5250'); // 30000 * 0.175
-            expect(res.totalLocataire.toString()).toBe('35250');
+            expect(res.montantCommission.toString()).toBe('5300'); // 5250 rounded to 5300
+            expect(res.totalLocataire.toString()).toBe('35300');
             expect(res.netProprietaire.toString()).toBe('30000');
         });
 
-        it('should calculate correct totals for 50,000 FCFA/day (13.5% commission)', () => {
+        it('should calculate correct totals for 50,000 FCFA/day (13.5% commission rounded to 100 FCFA)', () => {
             const res = service.calculate(new Prisma.Decimal(50000), 3);
             expect(res.totalBase.toString()).toBe('150000'); // 50000 * 3
             expect(res.tauxCommission.toString()).toBe('0.135');
-            expect(res.montantCommission.toString()).toBe('20250'); // 150000 * 0.135
-            expect(res.totalLocataire.toString()).toBe('170250');
+            expect(res.montantCommission.toString()).toBe('20300'); // 20250 rounded to 20300
+            expect(res.totalLocataire.toString()).toBe('170300');
             expect(res.netProprietaire.toString()).toBe('150000');
         });
     });
