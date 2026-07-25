@@ -1,53 +1,30 @@
-'use client';
-
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase/client';
-import { apiFetch } from '@/lib/nestjs/api-client';
-import type { ProfileResponse } from '@/lib/nestjs/auth';
-import { BecomeOwnerForm } from '@/features/owner/become-owner/components/become-owner-form';
+import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { decodeValidNestJwt } from '@/lib/nestjs/jwt';
+import { BecomeOwnerClient } from '@/features/owner/become-owner/components/become-owner-client';
 
 /**
- * /become-owner — Accessible à tout utilisateur connecté via Supabase.
+ * /become-owner — Accessible aux utilisateurs qui ne sont pas encore propriétaires.
  * - Non connecté → /login
  * - Déjà PROPRIETAIRE → /dashboard/owner
  * - ADMIN → /dashboard/admin
  * - LOCATAIRE → affiche le flow de transition
  */
 export default function BecomeOwnerPage() {
-  const router = useRouter();
+  const payload = decodeValidNestJwt(cookies().get('nest_access')?.value);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+  if (payload?.role === 'PROPRIETAIRE') {
+    redirect('/dashboard/owner');
+  }
 
-      if (!session) {
-        router.push('/login?next=/become-owner');
-        return;
-      }
-
-      // Récupérer le profil depuis le backend pour vérifier le rôle
-      try {
-        const profile = await apiFetch<ProfileResponse>('/auth/me', {
-          accessToken: session.access_token,
-        });
-        if (profile.role === 'PROPRIETAIRE') {
-          router.push('/dashboard/owner');
-        } else if (profile.role === 'ADMIN') {
-          router.push('/dashboard/admin');
-        }
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-      }
-    };
-
-    checkAuth();
-  }, [router]);
+  if (payload?.role === 'ADMIN' || payload?.role === 'SUPPORT') {
+    redirect('/dashboard/admin');
+  }
 
   return (
     <div className="min-h-[calc(100vh-60px)] bg-white flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm">
-        <BecomeOwnerForm />
+        <BecomeOwnerClient />
       </div>
     </div>
   );
