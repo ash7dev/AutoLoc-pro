@@ -34,9 +34,11 @@ export function BerlinesSection({ vehicles }: BerlinesSectionProps): React.React
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 auto-rows-fr">
         {vehicles.slice(0, 4).map((v) => (
-          <CompactVehicleCard key={v.id} vehicle={v} />
+          <div key={v.id} className="h-full">
+            <CompactVehicleCard vehicle={v} />
+          </div>
         ))}
       </div>
     </div>
