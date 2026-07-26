@@ -1,7 +1,8 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useTransition } from 'react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface VehiclesPaginationProps {
@@ -13,34 +14,38 @@ interface VehiclesPaginationProps {
 export function VehiclesPagination({ currentPage, totalPages, total }: VehiclesPaginationProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
 
   if (totalPages <= 1) return null;
 
   const goToPage = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', page.toString());
-    router.push(`?${params.toString()}`);
+    // Use startTransition to get isPending state for loading indicator
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+      // Force refresh to bypass Next.js Router Cache (client-side cache)
+      router.refresh();
+    });
   };
 
   // Calculer les numéros de pages à afficher
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
-    const maxVisible = 7; // Nombre maximum de boutons visibles
+    const maxVisible = 7;
 
     if (totalPages <= maxVisible) {
-      // Afficher toutes les pages si <= 7
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Toujours afficher la première page
       pages.push(1);
 
       if (currentPage > 3) {
         pages.push('...');
       }
 
-      // Pages autour de la page courante
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
 
@@ -52,7 +57,6 @@ export function VehiclesPagination({ currentPage, totalPages, total }: VehiclesP
         pages.push('...');
       }
 
-      // Toujours afficher la dernière page
       pages.push(totalPages);
     }
 
@@ -69,14 +73,21 @@ export function VehiclesPagination({ currentPage, totalPages, total }: VehiclesP
         <span className="font-medium">véhicule{total > 1 ? 's' : ''} au total</span>
         <span className="hidden sm:inline text-slate-300">•</span>
         <span className="hidden sm:inline text-slate-400 text-xs">Page {currentPage} sur {totalPages}</span>
+        {/* Loading indicator */}
+        {isPending && (
+          <span className="inline-flex items-center gap-1.5 ml-2 text-emerald-600">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2.5} />
+            <span className="text-[11px] font-bold animate-pulse">Chargement…</span>
+          </span>
+        )}
       </div>
 
       {/* Navigation */}
-      <div className="flex items-center gap-2">
+      <div className={cn("flex items-center gap-2", isPending && "opacity-60 pointer-events-none")}>
         {/* Bouton Précédent */}
         <button
           onClick={() => goToPage(currentPage - 1)}
-          disabled={currentPage === 1}
+          disabled={currentPage === 1 || isPending}
           className={cn(
             'flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-bold rounded-xl transition-all border',
             currentPage === 1
@@ -99,6 +110,7 @@ export function VehiclesPagination({ currentPage, totalPages, total }: VehiclesP
               <button
                 key={page}
                 onClick={() => goToPage(page as number)}
+                disabled={isPending}
                 className={cn(
                   'min-w-[40px] px-3 py-2.5 text-[13px] font-black rounded-xl transition-all border',
                   currentPage === page
@@ -120,7 +132,7 @@ export function VehiclesPagination({ currentPage, totalPages, total }: VehiclesP
         {/* Bouton Suivant */}
         <button
           onClick={() => goToPage(currentPage + 1)}
-          disabled={currentPage === totalPages}
+          disabled={currentPage === totalPages || isPending}
           className={cn(
             'flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-bold rounded-xl transition-all border',
             currentPage === totalPages

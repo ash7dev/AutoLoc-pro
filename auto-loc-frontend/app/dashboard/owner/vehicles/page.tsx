@@ -1,21 +1,16 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { unstable_cache } from "next/cache";
 import { ApiError } from "@/lib/nestjs/api-client";
 import { fetchMyVehicles, type Vehicle, type PaginatedVehicles } from "@/lib/nestjs/vehicles";
 import { OwnerHeader } from "@/features/dashboard/components/owner-header";
 import { OwnerFleet } from "@/features/vehicles/owner/OwnerFleet";
-import { CACHE_TAGS, getCacheKey, getOwnerCacheTags } from "@/lib/cache-config";
 import { VehiclesPagination } from "@/features/vehicles/owner/VehiclesPagination";
 
-const ITEMS_PER_PAGE = 10;
+// ✅ Force dynamic rendering — prevents Next.js from caching stale
+// search-param variants of this page (the root cause of pagination bugs).
+export const dynamic = "force-dynamic";
 
-// ✅ OPTIMISATION: Cache des véhicules pour 30 secondes
-const getCachedVehicles = (token: string, page: number) => unstable_cache(
-  async () => fetchMyVehicles(token, { limit: ITEMS_PER_PAGE, offset: (page - 1) * ITEMS_PER_PAGE }),
-  getCacheKey(CACHE_TAGS.owner_vehicles, token, page),
-  { revalidate: 30, tags: getOwnerCacheTags(CACHE_TAGS.owner_vehicles, token) }
-)();
+const ITEMS_PER_PAGE = 10;
 
 interface PageProps {
   searchParams: Promise<{ page?: string }>;
@@ -30,7 +25,7 @@ export default async function OwnerVehiclesPage({ searchParams }: PageProps) {
 
   let result: PaginatedVehicles;
   try {
-    result = await getCachedVehicles(token, currentPage);
+    result = await fetchMyVehicles(token, { limit: ITEMS_PER_PAGE, offset: (currentPage - 1) * ITEMS_PER_PAGE });
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) redirect("/login?expired=1");
     result = { data: [], total: 0, limit: ITEMS_PER_PAGE, offset: 0 };

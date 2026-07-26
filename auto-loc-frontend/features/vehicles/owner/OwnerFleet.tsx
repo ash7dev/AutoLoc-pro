@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -732,6 +732,11 @@ function EmptyState({ filtered }: { filtered: boolean }) {
 
 export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) {
     const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
+
+    // ✅ Sync state when server re-renders with new page data (pagination)
+    useEffect(() => {
+        setVehicles(initialVehicles);
+    }, [initialVehicles]);
     const [view, setView] = useState<"grid" | "list">("grid");
     const [filter, setFilter] = useState<FilterKey>("all");
     const [confirmVehicle, setConfirmVehicle] = useState<Vehicle | null>(null);
