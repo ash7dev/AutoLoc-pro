@@ -4,9 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus, Bell, Car, Clock, CheckCircle2, FileText, ArrowUpRight, ShieldAlert, CalendarCheck } from "lucide-react";
+import { Plus, Bell, Car, Clock, CheckCircle2, FileText, ArrowUpRight, ShieldAlert, CalendarCheck, Sparkles } from "lucide-react";
 import { useOwnerNotifications } from "../hooks/use-owner-notifications";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
+import type { Vehicle } from "@/lib/nestjs/vehicles";
+import { VehicleSelectorModal } from "@/features/vehicles/owner/VehicleSelectorModal";
+import { ShareStoryModal } from "@/features/vehicles/owner/ShareStoryModal";
 
 /* ── Notification Bell ───────────────────────────────────────────────── */
 import {
@@ -105,6 +110,8 @@ export function OwnerHeader({
   ctaShortLabel,
   ctaHref,
   ctaVariant,
+  showShareStoryBtn = false,
+  vehicles = [],
 }: {
   title: string;
   subtitle: string;
@@ -119,9 +126,16 @@ export function OwnerHeader({
   ctaShortLabel?: string;
   ctaHref?: string;
   ctaVariant?: 'withdraw';
+  showShareStoryBtn?: boolean;
+  vehicles?: Vehicle[];
 }) {
   const router = useRouter();
+  const { authFetch } = useAuthFetch();
   const [time, setTime] = useState("");
+  const [fetchedVehicles, setFetchedVehicles] = useState<Vehicle[]>(vehicles);
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const [storyModalOpen, setStoryModalOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 
   useEffect(() => {
     const update = () => {
@@ -132,6 +146,43 @@ export function OwnerHeader({
     const interval = setInterval(update, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    setFetchedVehicles(vehicles);
+  }, [vehicles]);
+
+  const handleShareStoryClick = async () => {
+    let currentList = fetchedVehicles;
+    if (!currentList || currentList.length === 0) {
+      try {
+        const res = await authFetch<{ data: Vehicle[] }>('/vehicles/me?limit=50');
+        currentList = res?.data ?? [];
+        setFetchedVehicles(currentList);
+      } catch (err) {
+        currentList = [];
+      }
+    }
+
+    const sharable = currentList.filter(v => v.statut === 'VERIFIE' || v.statut === 'EN_ATTENTE_VALIDATION');
+
+    if (sharable.length === 0) {
+      toast.error("Aucun véhicule disponible à partager", {
+        description: "Publiez votre premier véhicule pour commencer à le partager en Story.",
+        action: {
+          label: "Ajouter un véhicule",
+          onClick: () => router.push("/dashboard/owner/vehicles/new"),
+        },
+      });
+      return;
+    }
+
+    if (sharable.length === 1) {
+      setSelectedVehicle(sharable[0]);
+      setStoryModalOpen(true);
+    } else {
+      setSelectorOpen(true);
+    }
+  };
 
   return (
     <div className="relative rounded-2xl bg-[#0a0a0a] border border-white/[0.06] px-4 py-4 sm:px-8 sm:py-6 overflow-hidden">
@@ -251,6 +302,19 @@ export function OwnerHeader({
           {/* Notification bell */}
           <NotificationBell />
 
+          {/* Story & Share Header Button */}
+          {showShareStoryBtn && (
+            <button
+              onClick={handleShareStoryClick}
+              title="Partager en Story WhatsApp / Insta"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold text-xs px-3 sm:px-4 h-9 transition-all shadow-sm active:scale-95"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-emerald-400 animate-pulse" strokeWidth={2.5} />
+              <span className="hidden sm:inline">Story & Partage</span>
+              <span className="sm:hidden">Story</span>
+            </button>
+          )}
+
           {/* CTA */}
           {ctaHref ? (
             ctaHref.startsWith('#') ? (
@@ -289,6 +353,26 @@ export function OwnerHeader({
           )}
         </div>
       </div>
+
+      {/* Modals for Header Story Sharing */}
+      <VehicleSelectorModal
+        vehicles={fetchedVehicles}
+        open={selectorOpen}
+        onClose={() => setSelectorOpen(false)}
+        onSelectVehicle={(v) => {
+          setSelectedVehicle(v);
+          setStoryModalOpen(true);
+        }}
+      />
+
+      <ShareStoryModal
+        vehicle={selectedVehicle}
+        open={storyModalOpen}
+        onClose={() => {
+          setStoryModalOpen(false);
+          setSelectedVehicle(null);
+        }}
+      />
     </div>
   );
 }

@@ -76,7 +76,7 @@ export function FeatureAnnouncementModal() {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
-      <DialogContent className="max-w-lg w-[92vw] sm:w-[95vw] rounded-2xl sm:rounded-[2.5rem] p-0 border border-emerald-500/40 bg-[#070c14] text-white shadow-[0_0_60px_rgba(16,185,129,0.25)] overflow-hidden max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg w-[92vw] sm:w-[95vw] rounded-2xl sm:rounded-[2.5rem] p-0 border border-emerald-500/40 bg-[#070c14] text-white shadow-[0_0_60px_rgba(16,185,129,0.25)] overflow-hidden max-h-[90vh] overflow-y-auto sm:max-h-none sm:overflow-y-visible">
 
         {/* ── Top Hero Card ────────────────────────────────────── */}
         <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-[#06241a] to-[#02100b] p-5 sm:p-7 flex flex-col justify-between border-b border-emerald-500/20">

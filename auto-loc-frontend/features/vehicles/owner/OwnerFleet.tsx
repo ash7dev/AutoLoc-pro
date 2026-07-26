@@ -197,7 +197,10 @@ function VehicleActions({
                 onClick={(e) => e.stopPropagation()}
             >
                 <DropdownMenuItem
-                    onClick={() => onEdit(vehicle)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(vehicle);
+                    }}
                     className="group flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm cursor-pointer"
                 >
                     {locked
@@ -207,7 +210,7 @@ function VehicleActions({
                     <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 transition-all duration-150 group-hover:opacity-100 group-hover:translate-x-0 text-slate-400" strokeWidth={1.5} />
                 </DropdownMenuItem>
 
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem asChild onClick={(e) => e.stopPropagation()}>
                     <Link
                         href={`/dashboard/owner/vehicles/${vehicle.id}/reservations`}
                         className="group flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm"
@@ -218,9 +221,16 @@ function VehicleActions({
                     </Link>
                 </DropdownMenuItem>
 
-                {onShareStory && vehicle.statut === "VERIFIE" && (
+                {onShareStory && vehicle.statut !== "ARCHIVE" && (
                     <DropdownMenuItem
-                        onClick={() => onShareStory(vehicle)}
+                        onSelect={(e) => {
+                            e.preventDefault();
+                            onShareStory(vehicle);
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onShareStory(vehicle);
+                        }}
                         className="group flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-emerald-700 bg-emerald-50/50 hover:bg-emerald-100/70 focus:bg-emerald-100 cursor-pointer"
                     >
                         <Sparkles className="h-3.5 w-3.5 text-emerald-500" strokeWidth={2} />
@@ -230,7 +240,7 @@ function VehicleActions({
                 )}
 
                 {vehicle.statut === "VERIFIE" && (
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem asChild onClick={(e) => e.stopPropagation()}>
                         <Link
                             href={`/vehicle/${vehicle.id}`}
                             target="_blank"
@@ -247,7 +257,10 @@ function VehicleActions({
                     <>
                         <DropdownMenuSeparator className="my-1.5 bg-slate-100" />
                         <DropdownMenuItem
-                            onClick={() => onArchive(vehicle)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onArchive(vehicle);
+                            }}
                             className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-amber-600 focus:text-amber-700 focus:bg-amber-50 cursor-pointer"
                         >
                             <Archive className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -260,7 +273,10 @@ function VehicleActions({
                     <>
                         {vehicle.statut !== "ARCHIVE" && <DropdownMenuSeparator className="my-1.5 bg-slate-100" />}
                         <DropdownMenuItem
-                            onClick={() => onDelete(vehicle)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(vehicle);
+                            }}
                             className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer"
                         >
                             <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />

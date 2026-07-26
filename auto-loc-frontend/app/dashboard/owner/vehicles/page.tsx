@@ -45,6 +45,8 @@ export default async function OwnerVehiclesPage({ searchParams }: PageProps) {
           active: result.data.filter((v) => v.statut === "VERIFIE").length,
           drafts: 0,
         }}
+        showShareStoryBtn={true}
+        vehicles={result.data}
       />
       <OwnerFleet initialVehicles={result.data} />
       <VehiclesPagination currentPage={currentPage} totalPages={totalPages} total={result.total} />

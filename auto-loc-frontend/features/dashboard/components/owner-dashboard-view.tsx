@@ -342,6 +342,8 @@ export function OwnerDashboardView({
             <OwnerHeader
                 title="Tableau de bord"
                 subtitle={`Vue d'ensemble — ${vehicles.length} véhicule${vehicles.length !== 1 ? "s" : ""} · ${activeReservations} réservation${activeReservations !== 1 ? "s" : ""} active${activeReservations !== 1 ? "s" : ""}`}
+                showShareStoryBtn={true}
+                vehicles={vehicles}
             />
 
             {/* Profile Completion Banner */}
