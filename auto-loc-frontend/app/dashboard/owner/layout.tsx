@@ -5,6 +5,7 @@ import { unstable_cache } from 'next/cache';
 import { fetchMe } from '../../../lib/nestjs/auth';
 import { decodeValidNestJwt } from '../../../lib/nestjs/jwt';
 import { OwnerSidebar } from '../../../features/owner/components/owner-sidebar';
+import { FeatureAnnouncementModal } from '../../../features/dashboard/components/FeatureAnnouncementModal';
 
 /**
  * Guard PROPRIETAIRE : seul le rôle PROPRIETAIRE peut accéder à /dashboard/owner/*.
@@ -70,6 +71,7 @@ export default async function OwnerLayout({
       <main className="flex-1 min-w-0 overflow-y-auto pt-14 pb-[90px] lg:pt-0 lg:pb-0">
         {children}
       </main>
+      <FeatureAnnouncementModal />
     </div>
   );
 }

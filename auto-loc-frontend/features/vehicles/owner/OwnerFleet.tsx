@@ -29,6 +29,7 @@ import type { Vehicle, VehicleStatus } from "@/lib/nestjs/vehicles";
 import { VEHICLE_PATHS } from "@/lib/nestjs/vehicles";
 import { toast } from "sonner";
 import { EditVehicleSheet } from "./EditVehicleSheet";
+import { ShareStoryModal } from "./ShareStoryModal";
 import {
     STATUS_CONFIG, TYPE_LABELS, FUEL_LABELS, StatusChip,
     formatPrice, mainPhoto,
@@ -168,11 +169,13 @@ function VehicleActions({
     onEdit,
     onArchive,
     onDelete,
+    onShareStory,
 }: {
     vehicle: Vehicle;
     onEdit: (v: Vehicle) => void;
     onArchive: (v: Vehicle) => void;
     onDelete?: (v: Vehicle) => void;
+    onShareStory?: (v: Vehicle) => void;
 }) {
     const locked = vehicle.estVerrouille === true;
 
@@ -214,6 +217,17 @@ function VehicleActions({
                         <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 transition-all duration-150 group-hover:opacity-100 group-hover:translate-x-0 text-slate-400" strokeWidth={1.5} />
                     </Link>
                 </DropdownMenuItem>
+
+                {onShareStory && vehicle.statut === "VERIFIE" && (
+                    <DropdownMenuItem
+                        onClick={() => onShareStory(vehicle)}
+                        className="group flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-emerald-700 bg-emerald-50/50 hover:bg-emerald-100/70 focus:bg-emerald-100 cursor-pointer"
+                    >
+                        <Sparkles className="h-3.5 w-3.5 text-emerald-500" strokeWidth={2} />
+                        <span className="flex-1">Partager en Story</span>
+                        <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 transition-all duration-150 group-hover:opacity-100 group-hover:translate-x-0 text-emerald-600" strokeWidth={1.5} />
+                    </DropdownMenuItem>
+                )}
 
                 {vehicle.statut === "VERIFIE" && (
                     <DropdownMenuItem asChild>
@@ -268,6 +282,7 @@ function VehicleCard({
     onArchive,
     onDelete,
     onOpen,
+    onShareStory,
 }: {
     vehicle: Vehicle;
     archiving: boolean;
@@ -275,6 +290,7 @@ function VehicleCard({
     onArchive: (v: Vehicle) => void;
     onDelete?: (v: Vehicle) => void;
     onOpen: (v: Vehicle) => void;
+    onShareStory?: (v: Vehicle) => void;
 }) {
     const photo = mainPhoto(vehicle);
     const reservations = vehicle._count?.reservations ?? vehicle.totalLocations ?? 0;
@@ -363,7 +379,7 @@ function VehicleCard({
                 {/* Actions — toujours visible sur mobile, hover reveal sur desktop */}
                 <div className="absolute top-3 right-3 z-10 sm:opacity-0 sm:translate-y-1 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 transition-all duration-300">
                     <div className="rounded-xl bg-white/90 backdrop-blur-xl shadow-lg border border-white/30" onClick={(e) => e.stopPropagation()}>
-                        <VehicleActions vehicle={vehicle} onEdit={onEdit} onArchive={onArchive} onDelete={onDelete} />
+                        <VehicleActions vehicle={vehicle} onEdit={onEdit} onArchive={onArchive} onDelete={onDelete} onShareStory={onShareStory} />
                     </div>
                 </div>
 
@@ -547,6 +563,7 @@ function VehicleRow({
     onArchive,
     onDelete,
     onOpen,
+    onShareStory,
 }: {
     vehicle: Vehicle;
     archiving: boolean;
@@ -554,6 +571,7 @@ function VehicleRow({
     onArchive: (v: Vehicle) => void;
     onDelete?: (v: Vehicle) => void;
     onOpen: (v: Vehicle) => void;
+    onShareStory?: (v: Vehicle) => void;
 }) {
     const photo = mainPhoto(vehicle);
     const reservations = vehicle._count?.reservations ?? vehicle.totalLocations ?? 0;
@@ -658,7 +676,7 @@ function VehicleRow({
 
             {/* Actions */}
             <div className="flex justify-end sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300" onClick={(e) => e.stopPropagation()}>
-                <VehicleActions vehicle={vehicle} onEdit={onEdit} onArchive={onArchive} onDelete={onDelete} />
+                <VehicleActions vehicle={vehicle} onEdit={onEdit} onArchive={onArchive} onDelete={onDelete} onShareStory={onShareStory} />
             </div>
         </div>
     );
@@ -744,6 +762,7 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
     const [archivingId, setArchivingId] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [editVehicle, setEditVehicle] = useState<Vehicle | null>(null);
+    const [shareStoryVehicle, setShareStoryVehicle] = useState<Vehicle | null>(null);
     const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
         Object.fromEntries(SECTIONS.map(s => [s.id, s.defaultOpen])),
     );
@@ -930,6 +949,7 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                                                         onArchive={setConfirmVehicle}
                                                         onDelete={setConfirmDeleteVehicle}
                                                         onOpen={handleOpenVehicle}
+                                                        onShareStory={setShareStoryVehicle}
                                                     />
                                                 ))}
                                             </div>
@@ -944,6 +964,7 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                                                         onArchive={setConfirmVehicle}
                                                         onDelete={setConfirmDeleteVehicle}
                                                         onOpen={handleOpenVehicle}
+                                                        onShareStory={setShareStoryVehicle}
                                                     />
                                                 ))}
                                             </div>
@@ -971,6 +992,7 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                                 onArchive={setConfirmVehicle}
                                 onDelete={setConfirmDeleteVehicle}
                                 onOpen={handleOpenVehicle}
+                                onShareStory={setShareStoryVehicle}
                             />
                         ))}
                     </div>
@@ -990,6 +1012,7 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                                 onArchive={setConfirmVehicle}
                                 onDelete={setConfirmDeleteVehicle}
                                 onOpen={handleOpenVehicle}
+                                onShareStory={setShareStoryVehicle}
                             />
                         ))}
                     </div>
@@ -1002,6 +1025,13 @@ export function OwnerFleet({ initialVehicles }: { initialVehicles: Vehicle[] }) 
                 open={!!editVehicle}
                 onClose={() => setEditVehicle(null)}
                 onSaved={handleVehicleSaved}
+            />
+
+            {/* Story Share Modal */}
+            <ShareStoryModal
+                vehicle={shareStoryVehicle}
+                open={!!shareStoryVehicle}
+                onClose={() => setShareStoryVehicle(null)}
             />
 
             {/* Archive confirmation */}

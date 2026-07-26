@@ -10,6 +10,7 @@ import { cn, getTenantPricePerDay } from '@/lib/utils';
 import type { Vehicle } from '@/lib/nestjs/vehicles';
 import { TYPE_LABELS } from '@/features/vehicles/owner/vehicle-helpers';
 import { useCurrency } from '@/providers/currency-provider';
+import { ShareVehicleButton } from '@/features/vehicles/owner/ShareVehicleButton';
 
 interface Props { vehicle: Vehicle }
 type Photo = { id: string; url: string };
@@ -370,7 +371,7 @@ export function VehicleDetailHero({ vehicle }: Props): React.ReactElement {
               </span>
             )}
             <div className="ml-auto flex gap-1.5">
-              {/* Bouton partage supprimé */}
+              <ShareVehicleButton vehicle={vehicle} />
             </div>
           </div>
 
@@ -401,9 +402,9 @@ export function VehicleDetailHero({ vehicle }: Props): React.ReactElement {
             )}
           </div>
 
-          {/* Overlay: action buttons supprimées */}
+          {/* Overlay: action buttons */}
           <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-            {/* Espace vide */}
+            <ShareVehicleButton vehicle={vehicle} />
           </div>
 
         </div>

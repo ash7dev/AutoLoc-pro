@@ -345,7 +345,7 @@ export function OwnerDashboardView({
             />
 
             {/* Profile Completion Banner */}
-            {profile && <ProfileCompletionBanner profile={profile} />}
+            {profile && <ProfileCompletionBanner profile={profile} vehiclesCount={vehicles.length} />}
 
             {/* Stats row — visible on all breakpoints */}
             <OverviewStats data={stats} />

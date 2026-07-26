@@ -8,6 +8,7 @@ import type { UserProfile } from '@/lib/nestjs/auth';
 
 interface ProfileCompletionBannerProps {
     profile: UserProfile;
+    vehiclesCount?: number;
 }
 
 interface CompletionItem {
@@ -88,17 +89,17 @@ function calculateCompletion(profile: UserProfile) {
     };
 }
 
-export function ProfileCompletionBanner({ profile }: ProfileCompletionBannerProps) {
+export function ProfileCompletionBanner({ profile, vehiclesCount = 0 }: ProfileCompletionBannerProps) {
     const [isVisible, setIsVisible] = useState(false);
     const completion = calculateCompletion(profile);
 
     useEffect(() => {
-        // Afficher si profil incomplet
-        setIsVisible(!completion.isComplete);
-    }, [completion.isComplete]);
+        // Afficher si profil incomplet ET aucun véhicule
+        setIsVisible(!completion.isComplete && vehiclesCount === 0);
+    }, [completion.isComplete, vehiclesCount]);
 
-    // Ne rien afficher si profil complet
-    if (!isVisible) {
+    // Ne rien afficher si profil complet OU si l'utilisateur a au moins un véhicule
+    if (!isVisible || vehiclesCount > 0) {
         return null;
     }
 

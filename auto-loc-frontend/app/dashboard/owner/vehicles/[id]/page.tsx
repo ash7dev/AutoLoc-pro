@@ -249,7 +249,7 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
                 <span className="hidden sm:inline">Voir</span>
               </Link>
             )}
-            <ShareVehicleButton vehicleId={vehicle.id} marque={vehicle.marque} modele={vehicle.modele} />
+            <ShareVehicleButton vehicle={vehicle} />
             <DeleteVehicleButton vehicleId={vehicle.id} statut={vehicle.statut} />
             <EditVehicleButton vehicle={vehicle} />
           </div>
