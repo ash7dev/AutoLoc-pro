@@ -119,9 +119,10 @@ export function StepPricing({ onNext, onBack }: Props) {
                   <label className="sm:hidden text-[10px] font-bold text-slate-500 uppercase tracking-wide">À partir de (jours)</label>
                   <input
                     type="number"
+                    inputMode="numeric"
                     {...register(`tiers.${i}.joursMin` as const, { required: true, min: 1, valueAsNumber: true })}
                     placeholder="1"
-                    className="w-full h-10 sm:h-9 rounded-lg border border-slate-200 bg-white px-3 text-base sm:text-[12px] font-medium outline-none transition-all focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
+                    className="w-full h-12 sm:h-9 rounded-lg border border-slate-200 bg-white px-3 text-[16px] sm:text-[12px] font-medium outline-none transition-all focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
                   />
                 </div>
 
@@ -130,9 +131,10 @@ export function StepPricing({ onNext, onBack }: Props) {
                   <label className="sm:hidden text-[10px] font-bold text-slate-500 uppercase tracking-wide">Jusqu&apos;à (jours)</label>
                   <input
                     type="number"
+                    inputMode="numeric"
                     {...register(`tiers.${i}.joursMax` as const, { min: 1, valueAsNumber: true })}
-                    placeholder="∞"
-                    className="w-full h-10 sm:h-9 rounded-lg border border-slate-200 bg-white px-3 text-base sm:text-[12px] font-medium outline-none transition-all focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
+                    placeholder="Illimité"
+                    className="w-full h-12 sm:h-9 rounded-lg border border-slate-200 bg-white px-3 text-[16px] sm:text-[12px] font-medium outline-none transition-all focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
                   />
                 </div>
 
@@ -142,9 +144,10 @@ export function StepPricing({ onNext, onBack }: Props) {
                   <div className="relative">
                     <input
                       type="number"
+                      inputMode="numeric"
                       {...register(`tiers.${i}.prix` as const, { required: true, min: 1, valueAsNumber: true })}
                       placeholder="20 000"
-                      className="w-full h-10 sm:h-9 rounded-lg border border-slate-200 bg-white px-3 pr-14 sm:pr-3 text-base sm:text-[12px] font-medium outline-none transition-all focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
+                      className="w-full h-12 sm:h-9 rounded-lg border border-slate-200 bg-white px-3 pr-14 sm:pr-3 text-[16px] sm:text-[12px] font-medium outline-none transition-all focus:border-emerald-400 focus:ring-[3px] focus:ring-emerald-400/15"
                     />
                     <span className="sm:hidden absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">FCFA</span>
                   </div>

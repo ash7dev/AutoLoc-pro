@@ -141,7 +141,29 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
   // Equipment state
   const [equipements, setEquipements] = useState<string[]>([]);
 
+  // Vehicle types multi-selection state (1 to 3 types)
+  const [selectedTypes, setSelectedTypes] = useState<VehicleType[]>([]);
+  const [typeError, setTypeError] = useState<string | null>(null);
+
   const locked = vehicle?.estVerrouille === true;
+
+  const toggleType = (value: VehicleType) => {
+    if (lockedCritical) return;
+    setTypeError(null);
+    if (selectedTypes.includes(value)) {
+      if (selectedTypes.length === 1) {
+        setTypeError("Au moins 1 type de véhicule doit être sélectionné.");
+        return;
+      }
+      setSelectedTypes((prev) => prev.filter((t) => t !== value));
+    } else {
+      if (selectedTypes.length >= 3) {
+        setTypeError("Vous pouvez sélectionner jusqu'à 3 types maximum.");
+        return;
+      }
+      setSelectedTypes((prev) => [...prev, value]);
+    }
+  };
 
   // Verrouillage granulaire : seuls les champs critiques sont bloqués
   const lockedCritical = locked; // Immatriculation, Prix de base
@@ -198,6 +220,12 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
     setDeletedPhotoIds([]);
     setNewPhotos([]);
     setError(null);
+    setTypeError(null);
+
+    const initialTypes = vehicle.types?.length
+      ? vehicle.types
+      : (vehicle.type ? [vehicle.type] : ["BERLINE" as VehicleType]);
+    setSelectedTypes(initialTypes);
 
     // Pre-fill equipements
     const eqs = vehicle.equipements ?? [];
@@ -360,6 +388,10 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
 
   const onSubmit = async (data: EditFormData) => {
     if (!vehicle) return;
+    if (selectedTypes.length === 0) {
+      setTypeError("Au moins 1 type de véhicule doit être sélectionné.");
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -373,13 +405,16 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
         .sort() as string[];
       
       const equipementsChanged = JSON.stringify(normalizedEquipements) !== JSON.stringify(normalizedVehicleEquipements);
+
+      const initialTypes = vehicle.types?.length ? vehicle.types : (vehicle.type ? [vehicle.type] : []);
+      const typesChanged = JSON.stringify([...selectedTypes].sort()) !== JSON.stringify([...initialTypes].sort());
       
       const hasChanged = 
         data.marque !== vehicle.marque ||
         data.modele !== vehicle.modele ||
         Number(data.annee) !== vehicle.annee ||
         data.immatriculation !== vehicle.immatriculation ||
-        data.type !== vehicle.type ||
+        typesChanged ||
         (data.nombrePlaces ? Number(data.nombrePlaces) : undefined) !== (vehicle.nombrePlaces ?? undefined) ||
         (data.carburant || undefined) !== (vehicle.carburant || undefined) ||
         (data.transmission || undefined) !== (vehicle.transmission || undefined) ||
@@ -407,7 +442,8 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
             modele: data.modele,
             annee: Number(data.annee),
             immatriculation: data.immatriculation,
-            type: data.type,
+            type: selectedTypes[0],
+            types: selectedTypes,
             nombrePlaces: data.nombrePlaces ? Number(data.nombrePlaces) : undefined,
             carburant: (data.carburant || undefined) as FuelType | undefined,
             transmission: (data.transmission || undefined) as Transmission | undefined,
@@ -658,33 +694,38 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
 
                 {/* Type chips */}
                 <div>
-                  <p className={cn(LABEL_CLASS, "mb-3")}>Type de véhicule <span className="text-emerald-500 ml-0.5">*</span></p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className={cn(LABEL_CLASS)}>Type de véhicule <span className="text-emerald-500 ml-0.5">*</span></p>
+                    <span className="text-[11px] font-bold text-slate-500">
+                      {selectedTypes.length}/3 sélectionné{selectedTypes.length > 1 ? "s" : ""}
+                    </span>
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     {VEHICLE_TYPES.map((t) => {
-                      const active = watch("type") === t.value;
+                      const active = selectedTypes.includes(t.value);
                       return (
-                        <label
+                        <button
                           key={t.value}
+                          type="button"
+                          disabled={lockedCritical}
+                          onClick={() => toggleType(t.value)}
                           className={cn(
-                            "flex items-center justify-center px-3 py-2.5 rounded-xl border cursor-pointer transition-all duration-200",
+                            "flex items-center justify-center px-3 py-2.5 rounded-xl border transition-all duration-200",
                             active
-                              ? "border-emerald-400 bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-500/10 ring-1 ring-emerald-400/30"
-                              : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50",
+                              ? "border-emerald-400 bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-500/10 ring-1 ring-emerald-400/30 font-bold"
+                              : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 font-medium",
                             lockedCritical && "opacity-50 cursor-not-allowed",
                           )}
                         >
-                          <input
-                            type="radio"
-                            value={t.value}
-                            {...register("type", { required: true })}
-                            disabled={lockedCritical}
-                            className="sr-only"
-                          />
-                          <span className="text-[12px] font-bold">{t.label}</span>
-                        </label>
+                          <span className="text-[12px]">{t.label}</span>
+                          {active && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 ml-1.5 shrink-0" strokeWidth={2.5} />}
+                        </button>
                       );
                     })}
                   </div>
+                  {typeError && (
+                    <p className="text-[11px] font-bold text-red-500 mt-2">{typeError}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -819,53 +860,94 @@ export function EditVehicleSheet({ vehicle, open, onClose, onSaved }: Props) {
                   </div>
 
                   {fields.length > 0 ? (
-                    <div className="rounded-xl border-2 border-slate-200 overflow-hidden shadow-sm">
-                      <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 bg-gradient-to-br from-slate-50 to-slate-50/50 px-4 py-3.5 border-b-2 border-slate-200">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.12em]">À partir de (j)</span>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.12em]">Jusqu&apos;à (j)</span>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.12em]">Prix/j (FCFA)</span>
-                        <span />
-                      </div>
-                      <div className="divide-y divide-slate-200">
-                        {fields.map((field, i) => (
+                    <div className="space-y-3">
+                      {fields.map((field, i) => {
+                        const tierPrix = tiersWatch?.[i]?.prix;
+                        const basePrix = watch("prixParJour");
+                        const discount = basePrix && tierPrix && basePrix > 0
+                          ? Math.round(((basePrix - tierPrix) / basePrix) * 100)
+                          : 0;
+
+                        return (
                           <div
                             key={field.id}
-                            className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-center px-4 py-3 bg-white hover:bg-slate-50/50 transition-colors"
+                            className="relative rounded-xl border-2 border-slate-200 bg-white overflow-hidden hover:border-slate-300 transition-colors shadow-sm"
                           >
-                            <input
-                              type="number"
-                              {...register(`tiers.${i}.joursMin` as const, { required: true, min: 1, valueAsNumber: true })}
-                              disabled={lockedPricing}
-                              placeholder="1"
-                              className="h-11 rounded-xl border-2 border-slate-200 bg-white px-3 text-[15px] font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 shadow-sm"
-                            />
-                            <input
-                              type="number"
-                              {...register(`tiers.${i}.joursMax` as const, { min: 1, valueAsNumber: true })}
-                              disabled={lockedPricing}
-                              placeholder="∞"
-                              className="h-11 rounded-xl border-2 border-slate-200 bg-white px-3 text-[15px] font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 shadow-sm"
-                            />
-                            <input
-                              type="number"
-                              {...register(`tiers.${i}.prix` as const, { required: true, min: 1, valueAsNumber: true })}
-                              disabled={lockedPricing}
-                              placeholder="20 000"
-                              className="h-11 rounded-xl border-2 border-slate-200 bg-white px-3 text-[15px] font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 shadow-sm"
-                            />
-                            {!lockedPricing && (
-                              <button
-                                type="button"
-                                onClick={() => remove(i)}
-                                className="flex h-11 w-11 items-center justify-center rounded-xl border-2 border-slate-200 bg-white text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-300 transition-all shadow-sm"
-                              >
-                                <Trash2 className="h-4 w-4" strokeWidth={2.5} />
-                              </button>
-                            )}
-                            {lockedPricing && <div />}
+                            {/* Header du palier */}
+                            <div className="flex items-center justify-between bg-gradient-to-r from-slate-50 to-white px-4 py-2.5 border-b border-slate-100">
+                              <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                                Palier {i + 1}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                {discount > 0 && (
+                                  <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                                    −{discount}%
+                                  </span>
+                                )}
+                                {!lockedPricing && (
+                                  <button
+                                    type="button"
+                                    onClick={() => remove(i)}
+                                    className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Champs du palier */}
+                            <div className="p-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                {/* Jours Min */}
+                                <div>
+                                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                                    À partir de (jours)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    inputMode="numeric"
+                                    {...register(`tiers.${i}.joursMin` as const, { required: true, min: 1, valueAsNumber: true })}
+                                    disabled={lockedPricing}
+                                    placeholder="1"
+                                    className="w-full h-12 rounded-xl border-2 border-slate-200 bg-white px-3.5 text-[16px] font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 shadow-sm"
+                                  />
+                                </div>
+
+                                {/* Jours Max */}
+                                <div>
+                                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                                    Jusqu&apos;à (jours)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    inputMode="numeric"
+                                    {...register(`tiers.${i}.joursMax` as const, { min: 1, valueAsNumber: true })}
+                                    disabled={lockedPricing}
+                                    placeholder="Illimité"
+                                    className="w-full h-12 rounded-xl border-2 border-slate-200 bg-white px-3.5 text-[16px] font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 shadow-sm"
+                                  />
+                                </div>
+
+                                {/* Prix */}
+                                <div>
+                                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                                    Prix / jour (FCFA)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    inputMode="numeric"
+                                    {...register(`tiers.${i}.prix` as const, { required: true, min: 1, valueAsNumber: true })}
+                                    disabled={lockedPricing}
+                                    placeholder="20 000"
+                                    className="w-full h-12 rounded-xl border-2 border-slate-200 bg-white px-3.5 text-[16px] font-bold text-slate-900 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-50 shadow-sm"
+                                  />
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="flex items-start gap-3 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-4">

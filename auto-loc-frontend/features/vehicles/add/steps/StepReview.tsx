@@ -58,7 +58,8 @@ export function StepReview({ onBack }: Props) {
           marque: step1.marque,
           modele: step1.modele,
           annee: step1.annee,
-          type: step1.type,
+          type: step1.type ?? step1.types?.[0],
+          types: step1.types?.length ? step1.types : (step1.type ? [step1.type] : undefined),
           carburant: step1.carburant,
           transmission: step1.transmission,
           nombrePlaces: step1.nombrePlaces,
@@ -142,7 +143,7 @@ export function StepReview({ onBack }: Props) {
         <ReviewRow label="Marque / Modèle" value={`${step1?.marque ?? "—"} ${step1?.modele ?? ""}`} />
         <ReviewRow label="Année" value={String(step1?.annee ?? "—")} />
         <ReviewRow label="Immatriculation" value={step1?.immatriculation ?? "—"} mono />
-        <ReviewRow label="Type" value={step1?.type ?? "—"} />
+        <ReviewRow label="Type" value={step1?.types?.length ? step1.types.join(", ") : (step1?.type ?? "—")} />
         <ReviewRow label="Carburant" value={step1?.carburant ?? "—"} />
         <ReviewRow label="Transmission" value={step1?.transmission ?? "—"} />
         <ReviewRow label="Localisation" value={`${step1?.ville ?? "—"}, ${step1?.adresse ?? ""}`} />

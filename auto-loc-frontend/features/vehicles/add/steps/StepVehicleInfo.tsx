@@ -71,16 +71,34 @@ interface Props {
 export function StepVehicleInfo({ onNext }: Props) {
   const { step1, setStep1 } = useAddVehicleStore();
   const [equipements, setEquipements] = useState<string[]>(step1?.equipements ?? []);
+  const [selectedTypes, setSelectedTypes] = useState<VehicleType[]>(
+    step1?.types ?? (step1?.type ? [step1.type] : ["BERLINE"])
+  );
+  const [typeError, setTypeError] = useState<string | null>(null);
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<Step1Data>({
+  const { register, handleSubmit, formState: { errors } } = useForm<Step1Data>({
     defaultValues: step1 ?? {
       annee: new Date().getFullYear(),
-      type: "BERLINE",
       equipements: [],
     },
   });
 
-  const selectedType = watch("type");
+  const toggleType = (value: VehicleType) => {
+    setTypeError(null);
+    if (selectedTypes.includes(value)) {
+      if (selectedTypes.length === 1) {
+        setTypeError("Au moins 1 type de véhicule doit être sélectionné.");
+        return;
+      }
+      setSelectedTypes((prev) => prev.filter((t) => t !== value));
+    } else {
+      if (selectedTypes.length >= 3) {
+        setTypeError("Vous pouvez sélectionner jusqu'à 3 types maximum.");
+        return;
+      }
+      setSelectedTypes((prev) => [...prev, value]);
+    }
+  };
 
   const toggleEquipment = (value: string) => {
     setEquipements((prev) =>
@@ -89,7 +107,16 @@ export function StepVehicleInfo({ onNext }: Props) {
   };
 
   const onSubmit = (data: Step1Data) => {
-    setStep1({ ...data, equipements });
+    if (selectedTypes.length === 0) {
+      setTypeError("Au moins 1 type de véhicule doit être sélectionné.");
+      return;
+    }
+    setStep1({
+      ...data,
+      types: selectedTypes,
+      type: selectedTypes[0],
+      equipements,
+    });
     onNext();
   };
 
@@ -162,35 +189,40 @@ export function StepVehicleInfo({ onNext }: Props) {
       <SectionCard
         icon={Settings2}
         title="Type & motorisation"
-        subtitle="Catégorie, carburant et transmission"
+        subtitle="Catégorie (1 à 3 choix), carburant et transmission"
       >
         {/* Vehicle type chips */}
         <div>
-          <p className={cn(LABEL_CLASS, "mb-3")}>Type de véhicule *</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className={cn(LABEL_CLASS)}>Type de véhicule <span className="text-emerald-500">*</span></p>
+            <span className="text-[11px] font-bold text-slate-500">
+              {selectedTypes.length}/3 sélectionné{selectedTypes.length > 1 ? "s" : ""}
+            </span>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {VEHICLE_TYPES.map((t) => {
-              const active = selectedType === t.value;
+              const active = selectedTypes.includes(t.value);
               return (
-                <label
+                <button
                   key={t.value}
+                  type="button"
+                  onClick={() => toggleType(t.value)}
                   className={cn(
-                    "flex items-center justify-center px-3 py-2.5 rounded-xl border cursor-pointer transition-all duration-200",
+                    "flex items-center justify-center px-3 py-2.5 rounded-xl border transition-all duration-200",
                     active
-                      ? "border-emerald-400 bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-500/10 ring-1 ring-emerald-400/30"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50",
+                      ? "border-emerald-400 bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-500/10 ring-1 ring-emerald-400/30 font-bold"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 font-medium",
                   )}
                 >
-                  <input
-                    type="radio"
-                    value={t.value}
-                    {...register("type", { required: true })}
-                    className="sr-only"
-                  />
-                  <span className="text-[14px] sm:text-[13px] font-bold">{t.label}</span>
-                </label>
+                  <span className="text-[14px] sm:text-[13px]">{t.label}</span>
+                  {active && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 ml-1.5 shrink-0" strokeWidth={2.5} />}
+                </button>
               );
             })}
           </div>
+          {typeError && (
+            <p className="text-[11px] font-bold text-red-500 mt-2">{typeError}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-5">

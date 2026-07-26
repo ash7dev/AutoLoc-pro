@@ -10,6 +10,8 @@ import {
   ValidateNested,
   IsArray,
   ValidateIf,
+  ArrayMinSize,
+  ArrayMaxSize,
 } from 'class-validator';
 import { IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -58,8 +60,16 @@ export class CreateVehicleDto {
   @Type(() => Number)
   annee!: number;
 
+  @IsOptional()
   @IsEnum(TypeVehicule)
-  type!: TypeVehicule;
+  type?: TypeVehicule;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1, { message: 'Au moins 1 type de véhicule doit être sélectionné' })
+  @ArrayMaxSize(3, { message: 'Maximum 3 types de véhicule autorisés' })
+  @IsEnum(TypeVehicule, { each: true })
+  types?: TypeVehicule[];
 
   @IsOptional()
   @IsEnum(Carburant)

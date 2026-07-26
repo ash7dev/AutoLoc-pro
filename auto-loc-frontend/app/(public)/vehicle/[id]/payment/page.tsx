@@ -16,6 +16,7 @@ import { ApiError, apiFetch } from '@/lib/nestjs/api-client';
 import { useRoleStore } from '@/features/auth/stores/role.store';
 import { useCurrency } from '@/providers/currency-provider';
 import { supabase } from '@/lib/supabase/client';
+import { ttqTrack } from '@/lib/tiktok-pixel';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -177,6 +178,19 @@ export default function PaymentPage() {
             .finally(() => setLoading(false));
     }, [vehicleId, dateDebut, dateFin, nbJours, horsDakar, retryCount]);
 
+    // ── TikTok: InitiateCheckout ──────────────────────────────────────────────
+    useEffect(() => {
+        if (!vehicle || !pricing) return;
+        ttqTrack('InitiateCheckout', {
+            content_id: vehicleId,
+            content_type: 'product',
+            content_name: `${vehicle.marque} ${vehicle.modele}`,
+            value: pricing.totalLocataire,
+            currency: 'XOF',
+            quantity: nbJours,
+        });
+    }, [vehicle?.id, pricing?.totalLocataire]);
+
     // ── Polling quand en attente de confirmation paiement ────────────────────────
     useEffect(() => {
         if (step !== 'waiting' || !waitingId) return;
@@ -226,6 +240,16 @@ export default function PaymentPage() {
 
         setErrorMsg('');
         setStep('processing');
+
+        // TikTok: AddPaymentInfo
+        ttqTrack('AddPaymentInfo', {
+            content_id: vehicleId,
+            content_type: 'product',
+            content_name: `${vehicle.marque} ${vehicle.modele}`,
+            value: amountToPay,
+            currency: 'XOF',
+            description: method,
+        });
 
         try {
             // Vérification anti-changement de prix

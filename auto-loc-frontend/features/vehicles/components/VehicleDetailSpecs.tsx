@@ -202,8 +202,14 @@ export function VehicleDetailSpecs({ vehicle }: Props): React.ReactElement {
 
       {/* Important vehicle info */}
       <div className="rounded-2xl border border-slate-100 bg-white px-4 pt-1 pb-1">
-        {vehicle.type && (
-          <SpecRow icon={Layers} label="Catégorie" value={TYPE_LABELS[vehicle.type] || vehicle.type} />
+        {(vehicle.types?.length || vehicle.type) && (
+          <SpecRow
+            icon={Layers}
+            label="Catégorie"
+            value={(vehicle.types?.length ? vehicle.types : [vehicle.type])
+              .map((t) => TYPE_LABELS[t] || t)
+              .join(" · ")}
+          />
         )}
         {(vehicle.ville || vehicle.adresse) && (
           <SpecRow 

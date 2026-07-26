@@ -21,7 +21,8 @@ export interface Step1Data {
   marque: string;
   modele: string;
   annee: number;
-  type: VehicleType;
+  type?: VehicleType;
+  types: VehicleType[];
   carburant?: FuelType;
   transmission?: TransmissionType;
   nombrePlaces?: number;

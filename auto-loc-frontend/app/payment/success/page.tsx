@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { CheckCircle2, ChevronRight, Loader2, PartyPopper } from 'lucide-react';
 import { apiFetch } from '@/lib/nestjs/api-client';
 import { supabase } from '@/lib/supabase/client';
+import { ttqTrack } from '@/lib/tiktok-pixel';
 
 type Status = 'loading' | 'confirmed' | 'timeout';
 
@@ -37,6 +38,12 @@ export default function PaymentSuccessPage() {
                 });
                 if (res.statut === 'PAYEE' || res.statut === 'CONFIRMEE' || res.statut === 'EN_COURS') {
                     sessionStorage.removeItem('pending_reservation_id');
+                    // TikTok: CompletePayment
+                    ttqTrack('CompletePayment', {
+                        content_id: id,
+                        content_type: 'product',
+                        currency: 'XOF',
+                    });
                     if (isMounted.current) setStatus('confirmed');
                     return;
                 }

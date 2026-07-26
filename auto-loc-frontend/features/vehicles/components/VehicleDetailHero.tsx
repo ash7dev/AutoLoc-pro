@@ -411,9 +411,11 @@ export function VehicleDetailHero({ vehicle }: Props): React.ReactElement {
         {/* ── Title block ─────────────────────────────────────── */}
         <div className="pt-1">
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-[11px] font-bold uppercase tracking-widest text-slate-700">
-              {TYPE_LABELS[vehicle.type] ?? vehicle.type}
-            </span>
+            {(vehicle.types?.length ? vehicle.types : [vehicle.type]).map((t) => (
+              <span key={t} className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-100/80 text-[11px] font-bold uppercase tracking-widest text-emerald-800">
+                {TYPE_LABELS[t] ?? t}
+              </span>
+            ))}
             {vehicle.annee && (
               <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-[11px] font-bold uppercase tracking-widest text-slate-700">
                 {vehicle.annee}

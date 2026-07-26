@@ -66,6 +66,7 @@ model Vehicule {
   modele                     String
   annee                      Int
   type                       TypeVehicule
+  types                      TypeVehicule[]            @default([])
   carburant                  Carburant?
   transmission               Transmission?
   nombrePlaces               Int?

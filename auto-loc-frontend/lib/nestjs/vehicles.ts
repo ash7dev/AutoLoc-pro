@@ -57,6 +57,7 @@ export interface Vehicle {
   modele: string;
   annee: number;
   type: VehicleType;
+  types?: VehicleType[];
   carburant: FuelType | null;
   transmission: Transmission | null;
   nombrePlaces: number | null;
@@ -103,7 +104,8 @@ export interface CreateVehicleInput {
   marque: string;
   modele: string;
   annee: number;
-  type: VehicleType;
+  type?: VehicleType;
+  types?: VehicleType[];
   carburant?: FuelType;
   transmission?: Transmission;
   nombrePlaces?: number;
@@ -140,6 +142,7 @@ export interface VehicleSearchResult {
   modele: string;
   annee: number;
   type: string;
+  types?: VehicleType[];
   prixParJour: number;
   ville: string;
   note: number;

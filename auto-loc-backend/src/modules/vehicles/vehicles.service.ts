@@ -169,6 +169,9 @@ export class VehiclesService {
     let result: Awaited<ReturnType<typeof this.prisma.vehicule.findUniqueOrThrow>>;
     try {
       result = await this.prisma.$transaction(async (tx) => {
+        const typeToSave = dto.type ?? (dto.types?.length ? dto.types[0] : ('BERLINE' as any));
+        const typesToSave = dto.types?.length ? dto.types : (typeToSave ? [typeToSave] : []);
+
         // Création du véhicule avec tous les documents en une seule transaction
         const vehicle = await tx.vehicule.create({
           data: {
@@ -176,7 +179,8 @@ export class VehiclesService {
             marque: dto.marque,
             modele: dto.modele,
             annee: dto.annee,
-            type: dto.type,
+            type: typeToSave,
+            types: typesToSave,
             carburant: dto.carburant ?? null,
             transmission: dto.transmission ?? null,
             nombrePlaces: dto.nombrePlaces ?? null,
@@ -581,13 +585,17 @@ export class VehiclesService {
           }
         }
 
+        const typeToSave = dto.type ?? (dto.types?.length ? dto.types[0] : undefined);
+        const typesToSave = dto.types;
+
         return tx.vehicule.update({
           where: { id: vehicleId },
           data: {
             marque: dto.marque,
             modele: dto.modele,
             annee: dto.annee,
-            type: dto.type,
+            type: typeToSave,
+            types: typesToSave,
             carburant: dto.carburant,
             transmission: dto.transmission,
             nombrePlaces: dto.nombrePlaces,
@@ -813,7 +821,7 @@ export class VehiclesService {
       : Prisma.empty;
 
     const typeCondition = dto.type
-      ? Prisma.sql`AND v.type::text = ${dto.type}`
+      ? Prisma.sql`AND (v.type::text = ${dto.type} OR ${dto.type}::"TypeVehicule" = ANY(v.types))`
       : Prisma.empty;
 
     const prixMinCondition = dto.prixMin != null

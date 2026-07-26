@@ -382,12 +382,16 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
               <span className="text-[11px] font-semibold text-slate-600 truncate">{transmLabel}</span>
             </div>
           )}
-          {vehicle.type && (
+          {(vehicle.types?.length || vehicle.type) && (
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
                 <Car className="h-3 w-3 text-emerald-500" strokeWidth={2} />
               </div>
-              <span className="text-[11px] font-semibold text-slate-600 truncate">{TYPE_LABELS[vehicle.type] ?? vehicle.type}</span>
+              <span className="text-[11px] font-semibold text-slate-600 truncate">
+                {(vehicle.types?.length ? vehicle.types : [vehicle.type!])
+                  .map((t: string) => TYPE_LABELS[t] ?? t)
+                  .join(", ")}
+              </span>
             </div>
           )}
         </div>

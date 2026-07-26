@@ -17,6 +17,7 @@ import { fetchUserReviews } from '@/lib/nestjs/reviews';
 import { Footer } from '@/features/landing/Footer';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CACHE_DURATIONS } from '@/lib/cache-config';
+import { TikTokViewContent } from '@/components/analytics/TikTokViewContent';
 
 /** ISR — revalidate every 60 seconds */
 export const revalidate = 60;
@@ -114,6 +115,13 @@ export default async function VehicleDetailPage({ params }: PageProps) {
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(carJsonLd) }}
+            />
+            <TikTokViewContent
+                vehicleId={vehicle.id}
+                marque={vehicle.marque}
+                modele={vehicle.modele}
+                prixParJour={Number(vehicle.prixParJour)}
+                ville={vehicle.ville}
             />
             {/* ── Breadcrumb ──────────────────────────────────────────── */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-0">

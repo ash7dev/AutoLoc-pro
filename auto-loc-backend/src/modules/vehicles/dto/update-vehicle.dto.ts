@@ -10,6 +10,8 @@ import {
   ValidateNested,
   IsBoolean,
   ValidateIf,
+  ArrayMinSize,
+  ArrayMaxSize,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Carburant, Transmission, TypeVehicule } from '@prisma/client';
@@ -34,6 +36,13 @@ export class UpdateVehicleDto {
   @IsOptional()
   @IsEnum(TypeVehicule)
   type?: TypeVehicule;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1, { message: 'Au moins 1 type de véhicule doit être sélectionné' })
+  @ArrayMaxSize(3, { message: 'Maximum 3 types de véhicule autorisés' })
+  @IsEnum(TypeVehicule, { each: true })
+  types?: TypeVehicule[];
 
   @IsOptional()
   @IsEnum(Carburant)
