@@ -106,7 +106,7 @@ export function FeatureAnnouncementModal() {
           {/* Title */}
           <div className="space-y-2">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight">
-              Boostez vos réservations avec les <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400">Stories Social Media</span> 🚀
+              Boostez vos Annonces avec les <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400">Stories Social Media</span> 🚀
             </h2>
             <p className="text-[11px] sm:text-xs text-slate-300 font-medium leading-relaxed max-w-md">
               Générez en 1 clic des visuels HD pré-formatés 9:16 pour publier directement sur vos réseaux favoris.
