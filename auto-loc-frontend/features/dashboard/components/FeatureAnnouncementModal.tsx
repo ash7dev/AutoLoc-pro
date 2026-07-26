@@ -76,28 +76,28 @@ export function FeatureAnnouncementModal() {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
-      <DialogContent className="max-w-lg w-[95vw] rounded-[2.5rem] p-0 border border-emerald-500/40 bg-[#070c14] text-white shadow-[0_0_60px_rgba(16,185,129,0.25)] overflow-hidden">
-        
+      <DialogContent className="max-w-lg w-[92vw] sm:w-[95vw] rounded-2xl sm:rounded-[2.5rem] p-0 border border-emerald-500/40 bg-[#070c14] text-white shadow-[0_0_60px_rgba(16,185,129,0.25)] overflow-hidden max-h-[90vh] overflow-y-auto">
+
         {/* ── Top Hero Card ────────────────────────────────────── */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-[#06241a] to-[#02100b] p-7 flex flex-col justify-between border-b border-emerald-500/20">
-          
+        <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-[#06241a] to-[#02100b] p-5 sm:p-7 flex flex-col justify-between border-b border-emerald-500/20">
+
           {/* Glowing Orbs */}
-          <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-emerald-400/20 blur-3xl pointer-events-none animate-pulse" />
-          <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-teal-400/15 blur-3xl pointer-events-none" />
+          <div className="absolute -top-16 -right-16 w-40 sm:w-56 h-40 sm:h-56 rounded-full bg-emerald-400/20 blur-3xl pointer-events-none animate-pulse" />
+          <div className="absolute -bottom-16 -left-16 w-32 sm:w-48 h-32 sm:h-48 rounded-full bg-teal-400/15 blur-3xl pointer-events-none" />
 
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="absolute top-5 right-5 z-20 w-9 h-9 rounded-full bg-black/50 hover:bg-black/80 border border-white/10 backdrop-blur-xl flex items-center justify-center text-slate-400 hover:text-white transition-all active:scale-90"
+            className="absolute top-3 right-3 sm:top-5 sm:right-5 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/50 hover:bg-black/80 border border-white/10 backdrop-blur-xl flex items-center justify-center text-slate-400 hover:text-white transition-all active:scale-90"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
 
           {/* Header Badge */}
-          <div className="flex items-center gap-2 mb-4">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 backdrop-blur-md shadow-lg shadow-emerald-500/10">
-              <Sparkles className="w-4 h-4 text-emerald-400 animate-spin" style={{ animationDuration: '8s' }} />
-              <span className="text-[11px] font-black uppercase tracking-widest text-emerald-300">
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
+            <span className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 backdrop-blur-md shadow-lg shadow-emerald-500/10">
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 animate-spin" style={{ animationDuration: '8s' }} />
+              <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-emerald-300">
                 Nouveauté Exclusive
               </span>
             </span>
@@ -105,80 +105,83 @@ export function FeatureAnnouncementModal() {
 
           {/* Title */}
           <div className="space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight">
               Boostez vos réservations avec les <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400">Stories Social Media</span> 🚀
             </h2>
-            <p className="text-xs text-slate-300 font-medium leading-relaxed max-w-md">
+            <p className="text-[11px] sm:text-xs text-slate-300 font-medium leading-relaxed max-w-md">
               Générez en 1 clic des visuels HD pré-formatés 9:16 pour publier directement sur vos réseaux favoris.
             </p>
           </div>
 
           {/* Social Platform Badges */}
-          <div className="flex items-center gap-3 mt-5 pt-4 border-t border-white/10">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-400 text-xs font-bold shadow-sm">
-              <WhatsAppIcon className="w-4 h-4" />
-              WhatsApp
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-white/10">
+            <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-400 text-[10px] sm:text-xs font-bold shadow-sm">
+              <WhatsAppIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">WhatsApp</span>
+              <span className="inline xs:hidden">WA</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-pink-400/30 text-pink-300 text-xs font-bold shadow-sm">
-              <InstagramIcon className="w-4 h-4" />
-              Instagram
+            <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-pink-400/30 text-pink-300 text-[10px] sm:text-xs font-bold shadow-sm">
+              <InstagramIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Instagram</span>
+              <span className="inline xs:hidden">IG</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400/20 border border-amber-400/30 text-amber-300 text-xs font-bold shadow-sm">
-              <SnapchatIcon className="w-4 h-4" />
-              Snapchat
+            <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-amber-400/20 border border-amber-400/30 text-amber-300 text-[10px] sm:text-xs font-bold shadow-sm">
+              <SnapchatIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Snapchat</span>
+              <span className="inline xs:hidden">SC</span>
             </div>
           </div>
         </div>
 
         {/* ── Modal Body & Feature Cards ───────────────────────── */}
-        <div className="p-6 space-y-5 bg-[#070c14]">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 bg-[#070c14]">
 
           {/* Feature Highlights Grid */}
-          <div className="grid grid-cols-1 gap-3">
-            
+          <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
+
             {/* Card 1: WhatsApp Direct */}
-            <div className="group flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-emerald-500/40 hover:bg-white/[0.05] transition-all duration-300 shadow-sm">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0 text-emerald-400 group-hover:scale-110 transition-transform">
-                <WhatsAppIcon className="w-5 h-5" />
+            <div className="group flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/[0.03] border border-white/10 hover:border-emerald-500/40 hover:bg-white/[0.05] transition-all duration-300 shadow-sm">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0 text-emerald-400 group-hover:scale-110 transition-transform">
+                <WhatsAppIcon className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black text-white tracking-wide">Statuts & Messages WhatsApp</h4>
-                  <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">Instant</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start sm:items-center justify-between gap-2 flex-wrap">
+                  <h4 className="text-[11px] sm:text-xs font-black text-white tracking-wide">Statuts & Messages WhatsApp</h4>
+                  <span className="text-[8px] sm:text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 sm:px-2 py-0.5 rounded-md whitespace-nowrap">Instant</span>
                 </div>
-                <p className="text-[11.5px] text-slate-400 font-medium leading-normal mt-1">
+                <p className="text-[10.5px] sm:text-[11.5px] text-slate-400 font-medium leading-relaxed mt-1">
                   Envoyez votre annonce directement à vos contacts avec un texte accrocheur pré-rempli et le lien officiel AutoLoc.
                 </p>
               </div>
             </div>
 
             {/* Card 2: Story Canvas 9:16 */}
-            <div className="group flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-emerald-500/40 hover:bg-white/[0.05] transition-all duration-300 shadow-sm">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/30 flex items-center justify-center shrink-0 text-pink-400 group-hover:scale-110 transition-transform">
-                <Smartphone className="w-5 h-5" />
+            <div className="group flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/[0.03] border border-white/10 hover:border-emerald-500/40 hover:bg-white/[0.05] transition-all duration-300 shadow-sm">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-400/30 flex items-center justify-center shrink-0 text-pink-400 group-hover:scale-110 transition-transform">
+                <Smartphone className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black text-white tracking-wide">Générateur d&apos;Image Story 9:16 HD</h4>
-                  <span className="text-[9px] font-bold text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-md">Format 1080×1920</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start sm:items-center justify-between gap-2 flex-wrap">
+                  <h4 className="text-[11px] sm:text-xs font-black text-white tracking-wide">Générateur d&apos;Image Story 9:16 HD</h4>
+                  <span className="text-[8px] sm:text-[9px] font-bold text-purple-300 bg-purple-500/10 px-1.5 sm:px-2 py-0.5 rounded-md whitespace-nowrap">1080×1920</span>
                 </div>
-                <p className="text-[11.5px] text-slate-400 font-medium leading-normal mt-1">
+                <p className="text-[10.5px] sm:text-[11.5px] text-slate-400 font-medium leading-relaxed mt-1">
                   Créez des visuels de qualité professionnelle avec la photo de votre voiture, votre tarif en FCFA, et le badge certifié.
                 </p>
               </div>
             </div>
 
             {/* Card 3: Punchlines */}
-            <div className="group flex items-start gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-emerald-500/40 hover:bg-white/[0.05] transition-all duration-300 shadow-sm">
-              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center shrink-0 text-amber-400 group-hover:scale-110 transition-transform">
-                <Zap className="w-5 h-5" />
+            <div className="group flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/[0.03] border border-white/10 hover:border-emerald-500/40 hover:bg-white/[0.05] transition-all duration-300 shadow-sm">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center shrink-0 text-amber-400 group-hover:scale-110 transition-transform">
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black text-white tracking-wide">Catalogue de Punchlines Marketing</h4>
-                  <span className="text-[9px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-md">Au choix</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start sm:items-center justify-between gap-2 flex-wrap">
+                  <h4 className="text-[11px] sm:text-xs font-black text-white tracking-wide">Catalogue de Punchlines Marketing</h4>
+                  <span className="text-[8px] sm:text-[9px] font-bold text-amber-300 bg-amber-500/10 px-1.5 sm:px-2 py-0.5 rounded-md whitespace-nowrap">Au choix</span>
                 </div>
-                <p className="text-[11.5px] text-slate-400 font-medium leading-normal mt-1">
+                <p className="text-[10.5px] sm:text-[11.5px] text-slate-400 font-medium leading-relaxed mt-1">
                   Sélectionnez la phrase d&apos;accroche la plus percutante ou rédigez votre propre message personnalisé.
                 </p>
               </div>
@@ -187,18 +190,19 @@ export function FeatureAnnouncementModal() {
           </div>
 
           {/* ── Action Buttons ──────────────────────────────────── */}
-          <div className="space-y-2.5 pt-2">
+          <div className="space-y-2 sm:space-y-2.5 pt-2">
             <Button
               onClick={handleTryNow}
-              className="w-full h-13 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black text-xs gap-2 shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-all hover:scale-[1.01] active:scale-[0.99]"
+              className="w-full h-11 sm:h-13 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black text-[11px] sm:text-xs gap-2 shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-all hover:scale-[1.01] active:scale-[0.99]"
             >
-              Découvrir sur ma flotte de véhicules
-              <ArrowRight className="w-4 h-4 stroke-[3]" />
+              <span className="hidden sm:inline">Découvrir sur ma flotte de véhicules</span>
+              <span className="inline sm:hidden">Essayer maintenant</span>
+              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
             </Button>
-            
+
             <button
               onClick={handleClose}
-              className="w-full py-2.5 text-center text-slate-400 hover:text-white text-xs font-semibold transition-colors"
+              className="w-full py-2 sm:py-2.5 text-center text-slate-400 hover:text-white text-[11px] sm:text-xs font-semibold transition-colors"
             >
               Compris, fermer l&apos;annonce
             </button>
