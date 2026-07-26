@@ -22,6 +22,61 @@ interface ShareStoryModalProps {
 
 export type StoryTheme = 'dark_luxe' | 'emerald_brand' | 'clean_light';
 
+// ── Frosted-glass panel: blurs whatever is already on the canvas behind the
+// panel area, then washes it with a tint (white / emerald / dark) and adds a
+// gloss sheen + hairline rim — this is what gives the "passé par Photoshop"
+// premium look instead of a flat gradient.
+function drawFrostedPanel(
+  ctx: CanvasRenderingContext2D,
+  sourceCanvas: HTMLCanvasElement,
+  x: number, y: number, w: number, h: number,
+  radii: number[],
+  tint: string,
+  blurAmount = 24
+) {
+  const temp = document.createElement('canvas');
+  temp.width = w;
+  temp.height = h;
+  const tCtx = temp.getContext('2d');
+  if (tCtx) {
+    tCtx.drawImage(sourceCanvas, x, y, w, h, 0, 0, w, h);
+  }
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, radii);
+  ctx.clip();
+
+  // Blurred, slightly saturated backdrop (the "frosted" part)
+  ctx.filter = `blur(${blurAmount}px) saturate(1.35)`;
+  ctx.drawImage(temp, x - blurAmount, y - blurAmount, w + blurAmount * 2, h + blurAmount * 2);
+  ctx.filter = 'none';
+
+  // Color wash on top of the blur
+  ctx.fillStyle = tint;
+  ctx.fillRect(x, y, w, h);
+
+  // Gloss sheen for that glassy, catch-the-light feel
+  const sheen = ctx.createLinearGradient(x, y, x, y + h);
+  sheen.addColorStop(0, 'rgba(255,255,255,0.18)');
+  sheen.addColorStop(0.45, 'rgba(255,255,255,0.02)');
+  sheen.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sheen;
+  ctx.fillRect(x, y, w, h);
+
+  ctx.restore();
+
+  // Hairline rim along the top edge — the "edge of the glass" catch-light
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x + radii[0], y + 1);
+  ctx.lineTo(x + w - radii[1], y + 1);
+  ctx.stroke();
+  ctx.restore();
+}
+
 export function ShareStoryModal({ vehicle, open, onClose }: ShareStoryModalProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [selectedPunchlineIndex, setSelectedPunchlineIndex] = useState<number>(0);
@@ -247,28 +302,75 @@ export function ShareStoryModal({ vehicle, open, onClose }: ShareStoryModalProps
         ctx.fillText('📷 Photo indisponible', imgX + imgW / 2, imgY + imgH / 2);
       }
 
-      const imgGrad = ctx.createLinearGradient(0, imgY + imgH - 300, 0, imgY + imgH);
-      imgGrad.addColorStop(0, 'transparent');
-      imgGrad.addColorStop(1, 'rgba(0, 0, 0, 0.85)');
-      ctx.fillStyle = imgGrad;
-      ctx.fillRect(imgX, imgY + imgH - 300, imgW, 300);
+      // Duotone-style color grade over the photo itself — this is what makes
+      // it feel graded/edited rather than a raw upload, and it varies by theme.
+      if (imageOk) {
+        if (selectedTheme === 'dark_luxe') {
+          ctx.globalCompositeOperation = 'overlay';
+          ctx.fillStyle = 'rgba(8, 20, 35, 0.35)';
+          ctx.fillRect(imgX, imgY, imgW, imgH);
+          ctx.globalCompositeOperation = 'soft-light';
+          ctx.fillStyle = 'rgba(16, 185, 129, 0.18)';
+          ctx.fillRect(imgX, imgY, imgW, imgH);
+        } else if (selectedTheme === 'emerald_brand') {
+          ctx.globalCompositeOperation = 'multiply';
+          ctx.fillStyle = 'rgba(6, 78, 59, 0.4)';
+          ctx.fillRect(imgX, imgY, imgW, imgH);
+          ctx.globalCompositeOperation = 'screen';
+          ctx.fillStyle = 'rgba(110, 231, 183, 0.16)';
+          ctx.fillRect(imgX, imgY, imgW, imgH);
+        } else {
+          ctx.globalCompositeOperation = 'screen';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+          ctx.fillRect(imgX, imgY, imgW, imgH);
+          ctx.globalCompositeOperation = 'soft-light';
+          ctx.fillStyle = 'rgba(16, 185, 129, 0.08)';
+          ctx.fillRect(imgX, imgY, imgW, imgH);
+        }
+        ctx.globalCompositeOperation = 'source-over';
+
+        // Subtle vignette for depth
+        const vignette = ctx.createRadialGradient(
+          imgX + imgW / 2, imgY + imgH / 2, imgH * 0.28,
+          imgX + imgW / 2, imgY + imgH / 2, imgH * 0.78
+        );
+        vignette.addColorStop(0, 'rgba(0,0,0,0)');
+        vignette.addColorStop(1, 'rgba(0,0,0,0.32)');
+        ctx.fillStyle = vignette;
+        ctx.fillRect(imgX, imgY, imgW, imgH);
+      }
+
+      ctx.restore(); // restore outer image clip so the panel below sits on the finished photo
+
+      // Frosted-glass caption panel at the bottom of the photo — tint shifts
+      // with theme: dark glass, emerald glass, or white glass.
+      const captionH = 300;
+      const captionY = imgY + imgH - captionH;
+      const captionRadii = [0, 0, imgRadius, imgRadius];
+      const isLightCaption = selectedTheme === 'clean_light';
+      const captionTint = selectedTheme === 'dark_luxe'
+        ? 'rgba(9, 13, 22, 0.5)'
+        : selectedTheme === 'emerald_brand'
+          ? 'rgba(4, 60, 45, 0.48)'
+          : 'rgba(255, 255, 255, 0.62)';
+
+      drawFrostedPanel(ctx, canvas, imgX, captionY, imgW, captionH, captionRadii, captionTint);
 
       ctx.textAlign = 'left';
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = isLightCaption ? '#0f172a' : '#ffffff';
       const { lines: titleLines, fontSize: titleFontSize, lineHeight: titleLH } = fitTextInBox(
         ctx, `${vehicle.marque} ${vehicle.modele}`.toUpperCase(), imgW - 80, 110, 48, 30, 1.15, '900'
       );
       titleLines.forEach((l, i) => {
         ctx.font = `900 ${titleFontSize}px sans-serif`;
-        ctx.fillText(l, imgX + 40, imgY + imgH - 90 + i * titleLH);
+        ctx.fillText(l, imgX + 40, captionY + 110 + i * titleLH);
       });
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+      ctx.fillStyle = isLightCaption ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.8)';
       ctx.font = '700 30px sans-serif';
-      ctx.fillText(`${vehicle.annee}  •  ${vehicle.ville}`, imgX + 40, imgY + imgH - 35);
+      ctx.fillText(`${vehicle.annee}  •  ${vehicle.ville}`, imgX + 40, captionY + captionH - 35);
 
-      ctx.restore();
-
+      // Border around the image box
       ctx.save();
       ctx.beginPath();
       ctx.roundRect(imgX, imgY, imgW, imgH, imgRadius);
@@ -333,13 +435,19 @@ export function ShareStoryModal({ vehicle, open, onClose }: ShareStoryModalProps
       const quoteW = W - 160;
       const quoteH = 420;
 
+      const quoteTint = selectedTheme === 'dark_luxe'
+        ? 'rgba(15, 23, 42, 0.55)'
+        : selectedTheme === 'emerald_brand'
+          ? 'rgba(6, 78, 59, 0.42)'
+          : 'rgba(255, 255, 255, 0.68)';
+
+      drawFrostedPanel(ctx, canvas, quoteX, quoteY, quoteW, quoteH, [36, 36, 36, 36], quoteTint);
+
       ctx.save();
       ctx.beginPath();
       ctx.roundRect(quoteX, quoteY, quoteW, quoteH, 36);
-      ctx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.75)';
-      ctx.fill();
       ctx.strokeStyle = isLight ? 'rgba(226, 232, 240, 0.9)' : 'rgba(52, 211, 153, 0.3)';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 2;
       ctx.stroke();
       ctx.restore();
 
