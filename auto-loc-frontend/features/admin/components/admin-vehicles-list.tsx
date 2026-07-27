@@ -17,12 +17,13 @@ import { ADMIN_PATHS } from '../../../lib/nestjs/admin';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-export type TabValue = 'ALL' | 'PENDING' | 'EN_ATTENTE_VALIDATION' | 'VERIFIE' | 'SUSPENDU' | 'BROUILLON' | 'ARCHIVE';
+export type TabValue = 'ALL' | 'PENDING' | 'EN_ATTENTE_VALIDATION' | 'VERIFIE' | 'SUSPENDU' | 'BROUILLON' | 'ARCHIVE' | 'FEATURED';
 
-const TABS: { value: TabValue; label: string }[] = [
+const TABS: { value: TabValue; label: string; icon?: React.ElementType }[] = [
   { value: 'ALL', label: 'Tous' },
   { value: 'PENDING', label: 'En attente' },
   { value: 'VERIFIE', label: 'Vérifié' },
+  { value: 'FEATURED', label: 'En vedette', icon: Sparkles },
   { value: 'SUSPENDU', label: 'Suspendu' },
 ];
 
@@ -551,7 +552,9 @@ function VehicleCard({ vehicle, pendingId, onValidate, onSuspend, onDetails, onF
     <div className={cn(
       'rounded-2xl border bg-white overflow-hidden transition-all duration-300',
       'hover:shadow-lg hover:shadow-slate-200/80 hover:-translate-y-0.5',
-      vehicle.statut === 'EN_ATTENTE_VALIDATION'
+      vehicle.isFeatured
+        ? 'border-amber-400/60 ring-2 ring-amber-400/20 shadow-lg shadow-amber-100/50'
+        : vehicle.statut === 'EN_ATTENTE_VALIDATION'
         ? 'border-amber-200/70'
         : vehicle.statut === 'SUSPENDU'
         ? 'border-red-200/60'
@@ -572,6 +575,17 @@ function VehicleCard({ vehicle, pendingId, onValidate, onSuspend, onDetails, onF
               <Car className="w-8 h-8 text-slate-300" strokeWidth={1.5} />
             </div>
           )}
+
+          {/* Featured badge sur photo */}
+          {vehicle.isFeatured && (
+            <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full
+              bg-gradient-to-r from-amber-400 to-amber-500 border-2 border-white/90 px-2 py-0.5
+              text-[9px] font-black text-black shadow-lg shadow-amber-500/30">
+              <Sparkles className="h-2.5 w-2.5 fill-black" strokeWidth={0} />
+              VEDETTE
+            </div>
+          )}
+
           {vehicle.photos.length > 1 && (
             <span className="absolute bottom-2 right-2 rounded-full bg-black/65 backdrop-blur-sm
               px-1.5 py-0.5 text-[9px] font-bold text-white/90">{vehicle.photos.length} 📷</span>
@@ -664,12 +678,16 @@ function VehicleCard({ vehicle, pendingId, onValidate, onSuspend, onDetails, onF
             className={cn(
               'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all duration-150',
               vehicle.isFeatured
-                ? 'bg-amber-400 text-black hover:bg-amber-300'
-                : 'border border-slate-200 text-black/50 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200',
+                ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-black border-2 border-amber-600/30 shadow-lg shadow-amber-400/20 hover:from-amber-500 hover:to-amber-600'
+                : 'border border-slate-200 text-black/50 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-300',
               isLoading && 'opacity-40 cursor-not-allowed',
             )}>
-            <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
-            {vehicle.isFeatured ? 'En vedette' : 'Mettre en avant'}
+            {isLoading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
+            ) : (
+              <Sparkles className={cn('h-3.5 w-3.5', vehicle.isFeatured && 'fill-black')} strokeWidth={2} />
+            )}
+            {vehicle.isFeatured ? 'Retirer vedette' : 'Mettre en vedette'}
           </button>
         )}
 
@@ -781,7 +799,8 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
     const url =
       value === 'ALL' ? '/dashboard/admin/vehicles' :
         value === 'PENDING' ? '/dashboard/admin/vehicles?statut=PENDING' :
-          `/dashboard/admin/vehicles?statut=${value}`;
+          value === 'FEATURED' ? '/dashboard/admin/vehicles?statut=FEATURED' :
+            `/dashboard/admin/vehicles?statut=${value}`;
     startTransition(() => router.push(url));
   }
 
@@ -852,21 +871,27 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
-          {TABS.map((tab) => (
-            <button key={tab.value} type="button" onClick={() => changeTab(tab.value)}
-              className={cn('inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12.5px] font-semibold transition-all duration-200',
-                currentStatut === tab.value
-                  ? 'bg-black text-emerald-400 shadow-sm shadow-black/10'
-                  : 'bg-slate-100 text-black/50 hover:bg-slate-200 hover:text-black')}>
-              {tab.label}
-              {tab.value === 'PENDING' && pendingCount > 0 && currentStatut !== 'PENDING' && (
-                <span className="inline-flex items-center justify-center min-w-[18px] h-4
-                  rounded-full bg-amber-400/20 text-amber-600 text-[9px] font-bold px-1">
-                  {pendingCount}
-                </span>
-              )}
-            </button>
-          ))}
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button key={tab.value} type="button" onClick={() => changeTab(tab.value)}
+                className={cn('inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12.5px] font-semibold transition-all duration-200',
+                  currentStatut === tab.value
+                    ? tab.value === 'FEATURED'
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-black border-2 border-amber-600/30 shadow-lg shadow-amber-400/20'
+                      : 'bg-black text-emerald-400 shadow-sm shadow-black/10'
+                    : 'bg-slate-100 text-black/50 hover:bg-slate-200 hover:text-black')}>
+                {Icon && <Icon className="w-3.5 h-3.5" strokeWidth={2} />}
+                {tab.label}
+                {tab.value === 'PENDING' && pendingCount > 0 && currentStatut !== 'PENDING' && (
+                  <span className="inline-flex items-center justify-center min-w-[18px] h-4
+                    rounded-full bg-amber-400/20 text-amber-600 text-[9px] font-bold px-1">
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-2 sm:ml-auto flex-wrap">

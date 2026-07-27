@@ -289,17 +289,19 @@ export function VehicleGridSection({
         {/* Filter bar */}
         <FilterBar activeFilter={activeFilter} onFilter={setActiveFilter} />
 
-        {/* Featured — masqué si 0 véhicules mis en avant */}
+        {/* Recommandé — véhicules mis en vedette */}
         {!loading && !activeFilter && featured.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-amber-400" strokeWidth={2.5} />
-              <span className="text-[12px] font-black uppercase tracking-widest text-amber-500">À la une</span>
+          <div className="space-y-5 pb-8">
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="h-5 w-5 text-amber-500 fill-amber-500" strokeWidth={2} />
+              <h3 className="text-[22px] font-black tracking-tight text-slate-900">Recommandé</h3>
             </div>
+            <p className="text-[13px] font-medium text-slate-500 -mt-2">
+              Véhicules sélectionnés et mis en avant par AutoLoc
+            </p>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {featured.map((v, i) => <AnimatedCard key={v.id} vehicle={v} index={i} />)}
             </div>
-            <div className="h-px bg-slate-100" />
           </div>
         )}
 
@@ -331,6 +333,19 @@ export function VehicleGridSection({
         {/* Grid */}
         {!loading && !error && visible9.length > 0 && (
           <div className="space-y-8">
+            {/* Section title for all vehicles */}
+            {!activeFilter && featured.length > 0 && (
+              <div className="border-t border-slate-100 pt-8">
+                <div className="flex items-center gap-2.5 mb-5">
+                  <Car className="h-5 w-5 text-emerald-500" strokeWidth={2} />
+                  <h3 className="text-[22px] font-black tracking-tight text-slate-900">Tous les véhicules</h3>
+                </div>
+                <p className="text-[13px] font-medium text-slate-500 -mt-2 mb-5">
+                  Découvrez notre sélection complète de véhicules disponibles
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {visible9.map((v, i) => (
                 <AnimatedCard key={v.id} vehicle={v} index={i} />

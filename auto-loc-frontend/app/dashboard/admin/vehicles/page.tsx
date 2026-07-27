@@ -25,12 +25,18 @@ export default async function AdminVehiclesPage({
     rawStatut === 'PENDING' ||
     rawStatut === 'EN_ATTENTE_VALIDATION';
 
+  const isFeatured = rawStatut === 'FEATURED';
+
   let vehicles: Awaited<ReturnType<typeof fetchAdminVehicles>> = [];
   try {
     if (isPending) {
       vehicles = await fetchAdminVehicles(token, 'PENDING');
-    } else if (rawStatut === 'ALL') {
+    } else if (rawStatut === 'ALL' || isFeatured) {
+      // Pour FEATURED et ALL, on charge tous les véhicules et on filtre côté client
       vehicles = await fetchAdminVehicles(token);
+      if (isFeatured) {
+        vehicles = vehicles.filter((v) => v.isFeatured === true);
+      }
     } else if (VALID_STATUTS.includes(rawStatut as VehicleStatus)) {
       vehicles = await fetchAdminVehicles(token, rawStatut as VehicleStatus);
     } else {
@@ -43,6 +49,8 @@ export default async function AdminVehiclesPage({
 
   const currentStatut: TabValue = rawStatut === 'ALL'
     ? 'ALL'
+    : isFeatured
+    ? 'FEATURED'
     : isPending
     ? 'PENDING'
     : (rawStatut as VehicleStatus) ?? 'ALL';
