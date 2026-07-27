@@ -268,12 +268,6 @@ function StandardCard({ vehicle }: { vehicle: VehicleCardItem }) {
 
         {/* Top-left badges */}
         <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5 z-10">
-          {vehicle.isFeatured && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400 px-3 py-1 shadow-lg shadow-amber-400/30">
-              <Sparkles className="h-2.5 w-2.5 text-black" strokeWidth={3} />
-              <span className="text-[9px] font-black uppercase tracking-[0.1em] text-black">À la une</span>
-            </span>
-          )}
           {isCoupDeCoeur && (
             <div className="group/badge relative">
               <div className="absolute -inset-1 bg-emerald-400/30 rounded-full blur-[4px] opacity-0 group-hover/badge:opacity-100 transition duration-300"></div>

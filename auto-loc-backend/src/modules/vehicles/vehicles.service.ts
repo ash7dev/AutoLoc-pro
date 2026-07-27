@@ -1837,6 +1837,8 @@ export class VehiclesService {
       carteGriseUrl: v.carteGriseUrl ?? null,
       assuranceDocUrl: v.assuranceDocUrl ?? null,
       fraisLivraison: v.fraisLivraison ? Number(v.fraisLivraison) : null,
+      isFeatured: v.isFeatured,
+      featuredUntil: v.featuredUntil ? v.featuredUntil.toISOString() : null,
       proprietaire: v.proprietaire
         ? {
           id: v.proprietaire.id,

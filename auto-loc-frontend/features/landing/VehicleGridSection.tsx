@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
   ArrowRight, Car, TrendingUp,
-  Rocket, PlusCircle, ChevronRight, Sparkles,
+  Rocket, PlusCircle, ChevronRight, Sparkles, ChevronLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -233,6 +233,106 @@ function FilterBar({
 }
 
 /* ════════════════════════════════════════════════════════════════
+   FEATURED CAROUSEL
+════════════════════════════════════════════════════════════════ */
+function FeaturedCarousel({ vehicles }: { vehicles: VehicleGridItem[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    checkScroll();
+    el.addEventListener('scroll', checkScroll);
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [checkScroll]);
+
+  const scroll = (direction: 'left' | 'right') => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const scrollAmount = el.clientWidth * 0.8;
+    el.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+  };
+
+  return (
+    <div className="space-y-5 pb-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2.5 mb-2">
+            <Sparkles className="h-5 w-5 text-amber-500 fill-amber-500" strokeWidth={2} />
+            <h3 className="text-[22px] font-black tracking-tight text-slate-900">Recommandé</h3>
+          </div>
+          <p className="text-[13px] font-medium text-slate-500">
+            Véhicules sélectionnés et mis en avant par AutoLoc
+          </p>
+        </div>
+
+        {/* Navigation arrows */}
+        <div className="hidden lg:flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => scroll('left')}
+            disabled={!canScrollLeft}
+            className={cn(
+              'w-10 h-10 rounded-xl border flex items-center justify-center transition-all',
+              canScrollLeft
+                ? 'bg-white border-slate-200 text-slate-900 hover:bg-slate-50 hover:border-emerald-200 hover:text-emerald-600'
+                : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed',
+            )}
+            aria-label="Précédent"
+          >
+            <ChevronLeft className="w-5 h-5" strokeWidth={2.5} />
+          </button>
+          <button
+            type="button"
+            onClick={() => scroll('right')}
+            disabled={!canScrollRight}
+            className={cn(
+              'w-10 h-10 rounded-xl border flex items-center justify-center transition-all',
+              canScrollRight
+                ? 'bg-white border-slate-200 text-slate-900 hover:bg-slate-50 hover:border-emerald-200 hover:text-emerald-600'
+                : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed',
+            )}
+            aria-label="Suivant"
+          >
+            <ChevronRight className="w-5 h-5" strokeWidth={2.5} />
+          </button>
+        </div>
+      </div>
+
+      {/* Scrollable container */}
+      <div
+        ref={scrollRef}
+        className="flex gap-5 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none -mx-1 px-1"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {vehicles.map((v, i) => (
+          <div key={v.id} className="flex-shrink-0 w-[340px] snap-start">
+            <AnimatedCard vehicle={v} index={i} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════
    MAIN SECTION
 ════════════════════════════════════════════════════════════════ */
 interface VehicleGridSectionProps {
@@ -289,20 +389,9 @@ export function VehicleGridSection({
         {/* Filter bar */}
         <FilterBar activeFilter={activeFilter} onFilter={setActiveFilter} />
 
-        {/* Recommandé — véhicules mis en vedette */}
+        {/* Recommandé — carrousel horizontal avec navigation */}
         {!loading && !activeFilter && featured.length > 0 && (
-          <div className="space-y-5 pb-8">
-            <div className="flex items-center gap-2.5">
-              <Sparkles className="h-5 w-5 text-amber-500 fill-amber-500" strokeWidth={2} />
-              <h3 className="text-[22px] font-black tracking-tight text-slate-900">Recommandé</h3>
-            </div>
-            <p className="text-[13px] font-medium text-slate-500 -mt-2">
-              Véhicules sélectionnés et mis en avant par AutoLoc
-            </p>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {featured.map((v, i) => <AnimatedCard key={v.id} vehicle={v} index={i} />)}
-            </div>
-          </div>
+          <FeaturedCarousel vehicles={featured} />
         )}
 
         {/* Loading */}
