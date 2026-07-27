@@ -2140,7 +2140,7 @@ export class VehiclesService {
 
   /**
    * PATCH /admin/vehicles/:id/feature
-   * Active ou désactive la mise en avant d'un véhicule (max 5 simultanément).
+   * Active ou désactive la mise en avant d'un véhicule (max 10 simultanément).
    * Notifie le propriétaire et invalide le cache de recherche.
    */
   async featureVehicle(vehicleId: string, active: boolean, featuredUntil?: string) {
@@ -2157,8 +2157,8 @@ export class VehiclesService {
       const featuredCount = await this.prisma.vehicule.count({
         where: { isFeatured: true, id: { not: vehicleId } },
       });
-      if (featuredCount >= 5) {
-        throw new BadRequestException('Limite atteinte : 5 véhicules mis en avant simultanément maximum.');
+      if (featuredCount >= 10) {
+        throw new BadRequestException('Limite atteinte : 10 véhicules mis en avant simultanément maximum.');
       }
     }
 

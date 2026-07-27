@@ -60,7 +60,7 @@ export class AdminVehiclesController {
 
   /**
    * PATCH /admin/vehicles/:id/feature
-   * Active ou désactive la mise en avant d'un véhicule (max 5 simultanément).
+   * Active ou désactive la mise en avant d'un véhicule (max 10 simultanément).
    */
   @Patch(':id/feature')
   featureVehicle(

@@ -10,6 +10,7 @@ import {
   Key, Calendar, Users, Shield,
   Phone, Mail, Info, ZoomIn, FileText, ExternalLink, Truck,
   Timer, ArrowUp, ArrowDown, ChevronsUpDown, ArrowUpRight, Sparkles,
+  ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminVehicle } from '../../../lib/nestjs/admin';
@@ -740,6 +741,13 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
     open: boolean; vehicleId: string; vehicleName: string; raison: string; isReject: boolean;
   }>({ open: false, vehicleId: '', vehicleName: '', raison: '', isReject: false });
 
+  // États pour sections collapsibles
+  const [sectionsExpanded, setSectionsExpanded] = useState({
+    verified: false,
+    suspended: false,
+    archived: false,
+  });
+
   const safeVehicles = Array.isArray(vehicles) ? vehicles : [];
   const filtered = safeVehicles.filter((v) => {
     if (!search.trim()) return true;
@@ -852,15 +860,27 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
     } finally { setPendingId(null); }
   }
 
-  const pendingCount = vehicles.filter((v) => v.statut === 'EN_ATTENTE_VALIDATION' || v.statut === 'BROUILLON').length;
+  // Organiser les véhicules par section
+  const pendingVehicles = sorted.filter((v) => v.statut === 'EN_ATTENTE_VALIDATION' || v.statut === 'BROUILLON');
+  const featuredVehicles = sorted.filter((v) => v.isFeatured && v.statut === 'VERIFIE');
+  const verifiedVehicles = sorted.filter((v) => !v.isFeatured && v.statut === 'VERIFIE');
+  const suspendedVehicles = sorted.filter((v) => v.statut === 'SUSPENDU');
+  const archivedVehicles = sorted.filter((v) => v.statut === 'ARCHIVE');
+
+  const pendingCount = pendingVehicles.length;
+  const featuredCount = featuredVehicles.length;
+
   const openSuspend = (id: string, name: string, isReject = false) =>
     setSuspendDialog({ open: true, vehicleId: id, vehicleName: name, raison: '', isReject });
 
+  const toggleSection = (section: 'verified' | 'suspended' | 'archived') =>
+    setSectionsExpanded(prev => ({ ...prev, [section]: !prev[section] }));
+
   return (
     <>
-      {/* ── Toolbar ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-5 flex-wrap">
-        <div className="relative w-full sm:max-w-xs">
+      {/* ── Toolbar Simplifié ── */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 flex-wrap">
+        <div className="relative flex-1 min-w-[280px]">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-black/25" strokeWidth={2} />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher un véhicule, propriétaire…"
@@ -870,46 +890,17 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
               transition-all shadow-sm" />
         </div>
 
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button key={tab.value} type="button" onClick={() => changeTab(tab.value)}
-                className={cn('inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12.5px] font-semibold transition-all duration-200',
-                  currentStatut === tab.value
-                    ? tab.value === 'FEATURED'
-                      ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-black border-2 border-amber-600/30 shadow-lg shadow-amber-400/20'
-                      : 'bg-black text-emerald-400 shadow-sm shadow-black/10'
-                    : 'bg-slate-100 text-black/50 hover:bg-slate-200 hover:text-black')}>
-                {Icon && <Icon className="w-3.5 h-3.5" strokeWidth={2} />}
-                {tab.label}
-                {tab.value === 'PENDING' && pendingCount > 0 && currentStatut !== 'PENDING' && (
-                  <span className="inline-flex items-center justify-center min-w-[18px] h-4
-                    rounded-full bg-amber-400/20 text-amber-600 text-[9px] font-bold px-1">
-                    {pendingCount}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center gap-2 sm:ml-auto flex-wrap">
-          <span className="w-px h-5 bg-slate-200 hidden sm:block" />
+        <div className="flex items-center gap-2 flex-wrap">
           <SortBtnV label="Prix" sk="price" />
           <SortBtnV label="Date" sk="date" />
           <span className="w-px h-5 bg-slate-200" />
           <span className="text-[12px] font-medium text-black/30">
             {filtered.length} véhicule{filtered.length > 1 ? 's' : ''}
           </span>
-          <span className="inline-flex items-center justify-center min-w-[28px] h-7 px-2
-            rounded-xl bg-black text-emerald-400 text-[12px] font-black">
-            {filtered.length}
-          </span>
         </div>
       </div>
 
-      {/* ── Grid ── */}
+      {/* ── Sections Organisées ── */}
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-16
           rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
@@ -927,14 +918,160 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {sorted.map((v) => (
-            <VehicleCard key={v.id} vehicle={v} pendingId={pendingId}
-              onValidate={handleValidate}
-              onSuspend={(id, name) => openSuspend(id, name, v.statut === 'EN_ATTENTE_VALIDATION' || v.statut === 'BROUILLON')}
-              onDetails={() => router.push(`/dashboard/admin/vehicles/${v.id}`)}
-              onFeature={handleFeature} />
-          ))}
+        <div className="space-y-5">
+
+          {/* SECTION 1: EN ATTENTE - Toujours ouverte si count > 0 */}
+          {pendingCount > 0 && (
+            <div className="rounded-2xl border-2 border-red-200 bg-red-50/30 overflow-hidden">
+              <div className="bg-gradient-to-r from-red-500 to-red-600 px-5 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm">
+                    <Clock className="w-5 h-5 text-white" strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <h3 className="text-[15px] font-black text-white tracking-tight">EN ATTENTE DE VALIDATION</h3>
+                    <p className="text-[11px] text-white/80 font-medium">Action requise - Valider ou rejeter</p>
+                  </div>
+                </div>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30">
+                  <span className="text-[13px] font-black text-white">{pendingCount}</span>
+                  <span className="text-[10px] font-bold text-white/90 uppercase tracking-wider">Urgent</span>
+                </div>
+              </div>
+              <div className="p-4 bg-white">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {pendingVehicles.map((v) => (
+                    <VehicleCard key={v.id} vehicle={v} pendingId={pendingId}
+                      onValidate={handleValidate}
+                      onSuspend={(id, name) => openSuspend(id, name, true)}
+                      onDetails={() => router.push(`/dashboard/admin/vehicles/${v.id}`)}
+                      onFeature={handleFeature} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SECTION 2: EN VEDETTE - Toujours ouverte */}
+          {featuredCount > 0 && (
+            <div className="rounded-2xl border-2 border-amber-200 bg-amber-50/30 overflow-hidden">
+              <div className="bg-gradient-to-r from-amber-400 to-amber-500 px-5 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-black/10 backdrop-blur-sm">
+                    <Sparkles className="w-5 h-5 text-black fill-black" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h3 className="text-[15px] font-black text-black tracking-tight">EN VEDETTE</h3>
+                    <p className="text-[11px] text-black/70 font-medium">Gérer vos véhicules mis en avant</p>
+                  </div>
+                </div>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/10 backdrop-blur-md border border-black/20">
+                  <span className="text-[13px] font-black text-black">{featuredCount}/10</span>
+                  <span className="text-[10px] font-bold text-black/80 uppercase tracking-wider">Places</span>
+                </div>
+              </div>
+              <div className="p-4 bg-white">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {featuredVehicles.map((v) => (
+                    <VehicleCard key={v.id} vehicle={v} pendingId={pendingId}
+                      onValidate={handleValidate}
+                      onSuspend={(id, name) => openSuspend(id, name, false)}
+                      onDetails={() => router.push(`/dashboard/admin/vehicles/${v.id}`)}
+                      onFeature={handleFeature} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SECTION 3: VÉRIFIÉS - Collapsible */}
+          {verifiedVehicles.length > 0 && (
+            <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+              <button
+                type="button"
+                onClick={() => toggleSection('verified')}
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-[15px] font-black text-slate-900 tracking-tight">VÉRIFIÉS</h3>
+                    <p className="text-[11px] text-slate-500 font-medium">{verifiedVehicles.length} véhicule{verifiedVehicles.length > 1 ? 's' : ''}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[12px] font-bold text-slate-400">
+                    {sectionsExpanded.verified ? 'Masquer' : 'Afficher'}
+                  </span>
+                  {sectionsExpanded.verified ? (
+                    <ChevronUp className="w-5 h-5 text-slate-400" strokeWidth={2} />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-slate-400" strokeWidth={2} />
+                  )}
+                </div>
+              </button>
+              {sectionsExpanded.verified && (
+                <div className="p-4 border-t border-slate-100">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {verifiedVehicles.map((v) => (
+                      <VehicleCard key={v.id} vehicle={v} pendingId={pendingId}
+                        onValidate={handleValidate}
+                        onSuspend={(id, name) => openSuspend(id, name, false)}
+                        onDetails={() => router.push(`/dashboard/admin/vehicles/${v.id}`)}
+                        onFeature={handleFeature} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* SECTION 4: SUSPENDUS - Collapsible */}
+          {suspendedVehicles.length > 0 && (
+            <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+              <button
+                type="button"
+                onClick={() => toggleSection('suspended')}
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-50">
+                    <AlertTriangle className="w-5 h-5 text-red-600" strokeWidth={2.5} />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-[15px] font-black text-slate-900 tracking-tight">SUSPENDUS</h3>
+                    <p className="text-[11px] text-slate-500 font-medium">{suspendedVehicles.length} véhicule{suspendedVehicles.length > 1 ? 's' : ''}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[12px] font-bold text-slate-400">
+                    {sectionsExpanded.suspended ? 'Masquer' : 'Afficher'}
+                  </span>
+                  {sectionsExpanded.suspended ? (
+                    <ChevronUp className="w-5 h-5 text-slate-400" strokeWidth={2} />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-slate-400" strokeWidth={2} />
+                  )}
+                </div>
+              </button>
+              {sectionsExpanded.suspended && (
+                <div className="p-4 border-t border-slate-100">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {suspendedVehicles.map((v) => (
+                      <VehicleCard key={v.id} vehicle={v} pendingId={pendingId}
+                        onValidate={handleValidate}
+                        onSuspend={(id, name) => openSuspend(id, name, false)}
+                        onDetails={() => router.push(`/dashboard/admin/vehicles/${v.id}`)}
+                        onFeature={handleFeature} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
       )}
 
