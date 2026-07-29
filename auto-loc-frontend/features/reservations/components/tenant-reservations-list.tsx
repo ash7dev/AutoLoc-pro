@@ -431,6 +431,8 @@ function TenantReservationCard({ reservation }: { reservation: Reservation }) {
                             statut={reservation.statut}
                             className="text-[11px]"
                             showLabel={false}
+                            name={reservation.proprietaire?.prenom}
+                            reservationId={reservation.id}
                         />
                     </div>
                 </div>

@@ -5,6 +5,11 @@ import '../tokens/ds_colors.dart';
 import '../tokens/ds_spacing.dart';
 import '../tokens/ds_typography.dart';
 
+/// **Premium Glass**
+/// Le bloc glass "signature" : dégradé de fond, bordure subtile,
+/// ombre ambiante + halo émeraude optionnel. Utilisé par tous les
+/// composants de la fiche véhicule pour garantir une cohérence totale.
+
 /// **Design tokens émeraude — source unique de vérité pour tous les
 /// composants "Vehicle Detail" (header, specs, équipements...).**
 const Color kEmerald = Color(0xFF34D399);

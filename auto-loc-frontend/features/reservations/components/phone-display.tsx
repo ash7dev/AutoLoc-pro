@@ -66,15 +66,19 @@ export function PhoneDisplay({
                     </div>
                     
                     {/* WhatsApp Button */}
-                    <a 
-                        href={`https://wa.me/${telephone.replace(/\s+/g, '')}?text=${encodeURIComponent(`Bonjour ${name}, je vous contacte concernant la réservation ${reservationId.slice(0, 8).toUpperCase()} sur AutoLoc.`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold hover:bg-emerald-600 transition-colors shadow-sm shadow-emerald-500/20"
+                    <button 
+                        type="button"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const url = `https://wa.me/${telephone.replace(/\s+/g, '')}?text=${encodeURIComponent(`Bonjour ${name}, je vous contacte concernant la réservation ${reservationId.slice(0, 8).toUpperCase()} sur AutoLoc.`)}`;
+                            window.open(url, '_blank', 'noopener,noreferrer');
+                        }}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold hover:bg-emerald-600 transition-colors shadow-sm shadow-emerald-500/20 cursor-pointer"
                     >
                         <MessageSquare className="w-3 h-3" strokeWidth={2.5} />
                         WhatsApp
-                    </a>
+                    </button>
                 </div>
             </div>
         );

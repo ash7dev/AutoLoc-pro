@@ -287,6 +287,8 @@ export function OwnerReservationCard({
                         statut={r.statut}
                         className="text-[11px]"
                         showLabel={false}
+                        name={r.locataire?.prenom}
+                        reservationId={r.id}
                     />
                 </div>
 
