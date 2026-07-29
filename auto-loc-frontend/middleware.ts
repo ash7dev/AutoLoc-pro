@@ -115,7 +115,9 @@ export async function middleware(request: NextRequest) {
     }
 
     if (pathname.startsWith('/dashboard/owner')) {
-      if (payload.role !== 'PROPRIETAIRE' && payload.role !== 'ADMIN' && payload.role !== 'SUPPORT') {
+      const roleSwitchAt = request.cookies.get('role_switch_at')?.value;
+      const isRecentlySwitched = roleSwitchAt && (Date.now() - parseInt(roleSwitchAt, 10)) < 10 * 1000;
+      if (!isRecentlySwitched && payload.role !== 'PROPRIETAIRE' && payload.role !== 'ADMIN' && payload.role !== 'SUPPORT') {
         return NextResponse.redirect(new URL('/', request.url));
       }
     }

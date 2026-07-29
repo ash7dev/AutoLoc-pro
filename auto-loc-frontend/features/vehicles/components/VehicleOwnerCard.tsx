@@ -10,7 +10,7 @@ import {
     ShieldCheck, Star, ChevronUp, CreditCard, ArrowRight,
     Check, MapPin, Truck, Wallet, Banknote,
 } from 'lucide-react';
-import { cn, getCommissionRate, getTenantPricePerDay } from '@/lib/utils';
+import { cn, getCommissionRate, getTenantPricePerDay, roundToNearest100 } from '@/lib/utils';
 import type { Vehicle } from '@/lib/nestjs/vehicles';
 
 import { useCurrency } from '@/providers/currency-provider';
@@ -279,17 +279,20 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
         } catch {
             // Fallback local avec supplément hors Dakar
             const supp = horsDakar && autoriseHorsDakar ? (supplementHorsDakarParJour ?? 0) : 0;
-            const rate = getCommissionRate(prixParJour + supp);
+            const baseDaily = prixParJour + supp;
+            const totalBase = baseDaily * days;
+            const rate = getCommissionRate(baseDaily);
+            const montantCommission = roundToNearest100(totalBase * rate);
             setPricing({
                 nbJours: days,
                 autoriseHorsDakar,
                 supplementHorsDakar: supp,
                 prixParJour,
-                totalBase: (prixParJour + supp) * days,
+                totalBase,
                 tauxCommission: rate,
-                montantCommission: Math.round((prixParJour + supp) * days * rate),
-                totalLocataire: Math.round((prixParJour + supp) * days * (1 + rate)),
-                netProprietaire: (prixParJour + supp) * days,
+                montantCommission,
+                totalLocataire: totalBase + montantCommission,
+                netProprietaire: totalBase,
             });
         } finally { setLoadingPricing(false); }
     }, [vehicleId, prixParJour, horsDakar, autoriseHorsDakar, supplementHorsDakarParJour]);

@@ -38,7 +38,7 @@ export function ConfirmModal({ open, onClose, onConfirm, loading = false, dateDe
         setIsPastTime(selectedDateTime < now);
     }, [heureDebut, dateDebut]);
 
-    const canConfirm = heureDebut.length === 5 && !loading && !isPastTime;
+    const canConfirm = heureDebut.length === 5 && !loading;
 
     if (!open) return null;
 

@@ -9,7 +9,7 @@ import {
   ArrowRight, Loader2, Shield, Info, Truck, MapPin, AlertTriangle, UserCheck, CalendarDays,
   Wallet, Banknote,
 } from 'lucide-react';
-import { cn, getCommissionRate, getTenantPricePerDay } from '@/lib/utils';
+import { cn, getCommissionRate, getTenantPricePerDay, roundToNearest100 } from '@/lib/utils';
 import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles';
 import { useCurrency } from '@/providers/currency-provider';
 import { apiFetch, ApiError } from '@/lib/nestjs/api-client';
@@ -92,17 +92,20 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
     // ── Optimisation Mobile : Afficher un prix estimé IMMÉDIATEMENT ──
     // Évite le "blanc" pendant le fetch réseau
     const supp = horsDakar && autoriseHorsDakar ? (supplementHorsDakarParJour ?? 0) : 0;
-    const rate = getCommissionRate(prixParJour + supp);
+    const baseDaily = prixParJour + supp;
+    const totalBase = baseDaily * days;
+    const rate = getCommissionRate(baseDaily);
+    const montantCommission = roundToNearest100(totalBase * rate);
     const estimatedPricing = {
       nbJours: days,
       autoriseHorsDakar,
       supplementHorsDakar: supp,
       prixParJour,
-      totalBase: (prixParJour + supp) * days,
+      totalBase,
       tauxCommission: rate,
-      montantCommission: Math.round((prixParJour + supp) * days * rate),
-      totalLocataire: Math.round((prixParJour + supp) * days * (1 + rate)),
-      netProprietaire: (prixParJour + supp) * days,
+      montantCommission,
+      totalLocataire: totalBase + montantCommission,
+      netProprietaire: totalBase,
     };
 
     // Afficher immédiatement l'estimation

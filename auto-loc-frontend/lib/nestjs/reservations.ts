@@ -41,6 +41,7 @@ export interface ReservationUser {
     email?: string;
     noteLocataire?: number;
     kycStatus?: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
+    statutKyc?: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE' | string;
 }
 
 export interface PhotoEtatLieu {

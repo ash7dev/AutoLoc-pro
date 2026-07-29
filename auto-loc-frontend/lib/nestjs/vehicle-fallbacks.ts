@@ -4,20 +4,22 @@
  */
 
 import type { Vehicle, VehicleSearchResult, TarifTier } from './vehicles';
-import { getCommissionRate } from '@/lib/utils';
+import { getCommissionRate, roundToNearest100 } from '@/lib/utils';
 
 // ── Fallbacks pour les données manquantes ─────────────────────────────────────
 
 export function createFallbackPricing(basePrice: number, days: number) {
   const rate = getCommissionRate(basePrice);
+  const totalBase = basePrice * days;
+  const montantCommission = roundToNearest100(totalBase * rate);
   return {
     nbJours: days,
     prixParJour: basePrice,
-    totalBase: basePrice * days,
+    totalBase,
     tauxCommission: rate,
-    montantCommission: Math.round(basePrice * days * rate),
-    totalLocataire: Math.round(basePrice * days * (1 + rate)),
-    netProprietaire: basePrice * days,
+    montantCommission,
+    totalLocataire: totalBase + montantCommission,
+    netProprietaire: totalBase,
   };
 }
 

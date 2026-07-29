@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import { apiFetch } from '@/lib/nestjs/api-client';
 import { useRoleStore } from '../../auth/stores/role.store';
 
@@ -18,14 +17,9 @@ export function useSwitchToProprietaire() {
     setLoading(true);
     setError(null);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('Non connecté');
-      }
-
       const result = await apiFetch<{ role: string; accessToken: string; refreshToken: string }, { role: string }>(
         '/auth/switch-role',
-        { method: 'PATCH', body: { role: 'PROPRIETAIRE' }, accessToken: session.access_token },
+        { method: 'PATCH', body: { role: 'PROPRIETAIRE' } },
       );
 
       // Rafraîchir immédiatement le cookie httpOnly nest_access avec le nouveau JWT

@@ -68,19 +68,19 @@ function calculateCancellationPolicy(
 
         // Réservation CONFIRMEE ou EN_COURS
         if (daysUntil < 1) {
-            // Jour même - BLOQUÉ
+            // Jour même - Pénalité 40%
             const penalty = _totalBase * 0.4;
             return {
-                canCancel: false,
+                canCancel: true,
                 refundAmount: _totalLocataire,
                 refundPercentage: 100,
                 penaltyAmount: penalty,
                 penaltyPercentage: 40,
                 warnings: [
-                    "Annulation le jour même impossible",
-                    "Contactez le locataire directement",
+                    "Annulation le jour même : pénalité de 40% appliquée sur vos prochains revenus",
+                    "Avertissement : risque de suspension si répété",
                 ],
-                severity: "blocked",
+                severity: "danger",
             };
         }
 

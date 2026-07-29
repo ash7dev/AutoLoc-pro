@@ -310,7 +310,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                     statut={r.statut}
                     dateDebut={r.dateDebut}
                     dateFin={r.dateFin}
-                    locataireKycStatus={r.locataire.kycStatus}
+                    locataireKycStatus={r.locataire?.statutKyc || r.locataire?.kycStatus}
                     checkinProprietaireLe={r.checkinProprietaireLe ?? undefined}
                     checkinLocataireLe={r.checkinLocataireLe ?? undefined}
                     tacitCheckinDeadlineLe={r.tacitCheckinDeadlineLe}

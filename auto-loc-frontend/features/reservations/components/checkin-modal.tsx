@@ -104,7 +104,7 @@ export function CheckinModal({ reservationId, open, onClose, dateDebut }: Checki
         setSubmitting(true);
         setError(null);
         try {
-            await authFetch(`/reservations/${reservationId}/checkin?role=PROPRIETAIRE`, { method: "PATCH" });
+            await authFetch(`/reservations/${reservationId}/checkin?role=PROPRIETAIRE`, { method: "PATCH", body: { soldeRecu: true } });
             setSuccess(true);
             setSubmitting(false);
             // Montrer un état de revalidation avant de fermer

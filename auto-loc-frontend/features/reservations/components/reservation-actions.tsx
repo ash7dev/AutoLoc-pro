@@ -93,9 +93,9 @@ function getCancelPolicyNotice(statut: ReservationStatut, dateDebut?: string): {
     }
     return {
         color: 'red',
-        title: 'Annulation le jour même impossible',
-        body: 'L\'annulation le jour même n\'est pas autorisée depuis la plateforme. Contactez directement le locataire ou le support si vous avez une urgence.',
-        canCancel: false,
+        title: 'Pénalité de 40% (Annulation le jour même)',
+        body: 'L\'annulation le jour même entraîne une pénalité de 40% déduite de vos prochains revenus. Le locataire sera remboursé.',
+        canCancel: true,
     };
 }
 
@@ -537,10 +537,10 @@ export function ReservationActions({
 
     if (actions.length === 0) return null;
 
-    // KYC locataire — bloque la confirmation si non vérifié
-    const kycBlocked = statut === "PAYEE" && locataireKycStatus !== "VERIFIE";
+    // KYC locataire — bloque la confirmation uniquement si explicitement non vérifié / rejeté
+    const kycBlocked = statut === "PAYEE" && (locataireKycStatus === "NON_VERIFIE" || locataireKycStatus === "REJETE");
     const kycLabel =
-        !locataireKycStatus || locataireKycStatus === "NON_VERIFIE"
+        locataireKycStatus === "NON_VERIFIE"
             ? "Le locataire n'a pas encore soumis son KYC."
             : locataireKycStatus === "EN_ATTENTE"
                 ? "Le KYC du locataire est en cours de vérification."
@@ -551,7 +551,7 @@ export function ReservationActions({
     const apiMap: Record<string, () => Promise<void>> = {
         confirm: () => authFetch(`/reservations/${reservationId}/confirm`, { method: "PATCH", body: { heureDebut } }),
         cancel: () => authFetch(`/reservations/${reservationId}/cancel`, { method: "PATCH", body: { raison: cancelReason.trim() } }),
-        checkin: () => authFetch(`/reservations/${reservationId}/checkin?role=PROPRIETAIRE`, { method: "PATCH" }),
+        checkin: () => authFetch(`/reservations/${reservationId}/checkin?role=PROPRIETAIRE`, { method: "PATCH", body: { soldeRecu: true } }),
         checkout: () => authFetch(`/reservations/${reservationId}/checkout`, { method: "PATCH" }),
     };
 

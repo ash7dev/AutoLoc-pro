@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, LogOut, Loader2 } from 'lucide-react';
 import { useSwitchToProprietaire } from '@/features/owner/hooks/use-switch-to-proprietaire';
