@@ -32,13 +32,13 @@ export function ConfirmModal({ open, onClose, onConfirm, loading = false, dateDe
 
         const [hours, minutes] = heureDebut.split(':').map(Number);
         const selectedDateTime = new Date(dateDebut);
-        selectedDateTime.setHours(hours, minutes, 0, 0);
+        selectedDateTime.setUTCHours(hours, minutes, 0, 0);
 
         const now = new Date();
         setIsPastTime(selectedDateTime < now);
     }, [heureDebut, dateDebut]);
 
-    const canConfirm = heureDebut.length === 5 && !loading;
+    const canConfirm = heureDebut.length === 5 && !isPastTime && !loading;
 
     if (!open) return null;
 

@@ -491,13 +491,13 @@ export function CancelConfirmationModal({
                             <div className="flex items-center justify-between px-1">
                                 <span className={cn(
                                     "text-[11px] font-bold flex items-center gap-1",
-                                    raison.trim().length > 0 && raison.trim().length < 10
+                                    raison.trim().length > 0 && raison.trim().length < 5
                                         ? "text-red-500" : "text-slate-400"
                                 )}>
-                                    {raison.trim().length > 0 && raison.trim().length < 10 && (
+                                    {raison.trim().length > 0 && raison.trim().length < 5 && (
                                         <>
                                             <AlertTriangle className="w-3 h-3 flex-shrink-0" strokeWidth={2.5} />
-                                            Minimum 10 caractères requis
+                                            Minimum 5 caractères requis
                                         </>
                                     )}
                                 </span>
@@ -519,11 +519,11 @@ export function CancelConfirmationModal({
                         </button>
                         {policy.canCancel && (
                             <button
-                                onClick={() => raison.trim().length >= 10 && onConfirm(raison)}
-                                disabled={loading || raison.trim().length < 10}
+                                onClick={() => raison.trim().length >= 5 && onConfirm(raison)}
+                                disabled={loading || raison.trim().length < 5}
                                 className={cn(
                                     "w-full sm:flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-2xl text-[14px] font-black transition-all duration-200",
-                                    raison.trim().length >= 10 && !loading
+                                    raison.trim().length >= 5 && !loading
                                         ? `${config.btnBg} ${config.btnText} hover:-translate-y-0.5 active:translate-y-0 active:shadow-md`
                                         : "bg-slate-100 text-slate-400 cursor-not-allowed",
                                 )}

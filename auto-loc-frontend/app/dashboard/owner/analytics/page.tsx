@@ -36,8 +36,14 @@ function calculateAnalytics(reservations: Reservation[], vehicles: Vehicle[]) {
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
+  const validReservations = reservations.filter((r) => {
+    const start = new Date(r.dateDebut);
+    const end = new Date(r.dateFin);
+    return !isNaN(start.getTime()) && !isNaN(end.getTime());
+  });
+
   // Filter current month reservations
-  const currentMonthReservations = reservations.filter((r) => {
+  const currentMonthReservations = validReservations.filter((r) => {
     const startDate = new Date(r.dateDebut);
     return startDate.getMonth() === currentMonth && startDate.getFullYear() === currentYear;
   });
@@ -45,7 +51,7 @@ function calculateAnalytics(reservations: Reservation[], vehicles: Vehicle[]) {
   // Filter previous month reservations
   const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
   const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-  const previousMonthReservations = reservations.filter((r) => {
+  const previousMonthReservations = validReservations.filter((r) => {
     const startDate = new Date(r.dateDebut);
     return startDate.getMonth() === prevMonth && startDate.getFullYear() === prevYear;
   });
@@ -107,10 +113,12 @@ function calculateAnalytics(reservations: Reservation[], vehicles: Vehicle[]) {
 
       const vehicleRevPAD = daysInMonth > 0 ? revenue / daysInMonth : 0;
 
+      const photos = Array.isArray(vehicle.photos) ? vehicle.photos : [];
+
       return {
         id: vehicle.id,
         name: `${vehicle.marque} ${vehicle.modele}`,
-        photoUrl: vehicle.photos?.find(p => p.estPrincipale)?.url || vehicle.photos?.[0]?.url,
+        photoUrl: photos.find(p => p.estPrincipale)?.url || photos[0]?.url,
         revenue,
         bookingsCount,
         occupancyRate: vehicleOccupancyRate,
@@ -125,8 +133,9 @@ function calculateAnalytics(reservations: Reservation[], vehicles: Vehicle[]) {
     const dateStr = new Date(currentYear, currentMonth, day).toISOString().split("T")[0];
 
     const dayReservations = currentMonthReservations.filter((r) => {
-      const start = r.dateDebut.split("T")[0];
-      const end = r.dateFin.split("T")[0];
+      const start = r.dateDebut?.split("T")[0];
+      const end = r.dateFin?.split("T")[0];
+      if (!start || !end) return false;
       return dateStr >= start && dateStr <= end && ["TERMINEE", "EN_COURS", "CONFIRMEE", "PAYEE"].includes(r.statut);
     });
 

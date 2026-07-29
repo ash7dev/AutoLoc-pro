@@ -136,6 +136,7 @@ export function OwnerReservationCard({
     reservation: Reservation;
     className?: string;
 }) {
+    const router = useRouter();
     const revenue = Number(r.montantProprietaire) || 0;
     const st = STATUS_STYLES[r.statut] ?? DEFAULT_STATUS;
     const StatusIcon = st.icon;
@@ -159,12 +160,14 @@ export function OwnerReservationCard({
         ? ((r.vehicule as any).photos ?? []) 
         : [];
     const photoUrl = photos.find((p: any) => p.estPrincipale)?.url ?? photos[0]?.url ?? null;
+    const detailHref = `/dashboard/owner/reservations/${r.id}`;
 
     return (
         <Link
-            href={`/dashboard/owner/reservations/${r.id}`}
+            href={detailHref}
+            prefetch={true}
             className={cn(
-                "group relative flex flex-col rounded-2xl overflow-hidden",
+                "group relative flex flex-col rounded-2xl overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2",
                 "border border-white/60 border-l-[3px]",
                 st.accentBorder,
                 /* Glass */

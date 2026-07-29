@@ -260,6 +260,35 @@ export interface CloudinarySignature {
   folder: string;
 }
 
+export type UploadFileKind = 'photo' | 'document';
+
+const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
+const PHOTO_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+]);
+const DOCUMENT_MIME_TYPES = new Set([...PHOTO_MIME_TYPES, 'application/pdf']);
+
+/** Validate files before spending bandwidth or a Cloudinary request. */
+export function validateUploadFile(file: File, kind: UploadFileKind): string | null {
+  const allowedTypes = kind === 'photo' ? PHOTO_MIME_TYPES : DOCUMENT_MIME_TYPES;
+  const label = kind === 'photo' ? 'photo' : 'document';
+
+  if (!allowedTypes.has(file.type)) {
+    return kind === 'photo'
+      ? 'Format non pris en charge. Utilisez JPG, PNG, WebP ou HEIC.'
+      : 'Format non pris en charge. Utilisez JPG, PNG, WebP, HEIC ou PDF.';
+  }
+  if (file.size === 0) return `Le fichier ${label} est vide.`;
+  if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+    return `Le fichier est trop volumineux. Maximum ${MAX_UPLOAD_SIZE_BYTES / 1024 / 1024} Mo.`;
+  }
+  return null;
+}
+
 export async function fetchUploadSignature(): Promise<CloudinarySignature> {
   return apiFetch<CloudinarySignature>('/vehicles/upload-signature', {
     maxRetries: 3,
@@ -273,17 +302,25 @@ export async function compressImage(file: File, maxSize = 1600): Promise<File> {
   // Skip if not an image or already small
   if (!file.type.startsWith('image/') || file.size < 512 * 1024) return file;
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    let settled = false;
+    const finish = (result: File) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      URL.revokeObjectURL(objectUrl);
+      resolve(result);
+    };
     const timeoutId = setTimeout(() => {
       console.warn('[Compress] Timeout - utilisation fichier original');
-      resolve(file);
+      finish(file);
     }, 10000); // 10s timeout
 
     img.onerror = () => {
-      clearTimeout(timeoutId);
       console.error('[Compress] Erreur chargement image - utilisation fichier original');
-      resolve(file); // Fallback au fichier original plutôt que rejeter
+      finish(file); // Fallback au fichier original plutôt que rejeter
     };
 
     img.onload = () => {
@@ -310,39 +347,84 @@ export async function compressImage(file: File, maxSize = 1600): Promise<File> {
         const ctx = canvas.getContext('2d');
         if (!ctx) {
           console.error('[Compress] Impossible de créer contexte canvas');
-          resolve(file);
+          finish(file);
           return;
         }
 
         ctx.drawImage(img, 0, 0, width, height);
         canvas.toBlob((blob) => {
           if (blob) {
-            resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg' }));
+            finish(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg' }));
           } else {
             console.error('[Compress] Échec création blob');
-            resolve(file);
+            finish(file);
           }
         }, 'image/jpeg', 0.85);
       } catch (err) {
         console.error('[Compress] Erreur:', err);
-        resolve(file); // Fallback au fichier original
+        finish(file); // Fallback au fichier original
       }
     };
 
     try {
-      img.src = URL.createObjectURL(file);
+      img.src = objectUrl;
     } catch (err) {
-      clearTimeout(timeoutId);
       console.error('[Compress] Erreur création URL:', err);
-      resolve(file);
+      finish(file);
     }
   });
+}
+
+async function uploadFormToCloudinary(
+  url: string,
+  form: FormData,
+  file: File,
+  timeoutMs: number,
+  label: string,
+): Promise<{ secure_url: string; public_id: string; info?: unknown }> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(url, { method: 'POST', body: form, signal: controller.signal });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      console.error(`[Upload] Échec Cloudinary (${label}):`, {
+        status: res.status,
+        statusText: res.statusText,
+        response: text.substring(0, 500),
+        file: file.name,
+      });
+      if (res.status === 401 || res.status === 403) {
+        throw new Error('Autorisation d’upload expirée. Nouvelle tentative en cours.');
+      }
+      if (res.status === 413) {
+        throw new Error('Fichier trop volumineux. Maximum 10 Mo.');
+      }
+      if (res.status === 429) {
+        throw new Error('Le service d’upload est temporairement saturé.');
+      }
+      throw new Error(`Le service d’upload a refusé ce fichier (${res.status}).`);
+    }
+    return await res.json() as { secure_url: string; public_id: string; info?: unknown };
+  } catch (error) {
+    if ((error as { name?: string }).name === 'AbortError') {
+      throw new Error('L’upload a expiré. Vérifiez votre connexion puis réessayez.');
+    }
+    if (error instanceof TypeError) {
+      throw new Error('Connexion au service d’upload impossible. Vérifiez votre réseau puis réessayez.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 /** Upload a file directly to Cloudinary using a pre-signed signature. */
 export async function uploadToCloudinary(
   file: File,
   sig: CloudinarySignature,
+  options?: { timeoutMs?: number },
 ): Promise<{ url: string; publicId: string }> {
   const TRANSFORM = 'w_800,h_600,c_fill,f_webp,q_auto';
 
@@ -362,34 +444,13 @@ export async function uploadToCloudinary(
     form.append('signature', sig.signature);
     form.append('folder', sig.folder);
 
-    const res = await fetch(
+    const data = await uploadFormToCloudinary(
       `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`,
-      { method: 'POST', body: form },
+      form,
+      file,
+      options?.timeoutMs ?? 45_000,
+      'photo',
     );
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      console.error('[Upload] Échec Cloudinary:', {
-        status: res.status,
-        statusText: res.statusText,
-        response: text.substring(0, 500),
-        file: file.name,
-      });
-
-      // Messages d'erreur plus spécifiques
-      if (res.status === 401 || res.status === 403) {
-        throw new Error('Signature expirée ou invalide. Veuillez réessayer.');
-      }
-      if (res.status === 413) {
-        throw new Error('Fichier trop volumineux. Maximum 10MB.');
-      }
-      if (res.status === 429) {
-        throw new Error('Trop de requêtes. Attendez quelques secondes.');
-      }
-      throw new Error(`Erreur d'upload: ${res.status} - ${text.substring(0, 100)}`);
-    }
-
-    const data = await res.json() as { secure_url: string; public_id: string };
     const url = data.secure_url.replace('/upload/', `/upload/${TRANSFORM}/`);
     console.log('[Upload] Succès:', { publicId: data.public_id, file: file.name });
     return { url, publicId: data.public_id };
@@ -406,7 +467,7 @@ export async function uploadToCloudinary(
 export async function uploadDocumentToCloudinary(
   file: File,
   sig: CloudinarySignature,
-  options?: { detectFace?: boolean },
+  options?: { detectFace?: boolean; timeoutMs?: number },
 ): Promise<{ url: string; publicId: string }> {
   // ── Optimization: Compress client-side if it's an image ──
   // Documents are often scanned in high res but don't need to be huge.
@@ -428,15 +489,14 @@ export async function uploadDocumentToCloudinary(
   }
 
   // /auto/upload détecte automatiquement image vs raw (PDF)
-  const res = await fetch(
+  const data = await uploadFormToCloudinary(
     `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`,
-    { method: 'POST', body: form },
+    form,
+    file,
+    options?.timeoutMs ?? 60_000,
+    'document',
   );
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`Cloudinary document upload failed: ${res.status} ${text}`);
-  }
-  const data = await res.json() as {
+  const documentData = data as {
     secure_url: string;
     public_id: string;
     info?: {
@@ -451,7 +511,7 @@ export async function uploadDocumentToCloudinary(
 
   // ✅ Vérifier si un visage a été détecté (si option activée)
   if (options?.detectFace) {
-    const faceDetection = data.info?.detection?.adv_face;
+    const faceDetection = documentData.info?.detection?.adv_face;
     const hasFace = faceDetection?.data && faceDetection.data.length > 0;
 
     if (!hasFace) {
@@ -459,7 +519,7 @@ export async function uploadDocumentToCloudinary(
     }
   }
 
-  return { url: data.secure_url, publicId: data.public_id };
+  return { url: documentData.secure_url, publicId: documentData.public_id };
 }
 
 // ── Blocked dates (public, client-side) ──────────────────────────────────────

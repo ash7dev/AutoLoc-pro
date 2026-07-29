@@ -138,8 +138,16 @@ export async function fetchReservation(
 /**
  * Confirm a reservation (owner action).
  */
-export async function confirmReservation(id: string, accessToken?: string): Promise<void> {
-    await apiFetch(`/reservations/${id}/confirm`, { method: 'PATCH' });
+export async function confirmReservation(
+    id: string,
+    accessToken?: string,
+    heureDebut?: string,
+): Promise<void> {
+    await apiFetch(`/reservations/${id}/confirm`, {
+        method: 'PATCH',
+        accessToken,
+        body: heureDebut ? { heureDebut } : undefined,
+    });
 
     // ✅ OPTIMISATION: Invalider les caches après confirmation
     if (typeof window === 'undefined') {
@@ -165,6 +173,7 @@ export async function cancelReservation(
 ): Promise<void> {
     await apiFetch(`/reservations/${id}/cancel`, {
         method: 'PATCH',
+        accessToken,
         body: raison ? { raison } : undefined,
     });
 
@@ -190,7 +199,11 @@ export async function cancelReservation(
  * Check-in a reservation.
  */
 export async function checkinReservation(id: string, accessToken?: string): Promise<void> {
-    await apiFetch(`/reservations/${id}/checkin`, { method: 'PATCH' });
+    await apiFetch(`/reservations/${id}/checkin?role=PROPRIETAIRE`, {
+        method: 'PATCH',
+        accessToken,
+        body: { soldeRecu: true },
+    });
 
     // ✅ OPTIMISATION: Invalider les caches après check-in
     if (typeof window === 'undefined') {
@@ -210,7 +223,7 @@ export async function checkinReservation(id: string, accessToken?: string): Prom
  * Check-out a reservation.
  */
 export async function checkoutReservation(id: string, accessToken?: string): Promise<void> {
-    await apiFetch(`/reservations/${id}/checkout`, { method: 'PATCH' });
+    await apiFetch(`/reservations/${id}/checkout`, { method: 'PATCH', accessToken });
 
     // ✅ OPTIMISATION: Invalider les caches après check-out (wallet + versement)
     if (typeof window === 'undefined') {

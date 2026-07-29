@@ -6,9 +6,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAddVehicleStore } from "../store";
-import { VEHICLE_PATHS, uploadDocumentToCloudinary, fetchUploadSignature } from "@/lib/nestjs/vehicles";
+import { uploadDocumentToCloudinary, fetchUploadSignature, validateUploadFile } from "@/lib/nestjs/vehicles";
 
 type DocUploadStatus = 'idle' | 'uploading' | 'done' | 'error';
+const MAX_UPLOAD_ATTEMPTS = 3;
 
 interface Props {
     onNext: () => void;
@@ -22,23 +23,39 @@ export function StepDocuments({ onNext, onBack }: Props) {
         carteGrise: carteGriseUploadResult ? 'done' : 'idle',
         assurance: assuranceUploadResult ? 'done' : 'idle',
     });
+    const [uploadError, setUploadError] = useState<string | null>(null);
 
     const handleFile = async (type: "carteGrise" | "assurance", files: FileList | null) => {
         if (!files || files.length === 0) return;
         const file = files[0];
-        if (!file.type.startsWith("image/") && file.type !== "application/pdf") return;
+        const validationError = validateUploadFile(file, 'document');
+        if (validationError) {
+            setUploadError(validationError);
+            return;
+        }
 
         setDocument(type, file);
         setUploadStatus(prev => ({ ...prev, [type]: 'uploading' }));
+        setUploadError(null);
 
-        try {
-            const sig = await fetchUploadSignature();
-            const result = await uploadDocumentToCloudinary(file, sig);
-            setDocumentUploadResult(type, { url: result.url, publicId: result.publicId });
-            setUploadStatus(prev => ({ ...prev, [type]: 'done' }));
-        } catch {
-            setUploadStatus(prev => ({ ...prev, [type]: 'error' }));
+        let lastError: unknown;
+        for (let attempt = 1; attempt <= MAX_UPLOAD_ATTEMPTS; attempt += 1) {
+            try {
+                const sig = await fetchUploadSignature();
+                const result = await uploadDocumentToCloudinary(file, sig, { timeoutMs: 60_000 });
+                setDocumentUploadResult(type, { url: result.url, publicId: result.publicId });
+                setUploadStatus(prev => ({ ...prev, [type]: 'done' }));
+                return;
+            } catch (err) {
+                lastError = err;
+                if (attempt < MAX_UPLOAD_ATTEMPTS) {
+                    await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+                }
+            }
         }
+
+        setUploadStatus(prev => ({ ...prev, [type]: 'error' }));
+        setUploadError(lastError instanceof Error ? lastError.message : 'Upload impossible. Vérifiez votre connexion puis réessayez.');
     };
 
     const handleClear = (type: "carteGrise" | "assurance") => {
@@ -46,12 +63,21 @@ export function StepDocuments({ onNext, onBack }: Props) {
         setUploadStatus(prev => ({ ...prev, [type]: 'idle' }));
     };
 
-    const isFormValid = !!carteGrise && !!assurance;
+    const isFormValid = !!carteGriseUploadResult && !!assuranceUploadResult
+        && uploadStatus.carteGrise === 'done' && uploadStatus.assurance === 'done';
 
     return (
         <div className="space-y-7">
 
             {/* ━━━ Section Card ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+            {uploadError && (
+                <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                    <p className="flex-1 text-[12.5px] font-medium text-red-700">{uploadError}</p>
+                    <button type="button" onClick={() => setUploadError(null)} className="text-[11.5px] font-bold text-red-700 hover:text-red-900">
+                        Fermer
+                    </button>
+                </div>
+            )}
             <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">

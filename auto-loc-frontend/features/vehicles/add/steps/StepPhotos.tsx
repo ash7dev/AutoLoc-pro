@@ -1,15 +1,17 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useCallback } from "react";
 import {
   ArrowLeft, ArrowRight, X, Star, ImagePlus, Images,
   Loader2, AlertCircle, RotateCcw, GripVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAddVehicleStore } from "../store";
-import { fetchUploadSignature, uploadToCloudinary, type CloudinarySignature } from "@/lib/nestjs/vehicles";
+import { fetchUploadSignature, uploadToCloudinary, validateUploadFile } from "@/lib/nestjs/vehicles";
 
 const MAX_PHOTOS = 8;
+const MAX_CONCURRENT_UPLOADS = 2;
+const MAX_UPLOAD_ATTEMPTS = 3;
 
 interface Props {
   onNext: () => void;
@@ -19,76 +21,63 @@ interface Props {
 export function StepPhotos({ onNext, onBack }: Props) {
   const { photos, addPhotos, updatePhoto, removePhoto, movePhotoToFirst, movePhoto } = useAddVehicleStore();
   const galleryRef = useRef<HTMLInputElement>(null);
-  const sigRef = useRef<CloudinarySignature | null>(null);
-  const [sigError, setSigError] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  // Pre-fetch/refresh Cloudinary signature robustement avec retries
-  const getOrFetchSignature = useCallback(async (showErrorOnFail = true): Promise<CloudinarySignature | null> => {
-    if (sigRef.current) return sigRef.current;
+  const uploadPhotoWithRetry = useCallback(async (file: File, id: string) => {
+    const validationError = validateUploadFile(file, 'photo');
+    if (validationError) {
+      updatePhoto(id, { status: 'error' });
+      setUploadError(validationError);
+      return;
+    }
 
-    setSigError(false);
-    for (let attempt = 0; attempt < 3; attempt++) {
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= MAX_UPLOAD_ATTEMPTS; attempt += 1) {
       try {
         const sig = await fetchUploadSignature();
-        sigRef.current = sig;
-        setSigError(false);
-        return sig;
+        const result = await uploadToCloudinary(file, sig, { timeoutMs: 45_000 });
+        updatePhoto(id, { url: result.url, publicId: result.publicId, status: 'done' });
+        return;
       } catch (err) {
-        console.warn(`[StepPhotos] Tentative ${attempt + 1} signature échouée:`, err);
-        if (attempt < 2) {
-          await new Promise((resolve) => setTimeout(resolve, 800 * (attempt + 1)));
+        lastError = err;
+        if (attempt < MAX_UPLOAD_ATTEMPTS) {
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
         }
       }
     }
 
-    if (showErrorOnFail) {
-      setSigError(true);
-    }
-    return null;
-  }, []);
-
-  const loadSignature = useCallback(async (showErrorOnFail = true) => {
-    await getOrFetchSignature(showErrorOnFail);
-  }, [getOrFetchSignature]);
-
-  useEffect(() => { loadSignature(false); }, [loadSignature]);
+    console.error(`[StepPhotos] Échec définitif ${file.name}:`, lastError);
+    updatePhoto(id, { status: 'error' });
+    setUploadError(lastError instanceof Error ? lastError.message : 'Upload impossible. Vérifiez votre connexion puis réessayez.');
+  }, [updatePhoto]);
 
   const uploadFiles = useCallback(async (files: File[]) => {
     if (!files.length) return;
 
-    // Récupérer une signature valide avec retries automatiques
-    const sig = await getOrFetchSignature(true);
-    if (!sig) {
-      console.error('[StepPhotos] Impossible d\'obtenir la signature Cloudinary');
-      return;
-    }
+    setUploadError(null);
+    const validFiles = files.filter((file) => {
+      const validationError = validateUploadFile(file, 'photo');
+      if (validationError) setUploadError(validationError);
+      return !validationError;
+    });
+    if (!validFiles.length) return;
 
     const remaining = MAX_PHOTOS - photos.length;
-    const toUpload = files.slice(0, remaining);
+    const toUpload = validFiles.slice(0, remaining);
     const ids = addPhotos(toUpload);
 
-    console.log(`[StepPhotos] Upload de ${toUpload.length} photo(s)...`);
-
-    // Upload en parallèle
-    await Promise.all(
-      toUpload.map(async (file, i) => {
-        const id = ids[i];
-        try {
-          const result = await uploadToCloudinary(file, sig);
-          updatePhoto(id, { url: result.url, publicId: result.publicId, status: 'done' });
-        } catch (err) {
-          console.error(`[StepPhotos] Échec upload ${file.name}:`, err);
-          updatePhoto(id, { status: 'error' });
-        }
-      }),
-    );
-
-    // Réinitialiser la signature consommée et pré-charger la suivante silencieusement
-    sigRef.current = null;
-    getOrFetchSignature(false).catch(() => {});
-  }, [photos.length, addPhotos, updatePhoto, getOrFetchSignature]);
+    let nextIndex = 0;
+    const worker = async () => {
+      while (nextIndex < toUpload.length) {
+        const index = nextIndex;
+        nextIndex += 1;
+        await uploadPhotoWithRetry(toUpload[index], ids[index]);
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(MAX_CONCURRENT_UPLOADS, toUpload.length) }, worker));
+  }, [photos.length, addPhotos, uploadPhotoWithRetry]);
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
@@ -133,19 +122,19 @@ export function StepPhotos({ onNext, onBack }: Props) {
     <div className="space-y-7">
 
       {/* Signature error banner */}
-      {sigError && (
+      {uploadError && (
         <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
           <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" strokeWidth={2} />
           <p className="text-[12.5px] font-medium text-red-700 flex-1">
-            Impossible de contacter le serveur d&apos;upload.
+            {uploadError}
           </p>
           <button
             type="button"
-            onClick={() => loadSignature()}
+            onClick={() => setUploadError(null)}
             className="flex items-center gap-1 text-[11.5px] font-bold text-red-700 hover:text-red-900"
           >
             <RotateCcw className="w-3 h-3" strokeWidth={2.5} />
-            Réessayer
+            Fermer
           </button>
         </div>
       )}
@@ -216,18 +205,9 @@ export function StepPhotos({ onNext, onBack }: Props) {
                     <button
                       type="button"
                       onClick={async () => {
+                        setUploadError(null);
                         updatePhoto(photo.id, { status: 'uploading' });
-                        const sig = await getOrFetchSignature(true);
-                        if (!sig) {
-                          updatePhoto(photo.id, { status: 'error' });
-                          return;
-                        }
-                        try {
-                          const result = await uploadToCloudinary(photo.file, sig);
-                          updatePhoto(photo.id, { url: result.url, publicId: result.publicId, status: 'done' });
-                        } catch {
-                          updatePhoto(photo.id, { status: 'error' });
-                        }
+                        await uploadPhotoWithRetry(photo.file, photo.id);
                       }}
                       className="text-[9px] font-bold text-white underline"
                     >

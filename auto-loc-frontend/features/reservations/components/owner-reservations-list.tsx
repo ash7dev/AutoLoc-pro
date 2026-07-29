@@ -436,8 +436,8 @@ export function OwnerReservationsList({
 
                                     {/* Animated content area */}
                                     <div className={cn(
-                                        "transition-all duration-300 ease-out overflow-hidden",
-                                        isOpen ? "max-h-[5000px] opacity-100" : "max-h-0 opacity-0",
+                                        "transition-all duration-300 ease-out",
+                                        isOpen ? "opacity-100" : "max-h-0 opacity-0 overflow-hidden",
                                     )}>
                                         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 pt-1">
                                             {group.reservations.map(r => (

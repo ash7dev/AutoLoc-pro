@@ -283,11 +283,17 @@ export class ReservationsController {
   async findForOwner(
     @Req() req: Request & { user?: RequestUser },
     @Query('vehiculeId') vehiculeId?: string,
+    @Query('statut') statut?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
     const user = req.user!;
-    return this.reservationsService.findForOwner(user, vehiculeId, page ? Number(page) : 1, limit ? Number(limit) : undefined);
+    return this.reservationsService.findForOwner(user, {
+      vehiculeId,
+      statut,
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : undefined,
+    });
   }
 
   /**

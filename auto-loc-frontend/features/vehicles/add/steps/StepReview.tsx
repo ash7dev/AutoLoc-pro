@@ -11,7 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAddVehicleStore } from "../store";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
-import { VEHICLE_PATHS, Vehicle, uploadDocumentToCloudinary } from "@/lib/nestjs/vehicles";
+import { VEHICLE_PATHS, Vehicle } from "@/lib/nestjs/vehicles";
 import { revalidateVehiclePaths } from "@/lib/nestjs/revalidate";
 
 interface Props {
@@ -20,7 +20,7 @@ interface Props {
 
 export function StepReview({ onBack }: Props) {
   const router = useRouter();
-  const { step1, step2, step3, photos, carteGrise, assurance, carteGriseUploadResult, assuranceUploadResult, setVehicleId, reset } = useAddVehicleStore();
+  const { step1, step2, step3, photos, carteGriseUploadResult, assuranceUploadResult, setVehicleId, reset } = useAddVehicleStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { authFetch } = useAuthFetch();
@@ -30,22 +30,16 @@ export function StepReview({ onBack }: Props) {
 
   const handlePublish = async () => {
     if (!step1 || !step2) return;
+    if (!carteGriseUploadResult || !assuranceUploadResult) {
+      setError('Les documents doivent être envoyés avant la publication. Retournez à l’étape Documents.');
+      return;
+    }
     if (submittingRef.current) return; // Verrou synchrone
     submittingRef.current = true;
     setLoading(true);
     setError(null);
 
     try {
-      // ── Documents : utilise les résultats pré-uploadés si disponibles ──────────
-      const [carteGriseResult, assuranceResult] = await Promise.all([
-        carteGriseUploadResult
-          ? Promise.resolve(carteGriseUploadResult)
-          : (carteGrise ? uploadDocumentToCloudinaryWithRetry(carteGrise, 'carte-grise') : Promise.resolve(null)),
-        assuranceUploadResult
-          ? Promise.resolve(assuranceUploadResult)
-          : (assurance ? uploadDocumentToCloudinaryWithRetry(assurance, 'assurance') : Promise.resolve(null)),
-      ]);
-
       // ── Photos : filtre et log pour debug ─────────────────────────────────────────────
       const validPhotos = photos.filter((p) => p.status === 'done' && p.url && p.publicId);
       console.log('Photos envoyées au backend:', validPhotos.length, 'sur', photos.length);
@@ -79,10 +73,10 @@ export function StepReview({ onBack }: Props) {
           autoriseHorsDakar: step2.autoriseHorsDakar || false,
           supplementHorsDakarParJour: step2.supplementHorsDakarParJour || undefined,
           photos: validPhotos.map((p) => ({ url: p.url!, publicId: p.publicId! })),
-          carteGriseUrl: carteGriseResult?.url,
-          carteGrisePublicId: carteGriseResult?.publicId,
-          assuranceDocUrl: assuranceResult?.url,
-          assuranceDocPublicId: assuranceResult?.publicId,
+          carteGriseUrl: carteGriseUploadResult.url,
+          carteGrisePublicId: carteGriseUploadResult.publicId,
+          assuranceDocUrl: assuranceUploadResult.url,
+          assuranceDocPublicId: assuranceUploadResult.publicId,
         },
       });
 
@@ -104,36 +98,13 @@ export function StepReview({ onBack }: Props) {
     }
   };
 
-  // ── Helper : upload document avec retry ─────────────────────────────────────────────
-  async function uploadDocumentToCloudinaryWithRetry(file: File, docType: 'carte-grise' | 'assurance'): Promise<{ url: string; publicId: string }> {
-    const MAX_RETRIES = 3;
-    let lastError: Error | null = null;
-
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const sig = await authFetch<{ signature: string; timestamp: number; apiKey: string; cloudName: string; folder: string }>(
-          VEHICLE_PATHS.uploadSignature,
-        );
-        // uploadDocumentToCloudinary gère maintenant la compression client-side en interne
-        return await uploadDocumentToCloudinary(file, sig);
-      } catch (err) {
-        lastError = err instanceof Error ? err : new Error('Upload failed');
-        if (attempt === MAX_RETRIES) {
-          throw lastError;
-        }
-        // Attendre avant de réessayer (exponential backoff)
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt - 1)));
-      }
-    }
-    throw lastError!;
-  }
-
   const fmtPrice = (n: number | undefined | null) => {
     if (n === null || n === undefined || isNaN(n)) return "—";
     return new Intl.NumberFormat("fr-FR").format(n) + " FCFA";
   };
 
-  const allValid = !!step1 && !!step2 && photos.some((p) => p.status === 'done') && !!carteGrise && !!assurance;
+  const allValid = !!step1 && !!step2 && photos.some((p) => p.status === 'done')
+    && !!carteGriseUploadResult && !!assuranceUploadResult;
 
   return (
     <div className="space-y-6">
@@ -201,8 +172,8 @@ export function StepReview({ onBack }: Props) {
       <ReviewSection icon={FileCheck2} title="Fichiers">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <FileStatus label={`${photos.filter(p => p.status === 'done').length} photo(s)`} ok={photos.some(p => p.status === 'done')} icon={Camera} />
-          <FileStatus label="Carte Grise" ok={!!carteGrise} icon={FileCheck2} />
-          <FileStatus label="Assurance" ok={!!assurance} icon={Shield} />
+          <FileStatus label="Carte Grise" ok={!!carteGriseUploadResult} icon={FileCheck2} />
+          <FileStatus label="Assurance" ok={!!assuranceUploadResult} icon={Shield} />
         </div>
       </ReviewSection>
 

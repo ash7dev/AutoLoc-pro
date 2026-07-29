@@ -51,7 +51,7 @@ export default async function VehicleReservationsPage({ params }: PageProps) {
 
             <OwnerHeader
                 title="Réservations du véhicule"
-                subtitle={`${vehicle.marque} ${vehicle.modele} · ${reservations.length} réservation${reservations.length !== 1 ? 's' : ''}`}
+                subtitle={`${vehicle?.marque ?? 'Véhicule'} ${vehicle?.modele ?? ''} · ${reservations.length} réservation${reservations.length !== 1 ? 's' : ''}`}
             />
 
             <OwnerReservationsList initialReservations={reservations} />

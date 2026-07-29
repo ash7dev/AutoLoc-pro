@@ -558,7 +558,11 @@ export class ReservationsService {
 
   // ── GET /reservations/owner ──────────────────────────────────────────────────
 
-  async findForOwner(user: RequestUser, vehiculeId?: string, page = 1, limitOverride?: number) {
+  async findForOwner(
+    user: RequestUser,
+    params: { vehiculeId?: string; statut?: string; page?: number; limit?: number } = {},
+  ) {
+    const { vehiculeId, statut, page = 1, limit: limitOverride } = params;
     const proprietaire = await this.prisma.utilisateur.findUnique({
       where: { userId: user.sub },
       select: { id: true },
@@ -570,6 +574,12 @@ export class ReservationsService {
 
     const where: Record<string, unknown> = { proprietaireId: proprietaire.id };
     if (vehiculeId) where.vehiculeId = vehiculeId;
+    if (statut) {
+      if (!Object.values(StatutReservation).includes(statut as StatutReservation)) {
+        throw new BadRequestException('Statut de réservation invalide');
+      }
+      where.statut = statut;
+    }
 
     const take = Math.min(limitOverride ?? 20, 200);
     const skip = (page - 1) * take;

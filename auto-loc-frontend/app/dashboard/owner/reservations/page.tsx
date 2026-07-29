@@ -9,8 +9,8 @@ import { CACHE_TAGS, getCacheKey, getOwnerCacheTags } from "@/lib/cache-config";
 
 // ✅ OPTIMISATION: Cache des réservations owner pour 15 secondes
 const getCachedReservations = (token: string) => unstable_cache(
-  async () => fetchOwnerReservations(token, { limit: 10 }),
-  getCacheKey(CACHE_TAGS.owner_reservations, token, 10),
+  async () => fetchOwnerReservations(token, { limit: 100 }),
+  getCacheKey(CACHE_TAGS.owner_reservations, token, 100),
   { revalidate: 15, tags: getOwnerCacheTags(CACHE_TAGS.owner_reservations, token) }
 )();
 
@@ -22,7 +22,7 @@ export default async function OwnerReservationsPage() {
   let total = 0;
   try {
     const result = await getCachedReservations(token);
-    reservations = (result?.data ?? []).filter((r) => !["INITIEE", "EN_ATTENTE_PAIEMENT"].includes(r.statut));
+    reservations = result?.data ?? [];
     total = result?.total ?? reservations.length;
   } catch (err) {
     if (err instanceof ApiError) {

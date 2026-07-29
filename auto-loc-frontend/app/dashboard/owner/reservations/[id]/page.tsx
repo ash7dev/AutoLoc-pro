@@ -43,6 +43,16 @@ function fmtDateTime(d: string | Date) {
 function fmtMoney(n: number | string) {
     return Number(n).toLocaleString("fr-FR");
 }
+function safeText(value: unknown, fallback = "—") {
+    return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+function safeDateValue(value: unknown): string | Date | null {
+    if (typeof value === "string" || value instanceof Date) {
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) return value;
+    }
+    return null;
+}
 
 // Helper pour vérifier si on peut imprimer (moins de 24h avant le début ou déjà commencé)
 function canPrintContract(dateDebut: string | Date): boolean {
@@ -114,9 +124,23 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
     const r = reservation;
 
     /* ── Computed ── */
+    const dateDebut = safeDateValue(r.dateDebut);
+    const dateFin = safeDateValue(r.dateFin);
+    const locataire = r.locataire ?? {};
+    const vehicule = r.vehicule ?? {};
+    const locatairePrenom = safeText(locataire.prenom, "Locataire");
+    const locataireNom = safeText(locataire.nom, "");
+    const fullName = `${locatairePrenom} ${locataireNom}`.trim();
+    const initials = `${locatairePrenom[0] ?? "L"}${locataireNom[0] ?? ""}`.toUpperCase();
+    const vehicleMarque = safeText(vehicule.marque, "Véhicule");
+    const vehicleModele = safeText(vehicule.modele, "inconnu");
+    const vehicleName = `${vehicleMarque} ${vehicleModele}`;
+
     const nbJours = r.nbJours != null
         ? r.nbJours
-        : Math.max(1, Math.round((new Date(r.dateFin).getTime() - new Date(r.dateDebut).getTime()) / 86_400_000));
+        : dateDebut && dateFin
+            ? Math.max(1, Math.round((new Date(dateFin).getTime() - new Date(dateDebut).getTime()) / 86_400_000))
+            : 1;
 
     const totalLocataire  = Number(r.prixTotal) || 0;
     const commissionAmt   = Number(r.commission) || 0;
@@ -137,12 +161,10 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
     const commPct = COMMISSION_RATE;
     const netPct  = NET_RATE;
 
-    /* ── Privacy: sensitive info hidden before confirmation ── */
-    const initials  = `${r.locataire.prenom[0]}${r.locataire.nom[0]}`.toUpperCase();
-    const fullName  = `${r.locataire.prenom} ${r.locataire.nom}`;
-
     /* ── Vehicle photo ── */
-    const photos = (r.vehicule as typeof r.vehicule & { photos?: { url: string; estPrincipale?: boolean }[] }).photos ?? [];
+    const photos = Array.isArray((vehicule as { photos?: unknown }).photos)
+        ? (vehicule as { photos: { url?: string; estPrincipale?: boolean }[] }).photos
+        : [];
     const photoUrl = photos[0]?.url ?? null;
 
     /* ── Payment provider ── */
@@ -199,7 +221,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                         <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 md:w-2/5 hidden sm:block">
                             <Image
                                 src={photoUrl}
-                                alt={`${r.vehicule.marque} ${r.vehicule.modele}`}
+                                alt={vehicleName}
                                 fill
                                 className="object-cover opacity-10"
                                 sizes="40vw"
@@ -225,9 +247,9 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
                             <div>
                                 <h1 className="text-2xl lg:text-[2rem] font-black text-white tracking-tight leading-tight">
-                                    {r.vehicule.marque}{" "}
+                                    {vehicleMarque}{" "}
                                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-300">
-                                        {r.vehicule.modele}
+                                        {vehicleModele}
                                     </span>
                                 </h1>
                                 <p className="text-[12px] text-white/25 mt-1.5 flex items-center gap-1.5">
@@ -264,8 +286,8 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                         {/* Dates strip */}
                         <div className="mt-6 pt-5 border-t border-white/[0.06] flex flex-wrap gap-4 sm:gap-8">
                             {[
-                                { icon: LogIn,       label: "Prise en charge", value: fmtDateTime(r.dateDebut) },
-                                { icon: LogOut,      label: "Restitution",     value: fmtDateTime(r.dateFin) },
+                                { icon: LogIn,       label: "Prise en charge", value: dateDebut ? fmtDateTime(dateDebut) : "Date à confirmer" },
+                                { icon: LogOut,      label: "Restitution",     value: dateFin ? fmtDateTime(dateFin) : "Date à confirmer" },
                                 { icon: CalendarDays,label: "Durée",           value: `${nbJours} jour${nbJours > 1 ? "s" : ""}` },
                             ].map(item => (
                                 <div key={item.label} className="flex items-center gap-2.5">
@@ -308,33 +330,33 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                 <ReservationActions
                     reservationId={r.id}
                     statut={r.statut}
-                    dateDebut={r.dateDebut}
-                    dateFin={r.dateFin}
-                    locataireKycStatus={r.locataire?.statutKyc || r.locataire?.kycStatus}
+                    dateDebut={dateDebut ? String(dateDebut) : undefined}
+                    dateFin={dateFin ? String(dateFin) : undefined}
+                    locataireKycStatus={locataire?.statutKyc || locataire?.kycStatus}
                     checkinProprietaireLe={r.checkinProprietaireLe ?? undefined}
                     checkinLocataireLe={r.checkinLocataireLe ?? undefined}
                     tacitCheckinDeadlineLe={r.tacitCheckinDeadlineLe}
                     totalLocataire={totalLocataire}
                     totalBase={netAmt}
                     isOwner={true}
-                    showExpiredAlert={isReservationExpired(r.dateFin)}
+                    showExpiredAlert={dateFin ? isReservationExpired(dateFin) : false}
                 />
 
                 {/* ══════════════════════════════════════════════════
                     REVIEW — Propriétaire note le locataire
                 ══════════════════════════════════════════════════ */}
-                {(r.statut === 'TERMINEE' || (isReservationExpired(r.dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) && (
+                {(r.statut === 'TERMINEE' || (dateFin && isReservationExpired(dateFin) && ['EN_COURS', 'CONFIRMEE'].includes(r.statut))) && (
                     <>
                         {Array.isArray((r as any).avis) && (r as any).avis.length > 0 ? (
                             <ExistingReviewDisplay
                                 review={(r as any).avis[0]}
                                 title="Avis sur le locataire"
-                                subtitle={`Vous avez noté ${r.locataire.prenom} ${r.locataire.nom}`}
+                                subtitle={`Vous avez noté ${fullName}`}
                             />
                         ) : (
                             <TenantReviewForm
                                 reservationId={r.id}
-                                tenantName={`${r.locataire.prenom} ${r.locataire.nom}`}
+                                tenantName={fullName}
                             />
                         )}
                     </>
@@ -354,8 +376,8 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                         </div>
                         <ContratActions
                             reservationId={r.id}
-                            canPrint={canPrintContract(r.dateDebut)}
-                            dateDebut={r.dateDebut}
+                            canPrint={dateDebut ? canPrintContract(dateDebut) : false}
+                            dateDebut={dateDebut ? String(dateDebut) : ""}
                             from="owner"
                             showPdf={false}
                         />
@@ -378,8 +400,8 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                                         <span className="text-[15px] font-black text-emerald-700">{initials}</span>
                                     </div>
                                     {/* KYC dot */}
-                                    <div className={`absolute -bottom-1 -right-1 w-4.5 h-4.5 w-[18px] h-[18px] rounded-full border-2 border-white flex items-center justify-center ${r.locataire.kycStatus === "VERIFIE" ? "bg-emerald-500" : "bg-amber-400"}`}>
-                                        {r.locataire.kycStatus === "VERIFIE"
+                                    <div className={`absolute -bottom-1 -right-1 w-4.5 h-4.5 w-[18px] h-[18px] rounded-full border-2 border-white flex items-center justify-center ${locataire.kycStatus === "VERIFIE" ? "bg-emerald-500" : "bg-amber-400"}`}>
+                                        {locataire.kycStatus === "VERIFIE"
                                             ? <CheckCircle2 className="w-2.5 h-2.5 text-white" strokeWidth={3} />
                                             : <AlertTriangle className="w-2 h-2 text-white" strokeWidth={3} />
                                         }
@@ -388,20 +410,20 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[15px] font-black text-slate-900">{fullName}</p>
                                     <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-                                        <KycBadge status={r.locataire.kycStatus} />
+                                        <KycBadge status={locataire.kycStatus} />
                                         <TenantDocsViewer reservationId={r.id} compact />
                                     </div>
                                 </div>
                             </div>
 
                             {/* Privacy note before 24h */}
-                            <PhoneDisplay 
-                                telephone={r.locataire.telephone} 
-                                dateDebut={r.dateDebut}
+                            <PhoneDisplay
+                                telephone={locataire.telephone}
+                                dateDebut={dateDebut || new Date()}
                                 statut={r.statut}
                                 className="mt-2"
                                 showLabel={false}
-                                name={r.locataire.prenom}
+                                name={locatairePrenom}
                                 reservationId={r.id}
                             />
 
@@ -409,17 +431,17 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                             <InfoRow icon={Star} label="Note locataire" iconCls="bg-amber-50 border-amber-200" iconColor="text-amber-500">
                                 <div className="flex items-center gap-2">
                                     <span className="text-[14px] font-black text-slate-800 tabular-nums">
-                                        {r.locataire.noteLocataire != null
-                                            ? Number(r.locataire.noteLocataire).toFixed(1)
+                                        {locataire.noteLocataire != null
+                                            ? Number(locataire.noteLocataire).toFixed(1)
                                             : "0.0"}
                                         <span className="text-[11px] font-semibold text-slate-400 ml-1">/ 5</span>
                                     </span>
-                                    {(r.locataire as any).totalAvis != null && (r.locataire as any).totalAvis > 0 && (
+                                    {(locataire as any).totalAvis != null && (locataire as any).totalAvis > 0 && (
                                         <span className="text-[10px] font-semibold text-slate-400">
-                                            ({(r.locataire as any).totalAvis} avis)
+                                            ({(locataire as any).totalAvis} avis)
                                         </span>
                                     )}
-                                    {(r.locataire.noteLocataire == null || (r.locataire as any).totalAvis === 0 || (r.locataire as any).totalAvis == null) && (
+                                    {(locataire.noteLocataire == null || (locataire as any).totalAvis === 0 || (locataire as any).totalAvis == null) && (
                                         <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-bold text-slate-500">
                                             Nouveau
                                         </span>
@@ -437,7 +459,7 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
                             {/* Photo thumbnail */}
                             {photoUrl && (
                                 <div className="w-full h-32 rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
-                                    <Image src={photoUrl} alt={`${r.vehicule.marque} ${r.vehicule.modele}`}
+                                    <Image src={photoUrl} alt={vehicleName}
                                         width={400} height={200}
                                         className="w-full h-full object-cover"
                                     />
@@ -446,24 +468,24 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
 
                             <div>
                                 <p className="text-[17px] font-black text-slate-900 tracking-tight">
-                                    {r.vehicule.marque}{" "}
-                                    <span className="text-emerald-500">{r.vehicule.modele}</span>
+                                    {vehicleMarque}{" "}
+                                    <span className="text-emerald-500">{vehicleModele}</span>
                                 </p>
                                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                    {r.vehicule.annee && <span className="text-[11px] font-semibold text-slate-400">{r.vehicule.annee}</span>}
-                                    {r.vehicule.type  && <span className="text-[11px] font-semibold text-slate-400">· {r.vehicule.type}</span>}
+                                    {vehicule.annee && <span className="text-[11px] font-semibold text-slate-400">{vehicule.annee}</span>}
+                                    {vehicule.type  && <span className="text-[11px] font-semibold text-slate-400">· {vehicule.type}</span>}
                                 </div>
                             </div>
 
-                            {r.vehicule.immatriculation && (
+                            {vehicule.immatriculation && (
                                 <InfoRow icon={Hash} label="Immatriculation">
-                                    <span className="font-mono font-bold tracking-wider text-slate-800">{r.vehicule.immatriculation}</span>
+                                    <span className="font-mono font-bold tracking-wider text-slate-800">{vehicule.immatriculation}</span>
                                 </InfoRow>
                             )}
 
-                            {r.vehicule.ville && (
+                            {vehicule.ville && (
                                 <InfoRow icon={MapPin} label={r.adresseLivraison ? "Lieu de départ" : "Adresse de récupération"}>
-                                    <span className="capitalize text-slate-800">{r.vehicule.ville}</span>
+                                    <span className="capitalize text-slate-800">{vehicule.ville}</span>
                                 </InfoRow>
                             )}
 

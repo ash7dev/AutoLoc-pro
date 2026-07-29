@@ -30,6 +30,16 @@ import {
 function fmtMoney(n: number | string) {
   return Number(n).toLocaleString('fr-FR');
 }
+function fmtDateSafe(value: unknown) {
+  const date = typeof value === 'string' || value instanceof Date ? new Date(value) : null;
+  if (!date || isNaN(date.getTime())) return 'Date inconnue';
+  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function fmtShortDateSafe(value: unknown) {
+  const date = typeof value === 'string' || value instanceof Date ? new Date(value) : null;
+  if (!date || isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 
 const VEHICLE_STATUS: Record<string, { label: string; cls: string; dot: string }> = {
   BROUILLON: { label: 'Brouillon', cls: 'bg-slate-100 border-slate-200 text-slate-600', dot: 'bg-slate-400' },
@@ -195,7 +205,7 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
   }
 
   /* ── Derived ── */
-  const photos = vehicle.photos ?? [];
+  const photos = Array.isArray(vehicle.photos) ? vehicle.photos : [];
   const heroPhoto = photos.find((p: any) => p.estPrincipale) ?? photos[0];
   const otherPhotos = photos.filter((p: any) => p.id !== heroPhoto?.id).slice(0, 4);
   const isActive = vehicle.statut === 'VERIFIE';
@@ -260,7 +270,7 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
           <div className="lg:grid lg:grid-cols-[480px_1fr]">
 
             {/* Photo panel - Galerie swipeable */}
-            <VehiclePhotoGallery photos={photos} marque={vehicle.marque} modele={vehicle.modele} />
+              <VehiclePhotoGallery photos={photos} marque={vehicle.marque ?? 'Véhicule'} modele={vehicle.modele ?? ''} />
 
             {/* Info panel */}
             <div className="flex flex-col justify-between gap-5 p-6 lg:p-8">
@@ -327,7 +337,7 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
                   {/* Date d'ajout */}
                   <div className="flex items-center gap-2 text-[11px] text-slate-400 font-medium pt-1">
                     <Clock className="w-3.5 h-3.5" strokeWidth={1.75} />
-                    Ajouté le {new Date(vehicle.creeLe).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    Ajouté le {fmtDateSafe(vehicle.creeLe)}
                   </div>
                 </div>
               </div>
@@ -403,7 +413,7 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
                 dateDebut: r.dateDebut,
                 dateFin: r.dateFin,
                 statut: r.statut,
-              }))}
+              })).filter((r: any) => r.dateDebut && r.dateFin)}
             />
           </SectionCard>
 
@@ -443,9 +453,9 @@ export default async function OwnerVehicleDetailPage({ params }: PageProps) {
                         {r.locataire?.prenom} {r.locataire?.nom}
                       </p>
                       <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
-                        {new Date(r.dateDebut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                        {fmtShortDateSafe(r.dateDebut)}
                         {' → '}
-                        {new Date(r.dateFin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {fmtShortDateSafe(r.dateFin)}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
