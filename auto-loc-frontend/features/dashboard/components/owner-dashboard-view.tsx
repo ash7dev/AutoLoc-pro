@@ -208,14 +208,15 @@ export function OwnerDashboardView({
             let hasCheckOut = false;
             const reservedVehicles: string[] = [];
 
-            reservations.forEach(r => {
-                if (!["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE"].includes(r.statut)) return;
-                const start = r.dateDebut.split("T")[0];
-                const end = r.dateFin.split("T")[0];
+            (reservations || []).forEach(r => {
+                if (!r || !["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE"].includes(r.statut)) return;
+                const start = r.dateDebut?.split("T")[0];
+                const end = r.dateFin?.split("T")[0];
+                if (!start || !end) return;
 
                 if (dateStr >= start && dateStr <= end) {
                     isReserved = true;
-                    const vName = `${r.vehicule.marque} ${r.vehicule.modele}`;
+                    const vName = r.vehicule ? `${r.vehicule.marque ?? ''} ${r.vehicule.modele ?? ''}`.trim() : "Véhicule";
                     if (!reservedVehicles.includes(vName)) reservedVehicles.push(vName);
                 }
                 if (start === dateStr) hasCheckIn = true;
@@ -250,15 +251,19 @@ export function OwnerDashboardView({
         const dailyRevenue = new Array(daysInMonth + 1).fill(0);
         let totalRev = 0;
 
-        reservations.forEach(r => {
-            if (!["TERMINEE", "EN_COURS", "CONFIRMEE", "PAYEE"].includes(r.statut)) return;
+        (reservations || []).forEach(r => {
+            if (!r || !["TERMINEE", "EN_COURS", "CONFIRMEE", "PAYEE"].includes(r.statut)) return;
+            if (!r.dateDebut) return;
             
-            // On parse la date et on compare mois/année
             const start = new Date(r.dateDebut);
+            if (isNaN(start.getTime())) return;
+
             if (start.getMonth() === month && start.getFullYear() === year) {
                 const amount = parseFloat(r.montantProprietaire || "0");
-                dailyRevenue[start.getDate()] += amount;
-                totalRev += amount;
+                if (!isNaN(amount)) {
+                    dailyRevenue[start.getDate()] += amount;
+                    totalRev += amount;
+                }
             }
         });
 
@@ -275,11 +280,16 @@ export function OwnerDashboardView({
         const pYear = prevDate.getFullYear();
         let prevTotalRev = 0;
 
-        reservations.forEach(r => {
-            if (!["TERMINEE", "EN_COURS", "CONFIRMEE", "PAYEE"].includes(r.statut)) return;
+        (reservations || []).forEach(r => {
+            if (!r || !["TERMINEE", "EN_COURS", "CONFIRMEE", "PAYEE"].includes(r.statut)) return;
+            if (!r.dateDebut) return;
+
             const start = new Date(r.dateDebut);
+            if (isNaN(start.getTime())) return;
+
             if (start.getMonth() === pMonth && start.getFullYear() === pYear) {
-                prevTotalRev += parseFloat(r.montantProprietaire || "0");
+                const amount = parseFloat(r.montantProprietaire || "0");
+                if (!isNaN(amount)) prevTotalRev += amount;
             }
         });
 
@@ -312,14 +322,14 @@ export function OwnerDashboardView({
     }, [revenuePeriod, reservations]);
 
     // Wallet data
-    const walletSnapshot = wallet
+    const walletSnapshot = (wallet && wallet.balance)
         ? {
-            available: `${wallet.balance.soldeDisponible} FCFA`,
-            pending: `${wallet.balance.enAttente} FCFA`,
+            available: `${wallet.balance.soldeDisponible ?? '0'} FCFA`,
+            pending: `${wallet.balance.enAttente ?? '0'} FCFA`,
             processing: "0 FCFA",
             totalPenalties: penalties?.totalDette || 0,
-            penaltiesCount: penalties?.count || 0
-          }
+            penaltiesCount: penalties?.count || 0,
+        }
         : {
             available: "— FCFA",
             pending: "— FCFA",

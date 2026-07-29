@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { unstable_cache } from "next/cache";
+import { ApiError } from "@/lib/nestjs/api-client";
 import {
   fetchOwnerReservations,
   fetchOwnerStats,
@@ -117,6 +118,9 @@ async function FullDashboardData({ token }: { token: string }) {
     if (vehiclesResult.status === "fulfilled") vehicles = vehiclesResult.value;
     if (penaltiesResult.status === "fulfilled") penalties = penaltiesResult.value;
   } catch (err) {
+    if (err instanceof ApiError && err.status === 401) {
+      redirect("/login?expired=1");
+    }
     console.error("Dashboard data fetch error:", err);
   }
 
