@@ -162,10 +162,18 @@ export function OwnerReservationCard({
     const photoUrl = photos.find((p: any) => p.estPrincipale)?.url ?? photos[0]?.url ?? null;
     const detailHref = `/dashboard/owner/reservations/${r.id}`;
 
+    const handleClick = (e: React.MouseEvent) => {
+        if (!e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) {
+            e.preventDefault();
+            router.push(detailHref);
+        }
+    };
+
     return (
         <Link
             href={detailHref}
-            prefetch={true}
+            prefetch={false}
+            onClick={handleClick}
             className={cn(
                 "group relative flex flex-col rounded-2xl overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2",
                 "border border-white/60 border-l-[3px]",

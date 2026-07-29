@@ -116,9 +116,10 @@ export default async function ReservationDetailPage({ params }: { params: { id: 
     try {
         reservation = await getCachedReservation(token, params.id);
     } catch (err) {
+        console.error("[ReservationDetailPage] API error:", err);
         if (err instanceof ApiError && err.status === 401) redirect("/login?expired=1");
-        if (err instanceof ApiError && err.status === 404) notFound();
-        throw err;
+        if (err instanceof ApiError && (err.status === 404 || err.status === 403)) notFound();
+        notFound();
     }
 
     const r = reservation;

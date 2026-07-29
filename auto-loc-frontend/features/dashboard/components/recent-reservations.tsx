@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, ChevronRight, Car, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -56,7 +57,15 @@ const PIPELINE_ORDER: ReservationStatus[] = [
    ROW
 ════════════════════════════════════════════════════════════════ */
 function ReservationRow({ r }: { r: ReservationItem }) {
+  const router = useRouter();
   const s = STATUS[r.status] ?? STATUS.pending;
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (r.href && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) {
+      e.preventDefault();
+      router.push(r.href);
+    }
+  };
 
   const inner = (
     <div className={cn(
@@ -134,7 +143,7 @@ function ReservationRow({ r }: { r: ReservationItem }) {
   );
 
   return r.href
-    ? <Link href={r.href} className="block">{inner}</Link>
+    ? <Link href={r.href} onClick={handleClick} prefetch={false} className="block">{inner}</Link>
     : <div>{inner}</div>;
 }
 
