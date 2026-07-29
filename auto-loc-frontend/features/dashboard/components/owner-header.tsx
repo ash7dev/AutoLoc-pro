@@ -58,7 +58,7 @@ function NotificationBell() {
           </div>
         ) : (
           <div className="max-h-[340px] overflow-y-auto divide-y divide-white/[0.05]">
-            {counts?.pendingConfirmationsIds.map((id) => (
+            {(counts?.pendingConfirmationsIds ?? []).map((id) => (
               <Link
                 key={id}
                 href={`/dashboard/owner/reservations/${id}`}
@@ -76,7 +76,7 @@ function NotificationBell() {
                 <ArrowUpRight className="h-3.5 w-3.5 text-white/30 shrink-0" />
               </Link>
             ))}
-            {counts?.pendingLitigesIds.map((id) => (
+            {(counts?.pendingLitigesIds ?? []).map((id) => (
               <Link
                 key={id}
                 href={`/dashboard/owner/reservations/${id}`}

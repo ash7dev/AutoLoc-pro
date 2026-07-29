@@ -545,7 +545,7 @@ function VehicleCard({ vehicle, pendingId, onValidate, onSuspend, onDetails, onF
   onFeature: (id: string, active: boolean) => void;
 }) {
   const status = STATUS_CONFIG[vehicle.statut];
-  const mainPhoto = vehicle.photos.find((p) => p.estPrincipale) ?? vehicle.photos[0];
+  const mainPhoto = vehicle.photos?.find((p) => p.estPrincipale) ?? vehicle.photos?.[0];
   const ownerName = getOwnerName(vehicle);
   const isLoading = pendingId === vehicle.id;
 

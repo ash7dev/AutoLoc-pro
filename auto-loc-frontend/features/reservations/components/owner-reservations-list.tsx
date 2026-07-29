@@ -374,7 +374,7 @@ function FilterDropdown({
    MAIN COMPONENT
 ════════════════════════════════════════════════════════════════ */
 export function OwnerReservationsList({
-    initialReservations,
+    initialReservations = [],
 }: {
     initialReservations: Reservation[];
 }) {

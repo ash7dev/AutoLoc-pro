@@ -15,7 +15,7 @@ interface OccupancyHeatmapProps {
   loading?: boolean;
 }
 
-export function OccupancyHeatmap({ data, loading = false }: OccupancyHeatmapProps) {
+export function OccupancyHeatmap({ data = [], loading = false }: OccupancyHeatmapProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const handlePrevMonth = () => {

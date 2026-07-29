@@ -44,7 +44,7 @@ export function AttendanceCalendar({
 
   // Derive selected day info
   const selectedDayData = useMemo(() => {
-    return days.find(d => d.day === selectedDayDigit);
+    return (days || []).find(d => d.day === selectedDayDigit);
   }, [days, selectedDayDigit]);
 
   // Movements for the selected day
@@ -214,9 +214,9 @@ export function AttendanceCalendar({
               {dailyAgenda.checkins.length > 0 ? (
                 dailyAgenda.checkins.map(r => (
                   <div key={r.id} className="bg-white/80 backdrop-blur-sm p-2.5 sm:p-3 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-0.5">
-                    <p className="text-[12px] sm:text-[13px] font-bold text-slate-800 truncate">{r.vehicule.marque} {r.vehicule.modele}</p>
+                    <p className="text-[12px] sm:text-[13px] font-bold text-slate-800 truncate">{r.vehicule ? `${r.vehicule.marque ?? ''} ${r.vehicule.modele ?? ''}` : "Véhicule"}</p>
                     <p className="text-[10px] sm:text-[11px] text-slate-500 flex items-center gap-1.5 uppercase font-bold tracking-wider">
-                      <span className="text-blue-500">CLI :</span> {r.locataire.prenom} {r.locataire.nom.charAt(0)}.
+                      <span className="text-blue-500">CLI :</span> {r.locataire ? `${r.locataire.prenom ?? ''} ${r.locataire.nom?.charAt(0) ?? ''}.` : "Locataire"}
                     </p>
                   </div>
                 ))
@@ -236,9 +236,9 @@ export function AttendanceCalendar({
               {dailyAgenda.checkouts.length > 0 ? (
                 dailyAgenda.checkouts.map(r => (
                   <div key={r.id} className="bg-white/80 backdrop-blur-sm p-2.5 sm:p-3 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-0.5">
-                    <p className="text-[12px] sm:text-[13px] font-bold text-slate-800 truncate">{r.vehicule.marque} {r.vehicule.modele}</p>
+                    <p className="text-[12px] sm:text-[13px] font-bold text-slate-800 truncate">{r.vehicule ? `${r.vehicule.marque ?? ''} ${r.vehicule.modele ?? ''}` : "Véhicule"}</p>
                     <p className="text-[10px] sm:text-[11px] text-slate-500 flex items-center gap-1.5 uppercase font-bold tracking-wider">
-                      <span className="text-emerald-500">CLI :</span> {r.locataire.prenom} {r.locataire.nom.charAt(0)}.
+                      <span className="text-emerald-500">CLI :</span> {r.locataire ? `${r.locataire.prenom ?? ''} ${r.locataire.nom?.charAt(0) ?? ''}.` : "Locataire"}
                     </p>
                   </div>
                 ))

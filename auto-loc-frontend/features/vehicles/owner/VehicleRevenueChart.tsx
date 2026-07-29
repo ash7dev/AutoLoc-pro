@@ -8,7 +8,7 @@ interface VehicleRevenueChartProps {
     reservations: any[];
 }
 
-export function VehicleRevenueChart({ reservations }: VehicleRevenueChartProps) {
+export function VehicleRevenueChart({ reservations = [] }: VehicleRevenueChartProps) {
     const data = useMemo(() => {
         // Obtenir les 6 derniers mois
         const months: {

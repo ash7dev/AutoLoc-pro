@@ -37,7 +37,7 @@ export function FleetPerformance({ vehicles, reservations = [], loading, classNa
         const stats = vehicles.map(v => {
             // Filtrer les réservations pour ce véhicule sur le mois/année cible
             const vRes = reservations.filter(r => {
-                if (r.vehicule.id !== v.id) return false;
+                if (r.vehicule?.id !== v.id) return false;
                 if (!["PAYEE", "CONFIRMEE", "EN_COURS", "TERMINEE"].includes(r.statut)) return false;
                 
                 const start = new Date(r.dateDebut);

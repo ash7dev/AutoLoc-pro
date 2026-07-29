@@ -41,7 +41,8 @@ export function formatPrice(n: number) {
 }
 
 export function mainPhoto(v: Vehicle): string | null {
-  return v.photos.find((p) => p.estPrincipale)?.url ?? v.photos[0]?.url ?? null;
+  const photos = Array.isArray(v.photos) ? v.photos : [];
+  return photos.find((p) => p.estPrincipale)?.url ?? photos[0]?.url ?? null;
 }
 
 export function StatusChip({ statut }: { statut: VehicleStatus }) {

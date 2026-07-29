@@ -270,7 +270,7 @@ const PHOTO_MIME_TYPES = new Set([
   'image/heic',
   'image/heif',
 ]);
-const DOCUMENT_MIME_TYPES = new Set([...PHOTO_MIME_TYPES, 'application/pdf']);
+const DOCUMENT_MIME_TYPES = new Set(Array.from(PHOTO_MIME_TYPES).concat('application/pdf'));
 
 /** Validate files before spending bandwidth or a Cloudinary request. */
 export function validateUploadFile(file: File, kind: UploadFileKind): string | null {
