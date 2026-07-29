@@ -575,7 +575,7 @@ export function TenantSettings({ profile: initialProfile }: TenantSettingsProps)
                   ? <Loader2 className="w-4 h-4 animate-spin" />
                   : <RefreshCw className="w-4 h-4" />
                 }
-                <span className="hidden xs:inline">Espace </span>Propriétaire
+                <span>Espace Propriétaire</span>
               </button>
               <button
                 onClick={(e) => {

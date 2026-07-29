@@ -42,7 +42,15 @@ export function SettingsPageWrapper({ profile, memberSince }: SettingsPageWrappe
 
                     {/* Boutons d'action */}
                     <div className="flex items-center gap-2 flex-shrink-0">
-                        {profile.role === 'LOCATAIRE' && (
+                        {profile.role === 'PROPRIETAIRE' ? (
+                            <Link
+                                href="/dashboard/owner"
+                                className="flex items-center gap-1.5 px-4 py-2.5 text-[12px] font-black uppercase tracking-widest text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-all shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5"
+                            >
+                                <RefreshCw className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                <span>Propriétaire</span>
+                            </Link>
+                        ) : (
                             <button
                                 onClick={handleSwitchToOwner}
                                 disabled={switchingRole}
