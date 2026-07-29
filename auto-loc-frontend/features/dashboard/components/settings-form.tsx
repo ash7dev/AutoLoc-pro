@@ -793,9 +793,9 @@ export function SettingsForm({ profile }: Props): React.ReactElement {
                                     ? <Loader2 className="w-3 h-3 animate-spin" />
                                     : <RefreshCw className="w-3 h-3" strokeWidth={2.5} />
                                 }
-                                <span className="hidden sm:inline">Espace propriétaire</span>
+                                <span>Espace propriétaire</span>
                             </button>
-                        ) : undefined
+                        )
                     }
                 />
                 <InfoRow
