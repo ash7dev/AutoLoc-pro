@@ -66,19 +66,28 @@ export function PhoneDisplay({
                     </div>
                     
                     {/* WhatsApp Button */}
-                    <button 
-                        type="button"
+                    <span 
+                        role="button"
+                        tabIndex={0}
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             const url = `https://wa.me/${telephone.replace(/\s+/g, '')}?text=${encodeURIComponent(`Bonjour ${name}, je vous contacte concernant la réservation ${reservationId.slice(0, 8).toUpperCase()} sur AutoLoc.`)}`;
                             window.open(url, '_blank', 'noopener,noreferrer');
                         }}
-                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold hover:bg-emerald-600 transition-colors shadow-sm shadow-emerald-500/20 cursor-pointer"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const url = `https://wa.me/${telephone.replace(/\s+/g, '')}?text=${encodeURIComponent(`Bonjour ${name}, je vous contacte concernant la réservation ${reservationId.slice(0, 8).toUpperCase()} sur AutoLoc.`)}`;
+                                window.open(url, '_blank', 'noopener,noreferrer');
+                            }
+                        }}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold hover:bg-emerald-600 transition-colors shadow-sm shadow-emerald-500/20 cursor-pointer select-none"
                     >
                         <MessageSquare className="w-3 h-3" strokeWidth={2.5} />
                         WhatsApp
-                    </button>
+                    </span>
                 </div>
             </div>
         );

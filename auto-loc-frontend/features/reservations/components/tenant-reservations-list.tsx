@@ -11,7 +11,6 @@ import {
 import { cn } from '@/lib/utils';
 import type { Reservation } from '@/lib/nestjs/reservations';
 import { useCurrency } from '@/providers/currency-provider';
-import { PhoneDisplay } from './phone-display';
 
 interface Props {
     initialReservations: Reservation[];
@@ -425,15 +424,6 @@ function TenantReservationCard({ reservation }: { reservation: Reservation }) {
                                 {reservation.proprietaire?.prenom} {reservation.proprietaire?.nom}
                             </p>
                         </div>
-                        <PhoneDisplay
-                            telephone={reservation.proprietaire?.telephone}
-                            dateDebut={reservation.dateDebut}
-                            statut={reservation.statut}
-                            className="text-[11px]"
-                            showLabel={false}
-                            name={reservation.proprietaire?.prenom}
-                            reservationId={reservation.id}
-                        />
                     </div>
                 </div>
 

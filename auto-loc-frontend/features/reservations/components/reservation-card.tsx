@@ -9,7 +9,6 @@ import {
     XCircle, Timer, Car, Hourglass,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PhoneDisplay } from "./phone-display";
 import type { Reservation } from "@/lib/nestjs/reservations";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -285,15 +284,6 @@ export function OwnerReservationCard({
                             {r.locataire ? `${r.locataire.prenom} ${r.locataire.nom}` : "Locataire inconnu"}
                         </p>
                     </div>
-                    <PhoneDisplay
-                        telephone={r.locataire?.telephone}
-                        dateDebut={r.dateDebut}
-                        statut={r.statut}
-                        className="text-[11px]"
-                        showLabel={false}
-                        name={r.locataire?.prenom}
-                        reservationId={r.id}
-                    />
                 </div>
 
                 {/* Delivery */}
