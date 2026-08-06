@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import {
-    ArrowLeft, Loader2, Shield,
+    ArrowLeft, Loader2, Shield, MapPin,
     Clock, Check, Truck, Phone, Smartphone,
     CreditCard, Banknote, Wallet,
 } from 'lucide-react';
@@ -465,66 +465,87 @@ export default function PaymentPage() {
                 </div>
 
                 {/* Récap prix */}
-                <div className="rounded-2xl bg-white border border-slate-100 shadow-[0_1px_8px_rgba(0,0,0,0.05)] p-5 mb-4">
-                    <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Récapitulatif du prix</h2>
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-[13px] text-slate-500">
-                            {formatPrice(Math.round(pricing.totalLocataire / pricing.nbJours))} × {nbJours} jour{nbJours > 1 ? 's' : ''}
-                        </span>
-                        <span className="text-[13px] font-semibold text-slate-700 tabular-nums">
-                            {formatPrice(pricing.totalLocataire)}
-                        </span>
-                    </div>
-                    {deliveryFee > 0 && (
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-[13px] text-slate-500 flex items-center gap-1.5">
-                                <Truck className="w-3.5 h-3.5" strokeWidth={2} />
-                                Livraison — {adresseLivraison}
-                            </span>
-                            <span className="text-[13px] font-semibold text-slate-700 tabular-nums">
-                                {formatPrice(deliveryFee)}
-                            </span>
-                        </div>
-                    )}
-                    <div className="h-px bg-slate-100 mb-3" />
-                    <div className="flex items-center justify-between">
-                        <span className="text-[15px] font-black text-slate-800">Total</span>
-                        <span className="text-[22px] font-black text-emerald-600 tabular-nums">{formatPrice(grandTotal)}</span>
-                    </div>
+                {(() => {
+                    const suppTotal = (pricing.supplementHorsDakar != null && pricing.supplementHorsDakar > 0)
+                        ? pricing.supplementHorsDakar * nbJours
+                        : 0;
+                    const baseLocationTotal = pricing.totalLocataire - suppTotal;
+                    const baseDailyTenant = Math.round(baseLocationTotal / nbJours);
 
-                    {/* Mode de paiement badge */}
-                    <div className="h-px bg-slate-100 my-3" />
-                    <div className="flex items-center gap-2 mb-2">
-                        <Wallet className="w-4 h-4 text-violet-500" strokeWidth={2} />
-                        <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">Mode de paiement</span>
-                    </div>
-                    {modePaiement === 'TOTAL_EN_LIGNE' ? (
-                        <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50/60 p-3">
-                            <div className="flex items-center gap-2">
-                                <CreditCard className="w-4 h-4 text-emerald-600" strokeWidth={2} />
-                                <span className="text-[13px] font-bold text-emerald-900">Paiement total en ligne</span>
+                    return (
+                        <div className="rounded-2xl bg-white border border-slate-100 shadow-[0_1px_8px_rgba(0,0,0,0.05)] p-5 mb-4">
+                            <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Récapitulatif du prix</h2>
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-[13px] text-slate-500">
+                                    {formatPrice(baseDailyTenant)} × {nbJours} jour{nbJours > 1 ? 's' : ''}
+                                </span>
+                                <span className="text-[13px] font-semibold text-slate-700 tabular-nums">
+                                    {formatPrice(baseLocationTotal)}
+                                </span>
                             </div>
-                            <p className="text-[11.5px] text-emerald-700 mt-1 ml-6">Le montant total est débité maintenant.</p>
-                        </div>
-                    ) : (
-                        <div className="rounded-xl border-2 border-violet-200 bg-violet-50/60 p-3 space-y-2">
-                            <div className="flex items-center gap-2">
-                                <Banknote className="w-4 h-4 text-violet-600" strokeWidth={2} />
-                                <span className="text-[13px] font-bold text-violet-900">Accompte 30% + Solde à la remise</span>
-                            </div>
-                            <div className="ml-6 space-y-1.5">
-                                <div className="flex justify-between items-center text-[12.5px]">
-                                    <span className="text-violet-700 font-semibold">À payer maintenant (30%)</span>
-                                    <span className="font-black text-violet-700 tabular-nums">{formatPrice(amountToPay)}</span>
+                            {suppTotal > 0 && (
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-[13px] text-slate-500 flex items-center gap-1.5">
+                                        <MapPin className="w-3.5 h-3.5 text-blue-500" strokeWidth={2} />
+                                        Supplément Hors Dakar
+                                    </span>
+                                    <span className="text-[13px] font-semibold text-slate-700 tabular-nums">
+                                        {formatPrice(suppTotal)}
+                                    </span>
                                 </div>
-                                <div className="flex justify-between items-center text-[12.5px]">
-                                    <span className="text-slate-500 font-semibold">Solde à la remise (70%)</span>
-                                    <span className="font-semibold text-slate-500 tabular-nums">{formatPrice(balanceAtCheckin)}</span>
+                            )}
+                            {deliveryFee > 0 && (
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-[13px] text-slate-500 flex items-center gap-1.5">
+                                        <Truck className="w-3.5 h-3.5" strokeWidth={2} />
+                                        Livraison — {adresseLivraison}
+                                    </span>
+                                    <span className="text-[13px] font-semibold text-slate-700 tabular-nums">
+                                        {formatPrice(deliveryFee)}
+                                    </span>
                                 </div>
+                            )}
+                            <div className="h-px bg-slate-100 mb-3" />
+                            <div className="flex items-center justify-between">
+                                <span className="text-[15px] font-black text-slate-800">Total</span>
+                                <span className="text-[22px] font-black text-emerald-600 tabular-nums">{formatPrice(grandTotal)}</span>
                             </div>
+
+                            {/* Mode de paiement badge */}
+                            <div className="h-px bg-slate-100 my-3" />
+                            <div className="flex items-center gap-2 mb-2">
+                                <Wallet className="w-4 h-4 text-violet-500" strokeWidth={2} />
+                                <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">Mode de paiement</span>
+                            </div>
+                            {modePaiement === 'TOTAL_EN_LIGNE' ? (
+                                <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50/60 p-3">
+                                    <div className="flex items-center gap-2">
+                                        <CreditCard className="w-4 h-4 text-emerald-600" strokeWidth={2} />
+                                        <span className="text-[13px] font-bold text-emerald-900">Paiement total en ligne</span>
+                                    </div>
+                                    <p className="text-[11.5px] text-emerald-700 mt-1 ml-6">Le montant total est débité maintenant.</p>
+                                </div>
+                            ) : (
+                                <div className="rounded-xl border-2 border-violet-200 bg-violet-50/60 p-3 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <Banknote className="w-4 h-4 text-violet-600" strokeWidth={2} />
+                                        <span className="text-[13px] font-bold text-violet-900">Accompte 30% + Solde à la remise</span>
+                                    </div>
+                                    <div className="ml-6 space-y-1.5">
+                                        <div className="flex justify-between items-center text-[12.5px]">
+                                            <span className="text-violet-700 font-semibold">À payer maintenant (30%)</span>
+                                            <span className="font-black text-violet-700 tabular-nums">{formatPrice(amountToPay)}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-[12.5px]">
+                                            <span className="text-slate-500 font-semibold">Solde à la remise (70%)</span>
+                                            <span className="font-semibold text-slate-500 tabular-nums">{formatPrice(balanceAtCheckin)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
+                    );
+                })()}
 
                 {/* Méthode de paiement + numéro */}
                 <div className="rounded-2xl bg-white border border-slate-100 shadow-[0_1px_8px_rgba(0,0,0,0.05)] p-5 mb-4">

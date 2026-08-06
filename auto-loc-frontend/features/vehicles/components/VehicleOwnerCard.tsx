@@ -600,83 +600,93 @@ function SheetReservationForm({ vehicleId, prixParJour, joursMinimum, ageMinimum
                     </div>
 
                     {/* Pricing summary dark card */}
-                    <div className="relative rounded-2xl overflow-hidden p-5 space-y-3 shadow-xl">
-                        {/* Dark glass background */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl" />
-                        {/* Decorative glow */}
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+                    {(() => {
+                        const suppTotal = (pricing.supplementHorsDakar != null && pricing.supplementHorsDakar > 0)
+                            ? pricing.supplementHorsDakar * nbJours
+                            : 0;
+                        const baseLocationTotal = pricing.totalLocataire - suppTotal;
+                        const baseDailyTenant = Math.round(baseLocationTotal / nbJours);
 
-                        <div className="relative space-y-2.5">
-                            <div className="flex items-center gap-2 mb-3">
-                                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                    <CreditCard className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
-                                </div>
-                                <h4 className="text-[13px] font-black text-white/90 uppercase tracking-wide">Résumé de la réservation</h4>
-                            </div>
+                        return (
+                            <div className="relative rounded-2xl overflow-hidden p-5 space-y-3 shadow-xl">
+                                {/* Dark glass background */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl" />
+                                {/* Decorative glow */}
+                                <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                                <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                            <div className="flex justify-between items-center text-[13.5px]">
-                                <span className="text-slate-300 font-medium">{currencyFormat(Math.round(pricing.totalLocataire / nbJours))} × {nbJours} jour{nbJours > 1 ? 's' : ''}</span>
-                                <span className="font-bold text-white tabular-nums">{currencyFormat(pricing.totalLocataire)}</span>
-                            </div>
-
-                            {deliveryFee > 0 && (
-                                <div className="flex justify-between items-center text-[13.5px]">
-                                    <span className="text-slate-300 font-medium flex items-center gap-1.5">
-                                        <Truck className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
-                                        Livraison
-                                    </span>
-                                    <span className="font-bold text-white tabular-nums">{currencyFormat(deliveryFee)}</span>
-                                </div>
-                            )}
-
-                            {pricing.supplementHorsDakar != null && pricing.supplementHorsDakar > 0 && (
-                                <div className="flex justify-between items-center text-[13.5px]">
-                                    <span className="text-slate-300 font-medium flex items-center gap-1.5">
-                                        <MapPin className="w-3.5 h-3.5 text-blue-400" strokeWidth={2} />
-                                        Supplément Hors Dakar
-                                    </span>
-                                    <span className="font-bold text-white tabular-nums">
-                                        {currencyFormat(pricing.supplementHorsDakar * nbJours)}
-                                    </span>
-                                </div>
-                            )}
-
-                            <div className="pt-3 mt-1 border-t border-white/15 flex justify-between items-center">
-                                <span className="font-black text-white text-[14px]">Total à payer</span>
-                                <div className="text-right">
-                                    <div className="font-black text-emerald-400 text-[22px] tabular-nums leading-none">
-                                        {currencyFormat(pricing.totalLocataire + deliveryFee)}
+                                <div className="relative space-y-2.5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                            <CreditCard className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+                                        </div>
+                                        <h4 className="text-[13px] font-black text-white/90 uppercase tracking-wide">Résumé de la réservation</h4>
                                     </div>
-                                    <div className="text-[10px] text-slate-400 font-semibold mt-0.5">FCFA</div>
+
+                                    <div className="flex justify-between items-center text-[13.5px]">
+                                        <span className="text-slate-300 font-medium">{currencyFormat(baseDailyTenant)} × {nbJours} jour{nbJours > 1 ? 's' : ''}</span>
+                                        <span className="font-bold text-white tabular-nums">{currencyFormat(baseLocationTotal)}</span>
+                                    </div>
+
+                                    {deliveryFee > 0 && (
+                                        <div className="flex justify-between items-center text-[13.5px]">
+                                            <span className="text-slate-300 font-medium flex items-center gap-1.5">
+                                                <Truck className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+                                                Livraison
+                                            </span>
+                                            <span className="font-bold text-white tabular-nums">{currencyFormat(deliveryFee)}</span>
+                                        </div>
+                                    )}
+
+                                    {suppTotal > 0 && (
+                                        <div className="flex justify-between items-center text-[13.5px]">
+                                            <span className="text-slate-300 font-medium flex items-center gap-1.5">
+                                                <MapPin className="w-3.5 h-3.5 text-blue-400" strokeWidth={2} />
+                                                Supplément Hors Dakar
+                                            </span>
+                                            <span className="font-bold text-white tabular-nums">
+                                                {currencyFormat(suppTotal)}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <div className="pt-3 mt-1 border-t border-white/15 flex justify-between items-center">
+                                        <span className="font-black text-white text-[14px]">Total à payer</span>
+                                        <div className="text-right">
+                                            <div className="font-black text-emerald-400 text-[22px] tabular-nums leading-none">
+                                                {currencyFormat(pricing.totalLocataire + deliveryFee)}
+                                            </div>
+                                            <div className="text-[10px] text-slate-400 font-semibold mt-0.5">FCFA</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Breakdown accompte if deposit mode */}
+                                    {modePaiement === 'ACOMPTE_SOLDE_CHECKIN' && (
+                                        <div className="pt-2.5 mt-0.5 border-t border-white/10 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <div className="flex justify-between items-center text-[12.5px]">
+                                                <span className="text-emerald-300 font-semibold flex items-center gap-1.5">
+                                                    <CreditCard className="w-3 h-3" strokeWidth={2} />
+                                                    À payer maintenant (30%)
+                                                </span>
+                                                <span className="font-black text-emerald-300 tabular-nums">
+                                                    {currencyFormat(Math.round((pricing.totalLocataire + deliveryFee) * 0.3))}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-[12.5px]">
+                                                <span className="text-slate-400 font-semibold flex items-center gap-1.5">
+                                                    <Banknote className="w-3 h-3" strokeWidth={2} />
+                                                    Solde à la remise (70%)
+                                                </span>
+                                                <span className="font-semibold text-slate-400 tabular-nums">
+                                                    {currencyFormat(Math.round((pricing.totalLocataire + deliveryFee) * 0.7))}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-
-                            {/* Breakdown accompte if deposit mode */}
-                            {modePaiement === 'ACOMPTE_SOLDE_CHECKIN' && (
-                                <div className="pt-2.5 mt-0.5 border-t border-white/10 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <div className="flex justify-between items-center text-[12.5px]">
-                                        <span className="text-emerald-300 font-semibold flex items-center gap-1.5">
-                                            <CreditCard className="w-3 h-3" strokeWidth={2} />
-                                            À payer maintenant (30%)
-                                        </span>
-                                        <span className="font-black text-emerald-300 tabular-nums">
-                                            {currencyFormat(Math.round((pricing.totalLocataire + deliveryFee) * 0.3))}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-[12.5px]">
-                                        <span className="text-slate-400 font-semibold flex items-center gap-1.5">
-                                            <Banknote className="w-3 h-3" strokeWidth={2} />
-                                            Solde à la remise (70%)
-                                        </span>
-                                        <span className="font-semibold text-slate-400 tabular-nums">
-                                            {currencyFormat(Math.round((pricing.totalLocataire + deliveryFee) * 0.7))}
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                        );
+                    })()}
                     </>
                 )}
             </div>

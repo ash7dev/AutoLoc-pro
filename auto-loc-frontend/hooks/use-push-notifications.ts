@@ -50,6 +50,34 @@ export function usePushNotifications() {
     checkSupport();
   }, []);
 
+  // Ecouter les messages du Service Worker pour jouer le son lorsque l'onglet est actif
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'PUSH_NOTIFICATION_RECEIVED') {
+        playNotificationSound();
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('message', handleMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', handleMessage);
+  }, []);
+
+  /**
+   * Joue le son de notification
+   */
+  const playNotificationSound = useCallback(() => {
+    try {
+      const audio = new Audio('/sounds/notification.wav');
+      audio.play().catch((err) => {
+        console.warn('Impossible de jouer le son de notification (interaction requise):', err);
+      });
+    } catch (e) {
+      console.error('Erreur lors de la lecture du son:', e);
+    }
+  }, []);
+
   /**
    * S'abonner aux notifications push
    */
@@ -64,6 +92,16 @@ export function usePushNotifications() {
 
     try {
       setLoading(true);
+
+      // Demander explicitement la permission si status = default
+      if (typeof window !== 'undefined' && Notification.permission === 'default') {
+        const resPerm = await Notification.requestPermission();
+        setPermission(resPerm);
+        if (resPerm !== 'granted') {
+          throw new Error('Permission de notification refusée.');
+        }
+      }
+
       const registration = await navigator.serviceWorker.ready;
       
       const sub = await registration.pushManager.subscribe({
@@ -86,6 +124,9 @@ export function usePushNotifications() {
           deviceType: /Mobi|Android/i.test(navigator.userAgent) ? 'MOBILE' : 'DESKTOP',
         },
       });
+
+      // Jouer un petit son de confirmation d'activation
+      playNotificationSound();
       
       return sub;
     } catch (error: any) {
@@ -96,7 +137,7 @@ export function usePushNotifications() {
     } finally {
       setLoading(false);
     }
-  }, [isSupported]);
+  }, [isSupported, playNotificationSound]);
 
   /**
    * Se désabonner des notifications push

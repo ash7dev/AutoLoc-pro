@@ -678,7 +678,8 @@ class _PricingSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final prixParJour = nbJours > 0 ? (totalLocataire / nbJours).round() : 0;
+    final baseLocationTotal = totalLocataire - supplementHorsDakar;
+    final prixParJour = nbJours > 0 ? (baseLocationTotal / nbJours).round() : 0;
 
     return PremiumGlassCard(
       radius: PremiumRadius.card,
@@ -688,7 +689,7 @@ class _PricingSummaryCard extends StatelessWidget {
         children: [
           _PricingRow(
             label: '${MoneyFormatter.format(prixParJour)} × $nbJours jour${nbJours > 1 ? 's' : ''}',
-            value: MoneyFormatter.format(totalLocataire.round()),
+            value: MoneyFormatter.format(baseLocationTotal.round()),
           ),
           if (supplementHorsDakar > 0) ...[
             const SizedBox(height: DSSpacing.sm),

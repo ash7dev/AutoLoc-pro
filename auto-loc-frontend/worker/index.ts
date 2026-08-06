@@ -22,7 +22,10 @@ self.addEventListener('push', (event: PushEvent) => {
       body: data.body || 'Une nouvelle notification est arrivée.',
       icon: '/icon-192x192.png',
       badge: '/icon-192x192.png',
-      vibrate: [100, 50, 100],
+      vibrate: [150, 75, 150],
+      sound: '/sounds/notification.wav',
+      tag: data.tag || 'autoloc-push-notification',
+      renotify: true,
       data: {
         url: data.url || '/dashboard',
       },
@@ -32,7 +35,16 @@ self.addEventListener('push', (event: PushEvent) => {
       ],
     };
 
-    event.waitUntil(self.registration.showNotification(title, options));
+    event.waitUntil(
+      Promise.all([
+        self.registration.showNotification(title, options),
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+          clients.forEach((client) => {
+            client.postMessage({ type: 'PUSH_NOTIFICATION_RECEIVED', payload: data });
+          });
+        }),
+      ])
+    );
   } catch (error) {
     console.error('Erreur Push:', error);
   }

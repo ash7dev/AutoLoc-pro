@@ -540,99 +540,107 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
           )}
 
           {/* ── Résumé de la réservation — dark glass+blur — AFTER options ── */}
-          {pricing && datesValid && (
-            <div className="relative rounded-2xl overflow-hidden p-5 space-y-3 shadow-xl">
-              {/* Dark glass background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl" />
-              {/* Decorative glows */}
-              <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+          {pricing && datesValid && (() => {
+            const suppTotal = (pricing.supplementHorsDakar != null && pricing.supplementHorsDakar > 0)
+              ? pricing.supplementHorsDakar * nbJours
+              : 0;
+            const baseLocationTotal = pricing.totalLocataire - suppTotal;
+            const baseDailyTenant = Math.round(baseLocationTotal / nbJours);
 
-              <div className="relative space-y-2.5">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                    <CreditCard className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+            return (
+              <div className="relative rounded-2xl overflow-hidden p-5 space-y-3 shadow-xl">
+                {/* Dark glass background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl" />
+                {/* Decorative glows */}
+                <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative space-y-2.5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                      <CreditCard className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+                    </div>
+                    <h4 className="text-[13px] font-black text-white/90 uppercase tracking-wide">Résumé de la réservation</h4>
                   </div>
-                  <h4 className="text-[13px] font-black text-white/90 uppercase tracking-wide">Résumé de la réservation</h4>
-                </div>
 
-                <div className="flex justify-between items-center text-[13px]">
-                  <span className="text-slate-300 font-medium">
-                    {formatPrice(Math.round(pricing.totalLocataire / nbJours))} × {nbJours}j
-                  </span>
-                  <span className="font-semibold text-white tabular-nums">
-                    {formatPrice(pricing.totalLocataire)}
-                  </span>
-                </div>
-                {deliveryFee > 0 && (
                   <div className="flex justify-between items-center text-[13px]">
-                    <span className="text-slate-300 font-medium flex items-center gap-1.5">
-                      <Truck className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
-                      Livraison
+                    <span className="text-slate-300 font-medium">
+                      {formatPrice(baseDailyTenant)} × {nbJours}j
                     </span>
                     <span className="font-semibold text-white tabular-nums">
-                      {formatPrice(deliveryFee)}
+                      {formatPrice(baseLocationTotal)}
                     </span>
                   </div>
-                )}
-                {pricing.supplementHorsDakar != null && pricing.supplementHorsDakar > 0 && (
-                  <div className="flex justify-between items-center text-[13px]">
-                    <span className="text-slate-300 font-medium flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-blue-400" strokeWidth={2} />
-                      Supplément Hors Dakar
-                    </span>
-                    <span className="font-semibold text-white tabular-nums">
-                      {formatPrice(pricing.supplementHorsDakar * nbJours)}
+                  {deliveryFee > 0 && (
+                    <div className="flex justify-between items-center text-[13px]">
+                      <span className="text-slate-300 font-medium flex items-center gap-1.5">
+                        <Truck className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+                        Livraison
+                      </span>
+                      <span className="font-semibold text-white tabular-nums">
+                        {formatPrice(deliveryFee)}
+                      </span>
+                    </div>
+                  )}
+                  {suppTotal > 0 && (
+                    <div className="flex justify-between items-center text-[13px]">
+                      <span className="text-slate-300 font-medium flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-blue-400" strokeWidth={2} />
+                        Supplément Hors Dakar
+                      </span>
+                      <span className="font-semibold text-white tabular-nums">
+                        {formatPrice(suppTotal)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="pt-2.5 mt-1 border-t border-white/15 flex justify-between items-center">
+                    <span className="text-[14px] font-black text-white">Total</span>
+                    <span className="text-[20px] font-black text-emerald-400 tabular-nums">
+                      {formatPrice(pricing.totalLocataire + deliveryFee)}
                     </span>
                   </div>
-                )}
-                <div className="pt-2.5 mt-1 border-t border-white/15 flex justify-between items-center">
-                  <span className="text-[14px] font-black text-white">Total</span>
-                  <span className="text-[20px] font-black text-emerald-400 tabular-nums">
-                    {formatPrice(pricing.totalLocataire + deliveryFee)}
-                  </span>
+
+                  {/* ── Breakdown accompte if deposit mode ── */}
+                  {modePaiement === 'ACOMPTE_SOLDE_CHECKIN' && (
+                    <div className="pt-2.5 mt-0.5 border-t border-white/10 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="flex justify-between items-center text-[12.5px]">
+                        <span className="text-emerald-300 font-semibold flex items-center gap-1.5">
+                          <CreditCard className="w-3 h-3" strokeWidth={2} />
+                          À payer maintenant (30%)
+                        </span>
+                        <span className="font-black text-emerald-300 tabular-nums">
+                          {formatPrice(Math.round((pricing.totalLocataire + deliveryFee) * 0.3))}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-[12.5px]">
+                        <span className="text-slate-400 font-semibold flex items-center gap-1.5">
+                          <Banknote className="w-3 h-3" strokeWidth={2} />
+                          Solde à la remise (70%)
+                        </span>
+                        <span className="font-semibold text-slate-400 tabular-nums">
+                          {formatPrice(Math.round((pricing.totalLocataire + deliveryFee) * 0.7))}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {loadingPricing && (
+                    <div className="flex justify-center pt-1">
+                      <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                    </div>
+                  )}
+                  {pricingError && !loadingPricing && (
+                    <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" strokeWidth={2} />
+                      <p className="text-[11px] font-medium text-amber-300">
+                        Prix estimé — le montant exact sera confirmé à l&apos;étape suivante.
+                      </p>
+                    </div>
+                  )}
                 </div>
-
-                {/* ── Breakdown accompte if deposit mode ── */}
-                {modePaiement === 'ACOMPTE_SOLDE_CHECKIN' && (
-                  <div className="pt-2.5 mt-0.5 border-t border-white/10 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="flex justify-between items-center text-[12.5px]">
-                      <span className="text-emerald-300 font-semibold flex items-center gap-1.5">
-                        <CreditCard className="w-3 h-3" strokeWidth={2} />
-                        À payer maintenant (30%)
-                      </span>
-                      <span className="font-black text-emerald-300 tabular-nums">
-                        {formatPrice(Math.round((pricing.totalLocataire + deliveryFee) * 0.3))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-[12.5px]">
-                      <span className="text-slate-400 font-semibold flex items-center gap-1.5">
-                        <Banknote className="w-3 h-3" strokeWidth={2} />
-                        Solde à la remise (70%)
-                      </span>
-                      <span className="font-semibold text-slate-400 tabular-nums">
-                        {formatPrice(Math.round((pricing.totalLocataire + deliveryFee) * 0.7))}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {loadingPricing && (
-                  <div className="flex justify-center pt-1">
-                    <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
-                  </div>
-                )}
-                {pricingError && !loadingPricing && (
-                  <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" strokeWidth={2} />
-                    <p className="text-[11px] font-medium text-amber-300">
-                      Prix estimé — le montant exact sera confirmé à l&apos;étape suivante.
-                    </p>
-                  </div>
-                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Contract checkbox - Premium */}
           <label className="flex items-start gap-3.5 cursor-pointer group">

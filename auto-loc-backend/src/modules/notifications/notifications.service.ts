@@ -30,12 +30,23 @@ export class NotificationsService {
   async subscribe(userId: string, dto: SubscribeDto) {
     this.logger.log(`Nouveau push subscription pour l'utilisateur ${userId}`);
 
+    // Résoudre l'utilisateur dans la table Utilisateur (par userId Supabase ou id interne)
+    const user = await this.prisma.utilisateur.findFirst({
+      where: { OR: [{ userId }, { id: userId }] },
+      select: { userId: true },
+    });
+
+    if (!user) {
+      this.logger.warn(`Abonnement push ignoré : aucun compte Utilisateur trouvé pour ${userId}`);
+      return null;
+    }
+
     return this.prisma.pushSubscription.upsert({
       where: { endpoint: dto.endpoint },
       update: {
         p256dh: dto.keys.p256dh,
         auth: dto.keys.auth,
-        userId,
+        userId: user.userId,
         userAgent: dto.userAgent,
         deviceType: dto.deviceType,
       },
@@ -43,7 +54,7 @@ export class NotificationsService {
         endpoint: dto.endpoint,
         p256dh: dto.keys.p256dh,
         auth: dto.keys.auth,
-        userId,
+        userId: user.userId,
         userAgent: dto.userAgent,
         deviceType: dto.deviceType,
       },

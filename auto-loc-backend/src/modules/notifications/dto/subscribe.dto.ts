@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class PushSubscriptionKeysDto {
   @IsString()
@@ -16,7 +17,9 @@ export class SubscribeDto {
   endpoint!: string;
 
   @IsObject()
-  keys: PushSubscriptionKeysDto = new PushSubscriptionKeysDto;
+  @ValidateNested()
+  @Type(() => PushSubscriptionKeysDto)
+  keys!: PushSubscriptionKeysDto;
 
   @IsString()
   @IsOptional()
