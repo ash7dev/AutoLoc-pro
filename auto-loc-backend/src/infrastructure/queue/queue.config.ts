@@ -30,11 +30,16 @@ export const VEHICLE_ARCHIVE_CLEANUP_JOB = 'vehicle-archive-cleanup';
 export const VEHICLE_CLOUDINARY_DELETE_JOB = 'vehicle-cloudinary-delete';
 
 export function getBullModuleOptions(redisUrl: string): BullModuleOptions {
-  const url = redisUrl.trim();
+  const url = (redisUrl || '').replace(/\s+/g, '');
   if (!url) {
     throw new Error('REDIS_URL is required for Bull queues');
   }
-  const parsed = new URL(url);
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch (e) {
+    throw new Error(`REDIS_URL is invalid: ${(e as Error).message}`);
+  }
   const port = parsed.port ? parseInt(parsed.port, 10) : 6379;
   const password = parsed.password ? decodeURIComponent(parsed.password) : undefined;
 

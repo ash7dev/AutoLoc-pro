@@ -10,7 +10,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   constructor(private readonly configService: ConfigService) {
     this.redisUrl =
-      this.configService.get<string>('REDIS_URL')?.trim() ?? '';
+      (this.configService.get<string>('REDIS_URL') || '').replace(/\s+/g, '');
   }
 
   async onModuleInit(): Promise<void> {

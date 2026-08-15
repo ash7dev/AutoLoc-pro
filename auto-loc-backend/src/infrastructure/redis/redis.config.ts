@@ -16,8 +16,9 @@ export function redisRetryStrategy(retries: number): number {
  * Used by RedisService for cache and distributed locks.
  */
 export function getRedisOptions(redisUrl: string): RedisOptions {
+  const url = (redisUrl || '').replace(/\s+/g, '');
   return {
-    ...(redisUrl.startsWith('rediss://') ? { tls: {} } : {}),
+    ...(url.startsWith('rediss://') ? { tls: {} } : {}),
     maxRetriesPerRequest: null,
     retryStrategy: (times: number) => {
       return redisRetryStrategy(times);
