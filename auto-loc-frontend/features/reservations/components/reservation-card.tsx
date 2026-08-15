@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
     ArrowRight, Truck, CalendarRange, User2, Clock,
@@ -135,7 +136,6 @@ export function OwnerReservationCard({
     reservation: Reservation;
     className?: string;
 }) {
-    const router = useRouter();
     const revenue = Number(r.montantProprietaire) || 0;
     const st = STATUS_STYLES[r.statut] ?? DEFAULT_STATUS;
     const StatusIcon = st.icon;
@@ -161,21 +161,9 @@ export function OwnerReservationCard({
     const photoUrl = photos.find((p: any) => p.estPrincipale)?.url ?? photos[0]?.url ?? null;
     const detailHref = `/dashboard/owner/reservations/${r.id}`;
 
-    const handleClick = () => {
-        router.push(detailHref);
-    };
-
     return (
-        <div
-            onClick={handleClick}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleClick();
-                }
-            }}
+        <Link
+            href={detailHref}
             className={cn(
                 "group relative flex flex-col rounded-2xl overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2",
                 "border border-white/60 border-l-[3px]",
@@ -333,6 +321,6 @@ export function OwnerReservationCard({
                     <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-all duration-300" strokeWidth={2.5} />
                 </div>
             </div>
-        </div>
+        </Link>
     );
 }

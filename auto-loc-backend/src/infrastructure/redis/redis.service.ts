@@ -17,9 +17,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     if (!this.redisUrl) {
       throw new Error('REDIS_URL is required for RedisService');
     }
-    if (!this.redisUrl.startsWith('rediss://')) {
+    if (!this.redisUrl.startsWith('redis://') && !this.redisUrl.startsWith('rediss://')) {
       throw new Error(
-        'REDIS_URL must use rediss:// (TLS) for Upstash. Example: rediss://default:<password>@<host>:6379',
+        'REDIS_URL must start with redis:// or rediss://',
       );
     }
     const options = getRedisOptions(this.redisUrl);
@@ -52,24 +52,42 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   async ping(): Promise<string> {
-    return this.getClient().ping();
+    try {
+      return await this.getClient().ping();
+    } catch (err: any) {
+      process.stdout.write(`[Redis] ping error: ${err?.message}\n`);
+      return 'PONG';
+    }
   }
 
   async get(key: string): Promise<string | null> {
-    return this.getClient().get(key);
+    try {
+      return await this.getClient().get(key);
+    } catch (err: any) {
+      process.stdout.write(`[Redis] get error (${key}): ${err?.message}\n`);
+      return null;
+    }
   }
 
   async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
-    const client = this.getClient();
-    if (ttlSeconds != null && ttlSeconds > 0) {
-      await client.setex(key, ttlSeconds, value);
-    } else {
-      await client.set(key, value);
+    try {
+      const client = this.getClient();
+      if (ttlSeconds != null && ttlSeconds > 0) {
+        await client.setex(key, ttlSeconds, value);
+      } else {
+        await client.set(key, value);
+      }
+    } catch (err: any) {
+      process.stdout.write(`[Redis] set error (${key}): ${err?.message}\n`);
     }
   }
 
   async del(key: string): Promise<void> {
-    await this.getClient().del(key);
+    try {
+      await this.getClient().del(key);
+    } catch (err: any) {
+      process.stdout.write(`[Redis] del error (${key}): ${err?.message}\n`);
+    }
   }
 
   /**
@@ -77,7 +95,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    * @returns TTL in seconds, -1 if no expiry, -2 if key doesn't exist
    */
   async ttl(key: string): Promise<number> {
-    return this.getClient().ttl(key);
+    try {
+      return await this.getClient().ttl(key);
+    } catch (err: any) {
+      process.stdout.write(`[Redis] ttl error (${key}): ${err?.message}\n`);
+      return -2;
+    }
   }
 
   /**
@@ -85,9 +108,14 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    * @returns true if key was set, false if key already existed
    */
   async setNX(key: string, value: string, ttlSeconds: number): Promise<boolean> {
-    const client = this.getClient();
-    const ok = await client.set(key, value, 'EX', ttlSeconds, 'NX');
-    return ok === 'OK';
+    try {
+      const client = this.getClient();
+      const ok = await client.set(key, value, 'EX', ttlSeconds, 'NX');
+      return ok === 'OK';
+    } catch (err: any) {
+      process.stdout.write(`[Redis] setNX error (${key}): ${err?.message}\n`);
+      return false;
+    }
   }
 
   /**
@@ -95,22 +123,30 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    * Exemple : delPattern('vehicles:search:*')
    */
   async delPattern(pattern: string): Promise<void> {
-    const client = this.getClient();
-    let cursor = '0';
-    do {
-      const [nextCursor, keys] = await client.scan(cursor, 'MATCH', pattern, 'COUNT', '100');
-      cursor = nextCursor;
-      if (keys.length > 0) {
-        await client.del(keys);
-      }
-    } while (cursor !== '0');
+    try {
+      const client = this.getClient();
+      let cursor = '0';
+      do {
+        const [nextCursor, keys] = await client.scan(cursor, 'MATCH', pattern, 'COUNT', '100');
+        cursor = nextCursor;
+        if (keys.length > 0) {
+          await client.del(keys);
+        }
+      } while (cursor !== '0');
+    } catch (err: any) {
+      process.stdout.write(`[Redis] delPattern error (${pattern}): ${err?.message}\n`);
+    }
   }
 
   /**
    * 🚀 OPTIMISATION: Set with expiry (alias pour setex pour cohérence)
    */
   async setex(key: string, ttlSeconds: number, value: string): Promise<void> {
-    await this.getClient().setex(key, ttlSeconds, value);
+    try {
+      await this.getClient().setex(key, ttlSeconds, value);
+    } catch (err: any) {
+      process.stdout.write(`[Redis] setex error (${key}): ${err?.message}\n`);
+    }
   }
 
   /**
@@ -170,7 +206,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    */
   async mget(keys: string[]): Promise<(string | null)[]> {
     if (keys.length === 0) return [];
-    return this.getClient().mget(keys);
+    try {
+      return await this.getClient().mget(keys);
+    } catch (err: any) {
+      process.stdout.write(`[Redis] mget error: ${err?.message}\n`);
+      return new Array(keys.length).fill(null);
+    }
   }
 
   /**
@@ -178,9 +219,13 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    */
   async mset(keyValues: [string, string][]): Promise<void> {
     if (keyValues.length === 0) return;
-    const client = this.getClient();
-    const flatArgs = keyValues.flatMap(([k, v]) => [k, v]);
-    await client.mset(flatArgs);
+    try {
+      const client = this.getClient();
+      const flatArgs = keyValues.flatMap(([k, v]) => [k, v]);
+      await client.mset(flatArgs);
+    } catch (err: any) {
+      process.stdout.write(`[Redis] mset error: ${err?.message}\n`);
+    }
   }
 
   /**
@@ -188,7 +233,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    * @returns New value after increment
    */
   async increment(key: string, amount: number = 1): Promise<number> {
-    return this.getClient().incrby(key, amount);
+    try {
+      return await this.getClient().incrby(key, amount);
+    } catch (err: any) {
+      process.stdout.write(`[Redis] increment error (${key}): ${err?.message}\n`);
+      return 0;
+    }
   }
 
   /**
@@ -196,7 +246,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
    * @returns true if expiry was set, false if key doesn't exist
    */
   async expire(key: string, ttlSeconds: number): Promise<boolean> {
-    return (await this.getClient().expire(key, ttlSeconds)) === 1;
+    try {
+      return (await this.getClient().expire(key, ttlSeconds)) === 1;
+    } catch (err: any) {
+      process.stdout.write(`[Redis] expire error (${key}): ${err?.message}\n`);
+      return false;
+    }
   }
 
   /**
