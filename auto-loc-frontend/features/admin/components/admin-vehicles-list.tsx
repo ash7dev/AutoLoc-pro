@@ -878,6 +878,35 @@ export function AdminVehiclesList({ vehicles, currentStatut }: {
 
   return (
     <>
+      {/* ── Tabs Filter ── */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-4 no-scrollbar">
+        {TABS.map((tab) => {
+          const isActive = currentStatut === tab.value;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.value}
+              type="button"
+              onClick={() => changeTab(tab.value)}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12.5px] font-bold transition-all shrink-0',
+                isActive
+                  ? 'bg-black text-emerald-400 shadow-md shadow-black/15'
+                  : 'bg-white border border-slate-200 text-black/60 hover:bg-slate-50 hover:text-black hover:border-slate-300',
+              )}
+            >
+              {Icon && <Icon className="w-3.5 h-3.5" strokeWidth={2} />}
+              {tab.label}
+              {tab.value === 'PENDING' && pendingCount > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-black bg-red-500 text-white">
+                  {pendingCount}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
       {/* ── Toolbar Simplifié ── */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 flex-wrap">
         <div className="relative flex-1 min-w-[280px]">

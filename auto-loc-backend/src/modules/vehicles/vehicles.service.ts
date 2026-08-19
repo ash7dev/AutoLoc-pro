@@ -1790,13 +1790,13 @@ export class VehiclesService {
           ? { statut }
           : {};
 
-    const take = 30;
+    const take = 100;
     const skip = (page - 1) * take;
 
     const [vehicles, total] = await Promise.all([
       this.prisma.vehicule.findMany({
         where,
-        orderBy: { creeLe: 'asc' },
+        orderBy: { creeLe: 'desc' },
         take,
         skip,
         include: {
