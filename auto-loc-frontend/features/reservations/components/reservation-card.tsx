@@ -164,6 +164,8 @@ export function OwnerReservationCard({
     return (
         <Link
             href={detailHref}
+            target="_blank"
+            rel="noopener noreferrer"
             className={cn(
                 "group relative flex flex-col rounded-2xl overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2",
                 "border border-white/60 border-l-[3px]",
