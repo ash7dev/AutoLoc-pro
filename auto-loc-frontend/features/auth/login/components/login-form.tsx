@@ -43,10 +43,15 @@ export default function LoginAutoLoc() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const next =
+    searchParams.get('next') ||
+    searchParams.get('redirect') ||
+    searchParams.get('redirectTo') ||
+    searchParams.get('callbackUrl');
+
   // Si déjà connecté et qu'on a un ?next=, ou retour OAuth Google, on redirige
   useEffect(() => {
     const checkAndRedirect = async () => {
-      const next = searchParams.get('next');
       const fromOAuth = searchParams.get('from') === 'oauth';
 
       if (fromOAuth || next) {
@@ -56,7 +61,7 @@ export default function LoginAutoLoc() {
 
         if (fromOAuth || data.session) {
           setIsRedirecting(true);
-          const ok = await redirectAfterAuth();
+          const ok = await redirectAfterAuth(undefined, undefined, next);
           if (ok === false) {
             setIsRedirecting(false);
             setError({ erreur: 'Erreur de connexion', details: 'Impossible de synchroniser la session. Réessayez.' });
@@ -69,7 +74,7 @@ export default function LoginAutoLoc() {
       checkAndRedirect();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMounted]);
+  }, [isMounted, next]);
 
   // Mappe les erreurs des hooks vers l'état d'erreur du composant.
   useEffect(() => {
@@ -92,7 +97,6 @@ export default function LoginAutoLoc() {
 
     if (res.unconfirmed) {
       setIsRedirecting(true);
-      const next = searchParams.get('next');
       const nextParam = next ? `&next=${encodeURIComponent(next)}` : '';
       router.push(`/verify?email=${encodeURIComponent(email)}&type=email${nextParam}`);
       return;
@@ -100,7 +104,7 @@ export default function LoginAutoLoc() {
 
     if (res.success) {
       setIsRedirecting(true);
-      const ok = await redirectAfterAuth(res.session);
+      const ok = await redirectAfterAuth(res.session, undefined, next);
       if (ok === false) {
         setIsRedirecting(false);
         setError({ erreur: 'Erreur de connexion', details: 'Impossible de synchroniser la session. Réessayez.' });
@@ -116,7 +120,6 @@ export default function LoginAutoLoc() {
     const ok = await sendCode(formattedPhone);
     if (ok) {
       setIsRedirecting(true);
-      const next = searchParams.get('next');
       const nextParam = next ? `&next=${encodeURIComponent(next)}` : '';
       router.push(`/verify?phone=${encodeURIComponent(formattedPhone)}&type=phone${nextParam}`);
     }
@@ -125,7 +128,7 @@ export default function LoginAutoLoc() {
   /* ── GOOGLE OAUTH ───────────────────────────────────── */
   const handleGoogle = async () => {
     setError(null);
-    await signInWithGoogle(searchParams.get('next'));
+    await signInWithGoogle(next);
     // Supabase redirige vers Google — le browser quitte la page ici.
     // Si erreur, oauthError est mis à jour et le useEffect l'affiche.
   };
@@ -416,7 +419,7 @@ export default function LoginAutoLoc() {
             <div className="mt-8 text-center">
               <p className="autoloc-body text-sm text-gray-500">
                 Pas encore de compte ?{' '}
-                <a href="/register" className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors underline underline-offset-2 decoration-emerald-300 hover:decoration-emerald-500">
+                <a href={next ? `/register?next=${encodeURIComponent(next)}` : '/register'} className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors underline underline-offset-2 decoration-emerald-300 hover:decoration-emerald-500">
                   Créer un compte
                 </a>
               </p>

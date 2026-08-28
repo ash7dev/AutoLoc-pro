@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, RegisterInput } from '../schema';
 import { useRegister } from '../hooks/use-register';
 import { useOAuth } from '../../login/hooks/use-oauth';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { checkAvailability } from '@/lib/nestjs/auth';
 import { useAuthFlow } from '../../hooks/use-auth-flow';
 import { Controller } from 'react-hook-form';
@@ -63,6 +63,13 @@ export function RegisterForm() {
   const { signInWithGoogle, loading: oauthLoading, error: oauthError } = useOAuth();
   const { redirectAfterAuth } = useAuthFlow();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const next =
+    searchParams.get('next') ||
+    searchParams.get('redirect') ||
+    searchParams.get('redirectTo') ||
+    searchParams.get('callbackUrl');
 
   const {
     register,
@@ -86,12 +93,13 @@ export function RegisterForm() {
   const onSubmit = async (data: RegisterInput) => {
     const res = await signUp(data);
     if (res.requiresVerification || res.unconfirmed) {
-      router.push(`/verify?email=${encodeURIComponent(data.email)}&type=email`);
+      const nextParam = next ? `&next=${encodeURIComponent(next)}` : '';
+      router.push(`/verify?email=${encodeURIComponent(data.email)}&type=email${nextParam}`);
       return;
     }
 
     if (res.success) {
-      await redirectAfterAuth();
+      await redirectAfterAuth(undefined, undefined, next);
     }
   };
 
@@ -376,7 +384,7 @@ export function RegisterForm() {
             {/* Google uniquement */}
             <button
               type="button"
-              onClick={() => { void signInWithGoogle(); }}
+              onClick={() => { void signInWithGoogle(next); }}
               disabled={isLoading}
               className="autoloc-body w-full bg-white border border-gray-200 rounded-xl py-3 px-4 hover:bg-gray-50 hover:border-gray-300 focus:ring-2 focus:ring-gray-900 transition-all flex items-center justify-center gap-3 text-sm font-medium text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -398,7 +406,7 @@ export function RegisterForm() {
             <div className="mt-8 text-center">
               <p className="autoloc-body text-sm text-gray-500">
                 Déjà un compte ?{' '}
-                <a href="/login" className="font-semibold text-sky-600 hover:text-sky-700 transition-colors underline underline-offset-2 decoration-sky-300 hover:decoration-sky-500">
+                <a href={next ? `/login?next=${encodeURIComponent(next)}` : '/login'} className="font-semibold text-sky-600 hover:text-sky-700 transition-colors underline underline-offset-2 decoration-sky-300 hover:decoration-sky-500">
                   Se connecter
                 </a>
               </p>

@@ -1,5 +1,7 @@
+import React, { Suspense } from 'react';
 import { OtpForm } from '../../../features/auth/verify/components/otp-form';
 import { Mail, Smartphone, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { LogoLoader } from '@/components/ui/logo-loader';
 
 export default function VerifyPage({
   searchParams,
@@ -44,7 +46,9 @@ export default function VerifyPage({
       )}
 
       <div className="bg-white">
-        <OtpForm email={email} phone={phone} type={type} />
+        <Suspense fallback={<LogoLoader />}>
+          <OtpForm email={email} phone={phone} type={type} />
+        </Suspense>
       </div>
 
       <div className="flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-300">

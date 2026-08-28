@@ -88,7 +88,12 @@ export function useAuthFlow() {
       return true;
     }
 
-    const next = explicitNext ?? searchParams.get('next');
+    const next =
+      explicitNext ??
+      searchParams.get('next') ??
+      searchParams.get('redirect') ??
+      searchParams.get('redirectTo') ??
+      searchParams.get('callbackUrl');
     const requiredRole = searchParams.get('role') as 'PROPRIETAIRE' | 'LOCATAIRE' | null;
 
     if (next && next.startsWith('/')) {

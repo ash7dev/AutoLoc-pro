@@ -6,7 +6,7 @@ import { useOtp } from '../hooks/use-otp';
 import { useAuthFlow } from '../../hooks/use-auth-flow';
 import { clearPendingOtp } from '../../register/hooks/use-register';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
 export function OtpForm({
@@ -19,8 +19,15 @@ export function OtpForm({
   type: 'email' | 'phone';
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { verifyOtp, resendOtp, loading, error, counter, canResend } = useOtp();
   const { redirectAfterAuth } = useAuthFlow();
+
+  const next =
+    searchParams.get('next') ||
+    searchParams.get('redirect') ||
+    searchParams.get('redirectTo') ||
+    searchParams.get('callbackUrl');
 
   const slots = 6;
   const [otpValues, setOtpValues] = useState<string[]>(Array(slots).fill(''));
@@ -61,7 +68,8 @@ export function OtpForm({
             refreshToken: (session as any).refresh_token,
             activeRole: (session as any).active_role || 'LOCATAIRE',
             profile: (session as any).profile
-          } : undefined
+          } : undefined,
+          next,
         );
 
         if (success === false) {
