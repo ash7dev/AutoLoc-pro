@@ -142,11 +142,11 @@ export function MobileReservationBar({
         <>
           {/* Backdrop with blur */}
           <div
-            className="lg:hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200"
+            className="lg:hidden fixed inset-0 z-[70] bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200"
             onClick={() => setSheetOpen(false)}
           />
           {/* Bottom Sheet Container */}
-          <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white rounded-t-[32px] shadow-2xl flex flex-col max-h-[92dvh] animate-in slide-in-from-bottom duration-300 border-t border-slate-200/80">
+          <div className="lg:hidden fixed bottom-0 inset-x-0 z-[70] bg-white rounded-t-[32px] shadow-2xl flex flex-col max-h-[92dvh] animate-in slide-in-from-bottom duration-300 border-t border-slate-200/80">
             {/* Drag Handle */}
             <div className="flex justify-center pt-3 pb-1 flex-shrink-0 cursor-pointer" onClick={() => setSheetOpen(false)}>
               <div className="w-12 h-1.5 rounded-full bg-slate-300/80 hover:bg-slate-400 transition-colors" />

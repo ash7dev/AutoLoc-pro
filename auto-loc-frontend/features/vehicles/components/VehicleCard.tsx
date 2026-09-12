@@ -73,7 +73,6 @@ function StandardVehicleCard({ vehicle, priorityImage, className }: VehicleCardP
   const minDays = bestTier?.joursMin ?? null;
   const reservations = vehicle.totalLocations ?? 0;
 
-  const isVerified = vehicle.statut === 'VERIFIE';
   const isCoupDeCoeur = Number(vehicle.note) >= 4.5;
   const isPopular = !isCoupDeCoeur && reservations >= 8;
 
@@ -130,12 +129,6 @@ function StandardVehicleCard({ vehicle, priorityImage, className }: VehicleCardP
               <span className="text-[9px] font-extrabold uppercase tracking-widest">Populaire</span>
             </span>
           )}
-          {isVerified && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/90 backdrop-blur-md px-3 py-1 text-white shadow-md border border-emerald-400/30">
-              <Shield className="h-3 w-3 text-white" strokeWidth={2.5} />
-              <span className="text-[9px] font-extrabold uppercase tracking-widest">Vérifié</span>
-            </span>
-          )}
         </div>
 
         {/* Floating Top-Right: Year & Heart Favorite Toggle */}
@@ -182,13 +175,13 @@ function StandardVehicleCard({ vehicle, priorityImage, className }: VehicleCardP
         
         {/* Vehicle Brand & Model — FRAUNCES EDITORIAL SERIF */}
         <div className="mb-2">
-          <h3 className="text-[20px] font-bold text-slate-900 leading-snug tracking-tight font-editorial group-hover:text-emerald-700 transition-colors">
+          <h3 className="text-[20px] font-bold text-slate-900 leading-snug tracking-tight font-editorial group-hover:text-emerald-700 transition-colors line-clamp-1 truncate">
             {vehicle.marque} <span className="italic font-normal text-slate-700 group-hover:text-emerald-800">{vehicle.modele}</span>
           </h3>
         </div>
 
         {/* Location & Reservations Subtitle */}
-        <div className="flex items-center gap-2 text-slate-500 mb-4 text-[12px] font-medium">
+        <div className="flex items-center gap-2 text-slate-500 mb-4 text-[12px] font-medium min-h-[20px]">
           <span className="inline-flex items-center gap-1">
             <MapPin className="h-3.5 w-3.5 text-slate-400" strokeWidth={2} />
             {vehicle.ville}
@@ -205,7 +198,7 @@ function StandardVehicleCard({ vehicle, priorityImage, className }: VehicleCardP
         </div>
 
         {/* Specifications Pills Row */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
+        <div className="grid grid-cols-2 gap-2 mb-4 min-h-[72px] content-start">
           {vehicle.carburant && (
             <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-100">
               <Fuel className="h-3.5 w-3.5 text-emerald-600 shrink-0" strokeWidth={2} />
@@ -313,14 +306,6 @@ function CompactVehicleCardImpl({ vehicle, priorityImage, className }: VehicleCa
           </div>
         )}
 
-        {/* Verification Pill */}
-        {vehicle.statut === 'VERIFIE' && (
-          <div className="absolute top-2 left-2 z-10">
-            <span className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow">
-              <Shield className="h-3 w-3" strokeWidth={2.5} />
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Body */}
@@ -399,12 +384,6 @@ function FeaturedVehicleCard({ vehicle, priorityImage, className }: VehicleCardP
 
         {/* Top Badges */}
         <div className="absolute top-4 left-4 flex gap-2 z-10">
-          {vehicle.statut === 'VERIFIE' && (
-            <span className="inline-flex items-center gap-1.5 rounded-full badge-glass px-3 py-1">
-              <Shield className="h-3 w-3 text-emerald-400" strokeWidth={2.5} />
-              <span className="text-[9.5px] font-extrabold uppercase tracking-widest text-emerald-400">Vérifié</span>
-            </span>
-          )}
           {reservations >= 5 && (
             <span className="inline-flex items-center gap-1.5 rounded-full badge-glass px-3 py-1">
               <Zap className="h-3 w-3 text-amber-400 fill-amber-400" strokeWidth={2} />

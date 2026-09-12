@@ -20,6 +20,8 @@ export interface PremiumPriceTagProps {
   minDays?: number | null;
   /** Masquer le préfixe "À partir de" */
   hidePrefix?: boolean;
+  /** Réserver un espace fixe pour le badge afin d'aligner parfaitement la hauteur des cartes */
+  preserveBadgeSpace?: boolean;
   className?: string;
 }
 
@@ -31,6 +33,7 @@ export function PremiumPriceTag({
   savingsPercent = 0,
   minDays = null,
   hidePrefix = false,
+  preserveBadgeSpace = true,
   className,
 }: PremiumPriceTagProps): React.ReactElement {
   const { formatPrice } = useCurrency();
@@ -129,8 +132,8 @@ export function PremiumPriceTag({
         )}
       </div>
 
-      {savingsPercent > 0 && (
-        <div className="flex items-center">
+      <div className="flex items-center min-h-[22px]">
+        {savingsPercent > 0 ? (
           <span
             className={cn(
               'inline-flex items-center border font-black whitespace-nowrap transition-transform',
@@ -142,8 +145,18 @@ export function PremiumPriceTag({
             <span>−{savingsPercent}%</span>
             {minDays != null && <span>dès {minDays}j</span>}
           </span>
-        </div>
-      )}
+        ) : preserveBadgeSpace ? (
+          <span
+            aria-hidden="true"
+            className={cn(
+              'inline-flex items-center border font-black whitespace-nowrap opacity-0 pointer-events-none select-none',
+              sizeStyles.badge
+            )}
+          >
+            −0%
+          </span>
+        ) : null}
+      </div>
     </div>
   );
 }
