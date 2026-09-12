@@ -7,7 +7,7 @@ import { ProfileResponse } from "@/lib/nestjs/auth";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, Sparkles, Phone, ShieldCheck,
-  Check, Clock, AlertCircle, Circle, ArrowRight, X,
+  Check, Clock, AlertCircle, Circle, ArrowRight, X, BookmarkCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PhoneVerifyGate } from "./PhoneVerifyGate";
@@ -173,7 +173,6 @@ function PreGateOverview({
 
   return (
     <div className="max-w-lg mx-auto">
-      {/* Header card */}
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div className="bg-slate-900 px-6 py-5">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/60 mb-1">
@@ -190,14 +189,12 @@ function PreGateOverview({
           </p>
         </div>
 
-        {/* Steps */}
         <div className="p-4 sm:p-5 space-y-2.5">
           {steps.map((step, i) => (
             <StepRow key={step.label} step={step} index={i} />
           ))}
         </div>
 
-        {/* Info note */}
         <div className="mx-4 sm:mx-5 mb-4 px-4 py-3 rounded-xl bg-slate-50 border border-slate-100">
           <p className="text-[11.5px] text-slate-500 leading-relaxed">
             Ces étapes garantissent la confiance entre propriétaires et locataires.
@@ -205,7 +202,6 @@ function PreGateOverview({
           </p>
         </div>
 
-        {/* Actions */}
         <div className="flex flex-col-reverse sm:flex-row gap-2.5 px-4 sm:px-5 pb-5">
           <button
             type="button"
@@ -243,12 +239,12 @@ const JOYRIDE_STEPS: JoyrideStep[] = [
 ];
 
 const STEP_TITLES = [
-  "Informations du véhicule",
-  "Tarification & livraison",
-  "Conditions de location",
-  "Photos du véhicule",
-  "Documents obligatoires",
-  "Vérification & envoi",
+  { title: "Identité & Équipements du véhicule", desc: "Marque, modèle, catégorie et options" },
+  { title: "Tarification & Rendement estimé", desc: "Tarif journalier, réductions et livraison" },
+  { title: "Conditions & Protection Assurance", desc: "Assurance, politique carburant et règles" },
+  { title: "Studio Photos AutoLoc", desc: "Galerie photo haute définition du véhicule" },
+  { title: "Documents administratifs", desc: "Carte grise et attestation d'assurance" },
+  { title: "Aperçu & Publication", desc: "Vérification finale avant mise en ligne" },
 ];
 
 export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
@@ -277,7 +273,6 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
       const seen = localStorage.getItem("vehicle_wizard_tour_seen");
       if (!seen) setRunTour(true);
 
-      // Vérifier si un brouillon existe
       const hasDraft = store.step1 || store.step2 || store.step3 || store.photos.length > 0;
       if (hasDraft) {
         setShowDraftBanner(true);
@@ -306,7 +301,6 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
     }
   }, []);
 
-  // Remonter en haut de page à chaque changement d'étape
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentStep]);
@@ -366,6 +360,8 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
   }
 
   // ── Wizard principal ───────────────────────────────────────────────────────
+  const currentStepInfo = STEP_TITLES[currentStep - 1];
+
   return (
     <>
       <Joyride
@@ -373,23 +369,23 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
         run={runTour}
         continuous
         showSkipButton
-        showProgress={false} // On masque le "X of Y" natif de Joyride car on a notre propre stepper
+        showProgress={false}
         callback={handleJoyrideCallback}
-        styles={{ 
-            options: { 
-                primaryColor: "#10b981", 
-                zIndex: 1000 
-            },
-            buttonNext: {
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: 'bold'
-            },
-            buttonBack: {
-                marginRight: '10px',
-                fontSize: '13px',
-                fontWeight: 'bold'
-            }
+        styles={{
+          options: {
+            primaryColor: "#10b981",
+            zIndex: 1000
+          },
+          buttonNext: {
+            borderRadius: '8px',
+            fontSize: '13px',
+            fontWeight: 'bold'
+          },
+          buttonBack: {
+            marginRight: '10px',
+            fontSize: '13px',
+            fontWeight: 'bold'
+          }
         }}
         locale={{
           back: "Précédent",
@@ -403,64 +399,66 @@ export function AddVehicleFlow({ profile }: { profile: ProfileResponse }) {
       <PageShell onBack={() => router.push("/dashboard/owner/vehicles")}>
         <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
 
-          {/* ── Banner brouillon récupéré ──────────────────────── */}
+          {/* Banner brouillon sauvegardé */}
           {showDraftBanner && (
-            <div className="mx-4 sm:mx-0 flex items-center gap-3 rounded-xl border-2 border-emerald-200 bg-emerald-50 px-4 py-3 shadow-sm">
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-                <AlertCircle className="w-4 h-4 text-white" strokeWidth={2.5} />
+            <div className="mx-4 sm:mx-0 flex items-center gap-3 rounded-2xl border-2 border-emerald-200 bg-emerald-50/90 p-4 shadow-sm backdrop-blur-md">
+              <div className="shrink-0 w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-md">
+                <BookmarkCheck className="w-5 h-5 stroke-[2.5]" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-emerald-900">
-                  Brouillon récupéré
+                <p className="text-[13px] font-black text-emerald-950">
+                  Brouillon récupéré automatiquement
                 </p>
-                <p className="text-[11px] text-emerald-700 mt-0.5">
-                  Vos données ont été sauvegardées automatiquement. Continuez là où vous en étiez !
+                <p className="text-[11.5px] text-emerald-800 font-medium">
+                  Vos modifications ont été sauvegardées. Continuez votre création d'annonce là où vous en étiez !
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => {
-                  if (confirm('Êtes-vous sûr de vouloir supprimer ce brouillon ? Cette action est irréversible.')) {
+                  if (confirm('Voulez-vous réinitialiser ce brouillon ?')) {
                     store.reset();
                     setShowDraftBanner(false);
                     setCurrentStep(1);
                   }
                 }}
-                className="flex-shrink-0 text-[11px] font-bold text-emerald-700 hover:text-emerald-900 underline"
+                className="shrink-0 text-[11px] font-black text-emerald-800 hover:text-emerald-950 underline px-2 py-1"
               >
-                Supprimer
+                Réinitialiser
               </button>
               <button
                 type="button"
                 onClick={() => setShowDraftBanner(false)}
-                className="flex-shrink-0 text-emerald-500 hover:text-emerald-700"
+                className="shrink-0 text-emerald-600 hover:text-emerald-800 p-1"
               >
-                <X className="w-4 h-4" strokeWidth={2.5} />
+                <X className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
           )}
 
-          {/* ── Stepper ─────────────────────────────────────────── */}
+          {/* Stepper Timeline */}
           <div data-tour="wizard-progress" className="px-1 sm:px-0">
             <WizardProgress currentStep={currentStep} onStepClick={goToStep} />
           </div>
 
-          {/* ── Step title ──────────────────────────────────────── */}
+          {/* Step header title */}
           <div className="text-center space-y-1 px-4">
-            <p className="text-[12px] sm:text-[11px] font-black uppercase tracking-[0.15em] text-emerald-500">
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-emerald-500">
               Étape {currentStep} sur {STEP_TITLES.length}
             </p>
-            <h2 className="text-2xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              {STEP_TITLES[currentStep - 1]}
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              {currentStepInfo.title}
             </h2>
+            <p className="text-[13px] font-medium text-slate-500 max-w-md mx-auto">
+              {currentStepInfo.desc}
+            </p>
           </div>
 
-          {/* ── Step content card ────────────────────────────────── */}
+          {/* Form Content Shell */}
           <div
             data-tour="step-form"
-            className="rounded-2xl border border-slate-200 bg-white shadow-sm
-              hover:shadow-md transition-shadow duration-300
-              p-4 sm:p-8 max-w-3xl mx-auto overflow-visible"
+            className="rounded-3xl border border-slate-200/90 bg-white shadow-xl shadow-slate-200/40
+              p-5 sm:p-8 max-w-3xl mx-auto overflow-visible"
           >
             {currentStep === 1 && <StepVehicleInfo onNext={goNext} />}
             {currentStep === 2 && <StepPricing onNext={goNext} onBack={goBack} />}
@@ -485,34 +483,37 @@ function PageShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 via-white to-slate-50/50">
-      {/* Sticky header */}
-      <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/80 border-b border-slate-100 flex-shrink-0">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 via-white to-slate-50/60">
+      {/* Glassmorphism Header */}
+      <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/85 border-b border-slate-200/80 flex-shrink-0 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-2 text-[13px] font-semibold text-slate-500 hover:text-slate-900 transition-colors group"
+            className="flex items-center gap-2 text-[13px] font-extrabold text-slate-600 hover:text-slate-950 transition-colors group"
           >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" strokeWidth={2.5} />
-            <span className="hidden sm:inline">Retour aux véhicules</span>
-            <span className="sm:hidden">Retour</span>
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform stroke-[2.5]" />
+            <span className="hidden sm:inline">Retour à la liste des véhicules</span>
+            <span className="sm:hidden">Quitter</span>
           </button>
 
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-900 to-slate-700 flex items-center justify-center shadow-md">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2.5} />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center shadow-md ring-1 ring-white/10">
+              <Sparkles className="w-4 h-4 text-emerald-400" strokeWidth={2.5} />
             </div>
-            <div className="hidden sm:block">
-              <p className="text-[13px] font-black text-slate-900 leading-none">Créer une annonce</p>
-              <p className="text-[10px] font-medium text-slate-400 mt-0.5">AutoLoc · Propriétaire</p>
+            <div>
+              <p className="text-[13.5px] font-black text-slate-950 leading-none">Créer une annonce Pro</p>
+              <p className="text-[10.5px] font-bold text-emerald-600 mt-0.5 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Sauvegarde automatique active
+              </p>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Content */}
-      <main className="flex-1 px-3 sm:px-6 py-4 sm:py-10">
+      {/* Main Content */}
+      <main className="flex-1 px-3 sm:px-6 py-6 sm:py-10">
         {children}
       </main>
     </div>
@@ -532,7 +533,6 @@ function GateCard({
 }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-      {/* Dark header */}
       <div className="bg-slate-900 px-6 py-5">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/60 mb-1">
           AutoLoc · Propriétaire

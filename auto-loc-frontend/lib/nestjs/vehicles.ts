@@ -420,106 +420,45 @@ async function uploadFormToCloudinary(
   }
 }
 
-/** Upload a file directly to Cloudinary using a pre-signed signature. */
+export {
+  uploadToCloudinaryResilient,
+  compressImageResilient,
+} from './upload-resilience';
+export type { UploadProgressCallback } from './upload-resilience';
+
+/** Upload a file directly to Cloudinary using resilient pipeline with auto-retry and signature refresh. */
 export async function uploadToCloudinary(
   file: File,
   sig: CloudinarySignature,
-  options?: { timeoutMs?: number },
+  options?: { timeoutMs?: number; onProgress?: (percent: number) => void },
 ): Promise<{ url: string; publicId: string }> {
-  const TRANSFORM = 'w_800,h_600,c_fill,f_webp,q_auto';
-
-  try {
-    // ── Optimization: Compress client-side if it's an image ──
-    const optimizedFile = await compressImage(file);
-    console.log('[Upload] Fichier optimisé:', {
-      original: `${(file.size / 1024).toFixed(1)}KB`,
-      optimized: `${(optimizedFile.size / 1024).toFixed(1)}KB`,
-      name: file.name,
-    });
-
-    const form = new FormData();
-    form.append('file', optimizedFile);
-    form.append('timestamp', String(sig.timestamp));
-    form.append('api_key', sig.apiKey);
-    form.append('signature', sig.signature);
-    form.append('folder', sig.folder);
-
-    const data = await uploadFormToCloudinary(
-      `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`,
-      form,
-      file,
-      options?.timeoutMs ?? 45_000,
-      'photo',
-    );
-    const url = data.secure_url.replace('/upload/', `/upload/${TRANSFORM}/`);
-    console.log('[Upload] Succès:', { publicId: data.public_id, file: file.name });
-    return { url, publicId: data.public_id };
-  } catch (error) {
-    console.error('[Upload] Erreur complète:', error);
-    if (error instanceof Error) {
-      throw error;
+  const { uploadToCloudinaryResilient } = await import('./upload-resilience');
+  return uploadToCloudinaryResilient(
+    file,
+    () => fetchUploadSignature(),
+    {
+      isDocument: false,
+      onProgress: options?.onProgress,
     }
-    throw new Error('Erreur inconnue lors de l\'upload');
-  }
+  );
 }
 
-/** Upload un document (image ou PDF) directement vers Cloudinary via l'endpoint auto. */
+/** Upload a document (image or PDF) directly to Cloudinary using resilient pipeline. */
 export async function uploadDocumentToCloudinary(
   file: File,
   sig: CloudinarySignature,
-  options?: { detectFace?: boolean; timeoutMs?: number },
+  options?: { detectFace?: boolean; timeoutMs?: number; onProgress?: (percent: number) => void },
 ): Promise<{ url: string; publicId: string }> {
-  // ── Optimization: Compress client-side if it's an image ──
-  // Documents are often scanned in high res but don't need to be huge.
-  const optimizedFile = await compressImage(file);
-
-  const form = new FormData();
-  form.append('file', optimizedFile);
-  form.append('timestamp', String(sig.timestamp));
-  form.append('api_key', sig.apiKey);
-  form.append('signature', sig.signature);
-  form.append('folder', sig.folder);
-
-  // ✅ DÉTECTION DE VISAGE (Cloudinary AI - Gratuit jusqu'à 25k images/mois)
-  // Si la signature backend contient le param detection, on l'utilise (signé)
-  // Sinon on utilise l'option locale (pour rétro-compatibilité)
-  const detectionParam = (sig as any).detection || (options?.detectFace ? 'adv_face' : null);
-  if (detectionParam) {
-    form.append('detection', detectionParam);
-  }
-
-  // /auto/upload détecte automatiquement image vs raw (PDF)
-  const data = await uploadFormToCloudinary(
-    `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`,
-    form,
+  const { uploadToCloudinaryResilient } = await import('./upload-resilience');
+  return uploadToCloudinaryResilient(
     file,
-    options?.timeoutMs ?? 60_000,
-    'document',
-  );
-  const documentData = data as {
-    secure_url: string;
-    public_id: string;
-    info?: {
-      detection?: {
-        adv_face?: {
-          status?: string;
-          data?: Array<{ x: number; y: number; w: number; h: number }>;
-        };
-      };
-    };
-  };
-
-  // ✅ Vérifier si un visage a été détecté (si option activée)
-  if (options?.detectFace) {
-    const faceDetection = documentData.info?.detection?.adv_face;
-    const hasFace = faceDetection?.data && faceDetection.data.length > 0;
-
-    if (!hasFace) {
-      throw new Error('Aucun visage détecté dans le selfie. Assurez-vous que votre visage est bien visible et éclairé.');
+    () => fetchUploadSignature(),
+    {
+      isDocument: true,
+      detectFace: options?.detectFace,
+      onProgress: options?.onProgress,
     }
-  }
-
-  return { url: documentData.secure_url, publicId: documentData.public_id };
+  );
 }
 
 // ── Blocked dates (public, client-side) ──────────────────────────────────────

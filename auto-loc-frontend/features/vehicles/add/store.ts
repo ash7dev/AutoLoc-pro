@@ -61,6 +61,7 @@ export interface PhotoEntry {
   url: string | null;
   publicId: string | null;
   status: 'uploading' | 'done' | 'error';
+  progressPercent?: number;
 }
 
 // Version persistable (sans File object)
@@ -95,7 +96,7 @@ interface AddVehicleStore {
   setStep3: (data: Step3Data) => void;
   setVehicleId: (id: string) => void;
   addPhotos: (files: File[]) => string[];
-  updatePhoto: (id: string, patch: Partial<Pick<PhotoEntry, 'url' | 'publicId' | 'status'>>) => void;
+  updatePhoto: (id: string, patch: Partial<Pick<PhotoEntry, 'url' | 'publicId' | 'status' | 'progressPercent'>>) => void;
   removePhoto: (index: number) => void;
   movePhotoToFirst: (index: number) => void;
   movePhoto: (fromIndex: number, toIndex: number) => void;

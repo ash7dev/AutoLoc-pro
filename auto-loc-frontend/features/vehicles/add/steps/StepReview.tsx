@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft, CheckCircle2, Car, CircleDollarSign,
   FileText, Camera, FileCheck2, Loader2, AlertCircle,
-  Shield, Sparkles, Truck, MapPin,
-  Fuel,
+  Shield, Sparkles, Truck, MapPin, Fuel, Eye, Award
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAddVehicleStore } from "../store";
 import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 import { VEHICLE_PATHS, Vehicle } from "@/lib/nestjs/vehicles";
 import { revalidateVehiclePaths } from "@/lib/nestjs/revalidate";
+import { LiveListingCardMockup } from "@/features/vehicles/components/VehicleFormPrimitives";
 
 interface Props {
   onBack: () => void;
@@ -24,27 +24,22 @@ export function StepReview({ onBack }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { authFetch } = useAuthFetch();
-  // Verrou atomique anti double-submit : useState a un cycle de rendu de délai
-  // entre le 1er clic et le disabled du bouton, laissant une fenêtre pour un 2ème POST.
   const submittingRef = useRef(false);
 
   const handlePublish = async () => {
     if (!step1 || !step2) return;
     if (!carteGriseUploadResult || !assuranceUploadResult) {
-      setError('Les documents doivent être envoyés avant la publication. Retournez à l’étape Documents.');
+      setError('Les documents obligatoires doivent être téléversés. Retournez à l’étape Documents.');
       return;
     }
-    if (submittingRef.current) return; // Verrou synchrone
+    if (submittingRef.current) return;
     submittingRef.current = true;
     setLoading(true);
     setError(null);
 
     try {
-      // ── Photos : filtre et log pour debug ─────────────────────────────────────────────
       const validPhotos = photos.filter((p) => p.status === 'done' && p.url && p.publicId);
-      console.log('Photos envoyées au backend:', validPhotos.length, 'sur', photos.length);
       
-      // ── Transaction unique : créer véhicule avec tous les documents ─────────────────────
       const vehicle = await authFetch<Vehicle, Record<string, unknown>>(VEHICLE_PATHS.create, {
         method: "POST",
         timeoutMs: 25000,
@@ -81,17 +76,14 @@ export function StepReview({ onBack }: Props) {
       });
 
       setVehicleId(vehicle.id);
-
-      // Revalidate all vehicle-related paths + homepage and explorer
       await revalidateVehiclePaths(vehicle.id, true).catch(err => {
         console.warn('Failed to revalidate paths:', err);
       });
 
       reset();
       router.replace(`/dashboard/owner/vehicles/${vehicle.id}`);
-      return; // Navigation démarrée — on ne touche plus à l'état du composant
     } catch (err) {
-      submittingRef.current = false; // Libérer le verrou pour permettre une nouvelle tentative
+      submittingRef.current = false;
       const message = err instanceof Error ? err.message : "Une erreur est survenue.";
       setError(`La création de l'annonce a échoué : ${message}`);
       setLoading(false);
@@ -103,119 +95,115 @@ export function StepReview({ onBack }: Props) {
     return new Intl.NumberFormat("fr-FR").format(n) + " FCFA";
   };
 
+  const coverPhoto = photos.find((p) => p.status === 'done')?.url ?? undefined;
   const allValid = !!step1 && !!step2 && photos.some((p) => p.status === 'done')
     && !!carteGriseUploadResult && !!assuranceUploadResult;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-300">
 
-      {/* ━━━ Véhicule ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <ReviewSection icon={Car} title="Véhicule">
-        <ReviewRow label="Marque / Modèle" value={`${step1?.marque ?? "—"} ${step1?.modele ?? ""}`} />
-        <ReviewRow label="Année" value={String(step1?.annee ?? "—")} />
-        <ReviewRow label="Immatriculation" value={step1?.immatriculation ?? "—"} mono />
-        <ReviewRow label="Type" value={step1?.types?.length ? step1.types.join(", ") : (step1?.type ?? "—")} />
-        <ReviewRow label="Carburant" value={step1?.carburant ?? "—"} />
-        <ReviewRow label="Transmission" value={step1?.transmission ?? "—"} />
-        <ReviewRow label="Localisation" value={`${step1?.ville ?? "—"}, ${step1?.adresse ?? ""}`} />
-        {step1?.equipements && step1.equipements.length > 0 && (
-          <div className="pt-2 mt-2 border-t border-slate-100">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Équipements</p>
-            <div className="flex flex-wrap gap-1.5">
-              {step1.equipements.map((eq) => (
-                <span key={eq} className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
-                  {eq}
-                </span>
-              ))}
+      {/* ━━━ Hero Mockup Live Preview Section ━━━━━━━━━━━━━━━━━━━━━ */}
+      <div className="rounded-2xl bg-slate-900 text-white p-6 shadow-xl border border-slate-800 space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+              <Eye className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div>
+              <h3 className="text-[16px] font-black text-white">Aperçu en Direct de votre Annonce</h3>
+              <p className="text-[12px] font-medium text-slate-300">Voici exactement comment votre véhicule apparaîtra sur AutoLoc</p>
             </div>
           </div>
-        )}
-      </ReviewSection>
-
-      {/* ━━━ Tarification ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <ReviewSection icon={CircleDollarSign} title="Tarification">
-        <ReviewRow label="Prix par jour" value={step2 ? fmtPrice(step2.prixParJour) : "—"} highlight />
-        <ReviewRow label="Durée minimum" value={step2?.joursMinimum ? `${step2.joursMinimum} jour(s)` : "1 jour"} />
-        {(step2?.tiers ?? []).filter(t => !isNaN(t.joursMin) && !isNaN(t.prix)).length > 0 && (
-          <div className="pt-2 mt-2 border-t border-slate-100">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Paliers dégressifs</p>
-            {step2!.tiers
-              .filter(t => !isNaN(t.joursMin) && !isNaN(t.prix))
-              .map((t, i) => (
-                <div key={i} className="flex justify-between text-[12px] py-1">
-                  <span className="text-slate-500 font-medium">
-                    {t.joursMin}+ j{t.joursMax ? ` — ${t.joursMax} j` : ""}
-                  </span>
-                  <span className="font-bold text-slate-800">{fmtPrice(t.prix)}/j</span>
-                </div>
-              ))}
-          </div>
-        )}
-        {typeof step2?.fraisLivraison === 'number' && !isNaN(step2.fraisLivraison) && step2.fraisLivraison > 0 && (
-          <ReviewRow label="Frais de livraison" value={fmtPrice(step2.fraisLivraison)} icon={Truck} />
-        )}
-        {step2?.autoriseHorsDakar && typeof step2.supplementHorsDakarParJour === 'number' && !isNaN(step2.supplementHorsDakarParJour) && (
-          <ReviewRow label="Supplément Hors Dakar" value={`${fmtPrice(step2.supplementHorsDakarParJour)} / j`} icon={MapPin} />
-        )}
-      </ReviewSection>
-
-      {/* ━━━ Conditions ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <ReviewSection icon={Shield} title="Conditions">
-        <ReviewRow label="Âge minimum" value={step3?.ageMinimum ? `${step3.ageMinimum} ans` : "18 ans"} />
-        <ReviewRow label="Zone conduite" value={step3?.zoneConduite ?? "Non définie"} />
-        <ReviewRow label="Assurance" value={step3?.assurance ?? "Locataire responsable"} />
-        <ReviewRow label="Carburant" value={step3?.carburantCondition ?? "Non défini"} icon={Fuel} />
-        {step3?.reglesSpecifiques && <ReviewRow label="Règles" value={step3.reglesSpecifiques} />}
-      </ReviewSection>
-
-      {/* ━━━ Fichiers ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <ReviewSection icon={FileCheck2} title="Fichiers">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <FileStatus label={`${photos.filter(p => p.status === 'done').length} photo(s)`} ok={photos.some(p => p.status === 'done')} icon={Camera} />
-          <FileStatus label="Carte Grise" ok={!!carteGriseUploadResult} icon={FileCheck2} />
-          <FileStatus label="Assurance" ok={!!assuranceUploadResult} icon={Shield} />
+          <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-3 py-1 rounded-full">
+            <Award className="w-3.5 h-3.5" />
+            Annonce 100% Optimisée
+          </span>
         </div>
-      </ReviewSection>
 
-      {/* ━━━ Notice ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 p-4">
-        <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
-        <p className="text-[12px] font-medium text-amber-700 leading-relaxed">
-          Votre annonce sera examinée avant publication. Délai habituel : sous 24h.
+        {/* Live Catalog Card Component */}
+        <div className="pt-2">
+          <LiveListingCardMockup
+            marque={step1?.marque}
+            modele={step1?.modele}
+            annee={step1?.annee}
+            prixParJour={step2?.prixParJour}
+            ville={step1?.ville}
+            photoUrl={coverPhoto}
+            types={step1?.types}
+          />
+        </div>
+      </div>
+
+      {/* ━━━ Summary Cards ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {/* Véhicule */}
+        <ReviewSection icon={Car} title="Véhicule & Localisation">
+          <ReviewRow label="Marque & Modèle" value={`${step1?.marque ?? "—"} ${step1?.modele ?? ""}`} />
+          <ReviewRow label="Année" value={String(step1?.annee ?? "—")} />
+          <ReviewRow label="Immatriculation" value={step1?.immatriculation ?? "—"} mono />
+          <ReviewRow label="Catégories" value={step1?.types?.length ? step1.types.join(", ") : (step1?.type ?? "—")} />
+          <ReviewRow label="Carburant / Boîte" value={`${step1?.carburant ?? "—"} / ${step1?.transmission ?? "—"}`} />
+          <ReviewRow label="Localisation" value={`${step1?.ville ?? "—"}, ${step1?.adresse ?? ""}`} />
+        </ReviewSection>
+
+        {/* Tarification */}
+        <ReviewSection icon={CircleDollarSign} title="Tarification & Conditions">
+          <ReviewRow label="Prix par jour" value={step2 ? fmtPrice(step2.prixParJour) : "—"} highlight />
+          <ReviewRow label="Durée minimum" value={step2?.joursMinimum ? `${step2.joursMinimum} jour(s)` : "1 jour"} />
+          <ReviewRow label="Assurance" value={step3?.assurance ?? "Locataire responsable"} />
+          <ReviewRow label="Zone" value={step3?.zoneConduite ?? "Non définie"} />
+          <ReviewRow label="Politique Carburant" value={step3?.carburantCondition ?? "Non définie"} />
+          {step2?.fraisLivraison ? <ReviewRow label="Frais Livraison" value={fmtPrice(step2.fraisLivraison)} icon={Truck} /> : null}
+        </ReviewSection>
+      </div>
+
+      {/* Notice & Safety */}
+      <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-200 flex items-start gap-3">
+        <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <p className="text-[12px] font-bold text-amber-900 leading-relaxed">
+          Une fois votre annonce soumise, notre équipe effectuera une validation express sous 24h. Vous recevrez une notification dès qu'elle sera en ligne !
         </p>
       </div>
 
-      {/* Error */}
       {error && (
-        <div className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 p-4">
-          <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" strokeWidth={2} />
-          <p className="text-[12px] font-medium text-red-600">{error}</p>
+        <div className="p-4 rounded-xl bg-red-50 border border-red-200 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+          <p className="text-[13px] font-bold text-red-700">{error}</p>
         </div>
       )}
 
-      {/* ━━━ Navigation ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="flex items-center justify-between pt-2">
-        <button type="button" onClick={onBack} disabled={loading}
-          className="flex items-center gap-2 text-[13px] font-bold text-slate-500 hover:text-slate-700 px-5 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all duration-200 disabled:opacity-50">
-          <ArrowLeft className="w-4 h-4" strokeWidth={2.5} />
+      {/* ━━━ Action Navigation & Publish CTA ━━━━━━━━━━━━━━━━━━━━━━ */}
+      <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100">
+        <button
+          type="button"
+          onClick={onBack}
+          disabled={loading}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 text-[13px] font-bold text-slate-600 hover:text-slate-900 px-5 py-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all disabled:opacity-50"
+        >
+          <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
           Retour
         </button>
+
         <button
+          type="button"
           onClick={handlePublish}
           disabled={loading || !allValid}
           className={cn(
-            "group flex items-center gap-2.5 text-[13px] font-bold px-7 py-3.5 rounded-xl transition-all duration-200",
+            "w-full sm:w-auto flex items-center justify-center gap-2.5 text-[15px] font-black px-9 py-4 rounded-xl shadow-2xl transition-all duration-300 transform",
             allValid && !loading
-              ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/35 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md"
-              : "bg-slate-100 text-slate-300 cursor-not-allowed shadow-none",
+              ? "bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-0.5 active:translate-y-0 ring-4 ring-emerald-400/20"
+              : "bg-slate-100 text-slate-300 shadow-none cursor-not-allowed"
           )}
         >
           {loading ? (
-            <><Loader2 className="w-4 h-4 animate-spin" />Publication en cours…</>
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Publication en cours...
+            </>
           ) : (
             <>
-              <Sparkles className="w-4 h-4" strokeWidth={2} />
-              Publier l&apos;annonce
+              <Sparkles className="w-5 h-5 text-yellow-300 animate-pulse" />
+              Publier mon annonce AutoLoc
             </>
           )}
         </button>
@@ -224,22 +212,18 @@ export function StepReview({ onBack }: Props) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   Shared UI
-═══════════════════════════════════════════════════════════════════ */
-
 function ReviewSection({ icon: Icon, title, children }: {
   icon: React.ElementType; title: string; children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden">
-      <div className="flex items-center gap-2.5 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
-        <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-900 flex items-center justify-center shadow-sm">
-          <Icon className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-emerald-400" strokeWidth={2} />
-        </span>
-        <p className="text-[12px] sm:text-[13px] font-bold text-slate-900 tracking-tight">{title}</p>
+    <div className="rounded-2xl border border-slate-200/90 bg-white overflow-hidden shadow-sm">
+      <div className="flex items-center gap-3 px-5 py-3.5 border-b border-slate-100 bg-slate-50/60">
+        <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center shrink-0 shadow-sm">
+          <Icon className="w-4 h-4 text-emerald-400" />
+        </div>
+        <p className="text-[14px] font-black text-slate-900">{title}</p>
       </div>
-      <div className="px-4 sm:px-5 py-3 sm:py-4 space-y-2 sm:space-y-2.5">{children}</div>
+      <div className="p-4 space-y-2.5">{children}</div>
     </div>
   );
 }
@@ -248,47 +232,18 @@ function ReviewRow({ label, value, highlight, mono, icon: Icon }: {
   label: string; value: string; highlight?: boolean; mono?: boolean; icon?: React.ElementType;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 text-[12px]">
-      <span className="text-slate-500 font-medium flex items-center gap-1.5 flex-shrink-0">
-        {Icon && <Icon className="w-3 h-3" strokeWidth={2} />}
+    <div className="flex items-center justify-between gap-4 text-[13px] py-1 border-b border-slate-100 last:border-0">
+      <span className="text-slate-500 font-medium flex items-center gap-1.5 shrink-0">
+        {Icon && <Icon className="w-3.5 h-3.5 text-slate-400" />}
         {label}
       </span>
       <span className={cn(
-        "font-bold text-right",
-        highlight ? "text-emerald-600" : "text-slate-800",
-        mono && "font-mono tracking-wider uppercase",
+        "font-bold text-right truncate",
+        highlight ? "text-emerald-600 text-[15px] font-black" : "text-slate-800",
+        mono && "font-mono uppercase tracking-wider text-slate-900"
       )}>
         {value}
       </span>
-    </div>
-  );
-}
-
-function FileStatus({ label, ok, icon: Icon }: {
-  label: string; ok: boolean; icon: React.ElementType;
-}) {
-  return (
-    <div className={cn(
-      "flex items-center gap-2 rounded-xl border px-3 py-2.5 sm:px-3.5 sm:py-3 transition-colors",
-      ok
-        ? "border-emerald-200 bg-emerald-50/50"
-        : "border-red-100 bg-red-50/50",
-    )}>
-      <span className={cn(
-        "w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0",
-        ok ? "bg-emerald-100" : "bg-red-100",
-      )}>
-        {ok
-          ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2.5} />
-          : <AlertCircle className="w-3.5 h-3.5 text-red-500" strokeWidth={2.5} />
-        }
-      </span>
-      <div className="flex-1 min-w-0">
-        <p className={cn("text-[10px] sm:text-[11px] font-bold truncate", ok ? "text-emerald-700" : "text-red-600")}>{label}</p>
-        <p className={cn("text-[8.5px] sm:text-[9px] font-medium", ok ? "text-emerald-500" : "text-red-400")}>
-          {ok ? "✓ Prêt" : "Manquant"}
-        </p>
-      </div>
     </div>
   );
 }
