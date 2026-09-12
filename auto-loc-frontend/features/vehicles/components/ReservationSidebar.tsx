@@ -7,7 +7,7 @@ import Link from 'next/link';
 import {
   Clock, CreditCard, CheckCircle2,
   ArrowRight, Loader2, Shield, Info, Truck, MapPin, AlertTriangle, UserCheck, CalendarDays,
-  Wallet, Banknote, Sparkles, ShieldCheck, Lock, ChevronRight
+  Wallet, Banknote, Sparkles, ShieldCheck, Lock, ChevronRight, Compass
 } from 'lucide-react';
 import { cn, getCommissionRate, getTenantPricePerDay, roundToNearest100 } from '@/lib/utils';
 import { fetchVehiclePricing, type PricingResponse } from '@/lib/nestjs/vehicles';
@@ -336,67 +336,93 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
 
           {/* ── Delivery Option ── */}
           {deliveryAvailable && (
-            <div className={cn(
-              "relative rounded-2xl border-2 p-4 space-y-3 transition-all duration-300",
-              wantsDelivery
-                ? "bg-emerald-50/60 border-emerald-300 shadow-md shadow-emerald-500/5"
-                : "bg-slate-50/60 border-slate-200/90 hover:border-slate-300 hover:bg-white"
-            )}>
-              <label className="flex items-start gap-3.5 cursor-pointer group select-none">
-                <button
-                  type="button"
-                  onClick={() => setWantsDelivery(!wantsDelivery)}
-                  className={cn(
-                    'mt-0.5 w-5 h-5 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 shadow-sm',
-                    wantsDelivery
-                      ? 'bg-emerald-600 border-emerald-600 scale-105'
-                      : 'border-slate-300 group-hover:border-emerald-500 bg-white',
-                  )}
-                >
-                  {wantsDelivery && <CheckCircle2 className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
-                </button>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-0.5">
+            <div
+              onClick={() => setWantsDelivery(!wantsDelivery)}
+              className={cn(
+                "relative rounded-2xl border-2 p-4 cursor-pointer transition-all duration-300 overflow-hidden select-none",
+                wantsDelivery
+                  ? "bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-emerald-500/15 border-emerald-500 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500/30"
+                  : "bg-slate-50/70 border-slate-200/90 hover:border-slate-300 hover:bg-slate-100/80 shadow-xs"
+              )}
+            >
+              <div className="flex items-start gap-3.5">
+                {/* Icon Badge */}
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 shadow-sm",
+                  wantsDelivery
+                    ? "bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-emerald-600/30 scale-105"
+                    : "bg-emerald-100/80 text-emerald-700 border border-emerald-200/60"
+                )}>
+                  <Truck className="w-5 h-5" strokeWidth={2.2} />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-1">
                     <div className="flex items-center gap-2">
-                      <Truck className={cn(
-                        "w-4 h-4 transition-colors",
-                        wantsDelivery ? "text-emerald-700" : "text-slate-500"
-                      )} strokeWidth={2.5} />
-                      <span className={cn(
-                        "text-[14px] font-bold transition-colors",
-                        wantsDelivery ? "text-emerald-950 font-extrabold" : "text-slate-800"
+                      <h4 className={cn(
+                        "text-[14.5px] font-extrabold font-brand tracking-tight transition-colors",
+                        wantsDelivery ? "text-emerald-950" : "text-slate-900"
                       )}>
                         Livraison à domicile
-                      </span>
+                      </h4>
+                      {wantsDelivery && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-200/80">
+                          <Sparkles className="w-2.5 h-2.5 text-emerald-600" />
+                          Inclus
+                        </span>
+                      )}
                     </div>
-                    <span className="text-[14px] font-black tabular-nums text-emerald-600 bg-white px-2 py-0.5 rounded-lg border border-emerald-100 shadow-xs">
+                    <span className={cn(
+                      "text-[13px] font-black tabular-nums px-2.5 py-1 rounded-xl transition-all shadow-xs border",
+                      wantsDelivery
+                        ? "bg-slate-950 text-emerald-300 border-slate-800"
+                        : "bg-white text-emerald-700 border-slate-200"
+                    )}>
                       + {formatPrice(fraisLivraison)}
                     </span>
                   </div>
-                  <p className="text-[12px] text-slate-500 font-medium">
-                    Le véhicule vous sera livré à l&apos;adresse de votre choix
+
+                  <p className="text-[12.5px] text-slate-500 font-medium leading-relaxed">
+                    Le véhicule vous sera livré direct à l&apos;adresse de votre choix (hôtel, domicile...)
                   </p>
                 </div>
-              </label>
 
+                {/* Check Radio Pill */}
+                <div className={cn(
+                  "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-300 mt-0.5",
+                  wantsDelivery
+                    ? "bg-emerald-600 border-emerald-600 text-white scale-110 shadow-sm"
+                    : "border-slate-300 bg-white"
+                )}>
+                  {wantsDelivery && <CheckCircle2 className="w-4 h-4 text-white" strokeWidth={3} />}
+                </div>
+              </div>
+
+              {/* Address Input Dropdown when selected */}
               {wantsDelivery && (
-                <div className="space-y-2 pl-8 pt-1 animate-in slide-in-from-top-2 duration-300">
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="mt-3.5 pt-3.5 border-t border-emerald-200/60 space-y-2 animate-in slide-in-from-top-2 duration-300"
+                >
+                  <label className="block text-[11.5px] font-extrabold uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2.5} />
+                    Adresse précise de livraison
+                  </label>
                   <div className="relative">
-                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-600" strokeWidth={2.5} />
                     <input
                       type="text"
                       value={deliveryAddress}
                       onChange={(e) => setDeliveryAddress(e.target.value)}
-                      placeholder="Adresse exacte de livraison (ex: Les Almadies, Dakar)"
-                      className="w-full h-11 rounded-xl border-2 border-emerald-200 bg-white pl-10 pr-4
+                      placeholder="Ex: Villa 42, Les Almadies / Aéroport DSS..."
+                      className="w-full h-11 rounded-xl border-2 border-emerald-300/80 bg-white pl-4 pr-4
                         text-[13px] font-semibold text-slate-900 placeholder-slate-400
-                        focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-xs"
+                        focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 transition-all shadow-xs"
                     />
                   </div>
                   {!deliveryAddress.trim() && (
-                    <div className="flex items-center gap-1.5 text-amber-600">
-                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                      <p className="text-[11.5px] font-bold">Veuillez indiquer l&apos;adresse pour valider</p>
+                    <div className="flex items-center gap-1.5 text-amber-700 bg-amber-50/80 border border-amber-200/70 px-3 py-1.5 rounded-lg">
+                      <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                      <p className="text-[11.5px] font-bold">Veuillez renseigner votre adresse pour continuer</p>
                     </div>
                   )}
                 </div>
@@ -406,48 +432,67 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
 
           {/* ── Hors Dakar Option ── */}
           {autoriseHorsDakar && supplementHorsDakarParJour != null && (
-            <div className={cn(
-              "relative rounded-2xl border-2 p-4 transition-all duration-300",
-              horsDakar
-                ? "bg-blue-50/60 border-blue-300 shadow-md shadow-blue-500/5"
-                : "bg-slate-50/60 border-slate-200/90 hover:border-slate-300 hover:bg-white"
-            )}>
-              <label className="flex items-start gap-3.5 cursor-pointer group select-none">
-                <button
-                  type="button"
-                  onClick={() => setHorsDakar(!horsDakar)}
-                  className={cn(
-                    'mt-0.5 w-5 h-5 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 shadow-sm',
-                    horsDakar
-                      ? 'bg-blue-600 border-blue-600 scale-105'
-                      : 'border-slate-300 group-hover:border-blue-500 bg-white',
-                  )}
-                >
-                  {horsDakar && <CheckCircle2 className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
-                </button>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-0.5">
+            <div
+              onClick={() => setHorsDakar(!horsDakar)}
+              className={cn(
+                "relative rounded-2xl border-2 p-4 cursor-pointer transition-all duration-300 overflow-hidden select-none",
+                horsDakar
+                  ? "bg-gradient-to-br from-indigo-500/10 via-blue-500/5 to-indigo-500/15 border-indigo-500 shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/30"
+                  : "bg-slate-50/70 border-slate-200/90 hover:border-slate-300 hover:bg-slate-100/80 shadow-xs"
+              )}
+            >
+              <div className="flex items-start gap-3.5">
+                {/* Icon Badge */}
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 shadow-sm",
+                  horsDakar
+                    ? "bg-gradient-to-br from-indigo-600 to-blue-700 text-white shadow-indigo-600/30 scale-105"
+                    : "bg-indigo-100/80 text-indigo-700 border border-indigo-200/60"
+                )}>
+                  <Compass className="w-5 h-5" strokeWidth={2.2} />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-1">
                     <div className="flex items-center gap-2">
-                      <MapPin className={cn(
-                        "w-4 h-4 transition-colors",
-                        horsDakar ? "text-blue-700" : "text-slate-500"
-                      )} strokeWidth={2.5} />
-                      <span className={cn(
-                        "text-[14px] font-bold transition-colors",
-                        horsDakar ? "text-blue-950 font-extrabold" : "text-slate-800"
+                      <h4 className={cn(
+                        "text-[14.5px] font-extrabold font-brand tracking-tight transition-colors",
+                        horsDakar ? "text-indigo-950" : "text-slate-900"
                       )}>
                         Voyage Hors Dakar
-                      </span>
+                      </h4>
+                      {horsDakar && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-100/90 px-2 py-0.5 rounded-full border border-indigo-200/80">
+                          <Sparkles className="w-2.5 h-2.5 text-indigo-600" />
+                          Activé
+                        </span>
+                      )}
                     </div>
-                    <span className="text-[14px] font-black tabular-nums text-blue-600 bg-white px-2 py-0.5 rounded-lg border border-blue-100 shadow-xs">
+                    <span className={cn(
+                      "text-[13px] font-black tabular-nums px-2.5 py-1 rounded-xl transition-all shadow-xs border",
+                      horsDakar
+                        ? "bg-slate-950 text-indigo-300 border-slate-800"
+                        : "bg-white text-indigo-700 border-slate-200"
+                    )}>
                       + {formatPrice(supplementHorsDakarParJour)}<span className="text-[11px] font-semibold text-slate-400">/j</span>
                     </span>
                   </div>
-                  <p className="text-[12px] text-slate-500 font-medium">
-                    Partez explorer les régions du Sénégal en toute tranquillité
+
+                  <p className="text-[12.5px] text-slate-500 font-medium leading-relaxed">
+                    Liberté totale pour explorer Saint-Louis, Saly, Casamance et tout le Sénégal
                   </p>
                 </div>
-              </label>
+
+                {/* Check Radio Pill */}
+                <div className={cn(
+                  "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-300 mt-0.5",
+                  horsDakar
+                    ? "bg-indigo-600 border-indigo-600 text-white scale-110 shadow-sm"
+                    : "border-slate-300 bg-white"
+                )}>
+                  {horsDakar && <CheckCircle2 className="w-4 h-4 text-white" strokeWidth={3} />}
+                </div>
+              </div>
             </div>
           )}
 
