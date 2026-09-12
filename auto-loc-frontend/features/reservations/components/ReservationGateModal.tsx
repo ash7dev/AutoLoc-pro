@@ -258,26 +258,26 @@ function PreGateOverlay({
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-[2px] px-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/70 backdrop-blur-md px-4 animate-in fade-in duration-200"
       onClick={onCancel}
     >
       <div
-        className="w-full sm:max-w-md flex flex-col overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-[0_24px_64px_rgba(0,0,0,0.22)] animate-in zoom-in-95 duration-250"
+        className="w-full sm:max-w-lg flex flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_32px_80px_rgba(0,0,0,0.3)] animate-in zoom-in-95 duration-250"
         onClick={e => e.stopPropagation()}
       >
 
         {/* Header */}
-        <div className="flex items-start justify-between px-5 pt-4 pb-3 sm:px-6 sm:pt-5">
+        <div className="flex items-start justify-between px-6 pt-6 pb-4">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
-              Auto Loc · Locataire
-            </p>
-            <h2 className="text-[17px] font-black text-slate-900 tracking-tight mt-0.5">
-              Avant de réserver
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-[10.5px] font-black uppercase tracking-wider mb-1">
+              AutoLoc · Réservation
+            </span>
+            <h2 className="text-[20px] font-black text-slate-900 tracking-tight font-brand">
+              Avant de finaliser votre réservation
             </h2>
-            <p className="text-[12.5px] text-slate-500 mt-0.5 leading-snug">
+            <p className="text-[13px] text-slate-500 mt-0.5 leading-relaxed font-medium">
               {pending.length === 0
-                ? "Votre profil est complet. Vous pouvez continuer."
+                ? "Votre profil est complet et vérifié. Vous pouvez continuer."
                 : `${pending.length} étape${pending.length > 1 ? "s" : ""} requise${pending.length > 1 ? "s" : ""} · environ ${totalMin} min`
               }
             </p>
@@ -285,47 +285,47 @@ function PreGateOverlay({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-shrink-0 ml-4 w-8 h-8 flex items-center justify-center rounded-full border border-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors"
+            className="flex-shrink-0 ml-4 w-9 h-9 flex items-center justify-center rounded-full border border-slate-200/80 bg-slate-50 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all active:scale-95"
             aria-label="Fermer"
           >
-            <X className="w-3.5 h-3.5" strokeWidth={2.5} />
+            <X className="w-4 h-4" strokeWidth={2.5} />
           </button>
         </div>
 
         {/* Divider */}
-        <div className="mx-5 sm:mx-6 h-px bg-slate-100" />
+        <div className="mx-6 h-px bg-slate-100" />
 
         {/* Steps */}
-        <div className="px-4 py-4 sm:px-5 space-y-2.5">
+        <div className="px-6 py-5 space-y-3 max-h-[55vh] overflow-y-auto overscroll-contain">
           {steps.map((step, i) => (
             <StepRow key={step.key} step={step} index={i} />
           ))}
         </div>
 
         {/* Info note */}
-        <div className="mx-4 sm:mx-5 mb-4 px-4 py-3 rounded-xl bg-slate-50 border border-slate-100">
-          <p className="text-[11.5px] text-slate-500 leading-relaxed">
-            Ces informations sont nécessaires pour garantir la sécurité de chaque location.
-            Vos données restent strictement confidentielles.
+        <div className="mx-6 mb-5 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-2.5">
+          <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0" strokeWidth={2} />
+          <p className="text-[12px] text-slate-500 font-medium leading-relaxed">
+            Ces vérifications sécurisent la mise à disposition des véhicules. Vos données confidentielles sont chiffrées.
           </p>
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col-reverse sm:flex-row gap-2.5 px-4 pb-5 sm:px-5 sm:pb-5 pt-1">
+        <div className="flex flex-col-reverse sm:flex-row gap-3 px-6 pb-6 pt-1">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-5 py-3 rounded-xl border border-slate-200 text-[13.5px] font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-50 hover:border-slate-300 transition-all"
+            className="flex-1 px-5 py-3.5 rounded-2xl border-2 border-slate-200 text-[14px] font-extrabold text-slate-600 hover:text-slate-900 hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98]"
           >
             Annuler
           </button>
           <button
             type="button"
             onClick={onContinue}
-            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-900 hover:bg-emerald-500 text-white text-[13.5px] font-bold shadow-sm hover:shadow-md hover:shadow-emerald-500/20 hover:-translate-y-px active:translate-y-0 transition-all duration-200"
+            className="flex-1 flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white text-[14px] font-black shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/40 hover:-translate-y-px active:translate-y-0 transition-all duration-200"
           >
-            Continuer
-            <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+            <span>Continuer</span>
+            <ArrowRight className="w-4.5 h-4.5" strokeWidth={2.5} />
           </button>
         </div>
       </div>
@@ -428,16 +428,16 @@ function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, 
 
   const field = (label: string, icon: React.ElementType, inputProps: React.InputHTMLAttributes<HTMLInputElement>) => (
     <div className="space-y-1.5">
-      <label className="block text-[12px] font-bold text-slate-700 ml-1">{label}</label>
+      <label className="block text-[12px] font-extrabold text-slate-700 ml-1 uppercase tracking-wider">{label}</label>
       <div className="relative group">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
-          {React.createElement(icon, { size: 16 })}
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
+          {React.createElement(icon, { size: 18, strokeWidth: 2.2 })}
         </div>
         <input
           {...inputProps}
-          className="w-full h-11 rounded-xl border border-slate-200 bg-white pl-11 pr-4
-            text-[13px] font-medium text-slate-800 placeholder-slate-300
-            focus:border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-400/5 transition-all"
+          className="w-full h-12 rounded-2xl border-2 border-slate-200/80 bg-white pl-12 pr-4
+            text-[13.5px] font-semibold text-slate-900 placeholder-slate-400
+            focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-xs"
         />
       </div>
     </div>
@@ -468,7 +468,7 @@ function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, 
       />
 
       <div className="space-y-1.5">
-        <label className="block text-[12px] font-bold text-slate-700 ml-1">Téléphone *</label>
+        <label className="block text-[12px] font-extrabold text-slate-700 ml-1 uppercase tracking-wider">Téléphone *</label>
         <PhoneField
           value={form.phone}
           onChange={v => setForm(p => ({ ...p, phone: v }))}
@@ -478,8 +478,8 @@ function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, 
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-100 bg-red-50/50 p-3">
-          <p className="text-[11.5px] font-medium text-red-600">{error}</p>
+        <div className="rounded-2xl border border-red-200 bg-red-50/90 p-3.5">
+          <p className="text-[12px] font-bold text-red-700">{error}</p>
         </div>
       )}
 
@@ -487,15 +487,15 @@ function CreateProfileGate({ profile, onComplete }: { profile: ProfileResponse, 
         type="submit"
         disabled={loading}
         className={cn(
-          "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[14px] font-bold transition-all duration-200 mt-1",
+          "w-full flex items-center justify-center gap-2 h-14 rounded-2xl text-[15px] font-black tracking-wide transition-all duration-200 mt-2 shadow-lg active:scale-[0.98]",
           !loading
-            ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20"
-            : "bg-slate-100 text-slate-400 cursor-not-allowed"
+            ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-emerald-600/25 hover:shadow-emerald-600/40"
+            : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
         )}
       >
         {loading
-          ? <><Loader2 className="w-4 h-4 animate-spin" />Création…</>
-          : <>Créer mon profil <ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>}
+          ? <><Loader2 className="w-4.5 h-4.5 animate-spin" strokeWidth={2.5} />Enregistrement du profil…</>
+          : <>Créer mon profil <ArrowRight className="w-4.5 h-4.5" strokeWidth={2.5} /></>}
       </button>
     </form>
   );
@@ -564,8 +564,8 @@ function AgePhoneGate({ ageMinimum, onComplete }: { ageMinimum: number; onComple
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-100 bg-red-50/50 p-3">
-          <p className="text-[11.5px] font-medium text-red-600">{error}</p>
+        <div className="rounded-2xl border border-red-200 bg-red-50/90 p-3.5">
+          <p className="text-[12px] font-bold text-red-700">{error}</p>
         </div>
       )}
 
@@ -573,15 +573,15 @@ function AgePhoneGate({ ageMinimum, onComplete }: { ageMinimum: number; onComple
         type="submit"
         disabled={loading || !dateNaissance || !phone}
         className={cn(
-          "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[14px] font-bold transition-all duration-200 mt-2",
+          "w-full flex items-center justify-center gap-2 h-14 rounded-2xl text-[15px] font-black tracking-wide transition-all duration-200 mt-2 shadow-lg active:scale-[0.98]",
           (!loading && dateNaissance && phone)
-            ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20"
-            : "bg-slate-100 text-slate-400 cursor-not-allowed"
+            ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-emerald-600/25 hover:shadow-emerald-600/40"
+            : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
         )}
       >
         {loading
-          ? <><Loader2 className="w-4 h-4 animate-spin" />Enregistrement…</>
-          : <>Confirmer<ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>}
+          ? <><Loader2 className="w-4.5 h-4.5 animate-spin" strokeWidth={2.5} />Enregistrement…</>
+          : <>Confirmer <ArrowRight className="w-4.5 h-4.5" strokeWidth={2.5} /></>}
       </button>
     </form>
   );
@@ -629,8 +629,8 @@ function AgeGate({ onProceed, ageMinimum }: { onProceed: () => void; ageMinimum:
       />
 
       {error && (
-        <div className="rounded-xl border border-red-100 bg-red-50/50 p-3">
-          <p className="text-[11.5px] font-medium text-red-600">{error}</p>
+        <div className="rounded-2xl border border-red-200 bg-red-50/90 p-3.5">
+          <p className="text-[12px] font-bold text-red-700">{error}</p>
         </div>
       )}
 
@@ -638,15 +638,15 @@ function AgeGate({ onProceed, ageMinimum }: { onProceed: () => void; ageMinimum:
         type="submit"
         disabled={loading || !dateNaissance}
         className={cn(
-          "w-full flex items-center justify-center gap-2 h-12 rounded-xl text-[14px] font-bold transition-all duration-200 mt-2",
+          "w-full flex items-center justify-center gap-2 h-14 rounded-2xl text-[15px] font-black tracking-wide transition-all duration-200 mt-2 shadow-lg active:scale-[0.98]",
           (!loading && dateNaissance)
-            ? "bg-slate-900 hover:bg-emerald-500 text-white shadow-sm hover:shadow-md hover:shadow-emerald-500/20"
-            : "bg-slate-100 text-slate-400 cursor-not-allowed"
+            ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-emerald-600/25 hover:shadow-emerald-600/40"
+            : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
         )}
       >
         {loading
-          ? <><Loader2 className="w-4 h-4 animate-spin" />Vérification…</>
-          : <>Confirmer mon âge<ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>}
+          ? <><Loader2 className="w-4.5 h-4.5 animate-spin" strokeWidth={2.5} />Vérification…</>
+          : <>Confirmer mon âge <ArrowRight className="w-4.5 h-4.5" strokeWidth={2.5} /></>}
       </button>
     </form>
   );

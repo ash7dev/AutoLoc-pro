@@ -28,27 +28,18 @@ export function ModalShell({
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-[2px] sm:px-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/65 backdrop-blur-md px-4 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
         className={cn(
           "flex w-full flex-col overflow-hidden bg-white",
-          "border border-slate-200/60",
-          // Mobile : bottom sheet (coins hauts arrondis seulement)
-          "rounded-t-3xl sm:rounded-2xl rounded-b-none sm:rounded-b-2xl",
-          "shadow-[0_-8px_32px_rgba(0,0,0,0.12)] sm:shadow-[0_24px_64px_rgba(0,0,0,0.22)]",
-          // Mobile : 92% hauteur écran, desktop : limité
-          "max-h-[92dvh] sm:max-h-[calc(100dvh-3rem)]",
-          "sm:max-w-md",
-          "animate-in slide-in-from-bottom sm:zoom-in-95 duration-300",
+          "border border-slate-200/80 shadow-[0_32px_80px_rgba(0,0,0,0.3)]",
+          "rounded-3xl max-w-lg max-h-[90dvh]",
+          "animate-in zoom-in-95 duration-250",
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag handle — mobile only */}
-        <div className="sm:hidden flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full bg-slate-200" />
-        </div>
 
         {/* Header */}
         <div className="flex-shrink-0 flex items-start justify-between border-b border-slate-100 bg-white px-5 pt-3 pb-4 sm:px-6 sm:pt-5 sm:pb-4">
