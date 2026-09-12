@@ -373,7 +373,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
                       )}
                     </div>
                     <span className={cn(
-                      "text-[13px] font-black tabular-nums px-2.5 py-1 rounded-xl transition-all shadow-xs border",
+                      "text-[13px] font-black tabular-nums px-2.5 py-1 rounded-xl transition-all shadow-xs border whitespace-nowrap shrink-0",
                       wantsDelivery
                         ? "bg-slate-950 text-emerald-300 border-slate-800"
                         : "bg-white text-emerald-700 border-slate-200"
@@ -469,7 +469,7 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
                       )}
                     </div>
                     <span className={cn(
-                      "text-[13px] font-black tabular-nums px-2.5 py-1 rounded-xl transition-all shadow-xs border",
+                      "text-[13px] font-black tabular-nums px-2.5 py-1 rounded-xl transition-all shadow-xs border whitespace-nowrap shrink-0",
                       horsDakar
                         ? "bg-slate-950 text-indigo-300 border-slate-800"
                         : "bg-white text-indigo-700 border-slate-200"
