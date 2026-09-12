@@ -152,51 +152,51 @@ export function VehicleDetailSpecs({ vehicle }: Props): React.ReactElement {
         {vehicle.ageMinimum && <QuickStat icon={UserCheck} label="Âge min." value={`${vehicle.ageMinimum} ans`} />}
       </div>
 
-      {/* ── Flexible Payment Choice Cards ── */}
-      <div className="space-y-3 pt-2">
+      {/* ── Payment Options Cards (Beloved Previous Version) ── */}
+      <div className="space-y-3 pt-1">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700">
-            <Wallet className="w-3.5 h-3.5" strokeWidth={2.5} />
+          <div className="w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+            <Wallet className="w-3.5 h-3.5" strokeWidth={2} />
           </div>
-          <h3 className="text-[15px] font-extrabold text-slate-900 font-brand">Modalités de règlement disponibles</h3>
+          <h3 className="text-[15px] font-bold text-slate-900 font-brand">Options de paiement au choix</h3>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Card 1: 100% online */}
-          <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-200/80 bg-gradient-to-br from-emerald-50/60 via-white to-white p-4.5 shadow-sm">
+          {/* Card 1: Total 100% */}
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-slate-50/50 to-emerald-50/20 p-4 shadow-sm hover:shadow-md transition-all duration-300">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-md shadow-emerald-600/20">
-                <CreditCard className="w-5 h-5" strokeWidth={2.5} />
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <CreditCard className="w-5 h-5 text-emerald-600" strokeWidth={2} />
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-[14px] font-black text-slate-900">100% En Ligne</span>
-                  <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md">
+                  <span className="text-[13.5px] font-black text-slate-900">Payer 100% en ligne</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md">
                     Instantané
                   </span>
                 </div>
-                <p className="text-[12px] text-slate-600 leading-relaxed font-medium">
-                  Validation immédiate. Aucune transaction financière à effectuer lors de la remise des clés.
+                <p className="text-[11.5px] text-slate-500 leading-relaxed font-medium">
+                  Réglez l&apos;intégralité de la location en ligne. Confirmation immédiate et aucun règlement supplémentaire lors du départ.
                 </p>
               </div>
             </div>
           </div>
 
           {/* Card 2: Acompte 30% */}
-          <div className="relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-gradient-to-br from-slate-50/80 via-white to-white p-4.5 shadow-sm">
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-slate-50/50 to-amber-50/20 p-4 shadow-sm hover:shadow-md transition-all duration-300">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-900 text-emerald-400 flex items-center justify-center flex-shrink-0 shadow-md shadow-slate-900/20">
-                <Banknote className="w-5 h-5" strokeWidth={2.5} />
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Banknote className="w-5 h-5 text-amber-600" strokeWidth={2} />
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-[14px] font-black text-slate-900">Acompte 30%</span>
-                  <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
+                  <span className="text-[13.5px] font-black text-slate-900">Acompte 30% + Solde</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-md">
                     Flexible
                   </span>
                 </div>
-                <p className="text-[12px] text-slate-600 leading-relaxed font-medium">
-                  Réservez avec 30% aujourd&apos;hui. Le solde de 70% est remis directement au propriétaire le jour J.
+                <p className="text-[11.5px] text-slate-500 leading-relaxed font-medium">
+                  Bloquez le véhicule avec seulement 30% d&apos;acompte. Réglez les 70% restants au propriétaire lors de la remise des clés.
                 </p>
               </div>
             </div>
