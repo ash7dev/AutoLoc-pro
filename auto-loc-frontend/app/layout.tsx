@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Fraunces, Outfit } from 'next/font/google';
 import { ThemeProvider, ColorSystemProvider, CurrencyProviderServer } from '../providers';
 import { GlobalModals } from '@/features/pwa/GlobalModals';
 import { Toaster } from 'sonner';
@@ -10,7 +10,21 @@ const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-inter',
-  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  weight: ['300', '400', '500', '600', '700'],
+});
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-fraunces',
+  style: ['normal', 'italic'],
+});
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-outfit',
+  weight: ['500', '600', '700', '800', '900'],
 });
 
 const BASE_URL = 'https://www.autoloc.sn';
@@ -143,7 +157,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={cn(inter.variable, "font-sans antialiased")}>
+      <body className={cn(inter.variable, fraunces.variable, outfit.variable, "font-sans antialiased")}>
         <ThemeProvider defaultTheme="light" storageKey="autoloc-theme">
           <ColorSystemProvider>
             <CurrencyProviderServer>{children}</CurrencyProviderServer>

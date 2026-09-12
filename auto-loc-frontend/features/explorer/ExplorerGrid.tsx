@@ -22,6 +22,7 @@ import { useCurrency } from '@/providers/currency-provider';
 import { ExplorerResultsHeader } from './ExplorerResultsHeader';
 import { ExplorerVehicleCard } from './ExplorerVehicleCard';
 import { VehicleGridSkeleton } from './ExplorerSkeleton';
+import { VehicleGrid } from '@/features/vehicles/components/VehicleGrid';
 
 /* ════════════════════════════════════════════════════════════════
    TYPES
@@ -158,7 +159,6 @@ function ResultsArea({
   loading,
   error,
   vehicles,
-  strategy,
   hasActiveFilters,
   onReset,
   onRetry,
@@ -173,77 +173,16 @@ function ResultsArea({
   onRetry: () => void;
   onEndReached: () => void;
 }) {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const triggeredRef = useRef(false);
-  const onEndReachedRef = useRef(onEndReached);
-
-  useEffect(() => {
-    onEndReachedRef.current = onEndReached;
-  }, [onEndReached]);
-
-  // Re-attach observer when loading finishes (sectionRef.current is null during skeleton)
-  useEffect(() => {
-    if (loading) return;
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0.03 },
-    );
-    if (sectionRef.current) obs.observe(sectionRef.current);
-    return () => obs.disconnect();
-  }, [loading]);
-
-  // Pagination invisible : sentinel observé par rapport à la fenêtre (scroll vertical de la page).
-  // Re-armé à chaque ajout de véhicules pour pouvoir déclencher la page suivante.
-  useEffect(() => {
-    if (loading || !sentinelRef.current) return;
-    triggeredRef.current = false;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !triggeredRef.current) {
-          triggeredRef.current = true;
-          onEndReachedRef.current();
-        }
-      },
-      { rootMargin: '0px 0px 600px 0px' },
-    );
-    obs.observe(sentinelRef.current);
-    return () => obs.disconnect();
-  }, [loading, vehicles.length]);
-
-  if (loading) return <VehicleGridSkeleton count={6} />;
-  if (error) return <ErrorState onRetry={onRetry} />;
-  if (vehicles.length === 0) return <EmptyState hasFilters={hasActiveFilters} onReset={onReset} />;
-
-  const gridColsCls = cn(
-    'grid grid-cols-2 gap-3 sm:gap-4 lg:gap-5',
-    strategy.gridCols.lg === 2 && 'lg:grid-cols-2',
-    strategy.gridCols.lg === 3 && 'lg:grid-cols-3',
-  );
-
   return (
-    <div ref={sectionRef} className="space-y-7">
-
-      {/* ── Grid ─────────────────────────────────────────────── */}
-      <div className={gridColsCls}>
-        {vehicles.map((vehicle, i) => (
-          <div
-            key={vehicle.id}
-            className={cn(
-              'transition-all duration-500',
-              visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8',
-            )}
-            style={{ transitionDelay: `${Math.min(i * 60, 400)}ms` }}
-          >
-            <ExplorerVehicleCard vehicle={vehicle} />
-          </div>
-        ))}
-      </div>
-
-      {/* Sentinel pagination invisible */}
-      <div ref={sentinelRef} className="h-px w-full" />
-    </div>
+    <VehicleGrid
+      vehicles={vehicles}
+      loading={loading}
+      error={error}
+      onRetry={onRetry}
+      onResetFilters={onReset}
+      hasActiveFilters={hasActiveFilters}
+      onEndReached={onEndReached}
+    />
   );
 }
 

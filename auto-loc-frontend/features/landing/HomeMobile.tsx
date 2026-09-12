@@ -2,34 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { Sparkles, Clock, Star, Wallet, Gem, MapPin, Shield, Car } from 'lucide-react';
 import { fetchMobileFeed, type MobileFeedResponse } from '@/lib/nestjs/vehicles';
 import { MobileSearchBar } from './mobile/MobileSearchBar';
 import { MobileIntroCard } from './mobile/MobileIntroCard';
 import { MobileCategoriesCarousel } from './mobile/MobileCategoriesCarousel';
 import { NearbyVehiclesSection } from './mobile/NearbyVehiclesSection';
-import { PremiumSelectionGrid } from './mobile/PremiumSelectionGrid';
+import { VehicleSection } from './components/VehicleSection';
 
-const NouveautesSection = dynamic(() => import('./NouveautesSection').then((m) => m.NouveautesSection), {
-  loading: () => <CarouselSkeleton />,
-});
-const TopNotesSection = dynamic(() => import('./mobile/TopNotesSection').then((m) => m.TopNotesSection), {
-  loading: () => <CarouselSkeleton />,
-});
-const EconomiquesSection = dynamic(() => import('./mobile/EconomiquesSection').then((m) => m.EconomiquesSection), {
-  loading: () => <GridSkeleton />,
-});
-const LuxeSection = dynamic(() => import('./mobile/LuxeSection').then((m) => m.LuxeSection), {
-  loading: () => <GridSkeleton />,
-});
-const DakarSection = dynamic(() => import('./mobile/DakarSection').then((m) => m.DakarSection), {
-  loading: () => <CarouselSkeleton />,
-});
-const SUVSection = dynamic(() => import('./mobile/SUVSection').then((m) => m.SUVSection), {
-  loading: () => <CarouselSkeleton />,
-});
-const BerlinesSection = dynamic(() => import('./mobile/BerlinesSection').then((m) => m.BerlinesSection), {
-  loading: () => <GridSkeleton />,
-});
 const HowItWorksSection = dynamic(() => import('./HowItWorksSection').then((m) => m.HowItWorksSection));
 const BecomeHostCTA = dynamic(() => import('./BecomeHostCTA').then((m) => m.BecomeHostCTA));
 const Footer = dynamic(() => import('./Footer').then((m) => m.Footer));
@@ -82,7 +62,6 @@ export function HomeMobile({ initialFeed }: HomeMobileProps): React.ReactElement
   const [loading, setLoading] = useState(!initialFeed);
 
   useEffect(() => {
-    // If we didn't receive initial feed (e.g. client navigation or failed server fetch), load it on the client
     if (!initialFeed) {
       setLoading(true);
       fetchMobileFeed()
@@ -98,10 +77,10 @@ export function HomeMobile({ initialFeed }: HomeMobileProps): React.ReactElement
 
   return (
     <div className="w-full bg-slate-50 min-h-screen pb-12 flex flex-col gap-2">
-      {/* Intro presentation card - Hero noir EN PREMIER */}
+      {/* Intro presentation card - Hero */}
       <MobileIntroCard />
 
-      {/* Search Bar with dates - Formulaire APRÈS le hero */}
+      {/* Search Bar with dates */}
       <MobileSearchBar />
 
       {/* Horizontal categories */}
@@ -111,7 +90,7 @@ export function HomeMobile({ initialFeed }: HomeMobileProps): React.ReactElement
         <>
           {/* Recommandé Skeleton */}
           <div className="py-4 border-t border-slate-50 px-4">
-            <h3 className="text-[14px] font-black text-slate-800 tracking-tight uppercase mb-4">
+            <h3 className="text-[14px] font-black text-slate-800 tracking-tight uppercase mb-4 font-display">
               Véhicules recommandés
             </h3>
             <CarouselSkeleton />
@@ -119,7 +98,7 @@ export function HomeMobile({ initialFeed }: HomeMobileProps): React.ReactElement
 
           {/* Premium Skeleton */}
           <div className="py-4 border-t border-slate-50 px-4">
-            <h3 className="text-[14px] font-black text-slate-800 tracking-tight uppercase mb-4">
+            <h3 className="text-[14px] font-black text-slate-800 tracking-tight uppercase mb-4 font-display">
               Sélection Premium
             </h3>
             <GridSkeleton />
@@ -127,39 +106,111 @@ export function HomeMobile({ initialFeed }: HomeMobileProps): React.ReactElement
         </>
       ) : (
         <>
-          {/* 1. Recommandé — carousel, alimenté par le feed accueil + géolocalisation */}
+          {/* 1. Recommandé — carousel géolocalisé */}
           <NearbyVehiclesSection
             initialVehicles={feed?.recommended.items ?? []}
             excludeIds={feed?.recommended.excludedIds ?? []}
           />
 
-          {/* 2. Sélection Premium — grille, triée par nb de réservations côté backend */}
-          <PremiumSelectionGrid vehicles={feed?.premium ?? []} />
+          {/* 2. Sélection Premium — carrousel horizontal */}
+          <VehicleSection
+            title="Sélection Premium"
+            subtitle="Nos véhicules coup de cœur"
+            eyebrow="Collection d'exception"
+            icon={Sparkles}
+            iconColor="text-amber-500"
+            vehicles={feed?.premium ?? []}
+            layout="carousel"
+            viewAllHref="/explorer"
+          />
 
-          {/* 3. Nouveautés — carousel, véhicules ajoutés récemment */}
-          <NouveautesSection vehicles={feed?.nouveautes ?? []} />
+          {/* 3. Nouveautés — carrousel horizontal */}
+          <VehicleSection
+            title="Nouveautés"
+            subtitle="Récemment ajoutés"
+            eyebrow="Arrivées récentes"
+            icon={Clock}
+            iconColor="text-emerald-500"
+            vehicles={feed?.nouveautes ?? []}
+            layout="carousel"
+            viewAllHref="/explorer?sort=newest"
+          />
 
-          {/* 4. Top Notés — carousel, note ≥ 4.5★ */}
-          <TopNotesSection vehicles={feed?.topNotes ?? []} />
+          {/* 4. Top Notés — carrousel horizontal */}
+          <VehicleSection
+            title="Top notés"
+            subtitle="Excellence recommandée par les locataires"
+            eyebrow="4.8★ & plus"
+            icon={Star}
+            iconColor="text-amber-400"
+            vehicles={feed?.topNotes ?? []}
+            layout="carousel"
+            viewAllHref="/explorer?sort=rating"
+          />
 
-          {/* 5. Économiques — grille, prix ≤ médiane */}
-          <EconomiquesSection vehicles={feed?.economiques ?? []} />
+          {/* 5. Économiques — carrousel horizontal */}
+          <VehicleSection
+            title="Économiques"
+            subtitle="Les meilleurs tarifs au Sénégal"
+            eyebrow="Accessibles"
+            icon={Wallet}
+            iconColor="text-blue-500"
+            vehicles={feed?.economiques ?? []}
+            layout="carousel"
+            viewAllHref="/explorer?sort=price-asc"
+          />
 
-          {/* 6. Luxe — grille, véhicules haut de gamme */}
-          <LuxeSection vehicles={feed?.luxe ?? []} />
+          {/* 6. Luxe — carrousel horizontal */}
+          <VehicleSection
+            title="Luxe & Prestige"
+            subtitle="Berlines et SUV de haut standing"
+            eyebrow="Haut de gamme"
+            icon={Gem}
+            iconColor="text-purple-500"
+            vehicles={feed?.luxe ?? []}
+            layout="carousel"
+            viewAllHref="/explorer?type=LUXE"
+          />
 
-          {/* 7. Dakar — carousel, véhicules disponibles à Dakar */}
-          <DakarSection vehicles={feed?.dakar ?? []} />
+          {/* 7. Dakar — carrousel horizontal */}
+          <VehicleSection
+            title="Disponibles à Dakar"
+            subtitle="Prise en charge immédiate en capitale"
+            eyebrow="Zone Dakar"
+            icon={MapPin}
+            iconColor="text-emerald-500"
+            vehicles={feed?.dakar ?? []}
+            layout="carousel"
+            viewAllHref="/explorer?zone=dakar"
+          />
 
-          {/* 8. SUV du moment — carousel, SUV et 4x4 populaires */}
-          <SUVSection vehicles={feed?.suvMoment ?? []} />
+          {/* 8. SUV du moment — carrousel horizontal */}
+          <VehicleSection
+            title="SUV & 4×4 du moment"
+            subtitle="Spacieux pour vos déplacements"
+            eyebrow="Tout-terrain"
+            icon={Shield}
+            iconColor="text-emerald-600"
+            vehicles={feed?.suvMoment ?? []}
+            layout="carousel"
+            viewAllHref="/explorer?type=SUV"
+          />
 
-          {/* 9. Berlines populaires — grille, berlines et citadines */}
-          <BerlinesSection vehicles={feed?.berlinesPopulaires ?? []} />
+          {/* 9. Berlines populaires — carrousel horizontal */}
+          <VehicleSection
+            title="Berlines populaires"
+            subtitle="Confort & élégance urbaine"
+            eyebrow="Confort VIP"
+            icon={Car}
+            iconColor="text-slate-700"
+            vehicles={feed?.berlinesPopulaires ?? []}
+            layout="carousel"
+            viewAllHref="/explorer?type=BERLINE"
+          />
         </>
       )}
 
-      {/* Simplified How It Works */}
+      {/* How It Works */}
       <div className="bg-white border-t border-slate-100">
         <HowItWorksSection />
       </div>

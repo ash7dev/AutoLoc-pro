@@ -94,6 +94,8 @@ const config: Config = {
 
       fontFamily: {
         display: [...typography.fontFamily.display],
+        editorial: [...typography.fontFamily.editorial],
+        brand: [...typography.fontFamily.brand],
         body: [...typography.fontFamily.body],
         mono: [...typography.fontFamily.mono],
         sans: [...typography.fontFamily.body],

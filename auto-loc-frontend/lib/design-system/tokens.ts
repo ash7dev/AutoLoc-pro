@@ -325,9 +325,11 @@ export type ColorToken = keyof typeof colors;
 
 export const typography = {
   fontFamily: {
-    display: ['Inter', 'system-ui', 'sans-serif'],
-    body:    ['Inter', 'system-ui', 'sans-serif'],
-    mono:    ['ui-monospace', 'monospace'],
+    display:   ['var(--font-fraunces)', 'Georgia', 'serif'],
+    editorial: ['var(--font-fraunces)', 'Georgia', 'serif'],
+    brand:     ['var(--font-outfit)', 'system-ui', 'sans-serif'],
+    body:      ['var(--font-inter)', 'system-ui', 'sans-serif'],
+    mono:      ['ui-monospace', 'monospace'],
   },
   fontSize: {
     '2xs': ['0.625rem',  { lineHeight: '1rem' }],
