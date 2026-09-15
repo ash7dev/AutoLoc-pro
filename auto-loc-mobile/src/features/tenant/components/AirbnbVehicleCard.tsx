@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   Pressable,
-  ScrollView,
+  FlatList,
   NativeSyntheticEvent,
   NativeScrollEvent,
   Platform,
+  Dimensions,
+  LayoutChangeEvent,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Heart, Star, MapPin, Fuel, Settings, Users } from 'lucide-react-native';
@@ -18,6 +20,13 @@ import { formatConvertedPrice } from '../../../core/utils/currency';
 
 const DEFAULT_CAR_PHOTO =
   'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=800&auto=format&fit=crop';
+
+const DEMO_EXTRA_CAR_PHOTOS = [
+  'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=800&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=800&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=800&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?q=80&w=800&auto=format&fit=crop',
+];
 
 export interface AirbnbVehicleCardProps {
   vehicle: VehicleFeedItem & { photos?: Array<{ url: string }> | string[] };
@@ -33,24 +42,51 @@ export const AirbnbVehicleCard: React.FC<AirbnbVehicleCardProps> = ({
   isFavorited = false,
 }) => {
   const selectedCurrency = useAppStore((state) => state.selectedCurrency);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const listRef = useRef<FlatList>(null);
 
-  // Extract photos list or fallback to main photoUrl / default
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [cardWidth, setCardWidth] = useState<number>(
+    Dimensions.get('window').width - 32
+  );
+
+  // Extrait la liste de photos, ou retombe sur photoUrl / set de démo
   const photosList: string[] = React.useMemo(() => {
+    let list: string[] = [];
     if (vehicle.photos && Array.isArray(vehicle.photos) && vehicle.photos.length > 0) {
-      return vehicle.photos.map((p) => (typeof p === 'string' ? p : p.url));
+      list = vehicle.photos
+        .map((p) => (typeof p === 'string' ? p : p?.url))
+        .filter(Boolean) as string[];
+    } else if (vehicle.photoUrl) {
+      list = [vehicle.photoUrl];
     }
-    if (vehicle.photoUrl) {
-      return [vehicle.photoUrl];
+
+    if (list.length === 0) {
+      return DEMO_EXTRA_CAR_PHOTOS;
     }
-    return [DEFAULT_CAR_PHOTO];
-  }, [vehicle.photos, vehicle.photoUrl]);
+
+    // Garantit au moins 3 photos pour que le swipe fonctionne partout
+    if (list.length === 1) {
+      const charCode = vehicle.id ? vehicle.id.charCodeAt(0) : 0;
+      const extra1 = DEMO_EXTRA_CAR_PHOTOS[charCode % DEMO_EXTRA_CAR_PHOTOS.length];
+      const extra2 = DEMO_EXTRA_CAR_PHOTOS[(charCode + 1) % DEMO_EXTRA_CAR_PHOTOS.length];
+      return [list[0], extra1, extra2];
+    }
+
+    return list;
+  }, [vehicle.photos, vehicle.photoUrl, vehicle.id]);
+
+  const handleLayout = (event: LayoutChangeEvent) => {
+    const { width } = event.nativeEvent.layout;
+    if (width > 0 && Math.abs(width - cardWidth) > 2) {
+      setCardWidth(width);
+    }
+  };
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffset = event.nativeEvent.contentOffset.x;
-    const viewSize = event.nativeEvent.layoutMeasurement.width;
+    const viewSize = event.nativeEvent.layoutMeasurement.width || cardWidth;
     if (viewSize > 0) {
-      const index = Math.floor((contentOffset + viewSize / 2) / viewSize);
+      const index = Math.round(contentOffset / viewSize);
       if (index !== activeImageIndex && index >= 0 && index < photosList.length) {
         setActiveImageIndex(index);
       }
@@ -68,29 +104,41 @@ export const AirbnbVehicleCard: React.FC<AirbnbVehicleCardProps> = ({
       ]}
       onPress={() => onPress(vehicle)}
     >
-      {/* Container d'image avec Carrousel horizontal */}
-      <View style={styles.imageWrapper}>
-        <ScrollView
+      {/* Container d'image avec carrousel horizontal */}
+      <View style={styles.imageWrapper} onLayout={handleLayout}>
+        <FlatList
+          ref={listRef}
+          data={photosList}
           horizontal
           pagingEnabled
+          snapToInterval={cardWidth}
+          snapToAlignment="start"
+          decelerationRate="fast"
+          disableIntervalMomentum
+          bounces={false}
+          nestedScrollEnabled
           showsHorizontalScrollIndicator={false}
           onScroll={handleScroll}
           scrollEventThrottle={16}
-          decelerationRate="fast"
           style={styles.imageScroll}
-        >
-          {photosList.map((imgUri, idx) => (
+          keyExtractor={(_, idx) => `${vehicle.id}-img-${idx}`}
+          getItemLayout={(_, index) => ({
+            length: cardWidth,
+            offset: cardWidth * index,
+            index,
+          })}
+          renderItem={({ item: imgUri, index: idx }) => (
             <Image
               key={`${vehicle.id}-img-${idx}`}
               source={{ uri: imgUri }}
-              style={styles.cardImage}
+              style={[styles.cardImage, { width: cardWidth }]}
               contentFit="cover"
               transition={200}
             />
-          ))}
-        </ScrollView>
+          )}
+        />
 
-        {/* Bouton Favori Cœur Flottant Style Airbnb Glassmorphism */}
+        {/* Bouton favori flottant style Airbnb glassmorphism */}
         {onFavoriteToggle && (
           <Pressable
             style={styles.favoriteBtn}
@@ -124,9 +172,9 @@ export const AirbnbVehicleCard: React.FC<AirbnbVehicleCardProps> = ({
         )}
       </View>
 
-      {/* Contenu Texte & Infos véhicule (Style Airbnb Épuré) */}
+      {/* Contenu texte & infos véhicule (style Airbnb épuré) */}
       <View style={styles.contentBody}>
-        {/* Ligne 1 : Titre Marque/Modèle + Étoile Note */}
+        {/* Ligne 1 : Titre marque/modèle + étoile note */}
         <View style={styles.titleRow}>
           <Text style={styles.titleText} numberOfLines={1}>
             {vehicle.marque} {vehicle.modele} {vehicle.annee ? `(${vehicle.annee})` : ''}
@@ -147,7 +195,7 @@ export const AirbnbVehicleCard: React.FC<AirbnbVehicleCardProps> = ({
           )}
         </View>
 
-        {/* Ligne 2 : Localisation Zone & Ville */}
+        {/* Ligne 2 : Localisation zone & ville */}
         <View style={styles.locationRow}>
           <MapPin size={13} color="#64748B" />
           <Text style={styles.locationText} numberOfLines={1}>
@@ -155,7 +203,7 @@ export const AirbnbVehicleCard: React.FC<AirbnbVehicleCardProps> = ({
           </Text>
         </View>
 
-        {/* Ligne 3 : Spécifications techniques (Transmission, Carburant, Places) */}
+        {/* Ligne 3 : Spécifications techniques */}
         <View style={styles.specsRow}>
           {vehicle.transmission && (
             <View style={styles.specChip}>
@@ -177,7 +225,7 @@ export const AirbnbVehicleCard: React.FC<AirbnbVehicleCardProps> = ({
           )}
         </View>
 
-        {/* Ligne 4 : Prix par jour en devises AutoLoc */}
+        {/* Ligne 4 : Prix par jour en devises */}
         <View style={styles.priceRow}>
           <Text style={styles.priceValue}>{formattedPrice}</Text>
           <Text style={styles.pricePeriod}>/ jour</Text>
@@ -222,7 +270,6 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   cardImage: {
-    width: 350, // calculé dynamiquement ou adapté au conteneur
     height: 220,
   },
   favoriteBtn: {

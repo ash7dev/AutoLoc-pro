@@ -19,6 +19,7 @@ import { SplashScreen } from '../../features/splash/SplashScreen';
 import { OnboardingScreen } from '../../features/onboarding/OnboardingScreen';
 import { TenantMainLayout } from '../../features/tenant/screens/TenantMainLayout';
 import { VehicleDetailScreen } from '../../features/tenant/screens/VehicleDetailScreen';
+import { TenantBookingDetailScreen } from '../../features/tenant/screens/TenantBookingDetailScreen';
 import { VehicleFeedItem } from '../../features/tenant/types';
 import { TenantTabType } from '../../shared/components/TenantTabBar';
 import { LoginScreen } from '../../features/auth/screens/LoginScreen';
@@ -34,7 +35,8 @@ export type AppScreenRoute =
   | { name: 'LOGIN' }
   | { name: 'REGISTER' }
   | { name: 'OTP'; phone: string }
-  | { name: 'VEHICLE_DETAIL'; vehicleId: string; vehicle?: VehicleFeedItem };
+  | { name: 'VEHICLE_DETAIL'; vehicleId: string; vehicle?: VehicleFeedItem }
+  | { name: 'BOOKING_DETAIL'; reservationId: string };
 
 interface NavigationContextType {
   currentRoute: AppScreenRoute;
@@ -43,6 +45,7 @@ interface NavigationContextType {
   navigateToTab: (tab: TenantTabType) => void;
   navigateToOtp: (phone: string) => void;
   navigateToVehicleDetail: (vehicleId: string, vehicle?: VehicleFeedItem) => void;
+  navigateToBookingDetail: (reservationId: string) => void;
   goBack: () => void;
   canGoBack: boolean;
 }
@@ -99,6 +102,10 @@ export const RootNavigator: React.FC = () => {
 
   const navigateToVehicleDetail = (vehicleId: string, vehicle?: VehicleFeedItem) => {
     navigateTo({ name: 'VEHICLE_DETAIL', vehicleId, vehicle });
+  };
+
+  const navigateToBookingDetail = (reservationId: string) => {
+    navigateTo({ name: 'BOOKING_DETAIL', reservationId });
   };
 
   const goBack = () => {
@@ -169,6 +176,7 @@ export const RootNavigator: React.FC = () => {
     navigateToTab,
     navigateToOtp,
     navigateToVehicleDetail,
+    navigateToBookingDetail,
     goBack,
     canGoBack,
   };
@@ -226,6 +234,9 @@ export const RootNavigator: React.FC = () => {
                   onBack={() => goBack()}
                 />
               );
+
+            case 'BOOKING_DETAIL':
+              return <TenantBookingDetailScreen reservationId={currentRoute.reservationId} onBack={goBack} />;
 
             case 'TENANT_MAIN':
             default:

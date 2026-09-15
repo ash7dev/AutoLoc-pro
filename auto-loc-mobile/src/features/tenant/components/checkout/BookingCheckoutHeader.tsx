@@ -87,12 +87,13 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 9.5,
     color: theme.colors.brand.main,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   titleText: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 16,
+    fontSize: 17,
     color: theme.primitives.forest[800],
+    letterSpacing: -0.2,
   },
 });

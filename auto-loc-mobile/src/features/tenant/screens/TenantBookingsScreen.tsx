@@ -1,80 +1,146 @@
-import React from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, Image } from 'react-native';
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
+  Linking,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Calendar, CheckCircle, MapPin } from 'lucide-react-native';
-import { formatCurrency } from '@autoloc/shared';
+import { CalendarX, RefreshCw } from 'lucide-react-native';
 import { theme } from '../../../core/theme';
-import { TenantHeader, AutoCard } from '../../../shared/components';
+import { TenantHeader } from '../../../shared/components';
+import { useNavigation } from '../../../core/navigation/RootNavigator';
+import {
+  TenantBookingCard,
+  TenantBookingItem,
+} from '../components/TenantBookingCard';
+import { BookingCardSkeleton } from '../components/BookingCardSkeleton';
+import {
+  useTenantBookings,
+  BookingStatusFilter,
+} from '../hooks/useTenantBookings';
 
 export const TenantBookingsScreen: React.FC = () => {
+  const navigation = useNavigation();
+  const [activeTab, setActiveTab] = useState<BookingStatusFilter>('ALL');
+
+  const { bookings, loading, refreshing, error, refetch } = useTenantBookings(activeTab);
+
+  const handleContactHost = (booking: TenantBookingItem) => {
+    const phone = booking.proprietaire?.telephone;
+    if (phone) {
+      Linking.openURL(`tel:${phone}`);
+    } else {
+      Linking.openURL(`https://wa.me/221770000000?text=Bonjour,%20je%20vous%20contacte%20au%20sujet%20de%20la%20réservation%20%23${booking.id}`);
+    }
+  };
+
+  const handlePressDetails = (booking: TenantBookingItem) => {
+    navigation.navigateToBookingDetail(booking.id);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
 
+      {/* En-tête d'Écran avec Typographie Fraunces 600 & Support Emerald 24/7 */}
       <TenantHeader
         variant="MANAGEMENT"
         title="Mes Réservations"
         subtitle="Suivi de vos locations et acomptes réglés"
       />
 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Carte Réservation Principale */}
-        <AutoCard variant="elevated" style={styles.bookingCard}>
-          <View style={styles.statusRow}>
-            <Text style={styles.bookingId}>RÉSERVATION #AL-9842</Text>
-            <View style={styles.confirmedBadge}>
-              <CheckCircle size={12} color={theme.colors.brand.main} />
-              <Text style={styles.confirmedBadgeText}>CONFIRMÉE</Text>
-            </View>
-          </View>
+      {/* Barre de Filtres par Statut (Style Airbnb Pill Tabs) */}
+      <View style={styles.tabsContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabsScrollContent}
+        >
+          <TouchableOpacity
+            style={[styles.tabChip, activeTab === 'ALL' && styles.activeTabChip]}
+            onPress={() => setActiveTab('ALL')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.tabText, activeTab === 'ALL' && styles.activeTabText]}>
+              Toutes
+            </Text>
+          </TouchableOpacity>
 
-          <View style={styles.carRow}>
-            <Image
-              source={{ uri: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=400&q=80' }}
-              style={styles.carThumb}
+          <TouchableOpacity
+            style={[styles.tabChip, activeTab === 'CONFIRMED' && styles.activeTabChip]}
+            onPress={() => setActiveTab('CONFIRMED')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.tabBadgeDot} />
+            <Text style={[styles.tabText, activeTab === 'CONFIRMED' && styles.activeTabText]}>
+              Confirmées
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tabChip, activeTab === 'IN_PROGRESS' && styles.activeTabChip]}
+            onPress={() => setActiveTab('IN_PROGRESS')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.tabText, activeTab === 'IN_PROGRESS' && styles.activeTabText]}>
+              En cours
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tabChip, activeTab === 'COMPLETED' && styles.activeTabChip]}
+            onPress={() => setActiveTab('COMPLETED')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.tabText, activeTab === 'COMPLETED' && styles.activeTabText]}>
+              Terminées
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refetch}
+            tintColor={theme.colors.brand.main}
+            colors={[theme.colors.brand.main]}
+          />
+        }
+      >
+        {loading && !refreshing ? (
+          <BookingCardSkeleton count={2} />
+        ) : bookings.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIconCircle}>
+              <CalendarX size={32} color="#64748B" />
+            </View>
+            <Text style={styles.emptyTitle}>Aucune réservation trouvée</Text>
+            <Text style={styles.emptySubtitle}>{error || "Vous n'avez actuellement aucune réservation dans cette catégorie."}</Text>
+            <TouchableOpacity style={styles.refreshBtn} onPress={refetch} activeOpacity={0.8}>
+              <RefreshCw size={14} color="#FFFFFF" />
+              <Text style={styles.refreshBtnText}>Actualiser</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          bookings.map((booking) => (
+            <TenantBookingCard
+              key={booking.id}
+              booking={booking}
+              onContactHost={handleContactHost}
+              onPressDetails={handlePressDetails}
             />
-            <View style={styles.carInfo}>
-              {/* Titre Logement/Véhicule : Fraunces_600SemiBold (Plafond 600) */}
-              <Text style={styles.carName}>Toyota Land Cruiser Prado VX</Text>
-              
-              {/* dates & lieux */}
-              <View style={styles.dateRow}>
-                <Calendar size={12} color={theme.colors.brand.main} />
-                <Text style={styles.carDates}>20 Sep 2026 - 25 Sep 2026 (5 nuits)</Text>
-              </View>
-              <View style={styles.locRow}>
-                <MapPin size={12} color={theme.colors.text.tertiary} />
-                <Text style={styles.carLocation}>Almadies, Dakar</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Carte Récapitulatif Sombre Surface Forest-950 (#072A20) */}
-          <View style={styles.recapCardDark}>
-            <View style={styles.recapHeaderRow}>
-              <Text style={styles.recapBlockTitle}>DÉTAIL DU RÈGLEMENT</Text>
-              <Text style={styles.recapDiscountLabel}>-10% REMISE LONG SÉJOUR</Text>
-            </View>
-
-            <View style={styles.recapLine}>
-              <Text style={styles.recapLabel}>Acompte 30% réglé (Orange Money) :</Text>
-              <Text style={styles.recapPaidVal}>{formatCurrency(67500)}</Text>
-            </View>
-
-            <View style={styles.recapLine}>
-              <Text style={styles.recapLabel}>Solde à la remise des clés :</Text>
-              <Text style={styles.recapRemainingVal}>{formatCurrency(157500)}</Text>
-            </View>
-
-            <View style={styles.recapDivider} />
-
-            {/* Total à Payer : Fraunces_600SemiBold en Émeraude Lumineux #86EFAC */}
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total Séjour :</Text>
-              <Text style={styles.totalValue}>{formatCurrency(225000)}</Text>
-            </View>
-          </View>
-        </AutoCard>
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -83,151 +149,101 @@ export const TenantBookingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.surface.page,
+    backgroundColor: '#F8FAFC',
+  },
+  tabsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    paddingVertical: 10,
+  },
+  tabsScrollContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  tabChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: theme.radius.full,
+    backgroundColor: '#F1F5F9',
+    gap: 6,
+  },
+  activeTabChip: {
+    backgroundColor: '#072A20', // Forest 950
+  },
+  tabBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+  },
+  tabText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 12.5,
+    color: '#475569',
+  },
+  activeTabText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    color: '#FFFFFF',
   },
   container: {
     padding: theme.spacing[4],
     gap: theme.spacing[4],
     paddingBottom: 110,
   },
-  bookingCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: theme.radius.card, // 20px (radius-card)
-    padding: theme.spacing[4],
-    gap: theme.spacing[4],
-    borderWidth: 1,
-    borderColor: '#E4EBDB',
-    ...theme.elevation.card,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  loaderContainer: {
+    paddingVertical: 48,
     alignItems: 'center',
+    gap: 12,
   },
-  bookingId: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 10,
-    color: '#7D8975',
-    letterSpacing: 0.5,
-  },
-  confirmedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.brand.subtle,
-    borderWidth: 1,
-    borderColor: theme.colors.brand.border,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: theme.radius.full, // Pilule 9999px
-    gap: 5,
-  },
-  confirmedBadgeText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 10,
-    color: theme.colors.brand.main,
-  },
-  carRow: {
-    flexDirection: 'row',
-    gap: theme.spacing[3],
-    alignItems: 'center',
-  },
-  carThumb: {
-    width: 72,
-    height: 72,
-    borderRadius: 14,
-  },
-  carInfo: {
-    flex: 1,
-    gap: 4,
-  },
-  carName: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold, // Fraunces_600SemiBold (17px)
-    fontSize: 17,
-    color: theme.primitives.forest[800], // forest-950 (#041912)
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  carDates: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 12,
-    color: theme.colors.brand.main,
-  },
-  locRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  carLocation: {
-    fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 12,
-    color: '#5F6B59',
-  },
-  recapCardDark: {
-    backgroundColor: '#072A20', // Forest Night Surface (#072A20)
-    borderRadius: 16,
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-  },
-  recapHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  recapBlockTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 10,
-    color: '#A8D5C1',
-    letterSpacing: 0.5,
-  },
-  recapDiscountLabel: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 10,
-    color: theme.primitives.emerald[300], // Émeraude lumineux
-  },
-  recapLine: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  recapLabel: {
+  loaderText: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 12,
-    color: '#A8D5C1',
-  },
-  recapPaidVal: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontVariant: ['tabular-nums'],
     fontSize: 13,
-    color: '#FFFFFF',
+    color: '#64748B',
   },
-  recapRemainingVal: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontVariant: ['tabular-nums'],
-    fontSize: 13,
-    color: theme.primitives.emerald[300],
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 48,
+    gap: 12,
   },
-  recapDivider: {
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    marginVertical: 2,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  emptyIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  totalLabel: {
+  emptyTitle: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 18,
+    color: theme.primitives.forest[800],
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  refreshBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.primitives.forest[800],
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: theme.radius.full,
+    gap: 8,
+    marginTop: 8,
+  },
+  refreshBtnText: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 13,
     color: '#FFFFFF',
-  },
-  totalValue: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold, // Fraunces_600SemiBold (18px)
-    fontVariant: ['tabular-nums'],
-    fontSize: 18,
-    color: theme.primitives.emerald[300], // Émeraude lumineux (#86EFAC)
   },
 });

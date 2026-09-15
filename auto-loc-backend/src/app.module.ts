@@ -21,6 +21,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { RevalidateModule } from './infrastructure/revalidate/revalidate.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { SupabaseModule } from './infrastructure/supabase/supabase.module';
 
 
 // Sentry (optional — active only if SENTRY_DSN is set)
@@ -66,6 +67,7 @@ if (SENTRY_DSN) {
     JwtModule,
     RedisModule,
     CloudinaryModule,
+    SupabaseModule,
     SharedModule,
     AuthModule,
     QueueModule,
@@ -86,4 +88,3 @@ if (SENTRY_DSN) {
   ],
 })
 export class AppModule { }
-

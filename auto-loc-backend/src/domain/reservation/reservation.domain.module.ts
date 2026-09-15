@@ -33,10 +33,10 @@ import { WalletDomainModule } from '../wallet/wallet.domain.module';
     providers: [
         // Domain services
         ReservationPricingService,
+        CancellationPolicyService,
         ReservationAvailabilityService,
         ReservationIdempotencyService,
         ReservationStateMachine,
-        CancellationPolicyService,
         ContractGenerationService,
         // Use cases
         CreateReservationUseCase,

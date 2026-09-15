@@ -120,6 +120,16 @@ export class ReservationsController {
     return this.reservationsService.cancel(user, reservationId, dto);
   }
 
+  @Get(':id/cancellation-quote')
+  @UseGuards(RolesGuard)
+  @Roles(RoleProfile.LOCATAIRE)
+  async getCancellationQuote(
+    @Req() req: Request & { user?: RequestUser },
+    @Param('id', ParseUUIDPipe) reservationId: string,
+  ) {
+    return this.reservationsService.getTenantCancellationQuote(req.user!, reservationId);
+  }
+
   /**
    * PATCH /reservations/:id/checkin?role=PROPRIETAIRE|LOCATAIRE
    * Double confirmation check-in : les DEUX parties doivent confirmer.
@@ -255,6 +265,16 @@ export class ReservationsController {
         'Cache-Control': 'no-store',
       })
       .end(buffer);
+  }
+
+  @Get(':id/contract-access')
+  @UseGuards(RolesGuard)
+  @Roles(RoleProfile.LOCATAIRE, RoleProfile.PROPRIETAIRE)
+  async getContractAccessUrl(
+    @Req() req: Request & { user?: RequestUser },
+    @Param('id', ParseUUIDPipe) reservationId: string,
+  ) {
+    return this.reservationsService.createContractAccessUrl(req.user!, reservationId);
   }
 
   /**

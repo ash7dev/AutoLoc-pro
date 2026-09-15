@@ -12,6 +12,7 @@ export interface SearchFiltersState {
   prixMax?: number;
   carburant?: string;
   transmission?: string;
+  sort?: 'RELEVANCE' | 'PRICE_ASC' | 'PRICE_DESC' | 'RATING';
 }
 
 export function useExploreFeed(filters: SearchFiltersState) {
@@ -21,6 +22,8 @@ export function useExploreFeed(filters: SearchFiltersState) {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
+  const [total, setTotal] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // User Geolocation state
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -35,6 +38,7 @@ export function useExploreFeed(filters: SearchFiltersState) {
     filters.prixMax ||
     filters.carburant ||
     filters.transmission
+    || (filters.sort && filters.sort !== 'RELEVANCE')
   );
 
   // Request location permission contextually when requested (e.g. user toggles Map view)
@@ -64,6 +68,7 @@ export function useExploreFeed(filters: SearchFiltersState) {
   const fetchFeedData = useCallback(
     async (isRefresh = false, targetPage = 1) => {
       try {
+        setError(null);
         if (targetPage === 1) {
           if (isRefresh) setRefreshing(true);
           else setLoading(true);
@@ -126,15 +131,31 @@ export function useExploreFeed(filters: SearchFiltersState) {
             params.transmission = filters.transmission.trim();
           }
 
+          if (filters.sort === 'PRICE_ASC') {
+            params.sortBy = 'prixParJour';
+            params.sortOrder = 'asc';
+          } else if (filters.sort === 'PRICE_DESC') {
+            params.sortBy = 'prixParJour';
+            params.sortOrder = 'desc';
+          } else if (filters.sort === 'RATING') {
+            params.sortBy = 'note';
+            params.sortOrder = 'desc';
+          }
+
           const res = await apiClient.get('/vehicles/search', { params });
           const searchData = res.data;
 
           if (Array.isArray(searchData)) {
             newItems = searchData;
             canLoadNext = searchData.length >= 10;
+            if (targetPage === 1) setTotal(searchData.length);
           } else if (searchData?.data && Array.isArray(searchData.data)) {
             newItems = searchData.data;
-            canLoadNext = targetPage < (searchData.totalPages || 1);
+            const resultTotal = typeof searchData.total === 'number' ? searchData.total : null;
+            if (targetPage === 1) setTotal(resultTotal);
+            canLoadNext = resultTotal !== null
+              ? targetPage * 10 < resultTotal
+              : newItems.length >= 10;
           }
         } else {
           // MODE 2: Filters Empty -> Instagram-style continuous stream
@@ -165,6 +186,7 @@ export function useExploreFeed(filters: SearchFiltersState) {
               });
             }
             canLoadNext = true;
+            if (targetPage === 1) setTotal(newItems.length);
           } else {
             // Page 2+: Fetch general paginated search to continue infinite scroll
             const res = await apiClient.get('/vehicles/search', {
@@ -174,6 +196,7 @@ export function useExploreFeed(filters: SearchFiltersState) {
             const fetched = Array.isArray(searchData) ? searchData : searchData?.data || [];
             newItems = fetched;
             canLoadNext = fetched.length >= 10;
+            if (targetPage === 1) setTotal(fetched.length);
           }
         }
 
@@ -191,6 +214,7 @@ export function useExploreFeed(filters: SearchFiltersState) {
         setHasMore(canLoadNext);
       } catch (err) {
         console.error('Erreur chargement feed explorer:', err);
+        setError('Impossible de charger les véhicules. Vérifiez votre connexion puis réessayez.');
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -220,6 +244,8 @@ export function useExploreFeed(filters: SearchFiltersState) {
     loadingMore,
     refreshing,
     hasMore,
+    total,
+    error,
     refetch,
     loadMore,
     userLocation,

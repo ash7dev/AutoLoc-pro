@@ -45,6 +45,9 @@ import {
   ContractPdfService,
   ContractData,
 } from '../../infrastructure/contract/contract-pdf.service';
+import { CancellationPolicyService } from '../../domain/reservation/cancellation-policy.service';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 export { CreateReservationResult };
 
@@ -76,11 +79,14 @@ function serializeReservation(r: Record<string, unknown> & {
   checkoutLe?: Date | string | null;
   annuleLe?: Date | string | null;
   contratUrl?: string | null;
+  paymentUrl?: string | null;
   proprietaireId: string;
   locataire?: unknown;
   proprietaire?: unknown;
   vehicule?: unknown;
   paiement?: unknown;
+  historique?: unknown;
+  litige?: unknown;
 }) {
   const debut = new Date(r.dateDebut as string);
   const fin = new Date(r.dateFin as string);
@@ -115,6 +121,7 @@ function serializeReservation(r: Record<string, unknown> & {
     annuleeLe: r.annuleLe ?? undefined,
     raisonAnnulation: (r as Record<string, unknown>).raisonAnnulation as string | undefined ?? undefined,
     contratUrl: r.contratUrl ?? undefined,
+    paymentUrl: (r as Record<string, unknown>).paymentUrl as string | undefined ?? undefined,
     proprietaireId: r.proprietaireId,
     adresseLivraison: (r as Record<string, unknown>).adresseLivraison ?? null,
     fraisLivraison: (r as Record<string, unknown>).fraisLivraison != null
@@ -148,6 +155,8 @@ function serializeReservation(r: Record<string, unknown> & {
     paiement: r.paiement,
     photosEtatLieu: (r as Record<string, unknown>).photosEtatLieu ?? undefined,
     avis: (r as Record<string, unknown>).avis ?? undefined,
+    historique: (r as Record<string, unknown>).historique ?? [],
+    litige: (r as Record<string, unknown>).litige ?? null,
   };
 }
 
@@ -164,6 +173,9 @@ export class ReservationsService {
     private readonly refuseVehicleUseCase: RefuseVehicleUseCase,
     private readonly cloudinaryService: CloudinaryService,
     private readonly contractPdfService: ContractPdfService,
+    private readonly cancellationPolicy: CancellationPolicyService,
+    private readonly jwtService: JwtService,
+    private readonly config: ConfigService,
   ) { }
 
   // ── POST /reservations ────────────────────────────────────────────────────────
@@ -691,7 +703,17 @@ export class ReservationsService {
       this.prisma.reservation.count({ where }),
     ]);
 
-    return { data: reservations.map(serializeReservation), total, page, limit: take };
+    const now = Date.now();
+    const data = reservations.map((reservation) => {
+      const serialized = serializeReservation(reservation as Parameters<typeof serializeReservation>[0]);
+      const canRevealOwnerPhone = reservation.statut === StatutReservation.EN_COURS
+        || reservation.statut === StatutReservation.LITIGE
+        || (reservation.statut === StatutReservation.CONFIRMEE
+          && new Date(reservation.dateDebut).getTime() - now <= 24 * 60 * 60 * 1000);
+      if (!canRevealOwnerPhone && serialized.proprietaire) serialized.proprietaire.telephone = undefined;
+      return serialized;
+    });
+    return { data, total, page, limit: take };
   }
 
   // ── GET /reservations/owner/stats ────────────────────────────────────────────
@@ -811,6 +833,16 @@ export class ReservationsService {
           orderBy: [{ type: 'asc' }, { position: 'asc' }],
         },
         litige: true,
+        historique: {
+          orderBy: { modifieLe: 'asc' },
+          select: {
+            id: true,
+            ancienStatut: true,
+            nouveauStatut: true,
+            modifiePar: true,
+            modifieLe: true,
+          },
+        },
         avis: {
           where: { auteurId: utilisateur.id },
           select: {
@@ -829,7 +861,58 @@ export class ReservationsService {
       reservation.proprietaireId === utilisateur.id;
     if (!isParty) throw new ForbiddenException('Accès refusé');
 
-    return serializeReservation(reservation as Parameters<typeof serializeReservation>[0]);
+    const serialized = serializeReservation(reservation as Parameters<typeof serializeReservation>[0]);
+    const isTenant = reservation.locataireId === utilisateur.id;
+    const canRevealOwnerPhone = !isTenant
+      || reservation.statut === StatutReservation.EN_COURS
+      || reservation.statut === StatutReservation.LITIGE
+      || (reservation.statut === StatutReservation.CONFIRMEE
+        && new Date(reservation.dateDebut).getTime() - Date.now() <= 24 * 60 * 60 * 1000);
+
+    if (!canRevealOwnerPhone && serialized.proprietaire) {
+      serialized.proprietaire.telephone = undefined;
+    }
+    return serialized;
+  }
+
+  async getTenantCancellationQuote(user: RequestUser, reservationId: string) {
+    const utilisateur = await this.prisma.utilisateur.findUnique({ where: { userId: user.sub }, select: { id: true } });
+    if (!utilisateur) throw new ForbiddenException('Profil incomplet');
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: reservationId },
+      select: { locataireId: true, statut: true, dateDebut: true, totalLocataire: true, totalBase: true, montantCommission: true, netProprietaire: true },
+    });
+    if (!reservation) throw new NotFoundException('Réservation introuvable');
+    if (reservation.locataireId !== utilisateur.id) throw new ForbiddenException('Accès refusé');
+    const cancellableStatuses: StatutReservation[] = [StatutReservation.EN_ATTENTE_PAIEMENT, StatutReservation.PAYEE, StatutReservation.CONFIRMEE];
+    if (!cancellableStatuses.includes(reservation.statut)) {
+      throw new BadRequestException('Cette réservation ne peut plus être annulée');
+    }
+    const quote = this.cancellationPolicy.calculateForTenant(reservation, new Date(), reservation.statut === StatutReservation.CONFIRMEE);
+    return { canCancel: quote.canCancel, refundPercentage: quote.refundPercentage, refundAmount: quote.refundAmount.toString(), commissionRetained: quote.commissionRetained.toString(), warnings: quote.warnings };
+  }
+
+  async createContractAccessUrl(user: RequestUser, reservationId: string) {
+    await this.getContratBuffer(user, reservationId);
+    const token = await this.jwtService.signAsync(
+      { sub: user.sub, purpose: 'reservation-contract', reservationId },
+      { expiresIn: '5m' },
+    );
+    const baseUrl = (this.config.get<string>('PUBLIC_API_URL') || this.config.get<string>('API_URL') || 'https://api.autoloc.sn').replace(/\/$/, '');
+    const accessUrl = `${baseUrl}/reservation-contracts/${reservationId}?token=${encodeURIComponent(token)}`;
+    return {
+      viewUrl: accessUrl,
+      downloadUrl: `${accessUrl}&download=1`,
+      expiresInSeconds: 300,
+    };
+  }
+
+  async getContractFromAccessToken(reservationId: string, token: string) {
+    const payload = await this.jwtService.verifyAsync<{ sub?: string; purpose?: string; reservationId?: string }>(token);
+    if (payload.purpose !== 'reservation-contract' || payload.reservationId !== reservationId || !payload.sub) {
+      throw new ForbiddenException('Lien de contrat invalide');
+    }
+    return this.getContratBuffer({ sub: payload.sub }, reservationId);
   }
 
   // ── ADMIN ──────────────────────────────────────────────────────────────────

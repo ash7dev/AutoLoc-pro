@@ -26,6 +26,8 @@ import { CloudinaryService } from '../../infrastructure/cloudinary/cloudinary.se
 import { ALLOWED_MIMES, VEHICLE_PHOTO_MULTER_OPTIONS } from '../upload/upload.config';
 import { assertValidImageBuffer } from '../../infrastructure/cloudinary/utils/file-validator';
 import { RevalidateService } from '../../infrastructure/revalidate/revalidate.service';
+import { SecurityService } from './security.service';
+import { UpdateSecurityDto } from './dto/update-security.dto';
 
 @Controller('users/me')
 @UseGuards(JwtAuthGuard)
@@ -36,6 +38,7 @@ export class ProfileController {
         private readonly prisma: PrismaService,
         private readonly cloudinaryService: CloudinaryService,
         private readonly revalidate: RevalidateService,
+        private readonly securityService: SecurityService,
     ) { }
 
     /**
@@ -110,6 +113,15 @@ export class ProfileController {
         };
     }
 
+    @Patch('security')
+    @HttpCode(HttpStatus.OK)
+    async updateSecurity(
+        @Req() req: Request & { user?: RequestUser },
+        @Body() dto: UpdateSecurityDto,
+    ) {
+        return this.securityService.update(req.user!.sub, dto);
+    }
+
     /**
      * PATCH /users/me/profile
      * Met à jour le profil de l'utilisateur connecté.
@@ -146,26 +158,27 @@ export class ProfileController {
             });
         }
 
-        // Vérifier si l'email est déjà utilisé par un autre utilisateur
-        if (dto.email !== undefined && dto.email !== utilisateur.email) {
-            const existingWithEmail = await this.prisma.utilisateur.findFirst({
-                where: {
-                    email: dto.email,
-                    userId: { not: user.sub },
-                },
-            });
-            if (existingWithEmail) {
-                throw new ForbiddenException('Cet email est déjà utilisé par un autre compte');
-            }
+        // Rétrocompatibilité Web : une demande d'e-mail faite via l'ancien
+        // endpoint est déléguée au service sécurité, seul endroit qui synchronise
+        // Supabase Auth, profiles et utilisateur.
+        if (dto.email !== undefined) {
+            await this.securityService.update(user.sub, { email: dto.email });
         }
 
         const data: Record<string, unknown> = {};
         if (dto.prenom !== undefined) data.prenom = dto.prenom;
         if (dto.nom !== undefined) data.nom = dto.nom;
-        if (dto.email !== undefined) data.email = dto.email;
         if (dto.avatarUrl !== undefined) data.avatarUrl = dto.avatarUrl;
         if (dto.dateNaissance !== undefined) {
             data.dateNaissance = new Date(dto.dateNaissance);
+        }
+
+        // Un profil complété depuis mobile doit être reconnu par les gardes
+        // de réservation et de publication.
+        if (dto.prenom !== undefined || dto.nom !== undefined || dto.dateNaissance !== undefined) {
+            data.profileCompleted = Boolean(dto.prenom ?? utilisateur.prenom)
+                && Boolean(dto.nom ?? utilisateur.nom)
+                && Boolean(dto.dateNaissance ?? utilisateur.dateNaissance);
         }
 
         let kycResetMsg = false;
@@ -179,6 +192,7 @@ export class ProfileController {
             if (utilisateur.statutKyc !== 'NON_VERIFIE') {
                 data.statutKyc = 'NON_VERIFIE';
                 data.kycDocumentUrl = null;
+                data.kycDocumentBackUrl = null;
                 data.kycSelfieUrl = null;
                 data.kycRejectionReason = null;
                 kycResetMsg = true;
@@ -194,18 +208,10 @@ export class ProfileController {
                 nom: true,
                 avatarUrl: true,
                 dateNaissance: true,
+                profileCompleted: true,
                 misAJourLe: true,
             },
         });
-
-        // Si l'email a changé, mettre à jour aussi le Profile
-        if (dto.email !== undefined && dto.email !== utilisateur.email) {
-            await this.prisma.profile.update({
-                where: { userId: user.sub },
-                data: { email: dto.email },
-            });
-            this.logger.log(`[UPDATE PROFILE] Email updated in Profile table: ${dto.email}`);
-        }
 
         // Invalider le cache du profil utilisateur
         this.revalidate.revalidatePath('/dashboard/owner').catch(() => { });

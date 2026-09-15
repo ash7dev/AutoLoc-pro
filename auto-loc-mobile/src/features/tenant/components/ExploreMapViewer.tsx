@@ -23,7 +23,8 @@ const DAKAR_REGION = {
   longitudeDelta: 0.12,
 };
 
-// Fixed mock fallback coordinates for Dakar neighborhoods if vehicle has no exact lat/lng
+// City centroids are deliberately used only as an approximate fallback. We never
+// fabricate a precise listing position from a vehicle identifier.
 const DAKAR_LOCATIONS: Record<string, { latitude: number; longitude: number }> = {
   Almadies: { latitude: 14.7456, longitude: -17.5189 },
   Plateau: { latitude: 14.6672, longitude: -17.4344 },
@@ -54,20 +55,12 @@ const PriceMarker = memo(({
   onSelect: (v: VehicleFeedItem) => void;
   formattedPrice: string;
 }) => {
-  // Determine coordinates: exact lat/lng or fallback based on city/hash
-  const coords = React.useMemo(() => {
+  const { coords, isApproximate } = React.useMemo(() => {
     if (vehicle.latitude && vehicle.longitude) {
-      return { latitude: vehicle.latitude, longitude: vehicle.longitude };
+      return { coords: { latitude: vehicle.latitude, longitude: vehicle.longitude }, isApproximate: false };
     }
-    const locMatch = DAKAR_LOCATIONS[vehicle.ville] || DAKAR_LOCATIONS['Almadies'];
-    // Add deterministic micro offset based on vehicle ID string char codes
-    const hash = vehicle.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const latOffset = ((hash % 30) - 15) * 0.003;
-    const lngOffset = (((hash * 7) % 30) - 15) * 0.003;
-    return {
-      latitude: locMatch.latitude + latOffset,
-      longitude: locMatch.longitude + lngOffset,
-    };
+    const location = DAKAR_LOCATIONS[vehicle.ville] || DAKAR_REGION;
+    return { coords: location, isApproximate: true };
   }, [vehicle]);
 
   return (
@@ -89,7 +82,7 @@ const PriceMarker = memo(({
             isSelected && styles.markerTextSelected,
           ]}
         >
-          {formattedPrice}
+          {isApproximate ? '≈ ' : ''}{formattedPrice}
         </Text>
       </View>
     </Marker>
@@ -142,6 +135,10 @@ export const ExploreMapViewer: React.FC<ExploreMapViewerProps> = ({
           />
         ))}
       </MapView>
+
+      <View style={styles.locationNotice} pointerEvents="none">
+        <Text style={styles.locationNoticeText}>≈ Zone de prise en charge indicative</Text>
+      </View>
 
       {/* Overlay Mini Card lors de la sélection d'un marqueur */}
       {selectedVehicle && (
@@ -272,6 +269,20 @@ const styles = StyleSheet.create({
         elevation: 8,
       },
     }),
+  },
+  locationNotice: {
+    position: 'absolute',
+    top: 14,
+    alignSelf: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.94)',
+  },
+  locationNoticeText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 11,
+    color: '#475569',
   },
   closeCardBtn: {
     position: 'absolute',

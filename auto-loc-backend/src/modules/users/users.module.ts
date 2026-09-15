@@ -4,10 +4,11 @@ import { AdminController } from './admin.controller';
 import { ProfileController } from './profile.controller';
 import { UsersService } from './users.service';
 import { RevalidateModule } from '../../infrastructure/revalidate/revalidate.module';
+import { SecurityService } from './security.service';
 
 @Module({
   imports: [RevalidateModule],
   controllers: [UsersController, AdminController, ProfileController],
-  providers: [UsersService],
+  providers: [UsersService, SecurityService],
 })
 export class UsersModule { }

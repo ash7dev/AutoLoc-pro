@@ -31,6 +31,11 @@ export interface SearchFilters {
   type: string;
   dateDebut?: string;
   dateFin?: string;
+  prixMin?: number;
+  prixMax?: number;
+  carburant?: string;
+  transmission?: string;
+  sort?: 'RELEVANCE' | 'PRICE_ASC' | 'PRICE_DESC' | 'RATING';
 }
 
 interface AppState {

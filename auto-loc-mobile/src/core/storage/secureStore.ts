@@ -4,6 +4,7 @@ const TOKEN_KEY = 'autoloc_jwt_token';
 const REFRESH_TOKEN_KEY = 'autoloc_refresh_token';
 const USER_KEY = 'autoloc_user_data';
 const ONBOARDING_KEY = 'autoloc_has_seen_onboarding';
+const FAVORITE_VEHICLES_KEY = 'autoloc_favorite_vehicle_ids';
 
 export const secureStorage = {
   async getToken(): Promise<string | null> {
@@ -96,6 +97,25 @@ export const secureStorage = {
       await SecureStore.setItemAsync(ONBOARDING_KEY, 'true');
     } catch (e) {
       console.error('SecureStore setHasSeenOnboarding error:', e);
+    }
+  },
+
+  async getFavoriteVehicleIds(): Promise<string[]> {
+    try {
+      const json = await SecureStore.getItemAsync(FAVORITE_VEHICLES_KEY);
+      const ids: unknown = json ? JSON.parse(json) : [];
+      return Array.isArray(ids) && ids.every((id) => typeof id === 'string') ? ids : [];
+    } catch (e) {
+      console.warn('SecureStore getFavoriteVehicleIds error:', e);
+      return [];
+    }
+  },
+
+  async setFavoriteVehicleIds(ids: string[]): Promise<void> {
+    try {
+      await SecureStore.setItemAsync(FAVORITE_VEHICLES_KEY, JSON.stringify(ids));
+    } catch (e) {
+      console.error('SecureStore setFavoriteVehicleIds error:', e);
     }
   },
 

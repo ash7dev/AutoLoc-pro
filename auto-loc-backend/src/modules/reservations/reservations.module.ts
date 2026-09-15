@@ -13,10 +13,11 @@ import { RevalidateModule } from '../../infrastructure/revalidate/revalidate.mod
 import { AdminReservationsController } from './admin-reservations.controller';
 import { AdminCancellationsController } from './admin-cancellations.controller';
 import { CleanupPhotosTask } from './cleanup-photos.task';
+import { ReservationContractAccessController } from './reservation-contract-access.controller';
 
 @Module({
   imports: [ReservationDomainModule, DisputesModule, CloudinaryModule, ContractModule, QueueModule, RevalidateModule],
-  controllers: [ReservationsController, AdminReservationsController, AdminCancellationsController],
+  controllers: [ReservationsController, ReservationContractAccessController, AdminReservationsController, AdminCancellationsController],
   providers: [
     ReservationsService,
     JwtAuthGuard,

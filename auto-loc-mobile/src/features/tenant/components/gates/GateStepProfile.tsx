@@ -87,8 +87,9 @@ export const GateStepProfile: React.FC<GateStepProfileProps> = ({ onSuccess }) =
 
     setSubmitting(true);
     try {
-      // 1. Envoyer au serveur backend NestJS via l'endpoint de profil
-      await apiClient.post('/auth/complete-profile', {
+      // Le profil existe déjà après connexion : l'endpoint dédié évite de
+      // réinitialiser le téléphone et applique la politique KYC centrale.
+      await apiClient.patch('/users/me/profile', {
         prenom: prenom.trim(),
         nom: nom.trim(),
         dateNaissance: dateNaissance.trim(),
