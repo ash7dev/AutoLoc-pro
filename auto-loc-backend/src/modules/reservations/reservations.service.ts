@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { StatutReservation, StatutVehicule, StatutLitige, TypeEtatLieu, CategoriePhoto } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -908,7 +909,12 @@ export class ReservationsService {
   }
 
   async getContractFromAccessToken(reservationId: string, token: string) {
-    const payload = await this.jwtService.verifyAsync<{ sub?: string; purpose?: string; reservationId?: string }>(token);
+    let payload: { sub?: string; purpose?: string; reservationId?: string };
+    try {
+      payload = await this.jwtService.verifyAsync<{ sub?: string; purpose?: string; reservationId?: string }>(token);
+    } catch {
+      throw new UnauthorizedException('Lien de contrat expiré ou invalide');
+    }
     if (payload.purpose !== 'reservation-contract' || payload.reservationId !== reservationId || !payload.sub) {
       throw new ForbiddenException('Lien de contrat invalide');
     }
