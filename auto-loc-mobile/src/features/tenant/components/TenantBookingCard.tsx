@@ -5,6 +5,8 @@ import {
   View,
   TouchableOpacity,
   Platform,
+  Alert,
+  Linking,
 } from 'react-native';
 import { Image } from 'expo-image';
 import {
@@ -16,6 +18,8 @@ import {
   MessageSquare,
   ShieldCheck,
   AlertTriangle,
+  UserCheck,
+  Sparkles,
 } from 'lucide-react-native';
 import { formatCurrency } from '@autoloc/shared';
 import { theme } from '../../../core/theme';
@@ -27,14 +31,14 @@ const DEFAULT_CAR_THUMB =
 export interface TenantBookingItem {
   id: string;
   statut:
-    | 'EN_ATTENTE_PAIEMENT'
-    | 'PAYEE'
-    | 'CONFIRMEE'
-    | 'EN_COURS'
-    | 'TERMINEE'
-    | 'ANNULEE'
-    | 'LITIGE'
-    | string;
+  | 'EN_ATTENTE_PAIEMENT'
+  | 'PAYEE'
+  | 'CONFIRMEE'
+  | 'EN_COURS'
+  | 'TERMINEE'
+  | 'ANNULEE'
+  | 'LITIGE'
+  | string;
   dateDebut: string | Date;
   dateFin: string | Date;
   nbJours?: number;
@@ -73,15 +77,18 @@ export interface TenantBookingItem {
 export interface TenantBookingCardProps {
   booking: TenantBookingItem;
   onPressDetails?: (booking: TenantBookingItem) => void;
-  onContactHost?: (booking: TenantBookingItem) => void;
 }
+
+// Parsing numérique sûr : jamais de NaN affiché à l'utilisateur
+const safeNumber = (val: unknown, fallback = 0): number => {
+  const n = Number(val);
+  return Number.isFinite(n) ? n : fallback;
+};
 
 export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
   booking,
   onPressDetails,
-  onContactHost,
 }) => {
-  // Safe helper for formatting dates
   const formatDateStr = (dateVal?: string | Date) => {
     if (!dateVal) return '';
     try {
@@ -100,7 +107,6 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
   const startDateFormatted = formatDateStr(booking.dateDebut);
   const endDateFormatted = formatDateStr(booking.dateFin);
 
-  // Compute thumbnail
   const thumbUrl = React.useMemo(() => {
     if (booking.vehicule?.photos && booking.vehicule.photos.length > 0) {
       const first = booking.vehicule.photos[0];
@@ -109,21 +115,46 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
     return booking.vehicule?.photoUrl || DEFAULT_CAR_THUMB;
   }, [booking.vehicule]);
 
-  // Compute numeric values safely
-  const paidOnline = Number(booking.montantPayeEnLigne ?? booking.paiement?.montant ?? 0);
-  const remainingSolde = Number(booking.montantSoldeCheckin ?? 0);
-  const totalAmount = Number(booking.prixTotal ?? (paidOnline + remainingSolde));
+  const paidOnline = safeNumber(booking.montantPayeEnLigne ?? booking.paiement?.montant);
+  const remainingSolde = safeNumber(booking.montantSoldeCheckin);
+  const totalAmount = safeNumber(booking.prixTotal, paidOnline + remainingSolde);
 
-  // Compute display status badge
+  const statusCode = (booking.statut || '').toUpperCase();
+  const bookingRef = booking.id ? booking.id.slice(0, 10).toUpperCase() : '—';
+
+  // Pastille "Dans X jours" façon Airbnb, uniquement pour les séjours à venir et actifs
+  const upcomingChip = React.useMemo(() => {
+    if (!['PAYEE', 'CONFIRMEE'].includes(statusCode)) return null;
+    const start = new Date(booking.dateDebut);
+    if (isNaN(start.getTime())) return null;
+
+    const now = new Date();
+    const startMidnight = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.round((startMidnight.getTime() - todayMidnight.getTime()) / 86400000);
+
+    if (diffDays < 0) return null;
+    if (diffDays === 0) return 'Aujourd’hui';
+    if (diffDays === 1) return 'Demain';
+    if (diffDays <= 30) return `Dans ${diffDays} jours`;
+    return null;
+  }, [statusCode, booking.dateDebut]);
+
   const renderStatusBadge = () => {
-    const s = (booking.statut || '').toUpperCase();
-    switch (s) {
+    switch (statusCode) {
       case 'CONFIRMEE':
-      case 'PAYEE':
         return (
           <View style={styles.badgeSuccess}>
             <CheckCircle size={13} color="#059669" />
             <Text style={styles.badgeSuccessText}>CONFIRMÉE</Text>
+          </View>
+        );
+      case 'PAYEE':
+        // Le paiement est passé, mais l'hôte n'a pas encore confirmé : distinct de CONFIRMEE
+        return (
+          <View style={styles.badgeInfo}>
+            <CheckCircle size={13} color="#4338CA" />
+            <Text style={styles.badgeInfoText}>PAIEMENT REÇU</Text>
           </View>
         );
       case 'EN_COURS':
@@ -145,7 +176,7 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
         return (
           <View style={styles.badgeDanger}>
             <AlertTriangle size={13} color="#DC2626" />
-            <Text style={styles.badgeDangerText}>{s === 'LITIGE' ? 'LITIGE' : 'ANNULÉE'}</Text>
+            <Text style={styles.badgeDangerText}>{statusCode === 'LITIGE' ? 'LITIGE' : 'ANNULÉE'}</Text>
           </View>
         );
       default:
@@ -162,16 +193,34 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
     booking.paiement?.fournisseur === 'ORANGE_MONEY'
       ? 'Orange Money'
       : booking.paiement?.fournisseur === 'WAVE'
-      ? 'Wave'
-      : 'Paiement en ligne';
+        ? 'Wave'
+        : 'Paiement en ligne';
+
+  const ownerFirstName = booking.proprietaire?.prenom;
+  const ownerPhone = booking.proprietaire?.telephone;
+
+  const handleContactOwner = async () => {
+    if (!ownerPhone) return;
+    const url = `tel:${ownerPhone.replace(/\s+/g, '')}`;
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (!canOpen) throw new Error('tel: non supporté');
+      await Linking.openURL(url);
+    } catch (error) {
+      console.warn('[TenantBookingCard] Appel hôte impossible:', error);
+      Alert.alert('Appel impossible', 'Le numéro de l’hôte n’est pas disponible pour le moment.');
+    }
+  };
+
+  const carLabel = `${booking.vehicule?.marque || ''} ${booking.vehicule?.modele || ''}`.trim();
 
   return (
     <AutoCard variant="elevated" style={styles.bookingCard}>
       {/* Ligne En-tête : Numéro de réservation Mono & Badge statut */}
       <View style={styles.statusRow}>
         <View style={styles.idGroup}>
-          <Text style={styles.idMicroLabel}>RÉSERVATION</Text>
-          <Text style={styles.bookingId}>#{booking.id.slice(0, 10).toUpperCase()}</Text>
+          <Text style={styles.idMicroLabel}>RÉSERVATION AUTOLOC</Text>
+          <Text style={styles.bookingId}>#{bookingRef}</Text>
         </View>
 
         {renderStatusBadge()}
@@ -179,37 +228,55 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
 
       {/* Infos Véhicule : Thumbnail + Titre Fraunces 600 */}
       <View style={styles.carRow}>
-        <Image source={{ uri: thumbUrl }} style={styles.carThumb} contentFit="cover" transition={200} />
+        <Image
+          source={{ uri: thumbUrl }}
+          style={styles.carThumb}
+          contentFit="cover"
+          transition={180}
+          accessibilityLabel={carLabel ? `Photo du véhicule ${carLabel}` : 'Photo du véhicule'}
+        />
         <View style={styles.carInfo}>
-          {/* Titre véhicule : Fraunces_600SemiBold (Plafond 600) */}
           <Text style={styles.carName} numberOfLines={1}>
             {booking.vehicule?.marque} {booking.vehicule?.modele}{' '}
             {booking.vehicule?.annee ? `(${booking.vehicule.annee})` : ''}
           </Text>
 
-          {/* Dates & Durée */}
           <View style={styles.dateRow}>
             <Calendar size={13} color={theme.colors.brand.main} />
             <Text style={styles.carDates}>
               {startDateFormatted} - {endDateFormatted}
               {booking.nbJours ? ` (${booking.nbJours}j)` : ''}
             </Text>
+            {upcomingChip && (
+              <View style={styles.upcomingChip}>
+                <Sparkles size={10} color="#B45309" />
+                <Text style={styles.upcomingChipText}>{upcomingChip}</Text>
+              </View>
+            )}
           </View>
 
-          {/* Localisation */}
           <View style={styles.locRow}>
             <MapPin size={13} color="#64748B" />
             <Text style={styles.carLocation}>
               {booking.vehicule?.ville || 'Dakar'} • Sénégal
             </Text>
           </View>
+
+          {ownerFirstName && (
+            <View style={styles.ownerRow}>
+              <UserCheck size={13} color="#059669" />
+              <Text style={styles.ownerText} numberOfLines={1}>
+                Loué par {ownerFirstName}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 
       {/* Carte Récapitulatif Règlements Sombre Surface Forest-950 (#072A20) */}
       <View style={styles.recapCardDark}>
         <View style={styles.recapHeaderRow}>
-          <Text style={styles.recapBlockTitle}>DÉTAIL DU RÈGLEMENT</Text>
+          <Text style={styles.recapBlockTitle}>RÈGLEMENT SÉCURISÉ</Text>
           {booking.discountLabel ? (
             <Text style={styles.recapDiscountLabel}>{booking.discountLabel}</Text>
           ) : null}
@@ -235,31 +302,35 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
 
         <View style={styles.recapDivider} />
 
-        {/* Total Séjour : Inter_800ExtraBold en Émeraude Lumineux #86EFAC */}
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total Séjour :</Text>
           <Text style={styles.totalValue}>{formatCurrency(totalAmount)}</Text>
         </View>
       </View>
 
-      {/* Actions Inférieures (Contacter l'hôte & Détails) */}
       <View style={styles.actionsRow}>
-        <TouchableOpacity
-          style={styles.actionBtnSecondary}
-          onPress={() => onContactHost?.(booking)}
-          activeOpacity={0.8}
-        >
-          <MessageSquare size={14} color={theme.primitives.forest[800]} />
-          <Text style={styles.actionBtnSecondaryText}>Contacter l'hôte</Text>
-        </TouchableOpacity>
+        {ownerPhone && (
+          <TouchableOpacity
+            style={styles.actionBtnSecondary}
+            onPress={handleContactOwner}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={`Contacter ${ownerFirstName || 'l’hôte'} par téléphone`}
+          >
+            <MessageSquare size={15} color={theme.primitives.forest[800]} />
+            <Text style={styles.actionBtnSecondaryText}>Contacter</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
-          style={styles.actionBtnPrimary}
+          style={[styles.actionBtnPrimary, ownerPhone && styles.actionBtnPrimaryFlex]}
           onPress={() => onPressDetails?.(booking)}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={`Gérer la réservation ${carLabel}`}
         >
-          <Text style={styles.actionBtnPrimaryText}>Détails</Text>
-          <ChevronRight size={14} color="#FFFFFF" />
+          <Text style={styles.actionBtnPrimaryText}>Gérer la réservation</Text>
+          <ChevronRight size={15} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </AutoCard>
@@ -269,7 +340,7 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
 const styles = StyleSheet.create({
   bookingCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 24,
     padding: theme.spacing[4],
     gap: theme.spacing[4],
     borderWidth: 1,
@@ -277,9 +348,9 @@ const styles = StyleSheet.create({
     ...Platform.select({
       ios: {
         shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.06,
-        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.07,
+        shadowRadius: 16,
       },
       android: {
         elevation: 3,
@@ -324,6 +395,23 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 10.5,
     color: '#059669',
+    letterSpacing: 0.4,
+  },
+  badgeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E0E7FF',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: theme.radius.full,
+    gap: 5,
+  },
+  badgeInfoText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 10.5,
+    color: '#4338CA',
     letterSpacing: 0.4,
   },
   badgeInProgress: {
@@ -397,21 +485,24 @@ const styles = StyleSheet.create({
   carRow: {
     flexDirection: 'row',
     gap: 12,
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   carThumb: {
-    width: 76,
-    height: 76,
-    borderRadius: 14,
+    width: 84,
+    height: 84,
+    borderRadius: 18,
     backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: 'rgba(15, 23, 42, 0.06)',
   },
   carInfo: {
     flex: 1,
     gap: 5,
+    paddingTop: 1,
   },
   carName: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 17.5,
+    fontSize: 18,
     color: theme.primitives.forest[800],
     letterSpacing: -0.2,
   },
@@ -419,11 +510,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
+    flexWrap: 'wrap',
   },
   carDates: {
     fontFamily: theme.typography.fontFamily.medium,
     fontSize: 12.5,
     color: theme.colors.brand.main,
+  },
+  upcomingChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginLeft: 2,
+  },
+  upcomingChipText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 10,
+    color: '#B45309',
   },
   locRow: {
     flexDirection: 'row',
@@ -435,9 +542,20 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: '#64748B',
   },
+  ownerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 1,
+  },
+  ownerText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 12,
+    color: '#059669',
+  },
   recapCardDark: {
     backgroundColor: '#072A20', // Forest Night Surface
-    borderRadius: 16,
+    borderRadius: 18,
     padding: theme.spacing[4],
     gap: theme.spacing[3],
   },
@@ -448,7 +566,7 @@ const styles = StyleSheet.create({
   },
   recapBlockTitle: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 10,
+    fontSize: 9.5,
     color: '#A8D5C1',
     letterSpacing: 0.8,
   },
@@ -507,14 +625,16 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   actionBtnSecondary: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#F1F5F9',
-    paddingVertical: 10,
-    borderRadius: theme.radius.full,
+    paddingHorizontal: 16,
+    minHeight: 48,
+    borderRadius: 14,
     gap: 6,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   actionBtnSecondaryText: {
     fontFamily: theme.typography.fontFamily.bold,
@@ -522,14 +642,22 @@ const styles = StyleSheet.create({
     color: theme.primitives.forest[800],
   },
   actionBtnPrimary: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.primitives.forest[800],
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: theme.radius.full,
-    gap: 4,
+    minHeight: 48,
+    borderRadius: 14,
+    gap: 6,
+    shadowColor: theme.primitives.forest[800],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  actionBtnPrimaryFlex: {
+    flex: 1,
   },
   actionBtnPrimaryText: {
     fontFamily: theme.typography.fontFamily.bold,

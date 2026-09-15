@@ -22,6 +22,8 @@ import { VehicleDetailScreen } from '../../features/tenant/screens/VehicleDetail
 import { TenantBookingDetailScreen } from '../../features/tenant/screens/TenantBookingDetailScreen';
 import { VehicleFeedItem } from '../../features/tenant/types';
 import { TenantTabType } from '../../shared/components/TenantTabBar';
+import { OwnerTabType } from '../../shared/components/OwnerTabBar';
+import { OwnerMainLayout } from '../../features/owner/screens/OwnerMainLayout';
 import { LoginScreen } from '../../features/auth/screens/LoginScreen';
 import { RegisterScreen } from '../../features/auth/screens/RegisterScreen';
 import { OtpScreen } from '../../features/auth/screens/OtpScreen';
@@ -32,6 +34,7 @@ export type AppScreenRoute =
   | { name: 'SPLASH' }
   | { name: 'ONBOARDING' }
   | { name: 'TENANT_MAIN'; initialTab?: TenantTabType }
+  | { name: 'OWNER_MAIN'; initialTab?: OwnerTabType }
   | { name: 'LOGIN' }
   | { name: 'REGISTER' }
   | { name: 'OTP'; phone: string }
@@ -41,8 +44,12 @@ export type AppScreenRoute =
 interface NavigationContextType {
   currentRoute: AppScreenRoute;
   activeTenantTab: TenantTabType;
+  activeOwnerTab: OwnerTabType;
   navigateTo: (route: AppScreenRoute) => void;
   navigateToTab: (tab: TenantTabType) => void;
+  navigateToOwnerTab: (tab: OwnerTabType) => void;
+  switchToOwnerSpace: () => void;
+  switchToTenantSpace: () => void;
   navigateToOtp: (phone: string) => void;
   navigateToVehicleDetail: (vehicleId: string, vehicle?: VehicleFeedItem) => void;
   navigateToBookingDetail: (reservationId: string) => void;
@@ -80,6 +87,7 @@ export const RootNavigator: React.FC = () => {
   const [routeHistory, setRouteHistory] = useState<AppScreenRoute[]>([{ name: 'SPLASH' }]);
   const [splashFinished, setSplashFinished] = useState(false);
   const [activeTenantTab, setActiveTenantTab] = useState<TenantTabType>('ACCUEIL');
+  const [activeOwnerTab, setActiveOwnerTab] = useState<OwnerTabType>('ACCUEIL');
 
   const currentRoute = routeHistory[routeHistory.length - 1] || { name: 'SPLASH' };
   const canGoBack = routeHistory.length > 1;
@@ -94,6 +102,21 @@ export const RootNavigator: React.FC = () => {
     if (currentRoute.name !== 'TENANT_MAIN') {
       navigateTo({ name: 'TENANT_MAIN', initialTab: tab });
     }
+  };
+
+  const navigateToOwnerTab = (tab: OwnerTabType) => {
+    setActiveOwnerTab(tab);
+    if (currentRoute.name !== 'OWNER_MAIN') {
+      navigateTo({ name: 'OWNER_MAIN', initialTab: tab });
+    }
+  };
+
+  const switchToOwnerSpace = () => {
+    navigateTo({ name: 'OWNER_MAIN' });
+  };
+
+  const switchToTenantSpace = () => {
+    navigateTo({ name: 'TENANT_MAIN' });
   };
 
   const navigateToOtp = (phone: string) => {
@@ -172,8 +195,12 @@ export const RootNavigator: React.FC = () => {
   const contextValue: NavigationContextType = {
     currentRoute,
     activeTenantTab,
+    activeOwnerTab,
     navigateTo,
     navigateToTab,
+    navigateToOwnerTab,
+    switchToOwnerSpace,
+    switchToTenantSpace,
     navigateToOtp,
     navigateToVehicleDetail,
     navigateToBookingDetail,
@@ -237,6 +264,14 @@ export const RootNavigator: React.FC = () => {
 
             case 'BOOKING_DETAIL':
               return <TenantBookingDetailScreen reservationId={currentRoute.reservationId} onBack={goBack} />;
+
+            case 'OWNER_MAIN':
+              return (
+                <OwnerMainLayout
+                  initialTab={currentRoute.initialTab}
+                  onSwitchToTenant={switchToTenantSpace}
+                />
+              );
 
             case 'TENANT_MAIN':
             default:

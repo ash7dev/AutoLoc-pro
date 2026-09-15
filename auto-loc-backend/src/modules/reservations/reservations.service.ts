@@ -725,73 +725,159 @@ export class ReservationsService {
       select: { id: true },
     });
     if (!proprietaire) {
-      return { revenusMois: 0, reservationsActives: 0, tauxOccupation: 0, litigesOuverts: 0 };
+      return {
+        revenusMois: 0,
+        variationMoisPourcentage: 0,
+        reservationsActives: 0,
+        demandesEnAttenteCount: 0,
+        tauxOccupation: 0,
+        noteMoyenneFlotte: 0,
+        totalVehiculesCount: 0,
+        litigesOuverts: 0,
+      };
     }
 
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
-    const [reservationsRevenus, reservationsActives, litigesOuverts, vehiculesActifs] =
-      await Promise.all([
-        this.prisma.reservation.findMany({
-          where: {
+    const [
+      currentMonthReservations,
+      prevMonthReservations,
+      reservationsActives,
+      demandesEnAttenteCount,
+      litigesOuverts,
+      vehiculesActifs,
+      reviewsAggregate,
+    ] = await Promise.all([
+      // 1. Revenus mois en cours (Exclut ANNULEE / REJETE)
+      this.prisma.reservation.findMany({
+        where: {
+          proprietaireId: proprietaire.id,
+          statut: {
+            in: [
+              StatutReservation.PAYEE,
+              StatutReservation.CONFIRMEE,
+              StatutReservation.EN_COURS,
+              StatutReservation.TERMINEE,
+            ],
+          },
+          creeLe: { gte: startOfCurrentMonth },
+        },
+        select: {
+          modePaiement: true,
+          netProprietaire: true,
+          montantProprietaireEnLigne: true,
+        },
+      }),
+      // 2. Revenus mois précédent pour calculer la variation
+      this.prisma.reservation.findMany({
+        where: {
+          proprietaireId: proprietaire.id,
+          statut: {
+            in: [
+              StatutReservation.PAYEE,
+              StatutReservation.CONFIRMEE,
+              StatutReservation.EN_COURS,
+              StatutReservation.TERMINEE,
+            ],
+          },
+          creeLe: { gte: startOfPrevMonth, lte: endOfPrevMonth },
+        },
+        select: {
+          modePaiement: true,
+          netProprietaire: true,
+          montantProprietaireEnLigne: true,
+        },
+      }),
+      // 3. Réservations actives (PAYEE, CONFIRMEE, EN_COURS)
+      this.prisma.reservation.count({
+        where: {
+          proprietaireId: proprietaire.id,
+          statut: {
+            in: [
+              StatutReservation.PAYEE,
+              StatutReservation.CONFIRMEE,
+              StatutReservation.EN_COURS,
+            ],
+          },
+        },
+      }),
+      // 4. Demandes en attente (EN_ATTENTE_PAIEMENT ou PAYEE sans confirmation)
+      this.prisma.reservation.count({
+        where: {
+          proprietaireId: proprietaire.id,
+          statut: {
+            in: [StatutReservation.EN_ATTENTE_PAIEMENT, StatutReservation.PAYEE],
+          },
+        },
+      }),
+      // 5. Litiges ouverts
+      this.prisma.reservation.count({
+        where: {
+          proprietaireId: proprietaire.id,
+          statut: StatutReservation.LITIGE,
+        },
+      }),
+      // 6. Nombre de véhicules actifs du propriétaire
+      this.prisma.vehicule.count({
+        where: {
+          proprietaireId: proprietaire.id,
+          statut: {
+            in: [StatutVehicule.VERIFIE, StatutVehicule.EN_ATTENTE_VALIDATION],
+          },
+        },
+      }),
+      // 7. Moyenne des avis de la flotte
+      this.prisma.avis.aggregate({
+        where: {
+          reservation: {
             proprietaireId: proprietaire.id,
-            statut: {
-              in: [
-                StatutReservation.PAYEE,
-                StatutReservation.CONFIRMEE,
-                StatutReservation.EN_COURS,
-                StatutReservation.TERMINEE,
-              ],
-            },
-            creeLe: { gte: startOfMonth },
           },
-          select: {
-            modePaiement: true,
-            netProprietaire: true,
-            montantProprietaireEnLigne: true,
-          },
-        }),
-        this.prisma.reservation.count({
-          where: {
-            proprietaireId: proprietaire.id,
-            statut: {
-              in: [
-                StatutReservation.PAYEE,
-                StatutReservation.CONFIRMEE,
-                StatutReservation.EN_COURS,
-              ],
-            },
-          },
-        }),
-        this.prisma.reservation.count({
-          where: {
-            proprietaireId: proprietaire.id,
-            statut: StatutReservation.LITIGE,
-          },
-        }),
-        this.prisma.vehicule.count({
-          where: {
-            proprietaireId: proprietaire.id,
-            statut: {
-              in: [StatutVehicule.VERIFIE, StatutVehicule.EN_ATTENTE_VALIDATION],
-            },
-          },
-        }),
-      ]);
+        },
+        _avg: { note: true },
+      }),
+    ]);
 
-    const revenusMois = reservationsRevenus.reduce((sum, reservation) => {
-      const amount = reservation.modePaiement === 'ACOMPTE_SOLDE_CHECKIN'
-        ? reservation.montantProprietaireEnLigne
-        : reservation.netProprietaire;
-
+    const revenusMois = currentMonthReservations.reduce((sum, r) => {
+      const amount = r.modePaiement === 'ACOMPTE_SOLDE_CHECKIN'
+        ? r.montantProprietaireEnLigne
+        : r.netProprietaire;
       return sum + Number(amount);
     }, 0);
+
+    const revenusMoisPrecedent = prevMonthReservations.reduce((sum, r) => {
+      const amount = r.modePaiement === 'ACOMPTE_SOLDE_CHECKIN'
+        ? r.montantProprietaireEnLigne
+        : r.netProprietaire;
+      return sum + Number(amount);
+    }, 0);
+
+    // Calcul de la variation en %
+    let variationMoisPourcentage = 0;
+    if (revenusMoisPrecedent > 0) {
+      variationMoisPourcentage = Math.round(((revenusMois - revenusMoisPrecedent) / revenusMoisPrecedent) * 100);
+    } else if (revenusMois > 0) {
+      variationMoisPourcentage = 100;
+    }
+
     const tauxOccupation = vehiculesActifs > 0
       ? Math.min(100, Math.round((reservationsActives / vehiculesActifs) * 100))
       : 0;
 
-    return { revenusMois, reservationsActives, tauxOccupation, litigesOuverts };
+    const noteMoyenneFlotte = reviewsAggregate._avg.note ? Number(reviewsAggregate._avg.note.toFixed(1)) : 0;
+
+    return {
+      revenusMois,
+      variationMoisPourcentage,
+      reservationsActives,
+      demandesEnAttenteCount,
+      tauxOccupation,
+      noteMoyenneFlotte,
+      totalVehiculesCount: vehiculesActifs,
+      litigesOuverts,
+    };
   }
 
   // ── GET /reservations/:id ──────────────────────────────────────────────────

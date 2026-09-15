@@ -10,9 +10,10 @@ interface TenantProfileHeroProps {
   profile: TenantProfile;
   onAvatarUpdated: (avatarUrl: string) => Promise<void> | void;
   onVerificationPress: () => void;
+  isOwnerMode?: boolean;
 }
 
-export function TenantProfileHero({ profile, onAvatarUpdated, onVerificationPress }: TenantProfileHeroProps) {
+export function TenantProfileHero({ profile, onAvatarUpdated, onVerificationPress, isOwnerMode = false }: TenantProfileHeroProps) {
   const [uploading, setUploading] = useState(false);
   const initials = `${profile.prenom?.[0] || 'A'}${profile.nom?.[0] || ''}`.toUpperCase();
   const verified = profile.statutKyc === 'VERIFIE';
@@ -63,7 +64,10 @@ export function TenantProfileHero({ profile, onAvatarUpdated, onVerificationPres
         <View style={styles.identity}>
           <Text style={styles.name} numberOfLines={1}>{profile.prenom || 'Votre'} {profile.nom || 'profil'}</Text>
           <Text style={styles.contact} numberOfLines={1}>{profile.telephone || profile.email}</Text>
-          <View style={styles.rolePill}><Sparkles size={12} color={theme.primitives.emerald[300]} /><Text style={styles.roleText}>ESPACE LOCATAIRE</Text></View>
+          <View style={styles.rolePill}>
+            <Sparkles size={12} color={theme.primitives.emerald[300]} />
+            <Text style={styles.roleText}>{isOwnerMode ? 'ESPACE PROPRIÉTAIRE' : 'ESPACE LOCATAIRE'}</Text>
+          </View>
         </View>
       </View>
       <Pressable accessibilityRole="button" onPress={onVerificationPress} style={[styles.statusPill, verified ? styles.statusSuccess : styles.statusPending]}>

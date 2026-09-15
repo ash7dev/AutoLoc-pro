@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
-  Linking,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { CalendarX, RefreshCw } from 'lucide-react-native';
@@ -30,15 +29,6 @@ export const TenantBookingsScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<BookingStatusFilter>('ALL');
 
   const { bookings, loading, refreshing, error, refetch } = useTenantBookings(activeTab);
-
-  const handleContactHost = (booking: TenantBookingItem) => {
-    const phone = booking.proprietaire?.telephone;
-    if (phone) {
-      Linking.openURL(`tel:${phone}`);
-    } else {
-      Linking.openURL(`https://wa.me/221770000000?text=Bonjour,%20je%20vous%20contacte%20au%20sujet%20de%20la%20réservation%20%23${booking.id}`);
-    }
-  };
 
   const handlePressDetails = (booking: TenantBookingItem) => {
     navigation.navigateToBookingDetail(booking.id);
@@ -136,7 +126,6 @@ export const TenantBookingsScreen: React.FC = () => {
             <TenantBookingCard
               key={booking.id}
               booking={booking}
-              onContactHost={handleContactHost}
               onPressDetails={handlePressDetails}
             />
           ))

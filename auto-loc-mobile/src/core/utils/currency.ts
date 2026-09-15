@@ -94,6 +94,11 @@ export function formatDirectPrice(
 }
 
 /**
+ * Alias export for direct currency formatting
+ */
+export const formatCurrency = formatDirectPrice;
+
+/**
  * Calculateur complet avec décomposition détaillée du tarif
  */
 export function calculateDetailedVehiclePricing(

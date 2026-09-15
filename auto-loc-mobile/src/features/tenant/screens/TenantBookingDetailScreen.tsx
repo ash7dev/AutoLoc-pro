@@ -23,6 +23,8 @@ import { BookingPaymentPendingCard } from '../components/BookingPaymentPendingCa
 import { RefuseVehicleEvidenceModal } from '../components/RefuseVehicleEvidenceModal';
 import { TacitCheckinCountdownCard } from '../components/TacitCheckinCountdownCard';
 import { BookingCompletionPanel } from '../components/BookingCompletionPanel';
+import { BookingTimelineSection } from '../components/BookingTimelineSection';
+import { TenantBookingDetailSkeleton } from '../components/TenantBookingDetailSkeleton';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1000&q=80';
 
@@ -71,7 +73,7 @@ export const TenantBookingDetailScreen: React.FC<Props> = ({ reservationId, onBa
   };
   const openModal = (mode: ModalMode) => { setReason(''); setComment(''); setModalMode(mode); };
 
-  if (loading) return <LoadingState onBack={onBack} />;
+  if (loading) return <TenantBookingDetailSkeleton onBack={onBack} />;
   if (!booking) return <ErrorState message={error} onBack={onBack} onRetry={refetch} />;
 
   return (
@@ -104,6 +106,8 @@ export const TenantBookingDetailScreen: React.FC<Props> = ({ reservationId, onBa
           <View style={styles.vehicleBody}><Text style={styles.vehicleName}>{booking.vehicule?.marque} {booking.vehicule?.modele}</Text><Text style={styles.vehicleMeta}>{booking.vehicule?.annee || '—'} · {booking.vehicule?.type || 'Véhicule'}</Text><View style={styles.locationRow}><MapPin size={13} color={theme.colors.brand.main} /><Text style={styles.locationText}>{booking.adresseLivraison || booking.vehicule?.ville || 'Lieu communiqué par l’hôte'}</Text></View></View>
         </View>
 
+        <BookingContractCard reservationId={booking.id} statut={booking.statut} />
+
         {error ? <InlineNotice text={error} /> : null}
         {booking.statut === 'EN_ATTENTE_PAIEMENT' ? <BookingPaymentPendingCard paymentUrl={booking.paymentUrl} /> : null}
         {booking.statut === 'CONFIRMEE' && booking.checkinProprietaireLe && !booking.checkinLocataireLe ? <TacitCheckinCountdownCard deadline={booking.tacitCheckinDeadlineLe} /> : null}
@@ -128,13 +132,12 @@ export const TenantBookingDetailScreen: React.FC<Props> = ({ reservationId, onBa
           <View style={styles.guarantee}><ShieldCheck size={16} color="#A7F3D0" /><Text style={styles.guaranteeText}>{booking.modePaiement === 'ACOMPTE_SOLDE_CHECKIN' ? 'Le solde est remis au propriétaire lors du check-in.' : 'Votre paiement est tracé et sécurisé par AutoLoc.'}</Text></View>
         </Section>
 
-        <BookingHostContactCard reservationId={booking.id} statut={booking.statut} dateDebut={booking.dateDebut} host={booking.proprietaire} />
-        <BookingContractCard reservationId={booking.id} statut={booking.statut} />
+        <BookingHostContactCard statut={booking.statut} dateDebut={booking.dateDebut} host={booking.proprietaire} />
         <BookingEtatLieuxPhotos photos={booking.photosEtatLieu} onPress={() => setGalleryModalVisible(true)} />
 
         {booking.litige ? <Section title="Suivi du litige" icon={<AlertTriangle size={17} color="#DC2626" />}><Text style={styles.bodyText}>{booking.litige.description || booking.litige.commentaire || booking.litige.motif || 'Votre dossier est en cours de traitement par AutoLoc.'}</Text></Section> : null}
         {booking.statut === 'TERMINEE' ? <BookingCompletionPanel reservationId={booking.id} existingReview={booking.avis?.[0]} /> : null}
-        <Timeline events={booking.historique || []} />
+        <BookingTimelineSection events={booking.historique || []} />
         {booking.statut === 'ANNULEE' && booking.raisonAnnulation ? <Section title="Annulation" icon={<X size={17} color="#DC2626" />}><Text style={styles.bodyText}>{booking.raisonAnnulation}</Text></Section> : null}
         <View style={styles.support}><Text style={styles.supportTitle}>Besoin d’aide pour cette location ?</Text><Text style={styles.supportText}>Notre équipe est disponible pour vous accompagner à chaque étape.</Text></View>
       </ScrollView>
@@ -155,7 +158,6 @@ const DateBlock = ({ label, value }: { label: string; value: string }) => <View 
 const MoneyLine = ({ label, value, prominent = false }: { label: string; value: number; prominent?: boolean }) => <View style={styles.moneyLine}><Text style={[styles.moneyLabel, prominent && styles.moneyLabelProminent]}>{label}</Text><Text style={[styles.moneyValue, prominent && styles.moneyValueProminent]}>{formatCurrency(value)}</Text></View>;
 const InlineNotice = ({ text }: { text: string }) => <View style={styles.inlineNotice}><AlertTriangle size={16} color="#B45309" /><Text style={styles.inlineNoticeText}>{text}</Text></View>;
 const Section = ({ title, icon, dark = false, children }: { title: string; icon: React.ReactNode; dark?: boolean; children: React.ReactNode }) => <View style={[styles.section, dark && styles.sectionDark]}><View style={styles.sectionHeader}><View style={[styles.sectionIcon, dark && styles.sectionIconDark]}>{icon}</View><Text style={[styles.sectionTitle, dark && styles.sectionTitleDark]}>{title}</Text></View>{children}</View>;
-const Timeline = ({ events }: { events: Array<{ id: string; nouveauStatut: string; modifieLe: string; modifiePar?: string }> }) => <Section title="Chronologie" icon={<Clock3 size={17} color={theme.colors.brand.main} />}>{events.length ? events.map((event, index) => <View key={event.id} style={styles.timelineRow}><View style={styles.timelineRail}><View style={styles.timelineDot} />{index < events.length - 1 ? <View style={styles.timelineLine} /> : null}</View><View><Text style={styles.timelineTitle}>{event.modifiePar === 'SYSTEM_TACIT_CHECKIN' ? 'Check-in automatique appliqué' : getStatus(event.nouveauStatut).label}</Text><Text style={styles.timelineDate}>{new Date(event.modifieLe).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · {event.modifiePar?.startsWith('SYSTEM_') ? 'AutoLoc' : 'Action enregistrée'}</Text></View></View>) : <Text style={styles.bodyText}>Aucun événement enregistré pour le moment.</Text>}</Section>;
 const ActionPanel = ({ status, waitingForHost, canCheckin, submitting, onCheckin, onRefuse, onCancel, cancellable }: any) => <View style={styles.actionPanel}><View style={styles.actionHeading}><View style={styles.actionIcon}><CarFront size={18} color={theme.colors.brand.main} /></View><View><Text style={styles.actionTitle}>{status === 'EN_COURS' ? 'Votre location est en cours' : 'Prochaine étape'}</Text><Text style={styles.actionSubtitle}>{waitingForHost ? 'L’hôte doit d’abord confirmer l’état des lieux.' : canCheckin ? 'Vérifiez le véhicule puis confirmez la remise des clés.' : 'Toutes les informations utiles sont réunies ici.'}</Text></View></View>{canCheckin ? <><TouchableOpacity disabled={submitting} onPress={onCheckin} style={styles.primaryAction}><CheckCircle2 size={16} color="#FFFFFF" /><Text style={styles.primaryActionText}>{submitting ? 'Confirmation…' : 'Confirmer la remise des clés'}</Text></TouchableOpacity><TouchableOpacity disabled={submitting} onPress={onRefuse} style={styles.dangerAction}><AlertTriangle size={15} color="#B91C1C" /><Text style={styles.dangerActionText}>Signaler un véhicule non conforme</Text></TouchableOpacity></> : null}{cancellable ? <TouchableOpacity disabled={submitting} onPress={onCancel} style={styles.cancelAction}><Text style={styles.cancelActionText}>Annuler cette réservation</Text><ChevronRight size={14} color="#B91C1C" /></TouchableOpacity> : null}</View>;
 const LoadingState = ({ onBack }: { onBack: () => void }) => <SafeAreaView style={styles.safeArea}><View style={styles.loadingState}><TouchableOpacity onPress={onBack} style={styles.backButton}><ArrowLeft size={19} color="#072A20" /></TouchableOpacity><ActivityIndicator color={theme.colors.brand.main} size="large" /><Text style={styles.bodyText}>Chargement de votre réservation…</Text></View></SafeAreaView>;
 const ErrorState = ({ message, onBack, onRetry }: { message: string | null; onBack: () => void; onRetry: () => void }) => <SafeAreaView style={styles.safeArea}><View style={styles.errorState}><AlertTriangle size={36} color="#B45309" /><Text style={styles.errorTitle}>Réservation indisponible</Text><Text style={styles.bodyText}>{message || 'Une erreur est survenue.'}</Text><TouchableOpacity onPress={onRetry} style={styles.primaryAction}><Text style={styles.primaryActionText}>Réessayer</Text></TouchableOpacity><TouchableOpacity onPress={onBack}><Text style={styles.backText}>Retour aux réservations</Text></TouchableOpacity></View></SafeAreaView>;
