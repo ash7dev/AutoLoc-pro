@@ -854,6 +854,7 @@ export function ReservationActions({
                 totalLocataire={totalLocataire}
                 totalBase={totalBase}
                 isOwner={isOwner}
+                reservationId={reservationId}
             />
         </div>
     );

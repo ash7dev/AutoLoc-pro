@@ -53,6 +53,7 @@ import { WalletDomainModule } from '../wallet/wallet.domain.module';
     ],
     exports: [
         ReservationPricingService,
+        CancellationPolicyService,
         CreateReservationUseCase,
         ConfirmReservationUseCase,
         ConfirmPaymentUseCase,

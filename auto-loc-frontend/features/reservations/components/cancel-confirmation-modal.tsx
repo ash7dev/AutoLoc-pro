@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { AlertTriangle, XCircle, Ban, Info, Loader2, DollarSign, AlertCircleIcon, CheckCircle2, X, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthFetch } from "@/features/auth/hooks/use-auth-fetch";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -17,6 +18,7 @@ interface CancelConfirmationModalProps {
     totalLocataire?: number;
     totalBase?: number;
     isOwner?: boolean; // true si propriétaire, false si locataire
+    reservationId?: string;
 }
 
 interface PolicyResult {
@@ -209,25 +211,64 @@ export function CancelConfirmationModal({
     totalLocataire,
     totalBase,
     isOwner,
+    reservationId,
 }: CancelConfirmationModalProps) {
     const [raison, setRaison] = useState("");
     const [policy, setPolicy] = useState<PolicyResult | null>(null);
+    const { authFetch } = useAuthFetch();
 
     useEffect(() => {
+        let isMounted = true;
         if (open) {
-            const result = calculateCancellationPolicy(
+            const staticResult = calculateCancellationPolicy(
                 statut,
                 dateDebut,
                 totalLocataire,
                 totalBase,
                 isOwner,
             );
-            setPolicy(result);
+            setPolicy(staticResult);
+
+            if (!isOwner && reservationId) {
+                authFetch<{
+                    canCancel: boolean;
+                    refundPercentage: number;
+                    refundAmount: string;
+                    commissionRetained: string;
+                    warnings: string[];
+                }>(`/reservations/${reservationId}/cancellation-quote`)
+                    .then((res) => {
+                        if (!isMounted || !res) return;
+                        const refundAmt = Number(res.refundAmount) || 0;
+                        const pct = res.refundPercentage ?? 0;
+                        setPolicy({
+                            canCancel: res.canCancel,
+                            refundAmount: refundAmt,
+                            refundPercentage: pct,
+                            penaltyAmount: 0,
+                            penaltyPercentage: 0,
+                            warnings: res.warnings && res.warnings.length > 0 ? res.warnings : staticResult.warnings,
+                            severity: !res.canCancel
+                                ? "blocked"
+                                : pct >= 100
+                                    ? "success"
+                                    : pct > 0
+                                        ? "warning"
+                                        : "danger",
+                        });
+                    })
+                    .catch((err) => {
+                        console.warn("[CancelConfirmationModal] Impossible de charger le devis d'annulation depuis le serveur, fallback local utilisé:", err);
+                    });
+            }
         } else {
             setRaison("");
             setPolicy(null);
         }
-    }, [open, statut, dateDebut, totalLocataire, totalBase, isOwner]);
+        return () => {
+            isMounted = false;
+        };
+    }, [open, statut, dateDebut, totalLocataire, totalBase, isOwner, reservationId, authFetch]);
 
     if (!open || !policy) return null;
 

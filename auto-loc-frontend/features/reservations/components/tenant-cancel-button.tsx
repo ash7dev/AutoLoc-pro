@@ -72,6 +72,7 @@ export function TenantCancelButton({ reservationId, vehicleName, statut, dateDeb
         totalLocataire={totalLocataire}
         totalBase={totalBase}
         isOwner={false}
+        reservationId={reservationId}
       />
 
       <LifecycleModal
