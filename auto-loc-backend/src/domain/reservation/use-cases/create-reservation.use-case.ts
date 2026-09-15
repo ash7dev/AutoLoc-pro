@@ -74,7 +74,6 @@ export class CreateReservationUseCase {
         private readonly availability: ReservationAvailabilityService,
         private readonly idempotency: ReservationIdempotencyService,
         private readonly revalidate: RevalidateService,
-        private readonly telegram: TelegramService,
     ) { }
 
     async execute(

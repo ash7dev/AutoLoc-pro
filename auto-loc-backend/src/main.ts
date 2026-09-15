@@ -20,12 +20,21 @@ async function bootstrap(): Promise<void> {
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
+    'http://localhost:8081',
+    'http://localhost:19006',
     'https://www.autoloc.sn',
     'https://autoloc.sn',
   ];
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // 1. Mobile Native Apps (iOS/Android) don't send an Origin header
+      // 2. Local/Staging/Production web origins
+      // 3. In non-production, accept requests from local network IPs (e.g. Expo Go 192.168.x.x)
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        process.env.NODE_ENV !== 'production'
+      ) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));

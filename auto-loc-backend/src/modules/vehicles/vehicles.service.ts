@@ -775,26 +775,38 @@ export class VehiclesService {
     total: number;
   }> {
     const page = dto.page ?? 1;
-    const offset = (page - 1) * SEARCH_PAGE_SIZE;
+    const pageSize = dto.limit ?? SEARCH_PAGE_SIZE;
+    const offset = (page - 1) * pageSize;
+
+    // ── Mapping des alias de paramètres ─────────────────────────────────────────
+    const effectiveVille = dto.ville || dto.zone;
+    const effectiveDateDebut = dto.dateDebut || dto.debut;
+    const effectiveDateFin = dto.dateFin || dto.fin;
+    const effectivePrixMin = dto.prixMin ?? dto.budgetMin;
+    const effectivePrixMax = dto.prixMax ?? dto.budgetMax ?? dto.budget;
+    const effectiveCarburant = dto.carburant || dto.fuel;
+    const effectivePlacesMin = dto.placesMin ?? dto.places;
+    const effectiveSortBy = dto.sortBy || dto.sort;
 
     // ── Cache ────────────────────────────────────────────────────────────────
-    const cityKey = dto.ville ? dto.ville.toLowerCase() : 'all';
+    const cityKey = effectiveVille ? effectiveVille.toLowerCase() : 'all';
     const cacheParams = JSON.stringify({
       ville: cityKey,
-      dateDebut: dto.dateDebut ?? null,
-      dateFin: dto.dateFin ?? null,
+      dateDebut: effectiveDateDebut ?? null,
+      dateFin: effectiveDateFin ?? null,
       type: dto.type ?? null,
-      prixMin: dto.prixMin ?? null,
-      prixMax: dto.prixMax ?? null,
-      carburant: dto.carburant ?? null,
+      prixMin: effectivePrixMin ?? null,
+      prixMax: effectivePrixMax ?? null,
+      carburant: effectiveCarburant ?? null,
       transmission: dto.transmission ?? null,
-      placesMin: dto.placesMin ?? null,
+      placesMin: effectivePlacesMin ?? null,
       noteMin: dto.noteMin ?? null,
-      sortBy: dto.sortBy ?? null,
+      sortBy: effectiveSortBy ?? null,
       sortOrder: dto.sortOrder ?? null,
       latitude: dto.latitude ?? null,
       longitude: dto.longitude ?? null,
       rayon: dto.rayon ?? null,
+      nearMe: dto.nearMe ?? null,
       equipements: dto.equipements ?? null,
       excludeIds: dto.excludeIds?.length ? [...dto.excludeIds].sort() : null,
       q: dto.q ?? null,
@@ -816,32 +828,35 @@ export class VehiclesService {
     }
 
     // ── Filtres dynamiques ────────────────────────────────────────────────────
-    const villeCondition = dto.ville
-      ? Prisma.sql`AND LOWER(v.ville) = LOWER(${dto.ville})`
+    const cityClean = effectiveVille?.trim().toLowerCase();
+    const villeCondition = cityClean
+      ? cityClean === 'dakar'
+        ? Prisma.sql`AND (LOWER(v.ville) LIKE '%dakar%' OR LOWER(v.ville) IN ('mermoz-sacrecoeur-ckg', 'ouakam-yoff', 'almadies-ngor-mamelles', 'plateau-medina-gueuletapee', 'liberte-sicap-granddakar', 'parcelles-grandyoff', 'pikine-guediawaye', 'keurmassar-rufisque'))`
+        : Prisma.sql`AND (LOWER(v.ville) = ${cityClean} OR LOWER(v.ville) LIKE ${'%' + cityClean + '%'})`
       : Prisma.empty;
 
     const typeCondition = dto.type
       ? Prisma.sql`AND (v.type::text = ${dto.type} OR ${dto.type}::"TypeVehicule" = ANY(v.types))`
       : Prisma.empty;
 
-    const prixMinCondition = dto.prixMin != null
-      ? Prisma.sql`AND v."prixParJour" >= ${dto.prixMin}`
+    const prixMinCondition = effectivePrixMin != null
+      ? Prisma.sql`AND v."prixParJour" >= ${effectivePrixMin}`
       : Prisma.empty;
 
-    const prixMaxCondition = dto.prixMax != null
-      ? Prisma.sql`AND v."prixParJour" <= ${dto.prixMax}`
+    const prixMaxCondition = effectivePrixMax != null
+      ? Prisma.sql`AND v."prixParJour" <= ${effectivePrixMax}`
       : Prisma.empty;
 
-    const carburantCondition = dto.carburant
-      ? Prisma.sql`AND v.carburant::text = ${dto.carburant}`
+    const carburantCondition = effectiveCarburant
+      ? Prisma.sql`AND v.carburant::text = ${effectiveCarburant}`
       : Prisma.empty;
 
     const transmissionCondition = dto.transmission
       ? Prisma.sql`AND v.transmission::text = ${dto.transmission}`
       : Prisma.empty;
 
-    const placesCondition = dto.placesMin != null
-      ? Prisma.sql`AND v."nombrePlaces" >= ${dto.placesMin}`
+    const placesCondition = effectivePlacesMin != null
+      ? Prisma.sql`AND v."nombrePlaces" >= ${effectivePlacesMin}`
       : Prisma.empty;
 
     const noteCondition = dto.noteMin != null
@@ -858,23 +873,49 @@ export class VehiclesService {
       searchCondition = Prisma.sql`AND ${Prisma.join(conditions, ' AND ')}`;
     }
 
-    const dateCondition =
-      dto.dateDebut && dto.dateFin
-        ? Prisma.sql`
-            AND NOT EXISTS (
-              SELECT 1 FROM "Reservation" r
-              WHERE r."vehiculeId" = v.id
-                AND r.statut::text = ANY(ARRAY['PAYEE', 'CONFIRMEE', 'EN_COURS'])
-                AND r."dateDebut" < ${new Date(dto.dateFin)}
-                AND r."dateFin" > ${new Date(dto.dateDebut)}
-            )
-            AND NOT EXISTS (
-              SELECT 1 FROM "IndisponibiliteVehicule" iv
-              WHERE iv."vehiculeId" = v.id
-                AND iv."dateDebut" <= ${new Date(dto.dateFin)}::date
-                AND iv."dateFin" >= ${new Date(dto.dateDebut)}::date
-            )`
-        : Prisma.empty;
+    let dateCondition = Prisma.empty;
+    if (effectiveDateDebut && effectiveDateFin) {
+      dateCondition = Prisma.sql`
+        AND NOT EXISTS (
+          SELECT 1 FROM "Reservation" r
+          WHERE r."vehiculeId" = v.id
+            AND r.statut::text = ANY(ARRAY['PAYEE', 'CONFIRMEE', 'EN_COURS'])
+            AND r."dateDebut" < ${new Date(effectiveDateFin)}
+            AND r."dateFin" > ${new Date(effectiveDateDebut)}
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM "IndisponibiliteVehicule" iv
+          WHERE iv."vehiculeId" = v.id
+            AND iv."dateDebut" <= ${new Date(effectiveDateFin)}::date
+            AND iv."dateFin" >= ${new Date(effectiveDateDebut)}::date
+        )`;
+    } else if (effectiveDateDebut) {
+      dateCondition = Prisma.sql`
+        AND NOT EXISTS (
+          SELECT 1 FROM "Reservation" r
+          WHERE r."vehiculeId" = v.id
+            AND r.statut::text = ANY(ARRAY['PAYEE', 'CONFIRMEE', 'EN_COURS'])
+            AND r."dateFin" > ${new Date(effectiveDateDebut)}
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM "IndisponibiliteVehicule" iv
+          WHERE iv."vehiculeId" = v.id
+            AND iv."dateFin" >= ${new Date(effectiveDateDebut)}::date
+        )`;
+    } else if (effectiveDateFin) {
+      dateCondition = Prisma.sql`
+        AND NOT EXISTS (
+          SELECT 1 FROM "Reservation" r
+          WHERE r."vehiculeId" = v.id
+            AND r.statut::text = ANY(ARRAY['PAYEE', 'CONFIRMEE', 'EN_COURS'])
+            AND r."dateDebut" < ${new Date(effectiveDateFin)}
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM "IndisponibiliteVehicule" iv
+          WHERE iv."vehiculeId" = v.id
+            AND iv."dateDebut" <= ${new Date(effectiveDateFin)}::date
+        )`;
+    }
 
     // Geolocation (Haversine formula)
     const geoCondition =
@@ -905,13 +946,13 @@ export class VehiclesService {
         : Prisma.empty;
 
     // ── Requête native ────────────────────────────────────────────────────────
-    const orderFieldMap: Record<NonNullable<typeof dto.sortBy>, string> = {
+    const orderFieldMap: Record<string, string> = {
       totalLocations: 'v."totalLocations"',
       note: 'v.note',
       prixParJour: 'v."prixParJour"',
       annee: 'v.annee',
     };
-    const orderField = dto.sortBy ? orderFieldMap[dto.sortBy] : 'v.note';
+    const orderField = effectiveSortBy && orderFieldMap[effectiveSortBy] ? orderFieldMap[effectiveSortBy] : 'v.note';
     const orderDir = dto.sortOrder === 'asc' ? 'ASC' : 'DESC';
 
     // Separate queries for total count and paginated data
@@ -953,7 +994,7 @@ export class VehiclesService {
         ${excludeCondition}
         ${searchCondition}
       ORDER BY v."isFeatured" DESC, ${Prisma.raw(orderField)} ${Prisma.raw(orderDir)}
-      LIMIT ${Prisma.raw(String(SEARCH_PAGE_SIZE))} OFFSET ${Prisma.raw(String(offset))}
+      LIMIT ${Prisma.raw(String(pageSize))} OFFSET ${Prisma.raw(String(offset))}
     `;
 
     const ids = rows.map((r) => r.id);

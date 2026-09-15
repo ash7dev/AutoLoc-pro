@@ -24,14 +24,19 @@ export class JwtAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
+    let token: string | undefined;
+
     const authHeader = request.headers.authorization;
-    if (!authHeader || !authHeader.startsWith(BEARER_PREFIX)) {
-      throw new UnauthorizedException('En-tête d\'autorisation manquant ou invalide');
+    if (authHeader && authHeader.startsWith(BEARER_PREFIX)) {
+      token = authHeader.slice(BEARER_PREFIX.length).trim();
+    } else if ((request as any).cookies?.nest_access) {
+      token = (request as any).cookies.nest_access;
+    } else if ((request as any).cookies?.access_token) {
+      token = (request as any).cookies.access_token;
     }
 
-    const token = authHeader.slice(BEARER_PREFIX.length).trim();
     if (!token) {
-      throw new UnauthorizedException('Jeton manquant');
+      throw new UnauthorizedException('Jeton d\'authentification manquant');
     }
 
     const user = await this.resolveUser(token);

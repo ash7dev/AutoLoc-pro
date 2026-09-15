@@ -321,13 +321,16 @@ export function ExplorerGrid({
       newest: { by: 'annee', order: 'desc' },
     };
     const { by, order } = sortMap[filters.sort] ?? { by: 'totalLocations', order: 'desc' };
+    const validDateDebut = filters.dateDebut && filters.dateDebut.trim() !== '' ? filters.dateDebut.trim() : undefined;
+    const validDateFin = filters.dateFin && filters.dateFin.trim() !== '' ? filters.dateFin.trim() : undefined;
+
     return {
       type: (filters.type as VehicleType) || undefined,
       ville: filters.zone || undefined,
       prixMin: filters.budgetMin || undefined,
       prixMax: filters.budgetMax || undefined,
-      dateDebut: filters.dateDebut || undefined,
-      dateFin: filters.dateFin || undefined,
+      dateDebut: validDateDebut && validDateFin ? validDateDebut : undefined,
+      dateFin: validDateDebut && validDateFin ? validDateFin : undefined,
       carburant: (filters.fuel as FuelType) || undefined,
       transmission: (filters.transmission as Transmission) || undefined,
       placesMin: filters.places || undefined,

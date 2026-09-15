@@ -4,13 +4,14 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RequestUser } from '../../common/types/auth.types';
 import { NotificationsService } from './notifications.service';
 import { SubscribeDto } from './dto/subscribe.dto';
+import { RegisterExpoTokenDto } from './dto/register-expo.dto';
 
 @Controller('notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   /**
-   * POST /notifications/subscribe — Enregistre un nouvel abonnement
+   * POST /notifications/subscribe — Enregistre un nouvel abonnement web push (VAPID)
    */
   @Post('subscribe')
   @UseGuards(JwtAuthGuard)
@@ -19,6 +20,18 @@ export class NotificationsController {
     @Body() dto: SubscribeDto,
   ) {
     return this.notificationsService.subscribe(user.sub, dto);
+  }
+
+  /**
+   * POST /notifications/register-expo — Enregistre un token Expo Push (React Native)
+   */
+  @Post('register-expo')
+  @UseGuards(JwtAuthGuard)
+  async registerExpoToken(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: RegisterExpoTokenDto,
+  ) {
+    return this.notificationsService.registerExpoToken(user.sub, dto);
   }
 
   /**
@@ -43,3 +56,4 @@ export class NotificationsController {
     });
   }
 }
+
