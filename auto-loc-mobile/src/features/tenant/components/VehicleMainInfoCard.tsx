@@ -3,6 +3,7 @@ import {
   StyleSheet,
   View,
   Text,
+  ScrollView,
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,6 +15,7 @@ import {
   Fuel,
   Calendar,
   Navigation,
+  Sparkles,
 } from 'lucide-react-native';
 
 interface VehicleMainInfoCardProps {
@@ -25,6 +27,7 @@ interface VehicleMainInfoCardProps {
   typeStr: string;
   note?: number;
   totalAvis?: number;
+  totalLocations?: number;
   transmission?: string | null;
   carburant?: string | null;
   nombrePlaces?: number | null;
@@ -55,6 +58,7 @@ export const VehicleMainInfoCard: React.FC<VehicleMainInfoCardProps> = ({
   typeStr,
   note = 5.0,
   totalAvis = 0,
+  totalLocations = 0,
   transmission,
   carburant,
   nombrePlaces,
@@ -95,6 +99,12 @@ export const VehicleMainInfoCard: React.FC<VehicleMainInfoCardProps> = ({
             <Text style={styles.horsDakarBadgeText}>HORS DAKAR</Text>
           </View>
         )}
+
+        {totalLocations > 0 && (
+          <View style={styles.tripsBadge}>
+            <Text style={styles.tripsBadgeText}>{totalLocations} location{totalLocations > 1 ? 's' : ''}</Text>
+          </View>
+        )}
       </View>
 
       {/* Titre Marque + Modèle & Année */}
@@ -116,21 +126,30 @@ export const VehicleMainInfoCard: React.FC<VehicleMainInfoCardProps> = ({
           </Text>
         </View>
 
-        <View style={styles.ratingBox}>
-          <Star size={13} color={COLORS.gold} fill={COLORS.gold} />
-          <Text style={styles.ratingValue}>
-            {note > 0 ? note.toFixed(1) : '5.0'}
-          </Text>
-          <View style={styles.ratingDivider} />
-          <Text style={styles.ratingCount}>{totalAvis} avis</Text>
-        </View>
+        {totalAvis > 0 && note > 0 ? (
+          <View style={styles.ratingBox}>
+            <Star size={13} color={COLORS.gold} fill={COLORS.gold} />
+            <Text style={styles.ratingValue}>{Number(note).toFixed(1)}</Text>
+            <View style={styles.ratingDivider} />
+            <Text style={styles.ratingCount}>{totalAvis} avis</Text>
+          </View>
+        ) : (
+          <View style={styles.newBadgeBox}>
+            <Sparkles size={12} color={COLORS.accentDeep} />
+            <Text style={styles.newBadgeText}>Nouveau véhicule</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.divider} />
 
-      {/* Micro-pills de caractéristiques rapides */}
+      {/* Micro-pills de caractéristiques rapides sur UNE SEULE LIGNE */}
       {quickSpecs.length > 0 && (
-        <View style={styles.quickSpecsRow}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.quickSpecsRow}
+        >
           {quickSpecs.map((spec, idx) => {
             const Icon = spec.icon;
             return (
@@ -140,7 +159,7 @@ export const VehicleMainInfoCard: React.FC<VehicleMainInfoCardProps> = ({
               </View>
             );
           })}
-        </View>
+        </ScrollView>
       )}
     </View>
   );
@@ -221,11 +240,26 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.5,
   },
+  tripsBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  tripsBadgeText: {
+    color: '#475569',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
   titleRow: {
     marginBottom: 10,
   },
   titleText: {
     fontSize: 25,
+    fontFamily: 'Fraunces_600SemiBold',
     fontWeight: '800',
     color: COLORS.ink,
     letterSpacing: -0.5,
@@ -276,6 +310,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.goldBorder,
   },
+  newBadgeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: COLORS.tint,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.tintBorder,
+  },
+  newBadgeText: {
+    color: COLORS.accentDeep,
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
   ratingValue: {
     color: '#0F172A',
     fontSize: 13,
@@ -299,8 +349,9 @@ const styles = StyleSheet.create({
   },
   quickSpecsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: 8,
+    paddingRight: 10,
   },
   specPill: {
     flexDirection: 'row',

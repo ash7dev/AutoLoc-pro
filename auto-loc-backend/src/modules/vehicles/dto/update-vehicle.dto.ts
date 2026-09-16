@@ -14,10 +14,14 @@ import {
   ArrayMaxSize,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Carburant, Transmission, TypeVehicule } from '@prisma/client';
+import { Carburant, StatutVehicule, Transmission, TypeVehicule } from '@prisma/client';
 import { PriceTierDto } from './create-vehicle.dto';
 
 export class UpdateVehicleDto {
+  @IsOptional()
+  @IsEnum(StatutVehicule)
+  statut?: StatutVehicule;
+
   @IsOptional()
   @IsString()
   marque?: string;

@@ -3,7 +3,13 @@ import { secureStorage } from '../storage/secureStore';
 import { CurrencyCode } from '../../shared/components/CurrencyPickerModal';
 import { apiClient } from '../api/apiClient';
 
-export type PendingIntentAction = 'BOOK_VEHICLE' | 'ADD_FAVORITE' | 'VIEW_PROFILE' | 'VIEW_BOOKINGS' | 'CONTACT_HOST';
+export type PendingIntentAction =
+  | 'BOOK_VEHICLE'
+  | 'ADD_FAVORITE'
+  | 'VIEW_PROFILE'
+  | 'VIEW_BOOKINGS'
+  | 'CONTACT_HOST'
+  | 'ADD_VEHICLE';
 
 export interface PendingIntent {
   action: PendingIntentAction;

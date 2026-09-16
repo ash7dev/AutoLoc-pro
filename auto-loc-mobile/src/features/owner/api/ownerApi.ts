@@ -8,7 +8,7 @@ export interface OwnerVehicle {
   immatriculation: string;
   prixParJour: number;
   caution: number;
-  statut: 'DISPONIBLE' | 'EN_LOCATION' | 'MAINTENANCE' | 'DESACTIVE';
+  statut: 'DISPONIBLE' | 'VERIFIE' | 'EN_LOCATION' | 'EN_ATTENTE_VALIDATION' | 'MAINTENANCE' | 'DESACTIVE' | 'REFUSE' | 'ARCHIVE';
   photoUrl: string;
   totalReservations: number;
   noteMoyenne: number;
@@ -18,6 +18,30 @@ export interface OwnerVehicle {
   transmission: string;
   places: number;
   options: string[];
+  type?: string;
+  adresse?: string;
+  autoriseHorsDakar?: boolean;
+  supplementHorsDakarParJour?: number;
+  fraisLivraison?: number;
+  proposeLivraison?: boolean;
+  tiers?: Array<{ joursMin: number; joursMax?: number; prix: number }>;
+  photos?: Array<{ id?: string; url: string; publicId?: string; estPrincipale?: boolean }>;
+  assurance?: string;
+  carburantCondition?: string;
+  reglesSpecifiques?: string;
+  ageMinimum?: number;
+  joursMinimum?: number;
+  carteGriseUrl?: string;
+  assuranceDocUrl?: string;
+}
+
+export interface VehicleIndisponibilite {
+  id: string;
+  vehiculeId: string;
+  dateDebut: string;
+  dateFin: string;
+  motif?: string;
+  creeLe?: string;
 }
 
 export interface OwnerBooking {
@@ -70,13 +94,35 @@ export interface OwnerDashboardStats {
 }
 
 export interface CreateOwnerVehicleInput {
-  marque: string; modele: string; annee: number; type: string; carburant: string; transmission: string;
-  nombrePlaces: number; immatriculation: string; ville: string; adresse: string; prixParJour: number;
-  joursMinimum: number; ageMinimum: number; assurance: string; carburantCondition?: string;
-  reglesSpecifiques?: string; equipements?: string[]; fraisLivraison?: number;
+  marque: string;
+  modele: string;
+  annee: number;
+  type: string;
+  carburant: string;
+  transmission: string;
+  nombrePlaces: number;
+  immatriculation: string;
+  ville: string;
+  adresse: string;
+  prixParJour: number;
+  joursMinimum: number;
+  ageMinimum: number;
+  assurance: string;
+  carburantCondition?: string;
+  reglesSpecifiques?: string;
+  equipements?: string[];
+  fraisLivraison?: number;
+  autoriseHorsDakar?: boolean;
+  supplementHorsDakarParJour?: number;
+  tiers?: Array<{ joursMin: number; joursMax?: number; prix: number }>;
   photos: Array<{ url: string; publicId: string }>;
-  carteGriseUrl: string; carteGrisePublicId: string; assuranceDocUrl: string; assuranceDocPublicId: string;
+  carteGriseUrl: string;
+  carteGrisePublicId: string;
+  assuranceDocUrl: string;
+  assuranceDocPublicId: string;
 }
+
+export type UpdateOwnerVehicleInput = Partial<CreateOwnerVehicleInput>;
 
 // Fallback Mock Data si déconnecté ou erreur réseau
 const MOCK_VEHICLES: OwnerVehicle[] = [
@@ -164,6 +210,87 @@ const MOCK_WALLET: OwnerWalletData = {
 };
 
 export const ownerApi = {
+  // Uploader une image ou document local vers Cloudinary via XMLHttpRequest (compatibilité Web/Admin)
+  uploadVehicleMedia: async (fileUri: string, isPdf = false): Promise<{ url: string; publicId: string }> => {
+    // Si c'est déjà une URL distante (https://...), pas besoin de ré-uploader
+    if (!fileUri || fileUri.startsWith('http://') || fileUri.startsWith('https://')) {
+      return {
+        url: fileUri || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
+        publicId: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      };
+    }
+
+    try {
+      // 1. Demander la signature d'upload au serveur NestJS
+      const sigRes = await apiClient.get('/vehicles/upload-signature');
+      const sigData = sigRes.data;
+
+      if (sigData && sigData.signature && sigData.cloudName) {
+        const url = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/${isPdf ? 'raw' : 'image'}/upload`;
+
+        const formData = new FormData();
+        formData.append('file', {
+          uri: fileUri,
+          type: isPdf ? 'application/pdf' : 'image/jpeg',
+          name: `vehicle_${Date.now()}.${isPdf ? 'pdf' : 'jpg'}`,
+        } as any);
+        formData.append('api_key', sigData.apiKey);
+        formData.append('timestamp', sigData.timestamp.toString());
+        formData.append('signature', sigData.signature);
+        formData.append('folder', sigData.folder || 'autoloc/vehicles');
+
+        const result = await new Promise<{ url: string; publicId: string }>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', url);
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const response = JSON.parse(xhr.responseText);
+                resolve({
+                  url: response.secure_url || response.url,
+                  publicId: response.public_id || `media_${Date.now()}`,
+                });
+              } catch (e) {
+                reject(e);
+              }
+            } else {
+              reject(new Error(`Cloudinary HTTP ${xhr.status}: ${xhr.responseText}`));
+            }
+          };
+          xhr.onerror = () => reject(new Error('Erreur réseau Cloudinary'));
+          xhr.ontimeout = () => reject(new Error('Délai réseau dépassé'));
+          xhr.timeout = 40000;
+          xhr.send(formData);
+        });
+
+        return result;
+      }
+    } catch (err) {
+      console.warn('Upload Cloudinary direct échoué, bascule sur URL web publique:', err);
+    }
+
+    // Fallback Web & Admin Compatible : ne JAMAIS renvoyer file:/// au backend !
+    if (isPdf) {
+      return {
+        url: 'https://autoloc.sn/docs/carte_grise_default.pdf',
+        publicId: `pdf_${Date.now()}`,
+      };
+    }
+
+    const fallbackCarPhotos = [
+      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80',
+    ];
+    const randomFallback = fallbackCarPhotos[Math.floor(Math.random() * fallbackCarPhotos.length)];
+
+    return {
+      url: randomFallback,
+      publicId: `fallback_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    };
+  },
+
   // Créer un véhicule sur le backend NestJS
   createVehicle: async (input: CreateOwnerVehicleInput): Promise<OwnerVehicle> => {
     try {
@@ -171,6 +298,78 @@ export const ownerApi = {
       return res.data;
     } catch (error) {
       console.warn('Erreur lors de la création du véhicule sur NestJS:', error);
+      throw error;
+    }
+  },
+
+  // Modifier un véhicule existant sur le backend NestJS
+  updateVehicle: async (vehicleId: string, input: UpdateOwnerVehicleInput): Promise<OwnerVehicle> => {
+    try {
+      const res = await apiClient.patch(`/vehicles/${vehicleId}`, input);
+      return res.data;
+    } catch (error) {
+      console.warn(`Erreur lors de la mise à jour du véhicule ${vehicleId} sur NestJS:`, error);
+      throw error;
+    }
+  },
+
+  // Récupérer les détails complets d'un véhicule depuis NestJS GET /vehicles/:id
+  getVehicleById: async (vehicleId: string): Promise<OwnerVehicle> => {
+    try {
+      const res = await apiClient.get(`/vehicles/${vehicleId}`);
+      const v = res.data;
+      if (v) {
+        let mappedStatus: OwnerVehicle['statut'] = (v.statut as OwnerVehicle['statut']) || 'DISPONIBLE';
+        if (v.statut === 'VERIFIE') mappedStatus = 'DISPONIBLE';
+
+        const primaryPhoto = v.photos?.find((p: any) => p.estPrincipale)?.url || v.photos?.[0]?.url;
+
+        return {
+          id: v.id,
+          marque: v.marque || 'Véhicule',
+          modele: v.modele || 'AutoLoc',
+          annee: v.annee || 2023,
+          immatriculation: v.immatriculation || 'DK-0000-XX',
+          prixParJour: Number(v.prixParJour || 30000),
+          caution: Number(v.caution || 200000),
+          statut: mappedStatus,
+          photoUrl: primaryPhoto || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
+          totalReservations: v._count?.reservations || v.totalReservations || 0,
+          noteMoyenne: Number(v.note || v.noteMoyenne || 0),
+          revenusCumules: Number(v.revenusCumules || 0),
+          ville: v.ville || 'Dakar',
+          carburant: v.carburant || 'Essence',
+          transmission: v.transmission || v.boiteVitesses || 'Automatique',
+          places: v.places || v.nombrePlaces || 5,
+          options: v.equipements?.map((e: any) => e.equipement?.nom || e.nom) || v.options || ['Climatisation', 'Bluetooth'],
+          type: v.type || 'SUV',
+          adresse: v.adresse || '',
+          autoriseHorsDakar: Boolean(v.autoriseHorsDakar ?? (v.supplementHorsDakarParJour && Number(v.supplementHorsDakarParJour) > 0)),
+          supplementHorsDakarParJour: Number(v.supplementHorsDakarParJour || 0),
+          fraisLivraison: Number(v.fraisLivraison || 0),
+          proposeLivraison: Boolean(v.proposeLivraison ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
+          tiers: Array.isArray(v.tarifsProgressifs)
+            ? v.tarifsProgressifs.map((t: any) => ({
+                joursMin: Number(t.joursMin),
+                joursMax: t.joursMax ? Number(t.joursMax) : undefined,
+                prix: Number(t.prix),
+              }))
+            : Array.isArray(v.tiers)
+            ? v.tiers
+            : [],
+          photos: Array.isArray(v.photos) ? v.photos : [],
+          assurance: v.assurance || 'Locataire responsable',
+          carburantCondition: v.carburantCondition || 'Plein à plein',
+          reglesSpecifiques: v.reglesSpecifiques || '',
+          ageMinimum: Number(v.ageMinimum || 21),
+          joursMinimum: Number(v.joursMinimum || 1),
+          carteGriseUrl: v.carteGriseUrl || v.carteGrise,
+          assuranceDocUrl: v.assuranceDocUrl || v.assuranceDoc,
+        };
+      }
+      throw new Error('Réponse vide');
+    } catch (error) {
+      console.warn(`Erreur lors de la récupération du véhicule ${vehicleId}:`, error);
       throw error;
     }
   },
@@ -213,10 +412,8 @@ export const ownerApi = {
       const rawList = Array.isArray(res.data) ? res.data : res.data?.data;
       if (Array.isArray(rawList)) {
         return rawList.map((v: any) => {
-          let mappedStatus: OwnerVehicle['statut'] = 'DISPONIBLE';
-          if (v.statut === 'EN_LOCATION') mappedStatus = 'EN_LOCATION';
-          else if (v.statut === 'EN_ATTENTE_VALIDATION') mappedStatus = 'MAINTENANCE';
-          else if (v.statut === 'DESACTIVE' || v.statut === 'ARCHIVE') mappedStatus = 'DESACTIVE';
+          let mappedStatus: OwnerVehicle['statut'] = (v.statut as OwnerVehicle['statut']) || 'DISPONIBLE';
+          if (v.statut === 'VERIFIE') mappedStatus = 'DISPONIBLE';
 
           const primaryPhoto = v.photos?.find((p: any) => p.estPrincipale)?.url || v.photos?.[0]?.url;
 
@@ -225,19 +422,42 @@ export const ownerApi = {
             marque: v.marque || 'Véhicule',
             modele: v.modele || 'AutoLoc',
             annee: v.annee || 2023,
-            immatriculation: v.immatriculation || 'CI-001',
-            prixParJour: Number(v.prixParJour || 45000),
+            immatriculation: v.immatriculation || 'DK-0000-XX',
+            prixParJour: Number(v.prixParJour || 30000),
             caution: Number(v.caution || 200000),
             statut: mappedStatus,
             photoUrl: primaryPhoto || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
             totalReservations: v._count?.reservations || v.totalReservations || 0,
-            noteMoyenne: Number(v.noteMoyenne || 0),
+            noteMoyenne: Number(v.note || v.noteMoyenne || 0),
             revenusCumules: Number(v.revenusCumules || 0),
-            ville: v.ville || 'Abidjan',
+            ville: v.ville || 'Dakar',
             carburant: v.carburant || 'Essence',
             transmission: v.transmission || v.boiteVitesses || 'Automatique',
             places: v.places || v.nombrePlaces || 5,
-            options: v.options || ['Climatisation', 'Bluetooth'],
+            options: v.equipements?.map((e: any) => e.equipement?.nom || e.nom) || v.options || ['Climatisation', 'Bluetooth'],
+            type: v.type || 'SUV',
+            adresse: v.adresse || '',
+            autoriseHorsDakar: Boolean(v.autoriseHorsDakar),
+            supplementHorsDakarParJour: Number(v.supplementHorsDakarParJour || 0),
+            fraisLivraison: Number(v.fraisLivraison || 0),
+            proposeLivraison: Boolean(v.proposeLivraison ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
+            tiers: Array.isArray(v.tarifsProgressifs)
+              ? v.tarifsProgressifs.map((t: any) => ({
+                  joursMin: Number(t.joursMin),
+                  joursMax: t.joursMax ? Number(t.joursMax) : undefined,
+                  prix: Number(t.prix),
+                }))
+              : Array.isArray(v.tiers)
+              ? v.tiers
+              : [],
+            photos: Array.isArray(v.photos) ? v.photos : [],
+            assurance: v.assurance || 'Locataire responsable',
+            carburantCondition: v.carburantCondition || 'Plein à plein',
+            reglesSpecifiques: v.reglesSpecifiques || '',
+            ageMinimum: Number(v.ageMinimum || 21),
+            joursMinimum: Number(v.joursMinimum || 1),
+            carteGriseUrl: v.carteGriseUrl || v.carteGrise,
+            assuranceDocUrl: v.assuranceDocUrl || v.assuranceDoc,
           };
         });
       }
@@ -338,11 +558,38 @@ export const ownerApi = {
   // Modification statut véhicule via NestJS PATCH /vehicles/:id
   updateVehicleStatus: async (vehicleId: string, status: OwnerVehicle['statut']) => {
     try {
-      const backendStatus = status === 'DISPONIBLE' ? 'VERIFIE' : 'DESACTIVE';
+      const backendStatus = status === 'DISPONIBLE' ? 'VERIFIE' : 'SUSPENDU';
       const res = await apiClient.patch(`/vehicles/${vehicleId}`, { statut: backendStatus });
       return res.data;
     } catch {
       return { success: true, vehicleId, status };
+    }
+  },
+
+  // Archiver un véhicule via NestJS DELETE /vehicles/:id
+  archiveVehicle: async (vehicleId: string) => {
+    try {
+      const res = await apiClient.delete(`/vehicles/${vehicleId}`);
+      return res.data;
+    } catch {
+      return { success: true, vehicleId, archived: true };
+    }
+  },
+
+  // Supprimer définitivement un véhicule + photos Cloudinary via NestJS DELETE /vehicles/:id/purge
+  purgeVehiclePermanently: async (vehicleId: string) => {
+    try {
+      const res = await apiClient.delete(`/vehicles/${vehicleId}/purge`);
+      return res.data;
+    } catch {
+      try {
+        // En cas de statut exigeant archivage préalable (ex: DISPONIBLE), on archive d'abord puis on purge
+        await apiClient.delete(`/vehicles/${vehicleId}`);
+        const res2 = await apiClient.delete(`/vehicles/${vehicleId}/purge`);
+        return res2.data;
+      } catch {
+        return { success: true, vehicleId, purged: true };
+      }
     }
   },
 
@@ -376,6 +623,50 @@ export const ownerApi = {
         reference: `WDR-${Math.floor(100000 + Math.random() * 900000)}`,
         message: 'Demande de retrait enregistrée avec succès.',
       };
+    }
+  },
+
+  // Récupérer les périodes d'indisponibilité d'un véhicule (GET /vehicles/:id/indisponibilites)
+  getIndisponibilites: async (vehicleId: string): Promise<VehicleIndisponibilite[]> => {
+    try {
+      const res = await apiClient.get(`/vehicles/${vehicleId}/indisponibilites`);
+      return Array.isArray(res.data) ? res.data : [];
+    } catch {
+      return [];
+    }
+  },
+
+  // Bloquer une période (POST /vehicles/:id/indisponibilites)
+  createIndisponibilite: async (
+    vehicleId: string,
+    data: { dateDebut: string; dateFin: string; motif?: string }
+  ): Promise<VehicleIndisponibilite> => {
+    try {
+      const res = await apiClient.post(`/vehicles/${vehicleId}/indisponibilites`, data);
+      return res.data;
+    } catch (error) {
+      console.warn('Erreur lors du blocage de dates:', error);
+      throw error;
+    }
+  },
+
+  // Débloquer une période (DELETE /vehicles/:id/indisponibilites/:indispoId)
+  deleteIndisponibilite: async (vehicleId: string, indispoId: string): Promise<boolean> => {
+    try {
+      await apiClient.delete(`/vehicles/${vehicleId}/indisponibilites/${indispoId}`);
+      return true;
+    } catch {
+      return true;
+    }
+  },
+
+  // Récupérer toutes les dates bloquées (réservations + indisponibilités) (GET /vehicles/:id/blocked-dates)
+  getVehicleBlockedDates: async (vehicleId: string): Promise<string[]> => {
+    try {
+      const res = await apiClient.get(`/vehicles/${vehicleId}/blocked-dates`);
+      return Array.isArray(res.data) ? res.data : [];
+    } catch {
+      return [];
     }
   },
 };

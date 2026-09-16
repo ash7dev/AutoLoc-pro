@@ -4,7 +4,7 @@ import {
   View,
   Text,
 } from 'react-native';
-import { Tag, TrendingDown, Zap, Clock, Sparkles } from 'lucide-react-native';
+import { TrendingDown, Zap, Clock, Sparkles } from 'lucide-react-native';
 import { TarifTierDetail } from '../hooks/useVehicleDetail';
 import { CurrencyCode, getTenantPricePerDay, formatDirectPrice } from '../../../core/utils/currency';
 
@@ -19,26 +19,32 @@ export const VehiclePricingTierCard: React.FC<VehiclePricingTierCardProps> = ({
   baseOwnerPrice,
   selectedCurrency,
 }) => {
-  // Si le serveur backend ne renvoie aucun tarif dégressif pour ce véhicule, on masque le composant
+  // Si le serveur backend ne renvoie aucun tarif dégressif pour ce véhicule, on masque la section
   if (!tarifsProgressifs || tarifsProgressifs.length === 0) {
     return null;
   }
 
   const standardTenantPrice = getTenantPricePerDay(baseOwnerPrice);
 
-  const displayTiers = tarifsProgressifs.map((t) => ({
-    id: t.id,
-    joursMin: t.joursMin,
-    joursMax: t.joursMax,
-    tenantPrix: getTenantPricePerDay(Number(t.prix)),
-  }));
+  const displayTiers = tarifsProgressifs.map((t) => {
+    const priceVal = getTenantPricePerDay(Number(t.prix));
+    const saving = Math.max(0, Math.round(((standardTenantPrice - priceVal) / standardTenantPrice) * 100));
+    const label = t.joursMax
+      ? `${t.joursMin} à ${t.joursMax} jours`
+      : `${t.joursMin}+ jours`;
 
-  const basePrice = Math.max(standardTenantPrice, ...displayTiers.map((t) => t.tenantPrix));
+    return {
+      id: t.id || `tier-${t.joursMin}`,
+      label,
+      tenantPrix: priceVal,
+      savingPct: saving,
+    };
+  });
+
+  const basePrice = standardTenantPrice;
   const minPrice = Math.min(...displayTiers.map((t) => t.tenantPrix));
   const hasDiscount = basePrice > minPrice;
-  const maxSavingPct = hasDiscount
-    ? Math.round(((basePrice - minPrice) / basePrice) * 100)
-    : 0;
+  const maxSavingPct = Math.max(...displayTiers.map((t) => t.savingPct));
 
   return (
     <View style={styles.container}>
@@ -53,7 +59,7 @@ export const VehiclePricingTierCard: React.FC<VehiclePricingTierCardProps> = ({
                 <Text style={styles.discountHighlight}>−{maxSavingPct}%</Text> sur vos longs séjours
               </>
             ) : (
-              'Tarif fixe garanti sans frais cachés'
+              'Tarif fixe garanti'
             )}
           </Text>
         </View>
@@ -69,14 +75,9 @@ export const VehiclePricingTierCard: React.FC<VehiclePricingTierCardProps> = ({
         {displayTiers.map((tier) => {
           const isLowest = tier.tenantPrix === minPrice && hasDiscount;
           const formattedPrice = formatDirectPrice(tier.tenantPrix, selectedCurrency);
-          const savingPct = Math.round(((basePrice - tier.tenantPrix) / basePrice) * 100);
           const barPct = hasDiscount
-            ? Math.round(20 + ((basePrice - tier.tenantPrix) / (basePrice - minPrice)) * 80)
+            ? Math.round(20 + ((basePrice - tier.tenantPrix) / Math.max(1, basePrice - minPrice)) * 80)
             : 100;
-
-          const label = tier.joursMax
-            ? `${tier.joursMin} à ${tier.joursMax} jours`
-            : `${tier.joursMin}+ jours`;
 
           return (
             <View
@@ -108,12 +109,12 @@ export const VehiclePricingTierCard: React.FC<VehiclePricingTierCardProps> = ({
                       color={isLowest ? '#FFFFFF' : '#041912'}
                     />
                   </View>
-                  <Text style={styles.durationLabel}>{label}</Text>
+                  <Text style={styles.durationLabel}>{tier.label}</Text>
                 </View>
 
                 {/* Prix & Réduction */}
                 <View style={styles.priceContainer}>
-                  {savingPct > 0 && (
+                  {tier.savingPct > 0 && (
                     <View
                       style={[
                         styles.savingBadge,
@@ -126,7 +127,7 @@ export const VehiclePricingTierCard: React.FC<VehiclePricingTierCardProps> = ({
                           isLowest ? styles.savingBadgeTextFeatured : styles.savingBadgeTextStandard,
                         ]}
                       >
-                        −{savingPct}%
+                        −{tier.savingPct}%
                       </Text>
                     </View>
                   )}
@@ -175,29 +176,11 @@ const styles = StyleSheet.create({
   titleBox: {
     flex: 1,
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '800',
     color: '#041912',
     letterSpacing: -0.3,
-  },
-  fallbackTag: {
-    backgroundColor: '#FFFBEB',
-    borderColor: '#FEF3C7',
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  fallbackTagText: {
-    color: '#B45309',
-    fontSize: 10,
-    fontWeight: '700',
   },
   subtitleText: {
     fontSize: 13,

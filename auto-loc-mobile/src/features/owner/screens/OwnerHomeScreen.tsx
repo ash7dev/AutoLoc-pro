@@ -28,7 +28,13 @@ import { OwnerStatCard } from '../components/OwnerStatCard';
 import { OwnerBookingCard } from '../components/OwnerBookingCard';
 import { OwnerDailyScheduleWidget } from '../components/OwnerDailyScheduleWidget';
 import { OwnerFleetPreviewWidget } from '../components/OwnerFleetPreviewWidget';
+import { OwnerQuickActionsWidget } from '../components/OwnerQuickActionsWidget';
 import { ownerApi, OwnerDashboardStats, OwnerBooking, OwnerVehicle } from '../api/ownerApi';
+import { useHostGate } from '../hooks/useHostGate';
+import { ReservationGateModal } from '../../tenant/components/gates/ReservationGateModal';
+import { AddVehicleWizardScreen } from './AddVehicleWizardScreen';
+import { becomeAutoLocHost } from '../../tenant/api/tenantProfileApi';
+import { secureStorage } from '../../../core/storage/secureStore';
 
 interface OwnerHomeScreenProps {
   onNavigateToTab?: (tab: 'ACCUEIL' | 'VEHICULES' | 'RESERVATIONS' | 'WALLET') => void;
@@ -42,7 +48,9 @@ export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
   onProfilePress,
 }) => {
   const user = useAppStore((state) => state.user);
+  const setAuth = useAppStore((state) => state.setAuth);
   const selectedCurrency = useAppStore((state) => state.selectedCurrency);
+  const triggerGuestAuthGuard = useAppStore((state) => state.triggerGuestAuthGuard);
 
   const [stats, setStats] = useState<OwnerDashboardStats | null>(null);
   const [allBookings, setAllBookings] = useState<OwnerBooking[]>([]);
@@ -50,6 +58,38 @@ export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
   const [vehicles, setVehicles] = useState<OwnerVehicle[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [gateModalVisible, setGateModalVisible] = useState(false);
+  const [addWizardVisible, setAddWizardVisible] = useState(false);
+
+  const hostGate = useHostGate();
+
+  const handleAddVehiclePress = async () => {
+    const allowed = triggerGuestAuthGuard(
+      'Connectez-vous pour ajouter votre véhicule et commencer à recevoir des réservations.',
+      { action: 'ADD_VEHICLE' }
+    );
+    if (!allowed) return;
+
+    if (!hostGate.canProceed) {
+      setGateModalVisible(true);
+      return;
+    }
+
+    await openCreationFlow();
+  };
+
+  const openCreationFlow = async () => {
+    if (user && user.role !== 'PROPRIETAIRE') {
+      try {
+        const result = await becomeAutoLocHost();
+        await secureStorage.setRefreshToken(result.refreshToken);
+        await setAuth(result.accessToken, { ...user, role: result.role });
+      } catch {
+        // En cas de problème de token
+      }
+    }
+    setAddWizardVisible(true);
+  };
 
   const loadData = async () => {
     try {
@@ -147,40 +187,12 @@ export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
         </View>
 
         {/* Raccourcis d'actions rapides */}
-        <View style={styles.quickActionsContainer}>
-          <TouchableOpacity
-            style={styles.quickActionBtn}
-            onPress={() => onNavigateToTab?.('VEHICULES')}
-            activeOpacity={0.8}
-          >
-            <View style={[styles.quickIconCircle, { backgroundColor: '#ECFDF5' }]}>
-              <PlusCircle size={20} color="#059669" />
-            </View>
-            <Text style={styles.quickActionText}>Ajouter véhicule</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickActionBtn}
-            onPress={() => onNavigateToTab?.('RESERVATIONS')}
-            activeOpacity={0.8}
-          >
-            <View style={[styles.quickIconCircle, { backgroundColor: '#FEF3C7' }]}>
-              <Clock size={20} color="#D97706" />
-            </View>
-            <Text style={styles.quickActionText}>Demandes ({pendingBookings.length})</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickActionBtn}
-            onPress={() => onNavigateToTab?.('WALLET')}
-            activeOpacity={0.8}
-          >
-            <View style={[styles.quickIconCircle, { backgroundColor: '#EFF6FF' }]}>
-              <Wallet size={20} color="#2563EB" />
-            </View>
-            <Text style={styles.quickActionText}>Mes revenus</Text>
-          </TouchableOpacity>
-        </View>
+        <OwnerQuickActionsWidget
+          pendingBookingsCount={pendingBookings.length}
+          onAddVehiclePress={handleAddVehiclePress}
+          onBookingsPress={() => onNavigateToTab?.('RESERVATIONS')}
+          onRevenuesPress={() => onNavigateToTab?.('WALLET')}
+        />
 
         {/* Grille de Statistiques Clés */}
         <View style={styles.sectionHeader}>
@@ -256,10 +268,33 @@ export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
           vehicles={vehicles}
           selectedCurrency={selectedCurrency}
           onNavigateToFleet={() => onNavigateToTab?.('VEHICULES')}
-          onAddVehicle={() => onNavigateToTab?.('VEHICULES')}
+          onAddVehicle={handleAddVehiclePress}
           onSelectVehicle={() => onNavigateToTab?.('VEHICULES')}
         />
       </ScrollView>
+
+      <ReservationGateModal
+        visible={gateModalVisible}
+        vehicleTitle="Votre profil Hôte"
+        missingSteps={hostGate.missingSteps}
+        userAge={hostGate.userAge}
+        customTitle="Vérification requise pour ajouter un véhicule"
+        customSubtitle="Pour la sécurité des locataires et la couverture assurance AutoLoc, complétez votre profil hôte avant de publier votre annonce."
+        onClose={() => setGateModalVisible(false)}
+        onAllCompleted={() => {
+          setGateModalVisible(false);
+          openCreationFlow();
+        }}
+      />
+
+      <AddVehicleWizardScreen
+        visible={addWizardVisible}
+        onClose={() => setAddWizardVisible(false)}
+        onVehicleCreated={() => {
+          setAddWizardVisible(false);
+          loadData();
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -357,35 +392,6 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 11,
     color: '#34D399',
-  },
-  quickActionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  quickActionBtn: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 12,
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  quickIconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickActionText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 11,
-    color: '#1F2937',
-    textAlign: 'center',
   },
   sectionHeader: {
     flexDirection: 'row',

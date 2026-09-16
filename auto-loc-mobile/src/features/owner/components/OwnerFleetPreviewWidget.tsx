@@ -22,11 +22,11 @@ import {
 } from 'lucide-react-native';
 import { theme } from '../../../core/theme';
 import { OwnerVehicle } from '../api/ownerApi';
-import { formatCurrency } from '../../../core/utils/currency';
+import { formatCurrency, CurrencyCode } from '../../../core/utils/currency';
 
 interface OwnerFleetPreviewWidgetProps {
   vehicles: OwnerVehicle[];
-  selectedCurrency: string;
+  selectedCurrency: CurrencyCode;
   onNavigateToFleet?: () => void;
   onAddVehicle?: () => void;
   onSelectVehicle?: (vehicle: OwnerVehicle) => void;
@@ -42,11 +42,23 @@ const STATUS_CONFIG: Record<
     color: '#047857',
     dotColor: '#34D399',
   },
+  VERIFIE: {
+    label: 'Disponible',
+    bg: '#ECFDF5',
+    color: '#047857',
+    dotColor: '#34D399',
+  },
   EN_LOCATION: {
     label: 'En location',
     bg: '#EFF6FF',
     color: '#1D4ED8',
     dotColor: '#60A5FA',
+  },
+  EN_ATTENTE_VALIDATION: {
+    label: 'En vérification',
+    bg: '#FFFBEB',
+    color: '#B45309',
+    dotColor: '#FBBF24',
   },
   MAINTENANCE: {
     label: 'En attente',
@@ -59,6 +71,18 @@ const STATUS_CONFIG: Record<
     bg: '#F3F4F6',
     color: '#6B7280',
     dotColor: '#9CA3AF',
+  },
+  REFUSE: {
+    label: 'Refusé',
+    bg: '#FEF2F2',
+    color: '#B91C1C',
+    dotColor: '#EF4444',
+  },
+  ARCHIVE: {
+    label: 'Archivé',
+    bg: '#F1F5F9',
+    color: '#475569',
+    dotColor: '#94A3B8',
   },
 };
 
@@ -257,8 +281,10 @@ export const OwnerFleetPreviewWidget: React.FC<OwnerFleetPreviewWidgetProps> = (
             <View style={styles.addIconCircle}>
               <PlusCircle size={28} color={theme.colors.brand.main} />
             </View>
-            <Text style={styles.addTitle}>Ajouter un véhicule</Text>
-            <Text style={styles.addSubtitle}>
+            <Text style={styles.addTitle} numberOfLines={1}>
+              Ajouter un véhicule
+            </Text>
+            <Text style={styles.addSubtitle} numberOfLines={1}>
               Rentabilisez votre auto en la louant sur AutoLoc
             </Text>
           </TouchableOpacity>
@@ -539,13 +565,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5E7EB',
   },
   addVehicleCard: {
-    width: 180,
+    width: 200,
+    alignSelf: 'stretch',
     backgroundColor: '#F0FDF4',
     borderRadius: theme.radius.card,
     borderWidth: 2,
     borderColor: '#A7F3D0',
     borderStyle: 'dashed',
-    padding: 20,
+    padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,

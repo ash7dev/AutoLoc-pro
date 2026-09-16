@@ -95,6 +95,18 @@ export const GuestAuthModal: React.FC<GuestAuthModalProps> = ({
             'Accès prioritaire lors des offres promotionnelles',
           ],
         };
+      case 'ADD_VEHICLE':
+        return {
+          icon: Car,
+          iconColor: '#10B981',
+          badgeText: 'DEVENIR HÔTE AUTOLOC',
+          title: 'Publiez votre Véhicule',
+          subtitle: 'Connectez-vous pour ajouter votre véhicule et générer des revenus de location.',
+          highlights: [
+            'Rentabilisez votre véhicule en toute sécurité avec assurance incluse',
+            'Gestion simple de vos disponibilités et réservations',
+          ],
+        };
       default:
         return {
           icon: Lock,

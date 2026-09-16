@@ -1,22 +1,13 @@
 import React from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-} from 'react-native';
-import { ShieldCheck, Clock, CheckCircle2, Circle, ArrowRight, UserCheck, PhoneCall, FileText, Award } from 'lucide-react-native';
-import { GateStep } from '../../hooks/useBookingGate';
-import { theme } from '../../../../core/theme';
+import { StyleSheet, View, Text, Pressable, ScrollView } from 'react-native';
+import { ShieldCheck, Clock, Circle, ArrowRight, UserCheck, PhoneCall, FileText, Award, Car } from 'lucide-react-native';
+import { GateStep } from '../../tenant/hooks/useBookingGate';
+import { theme } from '../../../core/theme';
 
-interface BookingPreGateOverviewProps {
-  vehicleTitle: string;
+interface HostPreGateOverviewProps {
   missingSteps: GateStep[];
   onStart: () => void;
   onCancel: () => void;
-  customTitle?: string;
-  customSubtitle?: string;
 }
 
 const COLORS = {
@@ -29,15 +20,11 @@ const COLORS = {
   surface: '#F8FAFC',
 };
 
-export const BookingPreGateOverview: React.FC<BookingPreGateOverviewProps> = ({
-  vehicleTitle,
+export const HostPreGateOverview: React.FC<HostPreGateOverviewProps> = ({
   missingSteps,
   onStart,
   onCancel,
-  customTitle,
-  customSubtitle,
 }) => {
-  // Filtrer la porte PREGATE de la liste des étapes restantes
   const actualSteps = missingSteps.filter((step) => step !== 'PREGATE');
 
   const getStepInfo = (step: GateStep) => {
@@ -51,7 +38,7 @@ export const BookingPreGateOverview: React.FC<BookingPreGateOverviewProps> = ({
       case 'PHONE':
         return {
           title: 'Vérification téléphone',
-          subtitle: 'Confirmation par code SMS OTP',
+          subtitle: 'Confirmation par SMS OTP',
           icon: PhoneCall,
         };
       case 'KYC':
@@ -63,7 +50,7 @@ export const BookingPreGateOverview: React.FC<BookingPreGateOverviewProps> = ({
       case 'PERMIS':
         return {
           title: 'Permis de conduire',
-          subtitle: 'Photo lisible de votre permis',
+          subtitle: 'Photo lisible de votre permis de conduire',
           icon: Award,
         };
       default:
@@ -78,21 +65,14 @@ export const BookingPreGateOverview: React.FC<BookingPreGateOverviewProps> = ({
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Banner Icône & Titre d'Annonce */}
+        {/* Header Icon */}
         <View style={styles.headerBadgeContainer}>
-          <View style={styles.shieldIconWrapper}>
-            <ShieldCheck size={36} color={COLORS.accent} strokeWidth={2.2} />
+          <View style={styles.iconWrapper}>
+            <Car size={36} color={COLORS.accent} strokeWidth={2.2} />
           </View>
-          <Text style={styles.mainTitle}>
-            {customTitle || 'Dernière étape avant réservation'}
-          </Text>
+          <Text style={styles.mainTitle}>Devenir Hôte AutoLoc</Text>
           <Text style={styles.subTitle}>
-            {customSubtitle || (
-              <>
-                Pour votre sécurité et celle du propriétaire, veuillez compléter votre profil pour réserver{' '}
-                <Text style={{ fontWeight: '700', color: COLORS.ink }}>{vehicleTitle}</Text>.
-              </>
-            )}
+            Pour assurer la sécurité des locataires et la couverture d'assurance de vos véhicules, complétez votre profil hôte.
           </Text>
         </View>
 
@@ -100,13 +80,13 @@ export const BookingPreGateOverview: React.FC<BookingPreGateOverviewProps> = ({
         <View style={styles.timeEstimateCard}>
           <Clock size={18} color={COLORS.accent} style={{ marginRight: 8 }} />
           <Text style={styles.timeEstimateText}>
-            Durée estimée : <Text style={{ fontWeight: '700', color: COLORS.accent }}>~2 minutes</Text> • Une seule fois pour toutes vos réservations
+            Durée estimée : <Text style={{ fontWeight: '700', color: COLORS.accent }}>~2 minutes</Text> • Une seule fois pour publier vos annonces
           </Text>
         </View>
 
         {/* Checklist des Étapes */}
         <View style={styles.stepsCard}>
-          <Text style={styles.stepsTitle}>Checklist de vérification :</Text>
+          <Text style={styles.stepsTitle}>Checklist de vérification hôte :</Text>
 
           {actualSteps.map((step, index) => {
             const info = getStepInfo(step);
@@ -117,7 +97,9 @@ export const BookingPreGateOverview: React.FC<BookingPreGateOverviewProps> = ({
                   <Icon size={20} color={COLORS.accent} />
                 </View>
                 <View style={styles.stepTextContent}>
-                  <Text style={styles.stepItemTitle}>{index + 1}. {info.title}</Text>
+                  <Text style={styles.stepItemTitle}>
+                    {index + 1}. {info.title}
+                  </Text>
                   <Text style={styles.stepItemSubtitle}>{info.subtitle}</Text>
                 </View>
                 <Circle size={18} color="#CBD5E1" strokeWidth={2} />
@@ -126,16 +108,16 @@ export const BookingPreGateOverview: React.FC<BookingPreGateOverviewProps> = ({
           })}
         </View>
 
-        {/* Informations de confidentialité */}
+        {/* Note de confidentialité */}
         <View style={styles.trustBadge}>
           <ShieldCheck size={16} color={COLORS.inkMuted} />
           <Text style={styles.trustText}>
-            Vos données sont cryptées et protégées conformément aux normes RGPD & AutoLoc.
+            Vos documents sont chiffrés et vérifiés par l'équipe de modération AutoLoc.
           </Text>
         </View>
       </ScrollView>
 
-      {/* Barre d'Action Inférieure */}
+      {/* Footer Button */}
       <View style={styles.footerBar}>
         <Pressable style={styles.startButton} onPress={onStart}>
           <Text style={styles.startButtonText}>Commencer la vérification</Text>
@@ -164,7 +146,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  shieldIconWrapper: {
+  iconWrapper: {
     width: 72,
     height: 72,
     borderRadius: 36,

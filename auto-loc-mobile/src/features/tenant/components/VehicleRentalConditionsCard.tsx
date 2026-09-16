@@ -12,6 +12,8 @@ import {
   MapPin,
   FileText,
   Lock,
+  FileSpreadsheet,
+  Globe,
 } from 'lucide-react-native';
 import { CurrencyCode, formatConvertedPrice } from '../../../core/utils/currency';
 
@@ -21,6 +23,8 @@ interface VehicleRentalConditionsCardProps {
   autoriseHorsDakar?: boolean;
   supplementHorsDakarParJour?: number | null;
   fraisLivraison?: number | null;
+  zoneConduite?: string | null;
+  reglesSpecifiques?: string | null;
   selectedCurrency: CurrencyCode;
 }
 
@@ -44,6 +48,8 @@ export const VehicleRentalConditionsCard: React.FC<VehicleRentalConditionsCardPr
   autoriseHorsDakar,
   supplementHorsDakarParJour,
   fraisLivraison,
+  zoneConduite,
+  reglesSpecifiques,
   selectedCurrency,
 }) => {
   const supplementVal = supplementHorsDakarParJour ? Number(supplementHorsDakarParJour) : 0;
@@ -87,6 +93,22 @@ export const VehicleRentalConditionsCard: React.FC<VehicleRentalConditionsCardPr
             : 'À récupérer sur place au point de rendez-vous',
     },
   ];
+
+  if (zoneConduite) {
+    conditions.push({
+      icon: Globe,
+      title: 'Zone de Conduite',
+      detail: zoneConduite,
+    });
+  }
+
+  if (reglesSpecifiques) {
+    conditions.push({
+      icon: FileSpreadsheet,
+      title: 'Consignes de l’Hôte',
+      detail: reglesSpecifiques,
+    });
+  }
 
   return (
     <View style={styles.container}>

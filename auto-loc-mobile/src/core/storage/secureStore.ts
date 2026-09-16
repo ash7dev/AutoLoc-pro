@@ -5,6 +5,7 @@ const REFRESH_TOKEN_KEY = 'autoloc_refresh_token';
 const USER_KEY = 'autoloc_user_data';
 const ONBOARDING_KEY = 'autoloc_has_seen_onboarding';
 const FAVORITE_VEHICLES_KEY = 'autoloc_favorite_vehicle_ids';
+const VEHICLE_WIZARD_DRAFT_KEY = 'autoloc_vehicle_wizard_draft';
 
 export const secureStorage = {
   async getToken(): Promise<string | null> {
@@ -116,6 +117,32 @@ export const secureStorage = {
       await SecureStore.setItemAsync(FAVORITE_VEHICLES_KEY, JSON.stringify(ids));
     } catch (e) {
       console.error('SecureStore setFavoriteVehicleIds error:', e);
+    }
+  },
+
+  async getVehicleDraft<T>(): Promise<T | null> {
+    try {
+      const json = await SecureStore.getItemAsync(VEHICLE_WIZARD_DRAFT_KEY);
+      return json ? JSON.parse(json) : null;
+    } catch (e) {
+      console.warn('SecureStore getVehicleDraft error:', e);
+      return null;
+    }
+  },
+
+  async setVehicleDraft<T>(draft: T): Promise<void> {
+    try {
+      await SecureStore.setItemAsync(VEHICLE_WIZARD_DRAFT_KEY, JSON.stringify(draft));
+    } catch (e) {
+      console.error('SecureStore setVehicleDraft error:', e);
+    }
+  },
+
+  async removeVehicleDraft(): Promise<void> {
+    try {
+      await SecureStore.deleteItemAsync(VEHICLE_WIZARD_DRAFT_KEY);
+    } catch (e) {
+      console.warn('SecureStore removeVehicleDraft error:', e);
     }
   },
 

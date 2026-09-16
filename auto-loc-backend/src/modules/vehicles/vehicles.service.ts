@@ -591,6 +591,7 @@ export class VehiclesService {
         return tx.vehicule.update({
           where: { id: vehicleId },
           data: {
+            statut: dto.statut,
             marque: dto.marque,
             modele: dto.modele,
             annee: dto.annee,

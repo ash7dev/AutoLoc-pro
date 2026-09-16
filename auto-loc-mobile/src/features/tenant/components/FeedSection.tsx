@@ -68,7 +68,7 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
         keyExtractor={(item) => item.id}
         horizontal
         showsHorizontalScrollIndicator={false}
-        snapToInterval={301} // 285px width + 16px marginRight
+        snapToInterval={306} // 290px width + 16px marginRight
         decelerationRate="fast"
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (

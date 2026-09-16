@@ -6,28 +6,24 @@ import {
   Modal,
   Pressable,
   SafeAreaView,
-  Platform,
   StatusBar,
 } from 'react-native';
 import { X, ChevronLeft } from 'lucide-react-native';
-import { GateStep } from '../../hooks/useBookingGate';
-import { BookingPreGateOverview } from './BookingPreGateOverview';
-import { GateStepProfile } from './GateStepProfile';
-import { GateStepPhoneOtp } from './GateStepPhoneOtp';
-import { GateStepKycIdentity } from './GateStepKycIdentity';
-import { GateStepDriverLicense } from './GateStepDriverLicense';
-import { GateStepAgeWarning } from './GateStepAgeWarning';
+import { GateStep } from '../../tenant/hooks/useBookingGate';
+import { HostPreGateOverview } from './HostPreGateOverview';
+import { GateStepProfile } from '../../tenant/components/gates/GateStepProfile';
+import { GateStepPhoneOtp } from '../../tenant/components/gates/GateStepPhoneOtp';
+import { GateStepKycIdentity } from '../../tenant/components/gates/GateStepKycIdentity';
+import { GateStepDriverLicense } from '../../tenant/components/gates/GateStepDriverLicense';
+import { becomeAutoLocHost } from '../../tenant/api/tenantProfileApi';
+import { secureStorage } from '../../../core/storage/secureStore';
+import { useAppStore } from '../../../core/store/useAppStore';
 
-interface ReservationGateModalProps {
+interface HostGateModalProps {
   visible: boolean;
-  vehicleTitle: string;
-  vehicleMinimumAge?: number;
   missingSteps: GateStep[];
-  userAge: number | null;
   onClose: () => void;
   onAllCompleted: () => void;
-  customTitle?: string;
-  customSubtitle?: string;
 }
 
 const COLORS = {
@@ -39,20 +35,17 @@ const COLORS = {
   surface: '#F8FAFC',
 };
 
-export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
+export const HostGateModal: React.FC<HostGateModalProps> = ({
   visible,
-  vehicleTitle,
-  vehicleMinimumAge,
   missingSteps,
-  userAge,
   onClose,
   onAllCompleted,
-  customTitle,
-  customSubtitle,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [upgradingRole, setUpgradingRole] = useState(false);
+  const setAuth = useAppStore((state) => state.setAuth);
+  const user = useAppStore((state) => state.user);
 
-  // Réinitialiser le step au changement de visibilité
   useEffect(() => {
     if (visible) {
       setCurrentStepIndex(0);
@@ -66,14 +59,29 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
   const currentStep = missingSteps[currentStepIndex] || missingSteps[0];
   const totalSteps = missingSteps.length;
   const isPreGate = currentStep === 'PREGATE';
-  const isAgeWarning = currentStep === 'AGE_INSUFFICIENT';
 
-  // Passer à l'étape suivante ou terminer si toutes validées
-  const handleStepSuccess = () => {
+  const handleStepSuccess = async () => {
     if (currentStepIndex + 1 < totalSteps) {
       setCurrentStepIndex((prev) => prev + 1);
     } else {
-      onAllCompleted();
+      // Toutes les étapes de vérification sont franchies !
+      // Si l'utilisateur n'est pas encore PROPRIETAIRE, upgrade son rôle automatiquement.
+      try {
+        setUpgradingRole(true);
+        if (user && user.role !== 'PROPRIETAIRE') {
+          const result = await becomeAutoLocHost();
+          await secureStorage.setRefreshToken(result.refreshToken);
+          await setAuth(result.accessToken, {
+            ...user,
+            role: result.role,
+          });
+        }
+      } catch {
+        // En cas d'erreur réseau, poursuivre tout de même le flow
+      } finally {
+        setUpgradingRole(false);
+        onAllCompleted();
+      }
     }
   };
 
@@ -95,7 +103,7 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
       <SafeAreaView style={styles.safeArea}>
         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-        {/* En-tête de Modal (Fond Blanc) */}
+        {/* Header */}
         <View style={styles.header}>
           {currentStepIndex > 0 ? (
             <Pressable style={styles.iconButton} onPress={handleBack}>
@@ -105,8 +113,7 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
             <View style={styles.iconPlaceholder} />
           )}
 
-          {/* Indicateur de Progression (Dots) */}
-          {!isPreGate && !isAgeWarning && (
+          {!isPreGate && (
             <View style={styles.progressContainer}>
               <Text style={styles.stepCounterText}>
                 Étape {currentStepIndex} sur {totalSteps - 1}
@@ -115,7 +122,7 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
                 {missingSteps
                   .filter((s) => s !== 'PREGATE')
                   .map((stepItem, idx) => {
-                    const activeIdx = currentStepIndex - 1; // décalé de PREGATE
+                    const activeIdx = currentStepIndex - 1;
                     const isCompleted = idx < activeIdx;
                     const isActive = idx === activeIdx;
 
@@ -134,21 +141,18 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
             </View>
           )}
 
-          <Pressable style={styles.iconButton} onPress={onClose}>
+          <Pressable style={styles.iconButton} onPress={onClose} disabled={upgradingRole}>
             <X size={22} color={COLORS.ink} />
           </Pressable>
         </View>
 
-        {/* Corps des Équivalents de Pages */}
+        {/* Body */}
         <View style={styles.body}>
           {currentStep === 'PREGATE' && (
-            <BookingPreGateOverview
-              vehicleTitle={vehicleTitle}
+            <HostPreGateOverview
               missingSteps={missingSteps}
               onStart={() => setCurrentStepIndex(1)}
               onCancel={onClose}
-              customTitle={customTitle}
-              customSubtitle={customSubtitle}
             />
           )}
 
@@ -166,14 +170,6 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
 
           {currentStep === 'PERMIS' && (
             <GateStepDriverLicense onSuccess={handleStepSuccess} />
-          )}
-
-          {currentStep === 'AGE_INSUFFICIENT' && (
-            <GateStepAgeWarning
-              vehicleMinimumAge={vehicleMinimumAge}
-              userAge={userAge}
-              onClose={onClose}
-            />
           )}
         </View>
       </SafeAreaView>

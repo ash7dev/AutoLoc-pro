@@ -14,6 +14,7 @@ import { VehicleSpecsCard } from '../components/VehicleSpecsCard';
 import { VehicleEquipmentsGrid } from '../components/VehicleEquipmentsGrid';
 import { VehiclePricingTierCard } from '../components/VehiclePricingTierCard';
 import { VehicleRentalConditionsCard } from '../components/VehicleRentalConditionsCard';
+import { VehicleAvailabilityCalendarCard } from '../components/VehicleAvailabilityCalendarCard';
 import { VehicleStickyBookingBar } from '../components/VehicleStickyBookingBar';
 import { VehicleDetailSkeleton } from '../components/VehicleDetailSkeleton';
 import { ReservationGateModal } from '../components/gates/ReservationGateModal';
@@ -56,8 +57,8 @@ export const VehicleDetailScreen: React.FC<VehicleDetailScreenProps> = ({
   // Évaluation instantanée (0ms latence) des verrous de réservation
   const gateEval = useBookingGate(detail?.ageMinimum);
 
-  // Affichage du Skeleton pendant le chargement initial si pas de vehicle en props
-  if (loading && !detail && !initialVehicle) {
+  // Affichage du Skeleton ultra-fluide pendant le chargement des données réelles de l'API
+  if (loading || !detail) {
     return <VehicleDetailSkeleton />;
   }
 
@@ -148,6 +149,7 @@ export const VehicleDetailScreen: React.FC<VehicleDetailScreenProps> = ({
           typeStr={typeStr}
           note={detail?.note ? Number(detail.note) : 5.0}
           totalAvis={detail?.totalAvis || 0}
+          totalLocations={detail?.totalLocations || detail?._count?.reservations || 0}
           transmission={detail?.transmission}
           carburant={detail?.carburant}
           nombrePlaces={detail?.nombrePlaces}
@@ -167,11 +169,17 @@ export const VehicleDetailScreen: React.FC<VehicleDetailScreenProps> = ({
         {/* 5. Équipements & Options de confort */}
         <VehicleEquipmentsGrid equipements={detail?.equipements} />
 
-        {/* 6. Tarifs Dégressifs Longue Durée (Multi-devises) */}
+        {/* 6. Tarifs Dégressifs Longue Durée (Données API & Multi-devises) */}
         <VehiclePricingTierCard
           tarifsProgressifs={detail?.tarifsProgressifs}
           baseOwnerPrice={basePrice}
           selectedCurrency={selectedCurrency}
+        />
+
+        {/* 6.1. Disponibilité en temps réel & Calendrier */}
+        <VehicleAvailabilityCalendarCard
+          vehicleId={targetId}
+          ville={ville}
         />
 
         {/* 7. Carte Propriétaire / Hôte Partenaire Vérifié */}
@@ -189,6 +197,8 @@ export const VehicleDetailScreen: React.FC<VehicleDetailScreenProps> = ({
           autoriseHorsDakar={detail?.autoriseHorsDakar}
           supplementHorsDakarParJour={detail?.supplementHorsDakarParJour}
           fraisLivraison={detail?.fraisLivraison}
+          zoneConduite={detail?.zoneConduite}
+          reglesSpecifiques={detail?.reglesSpecifiques}
           selectedCurrency={selectedCurrency}
         />
 

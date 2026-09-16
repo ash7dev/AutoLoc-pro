@@ -13,6 +13,7 @@ import {
   Clock,
   CheckCircle2,
   Star,
+  Sparkles,
 } from 'lucide-react-native';
 
 interface ProprietaireData {
@@ -39,9 +40,9 @@ export const VehicleOwnerCard: React.FC<VehicleOwnerCardProps> = ({
   const fullName = `${prenom} ${nom}`.trim();
   const avatarUri = proprietaire?.avatarUrl;
   const initial = (prenom[0] || 'A').toUpperCase();
-  const note = proprietaire?.noteProprietaire
-    ? Number(proprietaire.noteProprietaire).toFixed(1)
-    : '5.0';
+  const totalAvis = proprietaire?.totalAvis || 0;
+  const noteNum = proprietaire?.noteProprietaire ? Number(proprietaire.noteProprietaire) : 0;
+  const noteFormatted = noteNum > 0 ? noteNum.toFixed(1) : null;
 
   const handlePress = onViewProfile || onContactHost;
 
@@ -72,10 +73,17 @@ export const VehicleOwnerCard: React.FC<VehicleOwnerCardProps> = ({
           <Text style={styles.ownerSubtitle}>Hôte Vérifié • AutoLoc Premium</Text>
 
           <View style={styles.statsInlineRow}>
-            <View style={styles.statPill}>
-              <Star size={12} color="#F59E0B" fill="#F59E0B" />
-              <Text style={styles.statPillText}>{note} (Hôte)</Text>
-            </View>
+            {totalAvis > 0 && noteFormatted ? (
+              <View style={styles.statPill}>
+                <Star size={12} color="#F59E0B" fill="#F59E0B" />
+                <Text style={styles.statPillText}>{noteFormatted} ({totalAvis})</Text>
+              </View>
+            ) : (
+              <View style={styles.statPill}>
+                <Sparkles size={12} color="#16A34A" />
+                <Text style={styles.statPillText}>Nouveau Hôte</Text>
+              </View>
+            )}
             <View style={styles.statDot} />
             <View style={styles.statPill}>
               <Clock size={12} color="#5F6B59" />
