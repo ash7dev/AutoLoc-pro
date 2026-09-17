@@ -91,6 +91,7 @@ export interface OwnerDashboardStats {
   tauxOccupation: number;
   noteMoyenneFlotte: number;
   totalVehiculesCount: number;
+  litigesOuverts?: number;
 }
 
 export interface CreateOwnerVehicleInput {

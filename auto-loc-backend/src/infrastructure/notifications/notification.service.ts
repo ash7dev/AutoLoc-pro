@@ -183,11 +183,26 @@ export class NotificationService {
   }
 
   /**
-   * Gère l'envoi WhatsApp avec fallback SMS selon le type de notification
+   * Gère l'envoi WhatsApp avec fallback SMS selon le type de notification ou canal explicite
    */
-  async sendInstantNotification(phone: string, type: NotificationType, data: Record<string, unknown>) {
+  async sendInstantNotification(
+    phone: string,
+    type: NotificationType,
+    data: Record<string, unknown>,
+    preferredChannel?: 'whatsapp' | 'sms' | 'auto',
+  ) {
     const mapping = this.getWhatsAppMapping(type, data);
     if (!mapping) return;
+
+    // Si le canal SMS est explicitement demandé (ex: "Pas de WhatsApp / Recevoir par SMS")
+    if (preferredChannel === 'sms') {
+      this.logger.log(`📱 Direct SMS requested for ${type} to ${phone}`);
+      await this.sendSms({
+        to: phone,
+        body: mapping.smsText || mapping.fallbackText,
+      }).catch(e => this.logger.error(`❌ Direct SMS delivery failed for ${phone}: ${e}`));
+      return;
+    }
 
     try {
       // Tentative WhatsApp

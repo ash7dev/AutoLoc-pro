@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,7 +11,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Smartphone, CheckCircle2, ChevronLeft, RefreshCw, ArrowRight, ShieldCheck } from 'lucide-react-native';
+import { Smartphone, CheckCircle2, ChevronLeft, RefreshCw, ArrowRight, ShieldCheck, MessageSquare } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../../core/theme';
@@ -35,6 +35,7 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
   const [code, setCode] = useState('');
   const [countdown, setCountdown] = useState(60);
   const [isResending, setIsResending] = useState(false);
+  const inputRef = useRef<TextInput>(null);
 
   const { verifyPhoneOtp, sendPhoneOtp, isLoading, error, clearError } = useAuthStore();
 
@@ -46,26 +47,38 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
     return () => clearInterval(timer);
   }, [countdown]);
 
-  const handleVerify = async () => {
-    if (!code.trim() || code.length !== 6) {
+  const handleVerify = async (codeToVerify?: string) => {
+    const targetCode = codeToVerify || code;
+    if (!targetCode.trim() || targetCode.length !== 6) {
       Alert.alert('Code incomplet', 'Veuillez saisir le code à 6 chiffres reçu par SMS ou WhatsApp.');
       return;
     }
 
     try {
-      await verifyPhoneOtp(telephone, code);
+      await verifyPhoneOtp(telephone, targetCode);
       onSuccess();
     } catch (e) {
       // Handled in store error
     }
   };
 
-  const handleResend = async () => {
+  const handleOtpChange = (val: string) => {
+    clearError();
+    const cleaned = val.replace(/[^0-9]/g, '').slice(0, 6);
+    setCode(cleaned);
+
+    if (cleaned.length === 6) {
+      handleVerify(cleaned);
+    }
+  };
+
+  const handleResend = async (channel: 'whatsapp' | 'sms' | 'auto' = 'auto') => {
     try {
       setIsResending(true);
-      const expiresIn = await sendPhoneOtp(telephone);
+      const expiresIn = await sendPhoneOtp(telephone, channel);
       setCountdown(expiresIn || 60);
-      Alert.alert('Code envoyé', 'Un nouveau code de vérification vous a été réexpédié par SMS/WhatsApp.');
+      const canalLabel = channel === 'sms' ? 'par SMS direct' : 'par WhatsApp/SMS';
+      Alert.alert('Code envoyé', `Un nouveau code de vérification vous a été réexpédié ${canalLabel}.`);
     } catch (e: any) {
       Alert.alert('Erreur', e.message || 'Impossible de renvoyer le code.');
     } finally {
@@ -147,25 +160,43 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
                   </View>
                 ) : null}
 
-                {/* Box de Saisie OTP Tabular Nums */}
-                <View style={styles.otpInputBox}>
-                  <TextInput
-                    style={styles.otpTextInput}
-                    value={code}
-                    onChangeText={(val) => {
-                      clearError();
-                      const cleaned = val.replace(/[^0-9]/g, '');
-                      if (cleaned.length <= 6) {
-                        setCode(cleaned);
-                      }
-                    }}
-                    keyboardType="number-pad"
-                    maxLength={6}
-                    placeholder="000000"
-                    placeholderTextColor="#D1D5DB"
-                    autoFocus
-                  />
-                </View>
+                {/* Saisie OTP 6 Cases avec focus & auto-submit */}
+                <TextInput
+                  ref={inputRef}
+                  style={styles.hiddenInput}
+                  value={code}
+                  onChangeText={handleOtpChange}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  autoFocus
+                  textContentType="oneTimeCode"
+                  autoComplete={Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'}
+                />
+
+                <TouchableOpacity
+                  style={styles.otpBoxesContainer}
+                  onPress={() => inputRef.current?.focus()}
+                  activeOpacity={0.9}
+                >
+                  {Array.from({ length: 6 }).map((_, index) => {
+                    const digit = code[index] || '';
+                    const isFocused = code.length === index;
+                    const isFilled = digit.length > 0;
+
+                    return (
+                      <View
+                        key={index}
+                        style={[
+                          styles.otpBox,
+                          isFocused && styles.otpBoxFocused,
+                          isFilled && styles.otpBoxFilled,
+                        ]}
+                      >
+                        <Text style={styles.otpDigitText}>{digit}</Text>
+                      </View>
+                    );
+                  })}
+                </TouchableOpacity>
 
                 {/* Submit Button Action */}
                 <AutoButton
@@ -177,7 +208,8 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
                     </View>
                   }
                   loading={isLoading}
-                  onPress={handleVerify}
+                  disabled={isLoading || code.length < 6}
+                  onPress={() => handleVerify()}
                   size="md"
                   style={styles.submitBtn}
                 />
@@ -187,21 +219,46 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
             {/* Resend Capsule */}
             <View style={styles.footerGlassCapsule}>
               {countdown > 0 ? (
-                <Text style={styles.timerText}>
-                  Renvoyer un nouveau code dans <Text style={styles.timerBold}>{countdown}s</Text>
-                </Text>
-              ) : (
-                <TouchableOpacity
-                  style={styles.resendBtn}
-                  onPress={handleResend}
-                  disabled={isResending}
-                  activeOpacity={0.7}
-                >
-                  <RefreshCw size={14} color="#4ADE80" />
-                  <Text style={styles.resendBtnText}>
-                    {isResending ? 'Envoi en cours...' : 'Renvoyer le code par SMS / WhatsApp'}
+                <View style={styles.resendColumn}>
+                  <Text style={styles.timerText}>
+                    Renvoyer un nouveau code dans <Text style={styles.timerBold}>{countdown}s</Text>
                   </Text>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.directSmsBtn}
+                    onPress={() => handleResend('sms')}
+                    disabled={isResending}
+                    activeOpacity={0.7}
+                  >
+                    <MessageSquare size={13} color="#4ADE80" />
+                    <Text style={styles.directSmsText}>
+                      Pas de WhatsApp ? Recevoir par SMS
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.resendOptionsRow}>
+                  <TouchableOpacity
+                    style={styles.resendBtn}
+                    onPress={() => handleResend('auto')}
+                    disabled={isResending}
+                    activeOpacity={0.7}
+                  >
+                    <RefreshCw size={13} color="#4ADE80" />
+                    <Text style={styles.resendBtnText}>
+                      {isResending ? 'Envoi en cours...' : 'Renvoyer (WhatsApp)'}
+                    </Text>
+                  </TouchableOpacity>
+                  <Text style={styles.dividerDot}>•</Text>
+                  <TouchableOpacity
+                    style={styles.resendBtn}
+                    onPress={() => handleResend('sms')}
+                    disabled={isResending}
+                    activeOpacity={0.7}
+                  >
+                    <MessageSquare size={13} color="#4ADE80" />
+                    <Text style={styles.resendBtnText}>Recevoir par SMS</Text>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
           </View>
@@ -362,24 +419,42 @@ const styles = StyleSheet.create({
     color: theme.colors.status.error,
     paddingLeft: 8,
   },
-  otpInputBox: {
+  hiddenInput: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0,
+  },
+  otpBoxesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     width: '100%',
-    backgroundColor: '#F9FAFB',
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    borderRadius: theme.radius.xl,
-    paddingVertical: 12,
-    alignItems: 'center',
     marginBottom: theme.spacing[4],
   },
-  otpTextInput: {
+  otpBox: {
+    width: 44,
+    height: 52,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F9FAFB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  otpBoxFocused: {
+    borderColor: '#059669',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 2,
+  },
+  otpBoxFilled: {
+    borderColor: '#059669',
+    backgroundColor: '#FFFFFF',
+  },
+  otpDigitText: {
     fontFamily: theme.typography.fontFamily.extraBold,
     fontVariant: ['tabular-nums'],
-    fontSize: 30,
-    letterSpacing: 8,
+    fontSize: 22,
     color: '#041912',
-    textAlign: 'center',
-    width: '100%',
   },
   submitBtn: {
     minHeight: 50,
@@ -415,6 +490,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  resendColumn: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  directSmsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 2,
+  },
+  directSmsText: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 12,
+    color: '#4ADE80',
+    textDecorationLine: 'underline',
+  },
+  resendOptionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
+  },
+  dividerDot: {
+    color: 'rgba(255, 255, 255, 0.40)',
+    fontSize: 12,
+  },
   timerText: {
     fontFamily: theme.typography.fontFamily.regular,
     fontSize: 12,
@@ -427,7 +529,7 @@ const styles = StyleSheet.create({
   resendBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   resendBtnText: {
     fontFamily: theme.typography.fontFamily.semiBold,

@@ -11,6 +11,8 @@ import {
   Alert,
   StatusBar,
 } from 'react-native';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -63,6 +65,33 @@ const normalizeDateStr = (dateVal: string | Date | undefined): string => {
   if (!dateVal) return '';
   const str = typeof dateVal === 'string' ? dateVal : dateVal.toISOString();
   return str.substring(0, 10);
+};
+
+// Helper: Formater une date en format français lisible (ex: 12 oct. 2026)
+const formatFrenchDate = (dateVal: string | Date | undefined): string => {
+  if (!dateVal) return '';
+  const str = normalizeDateStr(dateVal);
+  if (!str || str.length < 10) return String(dateVal);
+  const [y, m, d] = str.split('-');
+  const monthIdx = parseInt(m, 10) - 1;
+  const shortMonths = [
+    'janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
+    'juill.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'
+  ];
+  const monthName = shortMonths[monthIdx] || m;
+  return `${parseInt(d, 10)} ${monthName} ${y}`;
+};
+
+// Helper: Calculer le nombre de jours de location
+const getDaysCount = (start: string | Date | undefined, end: string | Date | undefined): number => {
+  if (!start) return 1;
+  const s = normalizeDateStr(start);
+  const e = end ? normalizeDateStr(end) : s;
+  const d1 = new Date(s);
+  const d2 = new Date(e);
+  const diffTime = Math.abs(d2.getTime() - d1.getTime());
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(1, diffDays);
 };
 
 export const VehicleCalendarModal: React.FC<VehicleCalendarModalProps> = ({
@@ -352,18 +381,30 @@ export const VehicleCalendarModal: React.FC<VehicleCalendarModalProps> = ({
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <StatusBar barStyle="light-content" backgroundColor="#041912" />
 
-        {/* Header Ultra-Clean */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <X size={20} color="#0F172A" />
+        {/* Header Dark Obsidian Glass */}
+        <LinearGradient
+          colors={['#072A20', '#041912', '#020F0B']}
+          locations={[0, 0.6, 1]}
+          style={styles.header}
+        >
+          <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.8}>
+            <X size={18} color="#FFFFFF" />
           </TouchableOpacity>
 
+          <View style={styles.headerThumbBox}>
+            {vehicle.photoUrl ? (
+              <Image source={{ uri: vehicle.photoUrl }} style={styles.headerThumbImage} contentFit="cover" transition={180} />
+            ) : (
+              <CalendarIcon size={18} color="#34D399" />
+            )}
+          </View>
+
           <View style={styles.headerTitleBox}>
-            <Text style={styles.headerTitle}>Calendrier de Disponibilité</Text>
+            <Text style={styles.headerTitle} numberOfLines={1}>Calendrier & Disponibilités</Text>
             <Text style={styles.headerSubtitle} numberOfLines={1}>
-              {vehicle.marque} {vehicle.modele} • {vehicle.immatriculation}
+              {vehicle.marque} {vehicle.modele} • {vehicle.ville} ({vehicle.annee})
             </Text>
           </View>
 
@@ -371,7 +412,7 @@ export const VehicleCalendarModal: React.FC<VehicleCalendarModalProps> = ({
             <View style={styles.greenPulse} />
             <Text style={styles.badgeStatutText}>En Ligne</Text>
           </View>
-        </View>
+        </LinearGradient>
 
         <ScrollView style={styles.scrollBody} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Quick Raccourcis Presets */}
@@ -562,19 +603,28 @@ export const VehicleCalendarModal: React.FC<VehicleCalendarModalProps> = ({
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.blockCtaBtn}
+                  style={styles.blockCtaBtnWrapper}
                   onPress={handleBlockPeriod}
                   disabled={submitting}
                   activeOpacity={0.8}
                 >
-                  {submitting ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <>
-                      <Lock size={15} color="#FFFFFF" />
-                      <Text style={styles.blockCtaText}>Bloquer ces dates</Text>
-                    </>
-                  )}
+                  <LinearGradient
+                    colors={['#0A3E30', '#041912']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.blockCtaBtn}
+                  >
+                    {submitting ? (
+                      <ActivityIndicator size="small" color="#34D399" />
+                    ) : (
+                      <>
+                        <View style={styles.blockCtaIconBox}>
+                          <Lock size={13} color="#34D399" />
+                        </View>
+                        <Text style={styles.blockCtaText}>Bloquer ces dates</Text>
+                      </>
+                    )}
+                  </LinearGradient>
                 </TouchableOpacity>
               </View>
             </View>
@@ -582,44 +632,83 @@ export const VehicleCalendarModal: React.FC<VehicleCalendarModalProps> = ({
 
           {/* Liste des périodes actuellement bloquées par l'hôte */}
           <View style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <Lock size={16} color="#0F172A" />
-              <Text style={styles.sectionTitle}>
-                Périodes bloquées par l'hôte ({indisponibilites.length})
-              </Text>
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.sectionHeaderLeft}>
+                <View style={styles.sectionIconBadge}>
+                  <Lock size={15} color="#041912" />
+                </View>
+                <View>
+                  <View style={styles.sectionTitleFlex}>
+                    <Text style={styles.sectionTitle}>Périodes bloquées</Text>
+                    {indisponibilites.length > 0 && (
+                      <View style={styles.countBadge}>
+                        <Text style={styles.countBadgeText}>{indisponibilites.length}</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.sectionSubtitle}>
+                    Plages de dates verrouillées manuellement
+                  </Text>
+                </View>
+              </View>
             </View>
 
             {indisponibilites.length > 0 ? (
-              indisponibilites.map((item) => {
-                const startStr = normalizeDateStr(item.dateDebut);
-                const endStr = normalizeDateStr(item.dateFin);
-                return (
-                  <View key={item.id} style={styles.indispoRow}>
-                    <View style={styles.indispoInfo}>
-                      <Text style={styles.indispoDates}>
-                        Du {startStr} au {endStr}
-                      </Text>
-                      <Text style={styles.indispoMotif}>• {item.motif || 'Indisponible'}</Text>
-                    </View>
+              <View style={styles.indispoList}>
+                {indisponibilites.map((item) => {
+                  const startFormatted = formatFrenchDate(item.dateDebut);
+                  const endFormatted = formatFrenchDate(item.dateFin);
+                  const daysCount = getDaysCount(item.dateDebut, item.dateFin);
+                  const isSingleDay = startFormatted === endFormatted;
 
-                    <TouchableOpacity
-                      style={styles.unblockBtn}
-                      onPress={() => handleUnblockPeriod(item)}
-                      activeOpacity={0.7}
-                    >
-                      <Unlock size={13} color="#DC2626" />
-                      <Text style={styles.unblockBtnText}>Débloquer</Text>
-                    </TouchableOpacity>
-                  </View>
-                );
-              })
+                  return (
+                    <View key={item.id} style={styles.indispoCard}>
+                      <View style={styles.indispoContentLeft}>
+                        <View style={styles.indispoLockBadge}>
+                          <Lock size={14} color="#EF4444" />
+                        </View>
+                        <View style={styles.indispoMainInfo}>
+                          <Text style={styles.indispoDateRange}>
+                            {isSingleDay ? startFormatted : `Du ${startFormatted} au ${endFormatted}`}
+                          </Text>
+
+                          <View style={styles.indispoMetaRow}>
+                            <View style={styles.motifTag}>
+                              <Text style={styles.motifTagText}>
+                                {item.motif || 'Indisponible'}
+                              </Text>
+                            </View>
+                            <Text style={styles.indispoDot}>•</Text>
+                            <Text style={styles.indispoDuration}>
+                              {daysCount} {daysCount > 1 ? 'jours' : 'jour'}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      <TouchableOpacity
+                        style={styles.unblockBtn}
+                        onPress={() => handleUnblockPeriod(item)}
+                        activeOpacity={0.7}
+                      >
+                        <Unlock size={12} color="#DC2626" />
+                        <Text style={styles.unblockBtnText}>Débloquer</Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </View>
             ) : (
               <View style={styles.emptyIndispoBox}>
-                <CheckCircle2 size={24} color="#059669" />
-                <Text style={styles.emptyIndispoTitle}>Aucun blocage manuel actif</Text>
-                <Text style={styles.emptyIndispoSub}>
-                  Votre véhicule est ouvert aux réservations. Touchez une date sur le calendrier pour bloquer des jours.
-                </Text>
+                <View style={styles.emptyIconContainer}>
+                  <CheckCircle2 size={24} color="#059669" />
+                </View>
+                <View style={styles.emptyTextWrapper}>
+                  <Text style={styles.emptyIndispoTitle}>Aucun blocage actif</Text>
+                  <Text style={styles.emptyIndispoSub}>
+                    Votre véhicule est 100% ouvert aux réservations. Touchez une plage de dates sur le calendrier ci-dessus pour bloquer des jours.
+                  </Text>
+                </View>
               </View>
             )}
           </View>
@@ -635,55 +724,81 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   header: {
-    height: 60,
-    backgroundColor: '#FFFFFF',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderColor: '#E2E8F0',
     gap: 12,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(74, 222, 128, 0.25)',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 6,
   },
   closeBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.20)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  headerThumbBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  headerThumbImage: {
+    width: '100%',
+    height: '100%',
   },
   headerTitleBox: {
     flex: 1,
   },
   headerTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 16,
-    color: '#0F172A',
+    fontSize: 15.5,
+    color: '#FFFFFF',
   },
   headerSubtitle: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 12,
-    color: '#64748B',
+    fontSize: 11.5,
+    color: '#A8D5C1',
+    marginTop: 1,
   },
   badgeStatut: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: 'rgba(74, 222, 128, 0.15)',
     paddingHorizontal: 9,
-    paddingVertical: 4,
+    paddingVertical: 4.5,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
   greenPulse: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#059669',
+    backgroundColor: '#34D399',
   },
   badgeStatutText: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 11,
-    color: '#047857',
+    color: '#34D399',
   },
   scrollBody: {
     flex: 1,
@@ -726,14 +841,14 @@ const styles = StyleSheet.create({
   },
   calendarCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 18,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 2,
   },
   monthHeader: {
@@ -943,37 +1058,83 @@ const styles = StyleSheet.create({
   cancelSelectionBtn: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 12,
     backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   cancelSelectionText: {
     fontFamily: theme.typography.fontFamily.medium,
     fontSize: 13,
     color: '#64748B',
   },
+  blockCtaBtnWrapper: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+  },
   blockCtaBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#059669',
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+  },
+  blockCtaIconBox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: 'rgba(52, 211, 153, 0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   blockCtaText: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 13,
     color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 18,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    gap: 16,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
   },
-  sectionHeader: {
+  sectionIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  sectionTitleFlex: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -983,23 +1144,84 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#0F172A',
   },
-  indispoRow: {
+  countBadge: {
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  countBadgeText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 11,
+    color: '#DC2626',
+  },
+  sectionSubtitle: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 1,
+  },
+  indispoList: {
+    gap: 10,
+  },
+  indispoCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderColor: '#F1F5F9',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  indispoInfo: {
-    gap: 2,
+  indispoContentLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
   },
-  indispoDates: {
+  indispoLockBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: '#FEF2F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+  },
+  indispoMainInfo: {
+    gap: 4,
+    flex: 1,
+  },
+  indispoDateRange: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 13,
     color: '#0F172A',
   },
-  indispoMotif: {
+  indispoMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  motifTag: {
+    backgroundColor: '#E2E8F0',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  motifTagText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 11,
+    color: '#334155',
+  },
+  indispoDot: {
+    color: '#94A3B8',
+    fontSize: 11,
+  },
+  indispoDuration: {
     fontFamily: theme.typography.fontFamily.medium,
     fontSize: 11,
     color: '#64748B',
@@ -1007,33 +1229,50 @@ const styles = StyleSheet.create({
   unblockBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#FEE2E2',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    gap: 5,
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.25)',
   },
   unblockBtnText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 11,
+    fontSize: 12,
     color: '#DC2626',
   },
   emptyIndispoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: '#F0FDF4',
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#DCFCE7',
+  },
+  emptyIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#DCFCE7',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 20,
-    gap: 6,
+  },
+  emptyTextWrapper: {
+    flex: 1,
+    gap: 2,
   },
   emptyIndispoTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 14,
-    color: '#0F172A',
+    color: '#065F46',
   },
   emptyIndispoSub: {
     fontFamily: theme.typography.fontFamily.medium,
     fontSize: 12,
-    color: '#64748B',
-    textAlign: 'center',
+    color: '#047857',
     lineHeight: 16,
   },
 });

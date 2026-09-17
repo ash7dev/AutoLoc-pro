@@ -315,7 +315,7 @@ export class AuthService {
     return { role: newRole, accessToken, refreshToken, profile };
   }
 
-  async requestPhoneOtp(user: RequestUser): Promise<{ expiresIn: number }> {
+  async requestPhoneOtp(user: RequestUser, channel?: 'whatsapp' | 'sms' | 'auto'): Promise<{ expiresIn: number }> {
     if (!user.sub) {
       throw new BadRequestException('Utilisateur invalide');
     }
@@ -343,19 +343,19 @@ export class AuthService {
       throw new BadRequestException('Aucun numéro de téléphone n’est enregistré sur ce compte.');
     }
 
-    const cooldownKey = this.getOtpCooldownKey(user.sub);
+    const targetChannel = channel || 'auto';
+    const cooldownKey = `${this.getOtpCooldownKey(user.sub)}:${targetChannel}`;
     const granted = await this.redisService.setNX(cooldownKey, '1', OTP_COOLDOWN_SECONDS);
     if (!granted) {
-      throw new BadRequestException('Un code a déjà été envoyé. Attendez 60 secondes avant de réessayer.');
+      throw new BadRequestException('Un code a déjà été envoyé par ce canal. Attendez 60 secondes avant de réessayer.');
     }
 
     const code = this.generateOtp();
     const key = this.getOtpKey(user.sub);
     await this.redisService.set(key, code, OTP_TTL_SECONDS);
 
-    // Fire-and-forget — phone only (WhatsApp + SMS fallback).
-    // Intentionally NOT calling notification.send() to avoid leaking the OTP by email.
-    this.notification.sendInstantNotification(telephone, "verification.code", { code })
+    // Fire-and-forget — phone only (WhatsApp or direct SMS).
+    this.notification.sendInstantNotification(telephone, "verification.code", { code }, targetChannel)
       .catch(err => console.error(`[Auth] Failed to send OTP to ${telephone}: ${err}`));
 
     return { expiresIn: OTP_COOLDOWN_SECONDS };
@@ -366,7 +366,7 @@ export class AuthService {
      et émet un JWT métier si le compte existe.
   ────────────────────────────────────────────────────────────────────────── */
 
-  async requestPhoneLoginOtp(rawPhone: string): Promise<{ expiresIn: number }> {
+  async requestPhoneLoginOtp(rawPhone: string, channel?: 'whatsapp' | 'sms' | 'auto'): Promise<{ expiresIn: number }> {
     const phone = this.normalizePhone(rawPhone);
 
     // 1. Vérifier que le numéro existe dans notre base
@@ -385,11 +385,12 @@ export class AuthService {
       bloqueJusqua: utilisateur.bloqueJusqua ? utilisateur.bloqueJusqua.toISOString() : null,
     });
 
-    // 3. Cooldown
-    const cooldownKey = `${PHONE_LOGIN_COOLDOWN_PREFIX}${phone}`;
+    // 3. Cooldown par canal (permets un basculement rapide vers SMS si WhatsApp n'a pas été reçu)
+    const targetChannel = channel || 'auto';
+    const cooldownKey = `${PHONE_LOGIN_COOLDOWN_PREFIX}${phone}:${targetChannel}`;
     const granted = await this.redisService.setNX(cooldownKey, '1', OTP_COOLDOWN_SECONDS);
     if (!granted) {
-      throw new BadRequestException('Un code a déjà été envoyé. Attendez 60 secondes avant de réessayer.');
+      throw new BadRequestException('Un code a déjà été envoyé par ce canal. Attendez 60 secondes avant de réessayer.');
     }
 
     // 4. Générer et stocker le code
@@ -397,16 +398,13 @@ export class AuthService {
     const key = `${PHONE_LOGIN_OTP_PREFIX}${phone}`;
     await this.redisService.set(key, code, OTP_TTL_SECONDS);
 
-    // 5. Envoi OTP via canal unifié (WhatsApp avec fallback SMS)
-    // On utilise auth.login_otp qui a un template Twilio dédié
-    await this.notification.sendInstantNotification(phone, 'auth.login_otp', { otp: code })
+    // 5. Envoi OTP via canal spécifié (WhatsApp avec fallback SMS, ou SMS direct)
+    await this.notification.sendInstantNotification(phone, 'auth.login_otp', { otp: code }, targetChannel)
       .catch((err) => {
-        console.error(`[Auth] Phone login OTP delivery failed for ${phone}`, err);
-        // On ne crash pas ici si au moins le code est stocké, 
-        // mais l'utilisateur ne le recevra probablement pas.
+        console.error(`[Auth] Phone login OTP delivery failed for ${phone} via ${targetChannel}`, err);
       });
 
-    return { expiresIn: OTP_TTL_SECONDS };
+    return { expiresIn: OTP_COOLDOWN_SECONDS };
   }
 
   async verifyPhoneLoginOtp(

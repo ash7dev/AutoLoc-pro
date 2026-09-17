@@ -10,7 +10,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
-import { PhoneCall, ShieldCheck, ArrowRight, Edit2, CheckCircle2, RefreshCw } from 'lucide-react-native';
+import { PhoneCall, ShieldCheck, ArrowRight, Edit2, CheckCircle2, RefreshCw, MessageSquare } from 'lucide-react-native';
 import { useAppStore } from '../../../../core/store/useAppStore';
 import { apiClient } from '../../../../core/api/apiClient';
 import { theme } from '../../../../core/theme';
@@ -41,7 +41,7 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
     }
   }, [step]);
 
-  const handleSendOtp = async () => {
+  const handleSendOtp = async (channel: 'whatsapp' | 'sms' | 'auto' = 'auto') => {
     if (!phone || phone.trim().length < 8) {
       Alert.alert('Numéro invalide', 'Veuillez entrer un numéro de téléphone valide (ex: +221771234567).');
       return;
@@ -53,7 +53,7 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
         await apiClient.post('/auth/phone/update', { telephone: phone.trim() });
       }
 
-      await apiClient.post('/auth/phone/send-otp');
+      await apiClient.post('/auth/phone/send-otp', { channel });
       setStep('OTP_INPUT');
       setOtpCode('');
       setResendCountdown(60);
@@ -68,7 +68,7 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
         });
       }, 1000);
     } catch (error: any) {
-      const msg = error.response?.data?.message || 'Erreur lors de l\'envoi du code OTP par SMS.';
+      const msg = error.response?.data?.message || 'Erreur lors de l\'envoi du code OTP.';
       Alert.alert('Erreur', typeof msg === 'string' ? msg : 'Échec de l\'envoi.');
     } finally {
       setLoading(false);
@@ -162,7 +162,7 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
 
               <TouchableOpacity
                 style={[styles.submitBtn, loading && styles.btnDisabled]}
-                onPress={handleSendOtp}
+                onPress={() => handleSendOtp('auto')}
                 disabled={loading}
                 activeOpacity={0.85}
               >
@@ -199,6 +199,7 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
                 onChangeText={handleOtpChange}
                 keyboardType="number-pad"
                 maxLength={OTP_LENGTH}
+                autoFocus
                 textContentType="oneTimeCode"
                 autoComplete={Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'}
               />
@@ -230,19 +231,44 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
 
               <View style={styles.resendRow}>
                 {resendCountdown > 0 ? (
-                  <Text style={styles.timerText}>
-                    Renvoyer un nouveau code dans <Text style={styles.timerBold}>{resendCountdown}s</Text>
-                  </Text>
+                  <View style={styles.resendColumn}>
+                    <Text style={styles.timerText}>
+                      Renvoyer un nouveau code dans <Text style={styles.timerBold}>{resendCountdown}s</Text>
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.directSmsBtn}
+                      onPress={() => handleSendOtp('sms')}
+                      disabled={loading}
+                      activeOpacity={0.7}
+                    >
+                      <MessageSquare size={13} color="#059669" />
+                      <Text style={styles.directSmsText}>
+                        Pas de WhatsApp ? Recevoir par SMS
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 ) : (
-                  <TouchableOpacity
-                    style={styles.resendBtn}
-                    onPress={handleSendOtp}
-                    disabled={loading}
-                    activeOpacity={0.7}
-                  >
-                    <RefreshCw size={13} color="#059669" />
-                    <Text style={styles.resendBtnText}>Renvoyer le code par SMS</Text>
-                  </TouchableOpacity>
+                  <View style={styles.resendOptionsRow}>
+                    <TouchableOpacity
+                      style={styles.resendBtn}
+                      onPress={() => handleSendOtp('auto')}
+                      disabled={loading}
+                      activeOpacity={0.7}
+                    >
+                      <RefreshCw size={13} color="#059669" />
+                      <Text style={styles.resendBtnText}>Renvoyer (WhatsApp)</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.dividerDot}>•</Text>
+                    <TouchableOpacity
+                      style={styles.resendBtn}
+                      onPress={() => handleSendOtp('sms')}
+                      disabled={loading}
+                      activeOpacity={0.7}
+                    >
+                      <MessageSquare size={13} color="#059669" />
+                      <Text style={styles.resendBtnText}>Recevoir par SMS</Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
               </View>
 
@@ -453,6 +479,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 4,
+  },
+  resendColumn: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  directSmsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingTop: 2,
+  },
+  directSmsText: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 12,
+    color: '#059669',
+    textDecorationLine: 'underline',
+  },
+  resendOptionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  dividerDot: {
+    color: '#94A3B8',
+    fontSize: 12,
   },
   timerText: {
     fontFamily: theme.typography.fontFamily.regular,

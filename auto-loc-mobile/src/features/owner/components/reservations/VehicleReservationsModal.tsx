@@ -16,6 +16,7 @@ import {
   RefreshControl,
   LayoutChangeEvent,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   X,
   Calendar,
@@ -27,6 +28,8 @@ import {
   XCircle,
   Clock,
   Car,
+  TrendingUp,
+  Sparkles,
   RotateCcw,
   Inbox,
 } from 'lucide-react-native';
@@ -87,6 +90,41 @@ const parseDateSafe = (value?: string): number | null => {
   return Number.isNaN(fallback) ? null : fallback;
 };
 
+// Helper: Calculer la durée d'une location en jours (ex: 25 au 28 = 3 jours)
+const calculateBookingDays = (startStr?: string, endStr?: string, fallbackDays?: number): number => {
+  if (startStr && endStr) {
+    const t1 = parseDateSafe(startStr);
+    const t2 = parseDateSafe(endStr);
+    if (t1 !== null && t2 !== null) {
+      const diffMs = Math.abs(t2 - t1);
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      return Math.max(1, diffDays);
+    }
+  }
+  return fallbackDays || 1;
+};
+
+// Helper: Formater une date ISO ou DD/MM/YYYY en français (ex: 25 août 2026)
+const formatFrenchDate = (dateStr?: string): string => {
+  if (!dateStr) return '';
+  const shortMonths = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juill.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+  const isoMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const [, y, m, d] = isoMatch;
+    const monthIdx = parseInt(m, 10) - 1;
+    const monthName = shortMonths[monthIdx] || m;
+    return `${parseInt(d, 10)} ${monthName} ${y}`;
+  }
+  const frMatch = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (frMatch) {
+    const [, d, m, y] = frMatch;
+    const monthIdx = parseInt(m, 10) - 1;
+    const monthName = shortMonths[monthIdx] || m;
+    return `${parseInt(d, 10)} ${monthName} ${y}`;
+  }
+  return dateStr;
+};
+
 // ---------- Sous-composants ----------
 
 const SkeletonCard: React.FC = () => {
@@ -119,25 +157,94 @@ const SkeletonCard: React.FC = () => {
   );
 };
 
-const EmptyState: React.FC<{ tab: FilterTab }> = ({ tab }) => {
-  const copy: Record<FilterTab, { title: string; subtitle: string }> = {
+interface EmptyStateProps {
+  tab: FilterTab;
+  onResetFilter: () => void;
+}
+
+const EmptyState: React.FC<EmptyStateProps> = ({ tab, onResetFilter }) => {
+  const config: Record<
+    FilterTab,
+    {
+      icon: any;
+      iconBg: string;
+      iconColor: string;
+      title: string;
+      subtitle: string;
+      ctaText: string;
+    }
+  > = {
     TOUS: {
+      icon: Sparkles,
+      iconBg: '#ECFDF5',
+      iconColor: '#059669',
       title: 'Aucune réservation enregistrée',
-      subtitle: "Ce véhicule n'a pas encore de réservations enregistrées sur la plateforme.",
+      subtitle: 'Ce véhicule n’a pas encore enregistré de réservation sur la plateforme.',
+      ctaText: 'Actualiser la liste',
     },
-    A_VENIR: { title: 'Rien à venir', subtitle: "Aucune réservation confirmée ou en attente pour l'instant." },
-    EN_COURS: { title: 'Aucune location en cours', subtitle: 'Ce véhicule n’est actuellement loué par personne.' },
-    TERMINEE: { title: 'Aucune location terminée', subtitle: 'L’historique des locations terminées apparaîtra ici.' },
-    ANNULEE: { title: 'Aucune annulation', subtitle: 'Aucune réservation annulée ou refusée pour ce véhicule.' },
+    A_VENIR: {
+      icon: Calendar,
+      iconBg: '#EFF6FF',
+      iconColor: '#2563EB',
+      title: 'Aucune réservation à venir',
+      subtitle: "Vous n'avez aucune réservation confirmée ou en attente pour les prochains jours.",
+      ctaText: 'Voir toutes les réservations',
+    },
+    EN_COURS: {
+      icon: Car,
+      iconBg: '#EFF6FF',
+      iconColor: '#2563EB',
+      title: 'Aucune location en cours',
+      subtitle: 'Ce véhicule est actuellement libre et prêt à être loué par un locataire.',
+      ctaText: 'Voir toutes les réservations',
+    },
+    TERMINEE: {
+      icon: CheckCircle2,
+      iconBg: '#F1F5F9',
+      iconColor: '#475569',
+      title: 'Aucun historique terminé',
+      subtitle: 'L’historique des réservations passées et clôturées apparaîtra ici.',
+      ctaText: 'Voir toutes les réservations',
+    },
+    ANNULEE: {
+      icon: ShieldCheck,
+      iconBg: '#ECFDF5',
+      iconColor: '#059669',
+      title: 'Aucune annulation à déplorer',
+      subtitle: 'Excellente nouvelle ! Aucun trajet n’a été annulé ou refusé pour ce véhicule.',
+      ctaText: 'Voir toutes les réservations',
+    },
   };
-  const { title, subtitle } = copy[tab];
+
+  const current = config[tab];
+  const IconComp = current.icon;
+
   return (
-    <View style={styles.emptyBox}>
-      <View style={styles.emptyIconCircle}>
-        <Inbox size={28} color="#94A3B8" />
+    <View style={styles.emptyCardContainer}>
+      <View style={[styles.emptyIconCircle, { backgroundColor: current.iconBg }]}>
+        <IconComp size={26} color={current.iconColor} />
       </View>
-      <Text style={styles.emptyTitle}>{title}</Text>
-      <Text style={styles.emptySubtitle}>{subtitle}</Text>
+
+      <View style={styles.emptyTextWrapper}>
+        <Text style={styles.emptyTitle}>{current.title}</Text>
+        <Text style={styles.emptySubtitle}>{current.subtitle}</Text>
+      </View>
+
+      <TouchableOpacity
+        style={styles.emptyCtaWrapper}
+        onPress={onResetFilter}
+        activeOpacity={0.85}
+      >
+        <LinearGradient
+          colors={['#0A3E30', '#041912']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.emptyCtaBtn}
+        >
+          <RotateCcw size={14} color="#34D399" />
+          <Text style={styles.emptyCtaText}>{current.ctaText}</Text>
+        </LinearGradient>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -315,20 +422,32 @@ export const VehicleReservationsModal: React.FC<VehicleReservationsModalProps> =
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <StatusBar barStyle="light-content" backgroundColor="#041912" />
 
-        {/* Top Navigation Bar */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
-            <X size={20} color="#0F172A" />
+        {/* Top Dark Obsidian Glass Navigation Bar */}
+        <LinearGradient
+          colors={['#072A20', '#041912', '#020F0B']}
+          locations={[0, 0.6, 1]}
+          style={styles.header}
+        >
+          <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.8}>
+            <X size={18} color="#FFFFFF" />
           </TouchableOpacity>
+
+          <View style={styles.headerThumbBox}>
+            {vehicle.photoUrl ? (
+              <Image source={{ uri: vehicle.photoUrl }} style={styles.headerThumbImage} resizeMode="cover" />
+            ) : (
+              <Car size={18} color="#34D399" />
+            )}
+          </View>
 
           <View style={styles.headerTitleBox}>
             <Text style={styles.headerTitle} numberOfLines={1}>
-              Réservations du Véhicule
+              Réservations du véhicule
             </Text>
             <Text style={styles.headerSubtitle} numberOfLines={1}>
-              {vehicle.marque} {vehicle.modele} • {vehicle.immatriculation}
+              {vehicle.marque} {vehicle.modele} • {vehicle.ville} ({vehicle.annee})
             </Text>
           </View>
 
@@ -338,7 +457,7 @@ export const VehicleReservationsModal: React.FC<VehicleReservationsModalProps> =
               <Text style={styles.liveBadgeText}>{activeCount} en cours</Text>
             </View>
           )}
-        </View>
+        </LinearGradient>
 
         <ScrollView
           style={styles.scrollBody}
@@ -348,52 +467,61 @@ export const VehicleReservationsModal: React.FC<VehicleReservationsModalProps> =
             <RefreshControl refreshing={refreshing} onRefresh={() => fetchReservations(true)} tintColor="#059669" colors={['#059669']} />
           }
         >
-          {/* Top KPI Snapshot */}
-          <View style={styles.kpiRow}>
-            <View style={styles.kpiCard}>
-              <Text style={styles.kpiValue} numberOfLines={1} adjustsFontSizeToFit>
+          {/* Top Executive KPI Snapshot Card */}
+          <LinearGradient
+            colors={['#072A20', '#041912']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.kpiCardContainer}
+          >
+            {/* Colonne 1: Revenus Nets */}
+            <View style={styles.kpiCol}>
+              <Text style={styles.kpiLabelDark}>REVENUS NETS HÔTE</Text>
+              <Text style={styles.kpiValueEmerald} numberOfLines={1} adjustsFontSizeToFit>
                 {totalRevenusNets > 0 ? formatFCFA(totalRevenusNets) : formatFCFA(vehicle.revenusCumules || 0)}
               </Text>
-              <Text style={styles.kpiLabel}>Revenus nets générés</Text>
             </View>
 
-            <View style={styles.kpiCardSmall}>
-              <Text style={styles.kpiValueSmall}>{totalCount || completedCount || vehicle.totalReservations || 0}</Text>
-              <Text style={styles.kpiLabel}>Locations</Text>
-            </View>
-          </View>
+            {/* Séparateur Vertical Glass */}
+            <View style={styles.kpiGlassDivider} />
 
-          {/* Filter Bar — segmented control avec indicateur animé */}
-          <View style={styles.filterContainer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-              <Animated.View
-                style={[
-                  styles.filterIndicator,
-                  {
-                    transform: [{ translateX: indicatorX }],
-                    width: indicatorWidth,
-                  },
-                ]}
-              />
-              {TABS.map((tab) => {
-                const isActive = activeTab === tab.id;
-                const count = tabCounts[tab.id];
-                return (
-                  <TouchableOpacity
-                    key={tab.id}
-                    onLayout={handleChipLayout(tab.id)}
-                    style={styles.filterChip}
-                    onPress={() => setActiveTab(tab.id)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
-                      {tab.label} ({count})
+            {/* Colonne 2: Locations */}
+            <View style={styles.kpiColSmall}>
+              <Text style={styles.kpiLabelDark}>LOCATIONS</Text>
+              <Text style={styles.kpiValueWhite}>
+                {totalCount || completedCount || vehicle.totalReservations || 0}
+              </Text>
+            </View>
+          </LinearGradient>
+
+          {/* Filter Bar — Luxury Pill Chips */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScroll}
+          >
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const count = tabCounts[tab.id];
+              return (
+                <TouchableOpacity
+                  key={tab.id}
+                  style={[styles.filterPill, isActive ? styles.filterPillActive : styles.filterPillInactive]}
+                  onPress={() => setActiveTab(tab.id)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.filterPillText, isActive ? styles.filterPillTextActive : styles.filterPillTextInactive]}>
+                    {tab.label}
+                  </Text>
+                  <View style={[styles.filterCountBadge, isActive ? styles.filterCountBadgeActive : styles.filterCountBadgeInactive]}>
+                    <Text style={[styles.filterCountText, isActive ? styles.filterCountTextActive : styles.filterCountTextInactive]}>
+                      {count}
                     </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
 
           {/* Body */}
           {loading ? (
@@ -444,61 +572,60 @@ export const VehicleReservationsModal: React.FC<VehicleReservationsModalProps> =
                   </View>
 
                   {/* Dates & Durée */}
-                  <View style={styles.datesBox}>
-                    <Calendar size={15} color="#059669" />
-                    <Text style={styles.datesText}>
-                      Du <Text style={styles.dateBold}>{b.dateDebut}</Text> au{' '}
-                      <Text style={styles.dateBold}>{b.dateFin}</Text> ({b.dureeJours} {b.dureeJours > 1 ? 'jours' : 'jour'})
-                    </Text>
-                  </View>
+                  {(() => {
+                    const days = calculateBookingDays(b.dateDebut, b.dateFin, b.dureeJours);
+                    const formattedStart = formatFrenchDate(b.dateDebut);
+                    const formattedEnd = formatFrenchDate(b.dateFin);
 
-                  {/* Financial Summary Box */}
-                  <View style={styles.financialRow}>
-                    <View style={styles.financialCol}>
-                      <Text style={styles.financialLabel}>Montant brut</Text>
-                      <Text style={styles.financialValueBrut}>{formatFCFA(b.montantTotalBrut)}</Text>
+                    return (
+                      <View style={styles.datesBox}>
+                        <View style={styles.datesIconBadge}>
+                          <Calendar size={14} color="#059669" />
+                        </View>
+                        <View style={styles.datesTextFlex}>
+                          <Text style={styles.datesText}>
+                            Du <Text style={styles.dateBold}>{formattedStart}</Text> au{' '}
+                            <Text style={styles.dateBold}>{formattedEnd}</Text>
+                          </Text>
+                        </View>
+                        <View style={styles.durationPill}>
+                          <Text style={styles.durationPillText}>
+                            {days} {days > 1 ? 'jours' : 'jour'}
+                          </Text>
+                        </View>
+                      </View>
+                    );
+                  })()}
+
+                  {/* Financial Summary Showcase */}
+                  <View style={styles.financialCard}>
+                    <View style={styles.financialLineRow}>
+                      <Text style={styles.financialLineLabel}>Montant brut location</Text>
+                      <Text style={styles.financialLineValue}>{formatFCFA(b.montantTotalBrut)}</Text>
                     </View>
 
-                    <View style={styles.financialDivider} />
-
-                    <View style={styles.financialCol}>
-                      <Text style={styles.financialLabel}>Commission</Text>
-                      <Text style={styles.financialValueSub}>-{formatFCFA(b.commissionAutoLoc)}</Text>
+                    <View style={styles.financialLineRow}>
+                      <Text style={styles.financialLineLabel}>Commission AutoLoc</Text>
+                      <Text style={styles.financialLineValueSub}>-{formatFCFA(b.commissionAutoLoc)}</Text>
                     </View>
 
-                    <View style={styles.financialDivider} />
+                    <View style={styles.financialLineDivider} />
 
-                    <View style={styles.financialColRight}>
-                      <Text style={styles.financialLabelNet}>Net hôte</Text>
-                      <Text style={styles.financialValueNet}>{formatFCFA(b.montantNetProprietaire)}</Text>
-                    </View>
-                  </View>
-
-                  {/* Contact & Action Buttons */}
-                  <View style={styles.cardActionsRow}>
-                    <TouchableOpacity
-                      style={styles.contactBtn}
-                      onPress={() => handleCallTenant(b.locatairePhone)}
-                      activeOpacity={0.75}
+                    <LinearGradient
+                      colors={['#072A20', '#041912']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.financialNetRowDark}
                     >
-                      <Phone size={13} color="#0F172A" />
-                      <Text style={styles.contactBtnText}>Appeler</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.whatsappBtn}
-                      onPress={() => handleWhatsAppTenant(b.locatairePhone)}
-                      activeOpacity={0.75}
-                    >
-                      <MessageSquare size={13} color="#25D366" />
-                      <Text style={styles.whatsappBtnText}>WhatsApp</Text>
-                    </TouchableOpacity>
+                      <Text style={styles.financialNetLabelDark}>REVENU NET HÔTE</Text>
+                      <Text style={styles.financialNetValueEmerald}>{formatFCFA(b.montantNetProprietaire)}</Text>
+                    </LinearGradient>
                   </View>
                 </View>
               ))}
             </Animated.View>
           ) : (
-            <EmptyState tab={activeTab} />
+            <EmptyState tab={activeTab} onResetFilter={() => setActiveTab('TOUS')} />
           )}
         </ScrollView>
       </SafeAreaView>
@@ -512,55 +639,81 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   header: {
-    height: 60,
-    backgroundColor: '#FFFFFF',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderColor: '#E2E8F0',
     gap: 12,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(74, 222, 128, 0.25)',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 6,
   },
   closeBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.20)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  headerThumbBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  headerThumbImage: {
+    width: '100%',
+    height: '100%',
   },
   headerTitleBox: {
     flex: 1,
   },
   headerTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 16,
-    color: '#0F172A',
+    fontSize: 15.5,
+    color: '#FFFFFF',
   },
   headerSubtitle: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 12,
-    color: '#64748B',
+    fontSize: 11.5,
+    color: '#A8D5C1',
+    marginTop: 1,
   },
   liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    gap: 5,
+    backgroundColor: 'rgba(74, 222, 128, 0.15)',
+    paddingHorizontal: 9,
+    paddingVertical: 4.5,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
   liveDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#34D399',
   },
   liveBadgeText: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 10.5,
-    color: '#1D4ED8',
+    color: '#34D399',
   },
   scrollBody: {
     flex: 1,
@@ -570,86 +723,114 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingBottom: 32,
   },
-  kpiRow: {
+  kpiCardContainer: {
     flexDirection: 'row',
-    gap: 10,
-  },
-  kpiCard: {
-    flex: 2,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  kpiCardSmall: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 14,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
+    borderColor: 'rgba(74, 222, 128, 0.3)',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  kpiValue: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 17,
-    color: '#059669',
+  kpiCol: {
+    flex: 1.8,
+    gap: 4,
   },
-  kpiValueSmall: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 17,
-    color: '#0F172A',
+  kpiColSmall: {
+    flex: 1,
+    gap: 4,
+    alignItems: 'flex-start',
+    paddingLeft: 16,
   },
-  kpiLabel: {
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 11,
-    color: '#64748B',
-    marginTop: 3,
+  kpiLabelDark: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 10,
+    color: '#94A3B8',
+    letterSpacing: 0.8,
   },
-  filterContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+  kpiValueEmerald: {
+    fontFamily: theme.typography.fontFamily.displayBold,
+    fontSize: 20,
+    color: '#34D399',
+    letterSpacing: -0.3,
+  },
+  kpiValueWhite: {
+    fontFamily: theme.typography.fontFamily.displayBold,
+    fontSize: 20,
+    color: '#FFFFFF',
+  },
+  kpiGlassDivider: {
+    width: 1,
+    height: 38,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   filterScroll: {
-    paddingHorizontal: 12,
     gap: 8,
-    position: 'relative',
+    paddingVertical: 4,
   },
-  filterIndicator: {
-    position: 'absolute',
-    top: 0,
-    height: '100%',
-    backgroundColor: '#059669',
+  filterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 999,
   },
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
+  filterPillActive: {
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.4)',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  filterChipText: {
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 12,
-    color: '#475569',
+  filterPillInactive: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  filterChipTextActive: {
+  filterPillText: {
+    fontSize: 12.5,
+  },
+  filterPillTextActive: {
     fontFamily: theme.typography.fontFamily.bold,
     color: '#FFFFFF',
+  },
+  filterPillTextInactive: {
+    fontFamily: theme.typography.fontFamily.medium,
+    color: '#475569',
+  },
+  filterCountBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 999,
+    minWidth: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterCountBadgeActive: {
+    backgroundColor: '#09382B',
+  },
+  filterCountBadgeInactive: {
+    backgroundColor: '#F1F5F9',
+  },
+  filterCountText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 10.5,
+  },
+  filterCountTextActive: {
+    color: '#34D399',
+  },
+  filterCountTextInactive: {
+    color: '#64748B',
   },
   errorBox: {
     alignItems: 'center',
@@ -686,16 +867,16 @@ const styles = StyleSheet.create({
   },
   bookingCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 18,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    gap: 12,
+    gap: 14,
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowRadius: 10,
+    elevation: 3,
   },
   skeletonBlock: {
     backgroundColor: '#E2E8F0',
@@ -706,9 +887,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: '#E2E8F0',
   },
   avatarFallback: {
@@ -730,7 +911,7 @@ const styles = StyleSheet.create({
   },
   tenantName: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 14.5,
+    fontSize: 15,
     color: '#0F172A',
     flexShrink: 1,
   },
@@ -739,9 +920,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 3,
     backgroundColor: '#ECFDF5',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
   },
   kycBadgeText: {
     fontFamily: theme.typography.fontFamily.bold,
@@ -758,8 +941,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 4.5,
     borderRadius: 999,
   },
   statusBadgeText: {
@@ -769,128 +952,173 @@ const styles = StyleSheet.create({
   datesBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     backgroundColor: '#F8FAFC',
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  datesIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  datesTextFlex: {
+    flex: 1,
   },
   datesText: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 12,
+    fontSize: 12.5,
     color: '#334155',
-    flexShrink: 1,
   },
   dateBold: {
     fontFamily: theme.typography.fontFamily.bold,
     color: '#0F172A',
   },
-  financialRow: {
+  durationPill: {
+    backgroundColor: '#E2E8F0',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  durationPillText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 11,
+    color: '#334155',
+  },
+  financialCard: {
+    backgroundColor: '#F8FAFC',
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    gap: 8,
+  },
+  financialLineRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
   },
-  financialCol: {
-    gap: 2,
-  },
-  financialColRight: {
-    alignItems: 'flex-end',
-    gap: 2,
-  },
-  financialDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: '#E2E8F0',
-  },
-  financialLabel: {
+  financialLineLabel: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 10.5,
+    fontSize: 12,
     color: '#64748B',
   },
-  financialLabelNet: {
+  financialLineValue: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 10.5,
-    color: '#047857',
-  },
-  financialValueBrut: {
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 12,
+    fontSize: 12.5,
     color: '#0F172A',
   },
-  financialValueSub: {
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 12,
+  financialLineValueSub: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 12.5,
     color: '#DC2626',
   },
-  financialValueNet: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 13.5,
-    color: '#059669',
+  financialLineDivider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    marginVertical: 2,
   },
-  cardActionsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    justifyContent: 'flex-end',
-  },
-  contactBtn: {
+  financialNetRowDark: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    marginTop: 2,
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  contactBtnText: {
+  financialNetLabelDark: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 12,
-    color: '#0F172A',
+    fontSize: 10.5,
+    color: '#A8D5C1',
+    letterSpacing: 0.6,
   },
-  whatsappBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#DCFCE7',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
+  financialNetValueEmerald: {
+    fontFamily: theme.typography.fontFamily.displayBold,
+    fontSize: 16,
+    color: '#34D399',
+    letterSpacing: -0.2,
   },
-  whatsappBtnText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 12,
-    color: '#15803D',
-  },
-  emptyBox: {
+  emptyCardContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: 24,
-    gap: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    gap: 14,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    marginTop: 8,
   },
   emptyIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#F1F5F9',
+    width: 60,
+    height: 60,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
+  },
+  emptyTextWrapper: {
+    alignItems: 'center',
+    gap: 6,
   },
   emptyTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 16,
     color: '#0F172A',
+    textAlign: 'center',
   },
   emptySubtitle: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 12,
+    fontSize: 12.5,
     color: '#64748B',
     textAlign: 'center',
     lineHeight: 18,
+    maxWidth: 280,
+  },
+  emptyCtaWrapper: {
+    marginTop: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  emptyCtaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+  },
+  emptyCtaText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 12.5,
+    color: '#FFFFFF',
   },
 });

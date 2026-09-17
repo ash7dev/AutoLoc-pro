@@ -31,17 +31,17 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
     switch (vehicle.statut) {
       case 'DISPONIBLE':
       case 'VERIFIE':
-        return { label: 'Disponible', text: '#065F46', dot: '#10B981' };
+        return { label: 'Disponible', text: '#34D399', dot: '#34D399' };
       case 'EN_LOCATION':
-        return { label: 'En location', text: '#1E40AF', dot: '#3B82F6' };
+        return { label: 'En location', text: '#60A5FA', dot: '#60A5FA' };
       case 'EN_ATTENTE_VALIDATION':
-        return { label: 'En vérification', text: '#92400E', dot: '#F59E0B' };
+        return { label: 'En vérification', text: '#FBBF24', dot: '#FBBF24' };
       case 'REFUSE':
-        return { label: 'Dossier refusé', text: '#991B1B', dot: '#EF4444' };
+        return { label: 'Dossier refusé', text: '#F87171', dot: '#F87171' };
       case 'MAINTENANCE':
-        return { label: 'En maintenance', text: '#92400E', dot: '#F59E0B' };
+        return { label: 'En maintenance', text: '#FBBF24', dot: '#FBBF24' };
       default:
-        return { label: 'Inactif', text: '#334155', dot: '#64748B' };
+        return { label: 'Inactif', text: '#94A3B8', dot: '#94A3B8' };
     }
   };
 
@@ -64,19 +64,32 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
           <Image source={{ uri: vehicle.photoUrl }} style={styles.image} contentFit="cover" transition={220} />
 
           <LinearGradient
-            colors={['rgba(5,27,20,0.15)', 'transparent', 'rgba(4,20,15,0.9)']}
-            locations={[0, 0.5, 1]}
+            colors={['rgba(4,25,18,0.4)', 'transparent', 'rgba(4,25,18,0.85)']}
+            locations={[0, 0.45, 1]}
             style={styles.gradientOverlay}
           />
 
-          {/* Status — pastille gauche */}
+          {/* Status — Pastille verre somptueuse à gauche */}
           <View style={styles.glassBadge}>
             <View style={[styles.statusDot, { backgroundColor: status.dot }]} />
             <Text style={[styles.statusBadgeText, { color: status.text }]}>{status.label}</Text>
           </View>
 
+          {/* Bouton Options Rapides à droite */}
+          <Pressable
+            style={styles.floatingMenuBtn}
+            onPress={(e) => {
+              e.stopPropagation();
+              onQuickActionPress?.(vehicle);
+            }}
+            hitSlop={8}
+          >
+            <View style={styles.floatingMenuCircle}>
+              <MoreVertical size={16} color="#FFFFFF" />
+            </View>
+          </Pressable>
 
-          {/* Plaque d'immatriculation façon plaque métallique */}
+          {/* Plaque d'immatriculation Dark Glass */}
           <View style={styles.plateBadge}>
             <Text style={styles.plateText}>{vehicle.immatriculation}</Text>
           </View>
@@ -84,7 +97,7 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
           {/* Revenus cumulés */}
           {hasCumulativeEarnings && (
             <View style={styles.earningsTag}>
-              <TrendingUp size={12} color="#6EE7B7" />
+              <TrendingUp size={12} color="#34D399" />
               <Text style={styles.earningsTagText}>
                 {formatDirectPrice(vehicle.revenusCumules || 0, selectedCurrency)} générés
               </Text>
@@ -100,7 +113,7 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
                 {vehicle.marque} {vehicle.modele}
               </Text>
               <View style={styles.locationRow}>
-                <MapPin size={12.5} color="#94A3B8" />
+                <MapPin size={12.5} color="#059669" />
                 <Text style={styles.locationText}>
                   {vehicle.ville} <Text style={styles.locationDot}>•</Text> {vehicle.annee}
                 </Text>
@@ -112,15 +125,10 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
                 <Star size={12} color="#F59E0B" fill="#F59E0B" />
                 <Text style={styles.ratingText}>{noteVal.toFixed(1)}</Text>
               </View>
-            ) : (
-              <View style={styles.newBadge}>
-                <Sparkles size={11} color="#059669" />
-                <Text style={styles.newBadgeText}>Nouveau</Text>
-              </View>
-            )}
+            ) : null}
           </View>
 
-          {/* Spec pills — icônes en pastille colorée sur une seule ligne */}
+          {/* Spec pills — icônes en pastille colorée */}
           <View style={styles.specsRow}>
             {vehicle.carburant ? (
               <View style={styles.specChip}>
@@ -165,9 +173,9 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
               }}
               hitSlop={6}
             >
-              <SlidersHorizontal size={14} color="#FFFFFF" />
+              <SlidersHorizontal size={13} color="#4ADE80" />
               <Text style={styles.manageBtnText}>Gérer</Text>
-              <ChevronRight size={14} color="#FFFFFF" />
+              <ChevronRight size={13} color="#4ADE80" />
             </Pressable>
           </View>
         </View>
@@ -178,26 +186,26 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
 
 const styles = StyleSheet.create({
   cardWrapper: {
-    marginBottom: 18,
-    borderRadius: 28,
-    shadowColor: '#059669',
-    shadowOffset: { width: 0, height: 10 },
+    marginBottom: 16,
+    borderRadius: 24,
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 6,
+    shadowRadius: 16,
+    elevation: 5,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 28,
+    borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#EEF2F6',
+    borderColor: '#E2E8F0',
   },
   imageContainer: {
     width: '100%',
-    height: 208,
+    height: 205,
     position: 'relative',
-    backgroundColor: '#051B14',
+    backgroundColor: '#041912',
   },
   image: {
     width: '100%',
@@ -208,99 +216,81 @@ const styles = StyleSheet.create({
   },
   glassBadge: {
     position: 'absolute',
-    top: 14,
-    left: 14,
+    top: 12,
+    left: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 11,
-    paddingVertical: 6,
+    paddingVertical: 5.5,
     borderRadius: 20,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    backgroundColor: 'rgba(4, 25, 18, 0.88)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.6)',
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
   statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 6.5,
+    height: 6.5,
+    borderRadius: 3.25,
   },
   statusBadgeText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
-  },
-  topToggleBadge: {
-    position: 'absolute',
-    top: 14,
-    right: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingLeft: 10,
-    paddingRight: 4,
-    paddingVertical: 3,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.94)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.6)',
   },
   floatingMenuBtn: {
     position: 'absolute',
     top: 12,
     right: 12,
   },
-  floatingMenuBlur: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+  floatingMenuCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
-    backgroundColor: 'rgba(5, 27, 20, 0.75)',
+    backgroundColor: 'rgba(4, 25, 18, 0.82)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.25)',
   },
   plateBadge: {
     position: 'absolute',
     bottom: 12,
-    right: 14,
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    right: 12,
+    backgroundColor: 'rgba(4, 25, 18, 0.88)',
     paddingHorizontal: 10,
     paddingVertical: 4.5,
     borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.3)',
   },
   plateText: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 11.5,
-    color: '#0F172A',
+    fontSize: 11,
+    color: '#ECFDF5',
     letterSpacing: 0.8,
   },
   earningsTag: {
     position: 'absolute',
     bottom: 12,
-    left: 14,
+    left: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     paddingHorizontal: 11,
-    paddingVertical: 6,
+    paddingVertical: 5.5,
     borderRadius: 14,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(5, 27, 20, 0.85)',
+    backgroundColor: 'rgba(4, 25, 18, 0.90)',
     borderWidth: 1,
-    borderColor: 'rgba(110,231,183,0.35)',
+    borderColor: 'rgba(74, 222, 128, 0.4)',
   },
   earningsTagText: {
     fontFamily: 'Inter_600SemiBold',
     fontSize: 11,
-    color: '#ECFDF5',
+    color: '#34D399',
   },
   content: {
-    padding: 18,
-    gap: 14,
+    padding: 16,
+    gap: 12,
   },
   headerRow: {
     flexDirection: 'row',
@@ -312,21 +302,21 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   title: {
-    fontFamily: 'Fraunces_600SemiBold',
-    fontSize: 19,
+    fontFamily: 'Fraunces_700Bold',
+    fontSize: 18.5,
     color: '#0F172A',
-    lineHeight: 24,
+    lineHeight: 23,
     letterSpacing: -0.2,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 5,
+    marginTop: 4,
   },
   locationText: {
     fontFamily: 'Inter_400Regular',
-    fontSize: 12.5,
+    fontSize: 12,
     color: '#64748B',
   },
   locationDot: {
@@ -337,7 +327,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFBEB',
     paddingHorizontal: 9,
-    paddingVertical: 5,
+    paddingVertical: 4.5,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#FDE68A',
@@ -353,7 +343,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ECFDF5',
     paddingHorizontal: 9,
-    paddingVertical: 5,
+    paddingVertical: 4.5,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#A7F3D0',
@@ -379,8 +369,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#EEF2F6',
-    gap: 6,
+    borderColor: '#E2E8F0',
+    gap: 5,
   },
   specIconDot: {
     width: 22,
@@ -398,7 +388,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 14,
+    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
   },
@@ -408,53 +398,32 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   priceValue: {
-    fontFamily: 'Fraunces_600SemiBold',
+    fontFamily: 'Fraunces_700Bold',
+    fontVariant: ['tabular-nums'],
     fontSize: 21,
-    color: '#059669',
+    color: '#047857',
     letterSpacing: -0.3,
   },
   pricePeriod: {
     fontFamily: 'Inter_400Regular',
     fontSize: 11.5,
     color: '#94A3B8',
-    marginBottom: 3,
-  },
-  actionsBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  toggleGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  toggleLabel: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 11.5,
-    color: '#64748B',
-  },
-  toggleLabelActive: {
-    fontFamily: 'Inter_700Bold',
-    color: '#047857',
+    marginBottom: 2.5,
   },
   manageBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 13,
-    paddingVertical: 8,
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     borderRadius: 14,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
   manageBtnPressed: {
     backgroundColor: '#059669',
+    borderColor: '#059669',
   },
   manageBtnText: {
     fontFamily: 'Inter_700Bold',

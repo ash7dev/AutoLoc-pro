@@ -1,9 +1,19 @@
-import { IsNotEmpty, IsString, Matches } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
+
+export class SendPhoneOtpDto {
+  @IsOptional()
+  @IsIn(['whatsapp', 'sms', 'auto'], { message: 'Canal invalide' })
+  channel?: 'whatsapp' | 'sms' | 'auto';
+}
 
 export class PhoneLoginSendOtpDto {
   @IsString()
   @IsNotEmpty({ message: 'Le numéro de téléphone est requis' })
   phone!: string;
+
+  @IsOptional()
+  @IsIn(['whatsapp', 'sms', 'auto'], { message: 'Canal invalide' })
+  channel?: 'whatsapp' | 'sms' | 'auto';
 }
 
 export class PhoneLoginVerifyOtpDto {

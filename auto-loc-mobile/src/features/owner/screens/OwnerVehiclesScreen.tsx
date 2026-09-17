@@ -9,12 +9,13 @@ import {
   RefreshControl,
   SafeAreaView,
   Alert,
+  StatusBar,
 } from 'react-native';
 import { Search, Plus, Car, X, Filter } from 'lucide-react-native';
 import { theme } from '../../../core/theme';
 import { OwnerHeader } from '../../../shared/components';
 import { OwnerVehicleCard } from '../components/OwnerVehicleCard';
-import { OwnerFleetHeaderWidget } from '../components/OwnerFleetHeaderWidget';
+import { OwnerVehiclesGlassHeroHeader } from '../components/OwnerVehiclesGlassHeroHeader';
 import { OwnerVehicleQuickActionModal } from '../components/OwnerVehicleQuickActionModal';
 import { OwnerVehicleSkeleton } from '../components/OwnerVehicleSkeleton';
 import { ownerApi, OwnerVehicle } from '../api/ownerApi';
@@ -33,6 +34,7 @@ interface OwnerVehiclesScreenProps {
 }
 
 export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
+  onSwitchToTenant,
   onProfilePress,
 }) => {
   const user = useAppStore((state) => state.user);
@@ -224,18 +226,22 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
   });
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <OwnerHeader
-        variant="MANAGEMENT"
-        title="Ma Flotte AutoLoc"
-        subtitle={`${vehicles.length} véhicule${vehicles.length > 1 ? 's' : ''} dans votre flotte`}
+    <View style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#041912" />
+      {/* Full-bleed Dark Obsidian Glass Hero Header */}
+      <OwnerVehiclesGlassHeroHeader
+        user={user}
+        vehicles={vehicles}
         onProfilePress={onProfilePress}
+        onSwitchToTenant={onSwitchToTenant}
+        onAddVehiclePress={handleAddVehiclePress}
       />
 
       {loading && !refreshing ? (
         <OwnerVehicleSkeleton />
       ) : (
         <ScrollView
+          style={styles.scrollContainer}
           contentContainerStyle={styles.scrollList}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -245,17 +251,11 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
                 setRefreshing(true);
                 loadVehicles();
               }}
-              tintColor={theme.colors.brand.main}
+              tintColor="#34D399"
             />
           }
         >
           <View style={styles.container}>
-            {/* Widget Synthese Flotte & Revenus */}
-            <OwnerFleetHeaderWidget
-              vehicles={vehicles}
-              selectedCurrency={selectedCurrency}
-              onAddVehicle={handleAddVehiclePress}
-            />
 
             {/* Section Recherche & Filtres Ultra-Pro */}
             <View style={styles.searchFilterSection}>
@@ -412,12 +412,16 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
           loadVehicles();
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: {
+    flex: 1,
+    backgroundColor: '#041912',
+  },
+  scrollContainer: {
     flex: 1,
     backgroundColor: '#F8FAFC',
   },

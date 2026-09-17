@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Pressable,
 } from 'react-native';
+import { Image } from 'expo-image';
 import {
   X,
   Calendar,
@@ -52,29 +53,24 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
 
   const menuItems = [
     {
-      id: 'calendar',
-      icon: Calendar,
-      title: 'Calendrier & Indisponibilités',
-      subtitle: 'Bloquer des dates pour entretien ou usage personnel',
-      color: '#059669',
-      bg: '#ECFDF5',
-      borderColor: '#A7F3D0',
-      onPress: () => {
-        onClose();
-        if (onManageCalendar) onManageCalendar(vehicle);
-      },
-    },
-    {
       id: 'edit',
       icon: Edit3,
       title: 'Modifier l’annonce & Tarifs',
       subtitle: 'Ajuster les prix, photos, équipements et conditions',
-      color: '#2563EB',
-      bg: '#EFF6FF',
-      borderColor: '#BFDBFE',
+      isHighlight: true,
       onPress: () => {
         onClose();
         if (onEditVehicle) onEditVehicle(vehicle);
+      },
+    },
+    {
+      id: 'calendar',
+      icon: Calendar,
+      title: 'Calendrier & Indisponibilités',
+      subtitle: 'Bloquer des dates pour entretien ou usage personnel',
+      onPress: () => {
+        onClose();
+        if (onManageCalendar) onManageCalendar(vehicle);
       },
     },
     {
@@ -82,9 +78,6 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
       icon: ClipboardList,
       title: 'Réservations du véhicule',
       subtitle: `${vehicle.totalReservations || 0} location(s) enregistrée(s)`,
-      color: '#7C3AED',
-      bg: '#F5F3FF',
-      borderColor: '#DDD6FE',
       onPress: () => {
         onClose();
         if (onViewReservations) onViewReservations(vehicle);
@@ -95,9 +88,6 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
       icon: Power,
       title: isAvailable ? 'Désactiver temporairement' : 'Activer l’annonce',
       subtitle: isAvailable ? 'Masquer du catalogue public' : 'Rendre à nouveau visible aux locataires',
-      color: isAvailable ? '#D97706' : '#059669',
-      bg: isAvailable ? '#FFFBEB' : '#ECFDF5',
-      borderColor: isAvailable ? '#FDE68A' : '#A7F3D0',
       onPress: () => {
         onClose();
         if (onToggleStatus) onToggleStatus(vehicle.id, vehicle.statut);
@@ -123,7 +113,11 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
           <View style={styles.sheetHeader}>
             <View style={styles.headerTitleBox}>
               <View style={styles.carBadge}>
-                <Car size={18} color="#059669" />
+                {vehicle.photoUrl ? (
+                  <Image source={{ uri: vehicle.photoUrl }} style={styles.carThumbImage} contentFit="cover" transition={180} />
+                ) : (
+                  <Car size={18} color="#34D399" />
+                )}
               </View>
               <View style={{ flex: 1 }}>
                 <View style={styles.titleRow}>
@@ -138,7 +132,7 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
                   </View>
                 </View>
                 <Text style={styles.vehicleSub} numberOfLines={1}>
-                  {vehicle.immatriculation} · {vehicle.ville} ({vehicle.annee})
+                  {vehicle.ville} ({vehicle.annee})
                 </Text>
               </View>
             </View>
@@ -152,23 +146,36 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
           <View style={styles.menuList}>
             {menuItems.map((item) => {
               const Icon = item.icon;
+              const isDarkCard = !!item.isHighlight;
               return (
                 <TouchableOpacity
                   key={item.id}
-                  style={styles.menuItem}
+                  style={[
+                    styles.menuItem,
+                    isDarkCard && styles.menuItemDark,
+                  ]}
                   onPress={item.onPress}
                   activeOpacity={0.75}
                 >
-                  <View style={[styles.menuIconBg, { backgroundColor: item.bg, borderColor: item.borderColor }]}>
-                    <Icon size={18} color={item.color} />
+                  <View
+                    style={[
+                      styles.menuIconBg,
+                      isDarkCard && styles.menuIconBgDark,
+                    ]}
+                  >
+                    <Icon size={18} color={isDarkCard ? '#4ADE80' : '#34D399'} />
                   </View>
 
                   <View style={styles.menuTextGroup}>
-                    <Text style={styles.menuTitle}>{item.title}</Text>
-                    <Text style={styles.menuSub}>{item.subtitle}</Text>
+                    <Text style={[styles.menuTitle, isDarkCard && styles.menuTitleDark]}>
+                      {item.title}
+                    </Text>
+                    <Text style={[styles.menuSub, isDarkCard && styles.menuSubDark]}>
+                      {item.subtitle}
+                    </Text>
                   </View>
 
-                  <ChevronRight size={16} color="#94A3B8" />
+                  <ChevronRight size={16} color={isDarkCard ? '#4ADE80' : '#94A3B8'} />
                 </TouchableOpacity>
               );
             })}
@@ -257,14 +264,20 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   carBadge: {
-    width: 42,
-    height: 42,
+    width: 44,
+    height: 44,
     borderRadius: 14,
-    backgroundColor: '#ECFDF5',
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
+    backgroundColor: '#041912',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  carThumbImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
   },
   titleRow: {
     flexDirection: 'row',
@@ -322,13 +335,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
+  menuItemDark: {
+    backgroundColor: '#041912',
+    borderColor: 'rgba(74, 222, 128, 0.4)',
+    borderWidth: 1.5,
+  },
   menuIconBg: {
     width: 40,
     height: 40,
     borderRadius: 12,
+    backgroundColor: '#041912',
     borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  menuIconBgDark: {
+    backgroundColor: 'rgba(74, 222, 128, 0.15)',
+    borderColor: 'rgba(74, 222, 128, 0.4)',
   },
   menuTextGroup: {
     flex: 1,
@@ -338,11 +362,18 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#0F172A',
   },
+  menuTitleDark: {
+    color: '#FFFFFF',
+    fontFamily: theme.typography.fontFamily.bold,
+  },
   menuSub: {
     fontSize: 11.5,
     fontFamily: theme.typography.fontFamily.medium,
     color: '#64748B',
     marginTop: 2,
+  },
+  menuSubDark: {
+    color: '#A8D5C1',
   },
   dangerGroup: {
     gap: 8,

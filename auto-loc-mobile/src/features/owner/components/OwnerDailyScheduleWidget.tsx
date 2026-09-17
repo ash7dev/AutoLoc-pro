@@ -6,8 +6,9 @@ import {
   TouchableOpacity,
   Linking,
   Alert,
-  Image,
+  Platform,
 } from 'react-native';
+import { Image } from 'expo-image';
 import {
   Calendar as CalendarIcon,
   Phone,
@@ -160,15 +161,17 @@ export const OwnerDailyScheduleWidget: React.FC<OwnerDailyScheduleWidgetProps> =
 
   return (
     <View style={styles.container}>
-      {/* En-tête Widget */}
+      {/* En-tête Widget avec Icône Badge Signature */}
       <View style={styles.headerRow}>
         <View style={styles.titleBox}>
-          <View style={styles.iconCircle}>
-            <CalendarIcon size={18} color="#059669" />
+          <View style={styles.titleIconBadge}>
+            <CalendarIcon size={14} color="#4ADE80" strokeWidth={2.25} />
           </View>
-          <View>
+          <View style={styles.titleColumn}>
             <Text style={styles.title}>Planning du Jour</Text>
-            <Text style={styles.subtitle}>Prises en charge & Restitutions</Text>
+            <Text style={styles.subtitle} numberOfLines={1}>
+              Prises en charge & Restitutions
+            </Text>
           </View>
         </View>
 
@@ -289,7 +292,7 @@ export const OwnerDailyScheduleWidget: React.FC<OwnerDailyScheduleWidgetProps> =
 
                 {/* Corps de la carte avec image véhicule & infos locataire */}
                 <View style={styles.cardBody}>
-                  <Image source={{ uri: event.vehiclePhoto }} style={styles.vehicleThumb} />
+                  <Image source={{ uri: event.vehiclePhoto }} style={styles.vehicleThumb} contentFit="cover" transition={150} />
 
                   <View style={styles.infoBox}>
                     <Text style={styles.vehicleTitle} numberOfLines={1}>
@@ -359,15 +362,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 16,
-    marginHorizontal: 16,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#E2E8F0',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   headerRow: {
     flexDirection: 'row',
@@ -379,37 +386,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    flex: 1,
+    marginRight: 8,
   },
-  iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#ECFDF5',
+  titleColumn: {
+    flex: 1,
+  },
+  titleIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: '#041912',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
   title: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 17,
+    color: '#041912',
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: 12,
-    color: '#6B7280',
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 11.5,
+    color: '#64748B',
     marginTop: 1,
   },
   fullCalendarBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 9,
+    borderRadius: theme.radius.full,
     backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: 'rgba(5, 150, 105, 0.2)',
   },
   fullCalendarText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 11.5,
     color: '#059669',
   },
   filtersRow: {
@@ -422,13 +440,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 12,
+    paddingHorizontal: 11,
     paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
+    borderRadius: theme.radius.full,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   filterChipActive: {
-    backgroundColor: '#111827',
+    backgroundColor: '#041912',
+    borderColor: '#041912',
   },
   filterChipActiveCheckin: {
     backgroundColor: '#ECFDF5',
@@ -441,25 +462,28 @@ const styles = StyleSheet.create({
     borderColor: '#FECACA',
   },
   filterChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#4B5563',
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 11.5,
+    color: '#64748B',
   },
   filterChipTextActive: {
+    fontFamily: theme.typography.fontFamily.bold,
     color: '#FFFFFF',
   },
   filterChipTextCheckin: {
+    fontFamily: theme.typography.fontFamily.bold,
     color: '#047857',
   },
   filterChipTextCheckout: {
+    fontFamily: theme.typography.fontFamily.bold,
     color: '#B91C1C',
   },
   eventsList: {
     gap: 12,
   },
   eventCard: {
-    borderRadius: 14,
-    padding: 12,
+    borderRadius: 16,
+    padding: 14,
     borderWidth: 1,
   },
   eventCardCheckin: {
@@ -498,8 +522,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
   },
   typeBadgeText: {
+    fontFamily: theme.typography.fontFamily.bold,
     fontSize: 10,
-    fontWeight: '700',
     letterSpacing: 0.2,
   },
   textCheckin: {
@@ -517,8 +541,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   timeText: {
+    fontFamily: theme.typography.fontFamily.semiBold,
     fontSize: 11,
-    fontWeight: '600',
     color: '#4B5563',
   },
   cardBody: {
@@ -530,16 +554,16 @@ const styles = StyleSheet.create({
   vehicleThumb: {
     width: 60,
     height: 60,
-    borderRadius: 10,
-    backgroundColor: '#E5E7EB',
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
   },
   infoBox: {
     flex: 1,
   },
   vehicleTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#111827',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 15,
+    color: '#0F172A',
   },
   immatRow: {
     flexDirection: 'row',
@@ -553,17 +577,17 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: '#CBD5E1',
   },
   immatText: {
+    fontFamily: theme.typography.fontFamily.bold,
     fontSize: 10,
-    fontWeight: '800',
-    color: '#1F2937',
+    color: '#0F172A',
   },
   codeText: {
+    fontFamily: theme.typography.fontFamily.medium,
     fontSize: 11,
-    color: '#6B7280',
-    fontWeight: '500',
+    color: '#64748B',
   },
   locataireRow: {
     flexDirection: 'row',
@@ -572,13 +596,14 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   locataireLabel: {
+    fontFamily: theme.typography.fontFamily.regular,
     fontSize: 12,
-    color: '#6B7280',
+    color: '#64748B',
   },
   locataireName: {
+    fontFamily: theme.typography.fontFamily.bold,
     fontSize: 12,
-    fontWeight: '700',
-    color: '#111827',
+    color: '#0F172A',
     maxWidth: 130,
   },
   kycIcon: {
@@ -600,13 +625,13 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: '#ECFDF5',
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: '#A7F3D0',
   },
   actionBtnCallText: {
+    fontFamily: theme.typography.fontFamily.bold,
     fontSize: 12,
-    fontWeight: '700',
     color: '#059669',
   },
   actionBtnDetails: {
@@ -617,23 +642,23 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: '#FFFFFF',
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#E2E8F0',
   },
   actionBtnDetailsText: {
+    fontFamily: theme.typography.fontFamily.bold,
     fontSize: 12,
-    fontWeight: '600',
-    color: '#374151',
+    color: '#334155',
   },
   emptyCard: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 14,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#E2E8F0',
     borderStyle: 'dashed',
   },
   emptyIconCircle: {
@@ -646,14 +671,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emptyTitle: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 14,
-    fontWeight: '700',
-    color: '#111827',
+    color: '#0F172A',
     marginBottom: 4,
   },
   emptySubtitle: {
+    fontFamily: theme.typography.fontFamily.regular,
     fontSize: 12,
-    color: '#6B7280',
+    color: '#64748B',
     textAlign: 'center',
     lineHeight: 17,
   },

@@ -19,7 +19,7 @@ import { RefreshDto } from './dto/refresh.dto';
 import { RoleProfile } from '@prisma/client';
 import { VerifyPhoneOtpDto } from './dto/verify-phone-otp.dto';
 import { UpdatePhoneDto } from './dto/update-phone.dto';
-import { PhoneLoginSendOtpDto, PhoneLoginVerifyOtpDto } from './dto/phone-login.dto';
+import { PhoneLoginSendOtpDto, PhoneLoginVerifyOtpDto, SendPhoneOtpDto } from './dto/phone-login.dto';
 import { SubmitKycLinksDto } from './dto/submit-kyc-links.dto';
 import { LinkPermisDto } from './dto/link-permis.dto';
 
@@ -97,8 +97,9 @@ export class AuthController {
   @UseGuards(JwtAuthGuard, AccountStatusGuard)
   async sendPhoneOtp(
     @CurrentUser() user: RequestUser,
+    @Body() dto?: SendPhoneOtpDto,
   ): Promise<{ expiresIn: number }> {
-    return this.authService.requestPhoneOtp(user);
+    return this.authService.requestPhoneOtp(user, dto?.channel);
   }
 
   @Post('phone/update')
@@ -125,7 +126,7 @@ export class AuthController {
   async sendPhoneLoginOtp(
     @Body() dto: PhoneLoginSendOtpDto,
   ): Promise<{ expiresIn: number }> {
-    return this.authService.requestPhoneLoginOtp(dto.phone);
+    return this.authService.requestPhoneLoginOtp(dto.phone, dto.channel);
   }
 
   @Post('phone-login/verify-otp')

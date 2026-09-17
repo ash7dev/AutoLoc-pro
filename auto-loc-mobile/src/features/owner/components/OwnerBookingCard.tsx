@@ -1,6 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
-import { Calendar, Phone, CheckCircle2, XCircle, Clock, ShieldCheck, ArrowRight } from 'lucide-react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Platform } from 'react-native';
+import { Calendar, Phone, CheckCircle2, XCircle, Clock, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react-native';
 import { theme } from '../../../core/theme';
 import { formatCurrency } from '../../../core/utils/currency';
 import { useAppStore } from '../../../core/store/useAppStore';
@@ -20,6 +20,7 @@ export const OwnerBookingCard: React.FC<OwnerBookingCardProps> = ({
   onDetailPress,
 }) => {
   const selectedCurrency = useAppStore((state) => state.selectedCurrency);
+  const isPending = booking.statut === 'PENDING_APPROVAL';
 
   const getStatusBadge = () => {
     switch (booking.statut) {
@@ -43,12 +44,20 @@ export const OwnerBookingCard: React.FC<OwnerBookingCardProps> = ({
   const StatusIcon = status.icon;
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, isPending && styles.cardPending]}>
       {/* En-tête : Code & Statut */}
       <View style={styles.headerRow}>
         <View style={styles.codeGroup}>
-          <Text style={styles.codeText}>{booking.codeReservation}</Text>
-          <Text style={styles.dateDemande}>{booking.dateDemande}</Text>
+          <View style={styles.codeRow}>
+            <Text style={styles.codeText}>#{booking.codeReservation}</Text>
+            {isPending && (
+              <View style={styles.urgentTag}>
+                <Sparkles size={10} color="#D97706" />
+                <Text style={styles.urgentTagText}>Nouvelle demande</Text>
+              </View>
+            )}
+          </View>
+          <Text style={styles.dateDemande}>Reçue le {booking.dateDemande}</Text>
         </View>
 
         <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
@@ -64,10 +73,14 @@ export const OwnerBookingCard: React.FC<OwnerBookingCardProps> = ({
           <Text style={styles.vehicleTitle} numberOfLines={1}>
             {booking.vehicleTitle}
           </Text>
-          <Text style={styles.plateText}>{booking.immatriculation}</Text>
-          <Text style={styles.datesText}>
-            {booking.dateDebut} → {booking.dateFin} ({booking.dureeJours}j)
-          </Text>
+          <View style={styles.immatRow}>
+            <View style={styles.immatPill}>
+              <Text style={styles.plateText}>{booking.immatriculation}</Text>
+            </View>
+            <Text style={styles.datesText}>
+              {booking.dateDebut} → {booking.dateFin} ({booking.dureeJours}j)
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -88,7 +101,10 @@ export const OwnerBookingCard: React.FC<OwnerBookingCardProps> = ({
               <View style={styles.nameRow}>
                 <Text style={styles.tenantName}>{booking.locataireName}</Text>
                 {booking.locataireKycVerified && (
-                  <ShieldCheck size={14} color="#10B981" />
+                  <View style={styles.kycBadge}>
+                    <ShieldCheck size={13} color="#059669" />
+                    <Text style={styles.kycText}>Identité vérifiée</Text>
+                  </View>
                 )}
               </View>
               <Text style={styles.tenantPhone}>{booking.locatairePhone}</Text>
@@ -97,7 +113,7 @@ export const OwnerBookingCard: React.FC<OwnerBookingCardProps> = ({
         </View>
       </View>
 
-      {/* Financial Net Payout Summary */}
+      {/* Gain Net Propriétaire */}
       <View style={styles.payoutRow}>
         <Text style={styles.payoutLabel}>Gain net propriétaire :</Text>
         <Text style={styles.payoutValue}>
@@ -106,7 +122,7 @@ export const OwnerBookingCard: React.FC<OwnerBookingCardProps> = ({
       </View>
 
       {/* Actions */}
-      {booking.statut === 'PENDING_APPROVAL' && (onApprove || onReject) ? (
+      {isPending && (onApprove || onReject) ? (
         <View style={styles.actionsRow}>
           {onReject && (
             <TouchableOpacity
@@ -124,7 +140,7 @@ export const OwnerBookingCard: React.FC<OwnerBookingCardProps> = ({
               onPress={() => onApprove(booking.id)}
               activeOpacity={0.8}
             >
-              <CheckCircle2 size={15} color="#FFFFFF" />
+              <CheckCircle2 size={15} color="#4ADE80" />
               <Text style={styles.approveBtnText}>Accepter la réservation</Text>
             </TouchableOpacity>
           )}
@@ -146,17 +162,27 @@ export const OwnerBookingCard: React.FC<OwnerBookingCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 16,
+    borderRadius: 18,
+    padding: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 2,
-    marginBottom: 14,
-    gap: 12,
+    borderColor: '#E2E8F0',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+    gap: 10,
+  },
+  cardPending: {
+    backgroundColor: '#FAFAF9',
+    borderColor: '#FDE68A',
+    borderWidth: 1.5,
   },
   headerRow: {
     flexDirection: 'row',
@@ -166,22 +192,41 @@ const styles = StyleSheet.create({
   codeGroup: {
     gap: 2,
   },
+  codeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   codeText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 14,
+    fontSize: 13.5,
     color: '#041912',
+  },
+  urgentTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  urgentTagText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 10,
+    color: '#B45309',
   },
   dateDemande: {
     fontFamily: theme.typography.fontFamily.regular,
     fontSize: 11,
-    color: '#9CA3AF',
+    color: '#64748B',
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3.5,
+    borderRadius: 8,
     gap: 4,
   },
   statusText: {
@@ -191,38 +236,55 @@ const styles = StyleSheet.create({
   vehicleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    backgroundColor: '#F9FAFB',
-    padding: 10,
-    borderRadius: 14,
+    gap: 10,
+    backgroundColor: '#F8FAFC',
+    padding: 9,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
   vehiclePhoto: {
-    width: 64,
-    height: 48,
-    borderRadius: 10,
-    backgroundColor: '#E5E7EB',
+    width: 60,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#E2E8F0',
   },
   vehicleInfo: {
     flex: 1,
     gap: 2,
   },
   vehicleTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13.5,
-    color: '#041912',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 14,
+    color: '#0F172A',
+  },
+  immatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  immatPill: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
   },
   plateText: {
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 11,
-    color: '#6B7280',
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 10,
+    color: '#0F172A',
   },
   datesText: {
     fontFamily: theme.typography.fontFamily.semiBold,
-    fontSize: 11.5,
+    fontSize: 11,
     color: '#059669',
   },
   tenantBox: {
     backgroundColor: '#FFFFFF',
+    paddingVertical: 2,
   },
   tenantHeader: {
     flexDirection: 'row',
@@ -235,37 +297,53 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
   },
   avatarFallback: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: '#ECFDF5',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
   },
   avatarFallbackText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 14,
+    fontSize: 13,
     color: '#047857',
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   tenantName: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13,
-    color: '#1F2937',
+    fontSize: 12.5,
+    color: '#0F172A',
+  },
+  kycBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 6,
+  },
+  kycText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 10,
+    color: '#047857',
   },
   tenantPhone: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 11.5,
-    color: '#6B7280',
+    fontSize: 11,
+    color: '#64748B',
   },
   payoutRow: {
     flexDirection: 'row',
@@ -273,35 +351,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: '#F1F5F9',
   },
   payoutLabel: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 12.5,
-    color: '#4B5563',
+    fontSize: 12,
+    color: '#475569',
   },
   payoutValue: {
     fontFamily: theme.typography.fontFamily.displayBold,
     fontSize: 16,
     color: '#047857',
+    fontVariant: ['tabular-nums'],
   },
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginTop: 4,
+    gap: 8,
+    marginTop: 2,
   },
   rejectBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 12,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    borderRadius: 11,
     backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: '#FCA5A5',
-    gap: 6,
+    borderColor: '#FECACA',
+    gap: 5,
   },
   rejectBtnText: {
     fontFamily: theme.typography.fontFamily.bold,
@@ -313,10 +392,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    backgroundColor: '#051B14',
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    borderRadius: 11,
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.4)',
     gap: 6,
   },
   approveBtnText: {
@@ -330,8 +411,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 9,
     gap: 6,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F8FAFC',
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   detailBtnText: {
     fontFamily: theme.typography.fontFamily.bold,
@@ -339,3 +422,4 @@ const styles = StyleSheet.create({
     color: '#059669',
   },
 });
+

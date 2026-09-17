@@ -11,7 +11,7 @@ interface AuthState {
   error: string | null;
 
   // Actions
-  sendPhoneOtp: (phone: string) => Promise<number>;
+  sendPhoneOtp: (phone: string, channel?: 'whatsapp' | 'sms' | 'auto') => Promise<number>;
   verifyPhoneOtp: (phone: string, code: string) => Promise<void>;
   loginWithGoogleOrSupabase: (supabaseAccessToken: string) => Promise<void>;
   registerProfile: (data: { prenom: string; nom: string; telephone: string; email: string }) => Promise<void>;
@@ -28,11 +28,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   clearError: () => set({ error: null }),
 
-  // Demander un code OTP par téléphone (Connexion Rapide)
-  sendPhoneOtp: async (phone: string) => {
+  // Demander un code OTP par téléphone (WhatsApp ou SMS direct)
+  sendPhoneOtp: async (phone: string, channel?: 'whatsapp' | 'sms' | 'auto') => {
     try {
       set({ isLoading: true, error: null });
-      const res = await authApi.sendPhoneLoginOtp(phone);
+      const res = await authApi.sendPhoneLoginOtp(phone, channel);
       set({ isLoading: false });
       return res.expiresIn;
     } catch (err: any) {

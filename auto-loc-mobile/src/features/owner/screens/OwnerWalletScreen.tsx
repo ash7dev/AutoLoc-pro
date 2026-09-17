@@ -15,6 +15,7 @@ import { formatCurrency } from '../../../core/utils/currency';
 import { useAppStore } from '../../../core/store/useAppStore';
 import { OwnerHeader } from '../../../shared/components';
 import { PayoutModal } from '../components/PayoutModal';
+import { OwnerRevenueChartWidget } from '../components/OwnerRevenueChartWidget';
 import { ownerApi, OwnerWalletData } from '../api/ownerApi';
 
 interface OwnerWalletScreenProps {
@@ -139,6 +140,11 @@ export const OwnerWalletScreen: React.FC<OwnerWalletScreenProps> = ({
             <Text style={styles.payoutCtaText}>Demander un virement (Wave / Mobile / Banque)</Text>
           </TouchableOpacity>
         </View>
+
+        {/* 📊 Diagramme interactif d'évolution des revenus */}
+        <OwnerRevenueChartWidget
+          selectedCurrency={selectedCurrency}
+        />
 
         {/* Section Bilan Financier */}
         <View style={styles.sectionHeader}>
