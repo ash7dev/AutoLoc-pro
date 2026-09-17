@@ -158,9 +158,24 @@ export const RootNavigator: React.FC = () => {
     }
   };
 
+  const handleVehicleDetailBack = () => {
+    setActiveTenantTab('EXPLORER');
+    setRouteHistory((prev) => {
+      const filtered = prev.filter((r) => r.name !== 'VEHICLE_DETAIL');
+      if (filtered.length > 0) {
+        return filtered;
+      }
+      return [{ name: 'TENANT_MAIN', initialTab: 'EXPLORER' }];
+    });
+  };
+
   // Gestionnaire du bouton Retour Matériel Android
   useEffect(() => {
     const onBackPress = () => {
+      if (currentRoute.name === 'VEHICLE_DETAIL') {
+        handleVehicleDetailBack();
+        return true;
+      }
       if (canGoBack) {
         goBack();
         return true;
@@ -170,7 +185,7 @@ export const RootNavigator: React.FC = () => {
 
     const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
     return () => backHandler.remove();
-  }, [canGoBack, routeHistory]);
+  }, [canGoBack, routeHistory, currentRoute]);
 
   if (!fontsLoaded) {
     return null;
@@ -258,7 +273,7 @@ export const RootNavigator: React.FC = () => {
                 <VehicleDetailScreen
                   vehicleId={currentRoute.vehicleId}
                   vehicle={currentRoute.vehicle}
-                  onBack={() => goBack()}
+                  onBack={handleVehicleDetailBack}
                 />
               );
 

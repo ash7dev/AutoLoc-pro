@@ -11,6 +11,7 @@ import { VehicleImageGallery } from '../components/VehicleImageGallery';
 import { VehicleMainInfoCard } from '../components/VehicleMainInfoCard';
 import { VehicleOwnerCard } from '../components/VehicleOwnerCard';
 import { VehicleSpecsCard } from '../components/VehicleSpecsCard';
+import { VehicleOptionsCard } from '../components/VehicleOptionsCard';
 import { VehicleEquipmentsGrid } from '../components/VehicleEquipmentsGrid';
 import { VehiclePricingTierCard } from '../components/VehiclePricingTierCard';
 import { VehicleRentalConditionsCard } from '../components/VehicleRentalConditionsCard';
@@ -78,8 +79,8 @@ export const VehicleDetailScreen: React.FC<VehicleDetailScreenProps> = ({
   const photosList = detail?.photos && detail.photos.length > 0
     ? detail.photos
     : initialVehicle?.photoUrl
-    ? [{ id: '1', url: initialVehicle.photoUrl, estPrincipale: true, position: 0, vehiculeId: targetId, creeLe: '' }]
-    : [];
+      ? [{ id: '1', url: initialVehicle.photoUrl, estPrincipale: true, position: 0, vehiculeId: targetId, creeLe: '' }]
+      : [];
 
   const photoPrincipalUrl = photosList[0]?.url || initialVehicle?.photoUrl;
 
@@ -164,6 +165,14 @@ export const VehicleDetailScreen: React.FC<VehicleDetailScreenProps> = ({
           nombrePlaces={detail?.nombrePlaces}
           ageMinimum={detail?.ageMinimum}
           joursMinimum={detail?.joursMinimum}
+        />
+
+        {/* 4.1. Options & Services Premium (Hors Dakar & Livraison) */}
+        <VehicleOptionsCard
+          autoriseHorsDakar={detail?.autoriseHorsDakar}
+          supplementHorsDakarParJour={detail?.supplementHorsDakarParJour}
+          fraisLivraison={detail?.fraisLivraison}
+          selectedCurrency={selectedCurrency}
         />
 
         {/* 5. Équipements & Options de confort */}

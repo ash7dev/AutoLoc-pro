@@ -9,6 +9,7 @@ import {
 import { ChevronRight } from 'lucide-react-native';
 import { VehicleFeedItem } from '../types';
 import { VehicleFeedCard } from './VehicleFeedCard';
+import { theme } from '../../../core/theme';
 
 interface FeedSectionProps {
   title: string;
@@ -37,7 +38,7 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
 
   return (
     <View style={styles.sectionContainer}>
-      {/* Header de Section */}
+      {/* Header de Section — Premium */}
       <View style={styles.headerRow}>
         <View style={styles.headerLeft}>
           <View style={styles.iconContainer}>{icon}</View>
@@ -47,19 +48,19 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
           </View>
         </View>
 
-        {onSeeAllPress && (
+        {Boolean(onSeeAllPress) ? (
           <Pressable
             style={({ pressed }) => [
               styles.seeAllButton,
-              pressed && styles.seeAllPressed,
+              pressed ? styles.seeAllPressed : null,
             ]}
             onPress={onSeeAllPress}
             hitSlop={8}
           >
             <Text style={styles.seeAllText}>Voir tout</Text>
-            <ChevronRight size={14} color="#059669" />
+            <ChevronRight size={14} color="#059669" strokeWidth={2.5} />
           </Pressable>
-        )}
+        ) : null}
       </View>
 
       {/* Scroll Horizontal avec Snap */}
@@ -84,16 +85,20 @@ export const FeedSection: React.FC<FeedSectionProps> = ({
   );
 };
 
+/* ─────────────────────────────────────────────
+   Styles — Premium Feed Section
+   ───────────────────────────────────────────── */
+
 const styles = StyleSheet.create({
   sectionContainer: {
-    marginVertical: 14,
+    marginVertical: 16,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -101,42 +106,50 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   iconContainer: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: '#ECFDF5',
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: theme.colors.brand.subtle,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.brand.border,
   },
   titleColumn: {
     flex: 1,
   },
   sectionTitle: {
-    color: '#0F172A',
-    fontSize: 18,
-    fontWeight: '700',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    color: theme.colors.text.primary,
+    fontSize: 19,
     letterSpacing: -0.3,
   },
   sectionSubtitle: {
-    color: '#64748B',
+    fontFamily: theme.typography.fontFamily.regular,
+    color: theme.colors.text.tertiary,
     fontSize: 12,
-    marginTop: 1,
+    marginTop: 2,
   },
   seeAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
-    paddingLeft: 8,
+    backgroundColor: theme.colors.brand.subtle,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: theme.colors.brand.border,
+    gap: 2,
   },
   seeAllPressed: {
     opacity: 0.6,
   },
   seeAllText: {
-    color: '#059669',
-    fontSize: 13,
-    fontWeight: '600',
-    marginRight: 2,
+    fontFamily: theme.typography.fontFamily.semiBold,
+    color: theme.colors.brand.action,
+    fontSize: 12,
+    letterSpacing: 0.2,
   },
   listContent: {
     paddingLeft: 16,

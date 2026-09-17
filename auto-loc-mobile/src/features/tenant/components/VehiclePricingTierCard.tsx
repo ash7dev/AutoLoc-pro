@@ -7,6 +7,7 @@ import {
 import { TrendingDown, Zap, Clock, Sparkles } from 'lucide-react-native';
 import { TarifTierDetail } from '../hooks/useVehicleDetail';
 import { CurrencyCode, getTenantPricePerDay, formatDirectPrice } from '../../../core/utils/currency';
+import { theme } from '../../../core/theme';
 
 interface VehiclePricingTierCardProps {
   tarifsProgressifs?: TarifTierDetail[];
@@ -50,24 +51,23 @@ export const VehiclePricingTierCard: React.FC<VehiclePricingTierCardProps> = ({
     <View style={styles.container}>
       {/* En-tête de Section */}
       <View style={styles.headerTop}>
-        <View style={styles.titleBox}>
-          <Text style={styles.sectionTitle}>Tarifs dégressifs par durée</Text>
-          <Text style={styles.subtitleText}>
-            {hasDiscount ? (
-              <>
-                Économisez jusqu'à{' '}
-                <Text style={styles.discountHighlight}>−{maxSavingPct}%</Text> sur vos longs séjours
-              </>
-            ) : (
-              'Tarif fixe garanti'
-            )}
-          </Text>
+        <View style={styles.headerTitleRow}>
+          <View style={styles.titleIconBadge}>
+            <TrendingDown size={14} color="#4ADE80" strokeWidth={2.25} />
+          </View>
+          <Text style={styles.sectionTitle}>Tarifs dégressifs</Text>
         </View>
 
-        <View style={styles.headerBadge}>
-          <TrendingDown size={13} color="#16A34A" />
-          <Text style={styles.headerBadgeText}>Plus longtemps = Moins cher</Text>
-        </View>
+        <Text style={styles.subtitleText}>
+          {hasDiscount ? (
+            <>
+              Économisez jusqu'à{' '}
+              <Text style={styles.discountHighlight}>−{maxSavingPct}%</Text> sur vos longs séjours
+            </>
+          ) : (
+            'Tarif fixe garanti'
+          )}
+        </Text>
       </View>
 
       {/* Grille de cartes de paliers dégressifs */}
@@ -109,7 +109,9 @@ export const VehiclePricingTierCard: React.FC<VehiclePricingTierCardProps> = ({
                       color={isLowest ? '#FFFFFF' : '#041912'}
                     />
                   </View>
-                  <Text style={styles.durationLabel}>{tier.label}</Text>
+                  <Text style={[styles.durationLabel, isLowest && styles.durationLabelFeatured]}>
+                    {tier.label}
+                  </Text>
                 </View>
 
                 {/* Prix & Réduction */}
@@ -132,8 +134,12 @@ export const VehiclePricingTierCard: React.FC<VehiclePricingTierCardProps> = ({
                     </View>
                   )}
                   <View style={styles.priceRow}>
-                    <Text style={styles.priceText}>{formattedPrice}</Text>
-                    <Text style={styles.perDayText}>/j</Text>
+                    <Text style={[styles.priceText, isLowest && styles.priceTextFeatured]}>
+                      {formattedPrice}
+                    </Text>
+                    <Text style={[styles.perDayText, isLowest && styles.perDayTextFeatured]}>
+                      /j
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -171,26 +177,41 @@ const styles = StyleSheet.create({
   },
   headerTop: {
     marginBottom: 16,
-    gap: 10,
+    gap: 4,
   },
-  titleBox: {
-    flex: 1,
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  titleIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: '#041912',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 17.5,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#041912',
     letterSpacing: -0.3,
   },
   subtitleText: {
-    fontSize: 13,
+    fontSize: 12.5,
+    fontFamily: theme.typography.fontFamily.regular,
     color: '#5F6B59',
-    marginTop: 3,
-    fontWeight: '500',
+    marginTop: 2,
   },
   discountHighlight: {
     color: '#16A34A',
-    fontWeight: '800',
+    fontFamily: theme.typography.fontFamily.bold,
+  },
+  titleBox: {
+    flex: 1,
   },
   headerBadge: {
     flexDirection: 'row',
@@ -223,16 +244,22 @@ const styles = StyleSheet.create({
   },
   tierCardStandard: {
     borderColor: '#E4EBDB',
+    backgroundColor: '#FFFFFF',
   },
   tierCardFeatured: {
-    borderColor: '#A7F3D0',
-    backgroundColor: '#F4FBF7',
+    borderColor: 'rgba(74, 222, 128, 0.45)',
+    backgroundColor: '#041912',
+    shadowColor: '#04150F',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
   },
   bestPriceBadge: {
     position: 'absolute',
     top: 0,
     right: 14,
-    backgroundColor: '#16A34A',
+    backgroundColor: '#059669',
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderBottomLeftRadius: 10,
@@ -240,6 +267,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: '#4ADE80',
   },
   bestPriceText: {
     color: '#FFFFFF',
@@ -270,12 +300,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F6EA',
   },
   clockIconFeatured: {
-    backgroundColor: '#16A34A',
+    backgroundColor: 'rgba(16, 185, 129, 0.25)',
+    borderColor: 'rgba(74, 222, 128, 0.40)',
+    borderWidth: 1,
   },
   durationLabel: {
     fontSize: 14,
     fontWeight: '700',
     color: '#041912',
+  },
+  durationLabelFeatured: {
+    color: '#FFFFFF',
   },
   priceContainer: {
     flexDirection: 'row',
@@ -291,7 +326,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#041912',
   },
   savingBadgeFeatured: {
-    backgroundColor: '#16A34A',
+    backgroundColor: 'rgba(74, 222, 128, 0.20)',
+    borderColor: 'rgba(74, 222, 128, 0.40)',
+    borderWidth: 1,
   },
   savingBadgeText: {
     fontSize: 11,
@@ -301,22 +338,29 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   savingBadgeTextFeatured: {
-    color: '#FFFFFF',
+    color: '#4ADE80',
   },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
   },
   priceText: {
-    fontSize: 16,
-    fontWeight: '800',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 17,
     color: '#16A34A',
+    fontVariant: ['tabular-nums'],
+  },
+  priceTextFeatured: {
+    color: '#4ADE80',
   },
   perDayText: {
     fontSize: 11,
     color: '#5F6B59',
     fontWeight: '500',
     marginLeft: 1,
+  },
+  perDayTextFeatured: {
+    color: 'rgba(255, 255, 255, 0.70)',
   },
   progressBarTrack: {
     height: 4,
@@ -332,7 +376,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#A8D5C1',
   },
   progressFeatured: {
-    backgroundColor: '#16A34A',
+    backgroundColor: '#4ADE80',
   },
   footerNote: {
     flexDirection: 'row',

@@ -656,8 +656,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 15,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 16,
     color: '#0F172A',
   },
   headerSubtitle: {
@@ -701,9 +701,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   presetsTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 12,
-    color: '#475569',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 13,
+    color: '#334155',
   },
   presetsRow: {
     gap: 8,
@@ -743,8 +743,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   monthTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 16,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 17,
     color: '#0F172A',
   },
   monthNavRow: {
@@ -887,8 +887,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionPanelTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 15,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 16,
     color: '#0F172A',
   },
   selectedDatesText: {
@@ -979,8 +979,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 14,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 15,
     color: '#0F172A',
   },
   indispoRow: {
@@ -1025,8 +1025,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   emptyIndispoTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 14,
     color: '#0F172A',
   },
   emptyIndispoSub: {

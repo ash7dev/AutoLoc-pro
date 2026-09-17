@@ -89,6 +89,10 @@ export class ProfileController {
             };
         }
 
+        const annoncesCount = await this.prisma.vehicule.count({
+            where: { proprietaireId: utilisateur.id },
+        });
+
         return {
             id: utilisateur.id,
             userId: utilisateur.userId,
@@ -110,6 +114,8 @@ export class ProfileController {
             kycDocumentUrl: utilisateur.kycDocumentUrl,
             kycDocumentBackUrl: utilisateur.kycDocumentBackUrl,
             kycSelfieUrl: utilisateur.kycSelfieUrl,
+            annoncesCount,
+            listingsCount: annoncesCount,
         };
     }
 

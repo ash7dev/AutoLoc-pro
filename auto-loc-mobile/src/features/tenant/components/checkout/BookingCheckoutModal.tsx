@@ -57,6 +57,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
   const [dateDebut, setDateDebut] = useState<string | undefined>(initialDateDebut);
   const [dateFin, setDateFin] = useState<string | undefined>(initialDateFin);
   const [isDeliverySelected, setIsDeliverySelected] = useState(false);
+  const [adresseLivraison, setAdresseLivraison] = useState('');
   const [isHorsDakarSelected, setIsHorsDakarSelected] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [blockedRanges, setBlockedRanges] = useState<Array<{ from: string; to: string }>>([]);
@@ -199,7 +200,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
         targetPayment: params.paymentGateway,
         payerPhone: phoneClean,
         modePaiement: modePaiementStr,
-        ...(isDeliverySelected ? { adresseLivraison: 'Livraison à domicile' } : {}),
+        ...(isDeliverySelected ? { adresseLivraison: adresseLivraison.trim() || 'Livraison à domicile' } : {}),
         ...(isHorsDakarSelected ? { horsDakar: true } : {}),
       };
 
@@ -265,6 +266,8 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
             onDatesChange={handleDatesChange}
             isDeliverySelected={isDeliverySelected}
             onToggleDelivery={setIsDeliverySelected}
+            adresseLivraison={adresseLivraison}
+            onAdresseLivraisonChange={setAdresseLivraison}
             isHorsDakarSelected={isHorsDakarSelected}
             onToggleHorsDakar={setIsHorsDakarSelected}
             selectedCurrency={selectedCurrency}

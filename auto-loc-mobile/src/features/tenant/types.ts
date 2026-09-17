@@ -13,6 +13,7 @@ export interface VehicleFeedItem {
   annee: number;
   type: string;
   prixParJour: number;
+  prixBarre?: number;
   ville: string;
   note: number;
   totalAvis: number;

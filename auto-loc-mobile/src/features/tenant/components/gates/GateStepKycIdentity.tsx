@@ -3,7 +3,7 @@ import {
   StyleSheet,
   View,
   Text,
-  Pressable,
+  TouchableOpacity,
   Image,
   Alert,
   ActivityIndicator,
@@ -21,16 +21,6 @@ interface GateStepKycIdentityProps {
   onSuccess: () => void;
 }
 
-const COLORS = {
-  bg: '#FFFFFF',
-  accent: '#16A34A',
-  accentLight: '#F0FDF4',
-  ink: '#041912',
-  inkMuted: '#64748B',
-  border: '#E2E8F0',
-  surface: '#F8FAFC',
-};
-
 type KycSubStep = 1 | 2 | 3;
 type TargetField = 'FRONT' | 'BACK' | 'SELFIE';
 
@@ -42,15 +32,11 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
   const [backUri, setBackUri] = useState<string | null>(null);
   const [selfieUri, setSelfieUri] = useState<string | null>(null);
 
-  // État de la jauge de progression d'upload (0-100%)
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [progressLabel, setProgressLabel] = useState('');
 
-  // Modal sur-mesure de sélection de source photo / fichier
   const [pickerModalVisible, setPickerModalVisible] = useState(false);
-
-  const activeTarget: TargetField = subStep === 1 ? 'FRONT' : subStep === 2 ? 'BACK' : 'SELFIE';
 
   const handleApplyUri = (uri: string) => {
     if (subStep === 1) setFrontUri(uri);
@@ -58,7 +44,6 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
     else if (subStep === 3) setSelfieUri(uri);
   };
 
-  // Option 1 : Photothèque
   const handleSelectLibrary = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -75,7 +60,6 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
     }
   };
 
-  // Option 2 : Appareil photo
   const handleSelectCamera = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
@@ -93,7 +77,6 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
     }
   };
 
-  // Option 3 : Choisir les fichiers
   const handleSelectDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -170,157 +153,238 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* En-tête des Sous-Étapes (1/3, 2/3, 3/3) */}
-        {!uploading && (
-          <View style={styles.subStepHeader}>
-            <View style={styles.subStepIndicatorRow}>
+    <ScrollView
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.cardStackWrapper}>
+        <View style={styles.backAccentCard} />
+
+        <View style={styles.frontGlassCard}>
+          {/* Header Box */}
+          <View style={styles.cardHeaderBox}>
+            <View style={styles.iconCircle}>
+              <ShieldCheck size={30} color="#059669" />
+            </View>
+
+            <View style={styles.badgeKycGlass}>
+              <ShieldCheck size={12} color="#059669" />
+              <Text style={styles.badgeKycText}>CONTRÔLE D'IDENTITÉ</Text>
+            </View>
+
+            <Text style={styles.mainTitle}>Pièce d'Identité & Selfie</Text>
+            <Text style={styles.subtitle}>
+              Transmission sécurisée conforme aux normes de sécurité AutoLoc.
+            </Text>
+          </View>
+
+          {/* SubStep Pill Track */}
+          {!uploading && (
+            <View style={styles.subStepTrack}>
               {[1, 2, 3].map((stepNum) => {
                 const isCompleted = stepNum < subStep;
                 const isActive = stepNum === subStep;
+                const stepLabel = stepNum === 1 ? '1. Recto' : stepNum === 2 ? '2. Verso' : '3. Selfie';
+
                 return (
-                  <View key={stepNum} style={styles.subStepIndicatorItem}>
-                    <View
+                  <TouchableOpacity
+                    key={stepNum}
+                    style={[
+                      styles.subStepPill,
+                      isActive && styles.subStepPillActive,
+                      isCompleted && styles.subStepPillCompleted,
+                    ]}
+                    onPress={() => {
+                      if (stepNum === 1) setSubStep(1);
+                      if (stepNum === 2 && frontUri) setSubStep(2);
+                      if (stepNum === 3 && frontUri && backUri) setSubStep(3);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    {isCompleted ? (
+                      <CheckCircle2 size={13} color="#FFFFFF" />
+                    ) : null}
+                    <Text
                       style={[
-                        styles.subStepCircle,
-                        isCompleted && styles.subStepCircleCompleted,
-                        isActive && styles.subStepCircleActive,
+                        styles.subStepPillText,
+                        isActive && styles.subStepPillTextActive,
+                        isCompleted && styles.subStepPillTextCompleted,
                       ]}
                     >
-                      {isCompleted ? (
-                        <CheckCircle2 size={16} color="#FFFFFF" />
-                      ) : (
-                        <Text style={[styles.subStepCircleText, isActive && styles.subStepCircleTextActive]}>
-                          {stepNum}
-                        </Text>
-                      )}
-                    </View>
-                    <Text style={[styles.subStepLabel, isActive && styles.subStepLabelActive]}>
-                      {stepNum === 1 ? 'Recto' : stepNum === 2 ? 'Verso' : 'Selfie'}
+                      {stepLabel}
                     </Text>
-                  </View>
+                  </TouchableOpacity>
                 );
               })}
             </View>
-          </View>
-        )}
+          )}
 
-        {/* Jauge de Progression d'Upload (Si soumission en cours) */}
-        {uploading ? (
-          <View style={styles.progressGaugeCard}>
-            <View style={styles.iconCircle}>
-              <ShieldCheck size={36} color={COLORS.accent} />
+          {/* Upload Progress Gauge */}
+          {uploading ? (
+            <View style={styles.progressGaugeCard}>
+              <Text style={styles.progressGaugeTitle}>Transfert de votre dossier KYC</Text>
+              <Text style={styles.progressGaugePercent}>{uploadProgress}%</Text>
+
+              <View style={styles.progressBarTrack}>
+                <View style={[styles.progressBarFill, { width: `${uploadProgress}%` }]} />
+              </View>
+
+              <Text style={styles.progressGaugeLabel}>{progressLabel}</Text>
             </View>
-            <Text style={styles.progressGaugeTitle}>Transfert sécurisé de votre dossier</Text>
-            <Text style={styles.progressGaugePercent}>{uploadProgress}%</Text>
+          ) : (
+            /* Active SubStep Content */
+            <View style={styles.stepContentBox}>
+              {subStep === 1 && (
+                <View style={styles.subStepInner}>
+                  <View style={styles.instructionBox}>
+                    <FileText size={16} color="#059669" />
+                    <Text style={styles.instructionText}>
+                      Prenez le recto de votre CNI ou la page principale du Passeport.
+                    </Text>
+                  </View>
 
-            <View style={styles.progressBarTrack}>
-              <View style={[styles.progressBarFill, { width: `${uploadProgress}%` }]} />
+                  <TouchableOpacity
+                    style={styles.captureFrame}
+                    onPress={() => setPickerModalVisible(true)}
+                    activeOpacity={0.85}
+                  >
+                    {frontUri ? (
+                      <View style={styles.previewContainer}>
+                        <Image source={{ uri: frontUri }} style={styles.previewImage} />
+                        <View style={styles.completedBadge}>
+                          <CheckCircle2 size={15} color="#FFFFFF" />
+                          <Text style={styles.completedBadgeText}>Recto capturé</Text>
+                        </View>
+                      </View>
+                    ) : (
+                      <View style={styles.placeholderContainer}>
+                        <View style={styles.cameraCircleIcon}>
+                          <Camera size={26} color="#059669" />
+                        </View>
+                        <Text style={styles.placeholderMainText}>Ajouter la photo Recto</Text>
+                        <Text style={styles.placeholderSubText}>Photothèque, Appareil photo ou Fichiers</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {subStep === 2 && (
+                <View style={styles.subStepInner}>
+                  <View style={styles.instructionBox}>
+                    <FileText size={16} color="#059669" />
+                    <Text style={styles.instructionText}>
+                      Prenez le verso de votre CNI ou la deuxième page du Passeport.
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.captureFrame}
+                    onPress={() => setPickerModalVisible(true)}
+                    activeOpacity={0.85}
+                  >
+                    {backUri ? (
+                      <View style={styles.previewContainer}>
+                        <Image source={{ uri: backUri }} style={styles.previewImage} />
+                        <View style={styles.completedBadge}>
+                          <CheckCircle2 size={15} color="#FFFFFF" />
+                          <Text style={styles.completedBadgeText}>Verso capturé</Text>
+                        </View>
+                      </View>
+                    ) : (
+                      <View style={styles.placeholderContainer}>
+                        <View style={styles.cameraCircleIcon}>
+                          <Camera size={26} color="#059669" />
+                        </View>
+                        <Text style={styles.placeholderMainText}>Ajouter la photo Verso</Text>
+                        <Text style={styles.placeholderSubText}>Photothèque, Appareil photo ou Fichiers</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {subStep === 3 && (
+                <View style={styles.subStepInner}>
+                  <View style={styles.instructionBox}>
+                    <UserCheck size={16} color="#059669" />
+                    <Text style={styles.instructionText}>
+                      Prenez un selfie bien éclairé de votre visage sans lunettes de soleil.
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.captureFrame}
+                    onPress={() => setPickerModalVisible(true)}
+                    activeOpacity={0.85}
+                  >
+                    {selfieUri ? (
+                      <View style={styles.previewContainer}>
+                        <Image source={{ uri: selfieUri }} style={styles.previewImage} />
+                        <View style={styles.completedBadge}>
+                          <CheckCircle2 size={15} color="#FFFFFF" />
+                          <Text style={styles.completedBadgeText}>Selfie capturé</Text>
+                        </View>
+                      </View>
+                    ) : (
+                      <View style={styles.placeholderContainer}>
+                        <View style={styles.cameraCircleIcon}>
+                          <UserCheck size={26} color="#059669" />
+                        </View>
+                        <Text style={styles.placeholderMainText}>Prendre un Selfie visuel</Text>
+                        <Text style={styles.placeholderSubText}>Positionnez votre visage au centre</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
+          )}
 
-            <Text style={styles.progressGaugeLabel}>{progressLabel}</Text>
-          </View>
-        ) : (
-          /* Sous-Étapes Guidées 1, 2 ou 3 */
-          <View>
-            {/* SOUS-ÉTAPE 1 : RECTO CNI / PASSEPORT */}
-            {subStep === 1 && (
-              <View style={styles.stepContentCard}>
-                <View style={styles.stepTitleRow}>
-                  <FileText size={24} color={COLORS.accent} />
-                  <Text style={styles.stepTitle}>1. Pièce d'identité (Recto)</Text>
-                </View>
-                <Text style={styles.stepInstruction}>
-                  Prenez en photo le recto de votre CNI ou la page principale de votre Passeport. Veillez à éviter les reflets.
-                </Text>
+          {/* SubStep Navigation Actions */}
+          {!uploading && (
+            <View style={styles.navRow}>
+              {subStep > 1 ? (
+                <TouchableOpacity
+                  style={styles.prevBtn}
+                  onPress={handlePrevSubStep}
+                  activeOpacity={0.7}
+                >
+                  <ChevronLeft size={18} color="#041912" />
+                  <Text style={styles.prevBtnText}>Précédent</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={{ width: 80 }} />
+              )}
 
-                <Pressable style={styles.captureFrame} onPress={() => setPickerModalVisible(true)}>
-                  {frontUri ? (
-                    <View style={styles.previewContainer}>
-                      <Image source={{ uri: frontUri }} style={styles.previewImage} />
-                      <View style={styles.completedBadge}>
-                        <CheckCircle2 size={16} color="#FFFFFF" />
-                        <Text style={styles.completedBadgeText}>Recto capturé</Text>
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={styles.placeholderContainer}>
-                      <Camera size={36} color={COLORS.inkMuted} />
-                      <Text style={styles.placeholderMainText}>Ajouter la photo Recto</Text>
-                      <Text style={styles.placeholderSubText}>Photothèque, Appareil photo ou Fichiers</Text>
-                    </View>
-                  )}
-                </Pressable>
-              </View>
-            )}
+              {subStep < 3 ? (
+                <TouchableOpacity
+                  style={styles.nextBtn}
+                  onPress={handleNextSubStep}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.nextBtnText}>Suivant</Text>
+                  <View style={styles.emeraldArrowCircle}>
+                    <ArrowRight size={13} color="#4ADE80" strokeWidth={2.5} />
+                  </View>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.nextBtn}
+                  onPress={handleSubmitFinal}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.nextBtnText}>Soumettre mon KYC</Text>
+                  <View style={styles.emeraldArrowCircle}>
+                    <CheckCircle2 size={13} color="#4ADE80" strokeWidth={2.5} />
+                  </View>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </View>
+      </View>
 
-            {/* SOUS-ÉTAPE 2 : VERSO CNI / PASSEPORT */}
-            {subStep === 2 && (
-              <View style={styles.stepContentCard}>
-                <View style={styles.stepTitleRow}>
-                  <FileText size={24} color={COLORS.accent} />
-                  <Text style={styles.stepTitle}>2. Pièce d'identité (Verso)</Text>
-                </View>
-                <Text style={styles.stepInstruction}>
-                  Prenez en photo le verso de votre CNI (ou la deuxième page de votre Passeport).
-                </Text>
-
-                <Pressable style={styles.captureFrame} onPress={() => setPickerModalVisible(true)}>
-                  {backUri ? (
-                    <View style={styles.previewContainer}>
-                      <Image source={{ uri: backUri }} style={styles.previewImage} />
-                      <View style={styles.completedBadge}>
-                        <CheckCircle2 size={16} color="#FFFFFF" />
-                        <Text style={styles.completedBadgeText}>Verso capturé</Text>
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={styles.placeholderContainer}>
-                      <Camera size={36} color={COLORS.inkMuted} />
-                      <Text style={styles.placeholderMainText}>Ajouter la photo Verso</Text>
-                      <Text style={styles.placeholderSubText}>Photothèque, Appareil photo ou Fichiers</Text>
-                    </View>
-                  )}
-                </Pressable>
-              </View>
-            )}
-
-            {/* SOUS-ÉTAPE 3 : SELFIE BIOMÉTRIQUE */}
-            {subStep === 3 && (
-              <View style={styles.stepContentCard}>
-                <View style={styles.stepTitleRow}>
-                  <UserCheck size={24} color={COLORS.accent} />
-                  <Text style={styles.stepTitle}>3. Selfie de vérification</Text>
-                </View>
-                <Text style={styles.stepInstruction}>
-                  Prenez un selfie clair de votre visage pour valider la concordance avec la pièce d'identité.
-                </Text>
-
-                <Pressable style={styles.captureFrame} onPress={() => setPickerModalVisible(true)}>
-                  {selfieUri ? (
-                    <View style={styles.previewContainer}>
-                      <Image source={{ uri: selfieUri }} style={styles.previewImage} />
-                      <View style={styles.completedBadge}>
-                        <CheckCircle2 size={16} color="#FFFFFF" />
-                        <Text style={styles.completedBadgeText}>Selfie capturé</Text>
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={styles.placeholderContainer}>
-                      <UserCheck size={36} color={COLORS.inkMuted} />
-                      <Text style={styles.placeholderMainText}>Prendre un selfie de votre visage</Text>
-                      <Text style={styles.placeholderSubText}>Positionnez votre visage au centre</Text>
-                    </View>
-                  )}
-                </Pressable>
-              </View>
-            )}
-          </View>
-        )}
-      </ScrollView>
-
-      {/* Modal Sur-Mesure Sélection Source */}
       <ImageSourcePickerModal
         visible={pickerModalVisible}
         onClose={() => setPickerModalVisible(false)}
@@ -328,145 +392,189 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
         onSelectCamera={handleSelectCamera}
         onSelectDocument={handleSelectDocument}
       />
-
-      {/* Barre d'Action Inférieure (Navigation entre sous-étapes) */}
-      {!uploading && (
-        <View style={styles.footer}>
-          <View style={styles.navRow}>
-            {subStep > 1 ? (
-              <Pressable style={styles.prevButton} onPress={handlePrevSubStep}>
-                <ChevronLeft size={20} color={COLORS.ink} />
-                <Text style={styles.prevButtonText}>Retour</Text>
-              </Pressable>
-            ) : (
-              <View style={{ width: 80 }} />
-            )}
-
-            {subStep < 3 ? (
-              <Pressable style={styles.nextButton} onPress={handleNextSubStep}>
-                <Text style={styles.nextButtonText}>Suivant</Text>
-                <ArrowRight size={18} color="#FFFFFF" strokeWidth={2.5} />
-              </Pressable>
-            ) : (
-              <Pressable style={styles.nextButton} onPress={handleSubmitFinal}>
-                <Text style={styles.nextButtonText}>Soumettre mon KYC</Text>
-                <CheckCircle2 size={18} color="#FFFFFF" strokeWidth={2.5} />
-              </Pressable>
-            )}
-          </View>
-        </View>
-      )}
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.bg,
-  },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingHorizontal: theme.spacing[4],
+    paddingBottom: theme.spacing[4],
+    flexGrow: 1,
+    justifyContent: 'center',
   },
-  subStepHeader: {
-    marginBottom: 20,
+  cardStackWrapper: {
+    position: 'relative',
+    marginVertical: theme.spacing[2],
   },
-  subStepIndicatorRow: {
+  backAccentCard: {
+    position: 'absolute',
+    top: -6,
+    left: 8,
+    right: 8,
+    bottom: -6,
+    borderRadius: 32,
+    backgroundColor: 'rgba(16, 185, 129, 0.20)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+  },
+  frontGlassCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.80)',
+    borderRadius: 28,
+    padding: theme.spacing[5],
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  cardHeaderBox: {
+    alignItems: 'center',
+    marginBottom: theme.spacing[3],
+  },
+  iconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing[2],
+  },
+  badgeKycGlass: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: theme.radius.full,
+    gap: 6,
+    marginBottom: theme.spacing[2],
+  },
+  badgeKycText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 9,
+    letterSpacing: 0.8,
+    color: '#059669',
+  },
+  mainTitle: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 22,
+    lineHeight: 28,
+    color: '#041912',
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 12.5,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 4,
+    lineHeight: 18,
+  },
+  subStepTrack: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.surface,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    gap: 6,
+    backgroundColor: '#F9FAFB',
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    padding: 4,
+    marginBottom: theme.spacing[3],
   },
-  subStepIndicatorItem: {
+  subStepPill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  subStepPillActive: {
+    backgroundColor: '#041912',
+  },
+  subStepPillCompleted: {
+    backgroundColor: '#059669',
+  },
+  subStepPillText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 11,
+    color: '#64748B',
+  },
+  subStepPillTextActive: {
+    fontFamily: theme.typography.fontFamily.bold,
+    color: '#FFFFFF',
+  },
+  subStepPillTextCompleted: {
+    fontFamily: theme.typography.fontFamily.bold,
+    color: '#FFFFFF',
+  },
+  stepContentBox: {
+    marginBottom: theme.spacing[3],
+  },
+  subStepInner: {
+    gap: 12,
+  },
+  instructionBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
   },
-  subStepCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#E2E8F0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  subStepCircleActive: {
-    backgroundColor: COLORS.accent,
-  },
-  subStepCircleCompleted: {
-    backgroundColor: COLORS.accent,
-  },
-  subStepCircleText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.inkMuted,
-  },
-  subStepCircleTextActive: {
-    color: '#FFFFFF',
-  },
-  subStepLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.inkMuted,
-  },
-  subStepLabelActive: {
-    fontWeight: '800',
-    color: COLORS.ink,
-  },
-  stepContentCard: {
-    backgroundColor: COLORS.bg,
-  },
-  stepTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 8,
-  },
-  stepTitle: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 20,
-    color: theme.primitives.forest[800],
-  },
-  stepInstruction: {
-    fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 13.5,
-    color: COLORS.inkMuted,
-    lineHeight: 20,
-    marginBottom: 20,
+  instructionText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 12,
+    color: '#041912',
+    flex: 1,
   },
   captureFrame: {
-    height: 220,
+    height: 180,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: COLORS.border,
+    borderColor: '#A7F3D0',
     borderStyle: 'dashed',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#F9FAFB',
     overflow: 'hidden',
   },
   placeholderContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 8,
     paddingHorizontal: 20,
+  },
+  cameraCircleIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
   },
   placeholderMainText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 15,
-    color: COLORS.ink,
+    fontSize: 14,
+    color: '#041912',
     textAlign: 'center',
   },
   placeholderSubText: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 12,
-    color: COLORS.inkMuted,
+    fontSize: 11.5,
+    color: '#64748B',
     textAlign: 'center',
   },
   previewContainer: {
@@ -476,111 +584,117 @@ const styles = StyleSheet.create({
   previewImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover' as const,
+    resizeMode: 'cover',
   },
   completedBadge: {
     position: 'absolute',
     bottom: 12,
     right: 12,
-    backgroundColor: COLORS.accent,
+    backgroundColor: '#041912',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.40)',
   },
   completedBadgeText: {
-    fontFamily: theme.typography.fontFamily.bold,
+    fontFamily: theme.typography.fontFamily.semiBold,
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 11.5,
   },
   progressGaugeCard: {
-    backgroundColor: COLORS.accentLight,
-    borderRadius: 20,
-    padding: 24,
+    backgroundColor: '#ECFDF5',
+    borderRadius: 18,
+    padding: 20,
     borderWidth: 1,
-    borderColor: '#DCFCE7',
+    borderColor: '#A7F3D0',
     alignItems: 'center',
-  },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: theme.spacing[3],
   },
   progressGaugeTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 16,
-    color: COLORS.ink,
+    fontSize: 15,
+    color: '#041912',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   progressGaugePercent: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 28,
-    color: COLORS.accent,
-    marginBottom: 16,
+    fontFamily: theme.typography.fontFamily.extraBold,
+    fontSize: 26,
+    color: '#059669',
+    marginBottom: 10,
   },
   progressBarTrack: {
-    height: 10,
+    height: 8,
     width: '100%',
     backgroundColor: '#DCFCE7',
-    borderRadius: 5,
+    borderRadius: 4,
     overflow: 'hidden',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: COLORS.accent,
-    borderRadius: 5,
+    backgroundColor: '#059669',
+    borderRadius: 4,
   },
   progressGaugeLabel: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 12.5,
-    color: COLORS.inkMuted,
+    fontSize: 12,
+    color: '#64748B',
     textAlign: 'center',
-  },
-  footer: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 24,
-    borderTopWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.bg,
   },
   navRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: theme.spacing[1],
   },
-  prevButton: {
+  prevBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
   },
-  prevButtonText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 14.5,
-    color: COLORS.ink,
+  prevBtnText: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 13.5,
+    color: '#041912',
   },
-  nextButton: {
-    backgroundColor: COLORS.accent,
-    height: 50,
-    paddingHorizontal: 22,
-    borderRadius: 14,
+  nextBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    height: 48,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(4, 25, 18, 0.90)',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
   },
-  nextButtonText: {
+  nextBtnText: {
     fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 14,
     color: '#FFFFFF',
-    fontSize: 15,
+  },
+  emeraldArrowCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
   },
 });
+

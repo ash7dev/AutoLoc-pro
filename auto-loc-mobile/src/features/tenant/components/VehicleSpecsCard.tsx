@@ -4,6 +4,7 @@ import {
   View,
   Text,
   ScrollView,
+  Platform,
 } from 'react-native';
 import {
   Gauge,
@@ -13,6 +14,7 @@ import {
   Calendar,
   SlidersHorizontal,
 } from 'lucide-react-native';
+import { theme } from '../../../core/theme';
 
 interface VehicleSpecsCardProps {
   transmission?: string | null;
@@ -29,76 +31,79 @@ export const VehicleSpecsCard: React.FC<VehicleSpecsCardProps> = ({
   ageMinimum = 21,
   joursMinimum = 1,
 }) => {
-  const UNIFIED_ICON_COLOR = '#16A34A';
-  const UNIFIED_BG_TINT = '#ECFDF5';
-  const UNIFIED_BORDER_COLOR = '#A7F3D0';
-
   const specs = [
     {
       id: 'transmission',
       label: 'Transmission',
       value: transmission || 'Automatique',
-      icon: <Gauge size={19} color={UNIFIED_ICON_COLOR} />,
+      icon: Gauge,
     },
     {
       id: 'carburant',
       label: 'Carburant',
       value: carburant || 'Essence',
-      icon: <Fuel size={19} color={UNIFIED_ICON_COLOR} />,
+      icon: Fuel,
     },
     {
       id: 'places',
       label: 'Capacité',
       value: `${nombrePlaces || 5} Places`,
-      icon: <Users size={19} color={UNIFIED_ICON_COLOR} />,
+      icon: Users,
     },
     {
       id: 'age',
       label: 'Âge Conducteur',
       value: `${ageMinimum || 21} ans min`,
-      icon: <UserCheck size={19} color={UNIFIED_ICON_COLOR} />,
+      icon: UserCheck,
     },
     {
       id: 'duree',
       label: 'Location Min.',
       value: `${joursMinimum || 1} jour(s)`,
-      icon: <Calendar size={19} color={UNIFIED_ICON_COLOR} />,
+      icon: Calendar,
     },
   ];
 
   return (
     <View style={styles.container}>
-      {/* Titre de section avec icône */}
+      {/* En-tête de section */}
       <View style={styles.headerRow}>
         <View style={styles.titleIconBadge}>
-          <SlidersHorizontal size={15} color="#16A34A" />
+          <SlidersHorizontal size={14} color="#4ADE80" strokeWidth={2.25} />
         </View>
-        <Text style={styles.sectionTitle}>Caractéristiques Techniques</Text>
+        <Text style={styles.sectionTitle}>Spécifications & Performance</Text>
       </View>
 
-      {/* Rangée défilante horizontale des 5 cartes d'indicateurs */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {specs.map((item) => (
-          <View key={item.id} style={styles.specCard}>
-            <View style={[styles.iconContainer, { backgroundColor: UNIFIED_BG_TINT, borderColor: UNIFIED_BORDER_COLOR }]}>
-              {item.icon}
-            </View>
-            <Text style={styles.specLabel}>{item.label}</Text>
-            <Text style={styles.specValue} numberOfLines={1}>{item.value}</Text>
-          </View>
-        ))}
-      </ScrollView>
+      {/* Carte à Fond Blanc (Harmonisé avec Options & Services) */}
+      <View style={styles.mainCard}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {specs.map((item) => {
+            const IconComponent = item.icon;
+            return (
+              <View key={item.id} style={styles.specCard}>
+                <View style={styles.iconCircle}>
+                  <IconComponent size={18} color="#4ADE80" strokeWidth={2.25} />
+                </View>
+                <Text style={styles.specLabel}>{item.label}</Text>
+                <Text style={styles.specValue} numberOfLines={1}>
+                  {item.value}
+                </Text>
+              </View>
+            );
+          })}
+        </ScrollView>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 20,
+    marginTop: 24,
     paddingHorizontal: 20,
   },
   headerRow: {
@@ -110,55 +115,75 @@ const styles = StyleSheet.create({
   titleIconBadge: {
     width: 28,
     height: 28,
-    borderRadius: 8,
-    backgroundColor: '#ECFDF5',
+    borderRadius: 9,
+    backgroundColor: '#041912',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 17.5,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#041912',
-    letterSpacing: -0.2,
+    letterSpacing: -0.3,
+    flex: 1,
+  },
+  mainCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#E4EBDB',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#041912',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   scrollContent: {
-    gap: 12,
-    paddingRight: 20,
+    gap: 10,
+    paddingHorizontal: 4,
   },
   specCard: {
     width: 120,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
     borderRadius: 18,
     paddingVertical: 14,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E4EBDB',
+    borderColor: '#E2E8F0',
   },
-  iconContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: '#ECFDF5',
-    borderColor: '#A7F3D0',
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    backgroundColor: '#041912',
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
-    borderWidth: 1,
   },
   specLabel: {
     fontSize: 11,
     color: '#5F6B59',
-    fontWeight: '500',
+    fontFamily: theme.typography.fontFamily.medium,
     marginBottom: 3,
     textAlign: 'center',
   },
   specValue: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#22271F',
+    fontFamily: theme.typography.fontFamily.bold,
+    color: '#041912',
     textAlign: 'center',
   },
 });

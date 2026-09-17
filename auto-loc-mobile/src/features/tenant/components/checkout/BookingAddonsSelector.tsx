@@ -1,6 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-import { Check, Truck, Navigation } from 'lucide-react-native';
+import { StyleSheet, View, Text, TouchableOpacity, TextInput } from 'react-native';
+import { Check, Truck, Navigation, MapPin, Zap } from 'lucide-react-native';
 import { theme } from '../../../../core/theme';
 import { formatDirectPrice } from '../../../../core/utils/currency';
 
@@ -9,6 +9,8 @@ interface BookingAddonsSelectorProps {
   fraisLivraison?: number;
   isDeliverySelected: boolean;
   onToggleDelivery: (val: boolean) => void;
+  adresseLivraison?: string;
+  onAdresseLivraisonChange?: (val: string) => void;
 
   autoriseHorsDakar?: boolean;
   supplementHorsDakarParJour?: number;
@@ -24,6 +26,8 @@ export const BookingAddonsSelector: React.FC<BookingAddonsSelectorProps> = ({
   fraisLivraison = 0,
   isDeliverySelected,
   onToggleDelivery,
+  adresseLivraison = '',
+  onAdresseLivraisonChange,
   autoriseHorsDakar = false,
   supplementHorsDakarParJour = 0,
   isHorsDakarSelected,
@@ -45,34 +49,63 @@ export const BookingAddonsSelector: React.FC<BookingAddonsSelectorProps> = ({
 
   return (
     <View style={styles.cardContainer}>
-      <Text style={styles.sectionTitle}>Options complémentaires</Text>
+      {/* En-tête de section avec badge sombre + titre Fraunces */}
+      <View style={styles.headerRow}>
+        <View style={styles.titleIconBadge}>
+          <Zap size={14} color="#4ADE80" strokeWidth={2.25} />
+        </View>
+        <Text style={styles.sectionTitle}>Options complémentaires</Text>
+      </View>
 
       <View style={styles.optionsList}>
         {/* Option 1 : Livraison à Domicile */}
         {showDelivery && (
-          <TouchableOpacity
-            style={[styles.addonCard, isDeliverySelected && styles.addonCardActive]}
-            onPress={() => onToggleDelivery(!isDeliverySelected)}
-            activeOpacity={0.85}
-          >
-            <View style={[styles.iconCircle, isDeliverySelected && styles.iconCircleActive]}>
-              <Truck size={17} color={isDeliverySelected ? theme.colors.brand.main : '#5F6B59'} />
-            </View>
-
-            <View style={styles.addonTextGroup}>
-              <Text style={styles.addonTitle}>Livraison à domicile</Text>
-              <Text style={styles.addonSubtitle}>Remise des clés à l'adresse de votre choix</Text>
-            </View>
-
-            <View style={styles.addonRightBox}>
-              <Text style={[styles.addonPriceText, isDeliverySelected && styles.addonPriceTextActive]}>
-                {fraisLivraison === 0 ? 'Gratuit' : `+${formattedDeliveryFee}`}
-              </Text>
-              <View style={[styles.checkboxIndicator, isDeliverySelected && styles.checkboxIndicatorActive]}>
-                {isDeliverySelected && <Check size={11} color="#FFFFFF" strokeWidth={3} />}
+          <View style={styles.addonWrapper}>
+            <TouchableOpacity
+              style={[styles.addonCard, isDeliverySelected && styles.addonCardActive]}
+              onPress={() => onToggleDelivery(!isDeliverySelected)}
+              activeOpacity={0.85}
+            >
+              <View style={styles.iconCircle}>
+                <Truck size={13} color="#4ADE80" strokeWidth={2.25} />
               </View>
-            </View>
-          </TouchableOpacity>
+
+              <View style={styles.addonTextGroup}>
+                <Text style={styles.addonTitle}>Livraison & Restitution</Text>
+                <Text style={styles.addonSubtitle}>
+                  Remise des clés à l'adresse de votre choix ou à l'aéroport
+                </Text>
+              </View>
+
+              <View style={styles.addonRightBox}>
+                <View style={[styles.priceBadgePill, isDeliverySelected && styles.priceBadgePillActive]}>
+                  <Text style={styles.priceBadgeText}>
+                    {fraisLivraison === 0 ? 'Gratuit' : `+${formattedDeliveryFee}`}
+                  </Text>
+                </View>
+                <View style={[styles.checkboxIndicator, isDeliverySelected && styles.checkboxIndicatorActive]}>
+                  {isDeliverySelected && <Check size={11} color="#FFFFFF" strokeWidth={3} />}
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            {/* Champ Saisie Adresse si Livraison cochée */}
+            {isDeliverySelected && (
+              <View style={styles.addressInputContainer}>
+                <View style={styles.addressHeaderRow}>
+                  <MapPin size={13} color="#059669" strokeWidth={2.25} />
+                  <Text style={styles.addressLabel}>Adresse exacte de livraison *</Text>
+                </View>
+                <TextInput
+                  style={styles.addressInput}
+                  value={adresseLivraison}
+                  onChangeText={onAdresseLivraisonChange}
+                  placeholder="Ex: Les Almadies, Villa 12 / Aéroport DSS..."
+                  placeholderTextColor="#94A3B8"
+                />
+              </View>
+            )}
+          </View>
         )}
 
         {/* Option 2 : Voyage Hors Dakar */}
@@ -82,21 +115,25 @@ export const BookingAddonsSelector: React.FC<BookingAddonsSelectorProps> = ({
             onPress={() => onToggleHorsDakar(!isHorsDakarSelected)}
             activeOpacity={0.85}
           >
-            <View style={[styles.iconCircle, isHorsDakarSelected && styles.iconCircleActive]}>
-              <Navigation size={17} color={isHorsDakarSelected ? theme.colors.brand.main : '#5F6B59'} />
+            <View style={styles.iconCircle}>
+              <Navigation size={13} color="#4ADE80" strokeWidth={2.25} />
             </View>
 
             <View style={styles.addonTextGroup}>
               <Text style={styles.addonTitle}>Voyage Hors Dakar</Text>
               <Text style={styles.addonSubtitle}>
-                {formattedHorsDakarDaily} / jour · Régions du Sénégal
+                {supplementHorsDakarParJour && supplementHorsDakarParJour > 0
+                  ? `${formattedHorsDakarDaily} / jour · Trajets interurbains`
+                  : 'Autorisé sans supplément'}
               </Text>
             </View>
 
             <View style={styles.addonRightBox}>
-              <Text style={[styles.addonPriceText, isHorsDakarSelected && styles.addonPriceTextActive]}>
-                +{formattedHorsDakarFee}
-              </Text>
+              <View style={[styles.priceBadgePill, isHorsDakarSelected && styles.priceBadgePillActive]}>
+                <Text style={styles.priceBadgeText}>
+                  {supplementHorsDakarParJour === 0 ? 'Inclus' : `+${formattedHorsDakarFee}`}
+                </Text>
+              </View>
               <View style={[styles.checkboxIndicator, isHorsDakarSelected && styles.checkboxIndicatorActive]}>
                 {isHorsDakarSelected && <Check size={11} color="#FFFFFF" strokeWidth={3} />}
               </View>
@@ -111,89 +148,149 @@ export const BookingAddonsSelector: React.FC<BookingAddonsSelectorProps> = ({
 const styles = StyleSheet.create({
   cardContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: theme.radius.xl,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: '#E4EBDB',
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-    ...theme.elevation.md,
+    padding: 16,
+    gap: 14,
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  titleIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: '#041912',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
   sectionTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 16,
-    color: theme.primitives.forest[800],
+    fontSize: 17.5,
+    color: '#041912',
+    letterSpacing: -0.3,
   },
   optionsList: {
+    gap: 12,
+  },
+  addonWrapper: {
     gap: 10,
   },
   addonCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FBF4',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#E4EBDB',
-    borderRadius: theme.radius.lg,
-    paddingHorizontal: theme.spacing[3],
-    paddingVertical: theme.spacing[3],
+    borderColor: '#E2E8F0',
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
     gap: 12,
   },
   addonCardActive: {
-    backgroundColor: '#F0FDF4',
-    borderColor: theme.colors.brand.main,
+    backgroundColor: '#ECFDF5',
+    borderColor: '#059669',
   },
   iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E4EBDB',
-    justifyContent: 'center',
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: '#041912',
     alignItems: 'center',
-  },
-  iconCircleActive: {
-    borderColor: theme.colors.brand.border,
-    backgroundColor: theme.colors.brand.subtle,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
   addonTextGroup: {
     flex: 1,
     gap: 2,
   },
   addonTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13,
-    color: theme.primitives.forest[800],
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 15,
+    color: '#041912',
+    letterSpacing: -0.2,
   },
   addonSubtitle: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 11,
+    fontSize: 11.5,
     color: '#5F6B59',
+    lineHeight: 16,
   },
   addonRightBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  addonPriceText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 12.5,
-    color: '#5F6B59',
+  priceBadgePill: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  addonPriceTextActive: {
-    color: theme.colors.brand.main,
+  priceBadgePillActive: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#A7F3D0',
+  },
+  priceBadgeText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 11,
+    color: '#059669',
   },
   checkboxIndicator: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 1.5,
-    borderColor: '#BDC8B7',
+    borderColor: '#CBD5E1',
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
   },
   checkboxIndicatorActive: {
-    backgroundColor: theme.colors.brand.main,
-    borderColor: theme.colors.brand.main,
+    backgroundColor: '#059669',
+    borderColor: '#059669',
+  },
+  /* Saisie Adresse de Livraison */
+  addressInputContainer: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    borderRadius: 16,
+    padding: 12,
+    gap: 8,
+  },
+  addressHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  addressLabel: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 12,
+    color: '#041912',
+  },
+  addressInput: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 13,
+    color: '#041912',
   },
 });

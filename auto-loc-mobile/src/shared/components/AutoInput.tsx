@@ -88,10 +88,12 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   label: {
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing[1],
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: -0.1,
+    color: '#041912',
+    marginBottom: 6,
   },
   inputContainer: {
     flexDirection: 'row',

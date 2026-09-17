@@ -7,23 +7,15 @@ import {
   Animated,
   Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight } from 'lucide-react-native';
 import { CurrencyCode, formatDirectPrice } from '../../../core/utils/currency';
+import { theme } from '../../../core/theme';
 
 interface VehicleStickyBookingBarProps {
   tenantPricePerDay: number;
   selectedCurrency: CurrencyCode;
   onBookPress: () => void;
 }
-
-const COLORS = {
-  accent: '#16A34A',
-  accentDeep: '#0F7A38',
-  ink: '#041912',
-  inkMuted: '#5F6B59',
-  border: '#E4EBDB',
-};
 
 export const VehicleStickyBookingBar: React.FC<VehicleStickyBookingBarProps> = ({
   tenantPricePerDay,
@@ -44,34 +36,41 @@ export const VehicleStickyBookingBar: React.FC<VehicleStickyBookingBarProps> = (
 
   return (
     <View style={styles.bottomBarContainer}>
+      {/* Zone d'affichage du prix (Anti-chevauchement & Typographie Tabulaire Premium) */}
       <View style={styles.priceContainer}>
-        <Text style={styles.priceLabel}>À partir de</Text>
+        <View style={styles.ttcBadge}>
+          <Text style={styles.priceLabel}>À PARTIR DE</Text>
+        </View>
         <View style={styles.priceRow}>
-          <Text style={styles.priceValue} numberOfLines={1}>
+          <Text
+            style={styles.priceValue}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.70}
+          >
             {formattedPrice}
           </Text>
-          <Text style={styles.pricePerDay}>/jour</Text>
+          <Text style={styles.pricePerDay}>/ jour</Text>
         </View>
         <Text style={styles.priceSubtext} numberOfLines={1}>
-          Frais TTC inclus
+          Frais & assurances TTC inclus
         </Text>
       </View>
 
+      {/* Bouton de réservation (Dark Auth Button) */}
       <Pressable
         onPressIn={() => animateTo(0.96)}
         onPressOut={() => animateTo(1)}
         onPress={onBookPress}
+        style={styles.buttonWrapper}
       >
         <Animated.View style={{ transform: [{ scale }] }}>
-          <LinearGradient
-            colors={[COLORS.accent, COLORS.accentDeep]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.bookGradient}
-          >
+          <View style={styles.bookButtonDark}>
             <Text style={styles.bookButtonText}>Réserver</Text>
-            <ArrowRight size={17} color="#FFFFFF" strokeWidth={2.5} />
-          </LinearGradient>
+            <View style={styles.emeraldArrowCircle}>
+              <ArrowRight size={13} color="#4ADE80" strokeWidth={2.5} />
+            </View>
+          </View>
         </Animated.View>
       </Pressable>
     </View>
@@ -84,79 +83,105 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    backgroundColor: '#04150F',
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 18,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     borderTopWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(74, 222, 128, 0.30)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 10,
     ...Platform.select({
       ios: {
-        shadowColor: COLORS.ink,
-        shadowOffset: { width: 0, height: -8 },
-        shadowOpacity: 0.12,
-        shadowRadius: 16,
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: -10 },
+        shadowOpacity: 0.35,
+        shadowRadius: 20,
       },
       android: {
-        elevation: 12,
+        elevation: 16,
       },
     }),
   },
   priceContainer: {
     flex: 1,
-    marginRight: 16,
+    marginRight: 6,
+    justifyContent: 'center',
+  },
+  ttcBadge: {
+    alignSelf: 'flex-start',
+    marginBottom: 2,
   },
   priceLabel: {
-    fontSize: 10.5,
-    fontWeight: '700',
-    color: COLORS.inkMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: 2,
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 9.5,
+    color: '#4ADE80',
+    letterSpacing: 0.8,
   },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 4,
+    flexShrink: 1,
+    overflow: 'hidden',
   },
   priceValue: {
-    fontSize: 23,
-    fontWeight: '800',
-    color: COLORS.ink,
-    letterSpacing: -0.4,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 22,
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+    fontVariant: ['tabular-nums'],
+    flexShrink: 1,
   },
   pricePerDay: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.inkMuted,
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 11.5,
+    color: 'rgba(168, 213, 193, 0.70)',
+    marginLeft: 4,
+    flexShrink: 0,
   },
   priceSubtext: {
-    fontSize: 11,
-    color: COLORS.inkMuted,
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 10.5,
+    color: 'rgba(255, 255, 255, 0.55)',
     marginTop: 2,
   },
-  bookGradient: {
+  buttonWrapper: {
+    flexShrink: 0,
+  },
+  bookButtonDark: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 15,
-    borderRadius: 14,
-    shadowColor: COLORS.accentDeep,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
+    paddingHorizontal: 18,
+    paddingVertical: 13,
+    borderRadius: 22,
+    backgroundColor: '#059669',
+    borderWidth: 1,
+    borderColor: '#4ADE80',
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.35,
     shadowRadius: 10,
-    elevation: 6,
+    elevation: 8,
   },
   bookButtonText: {
+    fontFamily: theme.typography.fontFamily.bold,
     color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 14.5,
     letterSpacing: 0.2,
+  },
+  emeraldArrowCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(4, 25, 18, 0.60)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.50)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

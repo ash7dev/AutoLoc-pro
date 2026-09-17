@@ -17,7 +17,10 @@ import {
   ChevronRight,
   ShieldCheck,
   Car,
+  Archive,
+  Sparkles,
 } from 'lucide-react-native';
+import { theme } from '../../../core/theme';
 import { OwnerVehicle } from '../api/ownerApi';
 
 interface OwnerVehicleQuickActionModalProps {
@@ -45,7 +48,7 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
 }) => {
   if (!vehicle) return null;
 
-  const isAvailable = vehicle.statut === 'DISPONIBLE';
+  const isAvailable = vehicle.statut === 'DISPONIBLE' || vehicle.statut === 'VERIFIE';
 
   const menuItems = [
     {
@@ -55,6 +58,7 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
       subtitle: 'Bloquer des dates pour entretien ou usage personnel',
       color: '#059669',
       bg: '#ECFDF5',
+      borderColor: '#A7F3D0',
       onPress: () => {
         onClose();
         if (onManageCalendar) onManageCalendar(vehicle);
@@ -67,6 +71,7 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
       subtitle: 'Ajuster les prix, photos, équipements et conditions',
       color: '#2563EB',
       bg: '#EFF6FF',
+      borderColor: '#BFDBFE',
       onPress: () => {
         onClose();
         if (onEditVehicle) onEditVehicle(vehicle);
@@ -76,9 +81,10 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
       id: 'reservations',
       icon: ClipboardList,
       title: 'Réservations du véhicule',
-      subtitle: `${vehicle.totalReservations || 0} réservation(s) au total`,
+      subtitle: `${vehicle.totalReservations || 0} location(s) enregistrée(s)`,
       color: '#7C3AED',
       bg: '#F5F3FF',
+      borderColor: '#DDD6FE',
       onPress: () => {
         onClose();
         if (onViewReservations) onViewReservations(vehicle);
@@ -91,6 +97,7 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
       subtitle: isAvailable ? 'Masquer du catalogue public' : 'Rendre à nouveau visible aux locataires',
       color: isAvailable ? '#D97706' : '#059669',
       bg: isAvailable ? '#FFFBEB' : '#ECFDF5',
+      borderColor: isAvailable ? '#FDE68A' : '#A7F3D0',
       onPress: () => {
         onClose();
         if (onToggleStatus) onToggleStatus(vehicle.id, vehicle.statut);
@@ -116,19 +123,27 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
           <View style={styles.sheetHeader}>
             <View style={styles.headerTitleBox}>
               <View style={styles.carBadge}>
-                <Car size={16} color="#059669" />
+                <Car size={18} color="#059669" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.vehicleTitle} numberOfLines={1}>
-                  {vehicle.marque} {vehicle.modele} ({vehicle.annee})
-                </Text>
-                <Text style={styles.vehicleSub}>
-                  Immatriculation : {vehicle.immatriculation} · {vehicle.ville}
+                <View style={styles.titleRow}>
+                  <Text style={styles.vehicleTitle} numberOfLines={1}>
+                    {vehicle.marque} {vehicle.modele}
+                  </Text>
+                  <View style={[styles.statusChip, { backgroundColor: isAvailable ? '#ECFDF5' : '#F1F5F9' }]}>
+                    <View style={[styles.statusDot, { backgroundColor: isAvailable ? '#059669' : '#64748B' }]} />
+                    <Text style={[styles.statusChipText, { color: isAvailable ? '#047857' : '#475569' }]}>
+                      {isAvailable ? 'Actif' : 'Inactif'}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.vehicleSub} numberOfLines={1}>
+                  {vehicle.immatriculation} · {vehicle.ville} ({vehicle.annee})
                 </Text>
               </View>
             </View>
 
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose} hitSlop={10}>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose} hitSlop={10} activeOpacity={0.7}>
               <X size={18} color="#64748B" />
             </TouchableOpacity>
           </View>
@@ -142,9 +157,9 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
                   key={item.id}
                   style={styles.menuItem}
                   onPress={item.onPress}
-                  activeOpacity={0.7}
+                  activeOpacity={0.75}
                 >
-                  <View style={[styles.menuIconBg, { backgroundColor: item.bg }]}>
+                  <View style={[styles.menuIconBg, { backgroundColor: item.bg, borderColor: item.borderColor }]}>
                     <Icon size={18} color={item.color} />
                   </View>
 
@@ -170,6 +185,7 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
                 }}
                 activeOpacity={0.8}
               >
+                <Archive size={15} color="#DC2626" />
                 <Text style={styles.archiveBtnText}>Archiver l'annonce</Text>
               </TouchableOpacity>
             )}
@@ -183,8 +199,8 @@ export const OwnerVehicleQuickActionModal: React.FC<OwnerVehicleQuickActionModal
                 }}
                 activeOpacity={0.8}
               >
-                <Trash2 size={16} color="#FFFFFF" />
-                <Text style={styles.purgeBtnText}>Supprimer définitivement le véhicule</Text>
+                <Trash2 size={15} color="#FFFFFF" />
+                <Text style={styles.purgeBtnText}>Supprimer définitivement</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -207,6 +223,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 34,
     paddingTop: 10,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 10,
   },
   handleRow: {
     alignItems: 'center',
@@ -214,9 +235,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   handlePill: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
+    width: 42,
+    height: 4.5,
+    borderRadius: 999,
     backgroundColor: '#E2E8F0',
   },
   sheetHeader: {
@@ -226,7 +247,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   headerTitleBox: {
     flexDirection: 'row',
@@ -236,36 +257,59 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   carBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     backgroundColor: '#ECFDF5',
     borderWidth: 1,
     borderColor: '#A7F3D0',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   vehicleTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 16.5,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#0F172A',
+    flexShrink: 1,
+  },
+  statusChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: 999,
+  },
+  statusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  statusChipText: {
+    fontSize: 10,
+    fontFamily: theme.typography.fontFamily.bold,
   },
   vehicleSub: {
     fontSize: 12,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: theme.typography.fontFamily.medium,
     color: '#64748B',
     marginTop: 2,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F8FAFC',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   menuList: {
-    gap: 8,
+    gap: 10,
     marginBottom: 16,
   },
   menuItem: {
@@ -273,15 +317,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     backgroundColor: '#F8FAFC',
-    padding: 12,
+    padding: 13,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
   },
   menuIconBg: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: 12,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -290,14 +335,14 @@ const styles = StyleSheet.create({
   },
   menuTitle: {
     fontSize: 14,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#0F172A',
   },
   menuSub: {
     fontSize: 11.5,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: theme.typography.fontFamily.medium,
     color: '#64748B',
-    marginTop: 1,
+    marginTop: 2,
   },
   dangerGroup: {
     gap: 8,
@@ -315,7 +360,7 @@ const styles = StyleSheet.create({
   },
   archiveBtnText: {
     fontSize: 13,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: theme.typography.fontFamily.bold,
     color: '#DC2626',
   },
   purgeBtn: {
@@ -329,7 +374,7 @@ const styles = StyleSheet.create({
   },
   purgeBtnText: {
     fontSize: 13,
-    fontFamily: 'Inter_700Bold',
+    fontFamily: theme.typography.fontFamily.bold,
     color: '#FFFFFF',
   },
 });

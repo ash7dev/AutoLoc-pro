@@ -4,11 +4,15 @@ import {
   View,
   Text,
   Modal,
-  Pressable,
-  SafeAreaView,
-  StatusBar,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  Dimensions,
 } from 'react-native';
-import { X, ChevronLeft } from 'lucide-react-native';
+import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { X, ChevronLeft, ShieldCheck } from 'lucide-react-native';
 import { GateStep } from '../../tenant/hooks/useBookingGate';
 import { HostPreGateOverview } from './HostPreGateOverview';
 import { GateStepProfile } from '../../tenant/components/gates/GateStepProfile';
@@ -18,6 +22,9 @@ import { GateStepDriverLicense } from '../../tenant/components/gates/GateStepDri
 import { becomeAutoLocHost } from '../../tenant/api/tenantProfileApi';
 import { secureStorage } from '../../../core/storage/secureStore';
 import { useAppStore } from '../../../core/store/useAppStore';
+import { theme } from '../../../core/theme';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 interface HostGateModalProps {
   visible: boolean;
@@ -26,21 +33,13 @@ interface HostGateModalProps {
   onAllCompleted: () => void;
 }
 
-const COLORS = {
-  bg: '#FFFFFF',
-  accent: '#16A34A',
-  ink: '#041912',
-  inkMuted: '#64748B',
-  border: '#E2E8F0',
-  surface: '#F8FAFC',
-};
-
 export const HostGateModal: React.FC<HostGateModalProps> = ({
   visible,
   missingSteps,
   onClose,
   onAllCompleted,
 }) => {
+  const insets = useSafeAreaInsets();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [upgradingRole, setUpgradingRole] = useState(false);
   const setAuth = useAppStore((state) => state.setAuth);
@@ -64,8 +63,6 @@ export const HostGateModal: React.FC<HostGateModalProps> = ({
     if (currentStepIndex + 1 < totalSteps) {
       setCurrentStepIndex((prev) => prev + 1);
     } else {
-      // Toutes les étapes de vérification sont franchies !
-      // Si l'utilisateur n'est pas encore PROPRIETAIRE, upgrade son rôle automatiquement.
       try {
         setUpgradingRole(true);
         if (user && user.role !== 'PROPRIETAIRE') {
@@ -77,7 +74,7 @@ export const HostGateModal: React.FC<HostGateModalProps> = ({
           });
         }
       } catch {
-        // En cas d'erreur réseau, poursuivre tout de même le flow
+        // Fallback
       } finally {
         setUpgradingRole(false);
         onAllCompleted();
@@ -100,138 +97,214 @@ export const HostGateModal: React.FC<HostGateModalProps> = ({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <View style={styles.container}>
+        <StatusBar style="light" animated />
 
-        {/* Header */}
-        <View style={styles.header}>
-          {currentStepIndex > 0 ? (
-            <Pressable style={styles.iconButton} onPress={handleBack}>
-              <ChevronLeft size={24} color={COLORS.ink} />
-            </Pressable>
-          ) : (
-            <View style={styles.iconPlaceholder} />
-          )}
+        {/* 1. Fond Sombre Émeraude & Aura Lumineuse */}
+        <View style={StyleSheet.absoluteFill}>
+          <LinearGradient
+            colors={['#062017', '#04150F', '#020B08']}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={styles.auraGlow} />
+        </View>
 
-          {!isPreGate && (
-            <View style={styles.progressContainer}>
-              <Text style={styles.stepCounterText}>
-                Étape {currentStepIndex} sur {totalSteps - 1}
-              </Text>
-              <View style={styles.dotsRow}>
-                {missingSteps
-                  .filter((s) => s !== 'PREGATE')
-                  .map((stepItem, idx) => {
-                    const activeIdx = currentStepIndex - 1;
-                    const isCompleted = idx < activeIdx;
-                    const isActive = idx === activeIdx;
+        {/* 2. En-tête Navigation Glassmorphism */}
+        <View
+          style={[
+            styles.safeHeader,
+            {
+              paddingTop: Math.max(insets.top, 16) + 4,
+            },
+          ]}
+        >
+          <View style={styles.topHeaderRow}>
+            {currentStepIndex > 0 ? (
+              <TouchableOpacity
+                style={styles.glassNavBtn}
+                onPress={handleBack}
+                activeOpacity={0.8}
+                disabled={upgradingRole}
+              >
+                <ChevronLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.glassNavPlaceholder} />
+            )}
 
-                    return (
-                      <View
-                        key={stepItem}
-                        style={[
-                          styles.dot,
-                          isCompleted && styles.dotCompleted,
-                          isActive && styles.dotActive,
-                        ]}
-                      />
-                    );
-                  })}
+            {!isPreGate ? (
+              <View style={styles.glassProgressCapsule}>
+                <Text style={styles.stepCounterText}>
+                  Étape {currentStepIndex} / {totalSteps - 1}
+                </Text>
+                <View style={styles.dotsRow}>
+                  {missingSteps
+                    .filter((s) => s !== 'PREGATE')
+                    .map((stepItem, idx) => {
+                      const activeIdx = currentStepIndex - 1;
+                      const isCompleted = idx < activeIdx;
+                      const isActive = idx === activeIdx;
+
+                      return (
+                        <View
+                          key={stepItem}
+                          style={[
+                            styles.dot,
+                            isCompleted && styles.dotCompleted,
+                            isActive && styles.dotActive,
+                          ]}
+                        />
+                      );
+                    })}
+                </View>
               </View>
-            </View>
-          )}
+            ) : (
+              <View style={styles.badgeSecurityHeader}>
+                <ShieldCheck size={13} color="#4ADE80" />
+                <Text style={styles.badgeSecurityText}>ESPACE PROPRIÉTAIRE</Text>
+              </View>
+            )}
 
-          <Pressable style={styles.iconButton} onPress={onClose} disabled={upgradingRole}>
-            <X size={22} color={COLORS.ink} />
-          </Pressable>
+            <TouchableOpacity
+              style={styles.glassNavBtn}
+              onPress={onClose}
+              activeOpacity={0.8}
+              disabled={upgradingRole}
+            >
+              <X size={18} color="#FFFFFF" strokeWidth={2.5} />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Body */}
-        <View style={styles.body}>
-          {currentStep === 'PREGATE' && (
-            <HostPreGateOverview
-              missingSteps={missingSteps}
-              onStart={() => setCurrentStepIndex(1)}
-              onCancel={onClose}
-            />
-          )}
+        {/* 3. Corps des Équivalents de Éapes */}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.flexOne}
+        >
+          <View style={[styles.bodyWrapper, { paddingBottom: Math.max(insets.bottom, 12) + 4 }]}>
+            {currentStep === 'PREGATE' && (
+              <HostPreGateOverview
+                missingSteps={missingSteps}
+                onStart={() => setCurrentStepIndex(1)}
+                onCancel={onClose}
+              />
+            )}
 
-          {currentStep === 'PROFILE' && (
-            <GateStepProfile onSuccess={handleStepSuccess} />
-          )}
+            {currentStep === 'PROFILE' && (
+              <GateStepProfile onSuccess={handleStepSuccess} />
+            )}
 
-          {currentStep === 'PHONE' && (
-            <GateStepPhoneOtp onSuccess={handleStepSuccess} />
-          )}
+            {currentStep === 'PHONE' && (
+              <GateStepPhoneOtp onSuccess={handleStepSuccess} />
+            )}
 
-          {currentStep === 'KYC' && (
-            <GateStepKycIdentity onSuccess={handleStepSuccess} />
-          )}
+            {currentStep === 'KYC' && (
+              <GateStepKycIdentity onSuccess={handleStepSuccess} />
+            )}
 
-          {currentStep === 'PERMIS' && (
-            <GateStepDriverLicense onSuccess={handleStepSuccess} />
-          )}
-        </View>
-      </SafeAreaView>
+            {currentStep === 'PERMIS' && (
+              <GateStepDriverLicense onSuccess={handleStepSuccess} />
+            )}
+          </View>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: COLORS.bg,
+    backgroundColor: '#04150F',
   },
-  header: {
-    height: 56,
+  auraGlow: {
+    position: 'absolute',
+    top: -50,
+    alignSelf: 'center',
+    width: screenWidth * 0.9,
+    height: screenWidth * 0.9,
+    borderRadius: (screenWidth * 0.9) / 2,
+    backgroundColor: 'rgba(16, 185, 129, 0.16)',
+  },
+  flexOne: {
+    flex: 1,
+  },
+  safeHeader: {
+    paddingHorizontal: theme.spacing[4],
+    paddingBottom: 10,
+    zIndex: 10,
+  },
+  topHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.bg,
   },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
+  glassNavBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.20)',
     justifyContent: 'center',
-    backgroundColor: COLORS.surface,
-  },
-  iconPlaceholder: {
-    width: 40,
-  },
-  progressContainer: {
     alignItems: 'center',
+  },
+  glassNavPlaceholder: {
+    width: 38,
+  },
+  glassProgressCapsule: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: theme.radius.full,
   },
   stepCounterText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.inkMuted,
-    marginBottom: 4,
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 11,
+    color: '#FFFFFF',
   },
   dotsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#E2E8F0',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.30)',
   },
   dotActive: {
-    width: 20,
-    backgroundColor: COLORS.accent,
+    width: 16,
+    backgroundColor: '#4ADE80',
   },
   dotCompleted: {
-    backgroundColor: '#86EFAC',
+    backgroundColor: '#059669',
   },
-  body: {
+  badgeSecurityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.30)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: theme.radius.full,
+  },
+  badgeSecurityText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 10,
+    letterSpacing: 0.8,
+    color: '#4ADE80',
+  },
+  bodyWrapper: {
     flex: 1,
-    backgroundColor: COLORS.bg,
   },
 });
+

@@ -12,6 +12,7 @@ import { Image } from 'expo-image';
 import {
   Calendar,
   CheckCircle,
+  CheckCircle2,
   MapPin,
   Clock,
   ChevronRight,
@@ -20,6 +21,9 @@ import {
   AlertTriangle,
   UserCheck,
   Sparkles,
+  ArrowRight,
+  KeyRound,
+  PhoneCall,
 } from 'lucide-react-native';
 import { formatCurrency } from '@autoloc/shared';
 import { theme } from '../../../core/theme';
@@ -119,8 +123,10 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
   const remainingSolde = safeNumber(booking.montantSoldeCheckin);
   const totalAmount = safeNumber(booking.prixTotal, paidOnline + remainingSolde);
 
+  const onlinePercent = totalAmount > 0 ? Math.min(100, Math.max(0, Math.round((paidOnline / totalAmount) * 100))) : 0;
+  const remainingPercent = 100 - onlinePercent;
+
   const statusCode = (booking.statut || '').toUpperCase();
-  const bookingRef = booking.id ? booking.id.slice(0, 10).toUpperCase() : '—';
 
   // Pastille "Dans X jours" façon Airbnb, uniquement pour les séjours à venir et actifs
   const upcomingChip = React.useMemo(() => {
@@ -145,29 +151,28 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
       case 'CONFIRMEE':
         return (
           <View style={styles.badgeSuccess}>
-            <CheckCircle size={13} color="#059669" />
+            <View style={[styles.statusDot, { backgroundColor: '#10B981' }]} />
             <Text style={styles.badgeSuccessText}>CONFIRMÉE</Text>
           </View>
         );
       case 'PAYEE':
-        // Le paiement est passé, mais l'hôte n'a pas encore confirmé : distinct de CONFIRMEE
         return (
           <View style={styles.badgeInfo}>
-            <CheckCircle size={13} color="#4338CA" />
+            <View style={[styles.statusDot, { backgroundColor: '#6366F1' }]} />
             <Text style={styles.badgeInfoText}>PAIEMENT REÇU</Text>
           </View>
         );
       case 'EN_COURS':
         return (
           <View style={styles.badgeInProgress}>
-            <Clock size={13} color="#2563EB" />
+            <View style={[styles.statusDot, { backgroundColor: '#3B82F6' }]} />
             <Text style={styles.badgeInProgressText}>EN COURS</Text>
           </View>
         );
       case 'TERMINEE':
         return (
           <View style={styles.badgeCompleted}>
-            <ShieldCheck size={13} color="#475569" />
+            <View style={[styles.statusDot, { backgroundColor: '#64748B' }]} />
             <Text style={styles.badgeCompletedText}>TERMINÉE</Text>
           </View>
         );
@@ -175,14 +180,14 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
       case 'ANNULEE':
         return (
           <View style={styles.badgeDanger}>
-            <AlertTriangle size={13} color="#DC2626" />
+            <View style={[styles.statusDot, { backgroundColor: '#EF4444' }]} />
             <Text style={styles.badgeDangerText}>{statusCode === 'LITIGE' ? 'LITIGE' : 'ANNULÉE'}</Text>
           </View>
         );
       default:
         return (
           <View style={styles.badgePending}>
-            <Clock size={13} color="#D97706" />
+            <View style={[styles.statusDot, { backgroundColor: '#F59E0B' }]} />
             <Text style={styles.badgePendingText}>EN ATTENTE</Text>
           </View>
         );
@@ -213,92 +218,157 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
   };
 
   const carLabel = `${booking.vehicule?.marque || ''} ${booking.vehicule?.modele || ''}`.trim();
+  const shortBookingId = booking.id ? `REF #${booking.id.slice(-6).toUpperCase()}` : '';
 
   return (
     <AutoCard variant="elevated" style={styles.bookingCard}>
-      {/* Ligne En-tête : Numéro de réservation Mono & Badge statut */}
-      <View style={styles.statusRow}>
-        <View style={styles.idGroup}>
-          <Text style={styles.idMicroLabel}>RÉSERVATION AUTOLOC</Text>
-          <Text style={styles.bookingId}>#{bookingRef}</Text>
-        </View>
-
+      {/* 1. Ligne En-tête : Badge statut & Code Référence */}
+      <View style={styles.topHeaderRow}>
         {renderStatusBadge()}
+        {shortBookingId ? (
+          <View style={styles.refCodeBadge}>
+            <Text style={styles.refCodeText}>{shortBookingId}</Text>
+          </View>
+        ) : null}
       </View>
 
-      {/* Infos Véhicule : Thumbnail + Titre Fraunces 600 */}
+      {/* 2. Banner Véhicule & Hôte */}
       <View style={styles.carRow}>
-        <Image
-          source={{ uri: thumbUrl }}
-          style={styles.carThumb}
-          contentFit="cover"
-          transition={180}
-          accessibilityLabel={carLabel ? `Photo du véhicule ${carLabel}` : 'Photo du véhicule'}
-        />
+        <View style={styles.carThumbWrap}>
+          <Image
+            source={{ uri: thumbUrl }}
+            style={styles.carThumb}
+            contentFit="cover"
+            transition={180}
+            accessibilityLabel={carLabel ? `Photo du véhicule ${carLabel}` : 'Photo du véhicule'}
+          />
+          {booking.vehicule?.type ? (
+            <View style={styles.carTypeBadge}>
+              <Text style={styles.carTypeText}>{booking.vehicule.type.toUpperCase()}</Text>
+            </View>
+          ) : null}
+        </View>
+
         <View style={styles.carInfo}>
           <Text style={styles.carName} numberOfLines={1}>
             {booking.vehicule?.marque} {booking.vehicule?.modele}{' '}
             {booking.vehicule?.annee ? `(${booking.vehicule.annee})` : ''}
           </Text>
 
-          <View style={styles.dateRow}>
-            <Calendar size={13} color={theme.colors.brand.main} />
-            <Text style={styles.carDates}>
-              {startDateFormatted} - {endDateFormatted}
-              {booking.nbJours ? ` (${booking.nbJours}j)` : ''}
-            </Text>
-            {upcomingChip && (
-              <View style={styles.upcomingChip}>
-                <Sparkles size={10} color="#B45309" />
-                <Text style={styles.upcomingChipText}>{upcomingChip}</Text>
-              </View>
-            )}
-          </View>
-
           <View style={styles.locRow}>
-            <MapPin size={13} color="#64748B" />
+            <MapPin size={12.5} color="#059669" strokeWidth={2} />
             <Text style={styles.carLocation}>
               {booking.vehicule?.ville || 'Dakar'} • Sénégal
             </Text>
           </View>
 
-          {ownerFirstName && (
+          {ownerFirstName ? (
             <View style={styles.ownerRow}>
-              <UserCheck size={13} color="#059669" />
+              <View style={styles.ownerAvatarBadge}>
+                <UserCheck size={11} color="#041912" strokeWidth={2.2} />
+              </View>
               <Text style={styles.ownerText} numberOfLines={1}>
-                Loué par {ownerFirstName}
+                Proposé par <Text style={styles.ownerNameHighlight}>{ownerFirstName}</Text>
               </Text>
             </View>
-          )}
+          ) : null}
         </View>
       </View>
 
-      {/* Carte Récapitulatif Règlements Sombre Surface Forest-950 (#072A20) */}
+      {/* 3. Bloc Parcours de Dates & Durée (Trip Passage Box) */}
+      <View style={styles.tripBox}>
+        {upcomingChip ? (
+          <View style={styles.upcomingBanner}>
+            <Sparkles size={11} color="#B45309" strokeWidth={2.2} />
+            <Text style={styles.upcomingBannerText}>{upcomingChip}</Text>
+          </View>
+        ) : null}
+
+        <View style={styles.tripDatesRow}>
+          <View style={styles.tripDateCol}>
+            <Text style={styles.tripLabel}>PRISE EN MAIN</Text>
+            <Text style={styles.tripDateVal}>{startDateFormatted}</Text>
+          </View>
+
+          <View style={styles.tripCenterCol}>
+            <View style={styles.tripLine} />
+            <View style={styles.tripDurationBadge}>
+              <ArrowRight size={11} color="#059669" strokeWidth={2.5} />
+              <Text style={styles.tripDurationText}>
+                {booking.nbJours ? `${booking.nbJours}j` : 'Séjour'}
+              </Text>
+            </View>
+            <View style={styles.tripLine} />
+          </View>
+
+          <View style={[styles.tripDateCol, styles.tripDateColRight]}>
+            <Text style={styles.tripLabel}>RESTITUTION</Text>
+            <Text style={styles.tripDateVal}>{endDateFormatted}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 4. Carte Récapitulatif & Barre de Progression Dark Obsidian (#041912) */}
       <View style={styles.recapCardDark}>
         <View style={styles.recapHeaderRow}>
-          <Text style={styles.recapBlockTitle}>RÈGLEMENT SÉCURISÉ</Text>
+          <View style={styles.recapTitleBadgeRow}>
+            <ShieldCheck size={13} color="#4ADE80" strokeWidth={2.2} />
+            <Text style={styles.recapBlockTitle}>PAIEMENT SÉCURISÉ AUTOLOC</Text>
+          </View>
           {booking.discountLabel ? (
-            <Text style={styles.recapDiscountLabel}>{booking.discountLabel}</Text>
+            <View style={styles.discountPill}>
+              <Text style={styles.discountPillText}>{booking.discountLabel}</Text>
+            </View>
           ) : null}
         </View>
 
-        {paidOnline > 0 && (
+        {/* Barre de Progression du Règlement (uniquement pour les séjours actifs/à venir) */}
+        {['CONFIRMEE', 'PAYEE', 'EN_COURS', 'EN_ATTENTE_PAIEMENT'].includes(statusCode) &&
+          booking.modePaiement === 'ACOMPTE_SOLDE_CHECKIN' &&
+          totalAmount > 0 ? (
+          <View style={styles.paymentProgressContainer}>
+            <View style={styles.progressBarTrack}>
+              <View style={[styles.progressBarFilled, { width: `${onlinePercent}%` }]}>
+                <CheckCircle2 size={10} color="#041912" strokeWidth={2.5} />
+              </View>
+              {remainingPercent > 0 && (
+                <View style={[styles.progressBarRemaining, { width: `${remainingPercent}%` }]}>
+                  <KeyRound size={10} color="#4ADE80" strokeWidth={2.5} />
+                </View>
+              )}
+            </View>
+            <View style={styles.progressLabelsRow}>
+              <Text style={styles.progressLabelLeft}>Acompte {onlinePercent}% réglé</Text>
+              <Text style={styles.progressLabelRight}>Solde {remainingPercent}% au check-in</Text>
+            </View>
+          </View>
+        ) : null}
+
+        {paidOnline > 0 ? (
           <View style={styles.recapLine}>
-            <Text style={styles.recapLabel}>
-              {booking.modePaiement === 'ACOMPTE_SOLDE_CHECKIN'
-                ? `Acompte réglé (${paymentProviderLabel}) :`
-                : `Total réglé (${paymentProviderLabel}) :`}
-            </Text>
+            <View style={styles.recapLineLabelRow}>
+              <CheckCircle2 size={13} color="#4ADE80" strokeWidth={2.2} />
+              <Text style={styles.recapLabel} numberOfLines={1} ellipsizeMode="tail">
+                {booking.modePaiement === 'ACOMPTE_SOLDE_CHECKIN'
+                  ? `Acompte réglé (${paymentProviderLabel})`
+                  : `Règlement total (${paymentProviderLabel})`}
+              </Text>
+            </View>
             <Text style={styles.recapPaidVal}>{formatCurrency(paidOnline)}</Text>
           </View>
-        )}
+        ) : null}
 
-        {remainingSolde > 0 && (
+        {remainingSolde > 0 ? (
           <View style={styles.recapLine}>
-            <Text style={styles.recapLabel}>Solde à la remise des clés :</Text>
+            <View style={styles.recapLineLabelRow}>
+              <KeyRound size={13} color="#FBBF24" strokeWidth={2.2} />
+              <Text style={styles.recapLabel} numberOfLines={1} ellipsizeMode="tail">
+                Solde à la remise des clés
+              </Text>
+            </View>
             <Text style={styles.recapRemainingVal}>{formatCurrency(remainingSolde)}</Text>
           </View>
-        )}
+        ) : null}
 
         <View style={styles.recapDivider} />
 
@@ -308,8 +378,9 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
         </View>
       </View>
 
+      {/* 5. Boutons d'Action */}
       <View style={styles.actionsRow}>
-        {ownerPhone && (
+        {ownerPhone ? (
           <TouchableOpacity
             style={styles.actionBtnSecondary}
             onPress={handleContactOwner}
@@ -317,10 +388,10 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
             accessibilityRole="button"
             accessibilityLabel={`Contacter ${ownerFirstName || 'l’hôte'} par téléphone`}
           >
-            <MessageSquare size={15} color={theme.primitives.forest[800]} />
+            <PhoneCall size={14} color="#041912" strokeWidth={2.2} />
             <Text style={styles.actionBtnSecondaryText}>Contacter</Text>
           </TouchableOpacity>
-        )}
+        ) : null}
 
         <TouchableOpacity
           style={[styles.actionBtnPrimary, ownerPhone && styles.actionBtnPrimaryFlex]}
@@ -330,7 +401,7 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
           accessibilityLabel={`Gérer la réservation ${carLabel}`}
         >
           <Text style={styles.actionBtnPrimaryText}>Gérer la réservation</Text>
-          <ChevronRight size={15} color="#FFFFFF" />
+          <ChevronRight size={15} color="#FFFFFF" strokeWidth={2.2} />
         </TouchableOpacity>
       </View>
     </AutoCard>
@@ -341,72 +412,59 @@ const styles = StyleSheet.create({
   bookingCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
-    padding: theme.spacing[4],
-    gap: theme.spacing[4],
+    padding: 16,
+    gap: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: 'rgba(15, 23, 42, 0.08)',
     ...Platform.select({
       ios: {
-        shadowColor: '#000000',
+        shadowColor: '#041912',
         shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.07,
-        shadowRadius: 16,
+        shadowOpacity: 0.08,
+        shadowRadius: 18,
       },
       android: {
         elevation: 3,
       },
     }),
   },
-  statusRow: {
+  topHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  idGroup: {
-    gap: 2,
-  },
-  idMicroLabel: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 9,
-    color: '#94A3B8',
-    letterSpacing: 1.0,
-    textTransform: 'uppercase',
-  },
-  bookingId: {
-    fontFamily: theme.typography.fontFamily.mono,
-    fontVariant: ['tabular-nums'],
-    fontSize: 13,
-    fontWeight: '700',
-    color: theme.primitives.forest[800],
-    letterSpacing: 0.5,
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   badgeSuccess: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.10)',
+    backgroundColor: 'rgba(16, 185, 129, 0.09)',
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.25)',
+    borderColor: 'rgba(16, 185, 129, 0.28)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: theme.radius.full,
-    gap: 5,
+    gap: 6,
   },
   badgeSuccessText: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 10.5,
-    color: '#059669',
+    color: '#047857',
     letterSpacing: 0.4,
   },
   badgeInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E0E7FF',
+    backgroundColor: 'rgba(99, 102, 241, 0.09)',
     borderWidth: 1,
-    borderColor: '#C7D2FE',
+    borderColor: 'rgba(99, 102, 241, 0.28)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: theme.radius.full,
-    gap: 5,
+    gap: 6,
   },
   badgeInfoText: {
     fontFamily: theme.typography.fontFamily.bold,
@@ -417,30 +475,30 @@ const styles = StyleSheet.create({
   badgeInProgress: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#DBEAFE',
+    backgroundColor: 'rgba(37, 99, 235, 0.09)',
     borderWidth: 1,
-    borderColor: '#93C5FD',
+    borderColor: 'rgba(37, 99, 235, 0.28)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: theme.radius.full,
-    gap: 5,
+    gap: 6,
   },
   badgeInProgressText: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 10.5,
-    color: '#2563EB',
+    color: '#1D4ED8',
     letterSpacing: 0.4,
   },
   badgeCompleted: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#E2E8F0',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: theme.radius.full,
-    gap: 5,
+    gap: 6,
   },
   badgeCompletedText: {
     fontFamily: theme.typography.fontFamily.bold,
@@ -451,13 +509,13 @@ const styles = StyleSheet.create({
   badgeDanger: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEE2E2',
+    backgroundColor: 'rgba(239, 68, 68, 0.09)',
     borderWidth: 1,
-    borderColor: '#FCA5A5',
+    borderColor: 'rgba(239, 68, 68, 0.28)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: theme.radius.full,
-    gap: 5,
+    gap: 6,
   },
   badgeDangerText: {
     fontFamily: theme.typography.fontFamily.bold,
@@ -468,13 +526,13 @@ const styles = StyleSheet.create({
   badgePending: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: 'rgba(245, 158, 11, 0.09)',
     borderWidth: 1,
-    borderColor: '#FCD34D',
+    borderColor: 'rgba(245, 158, 11, 0.28)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: theme.radius.full,
-    gap: 5,
+    gap: 6,
   },
   badgePendingText: {
     fontFamily: theme.typography.fontFamily.bold,
@@ -482,60 +540,68 @@ const styles = StyleSheet.create({
     color: '#D97706',
     letterSpacing: 0.4,
   },
+  refCodeBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  refCodeText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 10,
+    color: '#64748B',
+    letterSpacing: 0.5,
+  },
   carRow: {
     flexDirection: 'row',
-    gap: 12,
-    alignItems: 'flex-start',
+    gap: 14,
+    alignItems: 'center',
   },
-  carThumb: {
-    width: 84,
-    height: 84,
-    borderRadius: 18,
+  carThumbWrap: {
+    position: 'relative',
+    width: 92,
+    height: 92,
+    borderRadius: 20,
+    overflow: 'hidden',
     backgroundColor: '#0F172A',
     borderWidth: 1,
-    borderColor: 'rgba(15, 23, 42, 0.06)',
+    borderColor: 'rgba(15, 23, 42, 0.08)',
+  },
+  carThumb: {
+    width: '100%',
+    height: '100%',
+  },
+  carTypeBadge: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    backgroundColor: 'rgba(4, 25, 18, 0.85)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  carTypeText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 8.5,
+    color: '#4ADE80',
+    letterSpacing: 0.5,
   },
   carInfo: {
     flex: 1,
-    gap: 5,
-    paddingTop: 1,
+    gap: 6,
   },
   carName: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 18,
-    color: theme.primitives.forest[800],
-    letterSpacing: -0.2,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    flexWrap: 'wrap',
-  },
-  carDates: {
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 12.5,
-    color: theme.colors.brand.main,
-  },
-  upcomingChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 8,
-    marginLeft: 2,
-  },
-  upcomingChipText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 10,
-    color: '#B45309',
+    color: '#041912',
+    letterSpacing: -0.3,
   },
   locRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
   },
   carLocation: {
     fontFamily: theme.typography.fontFamily.regular,
@@ -545,57 +611,216 @@ const styles = StyleSheet.create({
   ownerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    marginTop: 1,
+    gap: 6,
+    marginTop: 2,
+  },
+  ownerAvatarBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
   },
   ownerText: {
-    fontFamily: theme.typography.fontFamily.medium,
+    fontFamily: theme.typography.fontFamily.regular,
     fontSize: 12,
-    color: '#059669',
+    color: '#475569',
+  },
+  ownerNameHighlight: {
+    fontFamily: theme.typography.fontFamily.bold,
+    color: '#041912',
+  },
+  tripBox: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    padding: 12,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  upcomingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+  },
+  upcomingBannerText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 10.5,
+    color: '#B45309',
+  },
+  tripDatesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  tripDateCol: {
+    flex: 1,
+    gap: 2,
+  },
+  tripDateColRight: {
+    alignItems: 'flex-end',
+  },
+  tripLabel: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 9.5,
+    color: '#94A3B8',
+    letterSpacing: 0.6,
+  },
+  tripDateVal: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 13,
+    color: '#041912',
+  },
+  tripCenterCol: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    gap: 4,
+  },
+  tripLine: {
+    width: 12,
+    height: 1,
+    backgroundColor: '#CBD5E1',
+  },
+  tripDurationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+  },
+  tripDurationText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 10.5,
+    color: '#047857',
   },
   recapCardDark: {
-    backgroundColor: '#072A20', // Forest Night Surface
+    backgroundColor: '#041912',
     borderRadius: 18,
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
+    padding: 14,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.22)',
   },
   recapHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  recapTitleBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   recapBlockTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 9.5,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 10,
     color: '#A8D5C1',
     letterSpacing: 0.8,
   },
-  recapDiscountLabel: {
+  discountPill: {
+    backgroundColor: 'rgba(74, 222, 128, 0.15)',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.3)',
+  },
+  discountPillText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 10,
-    color: '#86EFAC',
+    fontSize: 9.5,
+    color: '#4ADE80',
+  },
+  paymentProgressContainer: {
+    gap: 6,
+    marginVertical: 2,
+  },
+  progressBarTrack: {
+    height: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 8,
+    flexDirection: 'row',
+    overflow: 'hidden',
+    padding: 2,
+    gap: 2,
+  },
+  progressBarFilled: {
+    height: '100%',
+    backgroundColor: '#4ADE80',
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressBarRemaining: {
+    height: '100%',
+    backgroundColor: 'rgba(74, 222, 128, 0.25)',
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressLabelsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  progressLabelLeft: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 10.5,
+    color: '#4ADE80',
+  },
+  progressLabelRight: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 10.5,
+    color: '#A8D5C1',
   },
   recapLine: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
+  },
+  recapLineLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+    flexShrink: 1,
   },
   recapLabel: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 12,
+    fontSize: 11.5,
     color: '#A8D5C1',
+    flexShrink: 1,
   },
   recapPaidVal: {
-    fontFamily: theme.typography.fontFamily.bold,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontVariant: ['tabular-nums'],
     fontSize: 13.5,
     color: '#FFFFFF',
+    flexShrink: 0,
+    textAlign: 'right',
   },
   recapRemainingVal: {
-    fontFamily: theme.typography.fontFamily.bold,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontVariant: ['tabular-nums'],
     fontSize: 13.5,
-    color: '#86EFAC',
+    color: '#4ADE80',
+    flexShrink: 0,
+    textAlign: 'right',
   },
   recapDivider: {
     height: 1,
@@ -608,60 +833,60 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   totalLabel: {
-    fontFamily: theme.typography.fontFamily.bold,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 13.5,
     color: '#FFFFFF',
   },
   totalValue: {
-    fontFamily: theme.typography.fontFamily.extraBold,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontVariant: ['tabular-nums'],
-    fontSize: 19,
-    color: '#86EFAC',
+    fontSize: 20,
+    color: '#4ADE80',
   },
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginTop: 4,
+    marginTop: 2,
   },
   actionBtnSecondary: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 16,
-    minHeight: 48,
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 15,
+    minHeight: 46,
     borderRadius: 14,
     gap: 6,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   actionBtnSecondaryText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 12.5,
-    color: theme.primitives.forest[800],
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 13,
+    color: '#041912',
   },
   actionBtnPrimary: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.primitives.forest[800],
-    minHeight: 48,
+    backgroundColor: '#041912',
+    minHeight: 46,
     borderRadius: 14,
     gap: 6,
-    shadowColor: theme.primitives.forest[800],
+    shadowColor: '#041912',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.22,
+    shadowOpacity: 0.18,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 2,
   },
   actionBtnPrimaryFlex: {
     flex: 1,
   },
   actionBtnPrimaryText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 12.5,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 13,
     color: '#FFFFFF',
   },
 });

@@ -8,14 +8,18 @@ import {
   Platform,
   ScrollView,
   Image,
-  SafeAreaView,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Mail, Lock, ArrowRight, ShieldCheck, Eye, EyeOff, X } from 'lucide-react-native';
+import { Mail, Lock, ArrowRight, ShieldCheck, Eye, EyeOff, X, Sparkles } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../../core/theme';
 import { AutoInput, PhoneField, AutoButton } from '../../../shared/components';
 import { useAuthStore } from '../stores/useAuthStore';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 interface LoginScreenProps {
   onNavigateToRegister: () => void;
@@ -30,6 +34,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onLoginSuccess,
   onClose,
 }) => {
+  const insets = useSafeAreaInsets();
   const [authMethod, setAuthMethod] = useState<'PHONE' | 'EMAIL'>('PHONE');
   const [telephone, setTelephone] = useState('+221770000000');
   const [email, setEmail] = useState('');
@@ -70,261 +75,355 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
+    <View style={styles.container}>
+      <StatusBar style="light" animated />
 
-      {/* Top Navigation : Bouton Retour / Fermer pour accéder à l'accueil */}
-      <View style={styles.topNavRow}>
-        <TouchableOpacity
-          style={styles.closeCircleBtn}
-          onPress={onClose}
-          activeOpacity={0.8}
-        >
-          <X size={18} color={theme.colors.text.primary} strokeWidth={2.5} />
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={styles.skipBtn}>
-          <Text style={styles.skipText}>Ignorer & Explorer</Text>
-        </TouchableOpacity>
+      {/* 1. Fond Sombre Émeraude & Aura Lumineuse */}
+      <View style={StyleSheet.absoluteFill}>
+        <LinearGradient
+          colors={['#062017', '#04150F', '#020B08']}
+          style={StyleSheet.absoluteFill}
+        />
+        {/* Glow Radial en haut */}
+        <View style={styles.auraGlow} />
       </View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.flexContainer}
+      {/* 2. Content Alignement Safe Area */}
+      <View
+        style={[
+          styles.safeWrapper,
+          {
+            paddingTop: Math.max(insets.top, 20) + 8,
+            paddingBottom: Math.max(insets.bottom, 16) + 8,
+          },
+        ]}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+        {/* Top Header Row Glass Navigation */}
+        <View style={styles.topHeaderRow}>
+          <TouchableOpacity
+            style={styles.glassCloseBtn}
+            onPress={onClose}
+            activeOpacity={0.8}
+          >
+            <X size={18} color="#FFFFFF" strokeWidth={2.5} />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={onClose} activeOpacity={0.75} style={styles.skipGlassPill}>
+            <Sparkles size={12} color="#4ADE80" />
+            <Text style={styles.skipGlassText}>Ignorer & Explorer</Text>
+          </TouchableOpacity>
+        </View>
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.flexOne}
         >
-          {/* Header avec Logo & Badge KYC */}
-          <View style={styles.headerBox}>
-            <View style={styles.logoRow}>
-              <Image
-                source={require('../../../../assets/logo.png')}
-                style={styles.logoImage}
-                resizeMode="contain"
-              />
-            </View>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* STACK CARDS SUPERPOSÉES (Layered Glass Architecture) */}
+            <View style={styles.cardStackWrapper}>
+              {/* Card d'arrière-plan en décalé (Back Layer Accent) */}
+              <View style={styles.backAccentCard} />
 
-            <View style={styles.badgeKyc}>
-              <ShieldCheck size={12} color={theme.colors.brand.main} />
-              <Text style={styles.badgeKycText}>AUTHENTIFICATION SÉCURISÉE</Text>
-            </View>
+              {/* Card Principale Translucide (Front Floating Glass Sheet) */}
+              <View style={styles.frontGlassCard}>
+                {/* Header Card : Logo & Titre */}
+                <View style={styles.cardHeaderBox}>
+                  <View style={styles.logoContainer}>
+                    <Image
+                      source={require('../../../../assets/logo.png')}
+                      style={styles.logoImage}
+                      resizeMode="contain"
+                    />
+                  </View>
 
-            <Text style={styles.mainTitle}>Connexion</Text>
-            <Text style={styles.subtitle}>
-              Accédez à vos réservations et votre garage mobile
-            </Text>
-          </View>
+                  <View style={styles.badgeKycGlass}>
+                    <ShieldCheck size={12} color="#059669" />
+                    <Text style={styles.badgeKycText}>ESPACE CLIENT SÉCURISÉ</Text>
+                  </View>
 
-          {/* Bannière Erreur */}
-          {error ? (
-            <View style={styles.errorBanner}>
-              <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity onPress={clearError}>
-                <Text style={styles.errorClose}>×</Text>
-              </TouchableOpacity>
-            </View>
-          ) : null}
+                  <Text style={styles.mainTitle}>Bon retour</Text>
+                  <Text style={styles.subtitle}>
+                    Accédez à vos réservations et votre garage mobile
+                  </Text>
+                </View>
 
-          {/* Selector Methode (Telephone vs Email) */}
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[styles.tabBtn, authMethod === 'PHONE' && styles.tabBtnActive]}
-              onPress={() => { clearError(); setAuthMethod('PHONE'); }}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.tabText, authMethod === 'PHONE' && styles.tabTextActive]}>
-                Téléphone (SMS)
-              </Text>
-            </TouchableOpacity>
+                {/* Bannière Erreur */}
+                {error ? (
+                  <View style={styles.errorBanner}>
+                    <Text style={styles.errorText}>{error}</Text>
+                    <TouchableOpacity onPress={clearError}>
+                      <Text style={styles.errorClose}>×</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
 
-            <TouchableOpacity
-              style={[styles.tabBtn, authMethod === 'EMAIL' && styles.tabBtnActive]}
-              onPress={() => { clearError(); setAuthMethod('EMAIL'); }}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.tabText, authMethod === 'EMAIL' && styles.tabTextActive]}>
-                Email / Mot de passe
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Formulaire Dynamique */}
-          {authMethod === 'PHONE' ? (
-            <View style={styles.formStack}>
-              <PhoneField
-                label="Numéro de Téléphone"
-                value={telephone}
-                onChangeText={(t) => { clearError(); setTelephone(t); }}
-              />
-
-              <AutoButton
-                title="Recevoir mon code SMS / WhatsApp"
-                variant="action"
-                rightIcon={<ArrowRight size={18} color="#FFFFFF" />}
-                loading={isLoading}
-                onPress={handlePhoneSubmit}
-                size="lg"
-                style={styles.submitBtn}
-              />
-            </View>
-          ) : (
-            <View style={styles.formStack}>
-              <AutoInput
-                label="Adresse Email"
-                placeholder="vous@autoloc.sn"
-                value={email}
-                onChangeText={(t) => { clearError(); setEmail(t); }}
-                leftIcon={<Mail size={18} color={theme.colors.text.tertiary} />}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-
-              <AutoInput
-                label="Mot de passe"
-                placeholder="••••••••"
-                value={password}
-                onChangeText={(t) => { clearError(); setPassword(t); }}
-                leftIcon={<Lock size={18} color={theme.colors.text.tertiary} />}
-                isPassword={!showPassword}
-                rightIcon={
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                    {showPassword ? (
-                      <EyeOff size={18} color={theme.colors.text.tertiary} />
-                    ) : (
-                      <Eye size={18} color={theme.colors.text.tertiary} />
-                    )}
+                {/* Switcher Méthode de Connexion (Segmented Pill) */}
+                <View style={styles.segmentedTrack}>
+                  <TouchableOpacity
+                    style={[styles.segmentedBtn, authMethod === 'PHONE' && styles.segmentedBtnActive]}
+                    onPress={() => { clearError(); setAuthMethod('PHONE'); }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.segmentedText, authMethod === 'PHONE' && styles.segmentedTextActive]}>
+                      SMS / WhatsApp
+                    </Text>
                   </TouchableOpacity>
-                }
-              />
 
-              <TouchableOpacity style={styles.forgotPassBtn}>
-                <Text style={styles.forgotPassText}>Mot de passe oublié ?</Text>
-              </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.segmentedBtn, authMethod === 'EMAIL' && styles.segmentedBtnActive]}
+                    onPress={() => { clearError(); setAuthMethod('EMAIL'); }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.segmentedText, authMethod === 'EMAIL' && styles.segmentedTextActive]}>
+                      Email & Pass
+                    </Text>
+                  </TouchableOpacity>
+                </View>
 
-              <AutoButton
-                title="Se connecter"
-                variant="action"
-                rightIcon={<ArrowRight size={18} color="#FFFFFF" />}
-                loading={isLoading}
-                onPress={handleEmailSubmit}
-                size="lg"
-                style={styles.submitBtn}
-              />
+                {/* Formulaire Dynamique */}
+                {authMethod === 'PHONE' ? (
+                  <View style={styles.formStack}>
+                    <PhoneField
+                      label="Numéro de téléphone"
+                      value={telephone}
+                      onChangeText={(t) => { clearError(); setTelephone(t); }}
+                    />
+
+                    <AutoButton
+                      title="Recevoir mon code d'accès"
+                      variant="dark"
+                      rightIcon={
+                        <View style={styles.emeraldArrowCircle}>
+                          <ArrowRight size={13} color="#4ADE80" />
+                        </View>
+                      }
+                      loading={isLoading}
+                      onPress={handlePhoneSubmit}
+                      size="md"
+                      style={styles.submitBtn}
+                    />
+                  </View>
+                ) : (
+                  <View style={styles.formStack}>
+                    <AutoInput
+                      label="Adresse email"
+                      placeholder="vous@autoloc.sn"
+                      value={email}
+                      onChangeText={(t) => { clearError(); setEmail(t); }}
+                      leftIcon={<Mail size={18} color={theme.colors.text.tertiary} />}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                    />
+
+                    <AutoInput
+                      label="Mot de passe"
+                      placeholder="••••••••"
+                      value={password}
+                      onChangeText={(t) => { clearError(); setPassword(t); }}
+                      leftIcon={<Lock size={18} color={theme.colors.text.tertiary} />}
+                      isPassword={!showPassword}
+                      rightIcon={
+                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                          {showPassword ? (
+                            <EyeOff size={18} color={theme.colors.text.tertiary} />
+                          ) : (
+                            <Eye size={18} color={theme.colors.text.tertiary} />
+                          )}
+                        </TouchableOpacity>
+                      }
+                    />
+
+                    <TouchableOpacity style={styles.forgotPassBtn}>
+                      <Text style={styles.forgotPassText}>Mot de passe oublié ?</Text>
+                    </TouchableOpacity>
+
+                    <AutoButton
+                      title="Se connecter"
+                      variant="dark"
+                      rightIcon={
+                        <View style={styles.emeraldArrowCircle}>
+                          <ArrowRight size={13} color="#4ADE80" />
+                        </View>
+                      }
+                      loading={isLoading}
+                      onPress={handleEmailSubmit}
+                      size="md"
+                      style={styles.submitBtn}
+                    />
+                  </View>
+                )}
+
+                {/* Divider Glass */}
+                <View style={styles.dividerRow}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>OU CONTINUER AVEC</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                {/* Google Auth Button Glass */}
+                <TouchableOpacity
+                  style={styles.googleGlassBtn}
+                  onPress={handleGoogleAuth}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={{ uri: 'https://cdn-icons-png.flaticon.com/512/300/300221.png' }}
+                    style={styles.googleIcon}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.googleGlassText}>Continuer avec Google</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          )}
 
-          {/* Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>Ou continuer avec</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Google Auth Button */}
-          <AutoButton
-            title="Continuer avec Google"
-            variant="google"
-            onPress={handleGoogleAuth}
-            size="lg"
-            style={styles.googleBtn}
-          />
-
-          {/* Inscription footer */}
-          <View style={styles.footerRow}>
-            <Text style={styles.footerQuestion}>Pas encore de compte ? </Text>
-            <TouchableOpacity onPress={onNavigateToRegister} activeOpacity={0.7}>
-              <Text style={styles.registerLink}>S'inscrire gratuitement</Text>
+            {/* Inscription Footer Capsule */}
+            <TouchableOpacity
+              onPress={onNavigateToRegister}
+              style={styles.footerGlassCapsule}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.footerQuestion}>
+                Pas encore de compte ? <Text style={styles.registerLink}>S'inscrire gratuitement</Text>
+              </Text>
             </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: theme.colors.surface.page,
+    backgroundColor: '#04150F',
   },
-  topNavRow: {
+  auraGlow: {
+    position: 'absolute',
+    top: -60,
+    alignSelf: 'center',
+    width: screenWidth * 0.9,
+    height: screenWidth * 0.9,
+    borderRadius: (screenWidth * 0.9) / 2,
+    backgroundColor: 'rgba(16, 185, 129, 0.16)',
+  },
+  safeWrapper: {
+    flex: 1,
+  },
+  flexOne: {
+    flex: 1,
+  },
+  topHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: theme.spacing[5],
-    paddingTop: theme.spacing[2],
-    paddingBottom: theme.spacing[1],
+    marginBottom: theme.spacing[2],
   },
-  closeCircleBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radius.full,
-    backgroundColor: '#FFFFFF',
+  glassCloseBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
     borderWidth: 1,
-    borderColor: '#E4EBDB',
+    borderColor: 'rgba(255, 255, 255, 0.20)',
     justifyContent: 'center',
     alignItems: 'center',
-    ...theme.elevation.sm,
   },
-  skipBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+  skipGlassPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: theme.radius.full,
   },
-  skipText: {
+  skipGlassText: {
     fontFamily: theme.typography.fontFamily.semiBold,
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.brand.main,
-  },
-  flexContainer: {
-    flex: 1,
+    fontSize: 11,
+    color: '#FFFFFF',
   },
   scrollContent: {
-    paddingHorizontal: theme.spacing[5],
-    paddingVertical: theme.spacing[3],
+    paddingHorizontal: theme.spacing[4],
+    paddingBottom: theme.spacing[4],
     justifyContent: 'center',
     flexGrow: 1,
   },
-  headerBox: {
+  cardStackWrapper: {
+    position: 'relative',
+    marginVertical: theme.spacing[2],
+  },
+  backAccentCard: {
+    position: 'absolute',
+    top: -6,
+    left: 8,
+    right: 8,
+    bottom: -6,
+    borderRadius: 32,
+    backgroundColor: 'rgba(16, 185, 129, 0.20)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+  },
+  frontGlassCard: {
+    backgroundColor: '#FFFFFF', // Carte Principale Blanc Pur
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.80)',
+    borderRadius: 28,
+    padding: theme.spacing[5],
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  cardHeaderBox: {
     alignItems: 'center',
     marginBottom: theme.spacing[4],
   },
-  logoRow: {
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: theme.spacing[2],
   },
   logoImage: {
-    width: 160,
-    height: 50,
+    width: 170,
+    height: 52,
   },
-  badgeKyc: {
+  badgeKycGlass: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.brand.subtle,
+    backgroundColor: '#ECFDF5',
     borderWidth: 1,
-    borderColor: theme.colors.brand.border,
-    paddingHorizontal: theme.spacing[3],
-    paddingVertical: 4,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: theme.radius.full,
     gap: 6,
-    marginBottom: theme.spacing[3],
+    marginBottom: theme.spacing[2],
   },
   badgeKycText: {
-    ...theme.typography.textStyles.overline,
+    fontFamily: theme.typography.fontFamily.medium,
     fontSize: 9,
-    color: theme.colors.brand.main,
+    letterSpacing: 0.8,
+    color: '#059669',
   },
   mainTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: theme.typography.fontSize['3xl'],
-    lineHeight: theme.typography.lineHeight['3xl'],
-    color: theme.primitives.forest[800],
+    fontSize: 28,
+    lineHeight: 34,
+    color: '#041912',
     textAlign: 'center',
   },
   subtitle: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: theme.typography.fontSize.sm,
+    fontSize: theme.typography.fontSize.xs,
     color: theme.colors.text.secondary,
     textAlign: 'center',
     marginTop: 4,
@@ -336,7 +435,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.status.errorBg,
     borderColor: theme.colors.status.errorBorder,
     borderWidth: 1,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.lg,
     padding: theme.spacing[3],
     marginBottom: theme.spacing[3],
   },
@@ -351,31 +450,35 @@ const styles = StyleSheet.create({
     color: theme.colors.status.error,
     paddingLeft: 8,
   },
-  tabContainer: {
+  segmentedTrack: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.border.light,
+    backgroundColor: '#F3F4F6',
     borderRadius: theme.radius.full,
-    padding: 3,
+    padding: 4,
     marginBottom: theme.spacing[4],
   },
-  tabBtn: {
+  segmentedBtn: {
     flex: 1,
-    paddingVertical: 9,
+    paddingVertical: 10,
     alignItems: 'center',
     borderRadius: theme.radius.full,
   },
-  tabBtnActive: {
-    backgroundColor: '#FFFFFF',
-    ...theme.elevation.sm,
+  segmentedBtnActive: {
+    backgroundColor: '#041912', // Pilule Active Forêt Sombre
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  tabText: {
+  segmentedText: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
+    fontSize: 12,
+    color: '#6B7280',
   },
-  tabTextActive: {
+  segmentedTextActive: {
     fontFamily: theme.typography.fontFamily.bold,
-    color: theme.colors.text.primary,
+    color: '#FFFFFF',
   },
   formStack: {
     gap: theme.spacing[3],
@@ -386,11 +489,32 @@ const styles = StyleSheet.create({
   },
   forgotPassText: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.brand.main,
+    fontSize: 12,
+    color: '#059669',
   },
   submitBtn: {
+    minHeight: 50,
+    borderRadius: 25,
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(4, 25, 18, 0.90)',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
     marginTop: theme.spacing[2],
+  },
+  emeraldArrowCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 6,
   },
   dividerRow: {
     flexDirection: 'row',
@@ -401,30 +525,60 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: theme.colors.border.light,
+    backgroundColor: '#E5E7EB',
   },
   dividerText: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 11,
-    color: theme.colors.text.tertiary,
+    fontSize: 10,
+    letterSpacing: 0.8,
+    color: '#9CA3AF',
   },
-  googleBtn: {
-    marginBottom: theme.spacing[4],
-  },
-  footerRow: {
+  googleGlassBtn: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  googleIcon: {
+    width: 18,
+    height: 18,
+  },
+  googleGlassText: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 13,
+    color: '#1F2937',
+  },
+  footerGlassCapsule: {
+    marginTop: theme.spacing[4],
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: theme.radius.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   footerQuestion: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.80)',
   },
   registerLink: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.brand.main,
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 12,
+    color: '#4ADE80',
     textDecorationLine: 'underline',
   },
 });
+

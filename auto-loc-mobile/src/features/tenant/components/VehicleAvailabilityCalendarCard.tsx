@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   ScrollView,
-  ActivityIndicator,
+  Platform,
 } from 'react-native';
 import {
   Calendar,
   CheckCircle2,
   XCircle,
-  Clock,
   Sparkles,
 } from 'lucide-react-native';
+import { theme } from '../../../core/theme';
 
 interface BlockedRange {
   id?: string;
@@ -32,8 +32,7 @@ export const VehicleAvailabilityCalendarCard: React.FC<VehicleAvailabilityCalend
   ville = 'Dakar',
   blockedRanges = [],
 }) => {
-  const [loading, setLoading] = useState<boolean>(false);
-  const [blockedDatesList, setBlockedDatesList] = useState<BlockedRange[]>(blockedRanges);
+  const [blockedDatesList] = useState<BlockedRange[]>(blockedRanges);
 
   // Génère les 14 prochains jours pour le strip calendrier
   const nextDays = React.useMemo(() => {
@@ -71,40 +70,55 @@ export const VehicleAvailabilityCalendarCard: React.FC<VehicleAvailabilityCalend
 
   return (
     <View style={styles.cardContainer}>
-      {/* Header */}
+      {/* Header avec Icône Badge & Typographie Fraunces */}
       <View style={styles.cardHeader}>
-        <View style={styles.headerTitleRow}>
-          <View style={styles.iconBg}>
-            <Calendar size={18} color="#059669" />
+        <View style={styles.headerTopRow}>
+          <View style={styles.headerLeftRow}>
+            <View style={styles.titleIconBadge}>
+              <Calendar size={14} color="#4ADE80" strokeWidth={2.25} />
+            </View>
+            <Text
+              style={styles.sectionTitle}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.85}
+            >
+              Disponibilité en temps réel
+            </Text>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Disponibilité en Temps Réel</Text>
-            <Text style={styles.cardSub}>Aperçu des 14 prochains jours à {ville}</Text>
+
+          {/* Live Status Pill */}
+          <View
+            style={[
+              styles.statusPill,
+              isTodayAvailable ? styles.statusPillAvailable : styles.statusPillBusy,
+            ]}
+          >
+            <View
+              style={[
+                styles.statusDot,
+                isTodayAvailable ? styles.statusDotAvailable : styles.statusDotBusy,
+              ]}
+            />
+            <Text
+              style={[
+                styles.statusText,
+                isTodayAvailable ? styles.statusTextAvailable : styles.statusTextBusy,
+              ]}
+            >
+              {isTodayAvailable ? 'Disponible' : 'Occupé'}
+            </Text>
           </View>
         </View>
 
-        {/* Live Status Pill */}
-        <View
-          style={[
-            styles.statusPill,
-            isTodayAvailable ? styles.statusPillAvailable : styles.statusPillBusy,
-          ]}
+        <Text
+          style={styles.subtitleText}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.85}
         >
-          <View
-            style={[
-              styles.statusDot,
-              isTodayAvailable ? styles.statusDotAvailable : styles.statusDotBusy,
-            ]}
-          />
-          <Text
-            style={[
-              styles.statusText,
-              isTodayAvailable ? styles.statusTextAvailable : styles.statusTextBusy,
-            ]}
-          >
-            {isTodayAvailable ? 'Disponible Aujourd’hui' : 'Indisponible Aujourd’hui'}
-          </Text>
-        </View>
+          Aperçu du calendrier des 14 prochains jours
+        </Text>
       </View>
 
       {/* 14 Days Horizontal Strip */}
@@ -128,13 +142,19 @@ export const VehicleAvailabilityCalendarCard: React.FC<VehicleAvailabilityCalend
             <Text style={[styles.dayNumText, day.isToday && styles.textToday]}>
               {day.dayNum}
             </Text>
-            <Text style={styles.monthText}>{day.monthName}</Text>
+            <Text style={[styles.monthText, day.isToday && styles.textTodayMuted]}>
+              {day.monthName}
+            </Text>
 
             <View style={styles.iconIndicator}>
               {day.isBlocked ? (
-                <XCircle size={14} color="#EF4444" />
+                <XCircle size={14} color="#EF4444" strokeWidth={2.2} />
               ) : (
-                <CheckCircle2 size={14} color="#059669" />
+                <CheckCircle2
+                  size={14}
+                  color={day.isToday ? '#4ADE80' : '#059669'}
+                  strokeWidth={2.2}
+                />
               )}
             </View>
           </View>
@@ -145,7 +165,7 @@ export const VehicleAvailabilityCalendarCard: React.FC<VehicleAvailabilityCalend
       <View style={styles.infoFooter}>
         <Sparkles size={14} color="#059669" style={{ marginTop: 1 }} />
         <Text style={styles.infoFooterText}>
-          Réservation instantanée avec confirmation automatique dès validation du dossier.
+          Réservation instantanée avec confirmation automatique dès validation.
         </Text>
       </View>
     </View>
@@ -154,55 +174,62 @@ export const VehicleAvailabilityCalendarCard: React.FC<VehicleAvailabilityCalend
 
 const styles = StyleSheet.create({
   cardContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 18,
-    marginHorizontal: 16,
-    marginTop: 14,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 3,
+    marginTop: 24,
+    paddingHorizontal: 20,
   },
   cardHeader: {
     marginBottom: 14,
+    gap: 4,
   },
-  headerTitleRow: {
+  headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 10,
+    justifyContent: 'space-between',
+    gap: 8,
   },
-  iconBg: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#ECFDF5',
+  headerLeftRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  titleIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: '#041912',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
-  cardTitle: {
-    fontSize: 15,
-    fontFamily: 'Inter_700Bold',
-    color: '#0F172A',
+  sectionTitle: {
+    fontSize: 17.5,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    color: '#041912',
+    letterSpacing: -0.3,
+    flex: 1,
   },
-  cardSub: {
+  subtitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginTop: 2,
+  },
+  subtitleText: {
     fontSize: 12,
-    fontFamily: 'Inter_400Regular',
-    color: '#64748B',
-    marginTop: 1,
+    fontFamily: theme.typography.fontFamily.regular,
+    color: '#5F6B59',
+    flex: 1,
   },
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 14,
   },
   statusPillAvailable: {
     backgroundColor: '#ECFDF5',
@@ -215,9 +242,9 @@ const styles = StyleSheet.create({
     borderColor: '#FCA5A5',
   },
   statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   statusDotAvailable: {
     backgroundColor: '#10B981',
@@ -226,74 +253,92 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444',
   },
   statusText: {
-    fontSize: 11.5,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 11,
+    fontFamily: theme.typography.fontFamily.bold,
   },
   statusTextAvailable: {
-    color: '#047857',
+    color: '#059669',
   },
   statusTextBusy: {
     color: '#B91C1C',
   },
   stripContent: {
     gap: 8,
-    paddingVertical: 4,
+    paddingVertical: 6,
   },
   dayCard: {
-    width: 60,
-    paddingVertical: 10,
-    borderRadius: 14,
-    backgroundColor: '#F8FAFC',
+    width: 62,
+    paddingVertical: 12,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E4EBDB',
     alignItems: 'center',
     gap: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#041912',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   dayCardToday: {
-    backgroundColor: '#051B14',
-    borderColor: '#051B14',
+    backgroundColor: '#041912',
+    borderColor: 'rgba(74, 222, 128, 0.40)',
   },
   dayCardBlocked: {
     backgroundColor: '#FEF2F2',
     borderColor: '#FEE2E2',
-    opacity: 0.7,
+    opacity: 0.75,
   },
   dayNameText: {
     fontSize: 11,
-    fontFamily: 'Inter_600SemiBold',
-    color: '#64748B',
+    fontFamily: theme.typography.fontFamily.semiBold,
+    color: '#5F6B59',
   },
   dayNumText: {
     fontSize: 16,
-    fontFamily: 'Inter_800Bold',
-    color: '#0F172A',
+    fontFamily: theme.typography.fontFamily.bold,
+    color: '#041912',
+    fontVariant: ['tabular-nums'],
   },
   monthText: {
     fontSize: 10,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: theme.typography.fontFamily.regular,
     color: '#94A3B8',
     textTransform: 'lowercase',
   },
   textToday: {
     color: '#FFFFFF',
   },
+  textTodayMuted: {
+    color: 'rgba(255, 255, 255, 0.70)',
+  },
   iconIndicator: {
     marginTop: 4,
   },
   infoFooter: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
-    backgroundColor: '#F0FDF4',
-    padding: 10,
-    borderRadius: 10,
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 14,
     marginTop: 14,
   },
   infoFooterText: {
     flex: 1,
-    fontSize: 11.5,
-    fontFamily: 'Inter_400Regular',
-    color: '#166534',
-    lineHeight: 16,
+    fontSize: 12,
+    fontFamily: theme.typography.fontFamily.regular,
+    color: '#059669',
+    lineHeight: 17,
   },
 });

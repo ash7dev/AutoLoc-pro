@@ -181,8 +181,9 @@ export const ExploreMapViewer: React.FC<ExploreMapViewerProps> = ({
               </View>
 
               <Text style={styles.miniCardLoc}>
-                {selectedVehicle.ville || 'Dakar'} • Sénégal
+                {selectedVehicle.ville || 'Dakar'}
               </Text>
+
 
               <View style={styles.miniCardPriceRow}>
                 <Text style={styles.miniCardPrice}>

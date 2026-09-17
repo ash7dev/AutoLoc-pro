@@ -20,6 +20,8 @@ export interface TenantProfile {
   totalAvis: number;
   creeLe: string;
   role: string;
+  annoncesCount?: number;
+  listingsCount?: number;
 }
 
 export async function fetchTenantProfile(): Promise<TenantProfile> {

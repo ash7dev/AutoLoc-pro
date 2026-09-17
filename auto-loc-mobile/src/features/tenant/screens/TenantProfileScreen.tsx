@@ -94,7 +94,11 @@ export const TenantProfileScreen: React.FC = () => {
     <TenantHeader variant="MANAGEMENT" title="Mon profil" subtitle="Mon compte et mes vérifications" />
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); syncProfile(true); }} tintColor={theme.colors.brand.main} />}>
       <TenantProfileHero profile={profile} onVerificationPress={() => openVerification()} onAvatarUpdated={async (avatarUrl) => { setProfile({ ...profile, avatarUrl }); await updateUserProfile({ avatarUrl }); }} />
-      <TenantBecomeHostCard isHost={profile.role === 'PROPRIETAIRE'} onConfirm={becomeHost} />
+      <TenantBecomeHostCard
+        isHost={profile.role === 'PROPRIETAIRE'}
+        listingsCount={profile.annoncesCount ?? profile.listingsCount ?? 0}
+        onConfirm={becomeHost}
+      />
       <TenantVerificationCard profile={profile} onPress={() => openVerification()} />
       <TenantProfileInformationCard profile={profile} onPhonePress={() => openVerification(['PREGATE', 'PHONE'])} onUpdated={async (partial) => { setProfile({ ...profile, ...partial }); await syncProfile(true); }} />
       <TenantSecurityCard profile={profile} onUpdated={async (partial) => {

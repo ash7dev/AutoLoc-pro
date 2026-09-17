@@ -62,54 +62,64 @@ export const BookingDateSelector: React.FC<BookingDateSelectorProps> = ({
 
   return (
     <View style={styles.cardContainer}>
-      {/* En-tête : Titre & Badge Durée */}
+      {/* En-tête : Badge Icône Sombre + Titre Fraunces + Badge Durée */}
       <View style={styles.headerRow}>
-        <Text style={styles.sectionTitle}>Dates de réservation</Text>
+        <View style={styles.headerTitleGroup}>
+          <View style={styles.titleIconBadge}>
+            <CalendarIcon size={14} color="#4ADE80" strokeWidth={2.25} />
+          </View>
+          <Text style={styles.sectionTitle}>Dates de réservation</Text>
+        </View>
 
         <View style={styles.durationChip}>
-          <Clock size={12} color={theme.colors.brand.main} />
+          <Clock size={12} color="#059669" />
           <Text style={styles.durationChipText}>
             {durationDays} jour{durationDays > 1 ? 's' : ''}
           </Text>
         </View>
       </View>
 
-      {/* Carte des Dates Clean & Minimaliste */}
+      {/* Carte des Dates : Ligne par Ligne (Chacune sur sa propre ligne) */}
       <TouchableOpacity
         style={styles.datesBox}
         onPress={handleOpenCalendar}
         activeOpacity={0.85}
       >
-        {/* Ligne Départ */}
+        {/* Ligne 1 : Date de départ */}
         <View style={styles.dateItemRow}>
           <View style={styles.iconCircle}>
-            <CalendarIcon size={16} color={theme.colors.brand.main} />
+            <CalendarIcon size={13} color="#4ADE80" strokeWidth={2.25} />
           </View>
           <View style={styles.dateTextGroup}>
-            <Text style={styles.dateLabel}>Départ</Text>
-            <Text style={styles.dateValue}>{formatDateDisplay(dateDebut)}</Text>
+            <Text style={styles.dateLabel}>Date de départ</Text>
+            <Text style={styles.dateValue} numberOfLines={1}>
+              {formatDateDisplay(dateDebut)}
+            </Text>
           </View>
         </View>
 
+        {/* Ligne séparatrice */}
         <View style={styles.dateLineDivider} />
 
-        {/* Ligne Retour */}
+        {/* Ligne 2 : Date de retour */}
         <View style={styles.dateItemRow}>
           <View style={styles.iconCircle}>
-            <CalendarIcon size={16} color={theme.colors.brand.main} />
+            <CalendarIcon size={13} color="#4ADE80" strokeWidth={2.25} />
           </View>
           <View style={styles.dateTextGroup}>
-            <Text style={styles.dateLabel}>Retour</Text>
-            <Text style={styles.dateValue}>{formatDateDisplay(dateFin)}</Text>
+            <Text style={styles.dateLabel}>Date de retour</Text>
+            <Text style={styles.dateValue} numberOfLines={1}>
+              {formatDateDisplay(dateFin)}
+            </Text>
           </View>
-          <ChevronRight size={18} color="#7D8975" />
+          <ChevronRight size={18} color="#5F6B59" />
         </View>
       </TouchableOpacity>
 
-      {/* Durée minimale */}
+      {/* Info durée minimale */}
       {joursMinimum > 1 && (
         <View style={styles.minInfoRow}>
-          <Info size={13} color={theme.colors.brand.main} />
+          <Info size={13} color="#059669" />
           <Text style={styles.minInfoText}>
             Durée minimum fixée par le propriétaire : {joursMinimum} jours.
           </Text>
@@ -149,7 +159,7 @@ export const BookingDateSelector: React.FC<BookingDateSelectorProps> = ({
             <View style={styles.modalFooter}>
               <AutoButton
                 title="Valider ces dates"
-                variant="action"
+                variant="dark"
                 onPress={handleApplyDates}
                 disabled={!tempStart}
               />
@@ -164,97 +174,117 @@ export const BookingDateSelector: React.FC<BookingDateSelectorProps> = ({
 const styles = StyleSheet.create({
   cardContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: theme.radius.xl,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: '#E4EBDB',
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-    ...theme.elevation.md,
+    padding: 16,
+    gap: 12,
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  headerTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  titleIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: '#041912',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+  },
   sectionTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 16,
-    color: theme.primitives.forest[800],
+    fontSize: 17.5,
+    color: '#041912',
+    letterSpacing: -0.3,
   },
   durationChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: theme.colors.brand.subtle,
+    backgroundColor: '#ECFDF5',
     borderWidth: 1,
-    borderColor: theme.colors.brand.border,
+    borderColor: '#A7F3D0',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: theme.radius.full,
+    borderRadius: 12,
   },
   durationChipText: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 11,
-    color: theme.colors.brand.main,
+    color: '#059669',
   },
   datesBox: {
-    backgroundColor: '#F8FBF4',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#E4EBDB',
-    borderRadius: theme.radius.lg,
-    paddingHorizontal: theme.spacing[4],
-    paddingVertical: theme.spacing[2],
+    borderColor: '#E2E8F0',
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
   },
   dateItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: theme.spacing[2.5],
+    paddingVertical: 12,
     gap: 12,
   },
   iconCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#FFFFFF',
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: '#041912',
     borderWidth: 1,
-    borderColor: '#E4EBDB',
+    borderColor: 'rgba(74, 222, 128, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   dateTextGroup: {
     flex: 1,
-    gap: 1,
+    gap: 2,
   },
   dateLabel: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 11,
-    color: '#7D8975',
+    fontSize: 11.5,
+    color: '#5F6B59',
   },
   dateValue: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 14,
-    color: theme.primitives.forest[800],
+    fontSize: 14.5,
+    color: '#041912',
   },
   dateLineDivider: {
     height: 1,
-    backgroundColor: '#E4EBDB',
-    marginHorizontal: 4,
+    backgroundColor: '#E2E8F0',
   },
   minInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.brand.subtle,
+    backgroundColor: '#ECFDF5',
     borderWidth: 1,
-    borderColor: theme.colors.brand.border,
-    paddingHorizontal: theme.spacing[3],
-    paddingVertical: theme.spacing[2],
-    borderRadius: theme.radius.md,
-    gap: 6,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    gap: 8,
   },
   minInfoText: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 11,
-    color: theme.colors.brand.main,
+    fontSize: 11.5,
+    color: '#059669',
     flex: 1,
   },
   modalOverlay: {

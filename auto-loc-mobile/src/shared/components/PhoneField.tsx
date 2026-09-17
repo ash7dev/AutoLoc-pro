@@ -9,6 +9,7 @@ import {
   FlatList,
   SafeAreaView,
   TouchableWithoutFeedback,
+  Platform,
 } from 'react-native';
 import { ChevronDown, Search, X, Check } from 'lucide-react-native';
 import { theme } from '../../core/theme';
@@ -178,29 +179,36 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+            <View style={StyleSheet.absoluteFill} />
+          </TouchableWithoutFeedback>
+
           <SafeAreaView style={styles.modalContainer}>
+            {/* Drag Handle Bar */}
+            <View style={styles.dragHandle} />
+
             {/* Header Modal */}
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Sélectionnez un pays</Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn}>
-                <X size={22} color={theme.colors.text.primary} />
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn} activeOpacity={0.7}>
+                <X size={18} color="#041912" strokeWidth={2.5} />
               </TouchableOpacity>
             </View>
 
             {/* Barre de Recherche */}
             <View style={styles.searchBar}>
-              <Search size={18} color={theme.colors.text.tertiary} />
+              <Search size={18} color="#9CA3AF" />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Rechercher un pays ou indicatif..."
-                placeholderTextColor={theme.colors.text.tertiary}
+                placeholder="Rechercher un pays ou indicatif (+221...)"
+                placeholderTextColor="#9CA3AF"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 autoCapitalize="none"
               />
               {searchQuery ? (
-                <TouchableOpacity onPress={() => setSearchQuery('')}>
-                  <X size={16} color={theme.colors.text.tertiary} />
+                <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
+                  <X size={16} color="#9CA3AF" />
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -210,19 +218,29 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
               data={filteredCountries}
               keyExtractor={(item) => item.code}
               showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.listContent}
               renderItem={({ item }) => {
                 const isSelected = item.code === selectedCountry.code;
                 return (
                   <TouchableOpacity
                     style={[styles.countryItem, isSelected && styles.countryItemSelected]}
                     onPress={() => handleSelectCountry(item)}
+                    activeOpacity={0.7}
                   >
                     <Text style={styles.countryFlag}>{item.flag}</Text>
-                    <Text style={styles.countryName}>{item.name}</Text>
-                    <Text style={[styles.countryDial, isSelected && styles.countryDialSelected]}>
-                      {item.dial}
+                    <Text style={[styles.countryName, isSelected && styles.countryNameSelected]}>
+                      {item.name}
                     </Text>
-                    {isSelected && <Check size={18} color={theme.colors.brand.main} />}
+                    <View style={[styles.dialBadge, isSelected && styles.dialBadgeSelected]}>
+                      <Text style={[styles.countryDial, isSelected && styles.countryDialSelected]}>
+                        {item.dial}
+                      </Text>
+                    </View>
+                    {isSelected && (
+                      <View style={styles.checkCircle}>
+                        <Check size={14} color="#FFFFFF" strokeWidth={3} />
+                      </View>
+                    )}
                   </TouchableOpacity>
                 );
               }}
@@ -240,17 +258,19 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: theme.typography.fontFamily.semiBold,
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing[1],
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: -0.1,
+    color: '#041912',
+    marginBottom: 6,
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: theme.colors.border.default,
-    borderRadius: theme.radius.xl,
+    borderRadius: theme.radius.lg,
     overflow: 'hidden',
     height: 52,
   },
@@ -290,76 +310,124 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(5, 27, 20, 0.6)',
+    backgroundColor: 'rgba(4, 21, 15, 0.55)',
     justifyContent: 'flex-end',
   },
   modalContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: theme.radius.xl,
-    borderTopRightRadius: theme.radius.xl,
-    maxHeight: '80%',
-    minHeight: '60%',
-    paddingHorizontal: theme.spacing[4],
-    paddingTop: theme.spacing[4],
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    maxHeight: '82%',
+    minHeight: '62%',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 16,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 20,
+  },
+  dragHandle: {
+    width: 38,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E5E7EB',
+    alignSelf: 'center',
+    marginBottom: 14,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing[3],
+    marginBottom: 14,
   },
   modalTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: theme.typography.fontSize.lg,
-    color: theme.colors.text.primary,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 18,
+    color: '#041912',
   },
   closeBtn: {
-    padding: 4,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    borderRadius: theme.radius.lg,
-    paddingHorizontal: theme.spacing[3],
-    height: 44,
-    marginBottom: theme.spacing[3],
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    height: 46,
+    marginBottom: 14,
     gap: 8,
   },
   searchInput: {
     flex: 1,
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.primary,
+    fontSize: 13,
+    color: '#041912',
+  },
+  listContent: {
+    paddingBottom: 20,
   },
   countryItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: theme.spacing[3],
-    paddingHorizontal: theme.spacing[2],
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginVertical: 3,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
     gap: 12,
   },
   countryItemSelected: {
-    backgroundColor: 'rgba(16, 185, 129, 0.08)',
-    borderRadius: theme.radius.md,
+    backgroundColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
   },
   countryFlag: {
-    fontSize: 22,
+    fontSize: 24,
   },
   countryName: {
     flex: 1,
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.primary,
+    fontSize: 14,
+    color: '#374151',
+  },
+  countryNameSelected: {
+    fontFamily: theme.typography.fontFamily.bold,
+    color: '#041912',
+  },
+  dialBadge: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  dialBadgeSelected: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
   },
   countryDial: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
+    fontSize: 12,
+    color: '#6B7280',
   },
   countryDialSelected: {
-    color: theme.colors.brand.main,
+    color: '#059669',
+  },
+  checkCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#059669',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -87,8 +87,18 @@ export function useExploreFeed(filters: SearchFiltersState) {
           };
 
           if (filters.zone && typeof filters.zone === 'string' && filters.zone.trim() !== '') {
-            params.ville = filters.zone.trim();
+            const rawZone = filters.zone.trim();
+            if (rawZone === 'HorsDakar') {
+              params.horsDakar = true;
+              params.allowsOutsideDakar = true;
+            } else if (rawZone === 'AIBD') {
+              params.livraisonAeroport = true;
+              params.hasDeliveryFee = true;
+            } else if (rawZone !== 'Tout Dakar') {
+              params.ville = rawZone;
+            }
           }
+
 
           if (filters.type && typeof filters.type === 'string' && filters.type !== 'ALL' && filters.type !== 'TOUS' && filters.type.trim() !== '') {
             const rawType = filters.type.toUpperCase().trim();

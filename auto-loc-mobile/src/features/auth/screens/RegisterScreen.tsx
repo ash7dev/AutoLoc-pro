@@ -6,15 +6,20 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   Image,
-  SafeAreaView,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { User, Mail, Lock, ArrowRight, ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
+import { User, Mail, Lock, ArrowRight, ChevronLeft, Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../../core/theme';
 import { AutoInput, PhoneField, AutoButton } from '../../../shared/components';
 import { useAuthStore } from '../stores/useAuthStore';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 interface RegisterScreenProps {
   onNavigateToLogin: () => void;
@@ -38,12 +43,12 @@ const PasswordStrengthBar: React.FC<{ password: string }> = ({ password }) => {
 
   const label =
     strength <= 25
-      ? { text: 'Faible', color: theme.colors.status.error }
+      ? { text: 'Faible', color: '#EF4444' }
       : strength <= 50
-      ? { text: 'Moyen', color: theme.colors.amber[500] }
+      ? { text: 'Moyen', color: '#F59E0B' }
       : strength <= 75
       ? { text: 'Bon', color: '#0284C7' }
-      : { text: 'Excellent', color: theme.colors.brand.main };
+      : { text: 'Excellent', color: '#10B981' };
 
   return (
     <View style={styles.strengthContainer}>
@@ -63,6 +68,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   onNavigateToOtp,
   onClose,
 }) => {
+  const insets = useSafeAreaInsets();
   const [prenom, setPrenom] = useState('');
   const [nom, setNom] = useState('');
   const [email, setEmail] = useState('');
@@ -82,7 +88,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
       await registerProfile({ prenom, nom, email, telephone });
       onNavigateToOtp(telephone);
     } catch (e) {
-      // Géré par la store error
+      // Handled
     }
   };
 
@@ -91,243 +97,344 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
+    <View style={styles.container}>
+      <StatusBar style="light" animated />
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
+      {/* 1. Fond Sombre Émeraude & Aura Lumineuse */}
+      <View style={StyleSheet.absoluteFill}>
+        <LinearGradient
+          colors={['#062017', '#04150F', '#020B08']}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.auraGlow} />
+      </View>
+
+      {/* 2. Content Alignement Safe Area */}
+      <View
+        style={[
+          styles.safeWrapper,
+          {
+            paddingTop: Math.max(insets.top, 20) + 8,
+            paddingBottom: Math.max(insets.bottom, 16) + 8,
+          },
+        ]}
       >
-        <View style={styles.contentWrapper}>
-          {/* En-tête : Nav Back + Logo Centré */}
-          <View style={styles.topHeaderContainer}>
+        {/* Top Header Navigation */}
+        <View style={styles.topHeaderRow}>
+          <TouchableOpacity
+            style={styles.glassBackBtn}
+            onPress={onNavigateToLogin}
+            activeOpacity={0.8}
+          >
+            <ChevronLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={onClose} activeOpacity={0.75} style={styles.skipGlassPill}>
+            <Sparkles size={12} color="#4ADE80" />
+            <Text style={styles.skipGlassText}>Ignorer & Explorer</Text>
+          </TouchableOpacity>
+        </View>
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.flexOne}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* STACK CARDS SUPERPOSÉES */}
+            <View style={styles.cardStackWrapper}>
+              <View style={styles.backAccentCard} />
+
+              <View style={styles.frontGlassCard}>
+                {/* Header Card : Logo & Titre */}
+                <View style={styles.cardHeaderBox}>
+                  <View style={styles.logoContainer}>
+                    <Image
+                      source={require('../../../../assets/logo.png')}
+                      style={styles.logoImage}
+                      resizeMode="contain"
+                    />
+                  </View>
+
+                  <View style={styles.badgeKycGlass}>
+                    <ShieldCheck size={12} color="#059669" />
+                    <Text style={styles.badgeKycText}>INSCRIPTION GRATUITE EN 1 MIN</Text>
+                  </View>
+
+                  <Text style={styles.mainTitle}>Créer un compte</Text>
+                  <Text style={styles.subtitle}>
+                    Rejoignez la plateforme leader de location au Sénégal
+                  </Text>
+                </View>
+
+                {/* Bannière Erreur */}
+                {error ? (
+                  <View style={styles.errorBanner}>
+                    <Text style={styles.errorText}>{error}</Text>
+                    <TouchableOpacity onPress={clearError}>
+                      <Text style={styles.errorClose}>×</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
+
+                {/* Formulaire Grid */}
+                <View style={styles.formStack}>
+                  <View style={styles.nameRow}>
+                    <View style={styles.halfCol}>
+                      <AutoInput
+                        label="Prénom"
+                        placeholder="Oumar"
+                        value={prenom}
+                        onChangeText={(t) => { clearError(); setPrenom(t); }}
+                        leftIcon={<User size={16} color={theme.colors.text.tertiary} />}
+                      />
+                    </View>
+                    <View style={styles.halfCol}>
+                      <AutoInput
+                        label="Nom"
+                        placeholder="Sy"
+                        value={nom}
+                        onChangeText={(t) => { clearError(); setNom(t); }}
+                      />
+                    </View>
+                  </View>
+
+                  <PhoneField
+                    label="Numéro de téléphone"
+                    value={telephone}
+                    onChangeText={(t) => { clearError(); setTelephone(t); }}
+                  />
+
+                  <AutoInput
+                    label="Adresse email"
+                    placeholder="vous@autoloc.sn"
+                    value={email}
+                    onChangeText={(t) => { clearError(); setEmail(t); }}
+                    leftIcon={<Mail size={16} color={theme.colors.text.tertiary} />}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+
+                  <View style={styles.passwordBox}>
+                    <AutoInput
+                      label="Mot de passe"
+                      placeholder="••••••••"
+                      value={password}
+                      onChangeText={(t) => { clearError(); setPassword(t); }}
+                      leftIcon={<Lock size={16} color={theme.colors.text.tertiary} />}
+                      isPassword={!showPassword}
+                      rightIcon={
+                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                          {showPassword ? (
+                            <EyeOff size={16} color={theme.colors.text.tertiary} />
+                          ) : (
+                            <Eye size={16} color={theme.colors.text.tertiary} />
+                          )}
+                        </TouchableOpacity>
+                      }
+                    />
+                    <PasswordStrengthBar password={password} />
+                  </View>
+
+                  <AutoButton
+                    title="Créer mon compte"
+                    variant="dark"
+                    rightIcon={
+                      <View style={styles.emeraldArrowCircle}>
+                        <ArrowRight size={13} color="#4ADE80" />
+                      </View>
+                    }
+                    loading={isLoading}
+                    onPress={handleRegister}
+                    size="md"
+                    style={styles.submitBtn}
+                  />
+                </View>
+
+                {/* Divider Glass */}
+                <View style={styles.dividerRow}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>OU CONTINUER AVEC</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                {/* Google Auth Button */}
+                <TouchableOpacity
+                  style={styles.googleGlassBtn}
+                  onPress={handleGoogleSignup}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={{ uri: 'https://cdn-icons-png.flaticon.com/512/300/300221.png' }}
+                    style={styles.googleIcon}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.googleGlassText}>S'inscrire avec Google</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Footer Capsule */}
             <TouchableOpacity
-              style={styles.backCircleBtn}
               onPress={onNavigateToLogin}
+              style={styles.footerGlassCapsule}
               activeOpacity={0.8}
             >
-              <ChevronLeft size={20} color={theme.colors.text.primary} strokeWidth={2.5} />
+              <Text style={styles.footerQuestion}>
+                Vous avez déjà un compte ? <Text style={styles.loginLink}>Se connecter</Text>
+              </Text>
             </TouchableOpacity>
-
-            <View style={styles.logoCenterBox}>
-              <Image
-                source={require('../../../../assets/logo.png')}
-                style={styles.logoImage}
-                resizeMode="contain"
-              />
-            </View>
-
-            <View style={styles.headerRightSpacer} />
-          </View>
-
-          {/* Titre & Sous-titre */}
-          <View style={styles.headerSection}>
-            <Text style={styles.eyebrowTag}>INSCRIPTION GRATUITE</Text>
-            <Text style={styles.mainTitle}>Créez votre compte</Text>
-            <Text style={styles.subtitle}>Rejoignez AutoLoc en moins d'une minute</Text>
-          </View>
-
-          {/* Bannière d'erreur */}
-          {error ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity onPress={clearError}>
-                <Text style={styles.errorClose}>×</Text>
-              </TouchableOpacity>
-            </View>
-          ) : null}
-
-          {/* Formulaire */}
-          <View style={styles.formSection}>
-            <View style={styles.nameRow}>
-              <View style={styles.halfCol}>
-                <AutoInput
-                  label="Prénom"
-                  placeholder="Oumar"
-                  value={prenom}
-                  onChangeText={(t) => { clearError(); setPrenom(t); }}
-                  leftIcon={<User size={16} color={theme.colors.text.tertiary} />}
-                  wrapperStyle={styles.compactInputWrapper}
-                  containerStyle={styles.compactInputContainer}
-                />
-              </View>
-              <View style={styles.halfCol}>
-                <AutoInput
-                  label="Nom"
-                  placeholder="Sy"
-                  value={nom}
-                  onChangeText={(t) => { clearError(); setNom(t); }}
-                  wrapperStyle={styles.compactInputWrapper}
-                  containerStyle={styles.compactInputContainer}
-                />
-              </View>
-            </View>
-
-            {/* Téléphone */}
-            <PhoneField
-              label="Numéro de Téléphone"
-              value={telephone}
-              onChangeText={(t) => { clearError(); setTelephone(t); }}
-              containerStyle={styles.compactPhoneContainer}
-            />
-
-            {/* Email */}
-            <AutoInput
-              label="Adresse email"
-              placeholder="vous@autoloc.sn"
-              value={email}
-              onChangeText={(t) => { clearError(); setEmail(t); }}
-              leftIcon={<Mail size={16} color="#38BDF8" />}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              wrapperStyle={styles.compactInputWrapper}
-              containerStyle={styles.compactInputContainer}
-            />
-
-            {/* Mot de passe */}
-            <View style={styles.passwordFieldBox}>
-              <AutoInput
-                label="Mot de passe"
-                placeholder="••••••••"
-                value={password}
-                onChangeText={(t) => { clearError(); setPassword(t); }}
-                leftIcon={<Lock size={16} color="#A78BFA" />}
-                isPassword={!showPassword}
-                wrapperStyle={styles.compactPasswordWrapper}
-                containerStyle={styles.compactInputContainer}
-                rightIcon={
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                    {showPassword ? (
-                      <EyeOff size={16} color={theme.colors.text.tertiary} />
-                    ) : (
-                      <Eye size={16} color={theme.colors.text.tertiary} />
-                    )}
-                  </TouchableOpacity>
-                }
-              />
-              <PasswordStrengthBar password={password} />
-            </View>
-          </View>
-
-          {/* Section Boutons et Footer */}
-          <View style={styles.bottomStack}>
-            {/* AutoButton Action Émeraude */}
-            <AutoButton
-              title="Créer mon compte"
-              variant="action"
-              rightIcon={<ArrowRight size={18} color="#FFFFFF" />}
-              loading={isLoading}
-              onPress={handleRegister}
-              size="lg"
-              style={styles.submitBtn}
-            />
-
-            {/* Séparateur */}
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>Ou continuer avec</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Bouton Google */}
-            <AutoButton
-              title="Continuer avec Google"
-              variant="google"
-              onPress={handleGoogleSignup}
-              size="lg"
-            />
-
-            {/* Lien Connexion */}
-            <View style={styles.footerRow}>
-              <Text style={styles.footerQuestion}>Déjà un compte ? </Text>
-              <TouchableOpacity onPress={onNavigateToLogin} activeOpacity={0.7}>
-                <Text style={styles.loginLink}>Se connecter</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.colors.surface.page,
-  },
   container: {
     flex: 1,
+    backgroundColor: '#04150F',
   },
-  contentWrapper: {
+  auraGlow: {
+    position: 'absolute',
+    top: -60,
+    alignSelf: 'center',
+    width: screenWidth * 0.9,
+    height: screenWidth * 0.9,
+    borderRadius: (screenWidth * 0.9) / 2,
+    backgroundColor: 'rgba(16, 185, 129, 0.16)',
+  },
+  safeWrapper: {
     flex: 1,
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing[5],
-    paddingTop: theme.spacing[1],
-    paddingBottom: theme.spacing[4],
   },
-  topHeaderContainer: {
+  flexOne: {
+    flex: 1,
+  },
+  topHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    paddingHorizontal: theme.spacing[5],
+    marginBottom: theme.spacing[2],
   },
-  backCircleBtn: {
+  glassBackBtn: {
     width: 38,
     height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.20)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  skipGlassPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: theme.radius.full,
+  },
+  skipGlassText: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 11,
+    color: '#FFFFFF',
+  },
+  scrollContent: {
+    paddingHorizontal: theme.spacing[4],
+    paddingBottom: theme.spacing[4],
+    justifyContent: 'center',
+    flexGrow: 1,
+  },
+  cardStackWrapper: {
+    position: 'relative',
+    marginVertical: theme.spacing[2],
+  },
+  backAccentCard: {
+    position: 'absolute',
+    top: -6,
+    left: 8,
+    right: 8,
+    bottom: -6,
+    borderRadius: 32,
+    backgroundColor: 'rgba(16, 185, 129, 0.20)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+  },
+  frontGlassCard: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...theme.elevation.card,
+    borderColor: 'rgba(255, 255, 255, 0.80)',
+    borderRadius: 28,
+    padding: theme.spacing[5],
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: 10,
   },
-  logoCenterBox: {
+  cardHeaderBox: {
+    alignItems: 'center',
+    marginBottom: theme.spacing[3],
+  },
+  logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: theme.spacing[2],
   },
   logoImage: {
-    width: 140,
-    height: 44,
+    width: 160,
+    height: 48,
   },
-  headerRightSpacer: {
-    width: 38,
-  },
-  headerSection: {
+  badgeKycGlass: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: theme.radius.full,
+    gap: 6,
+    marginBottom: theme.spacing[2],
   },
-  eyebrowTag: {
-    ...theme.typography.textStyles.overline,
-    color: theme.colors.text.tertiary,
-    marginBottom: 2,
+  badgeKycText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 9,
+    letterSpacing: 0.8,
+    color: '#059669',
   },
   mainTitle: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold, // Fraunces_600SemiBold (Plafond 600)
-    fontSize: theme.typography.fontSize['3xl'],
-    lineHeight: theme.typography.lineHeight['3xl'],
-    color: theme.primitives.forest[800],
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 26,
+    lineHeight: 32,
+    color: '#041912',
     textAlign: 'center',
   },
   subtitle: {
     fontFamily: theme.typography.fontFamily.regular,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.text.secondary,
-    marginTop: 2,
     textAlign: 'center',
+    marginTop: 4,
   },
-  errorBox: {
+  errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: theme.colors.status.errorBg,
-    borderWidth: 1,
     borderColor: theme.colors.status.errorBorder,
-    borderRadius: theme.radius.md,
-    paddingHorizontal: theme.spacing[3],
-    paddingVertical: 6,
-    marginBottom: 6,
+    borderWidth: 1,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing[3],
+    marginBottom: theme.spacing[3],
   },
   errorText: {
     fontFamily: theme.typography.fontFamily.medium,
@@ -340,7 +447,7 @@ const styles = StyleSheet.create({
     color: theme.colors.status.error,
     paddingLeft: 8,
   },
-  formSection: {
+  formStack: {
     gap: 0,
   },
   nameRow: {
@@ -350,87 +457,123 @@ const styles = StyleSheet.create({
   halfCol: {
     flex: 1,
   },
-  compactInputWrapper: {
-    marginBottom: 6,
-  },
-  compactInputContainer: {
-    minHeight: 46,
-    paddingHorizontal: theme.spacing[3],
-  },
-  compactPhoneContainer: {
-    marginBottom: 6,
-  },
-  compactPasswordWrapper: {
-    marginBottom: 2,
-  },
-  passwordFieldBox: {
-    marginBottom: 4,
+  passwordBox: {
+    marginBottom: theme.spacing[2],
   },
   strengthContainer: {
-    marginTop: 2,
+    marginTop: -8,
+    marginBottom: theme.spacing[2],
   },
   strengthHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   strengthTitle: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 9,
+    fontSize: 10,
     color: theme.colors.text.tertiary,
   },
   strengthText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 9,
+    fontSize: 10,
   },
   strengthTrack: {
-    height: 3,
-    backgroundColor: theme.colors.border.light,
-    borderRadius: 1.5,
+    height: 4,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 2,
     overflow: 'hidden',
   },
   strengthFill: {
     height: '100%',
-    borderRadius: 1.5,
-  },
-  bottomStack: {
-    marginTop: 4,
-    gap: theme.spacing[2],
+    borderRadius: 2,
   },
   submitBtn: {
-    width: '100%',
+    minHeight: 50,
+    borderRadius: 25,
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(4, 25, 18, 0.90)',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
+    marginTop: theme.spacing[2],
+  },
+  emeraldArrowCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 6,
   },
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 4,
+    marginVertical: theme.spacing[4],
     gap: theme.spacing[2],
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: theme.colors.border.light,
+    backgroundColor: '#E5E7EB',
   },
   dividerText: {
     fontFamily: theme.typography.fontFamily.medium,
     fontSize: 10,
-    color: theme.colors.text.tertiary,
+    letterSpacing: 0.8,
+    color: '#9CA3AF',
   },
-  footerRow: {
+  googleGlassBtn: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 4,
+    justifyContent: 'center',
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  googleIcon: {
+    width: 18,
+    height: 18,
+  },
+  googleGlassText: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 13,
+    color: '#1F2937',
+  },
+  footerGlassCapsule: {
+    marginTop: theme.spacing[4],
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: theme.radius.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   footerQuestion: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.secondary,
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.80)',
   },
   loginLink: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.brand.main,
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 12,
+    color: '#4ADE80',
     textDecorationLine: 'underline',
   },
 });

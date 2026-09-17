@@ -163,20 +163,13 @@ export const VehicleImageGallery: React.FC<VehicleImageGalleryProps> = ({
               transition={300}
             />
 
-            {/* Gradient Ombragé Luxueux Top/Bottom */}
+            {/* Gradient Ombragé Luxueux Top/Bottom Émeraude */}
             <LinearGradient
-              colors={['rgba(15, 23, 42, 0.45)', 'transparent', 'rgba(15, 23, 42, 0.85)']}
+              colors={['rgba(4, 21, 15, 0.55)', 'transparent', 'rgba(4, 21, 15, 0.85)']}
               locations={[0, 0.5, 1]}
               style={styles.gradientOverlay}
             />
 
-            {/* Tag Photo Principale / Coup de Cœur */}
-            {photo.estPrincipale && (
-              <View style={styles.featuredBadge}>
-                <Sparkles size={12} color="#F59E0B" />
-                <Text style={styles.featuredText}>PHOTO PRINCIPALE</Text>
-              </View>
-            )}
           </Pressable>
         ))}
       </ScrollView>
@@ -357,12 +350,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: 'rgba(4, 21, 15, 0.70)',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(74, 222, 128, 0.30)',
   },
   dotPill: {
     height: 6,
@@ -370,7 +363,7 @@ const styles = StyleSheet.create({
   },
   dotPillActive: {
     width: 20,
-    backgroundColor: '#6366F1',
+    backgroundColor: '#4ADE80',
   },
   dotPillInactive: {
     width: 6,
@@ -380,12 +373,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    backgroundColor: 'rgba(4, 21, 15, 0.70)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: 'rgba(74, 222, 128, 0.30)',
   },
   expandPillText: {
     color: '#FFFFFF',

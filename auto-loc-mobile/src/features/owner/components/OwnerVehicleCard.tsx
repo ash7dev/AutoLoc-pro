@@ -1,8 +1,8 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Switch } from 'react-native';
+import React, { useRef } from 'react';
+import { StyleSheet, Text, View, Pressable, Animated } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star, MapPin, Fuel, Gauge, MoreVertical, Sparkles, TrendingUp, Users } from 'lucide-react-native';
+import { Star, MapPin, Fuel, Gauge, MoreVertical, SlidersHorizontal, Sparkles, TrendingUp, Users, ChevronRight } from 'lucide-react-native';
 import { formatDirectPrice } from '../../../core/utils/currency';
 import { useAppStore } from '../../../core/store/useAppStore';
 import { OwnerVehicle } from '../api/ownerApi';
@@ -23,184 +23,179 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
   const selectedCurrency = useAppStore((state) => state.selectedCurrency);
   const isAvailable = vehicle.statut === 'DISPONIBLE' || vehicle.statut === 'VERIFIE';
 
-  const getStatusBadge = () => {
+  const scale = useRef(new Animated.Value(1)).current;
+  const handlePressIn = () => Animated.spring(scale, { toValue: 0.975, useNativeDriver: true, speed: 40, bounciness: 4 }).start();
+  const handlePressOut = () => Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 8 }).start();
+
+  const getStatusMeta = () => {
     switch (vehicle.statut) {
       case 'DISPONIBLE':
       case 'VERIFIE':
-        return { label: 'Disponible', bg: 'rgba(236, 253, 245, 0.92)', text: '#047857', border: '#A7F3D0', dot: '#10B981' };
+        return { label: 'Disponible', text: '#065F46', dot: '#10B981' };
       case 'EN_LOCATION':
-        return { label: 'En location', bg: 'rgba(239, 246, 255, 0.92)', text: '#1D4ED8', border: '#BFDBFE', dot: '#3B82F6' };
+        return { label: 'En location', text: '#1E40AF', dot: '#3B82F6' };
       case 'EN_ATTENTE_VALIDATION':
-        return { label: 'En vérification', bg: 'rgba(255, 251, 235, 0.92)', text: '#B45309', border: '#FDE68A', dot: '#F59E0B' };
+        return { label: 'En vérification', text: '#92400E', dot: '#F59E0B' };
       case 'REFUSE':
-        return { label: 'Dossier Refusé', bg: 'rgba(254, 242, 242, 0.92)', text: '#B91C1C', border: '#FCA5A5', dot: '#EF4444' };
+        return { label: 'Dossier refusé', text: '#991B1B', dot: '#EF4444' };
       case 'MAINTENANCE':
-        return { label: 'En maintenance', bg: 'rgba(254, 243, 199, 0.92)', text: '#B45309', border: '#FDE68A', dot: '#F59E0B' };
+        return { label: 'En maintenance', text: '#92400E', dot: '#F59E0B' };
       default:
-        return { label: 'Inactif', bg: 'rgba(241, 245, 249, 0.92)', text: '#475569', border: '#E2E8F0', dot: '#64748B' };
+        return { label: 'Inactif', text: '#334155', dot: '#64748B' };
     }
   };
 
-  const status = getStatusBadge();
+  const status = getStatusMeta();
   const noteVal = vehicle.noteMoyenne ? Number(vehicle.noteMoyenne) : 0;
   const hasReviews = (vehicle.totalReservations || 0) > 0 && noteVal > 0;
   const hasCumulativeEarnings = (vehicle.revenusCumules || 0) > 0;
+  const handleManagePress = () => (onQuickActionPress ? onQuickActionPress(vehicle) : onEditPress?.(vehicle));
 
   return (
-    <TouchableOpacity
-      style={styles.card}
-      activeOpacity={0.94}
-      onPress={() => (onQuickActionPress ? onQuickActionPress(vehicle) : onEditPress?.(vehicle))}
-    >
-      {/* Photo & Badges Flottants Ultra-Premium */}
-      <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: vehicle.photoUrl }}
-          style={styles.image}
-          contentFit="cover"
-          transition={200}
-        />
-        
-        {/* Ombre dégradée pour lisibilité parfaite */}
-        <LinearGradient
-          colors={['rgba(0,0,0,0.35)', 'transparent', 'rgba(5,27,20,0.85)']}
-          locations={[0, 0.45, 1]}
-          style={styles.gradientOverlay}
-        />
+    <Animated.View style={[styles.cardWrapper, { transform: [{ scale }] }]}>
+      <Pressable
+        style={styles.card}
+        onPress={handleManagePress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+      >
+        {/* ---------- Zone Photo ---------- */}
+        <View style={styles.imageContainer}>
+          <Image source={{ uri: vehicle.photoUrl }} style={styles.image} contentFit="cover" transition={220} />
 
-        {/* Status Badge avec Glassmorphism */}
-        <View style={[styles.statusBadge, { backgroundColor: status.bg, borderColor: status.border }]}>
-          <View style={[styles.statusDot, { backgroundColor: status.dot }]} />
-          <Text style={[styles.statusBadgeText, { color: status.text }]}>{status.label}</Text>
-        </View>
+          <LinearGradient
+            colors={['rgba(5,27,20,0.15)', 'transparent', 'rgba(4,20,15,0.9)']}
+            locations={[0, 0.5, 1]}
+            style={styles.gradientOverlay}
+          />
 
-        {/* Immatriculation Plaque Métallique */}
-        <View style={styles.plateBadge}>
-          <Text style={styles.plateText}>{vehicle.immatriculation}</Text>
-        </View>
-
-        {/* Revenus Cumulés du Véhicule sur la photo */}
-        {hasCumulativeEarnings && (
-          <View style={styles.earningsTag}>
-            <TrendingUp size={12} color="#34D399" />
-            <Text style={styles.earningsTagText}>
-              {formatDirectPrice(vehicle.revenusCumules || 0, selectedCurrency)} générés
-            </Text>
+          {/* Status — pastille gauche */}
+          <View style={styles.glassBadge}>
+            <View style={[styles.statusDot, { backgroundColor: status.dot }]} />
+            <Text style={[styles.statusBadgeText, { color: status.text }]}>{status.label}</Text>
           </View>
-        )}
-      </View>
 
-      {/* Contenu et Spécifications */}
-      <View style={styles.content}>
-        <View style={styles.headerRow}>
-          <View style={styles.titleBox}>
-            <Text style={styles.title} numberOfLines={1}>
-              {vehicle.marque} {vehicle.modele}
-            </Text>
-            <View style={styles.locationRow}>
-              <MapPin size={13} color="#64748B" />
-              <Text style={styles.locationText}>
-                {vehicle.ville} · {vehicle.annee}
+
+          {/* Plaque d'immatriculation façon plaque métallique */}
+          <View style={styles.plateBadge}>
+            <Text style={styles.plateText}>{vehicle.immatriculation}</Text>
+          </View>
+
+          {/* Revenus cumulés */}
+          {hasCumulativeEarnings && (
+            <View style={styles.earningsTag}>
+              <TrendingUp size={12} color="#6EE7B7" />
+              <Text style={styles.earningsTagText}>
+                {formatDirectPrice(vehicle.revenusCumules || 0, selectedCurrency)} générés
               </Text>
-            </View>
-          </View>
-
-          {/* Rating ou Badge Nouveau */}
-          {hasReviews ? (
-            <View style={styles.ratingBadge}>
-              <Star size={12} color="#F59E0B" fill="#F59E0B" />
-              <Text style={styles.ratingText}>{noteVal.toFixed(1)}</Text>
-            </View>
-          ) : (
-            <View style={styles.newBadge}>
-              <Sparkles size={11} color="#059669" />
-              <Text style={styles.newBadgeText}>Nouveau</Text>
             </View>
           )}
         </View>
 
-        {/* Spec Chips (Carburant, Transmission, Places, Locations) */}
-        <View style={styles.specsRow}>
-          {vehicle.carburant ? (
-            <View style={styles.specChip}>
-              <Fuel size={12} color="#059669" />
-              <Text style={styles.specText}>{vehicle.carburant}</Text>
+        {/* ---------- Contenu ---------- */}
+        <View style={styles.content}>
+          <View style={styles.headerRow}>
+            <View style={styles.titleBox}>
+              <Text style={styles.title} numberOfLines={1}>
+                {vehicle.marque} {vehicle.modele}
+              </Text>
+              <View style={styles.locationRow}>
+                <MapPin size={12.5} color="#94A3B8" />
+                <Text style={styles.locationText}>
+                  {vehicle.ville} <Text style={styles.locationDot}>•</Text> {vehicle.annee}
+                </Text>
+              </View>
             </View>
-          ) : null}
 
-          {vehicle.transmission ? (
-            <View style={styles.specChip}>
-              <Gauge size={12} color="#2563EB" />
-              <Text style={styles.specText}>{vehicle.transmission}</Text>
-            </View>
-          ) : null}
-
-          {vehicle.places ? (
-            <View style={styles.specChip}>
-              <Users size={12} color="#7C3AED" />
-              <Text style={styles.specText}>{vehicle.places} pl.</Text>
-            </View>
-          ) : null}
-        </View>
-
-        {/* Footer : Prix & Interrupteur / Actions */}
-        <View style={styles.footerRow}>
-          <View>
-            <Text style={styles.priceValue}>
-              {formatDirectPrice(vehicle.prixParJour, selectedCurrency)}
-            </Text>
-            <Text style={styles.pricePeriod}>/ jour de location</Text>
+            {hasReviews ? (
+              <View style={styles.ratingBadge}>
+                <Star size={12} color="#F59E0B" fill="#F59E0B" />
+                <Text style={styles.ratingText}>{noteVal.toFixed(1)}</Text>
+              </View>
+            ) : (
+              <View style={styles.newBadge}>
+                <Sparkles size={11} color="#059669" />
+                <Text style={styles.newBadgeText}>Nouveau</Text>
+              </View>
+            )}
           </View>
 
-          <View style={styles.actionsBox}>
-            <View style={styles.toggleGroup}>
-              <Text style={[styles.toggleLabel, isAvailable && styles.toggleLabelActive]}>
-                {isAvailable ? 'Actif' : 'Inactif'}
-              </Text>
-              <Switch
-                value={isAvailable}
-                onValueChange={() => onToggleStatus(vehicle.id, vehicle.statut)}
-                trackColor={{ false: '#E2E8F0', true: '#A7F3D0' }}
-                thumbColor={isAvailable ? '#059669' : '#94A3B8'}
-              />
+          {/* Spec pills — icônes en pastille colorée sur une seule ligne */}
+          <View style={styles.specsRow}>
+            {vehicle.carburant ? (
+              <View style={styles.specChip}>
+                <View style={[styles.specIconDot, { backgroundColor: '#ECFDF5' }]}>
+                  <Fuel size={12} color="#059669" />
+                </View>
+                <Text style={styles.specText}>{vehicle.carburant}</Text>
+              </View>
+            ) : null}
+
+            {vehicle.transmission ? (
+              <View style={styles.specChip}>
+                <View style={[styles.specIconDot, { backgroundColor: '#EFF6FF' }]}>
+                  <Gauge size={12} color="#2563EB" />
+                </View>
+                <Text style={styles.specText}>{vehicle.transmission}</Text>
+              </View>
+            ) : null}
+
+            {vehicle.places ? (
+              <View style={styles.specChip}>
+                <View style={[styles.specIconDot, { backgroundColor: '#F5F3FF' }]}>
+                  <Users size={12} color="#7C3AED" />
+                </View>
+                <Text style={styles.specText}>{vehicle.places} pl.</Text>
+              </View>
+            ) : null}
+          </View>
+
+          {/* ---------- Footer : Prix & Actions ---------- */}
+          <View style={styles.footerRow}>
+            <View style={styles.priceBox}>
+              <Text style={styles.priceValue}>{formatDirectPrice(vehicle.prixParJour, selectedCurrency)}</Text>
+              <Text style={styles.pricePeriod}>/ jour</Text>
             </View>
 
-            <TouchableOpacity
-              style={styles.actionMenuBtn}
+            <Pressable
+              style={({ pressed }) => [styles.manageBtn, pressed && styles.manageBtnPressed]}
               onPress={(e) => {
                 e.stopPropagation();
-                if (onQuickActionPress) onQuickActionPress(vehicle);
-                else onEditPress?.(vehicle);
+                handleManagePress();
               }}
-              activeOpacity={0.7}
-              hitSlop={10}
+              hitSlop={6}
             >
-              <MoreVertical size={18} color="#0F172A" />
-            </TouchableOpacity>
+              <SlidersHorizontal size={14} color="#FFFFFF" />
+              <Text style={styles.manageBtnText}>Gérer</Text>
+              <ChevronRight size={14} color="#FFFFFF" />
+            </Pressable>
           </View>
         </View>
-      </View>
-    </TouchableOpacity>
+      </Pressable>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
+  cardWrapper: {
+    marginBottom: 18,
+    borderRadius: 28,
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 6,
+  },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    borderRadius: 28,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#051B14',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.07,
-    shadowRadius: 16,
-    elevation: 4,
-    marginBottom: 16,
+    borderColor: '#EEF2F6',
   },
   imageContainer: {
     width: '100%',
-    height: 180,
+    height: 208,
     position: 'relative',
     backgroundColor: '#051B14',
   },
@@ -211,7 +206,7 @@ const styles = StyleSheet.create({
   gradientOverlay: {
     ...StyleSheet.absoluteFill,
   },
-  statusBadge: {
+  glassBadge: {
     position: 'absolute',
     top: 14,
     left: 14,
@@ -219,13 +214,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 11,
-    paddingVertical: 5.5,
+    paddingVertical: 6,
     borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderColor: 'rgba(255, 255, 255, 0.6)',
   },
   statusDot: {
     width: 7,
@@ -236,21 +230,52 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_700Bold',
     fontSize: 11,
   },
-  plateBadge: {
+  topToggleBadge: {
     position: 'absolute',
     top: 14,
     right: 14,
-    backgroundColor: 'rgba(5, 27, 20, 0.92)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingLeft: 10,
+    paddingRight: 4,
+    paddingVertical: 3,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.6)',
+  },
+  floatingMenuBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+  },
+  floatingMenuBlur: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    backgroundColor: 'rgba(5, 27, 20, 0.75)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  plateBadge: {
+    position: 'absolute',
+    bottom: 12,
+    right: 14,
+    backgroundColor: 'rgba(255,255,255,0.95)',
     paddingHorizontal: 10,
     paddingVertical: 4.5,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderLeftWidth: 3,
+    borderLeftColor: '#0F172A',
   },
   plateText: {
     fontFamily: 'Inter_700Bold',
     fontSize: 11.5,
-    color: '#FFFFFF',
+    color: '#0F172A',
     letterSpacing: 0.8,
   },
   earningsTag: {
@@ -260,12 +285,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(5, 27, 20, 0.88)',
     paddingHorizontal: 11,
-    paddingVertical: 5,
-    borderRadius: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(5, 27, 20, 0.85)',
     borderWidth: 1,
-    borderColor: 'rgba(52, 211, 153, 0.35)',
+    borderColor: 'rgba(110,231,183,0.35)',
   },
   earningsTagText: {
     fontFamily: 'Inter_600SemiBold',
@@ -273,8 +299,8 @@ const styles = StyleSheet.create({
     color: '#ECFDF5',
   },
   content: {
-    padding: 16,
-    gap: 12,
+    padding: 18,
+    gap: 14,
   },
   headerRow: {
     flexDirection: 'row',
@@ -287,27 +313,31 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: 'Fraunces_600SemiBold',
-    fontSize: 18,
+    fontSize: 19,
     color: '#0F172A',
-    lineHeight: 23,
+    lineHeight: 24,
+    letterSpacing: -0.2,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 4,
+    marginTop: 5,
   },
   locationText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 12.5,
     color: '#64748B',
   },
+  locationDot: {
+    color: '#CBD5E1',
+  },
   ratingBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFBEB',
     paddingHorizontal: 9,
-    paddingVertical: 4.5,
+    paddingVertical: 5,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#FDE68A',
@@ -323,7 +353,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#ECFDF5',
     paddingHorizontal: 9,
-    paddingVertical: 4.5,
+    paddingVertical: 5,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#A7F3D0',
@@ -338,49 +368,61 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
   },
   specChip: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 9,
+    paddingLeft: 4,
+    paddingRight: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    gap: 5,
+    borderColor: '#EEF2F6',
+    gap: 6,
+  },
+  specIconDot: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   specText: {
     fontFamily: 'Inter_500Medium',
     fontSize: 11.5,
     color: '#334155',
   },
-
   footerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 12,
+    paddingTop: 14,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
-    marginTop: 2,
+  },
+  priceBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 4,
   },
   priceValue: {
     fontFamily: 'Fraunces_600SemiBold',
-    fontSize: 19,
+    fontSize: 21,
     color: '#059669',
+    letterSpacing: -0.3,
   },
   pricePeriod: {
     fontFamily: 'Inter_400Regular',
-    fontSize: 11,
-    color: '#64748B',
-    marginTop: 1,
+    fontSize: 11.5,
+    color: '#94A3B8',
+    marginBottom: 3,
   },
   actionsBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   toggleGroup: {
     flexDirection: 'row',
@@ -402,16 +444,21 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_700Bold',
     color: '#047857',
   },
-  actionMenuBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+  manageBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 5,
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+    borderRadius: 14,
+    backgroundColor: '#0F172A',
+  },
+  manageBtnPressed: {
+    backgroundColor: '#059669',
+  },
+  manageBtnText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 12,
+    color: '#FFFFFF',
   },
 });
-
-

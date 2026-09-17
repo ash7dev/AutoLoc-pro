@@ -85,7 +85,7 @@ export const VehicleMainInfoCard: React.FC<VehicleMainInfoCardProps> = ({
       {/* Rangée de Badges de Statut */}
       <View style={styles.badgesRow}>
         <LinearGradient
-          colors={[COLORS.accent, COLORS.accentDeep]}
+          colors={['#062017', '#041912']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.typeBadge}
@@ -95,7 +95,7 @@ export const VehicleMainInfoCard: React.FC<VehicleMainInfoCardProps> = ({
 
         {autoriseHorsDakar && (
           <View style={styles.horsDakarBadge}>
-            <Navigation size={12} color={COLORS.accentDeep} strokeWidth={2.25} />
+            <Navigation size={12} color="#059669" strokeWidth={2.25} />
             <Text style={styles.horsDakarBadgeText}>HORS DAKAR</Text>
           </View>
         )}
@@ -119,7 +119,7 @@ export const VehicleMainInfoCard: React.FC<VehicleMainInfoCardProps> = ({
       <View style={styles.metaRow}>
         <View style={styles.locationBox}>
           <View style={styles.pinDot}>
-            <MapPin size={13} color={COLORS.accentDeep} strokeWidth={2.5} />
+            <MapPin size={13} color="#4ADE80" strokeWidth={2.5} />
           </View>
           <Text style={styles.locationText} numberOfLines={1}>
             {formattedCity} {adresse ? `· ${adresse}` : ''}
@@ -133,12 +133,7 @@ export const VehicleMainInfoCard: React.FC<VehicleMainInfoCardProps> = ({
             <View style={styles.ratingDivider} />
             <Text style={styles.ratingCount}>{totalAvis} avis</Text>
           </View>
-        ) : (
-          <View style={styles.newBadgeBox}>
-            <Sparkles size={12} color={COLORS.accentDeep} />
-            <Text style={styles.newBadgeText}>Nouveau véhicule</Text>
-          </View>
-        )}
+        ) : null}
       </View>
 
       <View style={styles.divider} />
@@ -154,7 +149,9 @@ export const VehicleMainInfoCard: React.FC<VehicleMainInfoCardProps> = ({
             const Icon = spec.icon;
             return (
               <View key={idx} style={styles.specPill}>
-                <Icon size={13} color={COLORS.accentDeep} strokeWidth={2.25} />
+                <View style={styles.specIconBox}>
+                  <Icon size={12} color="#4ADE80" strokeWidth={2.25} />
+                </View>
                 <Text style={styles.specPillText}>{spec.label}</Text>
               </View>
             );
@@ -287,9 +284,9 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 7,
-    backgroundColor: COLORS.tint,
+    backgroundColor: '#041912',
     borderWidth: 1,
-    borderColor: COLORS.tintBorder,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -357,15 +354,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: COLORS.tint,
-    paddingHorizontal: 11,
-    paddingVertical: 7,
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.tintBorder,
+    borderColor: '#E2E8F0',
+  },
+  specIconBox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: '#041912',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   specPillText: {
-    color: COLORS.ink,
+    color: '#041912',
     fontSize: 12,
     fontWeight: '600',
   },

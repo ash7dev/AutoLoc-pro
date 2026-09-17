@@ -30,6 +30,13 @@ import { useMobileFeed } from '../hooks/useMobileFeed';
 import { FeedSection } from '../components/FeedSection';
 import { FeedSkeleton } from '../components/FeedSkeleton';
 import { CategoryChipsBar, CategoryFilterKey } from '../components/CategoryChipsBar';
+import { TenantHeroHeaderSection } from '../components/TenantHeroHeaderSection';
+import { HostMonetizeBannerCard } from '../components/HostMonetizeBannerCard';
+import { ReservationGateModal } from '../components/gates/ReservationGateModal';
+import { useHostGate } from '../../owner/hooks/useHostGate';
+import { becomeAutoLocHost } from '../api/tenantProfileApi';
+import { AddVehicleWizardScreen } from '../../owner/screens/AddVehicleWizardScreen';
+import { secureStorage } from '../../../core/storage/secureStore';
 import { VehicleFeedItem } from '../types';
 
 export const TenantHomeScreen: React.FC = () => {
@@ -37,11 +44,18 @@ export const TenantHomeScreen: React.FC = () => {
   const triggerGuestAuthGuard = useAppStore((state) => state.triggerGuestAuthGuard);
   const searchFilters = useAppStore((state) => state.searchFilters);
   const setSearchFilters = useAppStore((state) => state.setSearchFilters);
+  const user = useAppStore((state) => state.user);
+  const setAuth = useAppStore((state) => state.setAuth);
 
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilterKey>('ALL');
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
 
+  // Tunnel Hôte & KYC Modal States
+  const [hostGateModalVisible, setHostGateModalVisible] = useState(false);
+  const [addVehicleWizardVisible, setAddVehicleWizardVisible] = useState(false);
+
+  const hostGate = useHostGate();
   const { data: feedData, loading, refreshing, refetch } = useMobileFeed();
 
   const handleFavoriteToggle = (vehicleId: string) => {
@@ -57,6 +71,38 @@ export const TenantHomeScreen: React.FC = () => {
 
   const handleVehiclePress = (vehicle: VehicleFeedItem) => {
     navigation.navigateToVehicleDetail(vehicle.id, vehicle);
+  };
+
+  // Handler du tunnel au clic sur le CTA "Votre voiture dort ? Faites-la bosser !"
+  const handleHostMonetizePress = async () => {
+    // 1. Gardien Authentification Invité
+    const allowed = triggerGuestAuthGuard(
+      'Connectez-vous pour publier votre véhicule et commencer à générer des revenus sur AutoLoc.',
+      { action: 'ADD_VEHICLE' }
+    );
+    if (!allowed) return;
+
+    // 2. Vérification KYC & Profil Hôte
+    if (!hostGate.canProceed) {
+      setHostGateModalVisible(true);
+      return;
+    }
+
+    // 3. Passage à la création de véhicule
+    await openVehicleCreationFlow();
+  };
+
+  const openVehicleCreationFlow = async () => {
+    if (user && user.role !== 'PROPRIETAIRE') {
+      try {
+        const result = await becomeAutoLocHost();
+        await secureStorage.setRefreshToken(result.refreshToken);
+        await setAuth(result.accessToken, { ...user, role: result.role });
+      } catch {
+        // Fallback si problème réseau token
+      }
+    }
+    setAddVehicleWizardVisible(true);
   };
 
   const datesSummaryText = searchFilters.dateDebut
@@ -86,15 +132,13 @@ export const TenantHomeScreen: React.FC = () => {
           />
         }
       >
-        {/* 1. Widget Déclencheur "Où & quand louer ?" */}
-        <View style={styles.triggerWrapper}>
-          <WhereToSearchTrigger
-            onPress={() => setSearchModalVisible(true)}
-            selectedZone={searchFilters.zone}
-            selectedType={searchFilters.type}
-            selectedDatesSummary={datesSummaryText}
-          />
-        </View>
+        {/* 1. Masterpiece Hero Header Section (Recherche + Garantie Acompte 30% Unifiés) */}
+        <TenantHeroHeaderSection
+          onSearchPress={() => setSearchModalVisible(true)}
+          selectedZone={searchFilters.zone}
+          selectedType={searchFilters.type}
+          selectedDatesSummary={datesSummaryText}
+        />
 
         {/* 2. Barre de Filtres Rapides par Catégorie */}
         <CategoryChipsBar
@@ -103,7 +147,7 @@ export const TenantHomeScreen: React.FC = () => {
         />
 
         {/* Badge Filtre Actif avec bouton de réinitialisation */}
-        {!showAll && (
+        {!showAll ? (
           <View style={styles.activeFilterRow}>
             <Text style={styles.activeFilterText}>
               Filtre actif : <Text style={styles.activeFilterVal}>{selectedCategory}</Text>
@@ -116,21 +160,9 @@ export const TenantHomeScreen: React.FC = () => {
               <Text style={styles.resetFilterText}>Réinitialiser</Text>
             </TouchableOpacity>
           </View>
-        )}
+        ) : null}
 
-        {/* 3. Banner Promotionnel / Mobile Money */}
-        <View style={styles.bannerBox}>
-          <View style={styles.bannerHeader}>
-            <Zap size={18} color={theme.primitives.emerald[300]} />
-            <Text style={styles.bannerTag}>PAIEMENT SÉCURISÉ MOBILE MONEY</Text>
-          </View>
-          <Text style={styles.bannerTitle}>Acompte garanti de 30% à la réservation</Text>
-          <Text style={styles.bannerSubtitle}>
-            Payer instantanément par Orange Money ou Wave. Solde réglé lors de la remise des clés.
-          </Text>
-        </View>
-
-        {/* 4. Zone des Sections */}
+        {/* 4. Zone des Sections du Feed */}
         {loading && !feedData ? (
           <FeedSkeleton />
         ) : (
@@ -138,7 +170,7 @@ export const TenantHomeScreen: React.FC = () => {
             {/* Section 1: Sélection Premium */}
             {(showAll || selectedCategory === 'PREMIUM') &&
               feedData?.premium &&
-              feedData.premium.length > 0 && (
+              feedData.premium.length > 0 ? (
                 <FeedSection
                   title="Sélection Premium"
                   subtitle="Véhicules d'exception vérifiés par nos experts"
@@ -148,12 +180,12 @@ export const TenantHomeScreen: React.FC = () => {
                   onFavoriteToggle={handleFavoriteToggle}
                   favoritesMap={favorites}
                 />
-              )}
+              ) : null}
 
             {/* Section 2: Populaires à Dakar */}
             {(showAll || selectedCategory === 'DAKAR') &&
               feedData?.dakar &&
-              feedData.dakar.length > 0 && (
+              feedData.dakar.length > 0 ? (
                 <FeedSection
                   title="Populaires à Dakar"
                   subtitle="Disponibles immédiatement dans la capitale"
@@ -163,12 +195,12 @@ export const TenantHomeScreen: React.FC = () => {
                   onFavoriteToggle={handleFavoriteToggle}
                   favoritesMap={favorites}
                 />
-              )}
+              ) : null}
 
             {/* Section 3: Les mieux notés */}
             {(showAll || selectedCategory === 'TOP_RATED') &&
               feedData?.topNotes &&
-              feedData.topNotes.length > 0 && (
+              feedData.topNotes.length > 0 ? (
                 <FeedSection
                   title="Les mieux notés"
                   subtitle="Recommandés par la communauté des locataires"
@@ -178,12 +210,12 @@ export const TenantHomeScreen: React.FC = () => {
                   onFavoriteToggle={handleFavoriteToggle}
                   favoritesMap={favorites}
                 />
-              )}
+              ) : null}
 
             {/* Section 4: Bons plans & Économiques */}
             {(showAll || selectedCategory === 'ECONOMIC') &&
               feedData?.economiques &&
-              feedData.economiques.length > 0 && (
+              feedData.economiques.length > 0 ? (
                 <FeedSection
                   title="Bons plans & Économiques"
                   subtitle="Tarifs dégressifs les plus avantageux"
@@ -193,10 +225,10 @@ export const TenantHomeScreen: React.FC = () => {
                   onFavoriteToggle={handleFavoriteToggle}
                   favoritesMap={favorites}
                 />
-              )}
+              ) : null}
 
             {/* Section 5: Vient d'arriver */}
-            {showAll && feedData?.nouveautes && feedData.nouveautes.length > 0 && (
+            {showAll && feedData?.nouveautes && feedData.nouveautes.length > 0 ? (
               <FeedSection
                 title="Vient d'arriver"
                 subtitle="Dernières annonces fraîchement publiées"
@@ -206,12 +238,12 @@ export const TenantHomeScreen: React.FC = () => {
                 onFavoriteToggle={handleFavoriteToggle}
                 favoritesMap={favorites}
               />
-            )}
+            ) : null}
 
             {/* Section 6: 4×4 & Tout-Terrain */}
             {(showAll || selectedCategory === 'FOUR_X_FOUR') &&
               feedData?.luxe &&
-              feedData.luxe.length > 0 && (
+              feedData.luxe.length > 0 ? (
                 <FeedSection
                   title="4×4 & Tout-Terrain"
                   subtitle="Prêts pour vos pistes & aventures régionales"
@@ -221,12 +253,12 @@ export const TenantHomeScreen: React.FC = () => {
                   onFavoriteToggle={handleFavoriteToggle}
                   favoritesMap={favorites}
                 />
-              )}
+              ) : null}
 
             {/* Section 7: SUV du moment */}
             {(showAll || selectedCategory === 'SUV') &&
               feedData?.suvMoment &&
-              feedData.suvMoment.length > 0 && (
+              feedData.suvMoment.length > 0 ? (
                 <FeedSection
                   title="SUV du moment"
                   subtitle="Confort familial & espace garanti"
@@ -236,12 +268,12 @@ export const TenantHomeScreen: React.FC = () => {
                   onFavoriteToggle={handleFavoriteToggle}
                   favoritesMap={favorites}
                 />
-              )}
+              ) : null}
 
             {/* Section 8: Berlines populaires */}
             {(showAll || selectedCategory === 'BERLINE') &&
               feedData?.berlinesPopulaires &&
-              feedData.berlinesPopulaires.length > 0 && (
+              feedData.berlinesPopulaires.length > 0 ? (
                 <FeedSection
                   title="Berlines populaires"
                   subtitle="Élégance et sobriété pour la ville"
@@ -251,10 +283,10 @@ export const TenantHomeScreen: React.FC = () => {
                   onFavoriteToggle={handleFavoriteToggle}
                   favoritesMap={favorites}
                 />
-              )}
+              ) : null}
 
             {/* Section 9: Recommandés pour vous */}
-            {showAll && feedData?.recommended?.items && feedData.recommended.items.length > 0 && (
+            {showAll && feedData?.recommended?.items && feedData.recommended.items.length > 0 ? (
               <FeedSection
                 title="Recommandés pour vous"
                 subtitle="Sélection sur mesure AutoLoc"
@@ -264,7 +296,10 @@ export const TenantHomeScreen: React.FC = () => {
                 onFavoriteToggle={handleFavoriteToggle}
                 favoritesMap={favorites}
               />
-            )}
+            ) : null}
+
+            {/* Banner Card Premium : Votre voiture dort ? Faites-la bosser ! */}
+            <HostMonetizeBannerCard onPressStart={handleHostMonetizePress} />
           </>
         )}
       </ScrollView>
@@ -279,6 +314,33 @@ export const TenantHomeScreen: React.FC = () => {
         initialDateFin={searchFilters.dateFin}
         onSearch={(filters) => {
           setSearchFilters(filters);
+          navigation.navigateToTab('EXPLORER');
+        }}
+      />
+
+      {/* Modal Gate Hôte / Vérification KYC */}
+      <ReservationGateModal
+        visible={hostGateModalVisible}
+        vehicleTitle="Votre profil Hôte"
+        missingSteps={hostGate.missingSteps}
+        userAge={hostGate.userAge}
+        customTitle="Vérification requise pour publier un véhicule"
+        customSubtitle="Pour la sécurité des locataires et la couverture assurance AutoLoc, complétez votre profil hôte avant de publier votre annonce."
+        onClose={() => setHostGateModalVisible(false)}
+        onAllCompleted={() => {
+          setHostGateModalVisible(false);
+          openVehicleCreationFlow();
+        }}
+      />
+
+      {/* Wizard de Création de Véhicule */}
+      <AddVehicleWizardScreen
+        visible={addVehicleWizardVisible}
+        mode="CREATE"
+        onClose={() => setAddVehicleWizardVisible(false)}
+        onVehicleCreated={() => {
+          setAddVehicleWizardVisible(false);
+          navigation.navigateToOwnerTab('VEHICULES');
         }}
       />
     </SafeAreaView>
@@ -293,10 +355,6 @@ const styles = StyleSheet.create({
   container: {
     paddingVertical: 10,
     paddingBottom: 110,
-  },
-  triggerWrapper: {
-    paddingHorizontal: 16,
-    marginBottom: 6,
   },
   activeFilterRow: {
     flexDirection: 'row',
@@ -327,36 +385,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#059669',
     fontWeight: '700',
-  },
-  bannerBox: {
-    backgroundColor: '#072A20',
-    borderRadius: theme.radius.card,
-    padding: theme.spacing[4],
-    marginHorizontal: 16,
-    marginVertical: 10,
-    ...theme.elevation.md,
-  },
-  bannerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing[1],
-    marginBottom: theme.spacing[2],
-  },
-  bannerTag: {
-    ...theme.typography.textStyles.overline,
-    fontSize: 10,
-    color: theme.primitives.emerald[300],
-  },
-  bannerTitle: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: theme.typography.fontSize.lg,
-    color: '#F8FBF4',
-    marginBottom: theme.spacing[1],
-  },
-  bannerSubtitle: {
-    fontFamily: theme.typography.fontFamily.regular,
-    fontSize: theme.typography.fontSize.xs,
-    color: '#A8D5C1',
-    lineHeight: 18,
   },
 });

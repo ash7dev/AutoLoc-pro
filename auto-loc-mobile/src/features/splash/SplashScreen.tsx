@@ -1,69 +1,86 @@
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, View, Animated, Image, Dimensions } from 'react-native';
+import { StyleSheet, View, Animated, Image, useWindowDimensions, Easing } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { LinearGradient } from 'expo-linear-gradient';
-import { theme } from '../../core/theme';
 import { useAppStore } from '../../core/store/useAppStore';
-
-const { width, height } = Dimensions.get('window');
 
 interface SplashScreenProps {
   onFinish?: () => void;
 }
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
-  const pulseAnim = useRef(new Animated.Value(0.6)).current;
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+
+  // Animation drivers
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.72)).current;
+  const shimmerAnim = useRef(new Animated.Value(1)).current;
 
   const initialize = useAppStore((state) => state.initialize);
 
+  // Dynamic responsive logo sizing formula (Senior UX/UI responsive guidelines)
+  // Max width 68% of screen on mobile, clamped between 220px and 380px for tablets/large displays
+  const logoWidth = Math.min(Math.max(screenWidth * 0.65, 220), 380);
+  const logoHeight = logoWidth * 0.42; // Preserves optimal brand aspect ratio
+
   useEffect(() => {
-    // 1. Entrance animation (Fade-in + Spring Scale)
+    // 1. Entrance animation sequence (Cubic-bezier scale + Smooth fade)
     Animated.parallel([
-      Animated.timing(fadeAnim, {
+      Animated.timing(opacityAnim, {
         toValue: 1,
-        duration: 700,
+        duration: 650,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
-        friction: 7,
-        tension: 35,
+        friction: 6.5,
+        tension: 40,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]).start(() => {
+      // 2. Continuous subtle micro-breathing while background resources load
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(shimmerAnim, {
+            toValue: 1.03,
+            duration: 1100,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.timing(shimmerAnim, {
+            toValue: 1,
+            duration: 1100,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    });
 
-    // Pulse ambient background glow
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 0.6,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-
-    // 2. Application initialization & minimum duration
+    // 3. Application initialization with UX minimum duration (1.5s for seamless transition)
     const runInit = async () => {
       const startTime = Date.now();
       await initialize();
       const elapsedTime = Date.now() - startTime;
-      const minDuration = 1400;
+      const minDuration = 1500;
 
       const remainingTime = Math.max(0, minDuration - elapsedTime);
       setTimeout(() => {
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 350,
-          useNativeDriver: true,
-        }).start(() => {
+        // Exit animation: Smooth fade & slight expansion for ultra-premium UX
+        Animated.parallel([
+          Animated.timing(opacityAnim, {
+            toValue: 0,
+            duration: 400,
+            easing: Easing.in(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 1.06,
+            duration: 400,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
           if (onFinish) {
             onFinish();
           }
@@ -76,37 +93,31 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
+      {/* Dark icons for status bar on pure white background */}
+      <StatusBar style="dark" animated />
 
-      {/* Luxury Dark Radial/Linear Background */}
-      <LinearGradient
-        colors={['#0F172A', '#090D16', '#020617']}
-        style={StyleSheet.absoluteFill}
-      />
-
-      {/* Subtle Glowing Radial Aura */}
+      {/* Main Centered Logo Container */}
       <Animated.View
         style={[
-          styles.glowCircle,
+          styles.logoWrapper,
           {
-            opacity: pulseAnim,
-          },
-        ]}
-      />
-
-      {/* Centered Animated Logo */}
-      <Animated.View
-        style={[
-          styles.logoContainer,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
+            opacity: opacityAnim,
+            transform: [
+              { scale: scaleAnim },
+              { scale: shimmerAnim },
+            ],
           },
         ]}
       >
         <Image
           source={require('../../../assets/logo.png')}
-          style={styles.logo}
+          style={[
+            styles.logoImage,
+            {
+              width: logoWidth,
+              height: logoHeight,
+            },
+          ]}
           resizeMode="contain"
         />
       </Animated.View>
@@ -117,25 +128,17 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  glowCircle: {
-    position: 'absolute',
-    width: width * 0.8,
-    height: width * 0.8,
-    borderRadius: (width * 0.8) / 2,
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    filter: 'blur(30px)',
-  },
-  logoContainer: {
-    alignItems: 'center',
+  logoWrapper: {
     justifyContent: 'center',
-    zIndex: 10,
+    alignItems: 'center',
+    padding: 16,
   },
-  logo: {
-    width: 260,
-    height: 110,
+  logoImage: {
+    // Sizing handled dynamically via responsive calculation inline
   },
 });
+

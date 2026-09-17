@@ -17,6 +17,12 @@ import {
   Heart,
   MapPin,
   Star,
+  Settings,
+  Fuel,
+  Users,
+  Navigation,
+  ChevronRight,
+  ShieldCheck,
 } from 'lucide-react-native';
 import { VehicleFeedItem } from '../types';
 import { useAppStore } from '../../../core/store/useAppStore';
@@ -24,12 +30,15 @@ import { formatConvertedPrice } from '../../../core/utils/currency';
 import { theme } from '../../../core/theme';
 
 interface VehicleFeedCardProps {
-  vehicle: VehicleFeedItem;
+  vehicle: VehicleFeedItem & {
+    allowsOutsideDakar?: boolean;
+    horsDakar?: boolean;
+    isSuperhost?: boolean;
+  };
   onPress: (vehicle: VehicleFeedItem) => void;
   onFavoriteToggle?: (vehicleId: string) => void;
   isFavorited?: boolean;
 }
-
 
 const EXTRA_CAR_PHOTOS = [
   'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=800&auto=format&fit=crop',
@@ -39,6 +48,7 @@ const EXTRA_CAR_PHOTOS = [
 ];
 
 const CARD_WIDTH = 290;
+const IMAGE_HEIGHT = 195;
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -49,17 +59,18 @@ export const VehicleFeedCard: React.FC<VehicleFeedCardProps> = ({
   isFavorited = false,
 }) => {
   const selectedCurrency = useAppStore((state) => state.selectedCurrency);
-  const isPremium = vehicle.isFeatured || vehicle.scoreGlobal > 8;
+  const isPremium = Boolean(vehicle.isFeatured || (vehicle.scoreGlobal && vehicle.scoreGlobal > 8));
+  const allowsHorsDakar = Boolean(vehicle.allowsOutsideDakar || vehicle.horsDakar);
 
-  // ── Animated spring scale ──
+  // ── Animation ressort sur appui ──
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const favoriteAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = useCallback(() => {
     Animated.spring(scaleAnim, {
-      toValue: 0.965,
-      friction: 9,
-      tension: 60,
+      toValue: 0.97,
+      friction: 8,
+      tension: 70,
       useNativeDriver: true,
     }).start();
   }, [scaleAnim]);
@@ -67,33 +78,32 @@ export const VehicleFeedCard: React.FC<VehicleFeedCardProps> = ({
   const handlePressOut = useCallback(() => {
     Animated.spring(scaleAnim, {
       toValue: 1,
-      friction: 7,
-      tension: 40,
+      friction: 6,
+      tension: 50,
       useNativeDriver: true,
     }).start();
   }, [scaleAnim]);
 
   const handleFavoritePress = useCallback(() => {
     if (!onFavoriteToggle) return;
-    // Bounce animation on favorite
     Animated.sequence([
       Animated.spring(favoriteAnim, {
-        toValue: 1.3,
+        toValue: 1.35,
         friction: 3,
-        tension: 150,
+        tension: 160,
         useNativeDriver: true,
       }),
       Animated.spring(favoriteAnim, {
         toValue: 1,
         friction: 5,
-        tension: 80,
+        tension: 90,
         useNativeDriver: true,
       }),
     ]).start();
     onFavoriteToggle(vehicle.id);
   }, [onFavoriteToggle, vehicle.id, favoriteAnim]);
 
-  // ── Photo carousel ──
+  // ── Carrousel photos ──
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const photosList: string[] = React.useMemo(() => {
@@ -104,7 +114,6 @@ export const VehicleFeedCard: React.FC<VehicleFeedCardProps> = ({
     if (list.length === 0) {
       return EXTRA_CAR_PHOTOS;
     }
-    // Garantit au moins 3 photos pour un carousel fluide
     if (list.length === 1) {
       const charCode = vehicle.id ? vehicle.id.charCodeAt(0) : 0;
       const extra1 = EXTRA_CAR_PHOTOS[charCode % EXTRA_CAR_PHOTOS.length];
@@ -125,21 +134,20 @@ export const VehicleFeedCard: React.FC<VehicleFeedCardProps> = ({
     [activeImageIndex, photosList.length]
   );
 
-  // Price
   const formattedPrice = formatConvertedPrice(vehicle.prixParJour, selectedCurrency);
+  const hasRating = Boolean(vehicle.note && vehicle.note > 0);
 
   return (
     <AnimatedPressable
       style={[
         styles.cardContainer,
-        isPremium && styles.cardContainerPremium,
         { transform: [{ scale: scaleAnim }] },
       ]}
       onPress={() => onPress(vehicle)}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
     >
-      {/* ── Image Carousel ── */}
+      {/* ─── Visuel principal avec Carrousel ─── */}
       <View style={styles.imageWrapper}>
         <FlatList
           data={photosList}
@@ -172,375 +180,437 @@ export const VehicleFeedCard: React.FC<VehicleFeedCardProps> = ({
           )}
         />
 
-        {/* Gradient de protection — raffiné, ne noie plus la photo */}
+        {/* Dégradé haut translucide pour badges */}
         <LinearGradient
-          colors={[
-            'rgba(0, 0, 0, 0.08)',
-            'transparent',
-            'transparent',
-            'rgba(0, 0, 0, 0.25)',
-            'rgba(0, 0, 0, 0.88)',
-          ]}
-          locations={[0, 0.15, 0.45, 0.72, 1]}
-          style={styles.gradientOverlay}
+          colors={['rgba(4, 21, 15, 0.45)', 'transparent']}
+          style={styles.topFade}
           pointerEvents="none"
         />
 
-        {/* Top Header Overlay */}
-        <View style={styles.topHeader}>
-          {isPremium ? (
-            <View style={styles.premiumBadge}>
-              <Sparkles size={11} color="#FBBF24" style={styles.badgeIcon} />
-              <Text style={styles.premiumText}>PREMIUM</Text>
-            </View>
-          ) : (
-            <View style={styles.typeBadge}>
-              <Text style={styles.typeText}>{vehicle.type || 'LUXE'}</Text>
-            </View>
-          )}
+        {/* Dégradé bas cinématique */}
+        <LinearGradient
+          colors={['transparent', 'rgba(4, 21, 15, 0.35)']}
+          style={styles.bottomFade}
+          pointerEvents="none"
+        />
 
-          {/* Bouton Favoris — Glassmorphism pur */}
-          {onFavoriteToggle && (
-            <Pressable
-              style={styles.favoriteButton}
-              onPress={(e) => {
-                e.stopPropagation();
-                handleFavoritePress();
-              }}
-              hitSlop={10}
-            >
-              <Animated.View style={{ transform: [{ scale: favoriteAnim }] }}>
-                <Heart
-                  size={17}
-                  color={isFavorited ? '#EF4444' : '#FFFFFF'}
-                  fill={isFavorited ? '#EF4444' : 'transparent'}
-                  strokeWidth={2.2}
-                />
-              </Animated.View>
-            </Pressable>
-          )}
-        </View>
+        {/* Badges Glassmorphism Supérieurs */}
+        {allowsHorsDakar ? (
+          <View style={styles.badgesTopContainer}>
+            <View style={styles.horsDakarBadge}>
+              <Navigation size={9} color="#059669" />
+              <Text style={styles.horsDakarText}>HORS DAKAR OK</Text>
+            </View>
+          </View>
+        ) : null}
 
-        {/* Pagination Dots */}
-        {photosList.length > 1 && (
+
+        {/* Bouton Favori en Verre Flouté */}
+        {Boolean(onFavoriteToggle) ? (
+          <Pressable
+            style={styles.favoriteButton}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleFavoritePress();
+            }}
+            hitSlop={12}
+          >
+            <Animated.View style={{ transform: [{ scale: favoriteAnim }] }}>
+              <Heart
+                size={16}
+                color={isFavorited ? '#E11D48' : '#FFFFFF'}
+                fill={isFavorited ? '#E11D48' : 'transparent'}
+                strokeWidth={2.2}
+              />
+            </Animated.View>
+          </Pressable>
+        ) : null}
+
+        {/* Indication des Points de Pagination */}
+        {photosList.length > 1 ? (
           <View style={styles.paginationDots}>
             {photosList.slice(0, 5).map((_, idx) => (
               <View
                 key={`dot-${idx}`}
                 style={[
                   styles.dot,
-                  activeImageIndex === idx && styles.activeDot,
+                  activeImageIndex === idx ? styles.activeDot : null,
                 ]}
               />
             ))}
           </View>
-        )}
+        ) : null}
       </View>
 
-      {/* ── Bottom Content Overlay ── */}
-      <View style={styles.bottomContent}>
-        {/* Titre — Fraunces Display Font */}
-        <Text style={styles.titleText} numberOfLines={1}>
-          {vehicle.marque} {vehicle.modele}
-        </Text>
-
-        {/* Ligne Sub-info : Ville & Note */}
-        <View style={styles.subInfoRow}>
-          <View style={styles.infoPill}>
-            <MapPin size={12} color="#D1D5DB" strokeWidth={2.2} />
-            <Text style={styles.subInfoText}>{vehicle.ville || 'Dakar'}</Text>
-          </View>
-
-          <View style={styles.dotSeparatorWrap}>
-            <View style={styles.dotSeparator} />
-          </View>
-
-          <View style={styles.infoPill}>
-            <Star size={12} color="#FBBF24" fill="#FBBF24" />
-            <Text style={styles.ratingText}>
-              {vehicle.note > 0 ? vehicle.note.toFixed(1) : '5.0'}
-            </Text>
-            {vehicle.totalAvis > 0 && (
-              <Text style={styles.reviewCountText}>({vehicle.totalAvis})</Text>
-            )}
-          </View>
+      {/* ─── Contenu Texte & Caractéristiques ─── */}
+      <View style={styles.contentBody}>
+        {/* Ligne Titre & Évaluation */}
+        <View style={styles.titleRow}>
+          <Text style={styles.titleText} numberOfLines={1}>
+            {vehicle.marque} {vehicle.modele}
+          </Text>
+          {hasRating ? (
+            <View style={styles.ratingBox}>
+              <Star size={11} color="#F59E0B" fill="#F59E0B" />
+              <Text style={styles.ratingVal}>{vehicle.note.toFixed(1)}</Text>
+            </View>
+          ) : (
+            <View style={styles.newBadge}>
+              <Sparkles size={9} color="#059669" />
+              <Text style={styles.newBadgeText}>Nouveau</Text>
+            </View>
+          )}
         </View>
 
-        {/* Specs — Ligne compacte inline */}
-        <Text style={styles.specsLine} numberOfLines={1}>
-          {[vehicle.transmission, vehicle.carburant, vehicle.nombrePlaces ? `${vehicle.nombrePlaces} places` : null]
-            .filter(Boolean)
-            .join('  ·  ')}
-        </Text>
+        {/* Localisation & Garantie */}
+        <View style={styles.locationRow}>
+          <MapPin size={11} color="#059669" strokeWidth={2.2} />
+          <Text style={styles.locationText} numberOfLines={1}>
+            {vehicle.ville || 'Dakar'}
+          </Text>
+          {vehicle.isSuperhost && (
+            <View style={styles.superhostTag}>
+              <ShieldCheck size={10} color="#059669" />
+              <Text style={styles.superhostTagText}>Vérifié</Text>
+            </View>
+          )}
+        </View>
 
-        {/* Prix — Bannière de conversion premium */}
-        <View style={styles.priceBanner}>
-          <View style={styles.priceAccent} />
-          <View style={styles.priceContent}>
-            <Text style={styles.priceMain}>{formattedPrice}</Text>
+
+        {/* Puces de Spécifications Vectorielles */}
+        <View style={styles.specsRow}>
+          {Boolean(vehicle.transmission) ? (
+            <View style={styles.specChip}>
+              <Settings size={10} color="#64748B" />
+              <Text style={styles.specText} numberOfLines={1}>{vehicle.transmission}</Text>
+            </View>
+          ) : null}
+          {Boolean(vehicle.carburant) ? (
+            <View style={styles.specChip}>
+              <Fuel size={10} color="#64748B" />
+              <Text style={styles.specText} numberOfLines={1}>{vehicle.carburant}</Text>
+            </View>
+          ) : null}
+          {Boolean(vehicle.nombrePlaces) ? (
+            <View style={styles.specChip}>
+              <Users size={10} color="#64748B" />
+              <Text style={styles.specText} numberOfLines={1}>{vehicle.nombrePlaces} pl.</Text>
+            </View>
+          ) : null}
+        </View>
+
+
+        {/* ─── Bloc Prix Vert Nuit Forêt ─── */}
+        <LinearGradient
+          colors={['#041912', '#06281C']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.priceBlock}
+        >
+          <View style={styles.priceTextGroup}>
+            <Text style={styles.priceValue}>{formattedPrice}</Text>
             <Text style={styles.pricePeriod}>/ jour</Text>
           </View>
-        </View>
+
+          <View style={styles.priceArrowCircle}>
+            <ChevronRight size={13} color="#4ADE80" strokeWidth={2.5} />
+          </View>
+        </LinearGradient>
       </View>
     </AnimatedPressable>
   );
 };
 
+/* ─────────────────────────────────────────────
+   Styles — Premium Vehicle Feed Card (No Emojis)
+   ───────────────────────────────────────────── */
+
 const styles = StyleSheet.create({
-  // ── Card Container ──
   cardContainer: {
     width: CARD_WIDTH,
-    height: 395,
-    borderRadius: 24,
+    borderRadius: 22,
     overflow: 'hidden',
-    backgroundColor: '#0B1120',
+    backgroundColor: '#FFFFFF',
     marginRight: 16,
+    borderWidth: 1.5,
+    borderColor: '#E4EBDB',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: '#041912',
         shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.22,
+        shadowOpacity: 0.10,
         shadowRadius: 20,
       },
       android: {
-        elevation: 8,
-      },
-    }),
-  },
-  cardContainerPremium: {
-    ...Platform.select({
-      ios: {
-        shadowColor: '#059669',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.18,
-        shadowRadius: 18,
-      },
-      android: {
-        elevation: 10,
+        elevation: 6,
       },
     }),
   },
 
-  // ── Image Carousel ──
+  /* ── Zone Image ── */
   imageWrapper: {
     width: CARD_WIDTH,
-    height: '100%' as any,
+    height: IMAGE_HEIGHT,
+    backgroundColor: '#04150F',
     position: 'relative',
+    overflow: 'hidden',
   },
   imageScroll: {
     width: CARD_WIDTH,
-    height: '100%',
+    height: IMAGE_HEIGHT,
   },
   carouselImage: {
     width: CARD_WIDTH,
-    height: 395,
+    height: IMAGE_HEIGHT,
   },
-  gradientOverlay: {
+
+  topFade: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
+    height: 64,
   },
-
-  // ── Top Header ──
-  topHeader: {
-    position: 'absolute',
-    top: 14,
-    left: 14,
-    right: 14,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-
-  // Badge Premium — Gold Shimmer
-  premiumBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(251, 191, 36, 0.12)',
-    paddingHorizontal: 11,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(251, 191, 36, 0.35)',
-  },
-  badgeIcon: {
-    marginRight: 5,
-  },
-  premiumText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    color: '#FBBF24',
-    fontSize: 10,
-    letterSpacing: 1.5,
-  },
-
-  // Badge Type — Glassmorphism neutre
-  typeBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    paddingHorizontal: 11,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.20)',
-  },
-  typeText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    color: '#F9FAFB',
-    fontSize: 10,
-    letterSpacing: 1,
-  },
-
-  // Bouton Favoris — Glassmorphism pur
-  favoriteButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.20,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-
-  // Pagination Dots
-  paginationDots: {
-    position: 'absolute',
-    bottom: 130,
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(0, 0, 0, 0.30)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  dot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.40)',
-  },
-  activeDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: '#FFFFFF',
-  },
-
-  // ── Bottom Content ──
-  bottomContent: {
+  bottomFade: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 16,
-    paddingBottom: 18,
-    paddingTop: 8,
+    height: 54,
+  },
+
+  /* Badges Supérieurs */
+  badgesTopContainer: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    flexDirection: 'row',
+    gap: 6,
+    zIndex: 10,
+  },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(4, 25, 18, 0.75)',
+    paddingHorizontal: 9,
+    paddingVertical: 4.5,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 196, 81, 0.40)',
+  },
+  premiumText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    color: '#F5C451',
+    fontSize: 8.5,
+    letterSpacing: 1.2,
+  },
+  horsDakarBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  horsDakarText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    color: '#059669',
+    fontSize: 8.5,
+    letterSpacing: 0.5,
+  },
+
+  /* Favori */
+  favoriteButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(4, 25, 18, 0.45)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
     zIndex: 10,
   },
 
-  // Titre — Fraunces Display
+  /* Pagination Dots */
+  paginationDots: {
+    position: 'absolute',
+    bottom: 10,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(4, 25, 18, 0.40)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.20)',
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+  },
+  activeDot: {
+    width: 16,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#4ADE80',
+  },
+
+  /* ── Zone Contenu ── */
+  contentBody: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 14,
+    paddingTop: 13,
+    paddingBottom: 13,
+    gap: 6,
+  },
+
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   titleText: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
-    color: '#FFFFFF',
-    fontSize: 19,
-    letterSpacing: -0.4,
-    marginBottom: 6,
+    fontSize: 16.5,
+    color: '#041912',
+    flex: 1,
+    marginRight: 6,
+    letterSpacing: -0.3,
   },
-
-  // Sub-info Row
-  subInfoRow: {
+  ratingBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    gap: 3,
+    backgroundColor: '#FFFBEB',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FEF3C7',
   },
-  infoPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  subInfoText: {
-    fontFamily: theme.typography.fontFamily.medium,
-    color: '#D1D5DB',
-    fontSize: 12,
-    marginLeft: 4,
-  },
-  dotSeparatorWrap: {
-    paddingHorizontal: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dotSeparator: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
-  },
-  ratingText: {
+  ratingVal: {
     fontFamily: theme.typography.fontFamily.bold,
-    color: '#FFFFFF',
-    fontSize: 12,
-    marginLeft: 4,
+    fontSize: 11.5,
+    color: '#92400E',
   },
-  reviewCountText: {
-    fontFamily: theme.typography.fontFamily.regular,
-    color: 'rgba(255, 255, 255, 0.55)',
-    fontSize: 11,
-    marginLeft: 2,
-  },
-
-  // Specs — Ligne compacte
-  specsLine: {
-    fontFamily: theme.typography.fontFamily.medium,
-    color: 'rgba(255, 255, 255, 0.60)',
-    fontSize: 12,
-    letterSpacing: 0.2,
-    marginBottom: 14,
-  },
-
-  // Prix — Bannière de conversion
-  priceBanner: {
+  newBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255, 255, 255, 0.12)',
+    gap: 3,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
   },
-  priceAccent: {
-    width: 3,
-    height: 22,
-    borderRadius: 2,
-    backgroundColor: '#34D399',
-    marginRight: 10,
+  newBadgeText: {
+    fontSize: 9.5,
+    fontFamily: theme.typography.fontFamily.bold,
+    color: '#059669',
   },
-  priceContent: {
+
+  /* Localisation */
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  locationText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 11.5,
+    color: '#64748B',
+  },
+  superhostTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 6,
+    marginLeft: 4,
+  },
+  superhostTagText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 9,
+    color: '#059669',
+  },
+
+  /* Spécifications */
+  specsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  specChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 10,
+    gap: 3,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  specText: {
+    fontSize: 9.5,
+    fontFamily: theme.typography.fontFamily.medium,
+    color: '#475569',
+  },
+
+
+  /* Bloc Prix */
+  priceBlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.20)',
+  },
+  priceTextGroup: {
     flexDirection: 'row',
     alignItems: 'baseline',
+    gap: 4,
   },
-  priceMain: {
-    fontFamily: theme.typography.fontFamily.extraBold,
+  priceValue: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 18.5,
     color: '#FFFFFF',
-    fontSize: 20,
-    letterSpacing: -0.3,
     fontVariant: ['tabular-nums'],
+    letterSpacing: -0.3,
   },
   pricePeriod: {
     fontFamily: theme.typography.fontFamily.regular,
-    color: 'rgba(255, 255, 255, 0.55)',
-    fontSize: 13,
-    marginLeft: 4,
+    fontSize: 11,
+    color: 'rgba(168, 213, 193, 0.70)',
+  },
+  priceArrowCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(16, 185, 129, 0.20)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

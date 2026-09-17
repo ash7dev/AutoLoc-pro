@@ -630,8 +630,18 @@ export const ownerApi = {
   getIndisponibilites: async (vehicleId: string): Promise<VehicleIndisponibilite[]> => {
     try {
       const res = await apiClient.get(`/vehicles/${vehicleId}/indisponibilites`);
-      return Array.isArray(res.data) ? res.data : [];
-    } catch {
+      const raw = res.data;
+      const list = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+      return list.map((item: any) => ({
+        id: item.id || `indispo-${Math.random()}`,
+        vehiculeId: item.vehiculeId || vehicleId,
+        dateDebut: item.dateDebut ? new Date(item.dateDebut).toISOString().substring(0, 10) : item.dateDebut,
+        dateFin: item.dateFin ? new Date(item.dateFin).toISOString().substring(0, 10) : item.dateFin,
+        motif: item.motif || 'Non précisé',
+        creeLe: item.creeLe || item.createdAt,
+      }));
+    } catch (err) {
+      console.warn('Erreur getIndisponibilites:', err);
       return [];
     }
   },
@@ -643,7 +653,14 @@ export const ownerApi = {
   ): Promise<VehicleIndisponibilite> => {
     try {
       const res = await apiClient.post(`/vehicles/${vehicleId}/indisponibilites`, data);
-      return res.data;
+      const raw = res.data?.data || res.data;
+      return {
+        id: raw.id || `indispo-${Date.now()}`,
+        vehiculeId: raw.vehiculeId || vehicleId,
+        dateDebut: raw.dateDebut ? new Date(raw.dateDebut).toISOString().substring(0, 10) : data.dateDebut,
+        dateFin: raw.dateFin ? new Date(raw.dateFin).toISOString().substring(0, 10) : data.dateFin,
+        motif: raw.motif || data.motif || 'Usage personnel',
+      };
     } catch (error) {
       console.warn('Erreur lors du blocage de dates:', error);
       throw error;
@@ -664,8 +681,88 @@ export const ownerApi = {
   getVehicleBlockedDates: async (vehicleId: string): Promise<string[]> => {
     try {
       const res = await apiClient.get(`/vehicles/${vehicleId}/blocked-dates`);
-      return Array.isArray(res.data) ? res.data : [];
-    } catch {
+      const raw = res.data;
+      const datesSet = new Set<string>();
+
+      if (raw?.blockedRanges && Array.isArray(raw.blockedRanges)) {
+        raw.blockedRanges.forEach((range: any) => {
+          if (range.from && range.to) {
+            let cur = new Date(range.from);
+            const last = new Date(range.to);
+            while (cur <= last) {
+              const y = cur.getFullYear();
+              const m = String(cur.getMonth() + 1).padStart(2, '0');
+              const d = String(cur.getDate()).padStart(2, '0');
+              datesSet.add(`${y}-${m}-${d}`);
+              cur.setDate(cur.getDate() + 1);
+            }
+          }
+        });
+      }
+
+      const rawList = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+      rawList.forEach((item: any) => {
+        if (typeof item === 'string') {
+          datesSet.add(item.substring(0, 10));
+        } else if (item.from && item.to) {
+          let cur = new Date(item.from);
+          const last = new Date(item.to);
+          while (cur <= last) {
+            const y = cur.getFullYear();
+            const m = String(cur.getMonth() + 1).padStart(2, '0');
+            const d = String(cur.getDate()).padStart(2, '0');
+            datesSet.add(`${y}-${m}-${d}`);
+            cur.setDate(cur.getDate() + 1);
+          }
+        }
+      });
+
+      return Array.from(datesSet);
+    } catch (err) {
+      console.warn('Erreur getVehicleBlockedDates:', err);
+      return [];
+    }
+  },
+
+  // Récupérer les réservations d'un véhicule spécifique (GET /vehicles/:id/reservations)
+  getVehicleReservations: async (vehicleId: string): Promise<OwnerBooking[]> => {
+    try {
+      const res = await apiClient.get(`/vehicles/${vehicleId}/reservations`);
+      const rawList = Array.isArray(res.data) ? res.data : res.data?.data;
+      if (Array.isArray(rawList)) {
+        return rawList.map((r: any) => {
+          let mappedStatus: OwnerBooking['statut'] = 'CONFIRMED';
+          if (r.statut === 'EN_ATTENTE_PAIEMENT' || r.statut === 'INITIEE') mappedStatus = 'PENDING_APPROVAL';
+          if (r.statut === 'PAYEE' || r.statut === 'CONFIRMEE') mappedStatus = 'CONFIRMED';
+          if (r.statut === 'EN_COURS') mappedStatus = 'IN_PROGRESS';
+          if (r.statut === 'TERMINEE') mappedStatus = 'COMPLETED';
+          if (r.statut === 'ANNULEE' || r.statut === 'REFUSE') mappedStatus = 'CANCELLED';
+
+          return {
+            id: r.id,
+            codeReservation: r.codeReservation || `RES-${r.id.substring(0, 6).toUpperCase()}`,
+            vehicleId: r.vehiculeId || vehicleId,
+            vehicleTitle: r.vehicule ? `${r.vehicule.marque} ${r.vehicule.modele}` : 'Véhicule AutoLoc',
+            vehiclePhoto: r.vehicule?.photos?.[0]?.url || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
+            immatriculation: r.vehicule?.immatriculation || 'CI-000',
+            locataireName: r.locataire ? `${r.locataire.prenom} ${r.locataire.nom}`.trim() : 'Locataire AutoLoc',
+            locataireAvatar: r.locataire?.avatarUrl,
+            locatairePhone: r.locataire?.telephone || '+225 07 00 00 00',
+            locataireKycVerified: r.locataire?.statutKyc === 'VERIFIE',
+            dateDebut: r.dateDebut ? new Date(r.dateDebut).toISOString().split('T')[0] : '',
+            dateFin: r.dateFin ? new Date(r.dateFin).toISOString().split('T')[0] : '',
+            dureeJours: r.dureeJours || 1,
+            montantTotalBrut: Number(r.totalLocataire || r.montantTotalBrut || 0),
+            commissionAutoLoc: Number(r.montantCommission || r.commissionAutoLoc || 0),
+            montantNetProprietaire: Number(r.netProprietaire || r.montantNetProprietaire || 0),
+            statut: mappedStatus,
+            dateDemande: r.creeLe ? new Date(r.creeLe).toLocaleDateString('fr-FR') : 'Récemment',
+          };
+        });
+      }
+      return [];
+    } catch (err) {
+      console.warn(`Backend /vehicles/${vehicleId}/reservations indisponible:`, err);
       return [];
     }
   },

@@ -37,6 +37,8 @@ interface BookingCheckoutStep1Props {
 
   isDeliverySelected: boolean;
   onToggleDelivery: (val: boolean) => void;
+  adresseLivraison?: string;
+  onAdresseLivraisonChange?: (val: string) => void;
 
   isHorsDakarSelected: boolean;
   onToggleHorsDakar: (val: boolean) => void;
@@ -54,6 +56,8 @@ export const BookingCheckoutStep1: React.FC<BookingCheckoutStep1Props> = ({
   onDatesChange,
   isDeliverySelected,
   onToggleDelivery,
+  adresseLivraison,
+  onAdresseLivraisonChange,
   isHorsDakarSelected,
   onToggleHorsDakar,
   selectedCurrency = 'XOF',
@@ -106,6 +110,8 @@ export const BookingCheckoutStep1: React.FC<BookingCheckoutStep1Props> = ({
           fraisLivraison={vehicle.fraisLivraison}
           isDeliverySelected={isDeliverySelected}
           onToggleDelivery={onToggleDelivery}
+          adresseLivraison={adresseLivraison}
+          onAdresseLivraisonChange={onAdresseLivraisonChange}
           autoriseHorsDakar={vehicle.autoriseHorsDakar}
           supplementHorsDakarParJour={vehicle.supplementHorsDakarParJour}
           isHorsDakarSelected={isHorsDakarSelected}
@@ -131,13 +137,17 @@ export const BookingCheckoutStep1: React.FC<BookingCheckoutStep1Props> = ({
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Barre d'Action Fixe Inférieure */}
+      {/* Barre d'Action Fixe Inférieure (Floating Dark Glass Dock) */}
       <SafeAreaView style={styles.footerSafeArea}>
         <View style={styles.footerRow}>
           <AutoButton
             title={isDatesBlocked ? "Dates indisponibles" : "Continuer vers le paiement"}
-            variant="action"
-            rightIcon={<ArrowRight size={18} color="#FFFFFF" />}
+            variant="dark"
+            rightIcon={
+              <View style={styles.btnIconCircle}>
+                <ArrowRight size={14} color="#041912" strokeWidth={2.5} />
+              </View>
+            }
             onPress={onNext}
             disabled={isDatesBlocked}
             size="lg"
@@ -194,5 +204,13 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     width: '100%',
+  },
+  btnIconCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#4ADE80',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

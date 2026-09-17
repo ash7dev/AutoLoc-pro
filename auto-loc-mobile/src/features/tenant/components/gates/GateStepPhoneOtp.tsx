@@ -4,13 +4,13 @@ import {
   View,
   Text,
   TextInput,
-  Pressable,
+  TouchableOpacity,
   Alert,
   ActivityIndicator,
   ScrollView,
   Platform,
 } from 'react-native';
-import { PhoneCall, ShieldCheck, ArrowRight, Edit2, CheckCircle2 } from 'lucide-react-native';
+import { PhoneCall, ShieldCheck, ArrowRight, Edit2, CheckCircle2, RefreshCw } from 'lucide-react-native';
 import { useAppStore } from '../../../../core/store/useAppStore';
 import { apiClient } from '../../../../core/api/apiClient';
 import { theme } from '../../../../core/theme';
@@ -18,16 +18,6 @@ import { theme } from '../../../../core/theme';
 interface GateStepPhoneOtpProps {
   onSuccess: () => void;
 }
-
-const COLORS = {
-  bg: '#FFFFFF',
-  accent: '#16A34A',
-  accentLight: '#F0FDF4',
-  ink: '#041912',
-  inkMuted: '#64748B',
-  border: '#E2E8F0',
-  surface: '#F8FAFC',
-};
 
 const OTP_LENGTH = 6;
 
@@ -43,7 +33,6 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
 
   const inputRef = useRef<TextInput>(null);
 
-  // Focus automatique de l'input caché lorsque le step OTP s'ouvre
   useEffect(() => {
     if (step === 'OTP_INPUT') {
       setTimeout(() => {
@@ -52,7 +41,6 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
     }
   }, [step]);
 
-  // Envoi du code OTP par SMS
   const handleSendOtp = async () => {
     if (!phone || phone.trim().length < 8) {
       Alert.alert('Numéro invalide', 'Veuillez entrer un numéro de téléphone valide (ex: +221771234567).');
@@ -87,7 +75,6 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
     }
   };
 
-  // Validation du code OTP
   const handleVerifyOtp = async (codeToVerify?: string) => {
     const code = codeToVerify || otpCode;
     if (!code || code.trim().length < OTP_LENGTH) {
@@ -99,7 +86,6 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
     try {
       await apiClient.post('/auth/phone/verify-otp', { code: code.trim() });
 
-      // Mettre à jour le profil local instantanément
       await updateUserProfile({
         telephone: phone.trim(),
         phoneVerified: true,
@@ -114,7 +100,6 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
     }
   };
 
-  // Gestion de la saisie OTP et Auto-Submit sur le 6ème chiffre
   const handleOtpChange = (text: string) => {
     const cleaned = text.replace(/[^0-9]/g, '').slice(0, OTP_LENGTH);
     setOtpCode(cleaned);
@@ -125,200 +110,298 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.iconCircle}>
-          <PhoneCall size={32} color={COLORS.accent} />
-        </View>
+    <ScrollView
+      contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.cardStackWrapper}>
+        <View style={styles.backAccentCard} />
 
-        <Text style={styles.title}>
-          {step === 'PHONE_INPUT' ? 'Numéro de Téléphone' : 'Code de Confirmation SMS'}
-        </Text>
-
-        <Text style={styles.subtitle}>
-          {step === 'PHONE_INPUT'
-            ? 'Entrez votre numéro de téléphone pour recevoir le code de sécurité par SMS.'
-            : `Un code à ${OTP_LENGTH} chiffres a été envoyé par SMS au `}
-          {step === 'OTP_INPUT' && (
-            <Text style={{ fontWeight: '800', color: COLORS.ink }}>{phone}</Text>
-          )}
-        </Text>
-
-        {step === 'PHONE_INPUT' ? (
-          /* Saisie du numéro de téléphone */
-          <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Numéro mobile</Text>
-            <View style={styles.inputWrapper}>
-              <Text style={styles.countryFlag}>🇸🇳 +221</Text>
-              <View style={styles.separator} />
-              <TextInput
-                style={styles.input}
-                placeholder="77 000 00 00"
-                placeholderTextColor="#94A3B8"
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-              />
+        <View style={styles.frontGlassCard}>
+          <View style={styles.cardHeaderBox}>
+            <View style={styles.iconCircle}>
+              <PhoneCall size={30} color="#059669" />
             </View>
+
+            <View style={styles.badgeKycGlass}>
+              <ShieldCheck size={12} color="#059669" />
+              <Text style={styles.badgeKycText}>AUTHENTIFICATION MOBILE</Text>
+            </View>
+
+            <Text style={styles.mainTitle}>
+              {step === 'PHONE_INPUT' ? 'Numéro de Téléphone' : 'Vérification OTP'}
+            </Text>
+            <Text style={styles.subtitle}>
+              {step === 'PHONE_INPUT'
+                ? 'Un code de confirmation sécurisé vous sera envoyé par SMS / WhatsApp.'
+                : `Code à ${OTP_LENGTH} chiffres envoyé par SMS au `}
+              {step === 'OTP_INPUT' && (
+                <Text style={styles.phoneHighlight}>{phone}</Text>
+              )}
+            </Text>
           </View>
-        ) : (
-          /* Saisie OTP Ultra-Premium à 6 Cases Séparées */
-          <View style={styles.fieldGroup}>
-            {/* Ligne de modification du numéro */}
-            <View style={styles.editPhoneRow}>
-              <Text style={styles.label}>Code de sécurité</Text>
-              <Pressable 
-                style={styles.editPhoneButton} 
-                onPress={() => setStep('PHONE_INPUT')}
-              >
-                <Edit2 size={13} color={COLORS.accent} />
-                <Text style={styles.editPhoneText}>Modifier le numéro</Text>
-              </Pressable>
-            </View>
 
-            {/* Input caché d'auto-fill SMS */}
-            <TextInput
-              ref={inputRef}
-              style={styles.hiddenInput}
-              value={otpCode}
-              onChangeText={handleOtpChange}
-              keyboardType="number-pad"
-              maxLength={OTP_LENGTH}
-              textContentType="oneTimeCode"
-              autoComplete={Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'}
-            />
+          {step === 'PHONE_INPUT' ? (
+            <View style={styles.formStack}>
+              <View style={styles.fieldGroup}>
+                <Text style={styles.label}>Numéro mobile Sénégal</Text>
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.countryFlag}>🇸🇳 +221</Text>
+                  <View style={styles.separator} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="77 000 00 00"
+                    placeholderTextColor="#94A3B8"
+                    value={phone}
+                    onChangeText={setPhone}
+                    keyboardType="phone-pad"
+                  />
+                </View>
+              </View>
 
-            {/* 6 Cases UI Distinctes */}
-            <Pressable 
-              style={styles.otpBoxesContainer} 
-              onPress={() => inputRef.current?.focus()}
-            >
-              {Array.from({ length: OTP_LENGTH }).map((_, index) => {
-                const digit = otpCode[index] || '';
-                const isFocused = otpCode.length === index;
-                const isFilled = digit.length > 0;
-
-                return (
-                  <View
-                    key={index}
-                    style={[
-                      styles.otpBox,
-                      isFocused && styles.otpBoxFocused,
-                      isFilled && styles.otpBoxFilled,
-                    ]}
-                  >
-                    <Text style={styles.otpDigitText}>{digit}</Text>
-                  </View>
-                );
-              })}
-            </Pressable>
-
-            {/* Rangée de Renvoi avec Compte à rebours */}
-            <View style={styles.resendRow}>
-              <Text style={styles.resendText}>Vous n'avez pas reçu le code ?</Text>
-              <Pressable
-                disabled={resendCountdown > 0 || loading}
+              <TouchableOpacity
+                style={[styles.submitBtn, loading && styles.btnDisabled]}
                 onPress={handleSendOtp}
+                disabled={loading}
+                activeOpacity={0.85}
               >
-                <Text style={[styles.resendLink, resendCountdown > 0 && { color: COLORS.inkMuted }]}>
-                  {resendCountdown > 0 ? `Renvoyer (${resendCountdown}s)` : 'Renvoyer par SMS'}
-                </Text>
-              </Pressable>
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Text style={styles.submitBtnText}>Recevoir le code d'accès</Text>
+                    <View style={styles.emeraldArrowCircle}>
+                      <ArrowRight size={13} color="#4ADE80" strokeWidth={2.5} />
+                    </View>
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
-          </View>
-        )}
-      </ScrollView>
+          ) : (
+            <View style={styles.formStack}>
+              <View style={styles.editPhoneRow}>
+                <Text style={styles.label}>Code à 6 chiffres</Text>
+                <TouchableOpacity
+                  style={styles.editPhoneButton}
+                  onPress={() => setStep('PHONE_INPUT')}
+                  activeOpacity={0.7}
+                >
+                  <Edit2 size={12} color="#059669" />
+                  <Text style={styles.editPhoneText}>Modifier le numéro</Text>
+                </TouchableOpacity>
+              </View>
 
-      {/* Barre d'Action Inférieure */}
-      <View style={styles.footer}>
-        {step === 'PHONE_INPUT' ? (
-          <Pressable
-            style={[styles.submitButton, loading && { opacity: 0.7 }]}
-            onPress={handleSendOtp}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <>
-                <Text style={styles.submitButtonText}>Envoyer le code SMS</Text>
-                <ArrowRight size={18} color="#FFFFFF" strokeWidth={2.5} />
-              </>
-            )}
-          </Pressable>
-        ) : (
-          <Pressable
-            style={[
-              styles.submitButton,
-              (loading || otpCode.length < OTP_LENGTH) && { opacity: 0.7 },
-            ]}
-            onPress={() => handleVerifyOtp()}
-            disabled={loading || otpCode.length < OTP_LENGTH}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <>
-                <Text style={styles.submitButtonText}>Valider et continuer</Text>
-                <CheckCircle2 size={18} color="#FFFFFF" strokeWidth={2.5} />
-              </>
-            )}
-          </Pressable>
-        )}
+              <TextInput
+                ref={inputRef}
+                style={styles.hiddenInput}
+                value={otpCode}
+                onChangeText={handleOtpChange}
+                keyboardType="number-pad"
+                maxLength={OTP_LENGTH}
+                textContentType="oneTimeCode"
+                autoComplete={Platform.OS === 'android' ? 'sms-otp' : 'one-time-code'}
+              />
+
+              <TouchableOpacity
+                style={styles.otpBoxesContainer}
+                onPress={() => inputRef.current?.focus()}
+                activeOpacity={0.9}
+              >
+                {Array.from({ length: OTP_LENGTH }).map((_, index) => {
+                  const digit = otpCode[index] || '';
+                  const isFocused = otpCode.length === index;
+                  const isFilled = digit.length > 0;
+
+                  return (
+                    <View
+                      key={index}
+                      style={[
+                        styles.otpBox,
+                        isFocused && styles.otpBoxFocused,
+                        isFilled && styles.otpBoxFilled,
+                      ]}
+                    >
+                      <Text style={styles.otpDigitText}>{digit}</Text>
+                    </View>
+                  );
+                })}
+              </TouchableOpacity>
+
+              <View style={styles.resendRow}>
+                {resendCountdown > 0 ? (
+                  <Text style={styles.timerText}>
+                    Renvoyer un nouveau code dans <Text style={styles.timerBold}>{resendCountdown}s</Text>
+                  </Text>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.resendBtn}
+                    onPress={handleSendOtp}
+                    disabled={loading}
+                    activeOpacity={0.7}
+                  >
+                    <RefreshCw size={13} color="#059669" />
+                    <Text style={styles.resendBtnText}>Renvoyer le code par SMS</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.submitBtn,
+                  (loading || otpCode.length < OTP_LENGTH) && styles.btnDisabled,
+                ]}
+                onPress={() => handleVerifyOtp()}
+                disabled={loading || otpCode.length < OTP_LENGTH}
+                activeOpacity={0.85}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Text style={styles.submitBtnText}>Valider et continuer</Text>
+                    <View style={styles.emeraldArrowCircle}>
+                      <CheckCircle2 size={13} color="#4ADE80" strokeWidth={2.5} />
+                    </View>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.bg,
-  },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingHorizontal: theme.spacing[4],
+    paddingBottom: theme.spacing[4],
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  cardStackWrapper: {
+    position: 'relative',
+    marginVertical: theme.spacing[2],
+  },
+  backAccentCard: {
+    position: 'absolute',
+    top: -6,
+    left: 8,
+    right: 8,
+    bottom: -6,
+    borderRadius: 32,
+    backgroundColor: 'rgba(16, 185, 129, 0.20)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+  },
+  frontGlassCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.80)',
+    borderRadius: 28,
+    padding: theme.spacing[5],
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  cardHeaderBox: {
+    alignItems: 'center',
+    marginBottom: theme.spacing[3],
   },
   iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: COLORS.accentLight,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
-    alignSelf: 'center',
+    marginBottom: theme.spacing[2],
   },
-  title: {
+  badgeKycGlass: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: theme.radius.full,
+    gap: 6,
+    marginBottom: theme.spacing[2],
+  },
+  badgeKycText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 9,
+    letterSpacing: 0.8,
+    color: '#059669',
+  },
+  mainTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 22,
-    color: theme.primitives.forest[800],
+    lineHeight: 28,
+    color: '#041912',
     textAlign: 'center',
-    marginBottom: 8,
   },
   subtitle: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 13.5,
-    color: COLORS.inkMuted,
+    fontSize: 12.5,
+    color: '#64748B',
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 24,
+    marginTop: 4,
+    lineHeight: 18,
+  },
+  phoneHighlight: {
+    fontFamily: theme.typography.fontFamily.bold,
+    color: '#059669',
+  },
+  formStack: {
+    gap: theme.spacing[3],
   },
   fieldGroup: {
-    marginBottom: 18,
+    gap: 6,
   },
   label: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13,
-    color: COLORS.ink,
-    marginBottom: 6,
+    fontSize: 12.5,
+    color: '#041912',
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    height: 50,
+  },
+  countryFlag: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 14,
+    color: '#041912',
+  },
+  separator: {
+    width: 1,
+    height: 18,
+    backgroundColor: '#E5E7EB',
+    marginHorizontal: 10,
+  },
+  input: {
+    flex: 1,
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 15,
+    color: '#041912',
   },
   editPhoneRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
   },
   editPhoneButton: {
     flexDirection: 'row',
@@ -327,35 +410,8 @@ const styles = StyleSheet.create({
   },
   editPhoneText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 12.5,
-    color: COLORS.accent,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    height: 52,
-  },
-  countryFlag: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 14,
-    color: COLORS.ink,
-  },
-  separator: {
-    width: 1,
-    height: 20,
-    backgroundColor: COLORS.border,
-    marginHorizontal: 10,
-  },
-  input: {
-    flex: 1,
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 15,
-    color: COLORS.ink,
+    fontSize: 12,
+    color: '#059669',
   },
   hiddenInput: {
     position: 'absolute',
@@ -366,68 +422,92 @@ const styles = StyleSheet.create({
   otpBoxesContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginVertical: 14,
+    marginVertical: theme.spacing[2],
   },
   otpBox: {
-    width: 48,
-    height: 56,
-    borderRadius: 14,
+    width: 44,
+    height: 52,
+    borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.surface,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F9FAFB',
     alignItems: 'center',
     justifyContent: 'center',
   },
   otpBoxFocused: {
-    borderColor: COLORS.accent,
-    backgroundColor: COLORS.accentLight,
+    borderColor: '#059669',
+    backgroundColor: '#ECFDF5',
     borderWidth: 2,
   },
   otpBoxFilled: {
-    borderColor: COLORS.accent,
+    borderColor: '#059669',
     backgroundColor: '#FFFFFF',
   },
   otpDigitText: {
-    fontFamily: theme.typography.fontFamily.bold,
+    fontFamily: theme.typography.fontFamily.extraBold,
+    fontVariant: ['tabular-nums'],
     fontSize: 22,
-    color: COLORS.ink,
+    color: '#041912',
   },
   resendRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 14,
+    justifyContent: 'center',
+    marginVertical: 4,
   },
-  resendText: {
+  timerText: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 12.5,
-    color: COLORS.inkMuted,
+    fontSize: 12,
+    color: '#64748B',
   },
-  resendLink: {
+  timerBold: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13,
-    color: COLORS.accent,
+    color: '#059669',
   },
-  footer: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 24,
-    borderTopWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.bg,
+  resendBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  submitButton: {
-    backgroundColor: COLORS.accent,
-    height: 52,
-    borderRadius: 14,
+  resendBtnText: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 12,
+    color: '#059669',
+    textDecorationLine: 'underline',
+  },
+  submitBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(4, 25, 18, 0.90)',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
+    marginTop: theme.spacing[2],
   },
-  submitButtonText: {
+  btnDisabled: {
+    opacity: 0.65,
+  },
+  submitBtnText: {
     fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 14.5,
     color: '#FFFFFF',
-    fontSize: 15.5,
+  },
+  emeraldArrowCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
   },
 });
+

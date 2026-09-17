@@ -4,12 +4,12 @@ import {
   View,
   Text,
   TextInput,
-  Pressable,
+  TouchableOpacity,
   Alert,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { User, Calendar, ArrowRight, ChevronDown, CheckCircle2 } from 'lucide-react-native';
+import { User, Calendar, ArrowRight, ChevronDown, CheckCircle2, ShieldCheck } from 'lucide-react-native';
 import { useAppStore } from '../../../../core/store/useAppStore';
 import { apiClient } from '../../../../core/api/apiClient';
 import { CustomDatePickerModal } from '../../../../shared/components/CustomDatePickerModal';
@@ -18,16 +18,6 @@ import { theme } from '../../../../core/theme';
 interface GateStepProfileProps {
   onSuccess: () => void;
 }
-
-const COLORS = {
-  bg: '#FFFFFF',
-  accent: '#16A34A',
-  accentLight: '#F0FDF4',
-  ink: '#041912',
-  inkMuted: '#64748B',
-  border: '#E2E8F0',
-  surface: '#F8FAFC',
-};
 
 const MOIS_NOMS = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -44,7 +34,6 @@ export const GateStepProfile: React.FC<GateStepProfileProps> = ({ onSuccess }) =
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Helper de formatage convivial (ex: 1998-08-14 -> 14 Août 1998)
   const formatFrenchDate = (isoStr: string) => {
     if (!isoStr || isoStr.length !== 10) return null;
     const parts = isoStr.split('-');
@@ -55,7 +44,6 @@ export const GateStepProfile: React.FC<GateStepProfileProps> = ({ onSuccess }) =
     return `${d} ${MOIS_NOMS[m - 1]} ${y}`;
   };
 
-  // Helper de calcul de l'âge
   const getAge = (isoStr: string) => {
     if (!isoStr || isoStr.length !== 10) return null;
     const birthDate = new Date(isoStr);
@@ -87,15 +75,12 @@ export const GateStepProfile: React.FC<GateStepProfileProps> = ({ onSuccess }) =
 
     setSubmitting(true);
     try {
-      // Le profil existe déjà après connexion : l'endpoint dédié évite de
-      // réinitialiser le téléphone et applique la politique KYC centrale.
       await apiClient.patch('/users/me/profile', {
         prenom: prenom.trim(),
         nom: nom.trim(),
         dateNaissance: dateNaissance.trim(),
       });
 
-      // 2. Mettre à jour immédiatement le store local (Optimistic Instant Update)
       await updateUserProfile({
         prenom: prenom.trim(),
         nom: nom.trim(),
@@ -112,174 +97,248 @@ export const GateStepProfile: React.FC<GateStepProfileProps> = ({ onSuccess }) =
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.iconCircle}>
-          <User size={32} color={COLORS.accent} />
-        </View>
+    <ScrollView
+      contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.cardStackWrapper}>
+        <View style={styles.backAccentCard} />
 
-        <Text style={styles.title}>Informations personnelles</Text>
-        <Text style={styles.subtitle}>
-          Ces informations doivent correspondre exactement à votre pièce d'identité officielle pour la réservation.
-        </Text>
+        <View style={styles.frontGlassCard}>
+          <View style={styles.cardHeaderBox}>
+            <View style={styles.iconCircle}>
+              <User size={30} color="#059669" />
+            </View>
 
-        {/* Champ Prénom */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Prénom</Text>
-          <View style={[styles.inputWrapper, prenom.trim().length > 0 && styles.inputWrapperValid]}>
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: Amadou"
-              placeholderTextColor="#94A3B8"
-              value={prenom}
-              onChangeText={setPrenom}
-              autoCapitalize="words"
-            />
-            {prenom.trim().length > 0 && <CheckCircle2 size={16} color={COLORS.accent} />}
+            <View style={styles.badgeKycGlass}>
+              <ShieldCheck size={12} color="#059669" />
+              <Text style={styles.badgeKycText}>INFORMATIONS OFFICIELLES</Text>
+            </View>
+
+            <Text style={styles.mainTitle}>Identité personnelle</Text>
+            <Text style={styles.subtitle}>
+              Renseignez vos informations telles qu'elles apparaissent sur vos documents officiels.
+            </Text>
           </View>
-        </View>
 
-        {/* Champ Nom */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Nom de famille</Text>
-          <View style={[styles.inputWrapper, nom.trim().length > 0 && styles.inputWrapperValid]}>
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: Diallo"
-              placeholderTextColor="#94A3B8"
-              value={nom}
-              onChangeText={setNom}
-              autoCapitalize="characters"
-            />
-            {nom.trim().length > 0 && <CheckCircle2 size={16} color={COLORS.accent} />}
-          </View>
-        </View>
+          {/* Form Stack */}
+          <View style={styles.formStack}>
+            {/* Prénom */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Prénom</Text>
+              <View style={[styles.inputWrapper, prenom.trim().length > 0 && styles.inputWrapperValid]}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ex: Amadou"
+                  placeholderTextColor="#94A3B8"
+                  value={prenom}
+                  onChangeText={setPrenom}
+                  autoCapitalize="words"
+                />
+                {prenom.trim().length > 0 && <CheckCircle2 size={16} color="#059669" />}
+              </View>
+            </View>
 
-        {/* Champ Date de Naissance (Sélecteur Sur-Mesure Moderne) */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Date de naissance</Text>
-          <Pressable 
-            style={[
-              styles.inputWrapper, 
-              { justifyContent: 'space-between', height: 52 },
-              formattedDisplayDate && styles.inputWrapperValid
-            ]}
-            onPress={() => setDatePickerVisible(true)}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-              <Calendar size={18} color={COLORS.accent} style={{ marginRight: 10 }} />
-              {formattedDisplayDate ? (
-                <View style={styles.dateTextGroup}>
-                  <Text style={styles.formattedDateText}>{formattedDisplayDate}</Text>
-                  {userAge !== null && (
-                    <Text style={styles.ageSubtext}>({userAge} ans)</Text>
+            {/* Nom */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Nom de famille</Text>
+              <View style={[styles.inputWrapper, nom.trim().length > 0 && styles.inputWrapperValid]}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ex: Diallo"
+                  placeholderTextColor="#94A3B8"
+                  value={nom}
+                  onChangeText={setNom}
+                  autoCapitalize="characters"
+                />
+                {nom.trim().length > 0 && <CheckCircle2 size={16} color="#059669" />}
+              </View>
+            </View>
+
+            {/* Date de Naissance */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Date de naissance</Text>
+              <TouchableOpacity
+                style={[
+                  styles.inputWrapper,
+                  { justifyContent: 'space-between' },
+                  formattedDisplayDate ? styles.inputWrapperValid : null,
+                ]}
+                onPress={() => setDatePickerVisible(true)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.dateRowLeft}>
+                  <Calendar size={18} color="#059669" />
+                  {formattedDisplayDate ? (
+                    <View style={styles.dateTextGroup}>
+                      <Text style={styles.formattedDateText}>{formattedDisplayDate}</Text>
+                      {userAge !== null && (
+                        <Text style={styles.ageSubtext}>({userAge} ans)</Text>
+                      )}
+                    </View>
+                  ) : (
+                    <Text style={styles.placeholderText}>Sélectionnez votre date</Text>
                   )}
                 </View>
-              ) : (
-                <Text style={styles.placeholderText}>Sélectionnez votre date de naissance</Text>
-              )}
+                <ChevronDown size={18} color="#94A3B8" />
+              </TouchableOpacity>
             </View>
-            <ChevronDown size={18} color={COLORS.inkMuted} />
-          </Pressable>
-        </View>
-      </ScrollView>
 
-      {/* Modal Sélecteur de Date de Naissance Sur-Mesure */}
+            {/* Submit Button */}
+            <TouchableOpacity
+              style={[styles.submitBtn, (!isFormValid || submitting) && styles.btnDisabled]}
+              onPress={handleSubmit}
+              disabled={!isFormValid || submitting}
+              activeOpacity={0.85}
+            >
+              {submitting ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <>
+                  <Text style={styles.submitBtnText}>Enregistrer et continuer</Text>
+                  <View style={styles.emeraldArrowCircle}>
+                    <ArrowRight size={13} color="#4ADE80" strokeWidth={2.5} />
+                  </View>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
       <CustomDatePickerModal
         visible={datePickerVisible}
         value={dateNaissance}
         onConfirm={(formattedDate) => setDateNaissance(formattedDate)}
         onClose={() => setDatePickerVisible(false)}
       />
-
-      {/* Bouton de Validation */}
-      <View style={styles.footer}>
-        <Pressable
-          style={[styles.submitButton, (!isFormValid || submitting) && { opacity: 0.7 }]}
-          onPress={handleSubmit}
-          disabled={!isFormValid || submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <>
-              <Text style={styles.submitButtonText}>Enregistrer et continuer</Text>
-              <ArrowRight size={18} color="#FFFFFF" strokeWidth={2.5} />
-            </>
-          )}
-        </Pressable>
-      </View>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.bg,
-  },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingHorizontal: theme.spacing[4],
+    paddingBottom: theme.spacing[4],
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  cardStackWrapper: {
+    position: 'relative',
+    marginVertical: theme.spacing[2],
+  },
+  backAccentCard: {
+    position: 'absolute',
+    top: -6,
+    left: 8,
+    right: 8,
+    bottom: -6,
+    borderRadius: 32,
+    backgroundColor: 'rgba(16, 185, 129, 0.20)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+  },
+  frontGlassCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.80)',
+    borderRadius: 28,
+    padding: theme.spacing[5],
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  cardHeaderBox: {
+    alignItems: 'center',
+    marginBottom: theme.spacing[3],
   },
   iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: COLORS.accentLight,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
-    alignSelf: 'center',
+    marginBottom: theme.spacing[2],
   },
-  title: {
+  badgeKycGlass: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: theme.radius.full,
+    gap: 6,
+    marginBottom: theme.spacing[2],
+  },
+  badgeKycText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 9,
+    letterSpacing: 0.8,
+    color: '#059669',
+  },
+  mainTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 22,
-    color: theme.primitives.forest[800],
+    lineHeight: 28,
+    color: '#041912',
     textAlign: 'center',
-    marginBottom: 8,
   },
   subtitle: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 13.5,
-    color: COLORS.inkMuted,
+    fontSize: 12.5,
+    color: '#64748B',
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 24,
+    marginTop: 4,
+    lineHeight: 18,
+  },
+  formStack: {
+    gap: theme.spacing[3],
   },
   fieldGroup: {
-    marginBottom: 18,
+    gap: 6,
   },
   label: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13,
-    color: COLORS.ink,
-    marginBottom: 6,
+    fontSize: 12.5,
+    color: '#041912',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#F9FAFB',
     borderWidth: 1.5,
-    borderColor: COLORS.border,
+    borderColor: '#E5E7EB',
     borderRadius: 14,
     paddingHorizontal: 14,
     height: 50,
   },
   inputWrapperValid: {
-    borderColor: COLORS.accent,
+    borderColor: '#059669',
     backgroundColor: '#FFFFFF',
   },
   input: {
     flex: 1,
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 15,
-    color: COLORS.ink,
+    fontSize: 14.5,
+    color: '#041912',
+  },
+  dateRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
   },
   placeholderText: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 14.5,
+    fontSize: 14,
     color: '#94A3B8',
   },
   dateTextGroup: {
@@ -288,35 +347,49 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   formattedDateText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 15,
-    color: COLORS.ink,
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 14,
+    color: '#041912',
   },
   ageSubtext: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13,
-    color: COLORS.accent,
+    fontSize: 12.5,
+    color: '#059669',
   },
-  footer: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 24,
-    borderTopWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.bg,
-  },
-  submitButton: {
-    backgroundColor: COLORS.accent,
-    height: 52,
-    borderRadius: 14,
+  submitBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(4, 25, 18, 0.90)',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
+    marginTop: theme.spacing[2],
   },
-  submitButtonText: {
+  btnDisabled: {
+    opacity: 0.65,
+  },
+  submitBtnText: {
     fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 14.5,
     color: '#FFFFFF',
-    fontSize: 15.5,
+  },
+  emeraldArrowCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
   },
 });
+

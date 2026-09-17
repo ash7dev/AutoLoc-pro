@@ -38,31 +38,31 @@ export const VehicleDetailHeader: React.FC<VehicleDetailHeaderProps> = ({
 
   return (
     <View style={styles.headerContainer}>
-      {/* Bouton Retour (Gauche) */}
+      {/* Bouton Retour Glass (Gauche) */}
       <TouchableOpacity
-        style={styles.circleBtn}
+        style={styles.glassCircleBtn}
         onPress={onBack}
         activeOpacity={0.8}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <ArrowLeft size={20} color="#0F172A" strokeWidth={2.5} />
+        <ArrowLeft size={19} color="#FFFFFF" strokeWidth={2.5} />
       </TouchableOpacity>
 
       {/* Groupe d'actions à droite : Partager + Favoris */}
       <View style={styles.rightActionsGroup}>
-        {/* Bouton Partager */}
+        {/* Bouton Partager Glass */}
         <TouchableOpacity
-          style={styles.circleBtn}
+          style={styles.glassCircleBtn}
           onPress={handleShare}
           activeOpacity={0.8}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Share2 size={18} color="#0F172A" strokeWidth={2} />
+          <Share2 size={18} color="#FFFFFF" strokeWidth={2} />
         </TouchableOpacity>
 
-        {/* Bouton Favoris (Cœur) */}
+        {/* Bouton Favoris (Cœur Néon Menthe / Rouge) Glass */}
         <TouchableOpacity
-          style={styles.circleBtn}
+          style={[styles.glassCircleBtn, isFavorited && styles.glassCircleBtnActive]}
           onPress={() => {
             if (vehicleId && onFavoriteToggle) {
               onFavoriteToggle(vehicleId);
@@ -73,8 +73,8 @@ export const VehicleDetailHeader: React.FC<VehicleDetailHeaderProps> = ({
         >
           <Heart
             size={18}
-            color={isFavorited ? '#EF4444' : '#0F172A'}
-            fill={isFavorited ? '#EF4444' : 'transparent'}
+            color={isFavorited ? '#4ADE80' : '#FFFFFF'}
+            fill={isFavorited ? '#4ADE80' : 'transparent'}
             strokeWidth={2}
           />
         </TouchableOpacity>
@@ -86,7 +86,7 @@ export const VehicleDetailHeader: React.FC<VehicleDetailHeaderProps> = ({
 const styles = StyleSheet.create({
   headerContainer: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 20,
+    top: Platform.OS === 'ios' ? 52 : 24,
     left: 16,
     right: 16,
     zIndex: 100,
@@ -94,26 +94,30 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  circleBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.90)',
+  glassCircleBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(4, 21, 15, 0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
       },
       android: {
-        elevation: 5,
+        elevation: 6,
       },
     }),
+  },
+  glassCircleBtnActive: {
+    backgroundColor: 'rgba(4, 25, 18, 0.85)',
+    borderColor: 'rgba(74, 222, 128, 0.60)',
   },
   rightActionsGroup: {
     flexDirection: 'row',

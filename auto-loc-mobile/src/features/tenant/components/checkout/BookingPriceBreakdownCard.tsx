@@ -1,7 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { CreditCard, Wallet } from 'lucide-react-native';
+import { StyleSheet, View, Text, Platform } from 'react-native';
+import { Wallet, CreditCard, CheckCircle2 } from 'lucide-react-native';
 import { theme } from '../../../../core/theme';
 import { formatDirectPrice } from '../../../../core/utils/currency';
 
@@ -17,12 +16,6 @@ interface BookingPriceBreakdownCardProps {
 
   selectedCurrency?: string;
 }
-
-// Alignée sur la palette Émeraude & Forest Web (#10B981 / #059669)
-const ACCENT = '#10B981';
-const ACCENT_LIGHT = '#34D399';
-const ACCENT_SOFT = 'rgba(16, 185, 129, 0.16)';
-const ACCENT_BORDER = 'rgba(16, 185, 129, 0.35)';
 
 export const BookingPriceBreakdownCard: React.FC<BookingPriceBreakdownCardProps> = ({
   tenantPricePerDay,
@@ -48,275 +41,279 @@ export const BookingPriceBreakdownCard: React.FC<BookingPriceBreakdownCardProps>
   const fmtCurrency = (val: number) => formatDirectPrice(val, selectedCurrency as any);
 
   return (
-    <LinearGradient
-      colors={['#0A2419', '#041912', '#03130D']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.darkGlassCard}
-    >
-      {/* Filet de lumière en haut, effet "verre" */}
-      <LinearGradient
-        colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0)']}
-        style={styles.sheenOverlay}
-        pointerEvents="none"
-      />
-
-      {/* En-tête */}
-      <View style={styles.cardHeader}>
-        <View style={styles.headerTitleRow}>
-          <View style={styles.headerIconBadge}>
-            <Wallet size={15} color={ACCENT} strokeWidth={2.25} />
+    <View style={styles.cardContainer}>
+      {/* En-tête : Badge Icône Sombre + Titre Fraunces + Currency Pill */}
+      <View style={styles.headerRow}>
+        <View style={styles.headerTitleGroup}>
+          <View style={styles.titleIconBadge}>
+            <Wallet size={14} color="#4ADE80" strokeWidth={2.25} />
           </View>
-          <Text style={styles.headerTitle}>Récapitulatif des frais</Text>
+          <Text style={styles.sectionTitle}>Récapitulatif des frais</Text>
         </View>
-        <View style={styles.currencyBadge}>
-          <Text style={styles.currencyBadgeText}>{selectedCurrency}</Text>
+        <View style={styles.currencyPill}>
+          <Text style={styles.currencyPillText}>{selectedCurrency}</Text>
         </View>
       </View>
 
-      <View style={styles.divider} />
-
-      {/* Lignes de détails des frais */}
-      <View style={styles.linesContainer}>
-        <View style={styles.lineRow}>
-          <Text style={styles.lineLabel} numberOfLines={1} ellipsizeMode="tail">
-            Location ({nbJours}j × {fmtCurrency(tenantPricePerDay)})
+      {/* Lignes de Détails des Frais */}
+      <View style={styles.linesStack}>
+        {/* Ligne 1 : Location de base */}
+        <View style={styles.feeRow}>
+          <Text style={styles.feeLabel} numberOfLines={1}>
+            Location ({nbJours} jour{nbJours > 1 ? 's' : ''} × {fmtCurrency(numTenantPrice)})
           </Text>
-          <Text style={styles.lineValue}>{fmtCurrency(rentalBaseTotal)}</Text>
+          <Text style={styles.feeValue}>{fmtCurrency(rentalBaseTotal)}</Text>
         </View>
 
+        {/* Ligne 2 : Livraison à domicile (si cochée) */}
         {isDeliverySelected && (
-          <View style={styles.lineRow}>
-            <Text style={styles.lineLabel} numberOfLines={1} ellipsizeMode="tail">
-              Frais de livraison à domicile
+          <View style={styles.feeRow}>
+            <Text style={styles.feeLabel} numberOfLines={1}>
+              Livraison & Restitution à domicile
             </Text>
-            <Text style={styles.lineValue}>
+            <Text style={styles.feeValue}>
               {numFraisLivraison === 0 ? 'Gratuit' : fmtCurrency(deliveryTotal)}
             </Text>
           </View>
         )}
 
+        {/* Ligne 3 : Option Hors Dakar (si cochée) */}
         {isHorsDakarSelected && (
-          <View style={styles.lineRow}>
-            <Text style={styles.lineLabel} numberOfLines={1} ellipsizeMode="tail">
-              Supplément Hors Dakar ({nbJours}j)
+          <View style={styles.feeRow}>
+            <Text style={styles.feeLabel} numberOfLines={1}>
+              Supplément Hors Dakar ({nbJours}j × {fmtCurrency(numSupplementHorsDakar)})
             </Text>
-            <Text style={styles.lineValue}>{fmtCurrency(horsDakarTotal)}</Text>
+            <Text style={styles.feeValue}>{fmtCurrency(horsDakarTotal)}</Text>
           </View>
         )}
       </View>
 
-      <View style={styles.dividerLight} />
+      <View style={styles.divider} />
 
-      {/* Montant Total */}
+      {/* Ligne Total Général */}
       <View style={styles.totalRow}>
-        <Text style={styles.totalLabel} numberOfLines={1}>Total de la réservation</Text>
+        <Text style={styles.totalLabel}>Total de la réservation</Text>
         <Text style={styles.totalValue}>{fmtCurrency(grandTotal)}</Text>
       </View>
 
-      {/* Encadré Acompte 30% / Solde 70% avec bordure dégradée */}
-      <LinearGradient
-        colors={[ACCENT_BORDER, 'rgba(16, 185, 129, 0.05)']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.depositRing}
-      >
-        <View style={styles.depositGlassBox}>
-          <View style={styles.depositRow}>
-            <View style={styles.depositTag}>
-              <View style={styles.depositIconDot}>
-                <CreditCard size={12} color={ACCENT} strokeWidth={2.5} />
-              </View>
-              <Text style={styles.depositTagText}>Acompte en ligne</Text>
+      {/* Module Acompte 30% / Solde 70% Dark Obsidian */}
+      <View style={styles.depositDarkModule}>
+        {/* En-tête Acompte */}
+        <View style={styles.depositTopRow}>
+          <View style={styles.depositBadgeGroup}>
+            <View style={styles.depositIconCircle}>
+              <CreditCard size={14} color="#4ADE80" strokeWidth={2.25} />
             </View>
-            <Text style={styles.depositValue}>{fmtCurrency(deposit30)}</Text>
+            <View>
+              <Text style={styles.depositTitle}>Acompte à payer maintenant</Text>
+              <Text style={styles.depositSubtitle}>30% pour bloquer la réservation</Text>
+            </View>
           </View>
-
-          {/* Barre de proportion 30/70 */}
-          <View style={styles.splitTrack}>
-            <LinearGradient
-              colors={[ACCENT_LIGHT, ACCENT]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.splitFill, { width: '30%' }]}
-            />
-          </View>
-
-          <View style={styles.depositSubRow}>
-            <Text style={styles.depositSubLabel} numberOfLines={1}>Solde à la remise des clés</Text>
-            <Text style={styles.depositSubValue}>{fmtCurrency(remaining70)}</Text>
-          </View>
+          <Text style={styles.depositAmount}>{fmtCurrency(deposit30)}</Text>
         </View>
-      </LinearGradient>
-    </LinearGradient>
+
+        {/* Piste Visuelle de Progression 30% / 70% */}
+        <View style={styles.progressTrack}>
+          <View style={styles.progressFill30} />
+        </View>
+
+        {/* Pied Solde au Check-in */}
+        <View style={styles.depositBottomRow}>
+          <View style={styles.checkinGroup}>
+            <CheckCircle2 size={13} color="rgba(255, 255, 255, 0.60)" />
+            <Text style={styles.checkinText}>Solde dû à la remise des clés (70%)</Text>
+          </View>
+          <Text style={styles.checkinAmount}>{fmtCurrency(remaining70)}</Text>
+        </View>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  darkGlassCard: {
-    borderRadius: theme.radius.xl,
-    padding: theme.spacing[4],
-    gap: 14,
+  cardContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(228, 235, 219, 0.12)',
-    overflow: 'hidden',
-    ...theme.elevation.lg,
+    borderColor: '#E4EBDB',
+    padding: 16,
+    gap: 14,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#041912',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
-  sheenOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-  },
-  cardHeader: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  headerTitleRow: {
+  headerTitleGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 9,
+    gap: 8,
+    flex: 1,
   },
-  headerIconBadge: {
+  titleIconBadge: {
     width: 28,
     height: 28,
     borderRadius: 9,
-    backgroundColor: ACCENT_SOFT,
-    borderWidth: 1,
-    borderColor: ACCENT_BORDER,
+    backgroundColor: '#041912',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  headerTitle: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 15.5,
-    color: '#FFFFFF',
-    letterSpacing: -0.2,
-  },
-  currencyBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: theme.radius.full,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
-  currencyBadgeText: {
+  sectionTitle: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 17.5,
+    color: '#041912',
+    letterSpacing: -0.3,
+  },
+  currencyPill: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  currencyPillText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 10,
-    color: ACCENT,
-    letterSpacing: 0.4,
+    fontSize: 11,
+    color: '#059669',
+  },
+  linesStack: {
+    gap: 10,
+  },
+  feeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  feeLabel: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 13,
+    color: '#5F6B59',
+    flex: 1,
+  },
+  feeValue: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 13.5,
+    color: '#041912',
+    fontVariant: ['tabular-nums'],
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(228, 235, 219, 0.1)',
-  },
-  linesContainer: {
-    gap: 12,
-  },
-  lineRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 8,
-  },
-  lineLabel: {
-    fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 12.5,
-    color: '#A0B296',
-    flex: 1,
-    marginRight: 8,
-  },
-  lineValue: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13,
-    color: '#FFFFFF',
-    flexShrink: 0,
-  },
-  dividerLight: {
-    height: 1,
-    backgroundColor: 'rgba(228, 235, 219, 0.15)',
+    backgroundColor: '#E2E8F0',
   },
   totalRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: 12,
   },
   totalLabel: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontFamily: theme.typography.fontFamily.bold,
     fontSize: 15,
-    color: '#FFFFFF',
+    color: '#041912',
   },
   totalValue: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 22,
-    color: ACCENT,
+    fontSize: 20,
+    color: '#041912',
+    fontVariant: ['tabular-nums'],
     letterSpacing: -0.4,
   },
-  depositRing: {
-    borderRadius: theme.radius.lg + 1,
-    padding: 1,
-    marginTop: 2,
-  },
-  depositGlassBox: {
-    backgroundColor: 'rgba(4, 25, 18, 0.9)',
-    borderRadius: theme.radius.lg,
+  /* Module Acompte 30% Dark Obsidian */
+  depositDarkModule: {
+    backgroundColor: '#041912',
+    borderRadius: 18,
     padding: 14,
-    gap: 10,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.30)',
   },
-  depositRow: {
+  depositTopRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: 12,
   },
-  depositTag: {
+  depositBadgeGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
+    flex: 1,
   },
-  depositIconDot: {
-    width: 22,
-    height: 22,
-    borderRadius: 7,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+  depositIconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 11,
+    backgroundColor: 'rgba(74, 222, 128, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  depositTagText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 12.5,
+  depositTitle: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 13.5,
     color: '#FFFFFF',
   },
-  depositValue: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 17,
-    color: ACCENT,
-  },
-  splitTrack: {
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    overflow: 'hidden',
-  },
-  splitFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  depositSubRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  depositSubLabel: {
+  depositSubtitle: {
     fontFamily: theme.typography.fontFamily.regular,
     fontSize: 11,
-    color: '#A0B296',
+    color: 'rgba(255, 255, 255, 0.65)',
   },
-  depositSubValue: {
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 12,
-    color: '#E4EBDB',
+  depositAmount: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 17,
+    color: '#4ADE80',
+    fontVariant: ['tabular-nums'],
+  },
+  progressTrack: {
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    overflow: 'hidden',
+  },
+  progressFill30: {
+    width: '30%',
+    height: '100%',
+    backgroundColor: '#4ADE80',
+    borderRadius: 3,
+  },
+  depositBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingTop: 2,
+  },
+  checkinGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  checkinText: {
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 11.5,
+    color: 'rgba(255, 255, 255, 0.75)',
+  },
+  checkinAmount: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 12.5,
+    color: '#FFFFFF',
+    fontVariant: ['tabular-nums'],
   },
 });

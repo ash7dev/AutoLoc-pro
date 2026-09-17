@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import { Check, Phone, ShieldCheck, Lock } from 'lucide-react-native';
 import { theme } from '../../../../core/theme';
@@ -86,8 +87,10 @@ export const BookingCheckoutStep2: React.FC<BookingCheckoutStep2Props> = ({
         {/* 3. Saisie du Numéro de Téléphone pour Mobile Money */}
         <View style={styles.cardContainer}>
           <View style={styles.headerRow}>
-            <Phone size={16} color={theme.colors.brand.main} />
-            <Text style={styles.sectionLabelText}>NUMÉRO DE DÉBIT MOBILE MONEY</Text>
+            <View style={styles.titleIconBadge}>
+              <Phone size={14} color="#4ADE80" strokeWidth={2.25} />
+            </View>
+            <Text style={styles.sectionTitle}>Numéro de téléphone</Text>
           </View>
 
           <View style={styles.inputWrap}>
@@ -101,7 +104,7 @@ export const BookingCheckoutStep2: React.FC<BookingCheckoutStep2Props> = ({
               onChangeText={setPhoneNumber}
               placeholder="77 000 00 00"
               keyboardType="phone-pad"
-              placeholderTextColor="#7D8975"
+              placeholderTextColor="#94A3B8"
             />
           </View>
           <Text style={styles.fieldHint}>
@@ -116,7 +119,7 @@ export const BookingCheckoutStep2: React.FC<BookingCheckoutStep2Props> = ({
           activeOpacity={0.8}
         >
           <View style={[styles.checkbox, hasConsented && styles.checkboxActive]}>
-            {hasConsented && <Check size={12} color="#FFFFFF" />}
+            {hasConsented && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
           </View>
           <Text style={styles.consentText}>
             J'accepte les <Text style={styles.consentLink}>Conditions Générales d'Utilisation</Text> d'AutoLoc ainsi que le contrat de location du propriétaire.
@@ -125,7 +128,7 @@ export const BookingCheckoutStep2: React.FC<BookingCheckoutStep2Props> = ({
 
         {/* Badge de Sécurité 256-bit */}
         <View style={styles.securityBadge}>
-          <Lock size={14} color="#5F6B59" />
+          <Lock size={13} color="#64748B" />
           <Text style={styles.securityText}>
             Paiement 100% sécurisé et encadré par AutoLoc Sénégal.
           </Text>
@@ -134,13 +137,17 @@ export const BookingCheckoutStep2: React.FC<BookingCheckoutStep2Props> = ({
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Barre Fixe Inférieure Bouton de Paiement CTA */}
+      {/* Barre Fixe Inférieure Bouton de Paiement CTA Dark Obsidian */}
       <SafeAreaView style={styles.footerSafeArea}>
         <View style={styles.footerRow}>
           <AutoButton
             title={`Payer ${fmtCurrency(toPayAmount)} avec ${getGatewayName()}`}
-            variant="action"
-            leftIcon={<ShieldCheck size={18} color="#FFFFFF" />}
+            variant="dark"
+            leftIcon={
+              <View style={styles.btnIconCircle}>
+                <ShieldCheck size={14} color="#041912" strokeWidth={2.5} />
+              </View>
+            }
             onPress={handlePayPress}
             disabled={!hasConsented || !phoneNumber.trim()}
             loading={isProcessing}
@@ -164,101 +171,123 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: theme.radius.card,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: '#E4EBDB',
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
-    ...theme.elevation.sm,
+    padding: 16,
+    gap: 14,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#041912',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
-  sectionLabelText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 11,
-    color: '#7D8975',
-    letterSpacing: 0.6,
+  titleIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: '#041912',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+  },
+  sectionTitle: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 15.5,
+    color: '#041912',
+    letterSpacing: -0.3,
   },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FBF4',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#E4EBDB',
-    borderRadius: theme.radius.md,
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
     overflow: 'hidden',
   },
   countryPrefix: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E4EBDB',
+    backgroundColor: '#F1F5F9',
     paddingHorizontal: 12,
     paddingVertical: 12,
     gap: 6,
+    borderRightWidth: 1,
+    borderRightColor: '#E2E8F0',
   },
   flagText: {
     fontSize: 14,
   },
   prefixText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13,
-    color: theme.primitives.forest[800],
+    fontSize: 14,
+    color: '#041912',
   },
   textInput: {
     flex: 1,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 12,
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 15,
-    color: theme.primitives.forest[800],
+    color: '#041912',
   },
   fieldHint: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 11,
-    color: '#5F6B59',
+    fontSize: 11.5,
+    color: '#64748B',
   },
   consentCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#F8FBF4',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#E4EBDB',
-    borderRadius: theme.radius.md,
-    padding: theme.spacing[4],
-    gap: theme.spacing[3],
+    borderColor: '#E2E8F0',
+    borderRadius: 18,
+    padding: 14,
+    gap: 12,
   },
   consentCardActive: {
-    backgroundColor: '#F1F8EE',
-    borderColor: theme.colors.brand.main,
+    backgroundColor: '#ECFDF5',
+    borderColor: '#059669',
   },
   checkbox: {
     width: 20,
     height: 20,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: '#9EAD96',
+    borderColor: '#94A3B8',
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     marginTop: 2,
   },
   checkboxActive: {
-    backgroundColor: theme.colors.brand.main,
-    borderColor: theme.colors.brand.main,
+    backgroundColor: '#059669',
+    borderColor: '#059669',
   },
   consentText: {
     flex: 1,
     fontFamily: theme.typography.fontFamily.regular,
     fontSize: 12,
-    color: theme.primitives.forest[800],
+    color: '#475569',
     lineHeight: 18,
   },
   consentLink: {
     fontFamily: theme.typography.fontFamily.bold,
-    color: theme.colors.brand.main,
+    color: '#059669',
     textDecorationLine: 'underline',
   },
   securityBadge: {
@@ -270,8 +299,8 @@ const styles = StyleSheet.create({
   },
   securityText: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 11,
-    color: '#5F6B59',
+    fontSize: 11.5,
+    color: '#64748B',
   },
   footerSafeArea: {
     backgroundColor: '#FFFFFF',
@@ -284,5 +313,13 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     width: '100%',
+  },
+  btnIconCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#4ADE80',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -3,19 +3,18 @@ import {
   StyleSheet,
   View,
   Text,
+  Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
   ShieldCheck,
   Fuel,
-  Navigation,
-  MapPin,
+  Globe,
   FileText,
   Lock,
-  FileSpreadsheet,
-  Globe,
+  CheckCircle2,
 } from 'lucide-react-native';
-import { CurrencyCode, formatConvertedPrice } from '../../../core/utils/currency';
+import { theme } from '../../../core/theme';
+import { CurrencyCode } from '../../../core/utils/currency';
 
 interface VehicleRentalConditionsCardProps {
   assurance?: string | null;
@@ -25,72 +24,27 @@ interface VehicleRentalConditionsCardProps {
   fraisLivraison?: number | null;
   zoneConduite?: string | null;
   reglesSpecifiques?: string | null;
-  selectedCurrency: CurrencyCode;
+  selectedCurrency?: CurrencyCode;
 }
-
-const COLORS = {
-  accent: '#16A34A',
-  accentDeep: '#0F7A38',
-  tint: '#ECFDF5',
-  tintBorder: '#A7F3D0',
-  ink: '#041912',
-  inkTitle: '#22271F',
-  inkDetail: '#5F6B59',
-  rowDivider: '#F1F6EA',
-  cardBorder: '#E4EBDB',
-  secureBg: '#F4FBF6',
-  secureBorder: '#D3EFDD',
-};
 
 export const VehicleRentalConditionsCard: React.FC<VehicleRentalConditionsCardProps> = ({
   assurance,
   carburantCondition,
-  autoriseHorsDakar,
-  supplementHorsDakarParJour,
-  fraisLivraison,
   zoneConduite,
   reglesSpecifiques,
-  selectedCurrency,
 }) => {
-  const supplementVal = supplementHorsDakarParJour ? Number(supplementHorsDakarParJour) : 0;
-  const formattedSupplement = supplementVal > 0
-    ? formatConvertedPrice(supplementVal, selectedCurrency)
-    : null;
-
-  const livraisonVal = fraisLivraison != null ? Number(fraisLivraison) : null;
-  const formattedLivraison = livraisonVal != null && livraisonVal > 0
-    ? formatConvertedPrice(livraisonVal, selectedCurrency)
-    : null;
-
   const conditions = [
     {
       icon: ShieldCheck,
       title: 'Assurance & Protection',
-      detail: assurance || 'Assurance Tiers & Assistance incluses',
+      detail: assurance || 'Assurance Tiers & Assistance 24/7 incluses',
+      badgeText: 'Inclus',
     },
     {
       icon: Fuel,
       title: 'Politique Carburant',
-      detail: carburantCondition || 'Niveau identique au départ',
-    },
-    {
-      icon: Navigation,
-      title: 'Voyage Hors Dakar',
-      detail: autoriseHorsDakar
-        ? formattedSupplement
-          ? `Autorisé (+${formattedSupplement} / jour)`
-          : 'Autorisé sans supplément'
-        : 'Uniquement dans la région de Dakar',
-    },
-    {
-      icon: MapPin,
-      title: 'Livraison du véhicule',
-      detail:
-        livraisonVal === 0
-          ? 'Livraison gratuite sur demande'
-          : formattedLivraison
-            ? `Disponible sur demande (${formattedLivraison})`
-            : 'À récupérer sur place au point de rendez-vous',
+      detail: carburantCondition || 'Niveau identique au départ (Plein à plein)',
+      badgeText: 'Plein à plein',
     },
   ];
 
@@ -99,14 +53,16 @@ export const VehicleRentalConditionsCard: React.FC<VehicleRentalConditionsCardPr
       icon: Globe,
       title: 'Zone de Conduite',
       detail: zoneConduite,
+      badgeText: 'Réglementé',
     });
   }
 
   if (reglesSpecifiques) {
     conditions.push({
-      icon: FileSpreadsheet,
+      icon: FileText,
       title: 'Consignes de l’Hôte',
       detail: reglesSpecifiques,
+      badgeText: 'Important',
     });
   }
 
@@ -114,55 +70,53 @@ export const VehicleRentalConditionsCard: React.FC<VehicleRentalConditionsCardPr
     <View style={styles.container}>
       {/* En-tête de Section */}
       <View style={styles.headerRow}>
-        <LinearGradient
-          colors={[COLORS.accent, COLORS.accentDeep]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.titleIconBadge}
-        >
-          <FileText size={14} color="#FFFFFF" strokeWidth={2.25} />
-        </LinearGradient>
+        <View style={styles.titleIconBadge}>
+          <ShieldCheck size={14} color="#4ADE80" strokeWidth={2.25} />
+        </View>
         <Text style={styles.sectionTitle}>Conditions & Garanties</Text>
       </View>
 
-      <View style={styles.cardBox}>
+      {/* Grille des cartes de conditions (Identique à Options & Services) */}
+      <View style={styles.cardsStack}>
         {conditions.map((item, idx) => {
           const Icon = item.icon;
           return (
-            <View
-              key={idx}
-              style={[
-                styles.conditionRow,
-                idx === conditions.length - 1 && styles.lastRegularRow,
-              ]}
-            >
-              <View style={styles.iconCircle}>
-                <Icon size={15} color={COLORS.accentDeep} strokeWidth={2.25} />
+            <View key={idx} style={styles.conditionCard}>
+              <View style={styles.cardHeader}>
+                <View style={styles.iconCircle}>
+                  <Icon size={13} color="#4ADE80" strokeWidth={2.25} />
+                </View>
+                <View style={styles.cardHeaderContent}>
+                  <Text style={styles.optionTitle}>{item.title}</Text>
+                  {item.badgeText && (
+                    <View style={styles.badgePill}>
+                      <CheckCircle2 size={11} color="#059669" />
+                      <Text style={styles.badgeText}>{item.badgeText}</Text>
+                    </View>
+                  )}
+                </View>
               </View>
-              <View style={styles.conditionTextContainer}>
-                <Text style={styles.conditionTitle}>{item.title}</Text>
-                <Text style={styles.conditionDetail}>{item.detail}</Text>
-              </View>
+              <Text style={styles.optionDescription}>{item.detail}</Text>
             </View>
           );
         })}
 
-        {/* Ligne mise en avant : Réservation sécurisée */}
-        <View style={styles.secureRow}>
-          <View style={styles.secureIconCircle}>
-            <Lock size={15} color={COLORS.accentDeep} strokeWidth={2.5} />
-          </View>
-          <View style={styles.conditionTextContainer}>
-            <View style={styles.secureTitleRow}>
-              <Text style={styles.conditionTitle}>Réservation sécurisée</Text>
+        {/* Carte Garantie & Réservation Sécurisée (Fond Noir Obsidian) */}
+        <View style={styles.secureDarkCard}>
+          <View style={styles.cardHeader}>
+            <View style={styles.secureIconCircle}>
+              <Lock size={13} color="#4ADE80" strokeWidth={2.25} />
+            </View>
+            <View style={styles.cardHeaderContent}>
+              <Text style={styles.secureTitle}>Réservation sécurisée</Text>
               <View style={styles.securePill}>
                 <Text style={styles.securePillText}>30% d'acompte</Text>
               </View>
             </View>
-            <Text style={styles.conditionDetail}>
-              Via Mobile Money (Wave, Orange Money) ou Carte bancaire
-            </Text>
           </View>
+          <Text style={styles.secureDescription}>
+            Via Mobile Money (Wave, Orange Money)
+          </Text>
         </View>
       </View>
     </View>
@@ -171,125 +125,155 @@ export const VehicleRentalConditionsCard: React.FC<VehicleRentalConditionsCardPr
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 22,
+    marginTop: 24,
     paddingHorizontal: 20,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     marginBottom: 14,
   },
   titleIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    backgroundColor: '#041912',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+  },
+  sectionTitle: {
+    fontSize: 17.5,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    color: '#041912',
+    letterSpacing: -0.3,
+    flex: 1,
+  },
+  cardsStack: {
+    gap: 12,
+  },
+  conditionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E4EBDB',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#041912',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 8,
+  },
+  iconCircle: {
     width: 30,
     height: 30,
     borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: COLORS.accentDeep,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.ink,
-    letterSpacing: -0.3,
-  },
-  cardBox: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
-    shadowColor: '#0F1F14',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  conditionRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.rowDivider,
-  },
-  lastRegularRow: {
-    borderBottomWidth: 0,
-    paddingBottom: 14,
-  },
-  iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: COLORS.tint,
+    backgroundColor: '#041912',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: COLORS.tintBorder,
-    marginTop: 2,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
-  conditionTextContainer: {
+  cardHeaderContent: {
     flex: 1,
+    gap: 4,
   },
-  conditionTitle: {
-    color: COLORS.inkTitle,
-    fontSize: 13,
-    fontWeight: '700',
+  optionTitle: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 15,
+    color: '#041912',
   },
-  conditionDetail: {
-    color: COLORS.inkDetail,
-    fontSize: 12,
-    marginTop: 2,
-    lineHeight: 16,
-  },
-  secureRow: {
+  badgePill: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    marginHorizontal: -16,
-    marginBottom: -8,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: COLORS.secureBg,
-    borderBottomLeftRadius: 18,
-    borderBottomRightRadius: 18,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.secureBorder,
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  badgeText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 11,
+    color: '#059669',
+  },
+  optionDescription: {
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 12.5,
+    color: '#5F6B59',
+    lineHeight: 18,
+    marginLeft: 42,
+  },
+  /* Carte Noire Obsidian Réservation Sécurisée */
+  secureDarkCard: {
+    backgroundColor: '#041912',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.30)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#041912',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.25,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   secureIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: 'rgba(74, 222, 128, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: COLORS.tintBorder,
-    marginTop: 2,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
-  secureTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flexWrap: 'wrap',
+  secureTitle: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 15,
+    color: '#FFFFFF',
   },
   securePill: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(74, 222, 128, 0.18)',
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.tintBorder,
+    borderColor: 'rgba(74, 222, 128, 0.40)',
   },
   securePillText: {
-    color: COLORS.accentDeep,
-    fontSize: 10,
-    fontWeight: '700',
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 11,
+    color: '#4ADE80',
+  },
+  secureDescription: {
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 12.5,
+    color: 'rgba(255, 255, 255, 0.75)',
+    lineHeight: 18,
+    marginLeft: 42,
   },
 });

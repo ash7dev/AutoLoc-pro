@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { TenantHomeScreen } from './TenantHomeScreen';
 import { TenantExploreScreen } from './TenantExploreScreen';
 import { TenantBookingsScreen } from './TenantBookingsScreen';
 import { TenantProfileScreen } from './TenantProfileScreen';
-import { TenantTabBar, TenantTabType } from '../../../shared/components/TenantTabBar';
+import { TenantTabBar } from '../../../shared/components/TenantTabBar';
+import { useNavigation } from '../../../core/navigation/RootNavigator';
 
 export const TenantMainLayout: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TenantTabType>('ACCUEIL');
+  const { activeTenantTab, navigateToTab } = useNavigation();
 
   const renderActiveScreen = () => {
-    switch (activeTab) {
+    switch (activeTenantTab) {
       case 'ACCUEIL':
         return <TenantHomeScreen />;
       case 'EXPLORER':
@@ -33,8 +34,8 @@ export const TenantMainLayout: React.FC = () => {
 
       {/* Tab Bar Flottante Ultra-Premium (Inspirée de la maquette utilisateur) */}
       <TenantTabBar
-        activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab)}
+        activeTab={activeTenantTab}
+        onTabChange={(tab) => navigateToTab(tab)}
       />
     </View>
   );

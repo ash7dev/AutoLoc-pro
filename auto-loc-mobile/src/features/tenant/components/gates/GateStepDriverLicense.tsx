@@ -3,13 +3,13 @@ import {
   StyleSheet,
   View,
   Text,
-  Pressable,
+  TouchableOpacity,
   Image,
   Alert,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { Award, Camera, CheckCircle2, ArrowRight } from 'lucide-react-native';
+import { Award, Camera, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { kycService } from '../../../kyc/services/kycService';
@@ -21,28 +21,16 @@ interface GateStepDriverLicenseProps {
   onSuccess: () => void;
 }
 
-const COLORS = {
-  bg: '#FFFFFF',
-  accent: '#16A34A',
-  accentLight: '#F0FDF4',
-  ink: '#041912',
-  inkMuted: '#64748B',
-  border: '#E2E8F0',
-  surface: '#F8FAFC',
-};
-
 export const GateStepDriverLicense: React.FC<GateStepDriverLicenseProps> = ({ onSuccess }) => {
   const updateUserProfile = useAppStore((state) => state.updateUserProfile);
   const [permisUri, setPermisUri] = useState<string | null>(null);
 
-  // Jauge de progression
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [progressLabel, setProgressLabel] = useState('');
 
   const [pickerModalVisible, setPickerModalVisible] = useState(false);
 
-  // Option 1 : Photothèque
   const handleSelectLibrary = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -59,7 +47,6 @@ export const GateStepDriverLicense: React.FC<GateStepDriverLicenseProps> = ({ on
     }
   };
 
-  // Option 2 : Appareil photo
   const handleSelectCamera = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
@@ -75,7 +62,6 @@ export const GateStepDriverLicense: React.FC<GateStepDriverLicenseProps> = ({ on
     }
   };
 
-  // Option 3 : Choisir les fichiers
   const handleSelectDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -99,7 +85,7 @@ export const GateStepDriverLicense: React.FC<GateStepDriverLicenseProps> = ({ on
 
     setUploading(true);
     setUploadProgress(0);
-    setProgressLabel('Initialisation...');
+    setProgressLabel('Initialisation du fichier...');
 
     try {
       const res = await kycService.submitPermisLinkWithProgress(
@@ -124,59 +110,96 @@ export const GateStepDriverLicense: React.FC<GateStepDriverLicenseProps> = ({ on
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.iconCircle}>
-          <Award size={32} color={COLORS.accent} />
-        </View>
+    <ScrollView
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.cardStackWrapper}>
+        <View style={styles.backAccentCard} />
 
-        <Text style={styles.title}>Permis de conduire</Text>
-        <Text style={styles.subtitle}>
-          Ajoutez une photo lisible de votre permis de conduire valide.
-        </Text>
-
-        {/* Jauge de Progression d'Upload */}
-        {uploading && (
-          <View style={styles.progressGaugeCard}>
-            <View style={styles.progressGaugeHeader}>
-              <Text style={styles.progressGaugeTitle}>Envoi du permis...</Text>
-              <Text style={styles.progressGaugePercent}>{uploadProgress}%</Text>
+        <View style={styles.frontGlassCard}>
+          <View style={styles.cardHeaderBox}>
+            <View style={styles.iconCircle}>
+              <Award size={30} color="#059669" />
             </View>
 
-            <View style={styles.progressBarTrack}>
-              <View style={[styles.progressBarFill, { width: `${uploadProgress}%` }]} />
+            <View style={styles.badgeKycGlass}>
+              <ShieldCheck size={12} color="#059669" />
+              <Text style={styles.badgeKycText}>PERMIS DE CONDUIRE</Text>
             </View>
 
-            <Text style={styles.progressGaugeLabel}>{progressLabel}</Text>
+            <Text style={styles.mainTitle}>Permis de Conduire</Text>
+            <Text style={styles.subtitle}>
+              Ajoutez une photo claire et lisible du recto de votre permis de conduire valide.
+            </Text>
           </View>
-        )}
 
-        <View style={styles.uploadCard}>
-          <Pressable 
-            style={styles.uploadBox} 
+          {/* Jauge d'Upload en cours */}
+          {uploading && (
+            <View style={styles.progressGaugeCard}>
+              <View style={styles.progressGaugeHeader}>
+                <Text style={styles.progressGaugeTitle}>Transfert sécurisé du permis</Text>
+                <Text style={styles.progressGaugePercent}>{uploadProgress}%</Text>
+              </View>
+
+              <View style={styles.progressBarTrack}>
+                <View style={[styles.progressBarFill, { width: `${uploadProgress}%` }]} />
+              </View>
+
+              <Text style={styles.progressGaugeLabel}>{progressLabel}</Text>
+            </View>
+          )}
+
+          {/* Capture Zone Dropzone */}
+          <TouchableOpacity
+            style={styles.uploadBox}
             onPress={() => !uploading && setPickerModalVisible(true)}
             disabled={uploading}
+            activeOpacity={0.85}
           >
             {permisUri ? (
               <View style={styles.previewContainer}>
                 <Image source={{ uri: permisUri }} style={styles.previewImage} />
                 <View style={styles.completedBadge}>
-                  <CheckCircle2 size={16} color="#FFFFFF" />
+                  <CheckCircle2 size={15} color="#FFFFFF" />
                   <Text style={styles.completedBadgeText}>Permis ajouté</Text>
                 </View>
               </View>
             ) : (
               <View style={styles.placeholderContainer}>
-                <Camera size={32} color={COLORS.inkMuted} />
-                <Text style={styles.placeholderText}>Ajouter mon permis de conduire</Text>
-                <Text style={styles.placeholderSubtext}>Photothèque, Appareil photo ou Fichiers</Text>
+                <View style={styles.cameraCircleIcon}>
+                  <Camera size={26} color="#059669" />
+                </View>
+                <Text style={styles.placeholderMainText}>Ajouter mon permis de conduire</Text>
+                <Text style={styles.placeholderSubText}>Photothèque, Appareil photo ou Fichiers</Text>
               </View>
             )}
-          </Pressable>
-        </View>
-      </ScrollView>
+          </TouchableOpacity>
 
-      {/* Modal Sur-Mesure Sélection Source */}
+          {/* Submit Button Action */}
+          <TouchableOpacity
+            style={[styles.submitBtn, (!permisUri || uploading) && styles.btnDisabled]}
+            onPress={handleSubmit}
+            disabled={!permisUri || uploading}
+            activeOpacity={0.85}
+          >
+            {uploading ? (
+              <View style={styles.loadingRow}>
+                <ActivityIndicator color="#FFFFFF" size="small" />
+                <Text style={styles.submitBtnText}>Envoi en cours ({uploadProgress}%)...</Text>
+              </View>
+            ) : (
+              <>
+                <Text style={styles.submitBtnText}>Enregistrer mon permis</Text>
+                <View style={styles.emeraldArrowCircle}>
+                  <ArrowRight size={13} color="#4ADE80" strokeWidth={2.5} />
+                </View>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ImageSourcePickerModal
         visible={pickerModalVisible}
         onClose={() => setPickerModalVisible(false)}
@@ -184,134 +207,171 @@ export const GateStepDriverLicense: React.FC<GateStepDriverLicenseProps> = ({ on
         onSelectCamera={handleSelectCamera}
         onSelectDocument={handleSelectDocument}
       />
-
-      {/* Bouton de confirmation */}
-      <View style={styles.footer}>
-        <Pressable
-          style={[styles.submitButton, uploading && { opacity: 0.7 }]}
-          onPress={handleSubmit}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <ActivityIndicator color="#FFFFFF" />
-              <Text style={styles.submitButtonText}>Envoi en cours ({uploadProgress}%)...</Text>
-            </View>
-          ) : (
-            <>
-              <Text style={styles.submitButtonText}>Enregistrer mon permis</Text>
-              <ArrowRight size={18} color="#FFFFFF" strokeWidth={2.5} />
-            </>
-          )}
-        </Pressable>
-      </View>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.bg,
-  },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingHorizontal: theme.spacing[4],
+    paddingBottom: theme.spacing[4],
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  cardStackWrapper: {
+    position: 'relative',
+    marginVertical: theme.spacing[2],
+  },
+  backAccentCard: {
+    position: 'absolute',
+    top: -6,
+    left: 8,
+    right: 8,
+    bottom: -6,
+    borderRadius: 32,
+    backgroundColor: 'rgba(16, 185, 129, 0.20)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+  },
+  frontGlassCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.80)',
+    borderRadius: 28,
+    padding: theme.spacing[5],
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  cardHeaderBox: {
+    alignItems: 'center',
+    marginBottom: theme.spacing[3],
   },
   iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: COLORS.accentLight,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
-    alignSelf: 'center',
+    marginBottom: theme.spacing[2],
   },
-  title: {
+  badgeKycGlass: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: theme.radius.full,
+    gap: 6,
+    marginBottom: theme.spacing[2],
+  },
+  badgeKycText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 9,
+    letterSpacing: 0.8,
+    color: '#059669',
+  },
+  mainTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 22,
-    color: theme.primitives.forest[800],
+    lineHeight: 28,
+    color: '#041912',
     textAlign: 'center',
-    marginBottom: 8,
   },
   subtitle: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 13.5,
-    color: COLORS.inkMuted,
+    fontSize: 12.5,
+    color: '#64748B',
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 24,
+    marginTop: 4,
+    lineHeight: 18,
   },
   progressGaugeCard: {
-    backgroundColor: COLORS.accentLight,
+    backgroundColor: '#ECFDF5',
     borderRadius: 16,
-    padding: 16,
+    padding: 14,
     borderWidth: 1,
-    borderColor: '#DCFCE7',
-    marginBottom: 20,
+    borderColor: '#A7F3D0',
+    marginBottom: theme.spacing[3],
   },
   progressGaugeHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   progressGaugeTitle: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13.5,
-    color: COLORS.ink,
+    fontSize: 12.5,
+    color: '#041912',
   },
   progressGaugePercent: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 14,
-    color: COLORS.accent,
+    fontFamily: theme.typography.fontFamily.extraBold,
+    fontSize: 13,
+    color: '#059669',
   },
   progressBarTrack: {
-    height: 8,
+    height: 7,
     backgroundColor: '#DCFCE7',
     borderRadius: 4,
     overflow: 'hidden',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: COLORS.accent,
+    backgroundColor: '#059669',
     borderRadius: 4,
   },
   progressGaugeLabel: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 12,
-    color: COLORS.inkMuted,
-  },
-  uploadCard: {
-    marginBottom: 16,
+    fontSize: 11,
+    color: '#64748B',
   },
   uploadBox: {
     height: 180,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: COLORS.border,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#A7F3D0',
     borderStyle: 'dashed',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#F9FAFB',
     overflow: 'hidden',
+    marginBottom: theme.spacing[4],
   },
   placeholderContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    paddingHorizontal: 20,
   },
-  placeholderText: {
+  cameraCircleIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  placeholderMainText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13.5,
-    color: COLORS.ink,
+    fontSize: 14,
+    color: '#041912',
+    textAlign: 'center',
   },
-  placeholderSubtext: {
+  placeholderSubText: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 12,
-    color: COLORS.inkMuted,
+    fontSize: 11.5,
+    color: '#64748B',
+    textAlign: 'center',
   },
   previewContainer: {
     flex: 1,
@@ -326,39 +386,59 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 12,
     right: 12,
-    backgroundColor: COLORS.accent,
+    backgroundColor: '#041912',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.40)',
   },
   completedBadgeText: {
-    fontFamily: theme.typography.fontFamily.bold,
+    fontFamily: theme.typography.fontFamily.semiBold,
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 11.5,
   },
-  footer: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 24,
-    borderTopWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.bg,
-  },
-  submitButton: {
-    backgroundColor: COLORS.accent,
-    height: 52,
-    borderRadius: 14,
+  submitBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(4, 25, 18, 0.90)',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  btnDisabled: {
+    opacity: 0.60,
+  },
+  submitBtnText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 14.5,
+    color: '#FFFFFF',
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
-  submitButtonText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    color: '#FFFFFF',
-    fontSize: 15.5,
+  emeraldArrowCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
   },
 });
+

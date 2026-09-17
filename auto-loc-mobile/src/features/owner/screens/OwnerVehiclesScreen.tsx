@@ -22,6 +22,7 @@ import { useHostGate } from '../hooks/useHostGate';
 import { ReservationGateModal } from '../../tenant/components/gates/ReservationGateModal';
 import { AddVehicleWizardScreen } from './AddVehicleWizardScreen';
 import { VehicleCalendarModal } from '../components/calendar/VehicleCalendarModal';
+import { VehicleReservationsModal } from '../components/reservations/VehicleReservationsModal';
 import { becomeAutoLocHost } from '../../tenant/api/tenantProfileApi';
 import { useAppStore } from '../../../core/store/useAppStore';
 import { secureStorage } from '../../../core/storage/secureStore';
@@ -52,6 +53,7 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
   const [quickActionVehicle, setQuickActionVehicle] = useState<OwnerVehicle | null>(null);
   const [editingVehicle, setEditingVehicle] = useState<OwnerVehicle | null>(null);
   const [calendarVehicle, setCalendarVehicle] = useState<OwnerVehicle | null>(null);
+  const [reservationsVehicle, setReservationsVehicle] = useState<OwnerVehicle | null>(null);
 
   const handleEditVehicle = (vehicle: OwnerVehicle) => {
     setQuickActionVehicle(null);
@@ -351,7 +353,8 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
         }}
         onEditVehicle={(v) => handleEditVehicle(v)}
         onViewReservations={(v) => {
-          Alert.alert('Réservations', `Consultation des réservations pour ${v.immatriculation}`);
+          setQuickActionVehicle(null);
+          setReservationsVehicle(v);
         }}
         onToggleStatus={handleToggleStatus}
         onArchiveVehicle={handleArchiveVehicle}
@@ -363,6 +366,13 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
         visible={!!calendarVehicle}
         vehicle={calendarVehicle}
         onClose={() => setCalendarVehicle(null)}
+      />
+
+      {/* Modal Historique des Réservations du Véhicule */}
+      <VehicleReservationsModal
+        visible={!!reservationsVehicle}
+        vehicle={reservationsVehicle}
+        onClose={() => setReservationsVehicle(null)}
       />
 
       {/* Modal Verrou Hote */}

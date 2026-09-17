@@ -19,7 +19,7 @@ import { theme } from '../../core/theme';
 
 export interface AutoButtonProps extends Omit<PressableProps, 'style'> {
   title: string;
-  variant?: 'action' | 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'dark' | 'google';
+  variant?: 'action' | 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'dark' | 'google' | 'luxury';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   disabled?: boolean;
@@ -219,6 +219,16 @@ const VARIANT_STYLES: Record<string, ViewStyle> = {
     borderColor: '#E4EBDB',
     ...theme.elevation.sm,
   },
+  luxury: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.90)',
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 8,
+  },
   danger: {
     backgroundColor: theme.colors.status.error,
     ...theme.elevation.sm,
@@ -247,12 +257,16 @@ const TEXT_VARIANT_STYLES: Record<string, TextStyle> = {
     fontFamily: theme.typography.fontFamily.semiBold,
   },
   dark: {
-    color: theme.primitives.emerald[300],
-    fontFamily: theme.typography.fontFamily.bold,
+    color: '#FFFFFF',
+    fontFamily: theme.typography.fontFamily.extraBold,
   },
   google: {
     color: theme.primitives.neutral[800],
     fontFamily: theme.typography.fontFamily.bold,
+  },
+  luxury: {
+    color: '#041912',
+    fontFamily: theme.typography.fontFamily.extraBold,
   },
   danger: {
     color: '#FFFFFF',

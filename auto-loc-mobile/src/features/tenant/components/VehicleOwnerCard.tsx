@@ -15,6 +15,7 @@ import {
   Star,
   Sparkles,
 } from 'lucide-react-native';
+import { theme } from '../../../core/theme';
 
 interface ProprietaireData {
   prenom?: string;
@@ -98,7 +99,7 @@ export const VehicleOwnerCard: React.FC<VehicleOwnerCardProps> = ({
         </View>
       </View>
 
-      {/* Bouton Voir le profil */}
+      {/* Bouton Voir le profil au style Dark Auth */}
       {handlePress && (
         <Pressable
           style={({ pressed }) => [
@@ -107,8 +108,8 @@ export const VehicleOwnerCard: React.FC<VehicleOwnerCardProps> = ({
           ]}
           onPress={handlePress}
         >
-          <User size={15} color="#16A34A" />
-          <Text style={styles.contactButtonText}>Voir le profil</Text>
+          <User size={15} color="#4ADE80" />
+          <Text style={styles.contactButtonText}>Voir le profil de l'hôte</Text>
         </Pressable>
       )}
     </View>
@@ -118,11 +119,16 @@ export const VehicleOwnerCard: React.FC<VehicleOwnerCardProps> = ({
 const styles = StyleSheet.create({
   cardContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 16,
+    borderRadius: 22,
+    padding: 18,
     borderWidth: 1,
     borderColor: '#E4EBDB',
-    marginVertical: 10,
+    marginVertical: 12,
+    shadowColor: '#04150F',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    elevation: 3,
   },
   topRow: {
     flexDirection: 'row',
@@ -133,24 +139,24 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   avatarImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     borderWidth: 2,
-    borderColor: '#16A34A',
+    borderColor: '#10B981',
   },
   avatarPlaceholder: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: '#ECFDF5',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#16A34A',
+    borderColor: '#10B981',
   },
   avatarInitial: {
-    color: '#0B3D2E',
+    color: '#041912',
     fontSize: 20,
     fontWeight: '800',
   },
@@ -170,14 +176,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   ownerName: {
-    color: '#22271F',
-    fontSize: 16,
-    fontWeight: '700',
+    color: '#041912',
+    fontSize: 17,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    letterSpacing: -0.2,
   },
   ownerSubtitle: {
     color: '#5F6B59',
     fontSize: 12,
     marginTop: 2,
+    fontWeight: '500',
   },
   statsInlineRow: {
     flexDirection: 'row',
@@ -191,7 +199,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   statPillText: {
-    color: '#22271F',
+    color: '#041912',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -213,19 +221,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#ECFDF5',
-    paddingVertical: 10,
-    borderRadius: 12,
-    marginTop: 14,
+    backgroundColor: '#041912',
+    paddingVertical: 12,
+    borderRadius: 14,
+    marginTop: 16,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: 'rgba(4, 25, 18, 0.90)',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.20,
+    shadowRadius: 8,
+    elevation: 4,
   },
   contactButtonPressed: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: '#020B08',
+    opacity: 0.9,
   },
   contactButtonText: {
-    color: '#16A34A',
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '700',
+    letterSpacing: 0.2,
   },
 });
