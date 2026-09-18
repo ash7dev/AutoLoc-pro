@@ -24,7 +24,6 @@ import { ReservationPricingService } from '../../domain/reservation/reservation-
 import { RevalidateService } from '../../infrastructure/revalidate/revalidate.service';
 import { QueueService } from '../../infrastructure/queue/queue.service';
 import { FeedScoringService } from './feed-scoring.service';
-import { FeedPersonalizationService } from './feed-personalization.service';
 import { FeedOptimizerService } from './feed-optimizer.service';
 
 const MAX_PHOTOS = 8;
@@ -65,7 +64,6 @@ interface TarifTierRow {
 const FEED_CACHE_KEY = 'vehicles:feed:home';
 const FEED_CACHE_TTL = 120; // secondes
 const FEED_SECTION_SIZE = 10;
-const FEED_NOUVEAUTES_WINDOW_DAYS = 14;
 
 @Injectable()
 export class VehiclesService {

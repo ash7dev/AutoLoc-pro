@@ -10,8 +10,20 @@ import {
   SafeAreaView,
   Alert,
   StatusBar,
+  Platform,
 } from 'react-native';
-import { Search, Plus, Car, X, Filter } from 'lucide-react-native';
+import {
+  Search,
+  Plus,
+  Car,
+  X,
+  Filter,
+  SearchX,
+  CheckCircle2,
+  Key,
+  ShieldAlert,
+  EyeOff,
+} from 'lucide-react-native';
 import { theme } from '../../../core/theme';
 import { OwnerHeader } from '../../../shared/components';
 import { OwnerVehicleCard } from '../components/OwnerVehicleCard';
@@ -225,6 +237,145 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
     return v.statut === activeFilter;
   });
 
+  // Rendu contextualisé premium des états vides
+  const renderEmptyState = () => {
+    // 1. Recherche par mot-clé sans résultat
+    if (searchQuery.trim().length > 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconBadge}>
+            <SearchX size={26} color="#34D399" strokeWidth={2.25} />
+          </View>
+          <Text style={styles.emptyTitle}>Aucun résultat pour "{searchQuery}"</Text>
+          <Text style={styles.emptySubtitle}>
+            Aucun véhicule ne correspond à cette immatriculation, marque ou modèle. Vérifiez l'orthographe.
+          </Text>
+          <TouchableOpacity
+            style={styles.emptyPrimaryBtn}
+            onPress={() => setSearchQuery('')}
+            activeOpacity={0.8}
+          >
+            <X size={14} color="#FFFFFF" strokeWidth={2.5} />
+            <Text style={styles.emptyPrimaryBtnText}>Réinitialiser la recherche</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // 2. Onglet "Disponibles" vide
+    if (activeFilter === 'DISPONIBLE') {
+      return (
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconBadge}>
+            <CheckCircle2 size={26} color="#34D399" strokeWidth={2.25} />
+          </View>
+          <Text style={styles.emptyTitle}>Aucun véhicule disponible</Text>
+          <Text style={styles.emptySubtitle}>
+            Tous vos véhicules sont actuellement loués, en cours de vérification ou désactivés.
+          </Text>
+          <TouchableOpacity
+            style={styles.emptySecondaryBtn}
+            onPress={() => setActiveFilter('TOUS')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.emptySecondaryBtnText}>Voir toute la flotte</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // 3. Onglet "En location" vide
+    if (activeFilter === 'EN_LOCATION') {
+      return (
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconBadge}>
+            <Key size={26} color="#34D399" strokeWidth={2.25} />
+          </View>
+          <Text style={styles.emptyTitle}>Aucun véhicule en location</Text>
+          <Text style={styles.emptySubtitle}>
+            Aucun de vos véhicules n'est actuellement en cours d'utilisation par un locataire.
+          </Text>
+          <TouchableOpacity
+            style={styles.emptySecondaryBtn}
+            onPress={() => setActiveFilter('TOUS')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.emptySecondaryBtnText}>Voir toute la flotte</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // 4. Onglet "En vérification" vide
+    if (activeFilter === 'EN_ATTENTE_VALIDATION') {
+      return (
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconBadge}>
+            <ShieldAlert size={26} color="#34D399" strokeWidth={2.25} />
+          </View>
+          <Text style={styles.emptyTitle}>Aucun véhicule en vérification</Text>
+          <Text style={styles.emptySubtitle}>
+            Vous n'avez aucun véhicule en attente d'approbation ou de modération administrative.
+          </Text>
+          <TouchableOpacity
+            style={styles.emptySecondaryBtn}
+            onPress={() => setActiveFilter('TOUS')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.emptySecondaryBtnText}>Voir toute la flotte</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // 5. Onglet "Désactivés" vide
+    if (activeFilter === 'DESACTIVE') {
+      return (
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconBadge}>
+            <EyeOff size={26} color="#34D399" strokeWidth={2.25} />
+          </View>
+          <Text style={styles.emptyTitle}>Aucun véhicule désactivé</Text>
+          <Text style={styles.emptySubtitle}>
+            Toutes vos annonces sont actives et visibles par les locataires sur AutoLoc.
+          </Text>
+          <TouchableOpacity
+            style={styles.emptySecondaryBtn}
+            onPress={() => setActiveFilter('TOUS')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.emptySecondaryBtnText}>Voir toute la flotte</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // 6. Flotte totalement vide ('TOUS')
+    return (
+      <View style={styles.emptyContainer}>
+        <View style={styles.emptyIconBadge}>
+          <Car size={26} color="#34D399" strokeWidth={2.25} />
+        </View>
+        <Text style={styles.emptyTitle}>Votre flotte est vide</Text>
+        <Text style={styles.emptySubtitle}>
+          Ajoutez votre premier véhicule pour commencer à recevoir des réservations et générer des revenus sur AutoLoc.
+        </Text>
+        <TouchableOpacity
+          style={styles.emptyPrimaryBtn}
+          onPress={handleAddVehiclePress}
+          activeOpacity={0.8}
+        >
+          <Plus size={15} color="#FFFFFF" strokeWidth={2.5} />
+          <Text style={styles.emptyPrimaryBtnText}>Ajouter un véhicule</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  if (loading && !refreshing) {
+    return <OwnerVehicleSkeleton />;
+  }
+
   return (
     <View style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#041912" />
@@ -237,11 +388,8 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
         onAddVehiclePress={handleAddVehiclePress}
       />
 
-      {loading && !refreshing ? (
-        <OwnerVehicleSkeleton />
-      ) : (
-        <ScrollView
-          style={styles.scrollContainer}
+      <ScrollView
+        style={styles.scrollContainer}
           contentContainerStyle={styles.scrollList}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -324,23 +472,10 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
                 />
               ))
             ) : (
-              <TouchableOpacity
-                style={styles.emptyBox}
-                onPress={handleAddVehiclePress}
-                activeOpacity={0.8}
-              >
-                <Car size={36} color="#94A3B8" />
-                <Text style={styles.emptyTitle}>Aucun véhicule trouvé</Text>
-                <Text style={styles.emptySubtitle}>
-                  {searchQuery
-                    ? 'Aucun résultat ne correspond à votre recherche par immatriculation ou modèle.'
-                    : 'Ajoutez votre premier véhicule pour commencer à recevoir des réservations à Dakar.'}
-                </Text>
-              </TouchableOpacity>
+              renderEmptyState()
             )}
           </View>
         </ScrollView>
-      )}
 
       {/* Modal Quick Actions */}
       <OwnerVehicleQuickActionModal
@@ -527,27 +662,90 @@ const styles = StyleSheet.create({
   badgeCountTextActive: {
     color: '#FFFFFF',
   },
-  emptyBox: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 32,
+  /* États vides premium */
+  emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    marginTop: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 36,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    marginTop: 8,
+    gap: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#041912',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  emptyIconBadge: {
+    width: 60,
+    height: 60,
+    borderRadius: 20,
+    backgroundColor: '#041912',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.35)',
+    marginBottom: 4,
   },
   emptyTitle: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 15,
-    color: '#1E293B',
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 17,
+    color: '#041912',
+    textAlign: 'center',
+    letterSpacing: -0.3,
   },
   emptySubtitle: {
     fontFamily: 'Inter_400Regular',
-    fontSize: 12,
+    fontSize: 12.5,
     color: '#64748B',
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 19,
+    paddingHorizontal: 12,
+  },
+  emptyPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#041912',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 30,
+    gap: 8,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.25)',
+  },
+  emptyPrimaryBtnText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 13,
+    color: '#FFFFFF',
+  },
+  emptySecondaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 30,
+    gap: 6,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  emptySecondaryBtnText: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 12.5,
+    color: '#475569',
   },
 });

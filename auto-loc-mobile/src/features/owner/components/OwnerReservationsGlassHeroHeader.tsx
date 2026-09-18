@@ -1,58 +1,58 @@
 import React from 'react';
 import {
+  Platform,
   StyleSheet,
   Text,
-  View,
   TouchableOpacity,
-  Platform,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Car,
-  Plus,
-  Star,
+  ArrowRightLeft,
+  Calendar,
+  Clock,
+  CheckCircle2,
   ShieldCheck,
   User as UserIcon,
-  ArrowRightLeft,
+  ChevronRight,
 } from 'lucide-react-native';
 import { theme } from '../../../core/theme';
 import { UserProfile } from '../../../core/store/useAppStore';
-import { OwnerVehicle } from '../api/ownerApi';
+import { AutoSkeleton } from '../../../shared/components/AutoSkeleton';
 
-interface OwnerVehiclesGlassHeroHeaderProps {
-  user: UserProfile | null;
-  vehicles: OwnerVehicle[];
-  onProfilePress?: () => void;
-  onSwitchToTenant?: () => void;
-  onAddVehiclePress?: () => void;
+export interface ReservationHeaderStats {
+  total: number;
+  pendingCount: number;
+  inProgressCount: number;
+  completedCount: number;
 }
 
-export const OwnerVehiclesGlassHeroHeader: React.FC<OwnerVehiclesGlassHeroHeaderProps> = ({
+interface OwnerReservationsGlassHeroHeaderProps {
+  user: UserProfile | null;
+  stats: ReservationHeaderStats | null;
+  onProfilePress?: () => void;
+  onSwitchToTenant?: () => void;
+  onCalendarPress?: () => void;
+}
+
+export const OwnerReservationsGlassHeroHeader: React.FC<OwnerReservationsGlassHeroHeaderProps> = ({
   user,
-  vehicles,
+  stats,
   onProfilePress,
   onSwitchToTenant,
-  onAddVehiclePress,
+  onCalendarPress,
 }) => {
   const insets = useSafeAreaInsets();
 
-  const totalVehicles = vehicles.length;
-  const disponibleCount = vehicles.filter(
-    (v) => v.statut === 'DISPONIBLE' || v.statut === 'VERIFIE'
-  ).length;
-  const enLocationCount = vehicles.filter((v) => v.statut === 'EN_LOCATION').length;
-
-  const averageRating = React.useMemo(() => {
-    const rated = vehicles.filter((v) => Number(v.noteMoyenne) > 0);
-    if (rated.length === 0) return null;
-    const sum = rated.reduce((acc, v) => acc + Number(v.noteMoyenne), 0);
-    return Number((sum / rated.length).toFixed(1));
-  }, [vehicles]);
-
   const fullName = [user?.prenom, user?.nom].filter(Boolean).join(' ') || 'Espace Propriétaire';
   const avatarUrl = user?.avatarUrl;
+
+  const total = stats?.total ?? 0;
+  const pendingCount = stats?.pendingCount ?? 0;
+  const inProgressCount = stats?.inProgressCount ?? 0;
+  const completedCount = stats?.completedCount ?? 0;
 
   return (
     <View style={styles.outerContainer}>
@@ -61,10 +61,10 @@ export const OwnerVehiclesGlassHeroHeader: React.FC<OwnerVehiclesGlassHeroHeader
         locations={[0, 0.6, 1]}
         style={[styles.heroContainer, { paddingTop: Math.max(insets.top + 16, 44) }]}
       >
-        {/* Glow halo d'arrière-plan */}
+        {/* Halo d'ambiance d'arrière-plan */}
         <View style={styles.ambientGlow} pointerEvents="none" />
 
-        {/* Ligne Supérieure : Profil & Salutation & Switch */}
+        {/* 1. Ligne Supérieure : Profil & Salutation & Switch Mode */}
         <View style={styles.topBar}>
           <TouchableOpacity
             style={styles.profileTouchable}
@@ -87,7 +87,7 @@ export const OwnerVehiclesGlassHeroHeader: React.FC<OwnerVehiclesGlassHeroHeader
                 <Text style={styles.greetingTitle}>{fullName}</Text>
                 <ShieldCheck size={13} color="#34D399" />
               </View>
-              <Text style={styles.greetingSub}>Gestion de Flotte</Text>
+              <Text style={styles.greetingSub}>Gestion des Réservations</Text>
             </View>
           </TouchableOpacity>
 
@@ -103,66 +103,96 @@ export const OwnerVehiclesGlassHeroHeader: React.FC<OwnerVehiclesGlassHeroHeader
           )}
         </View>
 
-        {/* Centre Hero : Flotte Active & Compteur Fraunces */}
+        {/* 2. Main Hero Body : Compteur Général Prominent */}
         <View style={styles.mainHeroBody}>
           <View style={styles.heroHeaderRow}>
             <View style={styles.sectionBadge}>
-              <Car size={13} color="#34D399" />
-              <Text style={styles.sectionBadgeText}>FLOTTE AUTOMOBILE</Text>
+              <Calendar size={13} color="#34D399" />
+              <Text style={styles.sectionBadgeText}>RÉSERVATIONS & CONTRATS</Text>
             </View>
           </View>
 
-          <View style={styles.fleetCountRow}>
-            <Text style={styles.fleetCountValue}>
-              {totalVehicles} {totalVehicles > 1 ? 'Véhicules' : 'Véhicule'}
-            </Text>
+          <View style={styles.totalCountRow}>
+            {stats !== null ? (
+              <Text style={styles.totalCountValue}>
+                {total} {total > 1 ? 'Réservations' : 'Réservation'}
+              </Text>
+            ) : (
+              <AutoSkeleton
+                width={200}
+                height={34}
+                borderRadius={10}
+                style={{ backgroundColor: 'rgba(52, 211, 153, 0.25)', marginVertical: 2 }}
+              />
+            )}
           </View>
         </View>
 
-        {/* Barre de Synthèse des Statuts (Glassmorphic) */}
+        {/* 3. Barre de Synthèse des Statuts (Glassmorphic) */}
         <View style={styles.glassSummaryBar}>
+          {/* Métrique En attente */}
           <View style={styles.glassStatItem}>
-            <View style={[styles.statDot, { backgroundColor: '#34D399' }]} />
+            <Clock size={12} color="#F59E0B" />
             <Text style={styles.glassStatText}>
-              <Text style={styles.glassStatVal}>{disponibleCount}</Text> dispo.
+              {stats !== null ? (
+                <>
+                  <Text style={styles.glassStatVal}>{pendingCount}</Text> en attente
+                </>
+              ) : (
+                <AutoSkeleton width={50} height={12} borderRadius={4} style={styles.skeletonDark} />
+              )}
             </Text>
           </View>
 
           <View style={styles.glassDivider} />
 
+          {/* Métrique En cours */}
           <View style={styles.glassStatItem}>
             <View style={[styles.statDot, { backgroundColor: '#60A5FA' }]} />
             <Text style={styles.glassStatText}>
-              <Text style={styles.glassStatVal}>{enLocationCount}</Text> loué{enLocationCount > 1 ? 's' : ''}
+              {stats !== null ? (
+                <>
+                  <Text style={styles.glassStatVal}>{inProgressCount}</Text> en cours
+                </>
+              ) : (
+                <AutoSkeleton width={50} height={12} borderRadius={4} style={styles.skeletonDark} />
+              )}
             </Text>
           </View>
 
           <View style={styles.glassDivider} />
 
+          {/* Métrique Terminées */}
           <View style={styles.glassStatItem}>
-            <Star size={11} color="#F59E0B" fill={averageRating !== null ? '#F59E0B' : 'transparent'} />
+            <CheckCircle2 size={12} color="#34D399" />
             <Text style={styles.glassStatText}>
-              <Text style={styles.glassStatVal}>{averageRating !== null ? averageRating : '—'}</Text> Note
+              {stats !== null ? (
+                <>
+                  <Text style={styles.glassStatVal}>{completedCount}</Text> terminée{completedCount > 1 ? 's' : ''}
+                </>
+              ) : (
+                <AutoSkeleton width={50} height={12} borderRadius={4} style={styles.skeletonDark} />
+              )}
             </Text>
           </View>
         </View>
 
-        {/* Bouton d'Action VIP : Ajouter un Véhicule */}
+        {/* 4. Bouton d'Action VIP : Calendrier des réservations */}
         <TouchableOpacity
-          style={styles.addVehicleGlassBtn}
-          onPress={onAddVehiclePress}
+          style={styles.actionGlassBtn}
+          onPress={onCalendarPress}
           activeOpacity={0.88}
         >
           <LinearGradient
             colors={['#34D399', '#059669']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={styles.addBtnGradient}
+            style={styles.actionBtnGradient}
           >
-            <View style={styles.addBtnIconBox}>
-              <Plus size={16} color="#041912" strokeWidth={3} />
+            <View style={styles.actionBtnIconBox}>
+              <Calendar size={16} color="#041912" strokeWidth={2.5} />
             </View>
-            <Text style={styles.addBtnText}>Publier un nouveau véhicule</Text>
+            <Text style={styles.actionBtnText}>Voir le calendrier de réservations</Text>
           </LinearGradient>
         </TouchableOpacity>
       </LinearGradient>
@@ -282,6 +312,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#4ADE80',
   },
+
+  // Main Hero Body
   mainHeroBody: {
     gap: 4,
   },
@@ -307,16 +339,18 @@ const styles = StyleSheet.create({
     color: '#34D399',
     letterSpacing: 0.6,
   },
-  fleetCountRow: {
+  totalCountRow: {
     marginTop: 4,
   },
-  fleetCountValue: {
+  totalCountValue: {
     fontFamily: theme.typography.fontFamily.displayBold,
     fontSize: 32,
     color: '#4ADE80',
     letterSpacing: -0.5,
     fontVariant: ['tabular-nums'],
   },
+
+  // Glass Summary Bar
   glassSummaryBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -331,7 +365,7 @@ const styles = StyleSheet.create({
   glassStatItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
   },
   statDot: {
     width: 6,
@@ -352,7 +386,12 @@ const styles = StyleSheet.create({
     height: 14,
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
-  addVehicleGlassBtn: {
+  skeletonDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
+
+  // CTA Action Button
+  actionGlassBtn: {
     borderRadius: 14,
     overflow: 'hidden',
     ...Platform.select({
@@ -367,7 +406,7 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  addBtnGradient: {
+  actionBtnGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -375,7 +414,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 8,
   },
-  addBtnIconBox: {
+  actionBtnIconBox: {
     width: 24,
     height: 24,
     borderRadius: 12,
@@ -383,7 +422,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  addBtnText: {
+  actionBtnText: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 13.5,
     color: '#041912',

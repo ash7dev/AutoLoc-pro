@@ -1,5 +1,34 @@
 import { apiClient } from '../../../core/api/apiClient';
 
+export const parseDateSafe = (value?: string): number | null => {
+  if (!value) return null;
+  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const [, y, m, d] = isoMatch;
+    return new Date(Number(y), Number(m) - 1, Number(d)).getTime();
+  }
+  const frMatch = value.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (frMatch) {
+    const [, d, m, y] = frMatch;
+    return new Date(Number(y), Number(m) - 1, Number(d)).getTime();
+  }
+  const fallback = Date.parse(value);
+  return Number.isNaN(fallback) ? null : fallback;
+};
+
+export const calculateBookingDays = (startStr?: string, endStr?: string, fallbackDays?: number): number => {
+  if (startStr && endStr) {
+    const t1 = parseDateSafe(startStr);
+    const t2 = parseDateSafe(endStr);
+    if (t1 !== null && t2 !== null) {
+      const diffMs = Math.abs(t2 - t1);
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      return diffDays > 0 ? diffDays : (fallbackDays && fallbackDays > 0 ? fallbackDays : 1);
+    }
+  }
+  return fallbackDays && fallbackDays > 0 ? fallbackDays : 1;
+};
+
 export interface OwnerVehicle {
   id: string;
   marque: string;
@@ -65,22 +94,59 @@ export interface OwnerBooking {
   dateDemande: string;
 }
 
+export interface OwnerWalletBalance {
+  soldeDisponible: number;
+  soldeRetirable: number;
+  soldeWave: number;
+  soldeOrangeMoney: number;
+  enAttente: number;
+  totalGagne: number;
+}
+
+export interface OwnerWalletTransaction {
+  id: string;
+  type: 'CREDIT_LOCATION' | 'DEBIT_PENALITE' | 'DEBIT_RETRAIT' | 'GAIN_LOCATION' | 'RETRAIT_WAVE' | 'RETRAIT_ORANGE' | 'RETRAIT_BANQUE' | 'BONUS';
+  sens: 'CREDIT' | 'DEBIT';
+  montant: number;
+  soldeApres: number;
+  creeLe: string;
+  reservationId?: string;
+  fournisseur?: 'WAVE' | 'ORANGE_MONEY';
+  // Legacy / UI Helpers
+  titre?: string;
+  description?: string;
+  statut?: 'VALIDE' | 'EN_COURS' | 'ECHOUE';
+  date?: string;
+  reference?: string;
+}
+
 export interface OwnerWalletData {
+  balance: OwnerWalletBalance;
+  transactions: OwnerWalletTransaction[];
+  totalPenalites: number;
+  penaltiesCount: number;
+  // Legacy backward compatibility fields
   soldeDisponible: number;
   enAttenteVersement: number;
   revenusMoisActuel: number;
   cumulHistorique: number;
   prochainVersementDate?: string;
-  transactions: Array<{
-    id: string;
-    titre: string;
-    description: string;
-    montant: number;
-    type: 'GAIN_LOCATION' | 'RETRAIT_WAVE' | 'RETRAIT_ORANGE' | 'RETRAIT_BANQUE' | 'BONUS';
-    statut: 'VALIDE' | 'EN_COURS' | 'ECHOUE';
-    date: string;
-    reference: string;
-  }>;
+}
+
+export interface PenaltyItem {
+  id: string;
+  montant: number;
+  raison: string;
+  creeLe: string;
+  reservationId: string;
+  vehicule: string;
+  dateLocation: string;
+}
+
+export interface OwnerPenaltiesData {
+  penalites: PenaltyItem[];
+  totalDette: number;
+  count: number;
 }
 
 export interface OwnerDashboardStats {
@@ -125,90 +191,7 @@ export interface CreateOwnerVehicleInput {
 
 export type UpdateOwnerVehicleInput = Partial<CreateOwnerVehicleInput>;
 
-// Fallback Mock Data si déconnecté ou erreur réseau
-const MOCK_VEHICLES: OwnerVehicle[] = [
-  {
-    id: 'veh-owner-1',
-    marque: 'Toyota',
-    modele: 'Land Cruiser Prado VX',
-    annee: 2023,
-    immatriculation: 'AA-849-CI',
-    prixParJour: 55000,
-    caution: 250000,
-    statut: 'EN_LOCATION',
-    photoUrl: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
-    totalReservations: 18,
-    noteMoyenne: 4.9,
-    revenusCumules: 1480000,
-    ville: 'Abidjan, Cocody',
-    carburant: 'Diesel',
-    transmission: 'Automatique',
-    places: 7,
-    options: ['Climatisation', 'GPS', 'Caméra 360', 'Sièges Cuir'],
-  },
-  {
-    id: 'veh-owner-2',
-    marque: 'Mercedes-Benz',
-    modele: 'Classe C 200 AMG Line',
-    annee: 2022,
-    immatriculation: 'BB-102-CI',
-    prixParJour: 65000,
-    caution: 300000,
-    statut: 'DISPONIBLE',
-    photoUrl: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80',
-    totalReservations: 12,
-    noteMoyenne: 5.0,
-    revenusCumules: 975000,
-    ville: 'Abidjan, Marcory Zone 4',
-    carburant: 'Essence',
-    transmission: 'Automatique',
-    places: 5,
-    options: ['Toit Panoramique', 'Système Burmester', 'Apple CarPlay'],
-  },
-];
 
-const MOCK_BOOKINGS: OwnerBooking[] = [
-  {
-    id: 'res-owner-101',
-    codeReservation: 'RES-8942',
-    vehicleId: 'veh-owner-1',
-    vehicleTitle: 'Toyota Land Cruiser Prado VX',
-    vehiclePhoto: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
-    immatriculation: 'AA-849-CI',
-    locataireName: 'Kouassi Jean-Marc',
-    locataireAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    locatairePhone: '+225 07 08 12 34 56',
-    locataireKycVerified: true,
-    dateDebut: '2026-09-18',
-    dateFin: '2026-09-22',
-    dureeJours: 4,
-    montantTotalBrut: 220000,
-    commissionAutoLoc: 22000,
-    montantNetProprietaire: 198000,
-    statut: 'PENDING_APPROVAL',
-    dateDemande: 'Aujourd’hui à 14:32',
-  },
-];
-
-const MOCK_WALLET: OwnerWalletData = {
-  soldeDisponible: 580500,
-  enAttenteVersement: 198000,
-  revenusMoisActuel: 875000,
-  cumulHistorique: 3575000,
-  prochainVersementDate: 'Vendredi 19 Septembre',
-  transactions: [
-    {
-      id: 'tx-1',
-      titre: 'Gains Location #RES-8890',
-      description: 'Toyota Land Cruiser Prado VX • 3 jours',
-      montant: 148500,
-      type: 'GAIN_LOCATION',
-      statut: 'VALIDE',
-      date: 'Hier à 18:20',
-      reference: 'TX-901248',
-    },
-  ],
-};
 
 export const ownerApi = {
   // Uploader une image ou document local vers Cloudinary via XMLHttpRequest (compatibilité Web/Admin)
@@ -483,6 +466,9 @@ export const ownerApi = {
           else if (r.statut === 'ANNULEE' || r.statut === 'REJETE') mappedStatus = 'CANCELLED';
 
           const primaryPhoto = r.vehicule?.photos?.[0]?.url;
+          const dateDebutFormatted = r.dateDebut ? new Date(r.dateDebut).toISOString().split('T')[0] : '';
+          const dateFinFormatted = r.dateFin ? new Date(r.dateFin).toISOString().split('T')[0] : '';
+          const calculatedDays = calculateBookingDays(dateDebutFormatted, dateFinFormatted, Number(r.dureeJours || 0));
 
           return {
             id: r.id,
@@ -495,9 +481,9 @@ export const ownerApi = {
             locataireAvatar: r.locataire?.avatarUrl,
             locatairePhone: r.locataire?.telephone || '+225 07 00 00 00',
             locataireKycVerified: r.locataire?.statutKyc === 'VERIFIE',
-            dateDebut: r.dateDebut ? new Date(r.dateDebut).toISOString().split('T')[0] : '',
-            dateFin: r.dateFin ? new Date(r.dateFin).toISOString().split('T')[0] : '',
-            dureeJours: r.dureeJours || 1,
+            dateDebut: dateDebutFormatted,
+            dateFin: dateFinFormatted,
+            dureeJours: calculatedDays,
             montantTotalBrut: Number(r.totalLocataire || r.montantTotalBrut || 0),
             commissionAutoLoc: Number(r.montantCommission || r.commissionAutoLoc || 0),
             montantNetProprietaire: Number(r.netProprietaire || r.montantNetProprietaire || 0),
@@ -519,40 +505,148 @@ export const ownerApi = {
       const res = await apiClient.get('/wallet/me');
       const data = res.data;
       if (data) {
-        return {
-          soldeDisponible: Number(data.soldeDisponible ?? 0),
-          enAttenteVersement: Number(data.soldeGel ?? 0),
-          revenusMoisActuel: Number(data.revenusMoisActuel ?? 0),
-          cumulHistorique: Number(data.cumulRevenus ?? 0),
-          prochainVersementDate: 'Vendredi 19 Septembre',
-          transactions: (data.transactions || []).map((t: any) => ({
+        const bal = data.balance || {};
+        const soldeDisponible = Number(bal.soldeDisponible ?? data.soldeDisponible ?? 0);
+        const soldeRetirable = Number(bal.soldeRetirable ?? data.soldeRetirable ?? soldeDisponible);
+        const soldeWave = Number(bal.soldeWave ?? 0);
+        const soldeOrangeMoney = Number(bal.soldeOrangeMoney ?? 0);
+        const enAttente = Number(bal.enAttente ?? data.soldeGel ?? 0);
+        const totalGagne = Number(bal.totalGagne ?? data.cumulRevenus ?? 0);
+
+        const rawTransactions = Array.isArray(data.transactions) ? data.transactions : [];
+        const transactions: OwnerWalletTransaction[] = rawTransactions.map((t: any) => {
+          const isDebitType =
+            t.sens === 'DEBIT' ||
+            t.type === 'DEBIT_RETRAIT' ||
+            t.type === 'DEBIT_PENALITE' ||
+            t.type === 'RETRAIT_WAVE' ||
+            t.type === 'RETRAIT_ORANGE' ||
+            (t.type && String(t.type).includes('RETRAIT')) ||
+            (t.type && String(t.type).includes('DEBIT'));
+
+          const sens = isDebitType ? 'DEBIT' : 'CREDIT';
+          const isValide =
+            !t.statut ||
+            t.statut === 'VALIDE' ||
+            t.statut === 'CONFIRME' ||
+            t.statut === 'SUCCESS' ||
+            t.statut === 'COMPLETED' ||
+            t.statut === 'EFFECTUE';
+
+          let titre = t.titre;
+          if (!titre) {
+            if (sens === 'DEBIT') {
+              if (t.fournisseur === 'WAVE' || t.type === 'RETRAIT_WAVE') {
+                titre = 'Retrait Wave';
+              } else if (t.fournisseur === 'ORANGE_MONEY' || t.type === 'RETRAIT_ORANGE') {
+                titre = 'Retrait Orange Money';
+              } else {
+                titre = 'Demande de retrait';
+              }
+            } else {
+              titre = 'Gains de location';
+            }
+          }
+
+          return {
             id: t.id,
-            titre: t.titre || t.description || 'Transaction AutoLoc',
-            description: t.description || 'Détails du transfert',
-            montant: Number(t.montant),
-            type: t.type || 'GAIN_LOCATION',
-            statut: t.statut === 'VALIDE' || t.statut === 'CONFIRME' ? 'VALIDE' : 'EN_COURS',
+            type: t.type || (sens === 'DEBIT' ? 'DEBIT_RETRAIT' : 'CREDIT_LOCATION'),
+            sens,
+            montant: Number(t.montant || 0),
+            soldeApres: Number(t.soldeApres || 0),
+            creeLe: t.creeLe || t.date || new Date().toISOString(),
+            reservationId: t.reservationId,
+            fournisseur: t.fournisseur,
+            titre,
+            description: t.description || `Transaction ${t.fournisseur || ''}`.trim(),
+            statut: isValide ? 'VALIDE' : 'EN_COURS',
             date: t.creeLe ? new Date(t.creeLe).toLocaleDateString('fr-FR') : 'Récemment',
             reference: t.reference || `TX-${t.id.substring(0, 6)}`,
-          })),
+          };
+        });
+
+        return {
+          balance: {
+            soldeDisponible,
+            soldeRetirable,
+            soldeWave,
+            soldeOrangeMoney,
+            enAttente,
+            totalGagne,
+          },
+          transactions,
+          totalPenalites: Number(data.totalPenalites ?? 0),
+          penaltiesCount: Number(data.penaltiesCount ?? 0),
+          // Backward compatibility
+          soldeDisponible,
+          enAttenteVersement: enAttente,
+          revenusMoisActuel: totalGagne,
+          cumulHistorique: totalGagne,
+          prochainVersementDate: 'Vendredi 19 Septembre',
         };
       }
-      return {
-        soldeDisponible: 0,
-        enAttenteVersement: 0,
-        revenusMoisActuel: 0,
-        cumulHistorique: 0,
-        transactions: [],
-      };
+      throw new Error('Réponse vide');
     } catch (err) {
-      console.warn('Backend /wallet/me indisponible:', err);
+      console.warn('Backend /wallet/me indisponible ou erreur:', err);
       return {
+        balance: {
+          soldeDisponible: 0,
+          soldeRetirable: 0,
+          soldeWave: 0,
+          soldeOrangeMoney: 0,
+          enAttente: 0,
+          totalGagne: 0,
+        },
+        transactions: [],
+        totalPenalites: 0,
+        penaltiesCount: 0,
         soldeDisponible: 0,
         enAttenteVersement: 0,
         revenusMoisActuel: 0,
         cumulHistorique: 0,
-        transactions: [],
       };
+    }
+  },
+
+  // Récupérer les pénalités du propriétaire depuis NestJS GET /wallet/penalites
+  getOwnerPenalties: async (): Promise<OwnerPenaltiesData> => {
+    try {
+      const res = await apiClient.get('/wallet/penalites');
+      const data = res.data;
+      if (data) {
+        return {
+          penalites: (data.penalites || []).map((p: any) => ({
+            id: p.id,
+            montant: Number(p.montant || 0),
+            raison: p.raison || 'Pénalité annulation/retard',
+            creeLe: p.creeLe || new Date().toISOString(),
+            reservationId: p.reservationId || '',
+            vehicule: p.vehicule || 'Véhicule',
+            dateLocation: p.dateLocation || '',
+          })),
+          totalDette: Number(data.totalDette || 0),
+          count: Number(data.count || 0),
+        };
+      }
+      return { penalites: [], totalDette: 0, count: 0 };
+    } catch (err) {
+      console.warn('Backend /wallet/penalites indisponible:', err);
+      return { penalites: [], totalDette: 0, count: 0 };
+    }
+  },
+
+  // Demander un virement via NestJS POST /wallet/withdraw
+  requestPayout: async (data: { montant: number; methode: 'WAVE' | 'ORANGE_MONEY'; numeroDestinataire: string }) => {
+    try {
+      const res = await apiClient.post('/wallet/withdraw', {
+        montant: data.montant,
+        methode: data.methode,
+        numeroDestinataire: data.numeroDestinataire,
+      });
+      return res.data;
+    } catch (error) {
+      console.warn('Erreur lors de la demande de retrait:', error);
+      throw error;
     }
   },
 
@@ -594,7 +688,6 @@ export const ownerApi = {
     }
   },
 
-  // Répondre à une réservation via NestJS PATCH /reservations/:id/confirm ou cancel
   respondToBookingRequest: async (bookingId: string, accept: boolean) => {
     try {
       if (accept) {
@@ -609,22 +702,12 @@ export const ownerApi = {
     }
   },
 
-  // Demander un virement via NestJS POST /wallet/withdraw
-  requestPayout: async (data: { montant: number; methode: string; telephoneOuIban: string }) => {
-    try {
-      const res = await apiClient.post('/wallet/withdraw', {
-        montant: data.montant,
-        methode: data.methode,
-        numeroDestinataire: data.telephoneOuIban,
-      });
-      return res.data;
-    } catch {
-      return {
-        success: true,
-        reference: `WDR-${Math.floor(100000 + Math.random() * 900000)}`,
-        message: 'Demande de retrait enregistrée avec succès.',
-      };
-    }
+  approveBooking: async (bookingId: string) => {
+    return ownerApi.respondToBookingRequest(bookingId, true);
+  },
+
+  rejectBooking: async (bookingId: string) => {
+    return ownerApi.respondToBookingRequest(bookingId, false);
   },
 
   // Récupérer les périodes d'indisponibilité d'un véhicule (GET /vehicles/:id/indisponibilites)
@@ -739,6 +822,10 @@ export const ownerApi = {
           if (r.statut === 'TERMINEE') mappedStatus = 'COMPLETED';
           if (r.statut === 'ANNULEE' || r.statut === 'REFUSE') mappedStatus = 'CANCELLED';
 
+          const dateDebutFormatted = r.dateDebut ? new Date(r.dateDebut).toISOString().split('T')[0] : '';
+          const dateFinFormatted = r.dateFin ? new Date(r.dateFin).toISOString().split('T')[0] : '';
+          const calculatedDays = calculateBookingDays(dateDebutFormatted, dateFinFormatted, Number(r.dureeJours || 0));
+
           return {
             id: r.id,
             codeReservation: r.codeReservation || `RES-${r.id.substring(0, 6).toUpperCase()}`,
@@ -750,9 +837,9 @@ export const ownerApi = {
             locataireAvatar: r.locataire?.avatarUrl,
             locatairePhone: r.locataire?.telephone || '+225 07 00 00 00',
             locataireKycVerified: r.locataire?.statutKyc === 'VERIFIE',
-            dateDebut: r.dateDebut ? new Date(r.dateDebut).toISOString().split('T')[0] : '',
-            dateFin: r.dateFin ? new Date(r.dateFin).toISOString().split('T')[0] : '',
-            dureeJours: r.dureeJours || 1,
+            dateDebut: dateDebutFormatted,
+            dateFin: dateFinFormatted,
+            dureeJours: calculatedDays,
             montantTotalBrut: Number(r.totalLocataire || r.montantTotalBrut || 0),
             commissionAutoLoc: Number(r.montantCommission || r.commissionAutoLoc || 0),
             montantNetProprietaire: Number(r.netProprietaire || r.montantNetProprietaire || 0),

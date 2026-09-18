@@ -1,55 +1,53 @@
 import React from 'react';
 import {
+  Platform,
   StyleSheet,
   Text,
-  View,
   TouchableOpacity,
-  Platform,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Car,
-  Plus,
-  Star,
+  ArrowDownRight,
+  ArrowRightLeft,
+  Lock,
   ShieldCheck,
   User as UserIcon,
-  ArrowRightLeft,
+  Wallet,
+  Zap,
 } from 'lucide-react-native';
 import { theme } from '../../../core/theme';
 import { UserProfile } from '../../../core/store/useAppStore';
-import { OwnerVehicle } from '../api/ownerApi';
+import { OwnerWalletData } from '../api/ownerApi';
+import { formatCurrency } from '../../../core/utils/currency';
+import { CurrencyCode } from '../../../shared/components/CurrencyPickerModal';
+import { AutoSkeleton } from '../../../shared/components/AutoSkeleton';
 
-interface OwnerVehiclesGlassHeroHeaderProps {
+interface OwnerWalletGlassHeroHeaderProps {
   user: UserProfile | null;
-  vehicles: OwnerVehicle[];
+  walletData: OwnerWalletData | null;
+  selectedCurrency: CurrencyCode;
   onProfilePress?: () => void;
   onSwitchToTenant?: () => void;
-  onAddVehiclePress?: () => void;
+  onRequestPayoutPress?: () => void;
 }
 
-export const OwnerVehiclesGlassHeroHeader: React.FC<OwnerVehiclesGlassHeroHeaderProps> = ({
+export const OwnerWalletGlassHeroHeader: React.FC<OwnerWalletGlassHeroHeaderProps> = ({
   user,
-  vehicles,
+  walletData,
+  selectedCurrency,
   onProfilePress,
   onSwitchToTenant,
-  onAddVehiclePress,
+  onRequestPayoutPress,
 }) => {
   const insets = useSafeAreaInsets();
 
-  const totalVehicles = vehicles.length;
-  const disponibleCount = vehicles.filter(
-    (v) => v.statut === 'DISPONIBLE' || v.statut === 'VERIFIE'
-  ).length;
-  const enLocationCount = vehicles.filter((v) => v.statut === 'EN_LOCATION').length;
-
-  const averageRating = React.useMemo(() => {
-    const rated = vehicles.filter((v) => Number(v.noteMoyenne) > 0);
-    if (rated.length === 0) return null;
-    const sum = rated.reduce((acc, v) => acc + Number(v.noteMoyenne), 0);
-    return Number((sum / rated.length).toFixed(1));
-  }, [vehicles]);
+  const soldeTotal = walletData?.balance?.soldeDisponible ?? walletData?.soldeDisponible ?? 0;
+  const soldeRetirable = walletData?.balance?.soldeRetirable ?? walletData?.soldeDisponible ?? 0;
+  const soldeEnAttente = walletData?.balance?.enAttente ?? walletData?.enAttenteVersement ?? 0;
+  const soldeSequestre = walletData?.balance?.enAttente ?? 0;
 
   const fullName = [user?.prenom, user?.nom].filter(Boolean).join(' ') || 'Espace Propriétaire';
   const avatarUrl = user?.avatarUrl;
@@ -64,7 +62,7 @@ export const OwnerVehiclesGlassHeroHeader: React.FC<OwnerVehiclesGlassHeroHeader
         {/* Glow halo d'arrière-plan */}
         <View style={styles.ambientGlow} pointerEvents="none" />
 
-        {/* Ligne Supérieure : Profil & Salutation & Switch */}
+        {/* 1. Ligne Supérieure : Profil & Statut & Switch Mode */}
         <View style={styles.topBar}>
           <TouchableOpacity
             style={styles.profileTouchable}
@@ -87,7 +85,7 @@ export const OwnerVehiclesGlassHeroHeader: React.FC<OwnerVehiclesGlassHeroHeader
                 <Text style={styles.greetingTitle}>{fullName}</Text>
                 <ShieldCheck size={13} color="#34D399" />
               </View>
-              <Text style={styles.greetingSub}>Gestion de Flotte</Text>
+              <Text style={styles.greetingSub}>Portefeuille & Virement</Text>
             </View>
           </TouchableOpacity>
 
@@ -103,66 +101,82 @@ export const OwnerVehiclesGlassHeroHeader: React.FC<OwnerVehiclesGlassHeroHeader
           )}
         </View>
 
-        {/* Centre Hero : Flotte Active & Compteur Fraunces */}
+        {/* 2. Main Hero Body : Solde Total Prominent */}
         <View style={styles.mainHeroBody}>
           <View style={styles.heroHeaderRow}>
-            <View style={styles.sectionBadge}>
-              <Car size={13} color="#34D399" />
-              <Text style={styles.sectionBadgeText}>FLOTTE AUTOMOBILE</Text>
+            <View style={styles.walletBadge}>
+              <Wallet size={13} color="#34D399" />
+              <Text style={styles.walletBadgeText}>SOLDE TOTAL DISPONIBLE</Text>
             </View>
+
+            {Boolean(walletData?.totalPenalites && walletData.totalPenalites > 0) && (
+              <View style={styles.penaltiesWarningPill}>
+                <Text style={styles.penaltiesWarningText}>
+                  -{formatCurrency(walletData?.totalPenalites || 0, selectedCurrency)} déduit
+                </Text>
+              </View>
+            )}
           </View>
 
-          <View style={styles.fleetCountRow}>
-            <Text style={styles.fleetCountValue}>
-              {totalVehicles} {totalVehicles > 1 ? 'Véhicules' : 'Véhicule'}
-            </Text>
+          <View style={styles.totalBalanceRow}>
+            {walletData ? (
+              <Text style={styles.totalBalanceValue}>
+                {formatCurrency(soldeTotal, selectedCurrency)}
+              </Text>
+            ) : (
+              <AutoSkeleton
+                width={190}
+                height={34}
+                borderRadius={10}
+                style={{ backgroundColor: 'rgba(52, 211, 153, 0.25)', marginVertical: 2 }}
+              />
+            )}
           </View>
         </View>
 
-        {/* Barre de Synthèse des Statuts (Glassmorphic) */}
+        {/* 3. Barre de Synthèse des Statuts Financiers (Glassmorphic) */}
         <View style={styles.glassSummaryBar}>
+          {/* Métrique Retirable */}
           <View style={styles.glassStatItem}>
-            <View style={[styles.statDot, { backgroundColor: '#34D399' }]} />
+            <Zap size={12} color="#34D399" />
             <Text style={styles.glassStatText}>
-              <Text style={styles.glassStatVal}>{disponibleCount}</Text> dispo.
+              Retirable :{' '}
+              <Text style={styles.glassStatVal}>
+                {formatCurrency(soldeRetirable, selectedCurrency)}
+              </Text>
             </Text>
           </View>
 
           <View style={styles.glassDivider} />
 
+          {/* Métrique Séquestre */}
           <View style={styles.glassStatItem}>
-            <View style={[styles.statDot, { backgroundColor: '#60A5FA' }]} />
+            <Lock size={12} color="#F59E0B" />
             <Text style={styles.glassStatText}>
-              <Text style={styles.glassStatVal}>{enLocationCount}</Text> loué{enLocationCount > 1 ? 's' : ''}
-            </Text>
-          </View>
-
-          <View style={styles.glassDivider} />
-
-          <View style={styles.glassStatItem}>
-            <Star size={11} color="#F59E0B" fill={averageRating !== null ? '#F59E0B' : 'transparent'} />
-            <Text style={styles.glassStatText}>
-              <Text style={styles.glassStatVal}>{averageRating !== null ? averageRating : '—'}</Text> Note
+              Séquestre :{' '}
+              <Text style={styles.glassStatVal}>
+                {formatCurrency(soldeSequestre, selectedCurrency)}
+              </Text>
             </Text>
           </View>
         </View>
 
-        {/* Bouton d'Action VIP : Ajouter un Véhicule */}
+        {/* 4. Bouton d'Action VIP : Demander un virement */}
         <TouchableOpacity
-          style={styles.addVehicleGlassBtn}
-          onPress={onAddVehiclePress}
+          style={styles.payoutActionBtn}
+          onPress={onRequestPayoutPress}
           activeOpacity={0.88}
         >
           <LinearGradient
             colors={['#34D399', '#059669']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={styles.addBtnGradient}
+            style={styles.payoutBtnGradient}
           >
-            <View style={styles.addBtnIconBox}>
-              <Plus size={16} color="#041912" strokeWidth={3} />
+            <View style={styles.payoutBtnIconBox}>
+              <ArrowDownRight size={16} color="#041912" strokeWidth={3} />
             </View>
-            <Text style={styles.addBtnText}>Publier un nouveau véhicule</Text>
+            <Text style={styles.payoutBtnText}>Demander un virement instantané</Text>
           </LinearGradient>
         </TouchableOpacity>
       </LinearGradient>
@@ -282,6 +296,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#4ADE80',
   },
+
+  // Main Body
   mainHeroBody: {
     gap: 4,
   },
@@ -290,7 +306,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  sectionBadge: {
+  walletBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -301,22 +317,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(52, 211, 153, 0.25)',
   },
-  sectionBadgeText: {
+  walletBadgeText: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 10,
     color: '#34D399',
     letterSpacing: 0.6,
   },
-  fleetCountRow: {
+  penaltiesWarningPill: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+  },
+  penaltiesWarningText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 10,
+    color: '#F87171',
+  },
+  totalBalanceRow: {
     marginTop: 4,
   },
-  fleetCountValue: {
+  totalBalanceValue: {
     fontFamily: theme.typography.fontFamily.displayBold,
     fontSize: 32,
     color: '#4ADE80',
     letterSpacing: -0.5,
     fontVariant: ['tabular-nums'],
   },
+
+  // Glass Summary Bar
   glassSummaryBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -352,7 +383,9 @@ const styles = StyleSheet.create({
     height: 14,
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
-  addVehicleGlassBtn: {
+
+  // CTA Payout Button
+  payoutActionBtn: {
     borderRadius: 14,
     overflow: 'hidden',
     ...Platform.select({
@@ -367,7 +400,7 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  addBtnGradient: {
+  payoutBtnGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -375,7 +408,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 8,
   },
-  addBtnIconBox: {
+  payoutBtnIconBox: {
     width: 24,
     height: 24,
     borderRadius: 12,
@@ -383,7 +416,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  addBtnText: {
+  payoutBtnText: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 13.5,
     color: '#041912',

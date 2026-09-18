@@ -29,6 +29,8 @@ import { RegisterScreen } from '../../features/auth/screens/RegisterScreen';
 import { OtpScreen } from '../../features/auth/screens/OtpScreen';
 import { GuestAuthModal } from '../../shared/components';
 
+import { OwnerBookingDetailScreen } from '../../features/owner/screens/OwnerBookingDetailScreen';
+
 // Définition typée des routes de l'application
 export type AppScreenRoute =
   | { name: 'SPLASH' }
@@ -39,7 +41,8 @@ export type AppScreenRoute =
   | { name: 'REGISTER' }
   | { name: 'OTP'; phone: string }
   | { name: 'VEHICLE_DETAIL'; vehicleId: string; vehicle?: VehicleFeedItem }
-  | { name: 'BOOKING_DETAIL'; reservationId: string };
+  | { name: 'BOOKING_DETAIL'; reservationId: string }
+  | { name: 'OWNER_BOOKING_DETAIL'; reservationId: string };
 
 interface NavigationContextType {
   currentRoute: AppScreenRoute;
@@ -53,6 +56,7 @@ interface NavigationContextType {
   navigateToOtp: (phone: string) => void;
   navigateToVehicleDetail: (vehicleId: string, vehicle?: VehicleFeedItem) => void;
   navigateToBookingDetail: (reservationId: string) => void;
+  navigateToOwnerBookingDetail: (reservationId: string) => void;
   goBack: () => void;
   canGoBack: boolean;
 }
@@ -129,6 +133,10 @@ export const RootNavigator: React.FC = () => {
 
   const navigateToBookingDetail = (reservationId: string) => {
     navigateTo({ name: 'BOOKING_DETAIL', reservationId });
+  };
+
+  const navigateToOwnerBookingDetail = (reservationId: string) => {
+    navigateTo({ name: 'OWNER_BOOKING_DETAIL', reservationId });
   };
 
   const goBack = () => {
@@ -219,6 +227,7 @@ export const RootNavigator: React.FC = () => {
     navigateToOtp,
     navigateToVehicleDetail,
     navigateToBookingDetail,
+    navigateToOwnerBookingDetail,
     goBack,
     canGoBack,
   };
@@ -279,6 +288,9 @@ export const RootNavigator: React.FC = () => {
 
             case 'BOOKING_DETAIL':
               return <TenantBookingDetailScreen reservationId={currentRoute.reservationId} onBack={goBack} />;
+
+            case 'OWNER_BOOKING_DETAIL':
+              return <OwnerBookingDetailScreen reservationId={currentRoute.reservationId} onBack={goBack} />;
 
             case 'OWNER_MAIN':
               return (
