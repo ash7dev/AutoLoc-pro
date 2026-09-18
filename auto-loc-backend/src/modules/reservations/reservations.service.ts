@@ -370,6 +370,7 @@ export class ReservationsService {
       where: { id: reservationId },
       select: {
         proprietaireId: true,
+        statut: true,
         locataire: {
           select: {
             prenom: true,
@@ -388,6 +389,12 @@ export class ReservationsService {
     // Only the owner can view tenant docs
     if (reservation.proprietaireId !== utilisateur.id) {
       throw new ForbiddenException('Accès refusé');
+    }
+
+    if (['TERMINEE', 'ANNULEE', 'EXPIREE', 'REFUSEE'].includes(reservation.statut)) {
+      throw new ForbiddenException(
+        'Accès expiré : Les documents de vérification du locataire ne sont plus accessibles pour une réservation terminée ou annulée.'
+      );
     }
 
     return {

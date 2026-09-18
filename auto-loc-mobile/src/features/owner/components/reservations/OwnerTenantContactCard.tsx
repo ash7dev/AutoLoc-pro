@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
   ChevronRight,
   FileCheck,
@@ -35,6 +35,25 @@ export const OwnerTenantContactCard: React.FC<OwnerTenantContactCardProps> = ({
 }) => {
   const isVerified = kycStatus === 'VERIFIE';
   const isPending = kycStatus === 'EN_ATTENTE';
+
+  // Règle AutoLoc de confidentialité des documents KYC :
+  // Inaccessibles après la fin ou l'annulation de la réservation
+  const isEndedOrCancelled = useMemo(() => {
+    const st = (statut ?? '').toUpperCase();
+    return ['TERMINEE', 'ANNULEE', 'EXPIREE', 'REFUSEE'].includes(st);
+  }, [statut]);
+
+  const handleInspectPress = () => {
+    if (isEndedOrCancelled) {
+      Alert.alert(
+        'Accès expiré & confidentiel 🔒',
+        "Pour des raisons de protection des données personnelles (RGPD) et de confidentialité, les pièces d'identité et justificatifs KYC du locataire ne sont plus consultables pour les réservations terminées ou annulées.",
+        [{ text: 'J’ai compris', style: 'default' }]
+      );
+      return;
+    }
+    onInspectDocs();
+  };
 
   // Règle AutoLoc Web & Mobile de confidentialité du numéro de téléphone :
   // Masqué pour ANNULEE, TERMINEE, PAYEE, EN_ATTENTE_PAIEMENT
@@ -169,21 +188,29 @@ export const OwnerTenantContactCard: React.FC<OwnerTenantContactCardProps> = ({
       )}
 
       {/* KYC Documents Inspection Button */}
-      <TouchableOpacity activeOpacity={0.85} onPress={onInspectDocs} style={styles.inspectBtn}>
-        <View style={styles.inspectIconBox}>
-          <FileCheck size={16} color="#34D399" />
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={handleInspectPress}
+        style={[styles.inspectBtn, isEndedOrCancelled && styles.inspectBtnLocked]}
+      >
+        <View style={[styles.inspectIconBox, isEndedOrCancelled && styles.inspectIconBoxLocked]}>
+          {isEndedOrCancelled ? (
+            <Lock size={16} color="#94A3B8" />
+          ) : (
+            <FileCheck size={16} color="#34D399" />
+          )}
         </View>
 
         <View style={styles.inspectTextContainer}>
           <Text style={styles.inspectBtnTitle} numberOfLines={1} ellipsizeMode="tail">
-            Inspecter les documents du locataire
+            {isEndedOrCancelled ? 'Documents du locataire (Accès fermé)' : 'Inspecter les documents du locataire'}
           </Text>
           <Text style={styles.inspectBtnSub} numberOfLines={1} ellipsizeMode="tail">
-            Vérifier la pièce d’identité, selfie & permis
+            {isEndedOrCancelled ? 'Accès expiré pour des raisons de confidentialité (RGPD)' : 'Vérifier la pièce d’identité, selfie & permis'}
           </Text>
         </View>
 
-        <ChevronRight size={18} color="#34D399" style={styles.inspectChevron} />
+        <ChevronRight size={18} color={isEndedOrCancelled ? '#64748B' : '#34D399'} style={styles.inspectChevron} />
       </TouchableOpacity>
     </View>
   );
@@ -457,6 +484,14 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#A7F3D0',
     marginTop: 1,
+  },
+  inspectBtnLocked: {
+    backgroundColor: '#0F172A',
+    borderColor: '#334155',
+  },
+  inspectIconBoxLocked: {
+    backgroundColor: 'rgba(148, 163, 184, 0.12)',
+    borderColor: 'rgba(148, 163, 184, 0.25)',
   },
   inspectChevron: {
     flexShrink: 0,
