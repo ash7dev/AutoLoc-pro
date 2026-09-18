@@ -1,17 +1,25 @@
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Modal,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  ScrollView,
-  ActivityIndicator,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { Camera, CheckCircle2, ImagePlus, ShieldCheck, X } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
+import {
+  Camera,
+  CheckCircle2,
+  Eye,
+  FileCheck,
+  ImagePlus,
+  LogOut,
+  X,
+} from 'lucide-react-native';
 import { theme } from '../../../../core/theme';
 import { ownerApi } from '../../api/ownerApi';
 
@@ -19,7 +27,7 @@ interface OwnerCheckoutModalProps {
   visible: boolean;
   loading: boolean;
   reservationId: string;
-  existingPhotos?: Array<{ id: string; url: string; type: string }>;
+  existingPhotos?: Array<{ id: string; url: string; type: string; categorie?: string }>;
   onClose: () => void;
   onConfirm: () => Promise<void>;
   onLinkPhoto: (url: string, publicId: string, type: 'CHECKOUT', categorie?: string) => Promise<void>;
@@ -34,52 +42,118 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
   onConfirm,
   onLinkPhoto,
 }) => {
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [checkedTerms, setCheckedTerms] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+
+  // Parallel Upload Progress State
+  const [uploadProgress, setUploadProgress] = useState<{
+    isUploading: boolean;
+    current: number;
+    total: number;
+    percent: number;
+    statusText: string;
+  } | null>(null);
 
   const checkoutPhotos = existingPhotos.filter((p) => p.type === 'CHECKOUT');
 
-  const handlePickAndUploadPhoto = async (source: 'camera' | 'library') => {
+  const handlePickAndUploadPhotos = async (source: 'camera' | 'library') => {
     try {
-      let result: ImagePicker.ImagePickerResult;
+      let selectedUris: string[] = [];
 
       if (source === 'camera') {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
           return Alert.alert('Permission requise', 'Accès à l’appareil photo nécessaire.');
         }
-        result = await ImagePicker.launchCameraAsync({
+        const result = await ImagePicker.launchCameraAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          quality: 0.8,
+          quality: 0.85,
         });
+        if (!result.canceled && result.assets?.[0]?.uri) {
+          selectedUris = [result.assets[0].uri];
+        }
       } else {
-        result = await ImagePicker.launchImageLibraryAsync({
+        const result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          quality: 0.8,
+          quality: 0.85,
+          allowsMultipleSelection: true,
+          selectionLimit: 10,
         });
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+          selectedUris = result.assets.map((a) => a.uri).filter(Boolean);
+        }
       }
 
-      if (!result.canceled && result.assets?.[0]?.uri) {
-        setUploadingPhoto(true);
-        const uploaded = await ownerApi.uploadVehicleMedia(result.assets[0].uri);
-        await onLinkPhoto(uploaded.url, uploaded.publicId, 'CHECKOUT');
-      }
+      if (selectedUris.length === 0) return;
+
+      const total = selectedUris.length;
+      let completedCount = 0;
+
+      setUploadProgress({
+        isUploading: true,
+        current: 0,
+        total,
+        percent: 0,
+        statusText: `Préparation de l'envoi de ${total} photo${total > 1 ? 's' : ''}...`,
+      });
+
+      // Upload photos IN PARALLEL using Promise.all while tracking completed progress
+      const uploadTasks = selectedUris.map(async (uri, index) => {
+        try {
+          // 1. Upload file to Cloudinary over HTTPS (removes file:/// local URI)
+          const uploaded = await ownerApi.uploadVehicleMedia(uri);
+
+          // 2. Link photo DB record via NestJS API (makes it instantly available on Web & Mobile)
+          await onLinkPhoto(uploaded.url, uploaded.publicId, 'CHECKOUT');
+
+          completedCount++;
+          const currentPercent = Math.round((completedCount / total) * 100);
+
+          setUploadProgress({
+            isUploading: true,
+            current: completedCount,
+            total,
+            percent: currentPercent,
+            statusText: `Upload en cours : ${completedCount} / ${total} (${currentPercent}%)`,
+          });
+        } catch (err) {
+          console.error(`Erreur upload photo #${index + 1}:`, err);
+          throw err;
+        }
+      });
+
+      await Promise.all(uploadTasks);
+
+      setUploadProgress({
+        isUploading: false,
+        current: total,
+        total,
+        percent: 100,
+        statusText: `✓ ${total} photo${total > 1 ? 's' : ''} transférée${total > 1 ? 's' : ''} avec succès !`,
+      });
+
+      setTimeout(() => {
+        setUploadProgress(null);
+      }, 1500);
+
     } catch (err: any) {
-      Alert.alert('Erreur upload', err?.message || 'L’envoi de la photo a échoué.');
-    } finally {
-      setUploadingPhoto(false);
+      Alert.alert(
+        'Erreur lors de l’upload',
+        err?.message || 'Certaines photos n’ont pas pu être envoyées. Veuillez réétenter.'
+      );
+      setUploadProgress(null);
     }
   };
 
   const handleConfirmCheckout = async () => {
     if (!checkedTerms) {
-      return Alert.alert('Vérification requise', 'Veuillez cocher la case d’inspection du véhicule au retour.');
+      return Alert.alert('Vérification requise', 'Veuillez attester avoir récupéré le véhicule et vérifié l’état au retour.');
     }
 
     try {
       await onConfirm();
     } catch (err: any) {
-      Alert.alert('Erreur', err?.message || 'La clôture de la location a échoué.');
+      Alert.alert('Erreur de clôture', err?.message || 'La clôture de la location a échoué.');
     }
   };
 
@@ -89,10 +163,21 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={styles.modalCard}>
+          {/* Handle bar */}
+          <View style={styles.handleContainer}>
+            <View style={styles.sheetHandle} />
+          </View>
+
+          {/* Header */}
           <View style={styles.header}>
-            <View>
-              <Text style={styles.title}>Check-out & Restitution</Text>
-              <Text style={styles.subtitle}>Clôturez la location et validez l’état de retour</Text>
+            <View style={styles.headerLeft}>
+              <View style={styles.headerIconBox}>
+                <LogOut size={22} color="#059669" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.title}>Check-out & Restitution</Text>
+                <Text style={styles.subtitle}>État des lieux de retour & clôture de la location</Text>
+              </View>
             </View>
             <TouchableOpacity disabled={loading} onPress={onClose} style={styles.closeBtn}>
               <X size={18} color="#64748B" />
@@ -100,76 +185,153 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
           </View>
 
           <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-            {/* Photos Etat des lieux (CHECKOUT) */}
+            {/* Photos Section */}
             <View style={styles.photosSection}>
-              <Text style={styles.sectionTitle}>Photos de l’état du véhicule (Retour)</Text>
-              <Text style={styles.sectionSub}>
-                Prenez des photos de l’état final (Carrosserie, Carburant, Compteur).
-              </Text>
+              <View style={styles.photosHeaderRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sectionTitle}>Photos de l’état du véhicule (Retour)</Text>
+                  <Text style={styles.sectionSub}>
+                    Optionnel mais recommandé pour vous protéger en cas de litige.
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.counterBadge,
+                    checkoutPhotos.length >= 4 ? styles.counterBadgeOk : styles.counterBadgeWarn,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.counterText,
+                      checkoutPhotos.length >= 4 ? styles.counterTextOk : styles.counterTextWarn,
+                    ]}
+                  >
+                    {checkoutPhotos.length > 0 ? `${checkoutPhotos.length} photo${checkoutPhotos.length > 1 ? 's' : ''}` : 'Optionnel'}
+                  </Text>
+                </View>
+              </View>
 
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photosScroll}>
-                {checkoutPhotos.map((photo) => (
-                  <View key={photo.id} style={styles.photoThumb}>
-                    <Image source={{ uri: photo.url }} style={styles.photoImg} />
+              {/* Return Inspection Angles Chips */}
+              <View style={styles.anglesRow}>
+                {['Face avant', 'Arrière', 'Côtés', 'Jauge Carburant', 'Compteur KM'].map((angle, i) => (
+                  <View key={i} style={styles.angleChip}>
+                    <Text style={styles.angleChipText}>✓ {angle}</Text>
                   </View>
                 ))}
+              </View>
 
-                {uploadingPhoto ? (
-                  <View style={[styles.addPhotoBtn, styles.uploadingBox]}>
-                    <ActivityIndicator color={theme.colors.brand.main} />
-                    <Text style={styles.uploadingText}>Envoi…</Text>
+              {/* Parallel Upload Progress Bar Component */}
+              {uploadProgress && (
+                <View style={styles.progressCard}>
+                  <View style={styles.progressHeaderRow}>
+                    <View style={styles.progressStatusLeft}>
+                      <ActivityIndicator size="small" color="#059669" />
+                      <Text style={styles.progressStatusText}>{uploadProgress.statusText}</Text>
+                    </View>
+                    <Text style={styles.progressPercentText}>{uploadProgress.percent}%</Text>
                   </View>
-                ) : (
-                  <View style={styles.addPhotoActions}>
-                    <TouchableOpacity
-                      onPress={() => handlePickAndUploadPhoto('camera')}
-                      style={styles.addPhotoBtn}
-                    >
-                      <Camera size={20} color="#059669" />
-                      <Text style={styles.addPhotoText}>Photo</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => handlePickAndUploadPhoto('library')}
-                      style={styles.addPhotoBtn}
-                    >
-                      <ImagePlus size={20} color="#059669" />
-                      <Text style={styles.addPhotoText}>Galerie</Text>
-                    </TouchableOpacity>
+                  <View style={styles.progressBarTrack}>
+                    <View style={[styles.progressBarFill, { width: `${uploadProgress.percent}%` }]} />
                   </View>
-                )}
+                </View>
+              )}
+
+              {/* Photo Thumbnails Scroll */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.photosScrollContent}
+              >
+                {checkoutPhotos.map((photo, index) => (
+                  <TouchableOpacity
+                    key={photo.id || index}
+                    activeOpacity={0.85}
+                    onPress={() => setPreviewImageUrl(photo.url)}
+                    style={styles.photoThumbCard}
+                  >
+                    <Image source={{ uri: photo.url }} style={styles.photoImg} contentFit="cover" />
+                    <View style={styles.photoOverlayHint}>
+                      <Eye size={10} color="#FFFFFF" />
+                    </View>
+                  </TouchableOpacity>
+                ))}
+
+                {/* Pick / Upload Action Buttons */}
+                <View style={styles.uploadButtonsGroup}>
+                  <TouchableOpacity
+                    disabled={uploadProgress?.isUploading}
+                    onPress={() => handlePickAndUploadPhotos('camera')}
+                    style={[styles.addPhotoBtn, uploadProgress?.isUploading && styles.addPhotoBtnDisabled]}
+                  >
+                    <Camera size={18} color="#059669" />
+                    <Text style={styles.addPhotoText}>Appareil Photo</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    disabled={uploadProgress?.isUploading}
+                    onPress={() => handlePickAndUploadPhotos('library')}
+                    style={[styles.addPhotoBtn, styles.addPhotoBtnGallery, uploadProgress?.isUploading && styles.addPhotoBtnDisabled]}
+                  >
+                    <ImagePlus size={18} color="#047857" />
+                    <Text style={[styles.addPhotoText, { color: '#047857' }]}>Galerie (Batch)</Text>
+                  </TouchableOpacity>
+                </View>
               </ScrollView>
             </View>
 
-            {/* Checkbox confirmation */}
+            {/* Verification Checkbox Card */}
             <TouchableOpacity
               onPress={() => setCheckedTerms((v) => !v)}
-              activeOpacity={0.8}
-              style={styles.checkboxRow}
+              activeOpacity={0.85}
+              style={styles.checkboxCard}
             >
               <View style={[styles.checkbox, checkedTerms && styles.checkboxChecked]}>
-                {checkedTerms ? <CheckCircle2 size={14} color="#FFFFFF" /> : null}
+                {checkedTerms ? <CheckCircle2 size={15} color="#FFFFFF" /> : null}
               </View>
               <Text style={styles.checkboxText}>
-                J’atteste avoir récupéré le véhicule, vérifié le niveau de carburant et l’état général au retour.
+                J’atteste avoir récupéré le véhicule, vérifié le niveau de carburant, le kilométrage et constaté l’état général au retour.
               </Text>
             </TouchableOpacity>
           </ScrollView>
 
+          {/* Footer Action Bar */}
           <View style={styles.footer}>
             <TouchableOpacity disabled={loading} onPress={onClose} style={styles.cancelBtn}>
               <Text style={styles.cancelText}>Annuler</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
-              disabled={!checkedTerms || loading}
+              disabled={!checkedTerms || loading || uploadProgress?.isUploading}
               onPress={handleConfirmCheckout}
-              style={[styles.submitBtn, (!checkedTerms || loading) && styles.submitBtnDisabled]}
+              style={[
+                styles.submitBtn,
+                (!checkedTerms || loading || uploadProgress?.isUploading) && styles.submitBtnDisabled,
+              ]}
             >
-              <CheckCircle2 size={16} color="#FFFFFF" />
-              <Text style={styles.submitText}>{loading ? 'Clôture en cours…' : 'Finaliser le Check-out'}</Text>
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <>
+                  <CheckCircle2 size={18} color="#FFFFFF" />
+                  <Text style={styles.submitText}>Finaliser le Check-out</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
         </View>
       </View>
+
+      {/* Fullscreen Photo Preview Modal */}
+      {previewImageUrl && (
+        <Modal visible transparent animationType="fade" onRequestClose={() => setPreviewImageUrl(null)}>
+          <View style={styles.previewBackdrop}>
+            <TouchableOpacity style={styles.previewCloseBtn} onPress={() => setPreviewImageUrl(null)}>
+              <X size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Image source={{ uri: previewImageUrl }} style={styles.previewImage} contentFit="contain" />
+          </View>
+        </Modal>
+      )}
     </Modal>
   );
 };
@@ -177,7 +339,7 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(4, 25, 18, 0.65)',
+    backgroundColor: 'rgba(4, 25, 18, 0.72)',
     justifyContent: 'flex-end',
   },
   modalCard: {
@@ -185,43 +347,84 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     maxHeight: '90%',
-    paddingBottom: 24,
+    paddingBottom: 20,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  handleContainer: {
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  sheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E2E8F0',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 8,
     paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+    marginRight: 10,
+  },
+  headerIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   title: {
     fontFamily: theme.typography.fontFamily.displayBold,
-    fontSize: 19,
+    fontSize: 17,
     color: '#072A20',
   },
   subtitle: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 12,
+    fontSize: 11.5,
     color: '#64748B',
-    marginTop: 2,
+    marginTop: 1,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   body: {
-    padding: 20,
+    padding: 18,
     gap: 16,
   },
+
+  /* Photos Section */
   photosSection: {
-    gap: 8,
+    gap: 10,
+  },
+  photosHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 10,
   },
   sectionTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
@@ -232,67 +435,168 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.regular,
     fontSize: 11,
     color: '#64748B',
+    marginTop: 1,
   },
-  photosScroll: {
+  counterBadge: {
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  counterBadgeOk: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
+  },
+  counterBadgeWarn: {
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FDE68A',
+  },
+  counterText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 10.5,
+  },
+  counterTextOk: { color: '#047857' },
+  counterTextWarn: { color: '#B45309' },
+
+  anglesRow: {
     flexDirection: 'row',
-    gap: 10,
-    paddingVertical: 6,
+    flexWrap: 'wrap',
+    gap: 6,
   },
-  photoThumb: {
-    width: 72,
-    height: 72,
-    borderRadius: 12,
+  angleChip: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  angleChipText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 10,
+    color: '#475569',
+  },
+
+  /* Parallel Upload Progress Bar Card */
+  progressCard: {
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderRadius: 16,
+    padding: 12,
+    gap: 8,
+  },
+  progressHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  progressStatusLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  progressStatusText: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 12,
+    color: '#047857',
+  },
+  progressPercentText: {
+    fontFamily: theme.typography.fontFamily.displayBold,
+    fontSize: 13,
+    color: '#059669',
+  },
+  progressBarTrack: {
+    width: '100%',
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#DCFCE7',
     overflow: 'hidden',
-    backgroundColor: '#E2E8F0',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#059669',
+    borderRadius: 4,
+  },
+
+  /* Photos Horizontal Scroll */
+  photosScrollContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 4,
+  },
+  photoThumbCard: {
+    width: 84,
+    height: 84,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    position: 'relative',
   },
   photoImg: {
     width: '100%',
     height: '100%',
   },
-  addPhotoActions: {
+  photoOverlayHint: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  uploadButtonsGroup: {
     flexDirection: 'row',
     gap: 8,
   },
   addPhotoBtn: {
-    width: 72,
-    height: 72,
-    borderRadius: 12,
+    width: 90,
+    height: 84,
+    borderRadius: 14,
     backgroundColor: '#ECFDF5',
     borderWidth: 1.5,
     borderColor: '#A7F3D0',
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 5,
+    paddingHorizontal: 6,
+  },
+  addPhotoBtnGallery: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#86EFAC',
+  },
+  addPhotoBtnDisabled: {
+    opacity: 0.5,
   },
   addPhotoText: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 10,
     color: '#059669',
+    textAlign: 'center',
   },
-  uploadingBox: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#CBD5E1',
-  },
-  uploadingText: {
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 9,
-    color: '#64748B',
-  },
-  checkboxRow: {
+
+  /* Checkbox Card */
+  checkboxCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    padding: 12,
-    borderRadius: 14,
+    padding: 14,
+    borderRadius: 16,
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 6,
+    width: 22,
+    height: 22,
+    borderRadius: 7,
     borderWidth: 1.5,
     borderColor: '#94A3B8',
     alignItems: 'center',
@@ -300,22 +604,24 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   checkboxChecked: {
-    backgroundColor: theme.colors.brand.main,
-    borderColor: theme.colors.brand.main,
+    backgroundColor: '#059669',
+    borderColor: '#059669',
   },
   checkboxText: {
     flex: 1,
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 12,
+    fontSize: 11.5,
     color: '#334155',
-    lineHeight: 17,
+    lineHeight: 16.5,
   },
+
+  /* Footer */
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingHorizontal: 18,
+    paddingTop: 10,
   },
   cancelBtn: {
     paddingHorizontal: 16,
@@ -335,18 +641,47 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     borderRadius: 24,
-    backgroundColor: theme.colors.brand.main,
+    backgroundColor: '#072A20',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    shadowColor: '#072A20',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   submitBtnDisabled: {
     opacity: 0.45,
   },
   submitText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13,
+    fontSize: 13.5,
     color: '#FFFFFF',
+  },
+
+  /* Fullscreen Preview */
+  previewBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.92)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewCloseBtn: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  previewImage: {
+    width: '94%',
+    height: '80%',
   },
 });

@@ -2,14 +2,24 @@ import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Modal,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  ScrollView,
 } from 'react-native';
-import { AlertTriangle, CheckCircle2, Clock, Info, X } from 'lucide-react-native';
+import {
+  AlertTriangle,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Info,
+  Minus,
+  Plus,
+  Sparkles,
+  X,
+} from 'lucide-react-native';
 import { theme } from '../../../../core/theme';
 
 interface OwnerConfirmBookingModalProps {
@@ -19,6 +29,21 @@ interface OwnerConfirmBookingModalProps {
   onClose: () => void;
   onConfirm: (heureDebut: string) => Promise<void>;
 }
+
+const QUICK_HOURS = [
+  '08:00',
+  '09:00',
+  '10:00',
+  '11:00',
+  '12:00',
+  '14:00',
+  '15:00',
+  '16:00',
+  '17:00',
+  '18:00',
+  '19:00',
+  '20:00',
+];
 
 export const OwnerConfirmBookingModal: React.FC<OwnerConfirmBookingModalProps> = ({
   visible,
@@ -32,14 +57,32 @@ export const OwnerConfirmBookingModal: React.FC<OwnerConfirmBookingModalProps> =
 
   useEffect(() => {
     if (visible) {
-      // Set default time to current time or 09:00
       const now = new Date();
-      const defaultHours = String(now.getHours()).padStart(2, '0');
-      const defaultMins = '00';
-      setHeureDebut(`${defaultHours}:${defaultMins}`);
+      // Si la date de début est aujourd'hui, proposer l'heure courante arrondie à la demi-heure supérieure
+      if (dateDebut) {
+        const dDebut = new Date(dateDebut);
+        const isToday =
+          dDebut.getDate() === now.getDate() &&
+          dDebut.getMonth() === now.getMonth() &&
+          dDebut.getFullYear() === now.getFullYear();
+
+        if (isToday) {
+          const currentHours = now.getHours();
+          const currentMins = now.getMinutes();
+          const roundedMins = currentMins > 30 ? 0 : 30;
+          const roundedHours = currentMins > 30 ? (currentHours + 1) % 24 : currentHours;
+          setHeureDebut(
+            `${String(roundedHours).padStart(2, '0')}:${String(roundedMins).padStart(2, '0')}`
+          );
+        } else {
+          setHeureDebut('09:00');
+        }
+      } else {
+        setHeureDebut('09:00');
+      }
       setIsPastTime(false);
     }
-  }, [visible]);
+  }, [visible, dateDebut]);
 
   useEffect(() => {
     if (!heureDebut || !dateDebut) {
@@ -60,6 +103,35 @@ export const OwnerConfirmBookingModal: React.FC<OwnerConfirmBookingModalProps> =
   const isValidFormat = /^([01]\d|2[0-3]):([0-5]\d)$/.test(heureDebut);
   const canConfirm = isValidFormat && !isPastTime && !loading;
 
+  const adjustTime = (deltaMinutes: number) => {
+    const [hStr, mStr] = heureDebut.split(':');
+    let h = parseInt(hStr || '9', 10);
+    let m = parseInt(mStr || '0', 10);
+    if (isNaN(h)) h = 9;
+    if (isNaN(m)) m = 0;
+
+    let totalMins = h * 60 + m + deltaMinutes;
+    if (totalMins < 0) totalMins += 24 * 60;
+    totalMins = totalMins % (24 * 60);
+
+    const newH = Math.floor(totalMins / 60);
+    const newM = totalMins % 60;
+    const formatted = `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+    setHeureDebut(formatted);
+  };
+
+  const getCourtesyDeadline = () => {
+    if (!isValidFormat) return '--:--';
+    const [hStr, mStr] = heureDebut.split(':');
+    let h = parseInt(hStr, 10);
+    let m = parseInt(mStr, 10);
+    let totalMins = h * 60 + m + 60; // +1h courtoisie
+    totalMins = totalMins % (24 * 60);
+    const newH = Math.floor(totalMins / 60);
+    const newM = totalMins % 60;
+    return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+  };
+
   const handleSubmit = async () => {
     if (!canConfirm) return;
     try {
@@ -75,10 +147,21 @@ export const OwnerConfirmBookingModal: React.FC<OwnerConfirmBookingModalProps> =
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={styles.modalCard}>
+          {/* Sheet Handle */}
+          <View style={styles.handleContainer}>
+            <View style={styles.sheetHandle} />
+          </View>
+
+          {/* Header */}
           <View style={styles.header}>
-            <View>
-              <Text style={styles.title}>Confirmer la réservation</Text>
-              <Text style={styles.subtitle}>Définissez l’heure de remise des clés avec le locataire</Text>
+            <View style={styles.headerLeft}>
+              <View style={styles.headerIconBox}>
+                <CheckCircle2 size={22} color="#059669" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.title}>Confirmer la réservation</Text>
+                <Text style={styles.subtitle}>Fixez l’heure de mise à disposition du véhicule</Text>
+              </View>
             </View>
             <TouchableOpacity disabled={loading} onPress={onClose} style={styles.closeBtn}>
               <X size={18} color="#64748B" />
@@ -86,7 +169,7 @@ export const OwnerConfirmBookingModal: React.FC<OwnerConfirmBookingModalProps> =
           </View>
 
           <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-            {/* Hour Picker Input Box */}
+            {/* Time Picker Digital Display & Stepper Card */}
             <View style={styles.timeCard}>
               <View style={styles.timeCardHeader}>
                 <View style={styles.iconCircle}>
@@ -94,61 +177,119 @@ export const OwnerConfirmBookingModal: React.FC<OwnerConfirmBookingModalProps> =
                 </View>
                 <View style={styles.timeCardTitles}>
                   <Text style={styles.timeCardTitle}>Heure de prise en charge</Text>
-                  <Text style={styles.timeCardSub}>À quelle heure le véhicule sera-t-il disponible ?</Text>
+                  <Text style={styles.timeCardSub}>À quelle heure le véhicule sera-t-il remis au locataire ?</Text>
                 </View>
               </View>
 
-              <View style={styles.timeInputContainer}>
-                <TextInput
-                  value={heureDebut}
-                  onChangeText={setHeureDebut}
-                  placeholder="09:00"
-                  placeholderTextColor="#94A3B8"
-                  keyboardType="numbers-and-punctuation"
-                  maxLength={5}
-                  style={[styles.timeInput, isPastTime && styles.timeInputError]}
-                />
-                <Text style={styles.formatHint}>Format 24h (ex: 09:00, 14:30)</Text>
-                {isPastTime && (
+              {/* Digital Time Picker Display & Adjuster Buttons */}
+              <View style={styles.timePickerRow}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => adjustTime(-30)}
+                  style={styles.adjusterBtn}
+                >
+                  <Minus size={18} color="#047857" />
+                  <Text style={styles.adjusterBtnText}>- 30m</Text>
+                </TouchableOpacity>
+
+                <View style={styles.digitalClockBox}>
+                  <TextInput
+                    value={heureDebut}
+                    onChangeText={setHeureDebut}
+                    placeholder="09:00"
+                    placeholderTextColor="#94A3B8"
+                    keyboardType="numbers-and-punctuation"
+                    maxLength={5}
+                    style={[styles.digitalClockInput, isPastTime && styles.digitalClockError]}
+                  />
+                  <Text style={styles.formatHint}>Format 24h</Text>
+                </View>
+
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => adjustTime(30)}
+                  style={styles.adjusterBtn}
+                >
+                  <Plus size={18} color="#047857" />
+                  <Text style={styles.adjusterBtnText}>+ 30m</Text>
+                </TouchableOpacity>
+              </View>
+
+              {isPastTime && (
+                <View style={styles.errorBanner}>
+                  <AlertTriangle size={14} color="#DC2626" />
                   <Text style={styles.errorText}>
-                    L’heure sélectionnée est déjà passée. Choisissez une heure future.
+                    L’heure sélectionnée est déjà passée. Veuillez choisir une heure future.
                   </Text>
-                )}
+                </View>
+              )}
+
+              {/* Quick Preset Time Pills */}
+              <View style={styles.presetsSection}>
+                <Text style={styles.presetsTitle}>Sélection rapide :</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.presetsScroll}
+                >
+                  {QUICK_HOURS.map((time) => {
+                    const isSelected = heureDebut === time;
+                    return (
+                      <TouchableOpacity
+                        key={time}
+                        activeOpacity={0.8}
+                        onPress={() => setHeureDebut(time)}
+                        style={[styles.presetPill, isSelected && styles.presetPillActive]}
+                      >
+                        <Text style={[styles.presetPillText, isSelected && styles.presetPillTextActive]}>
+                          {time}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
               </View>
             </View>
 
-            {/* Notice Important */}
-            <View style={styles.noticeBox}>
-              <View style={styles.noticeHeader}>
-                <Info size={14} color="#047857" />
-                <Text style={styles.noticeTitle}>IMPORTANT</Text>
+            {/* Courtesy Hour Information Card */}
+            <View style={styles.courtesyBox}>
+              <View style={styles.courtesyHeader}>
+                <Sparkles size={16} color="#D97706" />
+                <Text style={styles.courtesyTitle}>Heure de courtoisie AutoLoc</Text>
               </View>
-              <Text style={styles.noticeText}>
-                Cette heure détermine le début officiel de la location et active la garantie AutoLoc.
+              <Text style={styles.courtesyText}>
+                Pour faciliter la restitution, l’heure limite de check-in sera fixée à{' '}
+                <Text style={styles.boldText}>{getCourtesyDeadline()}</Text> (+1h de courtoisie).
               </Text>
             </View>
 
-            {/* Notice Courtesy Hour */}
-            <View style={styles.courtesyBox}>
-              <AlertTriangle size={15} color="#D97706" style={styles.courtesyIcon} />
-              <Text style={styles.courtesyText}>
-                L’heure de retour du véhicule sera automatiquement ajustée à{' '}
-                <Text style={styles.boldText}>l’heure de remise + 1h de courtoisie</Text>.
+            {/* Important Contract Information Notice */}
+            <View style={styles.noticeBox}>
+              <View style={styles.noticeHeader}>
+                <Info size={14} color="#047857" />
+                <Text style={styles.noticeTitle}>ACTUATION DU CONTRAT</Text>
+              </View>
+              <Text style={styles.noticeText}>
+                La confirmation enclenche l’assurance AutoLoc et déverrouille l’accès au numéro du locataire 24h avant la prise en charge.
               </Text>
             </View>
           </ScrollView>
 
+          {/* Footer Action Bar */}
           <View style={styles.footer}>
             <TouchableOpacity disabled={loading} onPress={onClose} style={styles.cancelBtn}>
               <Text style={styles.cancelText}>Annuler</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               disabled={!canConfirm}
               onPress={handleSubmit}
               style={[styles.submitBtn, !canConfirm && styles.submitBtnDisabled]}
             >
-              <CheckCircle2 size={16} color="#FFFFFF" />
-              <Text style={styles.submitText}>{loading ? 'Validation…' : 'Confirmer la location'}</Text>
+              <CheckCircle2 size={18} color="#FFFFFF" />
+              <Text style={styles.submitText}>
+                {loading ? 'Validation…' : `Confirmer à ${isValidFormat ? heureDebut : ''}`}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -160,52 +301,87 @@ export const OwnerConfirmBookingModal: React.FC<OwnerConfirmBookingModalProps> =
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(4, 25, 18, 0.65)',
+    backgroundColor: 'rgba(4, 25, 18, 0.72)',
     justifyContent: 'flex-end',
   },
   modalCard: {
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    maxHeight: '85%',
-    paddingBottom: 24,
+    maxHeight: '90%',
+    paddingBottom: 20,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  handleContainer: {
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  sheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E2E8F0',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 8,
     paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+    marginRight: 10,
+  },
+  headerIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   title: {
     fontFamily: theme.typography.fontFamily.displayBold,
-    fontSize: 19,
+    fontSize: 17,
     color: '#072A20',
   },
   subtitle: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 12,
+    fontSize: 11.5,
     color: '#64748B',
-    marginTop: 2,
+    marginTop: 1,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   body: {
-    padding: 20,
+    padding: 18,
     gap: 14,
   },
+
+  /* Time Card */
   timeCard: {
     backgroundColor: '#F8FAFC',
-    borderRadius: 18,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     overflow: 'hidden',
@@ -214,9 +390,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    padding: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
   },
   iconCircle: {
     width: 34,
@@ -231,7 +409,7 @@ const styles = StyleSheet.create({
   },
   timeCardTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 14,
+    fontSize: 13.5,
     color: '#072A20',
   },
   timeCardSub: {
@@ -240,45 +418,158 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginTop: 1,
   },
-  timeInputContainer: {
-    padding: 16,
+
+  /* Time Picker Stepper Row */
+  timePickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 16,
+    gap: 12,
+  },
+  adjusterBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  adjusterBtnText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 12,
+    color: '#047857',
+  },
+  digitalClockBox: {
     alignItems: 'center',
   },
-  timeInput: {
-    fontSize: 34,
+  digitalClockInput: {
+    fontSize: 32,
     fontFamily: theme.typography.fontFamily.displayBold,
     color: '#072A20',
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
-    borderColor: '#CBD5E1',
+    borderColor: '#059669',
     borderRadius: 16,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 6,
     textAlign: 'center',
-    minWidth: 160,
+    minWidth: 130,
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  timeInputError: {
-    borderColor: '#EF4444',
+  digitalClockError: {
+    borderColor: '#DC2626',
+    color: '#DC2626',
   },
   formatHint: {
     fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 11,
-    color: '#64748B',
-    marginTop: 6,
+    fontSize: 10,
+    color: '#94A3B8',
+    marginTop: 4,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginHorizontal: 14,
+    marginBottom: 10,
+    borderRadius: 10,
   },
   errorText: {
-    fontFamily: theme.typography.fontFamily.semiBold,
-    fontSize: 12,
+    flex: 1,
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 11,
     color: '#DC2626',
-    marginTop: 6,
-    textAlign: 'center',
   },
+
+  /* Presets Section */
+  presetsSection: {
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    paddingTop: 10,
+  },
+  presetsTitle: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 11,
+    color: '#64748B',
+    marginBottom: 8,
+  },
+  presetsScroll: {
+    gap: 8,
+  },
+  presetPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  presetPillActive: {
+    backgroundColor: '#072A20',
+    borderColor: '#072A20',
+  },
+  presetPillText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 12,
+    color: '#475569',
+  },
+  presetPillTextActive: {
+    color: '#FFFFFF',
+  },
+
+  /* Courtesy Box */
+  courtesyBox: {
+    backgroundColor: '#FFFBEB',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    padding: 12,
+    gap: 4,
+  },
+  courtesyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  courtesyTitle: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 11.5,
+    color: '#92400E',
+  },
+  courtesyText: {
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 11.5,
+    color: '#B45309',
+    lineHeight: 16,
+  },
+  boldText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    color: '#78350F',
+  },
+
+  /* Notice Box */
   noticeBox: {
     backgroundColor: '#ECFDF5',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#A7F3D0',
-    padding: 14,
+    padding: 12,
     gap: 4,
   },
   noticeHeader: {
@@ -294,40 +585,18 @@ const styles = StyleSheet.create({
   },
   noticeText: {
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 12,
+    fontSize: 11.5,
     color: '#065F46',
-    lineHeight: 17,
+    lineHeight: 16,
   },
-  courtesyBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    backgroundColor: '#FFFBEB',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-    padding: 14,
-  },
-  courtesyIcon: {
-    marginTop: 2,
-  },
-  courtesyText: {
-    flex: 1,
-    fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 12,
-    color: '#92400E',
-    lineHeight: 17,
-  },
-  boldText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    color: '#78350F',
-  },
+
+  /* Footer */
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingHorizontal: 18,
+    paddingTop: 10,
   },
   cancelBtn: {
     paddingHorizontal: 16,
@@ -347,18 +616,23 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     borderRadius: 24,
-    backgroundColor: theme.colors.brand.main,
+    backgroundColor: '#072A20',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    shadowColor: '#072A20',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   submitBtnDisabled: {
     opacity: 0.45,
   },
   submitText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13,
+    fontSize: 13.5,
     color: '#FFFFFF',
   },
 });

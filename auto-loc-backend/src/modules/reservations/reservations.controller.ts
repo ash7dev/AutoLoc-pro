@@ -122,12 +122,12 @@ export class ReservationsController {
 
   @Get(':id/cancellation-quote')
   @UseGuards(RolesGuard)
-  @Roles(RoleProfile.LOCATAIRE)
+  @Roles(RoleProfile.LOCATAIRE, RoleProfile.PROPRIETAIRE)
   async getCancellationQuote(
     @Req() req: Request & { user?: RequestUser },
     @Param('id', ParseUUIDPipe) reservationId: string,
   ) {
-    return this.reservationsService.getTenantCancellationQuote(req.user!, reservationId);
+    return this.reservationsService.getCancellationQuote(req.user!, reservationId);
   }
 
   /**

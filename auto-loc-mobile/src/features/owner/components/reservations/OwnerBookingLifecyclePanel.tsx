@@ -17,6 +17,7 @@ interface OwnerBookingLifecyclePanelProps {
   onOpenSignalNoshow: () => void;
   onOpenSignalOverload: () => void;
   onOpenDispute: () => void;
+  onOpenCancel?: () => void;
 }
 
 export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProps> = ({
@@ -33,6 +34,7 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
   onOpenSignalNoshow,
   onOpenSignalOverload,
   onOpenDispute,
+  onOpenCancel,
 }) => {
   // Calcul de la règle No-Show T+2h
   const { canSignalNoshow, noshowAvailableTimeStr } = useMemo(() => {
@@ -117,6 +119,17 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
             <Text style={styles.primaryActionText}>
               {submitting ? 'Clôture en cours…' : 'Restitution du véhicule (Check-out)'}
             </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Cancellation Button for Owner (Before start) */}
+        {(isPayee || isConfirmee) && onOpenCancel && (
+          <TouchableOpacity
+            disabled={submitting}
+            onPress={onOpenCancel}
+            style={styles.cancelOwnerAction}
+          >
+            <Text style={styles.cancelOwnerActionText}>Annuler cette réservation</Text>
           </TouchableOpacity>
         )}
 
@@ -237,6 +250,17 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 13,
+  },
+  cancelOwnerAction: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  cancelOwnerActionText: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 12,
+    color: '#DC2626',
+    textDecorationLine: 'underline',
   },
   emergencyBlock: {
     marginTop: 6,

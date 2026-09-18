@@ -971,21 +971,63 @@ export class ReservationsService {
     return serialized;
   }
 
-  async getTenantCancellationQuote(user: RequestUser, reservationId: string) {
+  async getCancellationQuote(user: RequestUser, reservationId: string) {
     const utilisateur = await this.prisma.utilisateur.findUnique({ where: { userId: user.sub }, select: { id: true } });
     if (!utilisateur) throw new ForbiddenException('Profil incomplet');
     const reservation = await this.prisma.reservation.findUnique({
       where: { id: reservationId },
-      select: { locataireId: true, statut: true, dateDebut: true, totalLocataire: true, totalBase: true, montantCommission: true, netProprietaire: true },
+      select: {
+        locataireId: true,
+        proprietaireId: true,
+        statut: true,
+        dateDebut: true,
+        totalLocataire: true,
+        totalBase: true,
+        montantCommission: true,
+        netProprietaire: true,
+      },
     });
     if (!reservation) throw new NotFoundException('Réservation introuvable');
-    if (reservation.locataireId !== utilisateur.id) throw new ForbiddenException('Accès refusé');
-    const cancellableStatuses: StatutReservation[] = [StatutReservation.EN_ATTENTE_PAIEMENT, StatutReservation.PAYEE, StatutReservation.CONFIRMEE];
+    const isTenant = reservation.locataireId === utilisateur.id;
+    const isOwner = reservation.proprietaireId === utilisateur.id;
+    if (!isTenant && !isOwner) throw new ForbiddenException('Accès refusé');
+
+    const cancellableStatuses: StatutReservation[] = [
+      StatutReservation.INITIEE,
+      StatutReservation.EN_ATTENTE_PAIEMENT,
+      StatutReservation.PAYEE,
+      StatutReservation.CONFIRMEE,
+    ];
     if (!cancellableStatuses.includes(reservation.statut)) {
       throw new BadRequestException('Cette réservation ne peut plus être annulée');
     }
-    const quote = this.cancellationPolicy.calculateForTenant(reservation, new Date(), reservation.statut === StatutReservation.CONFIRMEE);
-    return { canCancel: quote.canCancel, refundPercentage: quote.refundPercentage, refundAmount: quote.refundAmount.toString(), commissionRetained: quote.commissionRetained.toString(), warnings: quote.warnings };
+
+    if (isTenant) {
+      const quote = this.cancellationPolicy.calculateForTenant(reservation, new Date(), reservation.statut === StatutReservation.CONFIRMEE);
+      return {
+        canCancel: quote.canCancel,
+        isOwner: false,
+        refundPercentage: quote.refundPercentage,
+        refundAmount: quote.refundAmount.toString(),
+        commissionRetained: quote.commissionRetained.toString(),
+        ownerPenaltyAmount: '0',
+        ownerPenaltyPercentage: 0,
+        warnings: quote.warnings,
+      };
+    } else {
+      const isConfirmed = reservation.statut !== StatutReservation.PAYEE;
+      const quote = this.cancellationPolicy.calculateForOwner(reservation, new Date(), isConfirmed);
+      return {
+        canCancel: quote.canCancel,
+        isOwner: true,
+        refundPercentage: 100,
+        refundAmount: reservation.totalLocataire.toString(),
+        commissionRetained: '0',
+        ownerPenaltyAmount: quote.ownerPenaltyAmount.toString(),
+        ownerPenaltyPercentage: quote.ownerPenaltyPercentage,
+        warnings: quote.warnings,
+      };
+    }
   }
 
   async createContractAccessUrl(user: RequestUser, reservationId: string) {
