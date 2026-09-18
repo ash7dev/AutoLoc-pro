@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import {
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -96,16 +95,12 @@ const StepperCounter: React.FC<{
   min: number;
   max: number;
   unit: string;
-  icon?: React.ReactNode;
   onIncrement: () => void;
   onDecrement: () => void;
-}> = ({ label, subLabel, value, min, max, unit, icon, onIncrement, onDecrement }) => (
+}> = ({ label, subLabel, value, min, max, unit, onIncrement, onDecrement }) => (
   <View style={styles.stepperCard}>
     <View style={styles.stepperTextCol}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        {icon}
-        <Text style={styles.stepperLabel}>{label}</Text>
-      </View>
+      <Text style={styles.stepperLabel}>{label}</Text>
       {Boolean(subLabel) && <Text style={styles.stepperSub}>{subLabel}</Text>}
     </View>
 
@@ -130,7 +125,7 @@ const StepperCounter: React.FC<{
         onPress={onIncrement}
         activeOpacity={0.7}
       >
-        <Plus size={16} color={COLORS.white} strokeWidth={2.5} />
+        <Plus size={16} color="#4ADE80" strokeWidth={2.5} />
       </TouchableOpacity>
     </View>
   </View>
@@ -162,35 +157,40 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
     return parts.join(' · ');
   }, [data, selectedCount]);
 
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      {/* Hero Header */}
-      <View style={styles.heroHeader}>
-        <View style={styles.heroBadgeRow}>
-          <View style={styles.heroBadge}>
-            <Sliders size={13} color={COLORS.primaryDark} />
-            <Text style={styles.heroBadgeText}>Étape 02 · Spécifications & Équipements</Text>
-          </View>
-          <View style={styles.completionPill}>
-            <Text style={styles.completionText}>{selectedCount} options</Text>
-          </View>
-        </View>
+  // Pair up equipment items into pairs for flawless 2-column horizontal rows
+  const equipmentPairs = useMemo(() => {
+    const pairs: EquipmentOption[][] = [];
+    for (let i = 0; i < EQUIPMENTS_LIST.length; i += 2) {
+      pairs.push(EQUIPMENTS_LIST.slice(i, i + 2));
+    }
+    return pairs;
+  }, []);
 
-        <Text style={styles.heroTitle}>Capacité et équipements à bord</Text>
-        <Text style={styles.heroSubtitle}>
-          Indiquez le nombre de places et sélectionnez les options de confort présentes dans le véhicule.
+  return (
+    <View style={styles.container}>
+      {/* Hero Header d'étape Centré Luxury */}
+      <View style={styles.centeredHeroHeader}>
+        <View style={styles.centeredIconBadge}>
+          <Sliders size={22} color="#4ADE80" strokeWidth={2.2} />
+        </View>
+        <Text style={styles.centeredHeroTitle}>Spécifications & Confort</Text>
+        <Text style={styles.centeredHeroSubtitle}>
+          Indiquez la capacité d'accueil et les équipements à bord
         </Text>
       </View>
 
       {/* Synthesis Pill */}
       <View style={styles.summaryCard}>
         <Sparkles size={16} color={COLORS.primaryDark} />
-        <Text style={styles.summaryText}>{summaryText}</Text>
+        <Text style={styles.summaryText} numberOfLines={1} ellipsizeMode="tail">{summaryText}</Text>
       </View>
 
       {/* Nombre de places */}
       <View style={styles.fieldGroup}>
-        <Text style={styles.sectionLabel}>Capacité d'accueil</Text>
+        <View style={styles.labelWithIcon}>
+          <Users size={16} color="#059669" strokeWidth={2.2} />
+          <Text style={styles.sectionLabel}>Capacité d'accueil</Text>
+        </View>
         <StepperCounter
           label="Nombre de places"
           subLabel="Conducteur compris"
@@ -198,7 +198,6 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
           min={1}
           max={50}
           unit="pl."
-          icon={<Users size={18} color={COLORS.primaryDark} />}
           onDecrement={() => onChange({ nombrePlaces: Math.max(1, data.nombrePlaces - 1) })}
           onIncrement={() => onChange({ nombrePlaces: Math.min(50, data.nombrePlaces + 1) })}
         />
@@ -206,7 +205,10 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
 
       {/* Conditions d'accès */}
       <View style={styles.fieldGroup}>
-        <Text style={styles.sectionLabel}>Conditions d'accès</Text>
+        <View style={styles.labelWithIcon}>
+          <ShieldCheck size={16} color="#059669" strokeWidth={2.2} />
+          <Text style={styles.sectionLabel}>Conditions d'accès</Text>
+        </View>
         <View style={{ gap: 10 }}>
           <StepperCounter
             label="Âge minimum conducteur"
@@ -215,7 +217,6 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
             min={18}
             max={30}
             unit="ans"
-            icon={<ShieldCheck size={18} color={COLORS.primaryDark} />}
             onDecrement={() => onChange({ ageMinimum: Math.max(18, data.ageMinimum - 1) })}
             onIncrement={() => onChange({ ageMinimum: Math.min(30, data.ageMinimum + 1) })}
           />
@@ -227,7 +228,6 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
             min={1}
             max={30}
             unit="j."
-            icon={<Gauge size={18} color={COLORS.primaryDark} />}
             onDecrement={() => onChange({ joursMinimum: Math.max(1, data.joursMinimum - 1) })}
             onIncrement={() => onChange({ joursMinimum: Math.min(30, data.joursMinimum + 1) })}
           />
@@ -237,53 +237,60 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
       {/* Équipements */}
       <View style={styles.fieldGroup}>
         <View style={styles.equipHeaderRow}>
-          <Text style={styles.sectionLabel}>Équipements & Confort</Text>
+          <View style={styles.labelWithIcon}>
+            <Sliders size={16} color="#059669" strokeWidth={2.2} />
+            <Text style={styles.sectionLabel}>Équipements & Confort</Text>
+          </View>
           <Text style={styles.equipCountText}>{selectedCount} sélectionné{selectedCount > 1 ? 's' : ''}</Text>
         </View>
         <Text style={styles.inputHelp}>Sélectionnez toutes les options présentes dans votre véhicule.</Text>
 
-        <View style={styles.equipGrid}>
-          {EQUIPMENTS_LIST.map((item) => {
-            const isSelected = data.equipements.includes(item.id);
-            const Icon = item.icon;
-            return (
-              <TouchableOpacity
-                key={item.id}
-                style={[styles.equipCard, isSelected && styles.equipCardActive]}
-                activeOpacity={0.8}
-                onPress={() => toggleEquipement(item.id)}
-              >
-                <View style={styles.equipCardHeader}>
-                  <View style={[styles.equipIconBox, isSelected && styles.equipIconBoxActive]}>
-                    <Icon size={18} color={isSelected ? COLORS.white : COLORS.inkSoft} />
-                  </View>
-                  {isSelected && (
-                    <View style={styles.equipCheckBadge}>
-                      <Check size={10} color={COLORS.white} strokeWidth={3} />
+        <View style={{ gap: 10 }}>
+          {equipmentPairs.map((pair, rowIndex) => (
+            <View key={rowIndex} style={styles.cardRow2Col}>
+              {pair.map((item) => {
+                const isSelected = data.equipements.includes(item.id);
+                const Icon = item.icon;
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[styles.equipCard, isSelected && styles.equipCardActive]}
+                    activeOpacity={0.8}
+                    onPress={() => toggleEquipement(item.id)}
+                  >
+                    <View style={styles.equipCardHeader}>
+                      <View style={[styles.equipIconBox, isSelected && styles.equipIconBoxActive]}>
+                        <Icon size={18} color={isSelected ? '#4ADE80' : COLORS.inkSoft} />
+                      </View>
+                      {isSelected && (
+                        <View style={styles.equipCheckBadge}>
+                          <Check size={10} color={COLORS.white} strokeWidth={3} />
+                        </View>
+                      )}
                     </View>
-                  )}
-                </View>
 
-                <View style={{ gap: 2 }}>
-                  <Text style={[styles.equipLabel, isSelected && styles.equipLabelActive]} numberOfLines={1}>
-                    {item.label}
-                  </Text>
-                  <Text style={styles.equipSub} numberOfLines={1}>
-                    {item.sub}
-                  </Text>
-                </View>
+                    <View style={{ gap: 2 }}>
+                      <Text style={[styles.equipLabel, isSelected && styles.equipLabelActive]} numberOfLines={1}>
+                        {item.label}
+                      </Text>
+                      <Text style={styles.equipSub} numberOfLines={1}>
+                        {item.sub}
+                      </Text>
+                    </View>
 
-                {Boolean(item.tag) && (
-                  <View style={[styles.equipTag, isSelected && styles.equipTagActive]}>
-                    <Text style={[styles.equipTagText, isSelected && styles.equipTagTextActive]}>{item.tag}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
+                    {Boolean(item.tag) && (
+                      <View style={[styles.equipTag, isSelected && styles.equipTagActive]}>
+                        <Text style={[styles.equipTagText, isSelected && styles.equipTagTextActive]}>{item.tag}</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ))}
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -292,67 +299,82 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
 // ----------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.white },
-  content: { padding: 20, paddingBottom: 40, gap: 22 },
+  container: { flex: 1, backgroundColor: COLORS.white, gap: 22 },
 
-  heroHeader: { gap: 8, marginBottom: 4 },
-  heroBadgeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 },
-  heroBadge: {
-    flexDirection: 'row',
+  centeredHeroHeader: {
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: COLORS.primarySoft,
-    borderWidth: 1,
-    borderColor: COLORS.primaryBorder,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
+    justifyContent: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 8,
   },
-  heroBadgeText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 11,
-    color: COLORS.primaryDark,
-    letterSpacing: 0.2,
+  centeredIconBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#041912',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  completionPill: { backgroundColor: '#F1F5F9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
-  completionText: { fontFamily: theme.typography.fontFamily.bold, fontSize: 11, color: COLORS.muted },
-  heroTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 22,
-    color: COLORS.ink,
+  centeredHeroTitle: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 24,
+    lineHeight: 30,
+    color: '#041912',
+    textAlign: 'center',
     letterSpacing: -0.4,
-    lineHeight: 28,
   },
-  heroSubtitle: {
+  centeredHeroSubtitle: {
     fontFamily: theme.typography.fontFamily.regular,
     fontSize: 13.5,
-    color: COLORS.muted,
     lineHeight: 19,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 4,
+    maxWidth: 300,
   },
 
   summaryCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: COLORS.primarySoft,
-    borderWidth: 1,
-    borderColor: COLORS.primaryBorder,
-    borderRadius: 14,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1.5,
+    borderColor: '#A7F3D0',
+    borderRadius: 16,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   summaryText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13,
+    flex: 1,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 12.5,
     color: COLORS.primaryDark,
   },
 
   fieldGroup: { gap: 8 },
+  labelWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
   sectionLabel: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 14,
-    color: '#0F172A',
-    letterSpacing: -0.2,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 15.5,
+    color: '#041912',
+    letterSpacing: -0.3,
   },
   inputHelp: { fontFamily: theme.typography.fontFamily.regular, fontSize: 12, color: COLORS.muted, marginBottom: 4 },
 
@@ -361,7 +383,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.white,
     borderWidth: 1.5,
     borderColor: COLORS.border,
     borderRadius: 16,
@@ -370,7 +392,7 @@ const styles = StyleSheet.create({
   },
   stepperTextCol: { gap: 2, flex: 1 },
   stepperLabel: {
-    fontFamily: theme.typography.fontFamily.bold,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 14,
     color: COLORS.ink,
   },
@@ -395,8 +417,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepperBtnActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: '#041912',
+    borderColor: '#041912',
   },
   stepperBtnDisabled: {
     opacity: 0.5,
@@ -407,7 +429,7 @@ const styles = StyleSheet.create({
     minWidth: 44,
   },
   stepperValueText: {
-    fontFamily: theme.typography.fontFamily.bold,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 16,
     color: COLORS.ink,
   },
@@ -424,19 +446,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   equipCountText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 11.5,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 12,
     color: COLORS.primaryDark,
   },
-  equipGrid: {
+  cardRow2Col: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: 10,
-    justifyContent: 'space-between',
+    width: '100%',
   },
   equipCard: {
-    width: '48.5%',
-    backgroundColor: COLORS.surface,
+    flex: 1,
+    backgroundColor: COLORS.white,
     borderWidth: 1.5,
     borderColor: COLORS.border,
     borderRadius: 16,
@@ -445,8 +467,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   equipCardActive: {
-    backgroundColor: COLORS.primarySoft,
-    borderColor: COLORS.primaryBorder,
+    backgroundColor: '#F0FDF4',
+    borderColor: '#059669',
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
   },
   equipCardHeader: {
     flexDirection: 'row',
@@ -455,29 +482,29 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   equipIconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: COLORS.white,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   equipIconBoxActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: '#041912',
+    borderColor: 'rgba(74, 222, 128, 0.4)',
   },
   equipCheckBadge: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: COLORS.primary,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#059669',
     alignItems: 'center',
     justifyContent: 'center',
   },
   equipLabel: {
-    fontFamily: theme.typography.fontFamily.bold,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 13,
     color: COLORS.ink,
   },

@@ -15,7 +15,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Carburant, StatutVehicule, Transmission, TypeVehicule } from '@prisma/client';
-import { PriceTierDto } from './create-vehicle.dto';
+import { PhotoInputDto, PriceTierDto } from './create-vehicle.dto';
 
 export class UpdateVehicleDto {
   @IsOptional()
@@ -133,7 +133,7 @@ export class UpdateVehicleDto {
   // ── Livraison & Hors Dakar ──────────────────────────────────────────────────
 
   @IsOptional()
-  @IsBoolean() // Needs to be added to imports if not there, wait, I can just not use IsBoolean or add it. Let me add imports. Actually, they might not be imported. Wait, I should import IsBoolean in UpdateVehicleDto.
+  @IsBoolean()
   autoriseHorsDakar?: boolean;
 
   @ValidateIf((o) => o.autoriseHorsDakar === true)
@@ -148,7 +148,13 @@ export class UpdateVehicleDto {
   @Type(() => Number)
   fraisLivraison?: number;
 
-  // ── Documents (niveaux de mise à jour) ───────────────────────────
+  // ── Photos & Documents (niveaux de mise à jour) ───────────────────────────
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PhotoInputDto)
+  photos?: PhotoInputDto[];
 
   @IsOptional()
   @IsString()

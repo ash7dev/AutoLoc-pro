@@ -7,7 +7,12 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "AutoLoc a besoin d'accéder à votre appareil photo pour capturer votre selfie de vérification d'identité et vos documents officiels.",
+        "NSPhotoLibraryUsageDescription": "AutoLoc a besoin d'accéder à votre photothèque pour vous permettre de joindre vos documents d'identité et permis de conduire.",
+        "NSLocationWhenInUseUsageDescription": "AutoLoc utilise votre position pour vous afficher les véhicules de location disponibles autour de vous."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -16,7 +21,14 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -25,7 +37,26 @@
       "expo-status-bar",
       "expo-image",
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "AutoLoc a besoin d'accéder à votre appareil photo pour capturer votre selfie de vérification d'identité et vos documents."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "AutoLoc a besoin d'accéder à vos photos pour joindre vos justificatifs d'identité.",
+          "cameraPermission": "AutoLoc a besoin d'accéder à l'appareil photo pour prendre votre selfie et vos pièces d'identité."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "AutoLoc utilise votre position pour vous afficher les véhicules disponibles à proximité."
+        }
+      ]
     ]
   }
 }

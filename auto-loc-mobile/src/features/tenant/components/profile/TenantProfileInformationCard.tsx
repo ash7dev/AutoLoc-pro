@@ -1,36 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Dimensions,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   CalendarDays,
+  Calendar,
   ChevronRight,
+  ChevronDown,
   Mail,
   Pencil,
   Phone,
   UserRound,
+  User,
   X,
   CheckCircle2,
   ShieldCheck,
+  ArrowRight,
 } from 'lucide-react-native';
 import { theme } from '../../../../core/theme';
+import { AutoInput, AutoButton, DatePickerField } from '../../../../shared/components';
 import { TenantProfile, updateTenantProfile } from '../../api/tenantProfileApi';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 interface TenantProfileInformationCardProps {
   profile: TenantProfile;
   onUpdated: (profile: Partial<TenantProfile>) => Promise<void> | void;
   onPhonePress: () => void;
 }
+
+const MOIS_NOMS = [
+  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+];
 
 function FieldRow({
   icon: Icon,
@@ -89,10 +105,11 @@ export function TenantProfileInformationCard({
   onUpdated,
   onPhonePress,
 }: TenantProfileInformationCardProps) {
+  const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [prenom, setPrenom] = useState(profile.prenom);
-  const [nom, setNom] = useState(profile.nom);
+  const [prenom, setPrenom] = useState(profile.prenom || '');
+  const [nom, setNom] = useState(profile.nom || '');
   const [dateNaissance, setDateNaissance] = useState(
     profile.dateNaissance?.slice(0, 10) || ''
   );
@@ -100,31 +117,62 @@ export function TenantProfileInformationCard({
 
   useEffect(() => {
     if (!open) {
-      setPrenom(profile.prenom);
-      setNom(profile.nom);
+      setPrenom(profile.prenom || '');
+      setNom(profile.nom || '');
       setDateNaissance(profile.dateNaissance?.slice(0, 10) || '');
       setError(null);
     }
   }, [open, profile]);
 
+  const formatFrenchDate = (isoStr: string) => {
+    if (!isoStr || isoStr.length !== 10) return null;
+    const parts = isoStr.split('-');
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    const d = parseInt(parts[2], 10);
+    if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+    return `${d} ${MOIS_NOMS[m - 1]} ${y}`;
+  };
+
+  const getAge = (isoStr: string) => {
+    if (!isoStr || isoStr.length !== 10) return null;
+    const birthDate = new Date(isoStr);
+    if (isNaN(birthDate.getTime())) return null;
+
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const formattedDisplayDate = formatFrenchDate(dateNaissance);
+  const userAge = getAge(dateNaissance);
+  const isFormValid = prenom.trim().length > 0 && nom.trim().length > 0 && dateNaissance.length === 10;
+
   const save = async () => {
-    if (
-      !prenom.trim() ||
-      !nom.trim() ||
-      (dateNaissance && !/^\d{4}-\d{2}-\d{2}$/.test(dateNaissance))
-    ) {
-      setError('Renseignez votre nom et une date au format AAAA-MM-JJ.');
+    if (!prenom.trim() || !nom.trim()) {
+      setError('Veuillez renseigner votre prénom et votre nom.');
       return;
     }
+    if (!dateNaissance || dateNaissance.length !== 10) {
+      setError('Veuillez sélectionner votre date de naissance.');
+      return;
+    }
+
     try {
       setSaving(true);
+      setError(null);
       const updated = await updateTenantProfile({
         prenom: prenom.trim(),
         nom: nom.trim(),
-        dateNaissance: dateNaissance || null,
+        dateNaissance: dateNaissance.trim() || null,
       });
       await onUpdated(updated);
       setOpen(false);
+      Alert.alert('Profil mis à jour', 'Vos informations personnelles ont été enregistrées avec succès.');
     } catch (err: any) {
       setError(err?.response?.data?.message || 'La mise à jour a échoué.');
     } finally {
@@ -140,6 +188,10 @@ export function TenantProfileInformationCard({
       year: 'numeric',
     })
     : '';
+
+  function setDatePickerVisible(arg0: boolean) {
+    throw new Error('Function not implemented.');
+  }
 
   return (
     <>
@@ -187,102 +239,151 @@ export function TenantProfileInformationCard({
         </View>
       </View>
 
-      {/* Modal / Bottom Sheet d'édition */}
+      {/* Modal d'édition FULL-SCREEN Centré (Exactement comme Login/Register) */}
       <Modal
         visible={open}
-        transparent
-        animationType="slide"
+        animationType="fade"
+        transparent={false}
         onRequestClose={() => !saving && setOpen(false)}
       >
-        <KeyboardAvoidingView
-          style={styles.overlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => !saving && setOpen(false)} />
-          <View style={styles.sheet}>
-            <View style={styles.handle} />
+        <View style={styles.modalContainer}>
+          <StatusBar style="light" animated />
 
-            <View style={styles.sheetHeader}>
-              <View style={styles.sheetTitleGroup}>
-                <View style={styles.darkIconBadgeSheet}>
-                  <Pencil size={16} color="#4ADE80" strokeWidth={2.25} />
-                </View>
-                <View>
-                  <Text style={styles.sheetTitle}>Modifier mon identité</Text>
-                  <Text style={styles.sheetSubtitle}>
-                    Mettez à jour vos informations enregistrées
-                  </Text>
-                </View>
-              </View>
+          {/* 1. Fond Sombre Émeraude & Aura Lumineuse (Identique Login/Register) */}
+          <View style={StyleSheet.absoluteFill}>
+            <LinearGradient
+              colors={['#062017', '#04150F', '#020B08']}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.auraGlow} />
+          </View>
 
+          {/* 2. Content Safe Area Wrapper */}
+          <View
+            style={[
+              styles.safeWrapper,
+              {
+                paddingTop: Math.max(insets.top, 20) + 8,
+                paddingBottom: Math.max(insets.bottom, 16) + 8,
+              },
+            ]}
+          >
+            {/* Top Header Navigation Glass */}
+            <View style={styles.topHeaderRow}>
               <TouchableOpacity
-                disabled={saving}
-                onPress={() => setOpen(false)}
-                style={styles.closeBtn}
-              >
-                <X size={18} color="#64748B" strokeWidth={2.2} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={styles.form}
-              showsVerticalScrollIndicator={false}
-            >
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>PRÉNOM</Text>
-                <TextInput
-                  value={prenom}
-                  onChangeText={setPrenom}
-                  autoCapitalize="words"
-                  style={styles.input}
-                  placeholder="Ex. Awa"
-                  placeholderTextColor="#94A3B8"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>NOM</Text>
-                <TextInput
-                  value={nom}
-                  onChangeText={setNom}
-                  autoCapitalize="characters"
-                  style={styles.input}
-                  placeholder="Ex. Ndiaye"
-                  placeholderTextColor="#94A3B8"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>DATE DE NAISSANCE (AAAA-MM-JJ)</Text>
-                <TextInput
-                  value={dateNaissance}
-                  onChangeText={setDateNaissance}
-                  keyboardType="numbers-and-punctuation"
-                  maxLength={10}
-                  style={styles.input}
-                  placeholder="1995-08-24"
-                  placeholderTextColor="#94A3B8"
-                />
-              </View>
-
-              {error ? <Text style={styles.error}>{error}</Text> : null}
-
-              <TouchableOpacity
-                disabled={saving}
-                onPress={save}
-                style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
+                style={styles.glassCloseBtn}
+                onPress={() => !saving && setOpen(false)}
                 activeOpacity={0.8}
               >
-                {saving ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                ) : (
-                  <Text style={styles.saveBtnText}>Enregistrer les modifications</Text>
-                )}
+                <X size={18} color="#FFFFFF" strokeWidth={2.5} />
               </TouchableOpacity>
-            </ScrollView>
+
+              <View style={styles.skipGlassPill}>
+                <ShieldCheck size={12} color="#4ADE80" />
+                <Text style={styles.skipGlassText}>ÉDITION PROFIL</Text>
+              </View>
+            </View>
+
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={styles.flexOne}
+            >
+              <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+              >
+                {/* STACK CARDS SUPERPOSÉES (Identique Login/Register) */}
+                <View style={styles.cardStackWrapper}>
+                  {/* Card d'arrière-plan en décalé */}
+                  <View style={styles.backAccentCard} />
+
+                  {/* Card Principale Translucide Blanc */}
+                  <View style={styles.frontGlassCard}>
+                    {/* Header Card : Logo & Titre */}
+                    <View style={styles.cardHeaderBox}>
+                      <View style={styles.logoContainer}>
+                        <Image
+                          source={require('../../../../../assets/logo.png')}
+                          style={styles.logoImage}
+                          resizeMode="contain"
+                        />
+                      </View>
+
+                      <View style={styles.badgeKycGlass}>
+                        <ShieldCheck size={12} color="#059669" />
+                        <Text style={styles.badgeKycText}>INFORMATIONS OFFICIELLES</Text>
+                      </View>
+
+                      <Text style={styles.mainTitle}>Modifier mon profil</Text>
+                      <Text style={styles.subtitle}>
+                        Mettez à jour vos informations personnelles de compte
+                      </Text>
+                    </View>
+
+                    {/* Bannière Erreur */}
+                    {error ? (
+                      <View style={styles.errorBanner}>
+                        <Text style={styles.errorText}>{error}</Text>
+                        <TouchableOpacity onPress={() => setError(null)}>
+                          <Text style={styles.errorClose}>×</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : null}
+
+                    {/* Formulaire */}
+                    <View style={styles.formStack}>
+                      <AutoInput
+                        label="Prénom"
+                        placeholder="Ex. Amadou"
+                        value={prenom}
+                        onChangeText={(t) => { setError(null); setPrenom(t); }}
+                        leftIcon={<User size={18} color={theme.colors.text.tertiary} />}
+                        autoCapitalize="words"
+                      />
+
+                      <AutoInput
+                        label="Nom de famille"
+                        placeholder="Ex. Diallo"
+                        value={nom}
+                        onChangeText={(t) => { setError(null); setNom(t); }}
+                        leftIcon={<User size={18} color={theme.colors.text.tertiary} />}
+                        autoCapitalize="characters"
+                      />
+
+                      {/* Sélecteur de date inline (JJ/MM/AAAA) */}
+                      <DatePickerField
+                        label="Date de naissance"
+                        value={dateNaissance}
+                        onChange={(isoStr) => {
+                          setError(null);
+                          setDateNaissance(isoStr);
+                        }}
+                      />
+
+                      {/* Bouton de confirmation */}
+                      <AutoButton
+                        title="Enregistrer les modifications"
+                        variant="dark"
+                        rightIcon={
+                          <View style={styles.emeraldArrowCircle}>
+                            <ArrowRight size={13} color="#4ADE80" />
+                          </View>
+                        }
+                        loading={saving}
+                        disabled={saving || !isFormValid}
+                        onPress={save}
+                        size="md"
+                        style={styles.submitBtn}
+                      />
+                    </View>
+                  </View>
+                </View>
+              </ScrollView>
+            </KeyboardAvoidingView>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       </Modal>
     </>
   );
@@ -434,114 +535,231 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     color: '#FFFFFF',
   },
-  /* Modal Styles */
-  overlay: {
+
+  /* Modal Full-Screen Centré Identique à Login/Register */
+  modalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(4, 25, 18, 0.55)',
+    backgroundColor: '#04150F',
   },
-  sheet: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 20,
-    paddingBottom: 28,
-    gap: 16,
-  },
-  handle: {
+  auraGlow: {
+    position: 'absolute',
+    top: -60,
     alignSelf: 'center',
-    height: 4,
-    width: 38,
-    borderRadius: 4,
-    backgroundColor: '#CBD5E1',
-    marginTop: 10,
-    marginBottom: 6,
+    width: screenWidth * 0.9,
+    height: screenWidth * 0.9,
+    borderRadius: (screenWidth * 0.9) / 2,
+    backgroundColor: 'rgba(16, 185, 129, 0.16)',
   },
-  sheetHeader: {
+  safeWrapper: {
+    flex: 1,
+  },
+  flexOne: {
+    flex: 1,
+  },
+  topHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 4,
+    paddingHorizontal: theme.spacing[5],
+    marginBottom: theme.spacing[2],
   },
-  sheetTitleGroup: {
+  glassCloseBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.20)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  skipGlassPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: theme.radius.full,
+  },
+  skipGlassText: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 11,
+    color: '#FFFFFF',
+  },
+  scrollContent: {
+    paddingHorizontal: theme.spacing[4],
+    paddingTop: theme.spacing[2],
+    paddingBottom: Platform.OS === 'ios' ? 160 : 120,
+    flexGrow: 1,
+  },
+  cardStackWrapper: {
+    position: 'relative',
+    marginVertical: theme.spacing[2],
+  },
+  backAccentCard: {
+    position: 'absolute',
+    top: -6,
+    left: 8,
+    right: 8,
+    bottom: -6,
+    borderRadius: 32,
+    backgroundColor: 'rgba(16, 185, 129, 0.20)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+  },
+  frontGlassCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.80)',
+    borderRadius: 28,
+    padding: theme.spacing[5],
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  cardHeaderBox: {
+    alignItems: 'center',
+    marginBottom: theme.spacing[3],
+  },
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing[2],
+  },
+  logoImage: {
+    width: 160,
+    height: 48,
+  },
+  badgeKycGlass: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: theme.radius.full,
+    gap: 6,
+    marginBottom: theme.spacing[2],
+  },
+  badgeKycText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 9,
+    letterSpacing: 0.8,
+    color: '#059669',
+  },
+  mainTitle: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 26,
+    lineHeight: 32,
+    color: '#041912',
+    textAlign: 'center',
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.status.errorBg,
+    borderColor: theme.colors.status.errorBorder,
+    borderWidth: 1,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing[3],
+    marginBottom: theme.spacing[3],
+  },
+  errorText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.status.error,
+    flex: 1,
+  },
+  errorClose: {
+    fontSize: 16,
+    color: theme.colors.status.error,
+    paddingLeft: 8,
+  },
+  formStack: {
+    gap: 0,
+  },
+  dateFieldWrapper: {
+    marginBottom: theme.spacing[4],
+    width: '100%',
+  },
+  dateLabel: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: -0.1,
+    color: '#041912',
+    marginBottom: 6,
+  },
+  dateInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.surface.canvas,
+    borderWidth: 1.5,
+    borderColor: theme.colors.border.default,
+    borderRadius: theme.radius.lg,
+    paddingHorizontal: theme.spacing[4],
+    minHeight: 52,
+  },
+  dateInputValid: {
+    borderColor: '#059669',
+    backgroundColor: '#FFFFFF',
+  },
+  dateRowLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     flex: 1,
   },
-  darkIconBadgeSheet: {
-    width: 36,
-    height: 36,
-    borderRadius: 11,
-    backgroundColor: '#041912',
+  placeholderDateText: {
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text.tertiary,
+  },
+  dateTextGroup: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
+  },
+  formattedDateText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: theme.typography.fontSize.base,
+    color: theme.colors.text.primary,
+  },
+  ageSubtext: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 12.5,
+    color: '#059669',
+  },
+  submitBtn: {
+    minHeight: 50,
+    borderRadius: 25,
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(4, 25, 18, 0.90)',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
+    marginTop: theme.spacing[2],
+  },
+  emeraldArrowCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
     borderWidth: 1,
     borderColor: 'rgba(74, 222, 128, 0.35)',
-  },
-  sheetTitle: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 18,
-    color: '#041912',
-  },
-  sheetSubtitle: {
-    fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  form: {
-    gap: 12,
-  },
-  inputGroup: {
-    gap: 5,
-  },
-  inputLabel: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 10,
-    color: '#64748B',
-    letterSpacing: 0.6,
-  },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderRadius: 14,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 14,
-    color: '#041912',
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 14,
-    backgroundColor: '#F8FAFC',
-  },
-  error: {
-    color: '#DC2626',
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 12,
-  },
-  saveBtn: {
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    backgroundColor: '#041912',
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(74, 222, 128, 0.25)',
-  },
-  saveBtnDisabled: {
-    opacity: 0.65,
-  },
-  saveBtnText: {
-    color: '#FFFFFF',
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 13.5,
+    marginLeft: 6,
   },
 });

@@ -16,6 +16,7 @@ import {
   Check,
   ArrowRight,
 } from 'lucide-react-native';
+import { theme } from '../../../../core/theme';
 
 interface PublishProgressModalProps {
   visible: boolean;
@@ -36,7 +37,7 @@ export const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
 
   const currentPercent = Math.min(Math.max(progress, 0), 100);
 
-  // Étape 1 : 0-30%, Étape 2 : 31-75%, Étape 3 : 76-100%
+  // Étape 1 : 0-35%, Étape 2 : 36-75%, Étape 3 : 76-100%
   const step1Done = currentPercent >= 35;
   const step2Done = currentPercent >= 75;
   const step3Done = currentPercent >= 100;
@@ -45,39 +46,35 @@ export const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
     <Modal visible={visible} transparent={true} animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.glassCard}>
-          {/* Top Security Pill */}
+          {/* Security Badge Pill */}
           <View style={styles.securityPill}>
             <View style={styles.pulseDot} />
             <Text style={styles.securityPillText}>TRAITEMENT SÉCURISÉ AUTOLOC</Text>
           </View>
 
-          {/* Central Hero Icon Circle */}
-          <View style={[styles.iconCircle, isSuccess && styles.iconCircleSuccess]}>
+          {/* Central Hero Icon Badge */}
+          <View style={[styles.iconBadge, isSuccess && styles.iconBadgeSuccess]}>
             {isSuccess ? (
-              <CheckCircle2 size={42} color="#059669" strokeWidth={2.2} />
+              <CheckCircle2 size={36} color="#4ADE80" strokeWidth={2.2} />
             ) : (
-              <CloudUpload size={36} color="#059669" strokeWidth={2} />
+              <CloudUpload size={32} color="#4ADE80" strokeWidth={2.2} />
             )}
           </View>
 
-          {/* Title & Large Percentage */}
+          {/* Title */}
           <Text style={styles.modalTitle}>
-            {isSuccess ? '🎉 Annonce Publiée !' : 'Publication de votre annonce'}
+            {isSuccess ? 'Annonce Publiée !' : 'Publication de votre annonce'}
           </Text>
 
+          {/* Large Percentage */}
           <View style={styles.percentageRow}>
             <Text style={styles.percentageNumber}>{currentPercent}</Text>
             <Text style={styles.percentageSymbol}>%</Text>
           </View>
 
-          {/* Premium High-Gloss Progress Bar */}
+          {/* High-Gloss Progress Bar */}
           <View style={styles.progressTrack}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: `${currentPercent}%` },
-              ]}
-            />
+            <View style={[styles.progressFill, { width: `${currentPercent}%` }]} />
           </View>
 
           {/* Current Status Message */}
@@ -92,7 +89,7 @@ export const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
             <View style={styles.checkItem}>
               <View style={[styles.checkCircle, step1Done && styles.checkCircleDone]}>
                 {step1Done ? (
-                  <Check size={12} color="#FFFFFF" strokeWidth={3} />
+                  <Check size={11} color="#FFFFFF" strokeWidth={3} />
                 ) : (
                   <View style={styles.checkDotActive} />
                 )}
@@ -106,13 +103,13 @@ export const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
             <View style={styles.checkItem}>
               <View style={[styles.checkCircle, step2Done && styles.checkCircleDone]}>
                 {step2Done ? (
-                  <Check size={12} color="#FFFFFF" strokeWidth={3} />
+                  <Check size={11} color="#FFFFFF" strokeWidth={3} />
                 ) : (
                   step1Done && <View style={styles.checkDotActive} />
                 )}
               </View>
               <Text style={[styles.checkLabel, step2Done && styles.checkLabelDone]}>
-                Photos HD & Papiers administratifs
+                Photos HD & Documents administratifs
               </Text>
             </View>
 
@@ -120,7 +117,7 @@ export const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
             <View style={styles.checkItem}>
               <View style={[styles.checkCircle, step3Done && styles.checkCircleDone]}>
                 {step3Done ? (
-                  <Check size={12} color="#FFFFFF" strokeWidth={3} />
+                  <Check size={11} color="#FFFFFF" strokeWidth={3} />
                 ) : (
                   step2Done && <View style={styles.checkDotActive} />
                 )}
@@ -138,9 +135,11 @@ export const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
               onPress={onFinish}
               activeOpacity={0.85}
             >
-              <Sparkles size={18} color="#FFFFFF" />
+              <Sparkles size={16} color="#4ADE80" />
               <Text style={styles.finishBtnText}>Accéder à mon annonce</Text>
-              <ArrowRight size={18} color="#FFFFFF" />
+              <View style={styles.emeraldArrowCircle}>
+                <ArrowRight size={13} color="#4ADE80" strokeWidth={2.5} />
+              </View>
             </TouchableOpacity>
           )}
         </View>
@@ -152,7 +151,7 @@ export const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.82)',
+    backgroundColor: 'rgba(4, 25, 18, 0.78)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -164,19 +163,19 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     padding: 24,
     alignItems: 'center',
-    shadowColor: '#059669',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.18,
-    shadowRadius: 32,
-    elevation: 20,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#E2E8F0',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: 16,
   },
   securityPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: '#F0FDF4',
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 999,
@@ -185,70 +184,75 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   pulseDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: '#10B981',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#059669',
   },
   securityPillText: {
-    fontSize: 10,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 9.5,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#047857',
     letterSpacing: 0.6,
   },
-  iconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#ECFDF5',
+  iconBadge: {
+    width: 60,
+    height: 60,
+    borderRadius: 20,
+    backgroundColor: '#041912',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
-    borderWidth: 2,
-    borderColor: '#D1FAE5',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  iconCircleSuccess: {
-    backgroundColor: '#D1FAE5',
-    borderColor: '#6EE7B7',
+  iconBadgeSuccess: {
+    borderColor: '#4ADE80',
   },
   modalTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter_700Bold',
-    color: '#0F172A',
+    fontSize: 19,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    color: '#041912',
     textAlign: 'center',
+    letterSpacing: -0.4,
   },
   percentageRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginTop: 4,
+    marginTop: 2,
     marginBottom: 12,
   },
   percentageNumber: {
-    fontSize: 44,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 42,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#059669',
-    letterSpacing: -1.5,
+    letterSpacing: -1,
   },
   percentageSymbol: {
-    fontSize: 22,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 20,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#059669',
     marginLeft: 2,
   },
   progressTrack: {
     width: '100%',
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#F1F5F9',
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#F0FDF4',
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 12,
+    borderColor: '#A7F3D0',
+    marginBottom: 14,
   },
   progressFill: {
     height: '100%',
     backgroundColor: '#059669',
-    borderRadius: 6,
+    borderRadius: 5,
   },
   statusBox: {
     flexDirection: 'row',
@@ -256,22 +260,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 24,
     marginBottom: 16,
+    paddingHorizontal: 8,
   },
   statusText: {
-    fontSize: 13,
-    fontFamily: 'Inter_600SemiBold',
-    color: '#475569',
+    fontSize: 12.5,
+    fontFamily: theme.typography.fontFamily.regular,
+    color: '#64748B',
     textAlign: 'center',
   },
   checklistCard: {
     width: '100%',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F0FDF4',
     borderRadius: 16,
     padding: 14,
     gap: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 8,
+    borderColor: '#A7F3D0',
   },
   checkItem: {
     flexDirection: 'row',
@@ -297,34 +301,47 @@ const styles = StyleSheet.create({
   },
   checkLabel: {
     fontSize: 12,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: theme.typography.fontFamily.regular,
     color: '#94A3B8',
     flex: 1,
   },
   checkLabelDone: {
-    fontFamily: 'Inter_600SemiBold',
-    color: '#0F172A',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    color: '#041912',
   },
   finishBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    backgroundColor: '#051B14',
-    borderRadius: 16,
-    paddingVertical: 15,
-    paddingHorizontal: 24,
+    gap: 8,
+    backgroundColor: '#041912',
+    borderRadius: 24,
+    height: 50,
+    paddingHorizontal: 20,
     width: '100%',
-    marginTop: 12,
-    shadowColor: '#051B14',
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(4, 25, 18, 0.9)',
+    shadowColor: '#041912',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 6,
   },
   finishBtnText: {
-    fontSize: 15,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 14.5,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#FFFFFF',
   },
+  emeraldArrowCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
+

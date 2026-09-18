@@ -116,7 +116,7 @@ export const kycService = {
     onTotalProgress?: (percent: number, stepLabel: string) => void
   ) {
     onTotalProgress?.(5, 'Obtention des accès sécurisés...');
-    const sigData = await this.getUploadSignature('adv_face');
+    const sigData = await this.getUploadSignature();
 
     let frontPct = 0;
     let backPct = 0;

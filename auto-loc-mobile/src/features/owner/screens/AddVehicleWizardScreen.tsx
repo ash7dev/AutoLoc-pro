@@ -6,10 +6,17 @@ import {
   Modal,
   SafeAreaView,
   TouchableOpacity,
-  StatusBar,
   ScrollView,
+  Dimensions,
+  Platform,
+  KeyboardAvoidingView,
+  ActionSheetIOS,
+  Alert,
 } from 'react-native';
-import { X, ChevronLeft, ArrowRight, Check, Save } from 'lucide-react-native';
+import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { X, ChevronLeft, ArrowRight, Check, Save, Sparkles, ShieldCheck } from 'lucide-react-native';
 import { theme } from '../../../core/theme';
 import { WizardStep1Model, Step1Data } from '../components/wizard/WizardStep1Model';
 import { WizardStep2Specs, Step2Data } from '../components/wizard/WizardStep2Specs';
@@ -23,6 +30,8 @@ import { AbandonWizardModal } from '../components/wizard/AbandonWizardModal';
 import { ResumeDraftModal } from '../components/wizard/ResumeDraftModal';
 import { useVehicleDraftStore, VehicleWizardDraft } from '../stores/useVehicleDraftStore';
 import { ownerApi, CreateOwnerVehicleInput, OwnerVehicle } from '../api/ownerApi';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 interface AddVehicleWizardScreenProps {
   visible: boolean;
@@ -61,6 +70,7 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
   mode = 'CREATE',
   vehicleToEdit,
 }) => {
+  const insets = useSafeAreaInsets();
   const isEditMode = mode === 'EDIT' && Boolean(vehicleToEdit);
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -97,14 +107,14 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
     equipements: ['CLIMATISATION'],
   });
 
-  // État initial de l'Étape 3 (Localisation & Services - Activé avec valeurs optimales par défaut)
+  // État initial de l'Étape 3 (Localisation & Services - Désactivés par défaut)
   const [step3, setStep3] = useState<Step3Data>({
     ville: 'Dakar',
     adresse: '',
-    autoriseHorsDakar: true,
-    supplementHorsDakarParJour: 5000,
-    fraisLivraison: 5000,
-    proposeLivraison: true,
+    autoriseHorsDakar: false,
+    supplementHorsDakarParJour: 0,
+    fraisLivraison: 0,
+    proposeLivraison: false,
   });
 
   // État initial de l'Étape 4 (Conditions & Assurance)
@@ -171,13 +181,13 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
 
           const mappedTiers = Array.isArray(v.tarifsProgressifs)
             ? v.tarifsProgressifs.map((t: any) => ({
-                joursMin: Number(t.joursMin),
-                joursMax: t.joursMax ? Number(t.joursMax) : undefined,
-                prix: Number(t.prix),
-              }))
+              joursMin: Number(t.joursMin),
+              joursMax: t.joursMax ? Number(t.joursMax) : undefined,
+              prix: Number(t.prix),
+            }))
             : Array.isArray(v.tiers)
-            ? v.tiers
-            : [];
+              ? v.tiers
+              : [];
 
           setStep5({
             prixParJour: Number(v.prixParJour || 25000),
@@ -266,7 +276,49 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
     } else {
       const isDirty = Boolean(step1.marque.trim() || step1.immatriculation.trim() || currentStep > 1);
       if (isDirty) {
-        setAbandonModalVisible(true);
+        if (Platform.OS === 'ios') {
+          ActionSheetIOS.showActionSheetWithOptions(
+            {
+              options: [
+                "Continuer l'édition",
+                ' Enregistrer le brouillon et quitter',
+                ' Supprimer le brouillon et quitter',
+              ],
+              cancelButtonIndex: 0,
+              destructiveButtonIndex: 2,
+              title: 'Enregistrer et quitter ?',
+              message: 'Votre annonce sera conservée dans vos brouillons. Vous pourrez la reprendre à tout moment.',
+            },
+            (buttonIndex) => {
+              if (buttonIndex === 1) {
+                handleSaveAndExit();
+              } else if (buttonIndex === 2) {
+                handleDiscardAndExit();
+              }
+            }
+          );
+        } else {
+          Alert.alert(
+            'Enregistrer et quitter ?',
+            'Votre annonce sera conservée dans vos brouillons. Vous pourrez la reprendre à tout moment.',
+            [
+              {
+                text: 'Enregistrer le brouillon',
+                onPress: handleSaveAndExit,
+              },
+              {
+                text: 'Supprimer le brouillon',
+                style: 'destructive',
+                onPress: handleDiscardAndExit,
+              },
+              {
+                text: "Continuer l'édition",
+                style: 'cancel',
+              },
+            ],
+            { cancelable: true }
+          );
+        }
       } else {
         onClose();
       }
@@ -283,13 +335,11 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
       step5,
       step6,
     });
-    setAbandonModalVisible(false);
     onClose();
   };
 
   const handleDiscardAndExit = async () => {
     await clearDraft();
-    setAbandonModalVisible(false);
     onClose();
   };
 
@@ -323,16 +373,16 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
     currentStep === 1
       ? isStep1Valid
       : currentStep === 2
-      ? isStep2Valid
-      : currentStep === 3
-      ? isStep3Valid
-      : currentStep === 4
-      ? isStep4Valid
-      : currentStep === 5
-      ? isStep5Valid
-      : currentStep === 6
-      ? isStep6Valid
-      : true;
+        ? isStep2Valid
+        : currentStep === 3
+          ? isStep3Valid
+          : currentStep === 4
+            ? isStep4Valid
+            : currentStep === 5
+              ? isStep5Valid
+              : currentStep === 6
+                ? isStep6Valid
+                : true;
 
   const totalSteps = isEditMode ? 6 : 7;
   const stepNumbers = isEditMode ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6, 7];
@@ -447,10 +497,10 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
         tiers:
           step5.tiers && step5.tiers.length > 0
             ? step5.tiers.map((t) => ({
-                joursMin: Number(t.joursMin),
-                joursMax: t.joursMax ? Number(t.joursMax) : undefined,
-                prix: Number(t.prix),
-              }))
+              joursMin: Number(t.joursMin),
+              joursMax: t.joursMax ? Number(t.joursMax) : undefined,
+              prix: Number(t.prix),
+            }))
             : undefined,
         photos: photoPayload,
         carteGriseUrl: carteGriseRes.url,
@@ -505,192 +555,257 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
   if (!visible) return null;
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={handleCloseAttempt}>
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <Modal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={handleCloseAttempt}>
+      <View style={styles.modalContainer}>
+        <StatusBar style="light" animated />
 
-        {/* Top Navigation Bar */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.iconBtn} onPress={handleBack} disabled={submitting}>
-            <ChevronLeft size={22} color="#0F172A" />
-          </TouchableOpacity>
+        {/* 1. Fond Sombre Émeraude & Aura Lumineuse Luxury */}
+        <View style={StyleSheet.absoluteFill}>
+          <LinearGradient
+            colors={['#062017', '#04150F', '#020B08']}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={styles.auraGlow} />
+        </View>
 
-          <View style={styles.progressBox}>
-            <View style={[styles.stepBadgePill, isEditMode && styles.stepBadgePillEdit]}>
-              <View style={[styles.greenPulseDot, isEditMode && styles.bluePulseDot]} />
-              <Text style={[styles.stepCountText, isEditMode && styles.stepCountTextEdit]}>
-                {isEditMode ? `ÉDITION • ÉTAPE ${currentStep}/6` : `ÉTAPE ${currentStep} SUR 7`}
-              </Text>
+        {/* 2. Content Safe Area Wrapper */}
+        <View
+          style={[
+            styles.safeWrapper,
+            {
+              paddingTop: Math.max(insets.top, 20) + 4,
+              paddingBottom: Math.max(insets.bottom, 16) + 4,
+            },
+          ]}
+        >
+          {/* Top Header Navigation Glass */}
+          <View style={styles.topHeaderRow}>
+            <TouchableOpacity
+              style={styles.glassCloseBtn}
+              onPress={handleBack}
+              disabled={submitting}
+              activeOpacity={0.8}
+            >
+              <ChevronLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+            </TouchableOpacity>
+
+            {isEditMode ? (
+              <View style={styles.editHeaderCenter}>
+                <View style={styles.stepBadgePill}>
+                  <View style={styles.greenPulseDot} />
+                  <Text style={styles.stepCountText}>MODE ÉDITION</Text>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.progressBox}>
+                <View style={styles.stepBadgePill}>
+                  <View style={styles.greenPulseDot} />
+                  <Text style={styles.stepCountText}>{`ÉTAPE ${currentStep} SUR 7`}</Text>
+                </View>
+                <Text style={styles.stepTitleText}>{STEP_TITLES[currentStep - 1]}</Text>
+              </View>
+            )}
+
+            <View style={styles.headerRightBox}>
+              {isEditMode ? (
+                <TouchableOpacity
+                  style={styles.headerSaveBtn}
+                  onPress={handleFinalSubmit}
+                  disabled={submitting}
+                  activeOpacity={0.8}
+                >
+                  <Save size={13} color="#FFFFFF" strokeWidth={2.5} />
+                  <Text style={styles.headerSaveBtnText}>Enregistrer</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.glassCloseBtn}
+                  onPress={handleCloseAttempt}
+                  disabled={submitting}
+                  activeOpacity={0.8}
+                >
+                  <X size={18} color="#FFFFFF" strokeWidth={2.5} />
+                </TouchableOpacity>
+              )}
             </View>
-            <Text style={styles.stepTitleText}>{STEP_TITLES[currentStep - 1]}</Text>
           </View>
 
-          <View style={styles.headerRightBox}>
-            {isEditMode ? (
+          {/* Horizontal Section Navigation Bar (Onglets de saut direct en verre sombre - Mode ÉDITION uniquement) */}
+          {isEditMode && (
+            <View style={styles.sectionTabsContainer}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.sectionTabsScroll}
+              >
+                {stepNumbers.map((stepNum) => {
+                  const isActive = stepNum === currentStep;
+                  const isCompleted = stepNum < currentStep;
+                  const isDisabled = !isEditMode && stepNum > currentStep;
+
+                  return (
+                    <TouchableOpacity
+                      key={stepNum}
+                      disabled={isDisabled}
+                      onPress={() => setCurrentStep(stepNum)}
+                      activeOpacity={0.7}
+                      style={[
+                        styles.sectionTabPill,
+                        isActive && styles.sectionTabPillActive,
+                        isCompleted && !isActive && styles.sectionTabPillCompleted,
+                        isDisabled && styles.sectionTabPillDisabled,
+                      ]}
+                    >
+                      {isCompleted && !isActive && (
+                        <Check size={11} color="#4ADE80" strokeWidth={3} style={{ marginRight: 3 }} />
+                      )}
+                      <Text
+                        style={[
+                          styles.sectionTabText,
+                          isActive && styles.sectionTabTextActive,
+                          isCompleted && !isActive && styles.sectionTabTextCompleted,
+                          isDisabled && styles.sectionTabTextDisabled,
+                        ]}
+                      >
+                        {SHORT_STEP_NAMES[stepNum - 1]}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* Segmented Progress Bar ultra-fine */}
+          <View style={styles.progressBarRow}>
+            {stepNumbers.map((stepNum) => {
+              const isCompleted = stepNum < currentStep;
+              const isActive = stepNum === currentStep;
+              return (
+                <View
+                  key={stepNum}
+                  style={[
+                    styles.progressSegment,
+                    isCompleted && styles.progressSegmentCompleted,
+                    isActive && styles.progressSegmentActive,
+                  ]}
+                />
+              );
+            })}
+          </View>
+
+          {/* Main Content Area with Layered White Card Stack */}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.flexOne}
+          >
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+            >
+              {/* STACK CARDS SUPERPOSÉES (Blanche + Ombre Émeraude) */}
+              <View style={styles.cardStackWrapper}>
+                {/* Card d'arrière-plan en décalé */}
+                <View style={styles.backAccentCard} />
+
+                {/* Card Principale Blanche avec les éléments du formulaire */}
+                <View style={styles.frontGlassCard}>
+                  {currentStep === 1 && (
+                    <WizardStep1Model
+                      data={step1}
+                      onChange={(partial) => setStep1((prev) => ({ ...prev, ...partial }))}
+                    />
+                  )}
+
+                  {currentStep === 2 && (
+                    <WizardStep2Specs
+                      data={step2}
+                      onChange={(partial) => setStep2((prev) => ({ ...prev, ...partial }))}
+                    />
+                  )}
+
+                  {currentStep === 3 && (
+                    <WizardStep3Location
+                      data={step3}
+                      onChange={(partial) => setStep3((prev) => ({ ...prev, ...partial }))}
+                    />
+                  )}
+
+                  {currentStep === 4 && (
+                    <WizardStep4Conditions
+                      data={step4}
+                      onChange={(partial) => setStep4((prev) => ({ ...prev, ...partial }))}
+                    />
+                  )}
+
+                  {currentStep === 5 && (
+                    <WizardStep5Pricing
+                      data={step5}
+                      onChange={(partial) => setStep5((prev) => ({ ...prev, ...partial }))}
+                    />
+                  )}
+
+                  {currentStep === 6 && (
+                    <WizardStep6Photos
+                      data={step6}
+                      onChange={(partial) => setStep6((prev) => ({ ...prev, ...partial }))}
+                      isEditMode={isEditMode}
+                    />
+                  )}
+
+                  {!isEditMode && currentStep === 7 && (
+                    <WizardStep7Review
+                      step1={step1}
+                      step2={step2}
+                      step3={step3}
+                      step4={step4}
+                      step5={step5}
+                      step6={step6}
+                      onJumpToStep={(s) => setCurrentStep(s)}
+                      onSubmit={handleFinalSubmit}
+                      submitting={submitting}
+                    />
+                  )}
+                </View>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+
+          {/* Footer Action Bar (CTA en bas) */}
+          <View style={styles.footerContainer}>
+            {currentStep > 1 ? (
               <TouchableOpacity
-                style={styles.headerSaveBtn}
-                onPress={handleFinalSubmit}
+                style={styles.prevBtnGlass}
+                onPress={handleBack}
                 disabled={submitting}
                 activeOpacity={0.8}
               >
-                <Save size={13} color="#FFFFFF" strokeWidth={2.5} />
-                <Text style={styles.headerSaveBtnText}>Enregistrer</Text>
+                <Text style={styles.prevBtnText}>Précédent</Text>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity style={styles.iconBtn} onPress={handleCloseAttempt} disabled={submitting}>
-                <X size={20} color="#0F172A" />
-              </TouchableOpacity>
+              <View style={{ width: 100 }} />
             )}
-          </View>
-        </View>
 
-        {/* Horizontal Section Navigation Bar (Onglets de saut direct) */}
-        <View style={styles.sectionTabsContainer}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.sectionTabsScroll}
-          >
-            {stepNumbers.map((stepNum) => {
-              const isActive = stepNum === currentStep;
-              const isCompleted = stepNum < currentStep;
-              const isDisabled = !isEditMode && stepNum > currentStep;
-
-              return (
-                <TouchableOpacity
-                  key={stepNum}
-                  disabled={isDisabled}
-                  onPress={() => setCurrentStep(stepNum)}
-                  activeOpacity={0.7}
-                  style={[
-                    styles.sectionTabPill,
-                    isActive && (isEditMode ? styles.sectionTabPillActiveEdit : styles.sectionTabPillActive),
-                    isCompleted && !isActive && styles.sectionTabPillCompleted,
-                    isDisabled && styles.sectionTabPillDisabled,
-                  ]}
-                >
-                  {isCompleted && !isActive && (
-                    <Check size={11} color="#059669" strokeWidth={3} style={{ marginRight: 2 }} />
-                  )}
-                  <Text
-                    style={[
-                      styles.sectionTabText,
-                      isActive && styles.sectionTabTextActive,
-                      isCompleted && !isActive && styles.sectionTabTextCompleted,
-                      isDisabled && styles.sectionTabTextDisabled,
-                    ]}
-                  >
-                    {SHORT_STEP_NAMES[stepNum - 1]}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        {/* Segmented Progress Bar ultra-fine */}
-        <View style={styles.progressBarRow}>
-          {stepNumbers.map((stepNum) => {
-            const isCompleted = stepNum < currentStep;
-            const isActive = stepNum === currentStep;
-            return (
-              <View
-                key={stepNum}
-                style={[
-                  styles.progressSegment,
-                  isCompleted && styles.progressSegmentCompleted,
-                  isActive && (isEditMode ? styles.progressSegmentActiveEdit : styles.progressSegmentActive),
-                ]}
-              />
-            );
-          })}
-        </View>
-
-        {/* Body Wizard Steps */}
-        <View style={styles.body}>
-          {currentStep === 1 && (
-            <WizardStep1Model
-              data={step1}
-              onChange={(partial) => setStep1((prev) => ({ ...prev, ...partial }))}
-            />
-          )}
-
-          {currentStep === 2 && (
-            <WizardStep2Specs
-              data={step2}
-              onChange={(partial) => setStep2((prev) => ({ ...prev, ...partial }))}
-            />
-          )}
-
-          {currentStep === 3 && (
-            <WizardStep3Location
-              data={step3}
-              onChange={(partial) => setStep3((prev) => ({ ...prev, ...partial }))}
-            />
-          )}
-
-          {currentStep === 4 && (
-            <WizardStep4Conditions
-              data={step4}
-              onChange={(partial) => setStep4((prev) => ({ ...prev, ...partial }))}
-            />
-          )}
-
-          {currentStep === 5 && (
-            <WizardStep5Pricing
-              data={step5}
-              onChange={(partial) => setStep5((prev) => ({ ...prev, ...partial }))}
-            />
-          )}
-
-          {currentStep === 6 && (
-            <WizardStep6Photos
-              data={step6}
-              onChange={(partial) => setStep6((prev) => ({ ...prev, ...partial }))}
-              isEditMode={isEditMode}
-            />
-          )}
-
-          {!isEditMode && currentStep === 7 && (
-            <WizardStep7Review
-              step1={step1}
-              step2={step2}
-              step3={step3}
-              step4={step4}
-              step5={step5}
-              step6={step6}
-              onJumpToStep={(s) => setCurrentStep(s)}
-              onSubmit={handleFinalSubmit}
-              submitting={submitting}
-            />
-          )}
-        </View>
-
-        {/* Footer Action Bar */}
-        <View style={styles.footer}>
-          {currentStep > 1 ? (
-            <TouchableOpacity style={styles.prevBtn} onPress={handleBack} disabled={submitting}>
-              <Text style={styles.prevBtnText}>Précédent</Text>
+            <TouchableOpacity
+              style={[styles.nextBtnDark, !canProceed && styles.nextBtnDisabled]}
+              onPress={handleNext}
+              disabled={!canProceed || submitting}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.nextBtnText}>
+                {currentStep === totalSteps
+                  ? isEditMode
+                    ? 'Enregistrer les modifications'
+                    : 'Publier mon annonce'
+                  : 'Continuer'}
+              </Text>
+              <View style={styles.emeraldArrowCircle}>
+                <ArrowRight size={14} color="#4ADE80" strokeWidth={2.5} />
+              </View>
             </TouchableOpacity>
-          ) : (
-            <View style={{ flex: 1 }} />
-          )}
-
-          <TouchableOpacity
-            style={[styles.nextBtn, !canProceed && styles.nextBtnDisabled]}
-            onPress={handleNext}
-            disabled={!canProceed || submitting}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.nextBtnText}>
-              {currentStep === totalSteps
-                ? isEditMode
-                  ? 'Enregistrer les modifications'
-                  : 'Publier mon annonce'
-                : 'Continuer'}
-            </Text>
-            <ArrowRight size={18} color="#FFFFFF" strokeWidth={2.5} />
-          </TouchableOpacity>
+          </View>
         </View>
 
         {/* Animated Progress Upload Modal */}
@@ -702,14 +817,6 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
           onFinish={handleFinishModal}
         />
 
-        {/* Centered Exit Confirmation Modal */}
-        <AbandonWizardModal
-          visible={abandonModalVisible}
-          onSaveAndExit={handleSaveAndExit}
-          onContinueEditing={() => setAbandonModalVisible(false)}
-          onDiscardAndExit={handleDiscardAndExit}
-        />
-
         {/* Resume Draft Modal */}
         <ResumeDraftModal
           visible={resumeModalVisible}
@@ -717,30 +824,49 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
           onResume={handleResumeDraft}
           onStartFresh={handleStartFresh}
         />
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  modalContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#04150F',
   },
-  header: {
-    height: 56,
+  auraGlow: {
+    position: 'absolute',
+    top: -60,
+    alignSelf: 'center',
+    width: screenWidth * 0.9,
+    height: screenWidth * 0.9,
+    borderRadius: (screenWidth * 0.9) / 2,
+    backgroundColor: 'rgba(16, 185, 129, 0.16)',
+  },
+  safeWrapper: {
+    flex: 1,
+  },
+  flexOne: {
+    flex: 1,
+  },
+  topHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderColor: '#F1F5F9',
+    paddingBottom: 8,
   },
-  iconBtn: {
+  glassCloseBtn: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.20)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editHeaderCenter: {
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -752,36 +878,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    backgroundColor: 'rgba(16, 185, 129, 0.20)',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     borderRadius: 999,
-  },
-  stepBadgePillEdit: {
-    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
   greenPulseDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#059669',
-  },
-  bluePulseDot: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#4ADE80',
   },
   stepCountText: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 9.5,
-    color: '#047857',
+    color: '#4ADE80',
     letterSpacing: 0.8,
-  },
-  stepCountTextEdit: {
-    color: '#1D4ED8',
   },
   stepTitleText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 14.5,
-    color: '#0F172A',
+    fontSize: 15,
+    color: '#FFFFFF',
     letterSpacing: -0.2,
   },
   headerRightBox: {
@@ -793,11 +912,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#059669',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 999,
-    shadowColor: '#2563EB',
+    shadowColor: '#059669',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -809,9 +928,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   sectionTabsContainer: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderBottomWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: 'rgba(255, 255, 255, 0.10)',
     paddingVertical: 8,
   },
   sectionTabsScroll: {
@@ -825,31 +944,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: 'rgba(255, 255, 255, 0.14)',
   },
   sectionTabPillActive: {
     backgroundColor: '#059669',
-    borderColor: '#059669',
-  },
-  sectionTabPillActiveEdit: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
+    borderColor: '#4ADE80',
   },
   sectionTabPillCompleted: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#A7F3D0',
+    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+    borderColor: 'rgba(74, 222, 128, 0.35)',
   },
   sectionTabPillDisabled: {
-    backgroundColor: '#F1F5F9',
-    borderColor: '#E2E8F0',
-    opacity: 0.6,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    opacity: 0.5,
   },
   sectionTabText: {
     fontFamily: theme.typography.fontFamily.medium,
     fontSize: 12,
-    color: '#475569',
+    color: 'rgba(255, 255, 255, 0.70)',
   },
   sectionTabTextActive: {
     fontFamily: theme.typography.fontFamily.bold,
@@ -857,93 +972,123 @@ const styles = StyleSheet.create({
   },
   sectionTabTextCompleted: {
     fontFamily: theme.typography.fontFamily.medium,
-    color: '#047857',
+    color: '#4ADE80',
   },
   sectionTabTextDisabled: {
-    color: '#94A3B8',
+    color: 'rgba(255, 255, 255, 0.35)',
   },
   progressBarRow: {
     flexDirection: 'row',
     height: 3,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
     gap: 2,
   },
   progressSegment: {
     flex: 1,
     height: 3,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
   progressSegmentActive: {
     backgroundColor: '#059669',
   },
-  progressSegmentActiveEdit: {
-    backgroundColor: '#2563EB',
-  },
   progressSegmentCompleted: {
-    backgroundColor: '#059669',
-    opacity: 0.7,
+    backgroundColor: '#4ADE80',
+    opacity: 0.8,
   },
-  body: {
-    flex: 1,
+  scrollContent: {
+    paddingHorizontal: 14,
+    paddingTop: 16,
+    paddingBottom: 120,
+    flexGrow: 1,
+  },
+  cardStackWrapper: {
+    position: 'relative',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  backAccentCard: {
+    position: 'absolute',
+    top: -6,
+    left: 6,
+    right: 6,
+    bottom: -6,
+    borderRadius: 32,
+    backgroundColor: 'rgba(16, 185, 129, 0.20)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+  },
+  frontGlassCard: {
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.80)',
+    borderRadius: 28,
+    padding: 18,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: 10,
   },
-  placeholderStep: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-    gap: 12,
-  },
-  placeholderTitle: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 18,
-    color: '#0F172A',
-  },
-  placeholderSub: {
-    fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 13,
-    color: '#64748B',
-    textAlign: 'center',
-  },
-  footer: {
+  footerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderTopWidth: 1,
-    borderColor: '#F1F5F9',
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 6,
     gap: 12,
   },
-  prevBtn: {
-    paddingHorizontal: 16,
+  prevBtnGlass: {
+    paddingHorizontal: 18,
     paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: '#F1F5F9',
+    borderRadius: 999,
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.20)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   prevBtnText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 14,
-    color: '#475569',
+    fontSize: 13.5,
+    color: '#FFFFFF',
   },
-  nextBtn: {
-    flex: 2,
+  nextBtnDark: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     height: 50,
-    borderRadius: 14,
-    backgroundColor: '#051B14',
+    borderRadius: 25,
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.40)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
     gap: 8,
   },
   nextBtnDisabled: {
-    backgroundColor: '#94A3B8',
-    opacity: 0.6,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: 'transparent',
+    opacity: 0.5,
   },
   nextBtnText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 15,
+    fontSize: 14.5,
     color: '#FFFFFF',
+  },
+  emeraldArrowCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
   },
 });

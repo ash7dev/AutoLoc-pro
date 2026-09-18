@@ -51,7 +51,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       quality: 0.8,
       allowsEditing: true,
     });
@@ -61,19 +61,44 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
   };
 
   const handleSelectCamera = async () => {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Permission requise', 'L\'accès à l\'appareil photo est nécessaire.');
-      return;
-    }
-    const cameraType = subStep === 3 ? ImagePicker.CameraType.front : ImagePicker.CameraType.back;
-    const result = await ImagePicker.launchCameraAsync({
-      cameraType,
-      quality: 0.8,
-      allowsEditing: true,
-    });
-    if (!result.canceled && result.assets[0]?.uri) {
-      handleApplyUri(result.assets[0].uri);
+    try {
+      let permission = await ImagePicker.getCameraPermissionsAsync();
+      if (!permission.granted && permission.canAskAgain) {
+        permission = await ImagePicker.requestCameraPermissionsAsync();
+      }
+
+      if (!permission.granted) {
+        Alert.alert(
+          'Accès à l\'appareil photo requis',
+          'L\'accès à l\'appareil photo est désactivé. Vous pouvez l\'activer dans vos Réglages, ou choisir une photo depuis votre galerie.',
+          [
+            { text: 'Choisir depuis la galerie', onPress: handleSelectLibrary },
+            { text: 'Annuler', style: 'cancel' },
+          ]
+        );
+        return;
+      }
+
+      const cameraType = subStep === 3 ? ImagePicker.CameraType.front : ImagePicker.CameraType.back;
+      const result = await ImagePicker.launchCameraAsync({
+        cameraType,
+        quality: 0.8,
+        allowsEditing: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]?.uri) {
+        handleApplyUri(result.assets[0].uri);
+      }
+    } catch (error: any) {
+      console.warn('Erreur ouverture caméra:', error);
+      Alert.alert(
+        'Appareil photo indisponible',
+        'Impossible d\'ouvrir l\'appareil photo direct. Souhaitez-vous sélectionner une photo depuis votre galerie ?',
+        [
+          { text: 'Ouvrir la galerie', onPress: handleSelectLibrary },
+          { text: 'Annuler', style: 'cancel' },
+        ]
+      );
     }
   };
 
@@ -315,7 +340,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
 
                   <TouchableOpacity
                     style={styles.captureFrame}
-                    onPress={() => setPickerModalVisible(true)}
+                    onPress={handleSelectCamera}
                     activeOpacity={0.85}
                   >
                     {selfieUri ? (
@@ -332,7 +357,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
                           <UserCheck size={26} color="#059669" />
                         </View>
                         <Text style={styles.placeholderMainText}>Prendre un Selfie visuel</Text>
-                        <Text style={styles.placeholderSubText}>Positionnez votre visage au centre</Text>
+                        <Text style={styles.placeholderSubText}>Ouvrir directement l'appareil photo avant</Text>
                       </View>
                     )}
                   </TouchableOpacity>
@@ -651,26 +676,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: theme.spacing[1],
+    gap: 6,
   },
   prevBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
     paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingHorizontal: 8,
+    flexShrink: 0,
   },
   prevBtnText: {
     fontFamily: theme.typography.fontFamily.semiBold,
-    fontSize: 13.5,
+    fontSize: 13,
     color: '#041912',
   },
   nextBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 48,
-    paddingHorizontal: 20,
-    borderRadius: 24,
+    height: 46,
+    paddingHorizontal: 14,
+    borderRadius: 23,
     backgroundColor: '#041912',
     borderWidth: 1,
     borderColor: 'rgba(4, 25, 18, 0.90)',
@@ -679,22 +706,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 6,
+    flexShrink: 1,
   },
   nextBtnText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 14,
+    fontSize: 13,
     color: '#FFFFFF',
   },
   emeraldArrowCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: 'rgba(16, 185, 129, 0.22)',
     borderWidth: 1,
     borderColor: 'rgba(74, 222, 128, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
+    marginLeft: 6,
   },
 });
 

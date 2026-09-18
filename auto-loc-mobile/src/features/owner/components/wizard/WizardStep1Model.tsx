@@ -14,10 +14,12 @@ import {
 } from 'react-native';
 import {
   BatteryCharging,
+  Calendar,
   Car,
   Check,
   ChevronRight,
   Droplets,
+  FileText,
   Fuel,
   Gauge,
   Plus,
@@ -143,7 +145,9 @@ const Pressy: React.FC<{
       onPressIn={pressIn}
       onPressOut={pressOut}
     >
-      <Animated.View style={[{ flex: 1 }, { transform: [{ scale }] }]}>{children}</Animated.View>
+      <Animated.View style={[{ transform: [{ scale }] }, style?.flex ? { flex: style.flex } : { width: '100%' }]}>
+        {children}
+      </Animated.View>
     </TouchableOpacity>
   );
 };
@@ -304,22 +308,15 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
   const plateValid = PLATE_REGEX.test(data.immatriculation || '');
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      {/* Hero Header d'étape */}
-      <View style={styles.heroHeader}>
-        <View style={styles.heroBadgeRow}>
-          <View style={styles.heroBadge}>
-            <Car size={13} color={COLORS.primaryDark} />
-            <Text style={styles.heroBadgeText}>Étape 01 · Modèle & Immatriculation</Text>
-          </View>
-          <View style={styles.completionPill}>
-            <Text style={styles.completionText}>{completedCount}/7 validés</Text>
-          </View>
+    <View style={styles.content}>
+      {/* Hero Header d'étape Centré Luxury (Style Airbnb / Revolut) */}
+      <View style={styles.centeredHeroHeader}>
+        <View style={styles.centeredIconBadge}>
+          <Car size={22} color="#4ADE80" strokeWidth={2.2} />
         </View>
-
-        <Text style={styles.heroTitle}>Quel véhicule mettez-vous en location ?</Text>
-        <Text style={styles.heroSubtitle}>
-          Sélectionnez la marque et le modèle exacts. Ces informations apparaîtront sur votre annonce.
+        <Text style={styles.centeredHeroTitle}>Votre véhicule</Text>
+        <Text style={styles.centeredHeroSubtitle}>
+          Indiquez la marque, le modèle et l'immatriculation
         </Text>
       </View>
 
@@ -349,7 +346,10 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
 
       {/* Marque */}
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Marque</Text>
+        <View style={styles.labelWithIcon}>
+          <Car size={16} color="#059669" strokeWidth={2.2} />
+          <Text style={styles.label}>Marque</Text>
+        </View>
         <FieldRow
           icon={<Car size={18} color={data.marque ? COLORS.primaryDark : COLORS.faint} />}
           placeholder="Toyota, Jetour, Mazda…"
@@ -360,7 +360,10 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
 
       {/* Modèle */}
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Modèle</Text>
+        <View style={styles.labelWithIcon}>
+          <Sliders size={16} color="#059669" strokeWidth={2.2} />
+          <Text style={styles.label}>Modèle</Text>
+        </View>
         <FieldRow
           placeholder={data.marque ? `Un modèle ${data.marque}…` : "Choisissez d'abord une marque"}
           value={data.modele}
@@ -371,7 +374,10 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
 
       {/* Année */}
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Année de mise en circulation</Text>
+        <View style={styles.labelWithIcon}>
+          <Calendar size={16} color="#059669" strokeWidth={2.2} />
+          <Text style={styles.label}>Année de mise en circulation</Text>
+        </View>
         <FieldRow
           icon={<Gauge size={18} color={data.annee ? COLORS.primaryDark : COLORS.faint} />}
           placeholder="Sélectionner l'année"
@@ -383,7 +389,10 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
       {/* Type de véhicule / Catégorie */}
       <View style={styles.fieldGroup}>
         <View style={styles.categoryHeaderRow}>
-          <Text style={styles.label}>Catégorie du véhicule</Text>
+          <View style={styles.labelWithIcon}>
+            <Shield size={16} color="#059669" strokeWidth={2.2} />
+            <Text style={styles.label}>Catégorie du véhicule</Text>
+          </View>
           {Boolean(data.type && data.modele) && (
             <View style={styles.autoSuggestBadge}>
               <Sparkles size={11} color={COLORS.primaryDark} />
@@ -401,17 +410,20 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
 
       {/* Transmission */}
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Transmission</Text>
-        <View style={styles.cardGrid2Col}>
+        <View style={styles.labelWithIcon}>
+          <Gauge size={16} color="#059669" strokeWidth={2.2} />
+          <Text style={styles.label}>Transmission</Text>
+        </View>
+        <View style={styles.cardRow2Col}>
           {TRANSMISSIONS.map((tr) => {
             const isSelected = data.transmission === tr.id;
             const Icon = tr.icon;
             return (
-              <Pressy key={tr.id} onPress={() => onChange({ transmission: tr.id })} style={{ width: '48.5%' }}>
+              <Pressy key={tr.id} onPress={() => onChange({ transmission: tr.id })} style={{ flex: 1 }}>
                 <View style={[styles.selectCard, isSelected && styles.selectCardActive]}>
                   <View style={styles.selectCardHeader}>
                     <View style={[styles.selectCardIconBox, isSelected && styles.selectCardIconBoxActive]}>
-                      <Icon size={18} color={isSelected ? COLORS.white : COLORS.inkSoft} />
+                      <Icon size={18} color={isSelected ? '#4ADE80' : COLORS.inkSoft} />
                     </View>
                     {isSelected && (
                       <View style={styles.selectCardCheck}>
@@ -434,41 +446,77 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
 
       {/* Carburant */}
       <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Carburant</Text>
-        <View style={styles.cardGrid2Col}>
-          {FUELS.map((f) => {
-            const isSelected = data.carburant === f.id;
-            const Icon = f.icon;
-            return (
-              <Pressy key={f.id} onPress={() => onChange({ carburant: f.id })} style={{ width: '48.5%' }}>
-                <View style={[styles.selectCard, isSelected && styles.selectCardActive]}>
-                  <View style={styles.selectCardHeader}>
-                    <View style={[styles.selectCardIconBox, isSelected && styles.selectCardIconBoxActive]}>
-                      <Icon size={18} color={isSelected ? COLORS.white : COLORS.inkSoft} />
-                    </View>
-                    {isSelected && (
-                      <View style={styles.selectCardCheck}>
-                        <Check size={10} color={COLORS.white} strokeWidth={3} />
+        <View style={styles.labelWithIcon}>
+          <Fuel size={16} color="#059669" strokeWidth={2.2} />
+          <Text style={styles.label}>Carburant</Text>
+        </View>
+        <View style={{ gap: 10 }}>
+          <View style={styles.cardRow2Col}>
+            {FUELS.slice(0, 2).map((f) => {
+              const isSelected = data.carburant === f.id;
+              const Icon = f.icon;
+              return (
+                <Pressy key={f.id} onPress={() => onChange({ carburant: f.id })} style={{ flex: 1 }}>
+                  <View style={[styles.selectCard, isSelected && styles.selectCardActive]}>
+                    <View style={styles.selectCardHeader}>
+                      <View style={[styles.selectCardIconBox, isSelected && styles.selectCardIconBoxActive]}>
+                        <Icon size={18} color={isSelected ? '#4ADE80' : COLORS.inkSoft} />
                       </View>
-                    )}
+                      {isSelected && (
+                        <View style={styles.selectCardCheck}>
+                          <Check size={10} color={COLORS.white} strokeWidth={3} />
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.selectCardTitle, isSelected && styles.selectCardTitleActive]} numberOfLines={1}>
+                      {f.label}
+                    </Text>
+                    <Text style={styles.selectCardSub} numberOfLines={1}>
+                      {f.sub}
+                    </Text>
                   </View>
-                  <Text style={[styles.selectCardTitle, isSelected && styles.selectCardTitleActive]} numberOfLines={1}>
-                    {f.label}
-                  </Text>
-                  <Text style={styles.selectCardSub} numberOfLines={1}>
-                    {f.sub}
-                  </Text>
-                </View>
-              </Pressy>
-            );
-          })}
+                </Pressy>
+              );
+            })}
+          </View>
+          <View style={styles.cardRow2Col}>
+            {FUELS.slice(2, 4).map((f) => {
+              const isSelected = data.carburant === f.id;
+              const Icon = f.icon;
+              return (
+                <Pressy key={f.id} onPress={() => onChange({ carburant: f.id })} style={{ flex: 1 }}>
+                  <View style={[styles.selectCard, isSelected && styles.selectCardActive]}>
+                    <View style={styles.selectCardHeader}>
+                      <View style={[styles.selectCardIconBox, isSelected && styles.selectCardIconBoxActive]}>
+                        <Icon size={18} color={isSelected ? '#4ADE80' : COLORS.inkSoft} />
+                      </View>
+                      {isSelected && (
+                        <View style={styles.selectCardCheck}>
+                          <Check size={10} color={COLORS.white} strokeWidth={3} />
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.selectCardTitle, isSelected && styles.selectCardTitleActive]} numberOfLines={1}>
+                      {f.label}
+                    </Text>
+                    <Text style={styles.selectCardSub} numberOfLines={1}>
+                      {f.sub}
+                    </Text>
+                  </View>
+                </Pressy>
+              );
+            })}
+          </View>
         </View>
       </View>
 
       {/* Immatriculation */}
       <View style={styles.fieldGroup}>
         <View style={styles.labelRow}>
-          <Text style={styles.label}>Immatriculation</Text>
+          <View style={styles.labelWithIcon}>
+            <FileText size={16} color="#059669" strokeWidth={2.2} />
+            <Text style={styles.label}>Immatriculation</Text>
+          </View>
           <Text style={styles.inputHelp}>Format : DK-1234-BA</Text>
         </View>
         <View style={[styles.senegalPlateContainer, plateValid && styles.senegalPlateValid]}>
@@ -793,7 +841,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
           />
         </SafeAreaView>
       </Modal>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -815,68 +863,71 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 2,
   },
-  heroBadge: {
-    flexDirection: 'row',
+  centeredHeroHeader: {
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: COLORS.primarySoft,
-    borderWidth: 1,
-    borderColor: COLORS.primaryBorder,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  heroBadgeText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 11,
-    color: COLORS.primaryDark,
-    letterSpacing: 0.2,
-  },
-  completionPill: {
-    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    marginBottom: 16,
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
   },
-  completionText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 11,
-    color: COLORS.muted,
+  centeredIconBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#041912',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  heroTitle: {
+  centeredHeroTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 22,
-    color: COLORS.ink,
-    letterSpacing: -0.3,
-    lineHeight: 28,
+    fontSize: 24,
+    lineHeight: 30,
+    color: '#041912',
+    textAlign: 'center',
+    letterSpacing: -0.4,
   },
-  heroSubtitle: {
+  centeredHeroSubtitle: {
     fontFamily: theme.typography.fontFamily.regular,
     fontSize: 13.5,
-    color: COLORS.muted,
     lineHeight: 19,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 4,
+    maxWidth: 280,
   },
 
   previewCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: COLORS.primarySoft,
-    borderWidth: 1,
-    borderColor: COLORS.primaryBorder,
-    borderRadius: 16,
-    padding: 14,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1.5,
+    borderColor: '#A7F3D0',
+    borderRadius: 18,
+    padding: 16,
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   previewIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: COLORS.white,
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: '#041912',
     alignItems: 'center',
     justifyContent: 'center',
   },
   previewTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 14.5,
     color: COLORS.primaryDark,
   },
@@ -893,31 +944,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  labelWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
   label: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 14,
-    color: '#0F172A',
-    letterSpacing: -0.2,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 15.5,
+    color: '#041912',
+    letterSpacing: -0.3,
   },
 
   selectTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.white,
     borderWidth: 1.5,
     borderColor: COLORS.border,
-    borderRadius: 14,
+    borderRadius: 16,
     paddingHorizontal: 14,
     height: 54,
   },
-  selectTriggerActive: { backgroundColor: COLORS.primarySoft, borderColor: COLORS.primaryBorder },
+  selectTriggerActive: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#059669',
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
   selectTriggerDisabled: { opacity: 0.6, backgroundColor: '#F1F5F9' },
   selectTriggerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
   selectTriggerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   selectTriggerText: { fontFamily: theme.typography.fontFamily.medium, fontSize: 14, flexShrink: 1 },
   selectTriggerTextPlaceholder: { color: COLORS.faint },
-  selectTriggerTextSelected: { color: COLORS.primaryDark, fontFamily: theme.typography.fontFamily.bold },
+  selectTriggerTextSelected: { color: COLORS.primaryDark, fontFamily: theme.typography.fontFamily.displaySemiBold },
 
   doneBadge: {
     width: 18,
@@ -945,20 +1009,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.white,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: COLORS.border,
-    borderRadius: 14,
+    borderRadius: 16,
     height: 56,
     overflow: 'hidden',
   },
   senegalPlateValid: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.primarySoft,
+    borderColor: '#059669',
+    backgroundColor: '#F0FDF4',
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
   },
   plateFlagBand: {
-    width: 40,
+    width: 44,
     height: '100%',
-    backgroundColor: '#1E3A8A',
+    backgroundColor: '#041912',
+    borderRightWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
@@ -1015,24 +1086,32 @@ const styles = StyleSheet.create({
     color: COLORS.primaryDark,
   },
 
-  cardGrid2Col: {
+  cardRow2Col: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    alignItems: 'center',
     gap: 10,
+    width: '100%',
   },
   selectCard: {
     flex: 1,
     width: '100%',
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.white,
     borderWidth: 1.5,
     borderColor: COLORS.border,
     borderRadius: 16,
-    padding: 12,
-    minHeight: 96,
+    padding: 14,
+    minHeight: 100,
     justifyContent: 'space-between',
   },
-  selectCardActive: { backgroundColor: COLORS.primarySoft, borderColor: COLORS.primaryBorder },
+  selectCardActive: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#059669',
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
+  },
   selectCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1040,25 +1119,25 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   selectCardIconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: COLORS.white,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  selectCardIconBoxActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  selectCardIconBoxActive: { backgroundColor: '#041912', borderColor: 'rgba(74, 222, 128, 0.4)' },
   selectCardCheck: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: COLORS.primary,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#059669',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  selectCardTitle: { fontFamily: theme.typography.fontFamily.bold, fontSize: 13, color: COLORS.ink },
+  selectCardTitle: { fontFamily: theme.typography.fontFamily.displaySemiBold, fontSize: 13.5, color: COLORS.ink },
   selectCardTitleActive: { color: COLORS.primaryDark },
   selectCardSub: { fontFamily: theme.typography.fontFamily.regular, fontSize: 11, color: COLORS.muted, marginTop: 2 },
 
@@ -1106,30 +1185,31 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontFamily: theme.typography.fontFamily.regular, fontSize: 14, color: COLORS.ink },
 
-  popularSection: { padding: 16, borderBottomWidth: 1, borderColor: '#F1F5F9', gap: 10 },
+  popularSection: { paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderColor: '#F1F5F9', gap: 10 },
   popularTitle: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 11.5,
-    color: COLORS.muted,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 12.5,
+    color: '#041912',
+    letterSpacing: -0.2,
   },
   popularGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   popularChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 16,
-    backgroundColor: '#F1F5F9',
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    paddingHorizontal: 14,
+    paddingVertical: 7.5,
+    borderRadius: 20,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
   },
-  popularChipActive: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
-  popularChipText: { fontFamily: theme.typography.fontFamily.medium, fontSize: 12, color: COLORS.inkSoft },
-  popularChipTextActive: { color: COLORS.white, fontFamily: theme.typography.fontFamily.bold },
+  popularChipActive: { backgroundColor: '#041912', borderColor: '#041912' },
+  popularChipText: { fontFamily: theme.typography.fontFamily.medium, fontSize: 13, color: '#334155' },
+  popularChipTextActive: { color: '#4ADE80', fontFamily: theme.typography.fontFamily.displaySemiBold },
 
   sheetListRow: { flex: 1, flexDirection: 'row' },
   sheetListContent: { paddingVertical: 8, paddingBottom: 32 },
   sectionHeaderRow: { backgroundColor: COLORS.white, paddingHorizontal: 20, paddingVertical: 6 },
   sectionHeaderText: {
-    fontFamily: theme.typography.fontFamily.bold,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 12,
     color: COLORS.faint,
   },
@@ -1144,7 +1224,7 @@ const styles = StyleSheet.create({
   },
   sheetItemRowActive: { backgroundColor: COLORS.primarySoft },
   sheetItemText: { fontFamily: theme.typography.fontFamily.medium, fontSize: 14.5, color: '#1E293B' },
-  sheetItemTextActive: { fontFamily: theme.typography.fontFamily.bold, color: COLORS.primaryDark },
+  sheetItemTextActive: { fontFamily: theme.typography.fontFamily.displaySemiBold, color: COLORS.primaryDark },
 
   sheetCategoryRow: {
     flexDirection: 'row',
@@ -1225,6 +1305,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
     marginTop: 10,
   },
-  customFooterTitle: { fontFamily: theme.typography.fontFamily.bold, fontSize: 12, color: COLORS.inkSoft },
+  customFooterTitle: { fontFamily: theme.typography.fontFamily.displaySemiBold, fontSize: 12, color: COLORS.inkSoft },
   customAddRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
 });

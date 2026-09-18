@@ -1,30 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
+  LayoutAnimation,
+  Platform,
+  UIManager,
 } from 'react-native';
 import {
   Shield,
   Fuel,
-  CheckCircle2,
   FileText,
-  Sparkles,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react-native';
-import {
-  useFonts as useFraunces,
-  Fraunces_600SemiBold,
-} from '@expo-google-fonts/fraunces';
-import {
-  useFonts as useInter,
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-} from '@expo-google-fonts/inter';
+import { theme } from '../../../../core/theme';
+
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 export interface Step4Data {
   assurance: string;
@@ -41,15 +40,15 @@ interface WizardStep4ConditionsProps {
 const INSURANCE_OPTIONS = [
   {
     value: 'Locataire responsable',
-    title: 'Locataire responsable (Standard)',
-    desc: 'En cas de dommage ou sinistre responsable, le locataire prend en charge les réparations.',
-    badge: 'Formule Standard',
+    title: 'Locataire responsable',
+    desc: 'Le locataire prend en charge les réparations en cas de sinistre.',
+    badge: 'Standard',
   },
   {
     value: 'Incluse (tous risques)',
-    title: 'Assurance Tous Risques Incluse',
-    desc: 'Votre véhicule bénéficie d’une protection complète Tous Risques AutoLoc.',
-    badge: 'Protection Maximale',
+    title: 'Tous Risques Incluse',
+    desc: 'Le véhicule dispose déjà d’une assurance Tous Risques pour la location.',
+    badge: 'Tous Risques',
   },
 ];
 
@@ -57,12 +56,12 @@ const FUEL_CONDITIONS = [
   {
     value: 'Plein à plein',
     title: '⛽ Plein à plein',
-    desc: 'Le véhicule est remis avec le plein et doit être restitué avec le plein.',
+    desc: 'Restitution avec le plein',
   },
   {
     value: 'Niveau identique',
     title: '📊 Niveau identique',
-    desc: 'Le véhicule doit être rendu avec exactement le même niveau de carburant qu’au départ.',
+    desc: 'Restitution à niveau égal',
   },
 ];
 
@@ -70,25 +69,23 @@ const QUICK_TAGS = [
   'Non-fumeur 🚭',
   'Pas d’animaux 🐾',
   'Restitution propre ✨',
-  'Permis de +3 ans requis 🪪',
-  'Code de la route 🚗',
+  'Permis +3 ans 🪪',
 ];
 
 export const WizardStep4Conditions: React.FC<WizardStep4ConditionsProps> = ({
   data,
   onChange,
 }) => {
-  const [frauncesLoaded] = useFraunces({ Fraunces_600SemiBold });
-  const [interLoaded] = useInter({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-  });
-
   const selectedAssurance = data.assurance || 'Locataire responsable';
   const selectedFuel = data.carburantCondition || 'Plein à plein';
   const currentRules = data.reglesSpecifiques || '';
+
+  const [rulesExpanded, setRulesExpanded] = useState(Boolean(currentRules));
+
+  const toggleRules = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setRulesExpanded((prev) => !prev);
+  };
 
   const addQuickRuleTag = (ruleTag: string) => {
     if (currentRules.includes(ruleTag)) return;
@@ -97,40 +94,26 @@ export const WizardStep4Conditions: React.FC<WizardStep4ConditionsProps> = ({
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
-      {/* Editorial Hero Header */}
-      <View style={styles.heroHeader}>
-        <View style={styles.heroBadgeRow}>
-          <View style={styles.heroBadgeDot} />
-          <Text style={styles.heroBadgeText}>ASSURANCE & CONDITIONS</Text>
+    <View style={styles.container}>
+      {/* Hero Header d'étape Centré Luxury */}
+      <View style={styles.centeredHeroHeader}>
+        <View style={styles.centeredIconBadge}>
+          <Shield size={22} color="#4ADE80" strokeWidth={2.2} />
         </View>
-        <Text
-          style={[
-            styles.heroTitle,
-            frauncesLoaded && { fontFamily: 'Fraunces_600SemiBold' },
-          ]}
-        >
+        <Text style={styles.centeredHeroTitle} numberOfLines={1} adjustsFontSizeToFit>
           Protection & Consignes
         </Text>
-        <Text style={styles.heroSubtitle}>
-          Définissez la formule d’assurance et vos consignes de restitution du véhicule.
+        <Text style={styles.centeredHeroSubtitle}>
+          Assurance et consignes de restitution
         </Text>
       </View>
 
       {/* SECTION 1: COUVERTURE D'ASSURANCE */}
       <View style={styles.sectionCard}>
-        <View style={styles.sectionHeaderRow}>
-          <Shield size={18} color="#059669" />
-          <Text style={styles.sectionTitleWithIcon}>Formule d’Assurance *</Text>
+        <View style={styles.labelWithIcon}>
+          <Shield size={16} color="#059669" strokeWidth={2.2} />
+          <Text style={styles.sectionTitle}>Formule d’Assurance *</Text>
         </View>
-        <Text style={styles.sectionDesc}>
-          Choisissez le niveau de responsabilité en cas de sinistre ou dommage.
-        </Text>
 
         <View style={styles.optionsStack}>
           {INSURANCE_OPTIONS.map((opt) => {
@@ -146,7 +129,9 @@ export const WizardStep4Conditions: React.FC<WizardStep4ConditionsProps> = ({
                 activeOpacity={0.8}
               >
                 <View style={styles.insuranceTopRow}>
-                  <Text style={styles.insuranceTitle}>{opt.title}</Text>
+                  <Text style={[styles.insuranceTitle, isSelected && styles.insuranceTitleActive]}>
+                    {opt.title}
+                  </Text>
                   <View
                     style={[
                       styles.badgePill,
@@ -165,195 +150,169 @@ export const WizardStep4Conditions: React.FC<WizardStep4ConditionsProps> = ({
                 </View>
 
                 <Text style={styles.insuranceDesc}>{opt.desc}</Text>
-
-                {isSelected && (
-                  <View style={styles.selectedRow}>
-                    <CheckCircle2 size={16} color="#059669" />
-                    <Text style={styles.selectedText}>Formule sélectionnée</Text>
-                  </View>
-                )}
               </TouchableOpacity>
             );
           })}
-        </View>
-
-        {/* Info Reassurance */}
-        <View style={styles.infoBox}>
-          <Sparkles size={16} color="#059669" style={{ marginTop: 2 }} />
-          <Text style={styles.infoBoxText}>
-            {selectedAssurance === 'Incluse (tous risques)'
-              ? "En cas de sinistre, le locataire s'acquitte uniquement de la franchise assurance."
-              : "En cas d'incident, un contrat de constat contradictoire est établi au départ et au retour."}
-          </Text>
         </View>
       </View>
 
       {/* SECTION 2: POLITIQUE DE CARBURANT */}
       <View style={styles.sectionCard}>
-        <View style={styles.sectionHeaderRow}>
-          <Fuel size={18} color="#0284C7" />
-          <Text style={styles.sectionTitleWithIcon}>Politique de Carburant</Text>
+        <View style={styles.labelWithIcon}>
+          <Fuel size={16} color="#059669" strokeWidth={2.2} />
+          <Text style={styles.sectionTitle}>Politique de Carburant</Text>
         </View>
-        <Text style={styles.sectionDesc}>
-          Condition exigée au locataire lors de la restitution.
-        </Text>
 
-        <View style={styles.optionsStack}>
+        <View style={styles.fuelGrid}>
           {FUEL_CONDITIONS.map((f) => {
             const isSelected = selectedFuel === f.value;
             return (
               <TouchableOpacity
                 key={f.value}
                 style={[
-                  styles.fuelOptionCard,
-                  isSelected && styles.fuelOptionCardActive,
+                  styles.fuelChipCard,
+                  isSelected && styles.fuelChipCardActive,
                 ]}
                 onPress={() => onChange({ carburantCondition: f.value })}
                 activeOpacity={0.8}
               >
-                <View style={styles.radioRow}>
-                  <View
-                    style={[
-                      styles.radioOuter,
-                      isSelected && styles.radioOuterActive,
-                    ]}
-                  >
-                    {isSelected && <View style={styles.radioInner} />}
-                  </View>
-                  <View style={styles.radioTextCol}>
-                    <Text style={styles.radioLabel}>{f.title}</Text>
-                    <Text style={styles.radioSub}>{f.desc}</Text>
-                  </View>
-                </View>
+                <Text style={[styles.fuelChipTitle, isSelected && styles.fuelChipTitleActive]}>
+                  {f.title}
+                </Text>
+                <Text style={styles.fuelChipSub}>{f.desc}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
       </View>
 
-      {/* SECTION 3: RÈGLES SPÉCIFIQUES & CONSIGNES (OPTIONNEL) */}
+      {/* SECTION 3: ACCORDÉON CONSIGNES SPÉCIFIQUES */}
       <View style={styles.sectionCard}>
-        <View style={styles.sectionHeaderRow}>
-          <FileText size={18} color="#7C3AED" />
-          <Text style={styles.sectionTitleWithIcon}>
-            Consignes d’utilisation (optionnel)
-          </Text>
-        </View>
-        <Text style={styles.sectionDesc}>
-          Laissez vos instructions ou consignes particulières pour le locataire.
-        </Text>
+        <TouchableOpacity
+          style={styles.accordionHeader}
+          onPress={toggleRules}
+          activeOpacity={0.7}
+        >
+          <View style={styles.accordionLeft}>
+            <FileText size={16} color="#059669" strokeWidth={2.2} />
+            <Text style={styles.sectionTitle} numberOfLines={1}>
+              Consignes d’utilisation
+            </Text>
+            <View style={styles.optionalPill}>
+              <Text style={styles.optionalPillText}>Optionnel</Text>
+            </View>
+          </View>
+          {rulesExpanded ? (
+            <ChevronUp size={18} color="#059669" />
+          ) : (
+            <ChevronDown size={18} color="#64748B" />
+          )}
+        </TouchableOpacity>
 
-        <TextInput
-          style={styles.textArea}
-          multiline={true}
-          numberOfLines={4}
-          value={currentRules}
-          onChangeText={(text) => onChange({ reglesSpecifiques: text })}
-          placeholder="Ex: Voiture non-fumeur, merci de ne pas consommer de nourriture à l'intérieur..."
-          placeholderTextColor="#94A3B8"
-          textAlignVertical="top"
-        />
+        {rulesExpanded && (
+          <View style={styles.accordionBody}>
+            <TextInput
+              style={styles.textArea}
+              multiline={true}
+              numberOfLines={3}
+              value={currentRules}
+              onChangeText={(text) => onChange({ reglesSpecifiques: text })}
+              placeholder="Ex: Voiture non-fumeur, merci de ne pas manger à l'intérieur..."
+              placeholderTextColor="#94A3B8"
+              textAlignVertical="top"
+            />
 
-        {/* Quick Tag Pills */}
-        <Text style={styles.quickTagsTitle}>Ajouter une consigne rapide :</Text>
-        <View style={styles.quickTagsRow}>
-          {QUICK_TAGS.map((tag) => (
-            <TouchableOpacity
-              key={tag}
-              style={styles.quickTagChip}
-              onPress={() => addQuickRuleTag(tag)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.quickTagText}>+ {tag}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+            <View style={styles.quickTagsRow}>
+              {QUICK_TAGS.map((tag) => (
+                <TouchableOpacity
+                  key={tag}
+                  style={styles.quickTagChip}
+                  onPress={() => addQuickRuleTag(tag)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.quickTagText}>+ {tag}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 40,
+    backgroundColor: '#FFFFFF',
     gap: 16,
   },
-  heroHeader: {
+
+  centeredHeroHeader: {
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 4,
-    gap: 6,
+    paddingHorizontal: 8,
   },
-  heroBadgeRow: {
+  centeredIconBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#041912',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  centeredHeroTitle: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 21.5,
+    lineHeight: 28,
+    color: '#041912',
+    textAlign: 'center',
+    letterSpacing: -0.5,
+  },
+  centeredHeroSubtitle: {
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 13.5,
+    lineHeight: 19,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 4,
+    maxWidth: 300,
+  },
+
+  labelWithIcon: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
-  },
-  heroBadgeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#059669',
-  },
-  heroBadgeText: {
-    fontSize: 11,
-    fontFamily: 'Inter_700Bold',
-    color: '#047857',
-    letterSpacing: 0.5,
-  },
-  heroTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#051B14',
-    letterSpacing: -0.5,
-    marginTop: 2,
-  },
-  heroSubtitle: {
-    fontSize: 14,
-    fontFamily: 'Inter_400Regular',
-    color: '#64748B',
-    lineHeight: 20,
+    gap: 7,
   },
 
   // Cards
   sectionCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 16,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#E2E8F0',
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
+    shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
+    gap: 12,
   },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 2,
-  },
-  sectionTitleWithIcon: {
-    fontSize: 15,
-    fontFamily: 'Inter_700Bold',
-    color: '#0F172A',
-  },
-  sectionDesc: {
-    fontSize: 13,
-    fontFamily: 'Inter_400Regular',
-    color: '#64748B',
-    marginBottom: 12,
+  sectionTitle: {
+    fontSize: 15.5,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    color: '#041912',
+    letterSpacing: -0.3,
   },
 
   optionsStack: {
@@ -362,174 +321,160 @@ const styles = StyleSheet.create({
 
   // Insurance Card
   insuranceCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    padding: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 12,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
   },
   insuranceCardActive: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#10B981',
+    backgroundColor: '#F0FDF4',
+    borderColor: '#059669',
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   insuranceTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   insuranceTitle: {
-    fontSize: 14.5,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 14,
+    fontFamily: theme.typography.fontFamily.medium,
     color: '#0F172A',
     flex: 1,
+  },
+  insuranceTitleActive: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    color: '#047857',
   },
   badgePill: {
     backgroundColor: '#F1F5F9',
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
   badgePillActive: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: '#041912',
   },
   badgeText: {
     fontSize: 11,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: theme.typography.fontFamily.medium,
     color: '#64748B',
   },
   badgeTextActive: {
-    color: '#047857',
+    color: '#4ADE80',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
   },
   insuranceDesc: {
-    fontSize: 12.5,
-    fontFamily: 'Inter_400Regular',
-    color: '#64748B',
-    lineHeight: 18,
-  },
-  selectedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#D1FAE5',
-  },
-  selectedText: {
     fontSize: 12,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: theme.typography.fontFamily.regular,
+    color: '#64748B',
+    lineHeight: 16,
+  },
+
+  // Fuel Grid (Side-by-side)
+  fuelGrid: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  fuelChipCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+  },
+  fuelChipCardActive: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#059669',
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  fuelChipTitle: {
+    fontSize: 13.5,
+    fontFamily: theme.typography.fontFamily.medium,
+    color: '#0F172A',
+    marginBottom: 2,
+  },
+  fuelChipTitleActive: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#047857',
   },
-
-  infoBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    backgroundColor: '#F8FAFC',
-    padding: 12,
-    borderRadius: 10,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  infoBoxText: {
-    flex: 1,
-    fontSize: 12,
-    fontFamily: 'Inter_500Medium',
-    color: '#475569',
-    lineHeight: 17,
-  },
-
-  // Fuel Cards
-  fuelOptionCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  fuelOptionCardActive: {
-    backgroundColor: '#F0F9FF',
-    borderColor: '#0284C7',
-  },
-  radioRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  radioOuter: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#CBD5E1',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  radioOuterActive: {
-    borderColor: '#0284C7',
-  },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#0284C7',
-  },
-  radioTextCol: {
-    flex: 1,
-  },
-  radioLabel: {
-    fontSize: 14,
-    fontFamily: 'Inter_600SemiBold',
-    color: '#0F172A',
-  },
-  radioSub: {
-    fontSize: 12,
-    fontFamily: 'Inter_400Regular',
+  fuelChipSub: {
+    fontSize: 11.5,
+    fontFamily: theme.typography.fontFamily.regular,
     color: '#64748B',
-    marginTop: 2,
-    lineHeight: 16,
+  },
+
+  // Accordion
+  accordionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  accordionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    flex: 1,
+    flexShrink: 1,
+  },
+  optionalPill: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  optionalPillText: {
+    fontSize: 10.5,
+    fontFamily: theme.typography.fontFamily.medium,
+    color: '#64748B',
+  },
+  accordionBody: {
+    marginTop: 4,
+    gap: 10,
   },
 
   // Rules Text Area
   textArea: {
     backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
     padding: 12,
-    fontSize: 14,
-    fontFamily: 'Inter_400Regular',
+    fontSize: 13.5,
+    fontFamily: theme.typography.fontFamily.regular,
     color: '#0F172A',
-    minHeight: 90,
+    minHeight: 80,
   },
 
   // Quick Tags
-  quickTagsTitle: {
-    fontSize: 12,
-    fontFamily: 'Inter_600SemiBold',
-    color: '#64748B',
-    marginTop: 12,
-    marginBottom: 6,
-  },
   quickTagsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
   },
   quickTagChip: {
-    backgroundColor: '#F1F5F9',
-    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#E2E8F0',
   },
   quickTagText: {
     fontSize: 11.5,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: theme.typography.fontFamily.medium,
     color: '#475569',
   },
 });

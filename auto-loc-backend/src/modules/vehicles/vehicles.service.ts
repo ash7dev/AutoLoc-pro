@@ -550,6 +550,20 @@ export class VehiclesService {
           await tx.tarifTier.deleteMany({ where: { vehiculeId: vehicleId } });
         }
 
+        // Handle photos: delete existing + recreate
+        if (dto.photos !== undefined && dto.photos.length > 0) {
+          await tx.photoVehicule.deleteMany({ where: { vehiculeId: vehicleId } });
+          await tx.photoVehicule.createMany({
+            data: dto.photos.map((p, i) => ({
+              vehiculeId: vehicleId,
+              url: p.url,
+              publicId: p.publicId,
+              position: i,
+              estPrincipale: i === 0,
+            })),
+          });
+        }
+
         // Handle equipements: delete existing + recreate (bulk optimisé)
         if (dto.equipements !== undefined) {
           await tx.vehiculeEquipement.deleteMany({ where: { vehiculeId: vehicleId } });

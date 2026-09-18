@@ -4,11 +4,12 @@ import {
   View,
   Text,
   Modal,
-  Pressable,
+  TouchableOpacity,
   ScrollView,
-  SafeAreaView,
+  TextInput,
+  Platform,
 } from 'react-native';
-import { Calendar, X, Check, ChevronDown } from 'lucide-react-native';
+import { Calendar, X, CheckCircle2, ChevronRight } from 'lucide-react-native';
 
 interface CustomDatePickerModalProps {
   visible: boolean;
@@ -17,19 +18,14 @@ interface CustomDatePickerModalProps {
   onClose: () => void;
 }
 
-const COLORS = {
-  bg: '#FFFFFF',
-  accent: '#16A34A',
-  accentLight: '#F0FDF4',
-  ink: '#041912',
-  inkMuted: '#64748B',
-  border: '#E2E8F0',
-  surface: '#F8FAFC',
-};
-
 const MOIS_NOMS = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+];
+
+const MOIS_SHORT = [
+  'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
+  'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'
 ];
 
 export const CustomDatePickerModal: React.FC<CustomDatePickerModalProps> = ({
@@ -39,9 +35,9 @@ export const CustomDatePickerModal: React.FC<CustomDatePickerModalProps> = ({
   onClose,
 }) => {
   const currentYear = new Date().getFullYear();
-  const defaultYear = 1998;
+  const maxAllowedYear = currentYear - 16;
+  const minAllowedYear = 1940;
 
-  // Analyser la valeur YYYY-MM-DD passée en props
   const parseInitialDate = () => {
     if (value && value.length === 10) {
       const parts = value.split('-');
@@ -52,14 +48,19 @@ export const CustomDatePickerModal: React.FC<CustomDatePickerModalProps> = ({
         return { year: y, month: m, day: d };
       }
     }
-    return { year: defaultYear, month: 8, day: 14 };
+    return { year: 1998, month: 8, day: 14 };
   };
 
   const initial = parseInitialDate();
   const [selectedYear, setSelectedYear] = useState(initial.year);
   const [selectedMonth, setSelectedMonth] = useState(initial.month); // 1-12
   const [selectedDay, setSelectedDay] = useState(initial.day); // 1-31
-  const [viewMode, setViewMode] = useState<'PICKER' | 'YEAR_GRID'>('PICKER');
+  const [activeTab, setActiveTab] = useState<'YEAR' | 'MONTH' | 'DAY'>('YEAR');
+
+  // Input manuel alternatif
+  const [manualDay, setManualDay] = useState(String(initial.day).padStart(2, '0'));
+  const [manualMonth, setManualMonth] = useState(String(initial.month).padStart(2, '0'));
+  const [manualYear, setManualYear] = useState(String(initial.year));
 
   useEffect(() => {
     if (visible) {
@@ -67,33 +68,53 @@ export const CustomDatePickerModal: React.FC<CustomDatePickerModalProps> = ({
       setSelectedYear(parsed.year);
       setSelectedMonth(parsed.month);
       setSelectedDay(parsed.day);
-      setViewMode('PICKER');
+      setManualDay(String(parsed.day).padStart(2, '0'));
+      setManualMonth(String(parsed.month).padStart(2, '0'));
+      setManualYear(String(parsed.year));
+      setActiveTab('YEAR');
     }
   }, [visible, value]);
 
-  // Nombre de jours dans le mois sélectionné
+  // Sync manuel vers état interne
+  const handleManualChange = (dStr: string, mStr: string, yStr: string) => {
+    setManualDay(dStr);
+    setManualMonth(mStr);
+    setManualYear(yStr);
+
+    const d = parseInt(dStr, 10);
+    const m = parseInt(mStr, 10);
+    const y = parseInt(yStr, 10);
+
+    if (!isNaN(y) && y >= minAllowedYear && y <= maxAllowedYear) {
+      setSelectedYear(y);
+    }
+    if (!isNaN(m) && m >= 1 && m <= 12) {
+      setSelectedMonth(m);
+    }
+    if (!isNaN(d) && d >= 1 && d <= 31) {
+      setSelectedDay(d);
+    }
+  };
+
   const getDaysInMonth = (year: number, month: number) => {
     return new Date(year, month, 0).getDate();
   };
 
   const maxDays = getDaysInMonth(selectedYear, selectedMonth);
 
-  // Ajuster le jour si le mois change (ex: passer de 31 Janvier à Février)
   useEffect(() => {
     if (selectedDay > maxDays) {
       setSelectedDay(maxDays);
+      setManualDay(String(maxDays).padStart(2, '0'));
     }
-  }, [selectedMonth, selectedYear, maxDays, selectedDay]);
+  }, [selectedMonth, selectedYear, maxDays]);
 
-  // Générer les listes d'années (de 1940 à max 16 ans aujourd'hui)
-  const minYear = 1940;
-  const maxYear = currentYear - 16;
+  // Liste des années
   const yearsList: number[] = [];
-  for (let y = maxYear; y >= minYear; y--) {
+  for (let y = maxAllowedYear; y >= minAllowedYear; y--) {
     yearsList.push(y);
   }
 
-  // Calcul de l'âge théorique
   const calculateAge = () => {
     const today = new Date();
     let age = today.getFullYear() - selectedYear;
@@ -101,7 +122,7 @@ export const CustomDatePickerModal: React.FC<CustomDatePickerModalProps> = ({
     if (m < 0 || (m === 0 && today.getDate() < selectedDay)) {
       age--;
     }
-    return age;
+    return Math.max(0, age);
   };
 
   const formattedDateStr = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
@@ -121,146 +142,195 @@ export const CustomDatePickerModal: React.FC<CustomDatePickerModalProps> = ({
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalCard}>
-          {/* Header Modal */}
-          <View style={styles.header}>
-            <View style={styles.headerTitleRow}>
-              <Calendar size={20} color={COLORS.accent} />
-              <Text style={styles.headerTitle}>Sélectionnez votre Date de Naissance</Text>
+          {/* Top Bar Header */}
+          <View style={styles.headerRow}>
+            <View style={styles.headerTitleGroup}>
+              <View style={styles.headerIconCircle}>
+                <Calendar size={18} color="#059669" strokeWidth={2.2} />
+              </View>
+              <Text style={styles.headerTitle}>Date de naissance</Text>
             </View>
-            <Pressable style={styles.closeButton} onPress={onClose}>
-              <X size={20} color={COLORS.ink} />
-            </Pressable>
+
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.8}>
+              <X size={18} color="#64748B" strokeWidth={2.2} />
+            </TouchableOpacity>
           </View>
 
-          {/* Affichage de la Date Sélectionnée & Âge Calculé */}
-          <View style={styles.datePreviewCard}>
-            <Text style={styles.datePreviewLabel}>Date choisie :</Text>
-            <View style={styles.datePreviewRow}>
-              <Text style={styles.datePreviewText}>{displayFormattedDate}</Text>
-              <View style={styles.ageBadge}>
-                <Text style={styles.ageBadgeText}>{calculateAge()} ans</Text>
-              </View>
+          {/* Banner Preview Date Sélectionnée & Âge */}
+          <View style={styles.previewBanner}>
+            <View style={styles.previewTextGroup}>
+              <Text style={styles.previewSubtext}>DATE SÉLECTIONNÉE</Text>
+              <Text style={styles.previewDateText}>{displayFormattedDate}</Text>
+            </View>
+
+            <View style={styles.ageBadge}>
+              <Text style={styles.ageBadgeText}>{calculateAge()} ans</Text>
             </View>
           </View>
 
-          {viewMode === 'YEAR_GRID' ? (
-            /* Mode Sélection Rapide d'Année */
-            <View style={styles.yearGridContainer}>
-              <View style={styles.yearGridHeader}>
-                <Text style={styles.sectionTitle}>Choisissez votre année de naissance</Text>
-                <Pressable onPress={() => setViewMode('PICKER')}>
-                  <Text style={styles.backToPickerText}>Retour au sélecteur</Text>
-                </Pressable>
-              </View>
-              <ScrollView contentContainerStyle={styles.yearGridScroll} showsVerticalScrollIndicator={false}>
-                {yearsList.map((y) => (
-                  <Pressable
-                    key={y}
-                    style={[
-                      styles.yearChip,
-                      y === selectedYear && styles.yearChipSelected,
-                    ]}
-                    onPress={() => {
-                      setSelectedYear(y);
-                      setViewMode('PICKER');
-                    }}
-                  >
-                    <Text style={[styles.yearChipText, y === selectedYear && styles.yearChipTextSelected]}>
-                      {y}
-                    </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            </View>
-          ) : (
-            /* Mode Sélecteur 3 Colonnes (Jour / Mois / Année) */
-            <View style={styles.pickerBody}>
-              {/* Bouton Rapide Sélection d'Année */}
-              <Pressable style={styles.quickYearButton} onPress={() => setViewMode('YEAR_GRID')}>
-                <Text style={styles.quickYearButtonText}>Année : <Text style={{ fontWeight: '800' }}>{selectedYear}</Text></Text>
-                <ChevronDown size={16} color={COLORS.accent} />
-              </Pressable>
+          {/* Segmented Tabs (Année -> Mois -> Jour) */}
+          <View style={styles.tabsTrack}>
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === 'YEAR' && styles.tabBtnActive]}
+              onPress={() => setActiveTab('YEAR')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.tabLabel, activeTab === 'YEAR' && styles.tabLabelActive]}>1. Année</Text>
+              <Text style={[styles.tabValue, activeTab === 'YEAR' && styles.tabValueActive]}>{selectedYear}</Text>
+            </TouchableOpacity>
 
-              <View style={styles.columnsRow}>
-                {/* Colonne Jour */}
-                <View style={styles.columnContainer}>
-                  <Text style={styles.columnTitle}>Jour</Text>
-                  <ScrollView style={styles.columnScroll} showsVerticalScrollIndicator={false}>
-                    {Array.from({ length: maxDays }, (_, i) => i + 1).map((d) => (
-                      <Pressable
-                        key={d}
-                        style={[
-                          styles.itemCell,
-                          d === selectedDay && styles.itemCellSelected,
-                        ]}
-                        onPress={() => setSelectedDay(d)}
-                      >
-                        <Text style={[styles.itemText, d === selectedDay && styles.itemTextSelected]}>
-                          {String(d).padStart(2, '0')}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </ScrollView>
-                </View>
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === 'MONTH' && styles.tabBtnActive]}
+              onPress={() => setActiveTab('MONTH')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.tabLabel, activeTab === 'MONTH' && styles.tabLabelActive]}>2. Mois</Text>
+              <Text style={[styles.tabValue, activeTab === 'MONTH' && styles.tabValueActive]}>
+                {MOIS_SHORT[selectedMonth - 1]}
+              </Text>
+            </TouchableOpacity>
 
-                {/* Colonne Mois */}
-                <View style={[styles.columnContainer, { flex: 1.4 }]}>
-                  <Text style={styles.columnTitle}>Mois</Text>
-                  <ScrollView style={styles.columnScroll} showsVerticalScrollIndicator={false}>
-                    {MOIS_NOMS.map((mName, idx) => {
-                      const mNumber = idx + 1;
-                      const isSelected = mNumber === selectedMonth;
-                      return (
-                        <Pressable
-                          key={mName}
-                          style={[
-                            styles.itemCell,
-                            isSelected && styles.itemCellSelected,
-                          ]}
-                          onPress={() => setSelectedMonth(mNumber)}
-                        >
-                          <Text 
-                            style={[styles.itemText, isSelected && styles.itemTextSelected]}
-                            numberOfLines={1}
-                          >
-                            {mName}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </ScrollView>
-                </View>
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === 'DAY' && styles.tabBtnActive]}
+              onPress={() => setActiveTab('DAY')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.tabLabel, activeTab === 'DAY' && styles.tabLabelActive]}>3. Jour</Text>
+              <Text style={[styles.tabValue, activeTab === 'DAY' && styles.tabValueActive]}>
+                {String(selectedDay).padStart(2, '0')}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-                {/* Colonne Année */}
-                <View style={styles.columnContainer}>
-                  <Text style={styles.columnTitle}>Année</Text>
-                  <ScrollView style={styles.columnScroll} showsVerticalScrollIndicator={false}>
-                    {yearsList.map((y) => (
-                      <Pressable
+          {/* Contenu Interactif selon l'onglet actif */}
+          <View style={styles.tabContentArea}>
+            {activeTab === 'YEAR' && (
+              <View style={styles.gridWrapper}>
+                <Text style={styles.gridInstruction}>Choisissez votre année de naissance :</Text>
+                <ScrollView contentContainerStyle={styles.yearsGrid} showsVerticalScrollIndicator={false}>
+                  {yearsList.map((y) => {
+                    const isSelected = y === selectedYear;
+                    return (
+                      <TouchableOpacity
                         key={y}
-                        style={[
-                          styles.itemCell,
-                          y === selectedYear && styles.itemCellSelected,
-                        ]}
-                        onPress={() => setSelectedYear(y)}
+                        style={[styles.yearChip, isSelected && styles.yearChipSelected]}
+                        onPress={() => {
+                          setSelectedYear(y);
+                          setManualYear(String(y));
+                          setActiveTab('MONTH');
+                        }}
+                        activeOpacity={0.7}
                       >
-                        <Text style={[styles.itemText, y === selectedYear && styles.itemTextSelected]}>
+                        <Text style={[styles.yearChipText, isSelected && styles.yearChipTextSelected]}>
                           {y}
                         </Text>
-                      </Pressable>
-                    ))}
-                  </ScrollView>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
+
+            {activeTab === 'MONTH' && (
+              <View style={styles.gridWrapper}>
+                <Text style={styles.gridInstruction}>Choisissez votre mois de naissance :</Text>
+                <View style={styles.monthsGrid}>
+                  {MOIS_NOMS.map((mName, idx) => {
+                    const mNum = idx + 1;
+                    const isSelected = mNum === selectedMonth;
+                    return (
+                      <TouchableOpacity
+                        key={mName}
+                        style={[styles.monthCard, isSelected && styles.monthCardSelected]}
+                        onPress={() => {
+                          setSelectedMonth(mNum);
+                          setManualMonth(String(mNum).padStart(2, '0'));
+                          setActiveTab('DAY');
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.monthNumberText, isSelected && styles.monthNumberTextSelected]}>
+                          {String(mNum).padStart(2, '0')}
+                        </Text>
+                        <Text style={[styles.monthNameText, isSelected && styles.monthNameTextSelected]} numberOfLines={1}>
+                          {mName}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
+            )}
+
+            {activeTab === 'DAY' && (
+              <View style={styles.gridWrapper}>
+                <Text style={styles.gridInstruction}>Choisissez le jour dans le mois :</Text>
+                <ScrollView contentContainerStyle={styles.daysGrid} showsVerticalScrollIndicator={false}>
+                  {Array.from({ length: maxDays }, (_, i) => i + 1).map((d) => {
+                    const isSelected = d === selectedDay;
+                    return (
+                      <TouchableOpacity
+                        key={d}
+                        style={[styles.dayChip, isSelected && styles.dayChipSelected]}
+                        onPress={() => {
+                          setSelectedDay(d);
+                          setManualDay(String(d).padStart(2, '0'));
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.dayChipText, isSelected && styles.dayChipTextSelected]}>
+                          {String(d).padStart(2, '0')}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+
+          {/* Saisie Manuelle Rapide Alternative */}
+          <View style={styles.manualInputRow}>
+            <Text style={styles.manualLabel}>Ou saisissez directement :</Text>
+            <View style={styles.manualInputsGroup}>
+              <TextInput
+                style={styles.manualBox}
+                keyboardType="number-pad"
+                maxLength={2}
+                placeholder="JJ"
+                placeholderTextColor="#94A3B8"
+                value={manualDay}
+                onChangeText={(t) => handleManualChange(t, manualMonth, manualYear)}
+              />
+              <Text style={styles.manualSlash}>/</Text>
+              <TextInput
+                style={styles.manualBox}
+                keyboardType="number-pad"
+                maxLength={2}
+                placeholder="MM"
+                placeholderTextColor="#94A3B8"
+                value={manualMonth}
+                onChangeText={(t) => handleManualChange(manualDay, t, manualYear)}
+              />
+              <Text style={styles.manualSlash}>/</Text>
+              <TextInput
+                style={[styles.manualBox, { width: 68 }]}
+                keyboardType="number-pad"
+                maxLength={4}
+                placeholder="AAAA"
+                placeholderTextColor="#94A3B8"
+                value={manualYear}
+                onChangeText={(t) => handleManualChange(manualDay, manualMonth, t)}
+              />
             </View>
-          )}
+          </View>
 
           {/* Footer Bouton Validation */}
           <View style={styles.footer}>
-            <Pressable style={styles.confirmButton} onPress={handleConfirm}>
-              <Check size={18} color="#FFFFFF" strokeWidth={2.5} />
+            <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm} activeOpacity={0.85}>
+              <CheckCircle2 size={18} color="#FFFFFF" strokeWidth={2.2} />
               <Text style={styles.confirmButtonText}>Valider cette date</Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -271,169 +341,145 @@ export const CustomDatePickerModal: React.FC<CustomDatePickerModalProps> = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(4, 25, 18, 0.6)',
+    backgroundColor: 'rgba(4, 25, 18, 0.75)',
     justifyContent: 'flex-end',
   },
   modalCard: {
-    backgroundColor: COLORS.bg,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingTop: 20,
-    maxHeight: '82%',
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingTop: 16,
+    maxHeight: '88%',
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    marginBottom: 16,
+    paddingHorizontal: 20,
+    marginBottom: 12,
   },
-  headerTitleRow: {
+  headerTitleGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
+  },
+  headerIconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: COLORS.ink,
+    fontFamily: 'Fraunces_600SemiBold',
+    fontSize: 17,
+    color: '#041912',
   },
-  closeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.surface,
+  closeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  datePreviewCard: {
-    backgroundColor: COLORS.accentLight,
-    marginHorizontal: 24,
-    borderRadius: 16,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#DCFCE7',
-    marginBottom: 16,
-  },
-  datePreviewLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.inkMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  datePreviewRow: {
+  previewBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    marginHorizontal: 20,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 14,
   },
-  datePreviewText: {
+  previewTextGroup: {
+    gap: 2,
+  },
+  previewSubtext: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 9.5,
+    letterSpacing: 0.8,
+    color: '#059669',
+  },
+  previewDateText: {
+    fontFamily: 'Fraunces_600SemiBold',
     fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.ink,
+    color: '#041912',
   },
   ageBadge: {
-    backgroundColor: COLORS.accent,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    backgroundColor: '#041912',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.4)',
   },
   ageBadgeText: {
-    color: '#FFFFFF',
+    fontFamily: 'Inter_700Bold',
     fontSize: 12,
-    fontWeight: '800',
+    color: '#4ADE80',
   },
-  pickerBody: {
-    paddingHorizontal: 24,
-    height: 240,
-  },
-  quickYearButton: {
+  tabsTrack: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: COLORS.surface,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    marginBottom: 12,
-  },
-  quickYearButtonText: {
-    fontSize: 13,
-    color: COLORS.ink,
-  },
-  columnsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    height: 180,
-  },
-  columnContainer: {
-    flex: 1,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#F1F5F9',
+    marginHorizontal: 20,
     borderRadius: 14,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    overflow: 'hidden',
-  },
-  columnTitle: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.inkMuted,
-    textAlign: 'center',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: '#FFFFFF',
-    textTransform: 'uppercase',
-  },
-  columnScroll: {
-    flex: 1,
-    paddingVertical: 4,
-  },
-  itemCell: {
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
-    marginHorizontal: 4,
-    marginVertical: 2,
-  },
-  itemCellSelected: {
-    backgroundColor: COLORS.accent,
-  },
-  itemText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.ink,
-  },
-  itemTextSelected: {
-    color: '#FFFFFF',
-    fontWeight: '800',
-  },
-  yearGridContainer: {
-    paddingHorizontal: 24,
-    height: 240,
-  },
-  yearGridHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    padding: 4,
     marginBottom: 12,
+    gap: 4,
   },
-  sectionTitle: {
+  tabBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 10,
+    gap: 1,
+  },
+  tabBtnActive: {
+    backgroundColor: '#041912',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  tabLabel: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 10,
+    color: '#64748B',
+  },
+  tabLabelActive: {
+    color: 'rgba(255, 255, 255, 0.75)',
+  },
+  tabValue: {
+    fontFamily: 'Inter_700Bold',
     fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.ink,
+    color: '#041912',
   },
-  backToPickerText: {
-    fontSize: 12.5,
-    fontWeight: '700',
-    color: COLORS.accent,
+  tabValueActive: {
+    color: '#4ADE80',
   },
-  yearGridScroll: {
+  tabContentArea: {
+    height: 220,
+    paddingHorizontal: 20,
+  },
+  gridWrapper: {
+    flex: 1,
+  },
+  gridInstruction: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 12,
+    color: '#64748B',
+    marginBottom: 10,
+  },
+  yearsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
@@ -441,47 +487,154 @@ const styles = StyleSheet.create({
   },
   yearChip: {
     width: '23%',
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
   },
   yearChipSelected: {
-    backgroundColor: COLORS.accent,
-    borderColor: COLORS.accent,
+    backgroundColor: '#041912',
+    borderColor: '#059669',
   },
   yearChipText: {
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.ink,
+    color: '#041912',
   },
   yearChipTextSelected: {
+    color: '#4ADE80',
+    fontFamily: 'Inter_700Bold',
+  },
+  monthsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  monthCard: {
+    width: '31%',
+    height: 54,
+    borderRadius: 14,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    padding: 8,
+    justifyContent: 'center',
+  },
+  monthCardSelected: {
+    backgroundColor: '#041912',
+    borderColor: '#059669',
+  },
+  monthNumberText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 10,
+    color: '#059669',
+  },
+  monthNumberTextSelected: {
+    color: '#4ADE80',
+  },
+  monthNameText: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 12.5,
+    color: '#041912',
+    marginTop: 2,
+  },
+  monthNameTextSelected: {
     color: '#FFFFFF',
-    fontWeight: '800',
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 7,
+    paddingBottom: 16,
+  },
+  dayChip: {
+    width: '12.5%',
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayChipSelected: {
+    backgroundColor: '#041912',
+    borderColor: '#059669',
+  },
+  dayChipText: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 12.5,
+    color: '#041912',
+  },
+  dayChipTextSelected: {
+    color: '#4ADE80',
+    fontFamily: 'Inter_700Bold',
+  },
+  manualInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderColor: '#F1F5F9',
+    backgroundColor: '#FAFAFA',
+  },
+  manualLabel: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 11.5,
+    color: '#64748B',
+  },
+  manualInputsGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  manualBox: {
+    width: 44,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    textAlign: 'center',
+    fontFamily: 'Inter_700Bold',
+    fontSize: 13,
+    color: '#041912',
+  },
+  manualSlash: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 14,
+    color: '#94A3B8',
   },
   footer: {
-    paddingHorizontal: 24,
-    paddingTop: 14,
-    paddingBottom: 28,
-    borderTopWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.bg,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 16,
+    backgroundColor: '#FFFFFF',
   },
   confirmButton: {
-    backgroundColor: COLORS.accent,
+    backgroundColor: '#041912',
     height: 50,
-    borderRadius: 14,
+    borderRadius: 25,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(4, 25, 18, 0.90)',
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
   },
   confirmButtonText: {
     color: '#FFFFFF',
-    fontSize: 15.5,
-    fontWeight: '700',
+    fontSize: 14.5,
+    fontFamily: 'Inter_700Bold',
   },
 });

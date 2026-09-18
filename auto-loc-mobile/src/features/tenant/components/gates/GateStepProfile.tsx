@@ -12,7 +12,7 @@ import {
 import { User, Calendar, ArrowRight, ChevronDown, CheckCircle2, ShieldCheck } from 'lucide-react-native';
 import { useAppStore } from '../../../../core/store/useAppStore';
 import { apiClient } from '../../../../core/api/apiClient';
-import { CustomDatePickerModal } from '../../../../shared/components/CustomDatePickerModal';
+import { DatePickerField } from '../../../../shared/components/DatePickerField';
 import { theme } from '../../../../core/theme';
 
 interface GateStepProfileProps {
@@ -31,7 +31,6 @@ export const GateStepProfile: React.FC<GateStepProfileProps> = ({ onSuccess }) =
   const [prenom, setPrenom] = useState(user?.prenom || '');
   const [nom, setNom] = useState(user?.nom || '');
   const [dateNaissance, setDateNaissance] = useState(user?.dateNaissance || '');
-  const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const formatFrenchDate = (isoStr: string) => {
@@ -156,34 +155,12 @@ export const GateStepProfile: React.FC<GateStepProfileProps> = ({ onSuccess }) =
               </View>
             </View>
 
-            {/* Date de Naissance */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Date de naissance</Text>
-              <TouchableOpacity
-                style={[
-                  styles.inputWrapper,
-                  { justifyContent: 'space-between' },
-                  formattedDisplayDate ? styles.inputWrapperValid : null,
-                ]}
-                onPress={() => setDatePickerVisible(true)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.dateRowLeft}>
-                  <Calendar size={18} color="#059669" />
-                  {formattedDisplayDate ? (
-                    <View style={styles.dateTextGroup}>
-                      <Text style={styles.formattedDateText}>{formattedDisplayDate}</Text>
-                      {userAge !== null && (
-                        <Text style={styles.ageSubtext}>({userAge} ans)</Text>
-                      )}
-                    </View>
-                  ) : (
-                    <Text style={styles.placeholderText}>Sélectionnez votre date</Text>
-                  )}
-                </View>
-                <ChevronDown size={18} color="#94A3B8" />
-              </TouchableOpacity>
-            </View>
+            {/* Date de Naissance Inline (JJ/MM/AAAA) */}
+            <DatePickerField
+              label="Date de naissance"
+              value={dateNaissance}
+              onChange={setDateNaissance}
+            />
 
             {/* Submit Button */}
             <TouchableOpacity
@@ -206,13 +183,6 @@ export const GateStepProfile: React.FC<GateStepProfileProps> = ({ onSuccess }) =
           </View>
         </View>
       </View>
-
-      <CustomDatePickerModal
-        visible={datePickerVisible}
-        value={dateNaissance}
-        onConfirm={(formattedDate) => setDateNaissance(formattedDate)}
-        onClose={() => setDatePickerVisible(false)}
-      />
     </ScrollView>
   );
 };

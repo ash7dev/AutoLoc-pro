@@ -22,17 +22,7 @@ import {
   Coins,
   Navigation,
 } from 'lucide-react-native';
-import {
-  useFonts as useFraunces,
-  Fraunces_600SemiBold,
-} from '@expo-google-fonts/fraunces';
-import {
-  useFonts as useInter,
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-} from '@expo-google-fonts/inter';
+import { theme } from '../../../../core/theme';
 import { SENEGAL_LOCATIONS } from '../vehicleCatalog';
 
 export interface Step3Data {
@@ -56,19 +46,11 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({
   data,
   onChange,
 }) => {
-  const [frauncesLoaded] = useFraunces({ Fraunces_600SemiBold });
-  const [interLoaded] = useInter({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-  });
-
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Proposer livraison actif si proposeLivraison === true ou fraisLivraison > 0
-  const proposeLivraison = data.proposeLivraison ?? (Boolean(data.fraisLivraison && data.fraisLivraison > 0));
+  // Proposer livraison actif si proposeLivraison === true
+  const proposeLivraison = Boolean(data.proposeLivraison);
 
   // Filtrage des villes/quartiers pour la modal de sélection
   const filteredLocations = useMemo(() => {
@@ -88,7 +70,6 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({
   }, [searchQuery]);
 
   const handleSelectLocation = (region: string, city: string) => {
-    // Si c'est Dakar, on peut enregistrer "Dakar" ou "Dakar, Quartier"
     const locationString = region === 'Dakar' ? `Dakar (${city})` : city;
     onChange({ ville: locationString });
     setModalVisible(false);
@@ -110,67 +91,62 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
-      {/* Editorial Hero Header */}
-      <View style={styles.heroHeader}>
-        <View style={styles.heroBadgeRow}>
-          <View style={styles.heroBadgeDot} />
-          <Text style={styles.heroBadgeText}>LOCALISATION & LOGISTIQUE</Text>
+    <View style={styles.container}>
+      {/* Hero Header d'étape Centré Luxury */}
+      <View style={styles.centeredHeroHeader}>
+        <View style={styles.centeredIconBadge}>
+          <MapPin size={22} color="#4ADE80" strokeWidth={2.2} />
         </View>
-        <Text
-          style={[
-            styles.heroTitle,
-            frauncesLoaded && { fontFamily: 'Fraunces_600SemiBold' },
-          ]}
-        >
-          Où se situe votre véhicule ?
+        <Text style={styles.centeredHeroTitle} numberOfLines={1} adjustsFontSizeToFit>
+          Localisation & Logistique
         </Text>
-        <Text style={styles.heroSubtitle}>
-          Définissez son point d’attache principal ainsi que vos options de déplacement et de livraison.
+        <Text style={styles.centeredHeroSubtitle}>
+          Définissez le point d'attache principal et vos options de livraison
         </Text>
       </View>
 
       {/* SECTION 1: VILLE ET QUARTIER */}
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Ville & Zone d’attache *</Text>
+        <View style={styles.labelWithIcon}>
+          <MapPin size={16} color="#059669" strokeWidth={2.2} />
+          <Text style={styles.sectionTitle}>Ville & Zone d’attache *</Text>
+        </View>
         <Text style={styles.sectionDesc}>
           Sélectionnez la ville principale où le véhicule sera restitué.
         </Text>
 
         <TouchableOpacity
-          style={styles.selectRow}
+          style={[styles.selectRow, Boolean(data.ville) && styles.selectRowActive]}
           onPress={() => setModalVisible(true)}
           activeOpacity={0.7}
         >
           <View style={styles.selectLeft}>
-            <View style={styles.selectIconBg}>
-              <MapPin size={20} color="#059669" />
+            <View style={[styles.selectIconBg, Boolean(data.ville) && styles.selectIconBgActive]}>
+              <MapPin size={18} color={data.ville ? '#4ADE80' : '#059669'} />
             </View>
             <View style={styles.selectTextCol}>
               <Text style={styles.selectLabel}>Ville principale</Text>
-              <Text style={styles.selectValue}>
+              <Text style={[styles.selectValue, Boolean(data.ville) && styles.selectValueActive]}>
                 {data.ville || 'Sélectionner une ville (ex: Dakar, Saly...)'}
               </Text>
             </View>
           </View>
-          <ChevronRight size={20} color="#94A3B8" />
+          <ChevronRight size={20} color={data.ville ? '#059669' : '#94A3B8'} />
         </TouchableOpacity>
       </View>
 
       {/* SECTION 2: ADRESSE EXACTE */}
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Adresse ou Quartier exact *</Text>
+        <View style={styles.labelWithIcon}>
+          <Navigation size={16} color="#059669" strokeWidth={2.2} />
+          <Text style={styles.sectionTitle}>Adresse ou Quartier exact *</Text>
+        </View>
         <Text style={styles.sectionDesc}>
           Indiquez le lieu précis de prise en main (ex: Almadies, en face de l’hôtel X).
         </Text>
 
-        <View style={styles.inputContainer}>
-          <Navigation size={18} color="#64748B" style={styles.inputIcon} />
+        <View style={[styles.inputContainer, Boolean(data.adresse) && styles.inputContainerActive]}>
+          <Navigation size={18} color={data.adresse ? '#059669' : '#64748B'} style={styles.inputIcon} />
           <TextInput
             style={styles.textInput}
             value={data.adresse}
@@ -220,10 +196,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({
           <View style={styles.expandableContent}>
             <View style={styles.divider} />
             <Text style={styles.subFieldTitle}>
-              Supplément Hors Dakar (FCFA / jour)
-            </Text>
-            <Text style={styles.subFieldDesc}>
-              Montant additionnel facturé par jour de location hors région.
+              Supplément journalier (FCFA / jour)
             </Text>
 
             {/* Presets Chips */}
@@ -298,10 +271,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({
         {proposeLivraison && (
           <View style={styles.expandableContent}>
             <View style={styles.divider} />
-            <Text style={styles.subFieldTitle}>Frais de livraison (FCFA)</Text>
-            <Text style={styles.subFieldDesc}>
-              Indiquez les frais de livraison appliqués pour amener la voiture au locataire.
-            </Text>
+            <Text style={styles.subFieldTitle}>Montant de la livraison (FCFA)</Text>
 
             {/* Presets Chips */}
             <View style={styles.chipsRow}>
@@ -455,84 +425,86 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
+    gap: 18,
   },
-  content: {
-    padding: 16,
-    paddingBottom: 40,
-    gap: 16,
+
+  centeredHeroHeader: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 8,
   },
-  heroHeader: {
-    marginBottom: 4,
-    gap: 6,
+  centeredIconBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#041912',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    shadowColor: '#041912',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  heroBadgeRow: {
+  centeredHeroTitle: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 21.5,
+    lineHeight: 28,
+    color: '#041912',
+    textAlign: 'center',
+    letterSpacing: -0.5,
+  },
+  centeredHeroSubtitle: {
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 13.5,
+    lineHeight: 19,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 4,
+    maxWidth: 300,
+  },
+
+  labelWithIcon: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
-  },
-  heroBadgeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#059669',
-  },
-  heroBadgeText: {
-    fontSize: 11,
-    fontFamily: 'Inter_700Bold',
-    color: '#047857',
-    letterSpacing: 0.5,
-  },
-  heroTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#051B14',
-    letterSpacing: -0.5,
-    marginTop: 2,
-  },
-  heroSubtitle: {
-    fontSize: 14,
-    fontFamily: 'Inter_400Regular',
-    color: '#64748B',
-    lineHeight: 20,
+    gap: 7,
+    marginBottom: 2,
   },
 
   // Cards
   sectionCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 16,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#E2E8F0',
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
+    shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontFamily: 'Inter_700Bold',
-    color: '#0F172A',
-    marginBottom: 2,
+    fontSize: 15.5,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    color: '#041912',
+    letterSpacing: -0.3,
   },
   sectionDesc: {
     fontSize: 13,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: theme.typography.fontFamily.regular,
     color: '#64748B',
     marginBottom: 12,
   },
@@ -542,11 +514,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+  },
+  selectRowActive: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#059669',
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   selectLeft: {
     flexDirection: 'row',
@@ -557,36 +538,50 @@ const styles = StyleSheet.create({
   selectIconBg: {
     width: 38,
     height: 38,
-    borderRadius: 10,
-    backgroundColor: '#ECFDF5',
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  selectIconBgActive: {
+    backgroundColor: '#041912',
+    borderColor: 'rgba(74, 222, 128, 0.4)',
   },
   selectTextCol: {
     flex: 1,
   },
   selectLabel: {
-    fontSize: 11,
-    fontFamily: 'Inter_500Medium',
+    fontSize: 11.5,
+    fontFamily: theme.typography.fontFamily.medium,
     color: '#64748B',
   },
   selectValue: {
     fontSize: 14,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: theme.typography.fontFamily.medium,
     color: '#0F172A',
     marginTop: 2,
+  },
+  selectValueActive: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    color: '#047857',
   },
 
   // Input Container
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    paddingHorizontal: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+  },
+  inputContainerActive: {
+    borderColor: '#059669',
+    backgroundColor: '#F0FDF4',
   },
   inputIcon: {
     marginRight: 10,
@@ -594,7 +589,7 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: theme.typography.fontFamily.regular,
     color: '#0F172A',
   },
 
@@ -604,16 +599,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 8,
     backgroundColor: '#F0FDF4',
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 10,
+    padding: 12,
+    borderRadius: 12,
+    marginTop: 12,
     borderWidth: 1,
-    borderColor: '#DCFCE7',
+    borderColor: '#A7F3D0',
   },
   privacyBadgeText: {
     flex: 1,
     fontSize: 12,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: theme.typography.fontFamily.regular,
     color: '#166534',
     lineHeight: 16,
   },
@@ -634,7 +629,7 @@ const styles = StyleSheet.create({
   toggleIconBg: {
     width: 38,
     height: 38,
-    borderRadius: 10,
+    borderRadius: 12,
     backgroundColor: '#E0F2FE',
     alignItems: 'center',
     justifyContent: 'center',
@@ -642,7 +637,7 @@ const styles = StyleSheet.create({
   toggleIconBgPurple: {
     width: 38,
     height: 38,
-    borderRadius: 10,
+    borderRadius: 12,
     backgroundColor: '#F3E8FF',
     alignItems: 'center',
     justifyContent: 'center',
@@ -651,13 +646,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   toggleTitle: {
-    fontSize: 15,
-    fontFamily: 'Inter_700Bold',
-    color: '#0F172A',
+    fontSize: 15.5,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    color: '#041912',
+    letterSpacing: -0.3,
   },
   toggleSub: {
     fontSize: 12,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: theme.typography.fontFamily.regular,
     color: '#64748B',
     marginTop: 2,
   },
@@ -673,13 +669,8 @@ const styles = StyleSheet.create({
   },
   subFieldTitle: {
     fontSize: 13,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#1E293B',
-  },
-  subFieldDesc: {
-    fontSize: 12,
-    fontFamily: 'Inter_400Regular',
-    color: '#64748B',
     marginBottom: 10,
   },
 
@@ -691,53 +682,55 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   presetChip: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 14,
+    paddingVertical: 7.5,
+    borderRadius: 20,
+    borderWidth: 1.5,
     borderColor: '#E2E8F0',
   },
   presetChipActive: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#059669',
+    backgroundColor: '#041912',
+    borderColor: '#041912',
   },
   presetChipPurpleActive: {
-    backgroundColor: '#F3E8FF',
-    borderColor: '#7C3AED',
+    backgroundColor: '#041912',
+    borderColor: '#041912',
   },
   presetChipText: {
-    fontSize: 12,
-    fontFamily: 'Inter_600SemiBold',
+    fontSize: 12.5,
+    fontFamily: theme.typography.fontFamily.medium,
     color: '#475569',
   },
   presetChipTextActive: {
-    color: '#047857',
+    color: '#4ADE80',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
   },
   presetChipTextPurpleActive: {
-    color: '#6D28D9',
+    color: '#4ADE80',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
   },
 
   // Amount Input Row
   amountInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    paddingHorizontal: 12,
-    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 14,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
   },
   amountInput: {
     flex: 1,
     fontSize: 15,
-    fontFamily: 'Inter_700Bold',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#0F172A',
   },
   currencyTag: {
     fontSize: 12,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: theme.typography.fontFamily.medium,
     color: '#64748B',
   },
 
@@ -782,7 +775,7 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     fontSize: 18,
-    fontFamily: 'Inter_700Bold',
+    fontFamily: theme.typography.fontFamily.displayBold,
     color: '#0F172A',
   },
   sheetCloseBtn: {
@@ -791,8 +784,10 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
     paddingHorizontal: 12,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
     gap: 8,
@@ -800,7 +795,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: theme.typography.fontFamily.regular,
     color: '#0F172A',
   },
   sheetList: {
@@ -816,8 +811,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   regionTitle: {
-    fontSize: 14,
-    fontFamily: 'Inter_700Bold',
+    fontSize: 13,
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#059669',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -830,44 +825,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#F8FAFC',
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   cityItemActive: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#10B981',
+    backgroundColor: '#F0FDF4',
+    borderColor: '#059669',
   },
   cityName: {
     fontSize: 14,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: theme.typography.fontFamily.medium,
     color: '#334155',
   },
   cityNameActive: {
-    fontFamily: 'Inter_700Bold',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#047857',
   },
   customSearchChoice: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#ECFDF5',
-    borderRadius: 12,
+    backgroundColor: '#F0FDF4',
+    borderRadius: 14,
     padding: 14,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#A7F3D0',
     marginBottom: 16,
   },
   customSearchText: {
     fontSize: 14,
-    fontFamily: 'Inter_500Medium',
+    fontFamily: theme.typography.fontFamily.regular,
     color: '#047857',
     flex: 1,
   },
   customSearchBold: {
-    fontFamily: 'Inter_700Bold',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
     color: '#065F46',
   },
 });
