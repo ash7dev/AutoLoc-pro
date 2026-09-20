@@ -122,6 +122,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     setIsLoading(true);
     try {
       const res = await AuthService.verifyPhoneLoginOtp(telephone, code);
+      if (res.accessToken && typeof window !== 'undefined') {
+        localStorage.setItem('autoloc_token', res.accessToken);
+      }
       
       // Enregistrer prénom, nom et email auprès du backend
       if (prenom || nom || email) {

@@ -17,14 +17,23 @@ async function bootstrap(): Promise<void> {
   const { json, urlencoded } = require('body-parser');
   app.use(json({ limit: '50mb', verify: captureRawBody }));
   app.use(urlencoded({ limit: '50mb', extended: true, verify: captureRawBody }));
+  const envOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+    : [];
+
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
+    'http://localhost:4000',
+    'http://localhost:4001',
+    'http://localhost:5173',
     'http://localhost:8081',
     'http://localhost:19006',
     'https://www.autoloc.sn',
     'https://autoloc.sn',
+    ...envOrigins,
   ];
+
   app.enableCors({
     origin: (origin, callback) => {
       // 1. Mobile Native Apps (iOS/Android) don't send an Origin header
@@ -33,6 +42,7 @@ async function bootstrap(): Promise<void> {
       if (
         !origin ||
         allowedOrigins.includes(origin) ||
+        envOrigins.includes(origin) ||
         process.env.NODE_ENV !== 'production'
       ) {
         callback(null, true);

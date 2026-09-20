@@ -72,6 +72,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setIsLoading(true);
     try {
       const res = await AuthService.verifyPhoneLoginOtp(telephone, code);
+      if (res.accessToken && typeof window !== 'undefined') {
+        localStorage.setItem('autoloc_token', res.accessToken);
+      }
       const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
 
       setUser(userProfile);

@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import * as path from 'path';
 import * as fs from 'fs';
-import PDFDocument from 'pdfkit';
-import type PDFKit from 'pdfkit';
-
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const PDFDocument = require('pdfkit');
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -126,7 +125,7 @@ export class ContractPdfService {
 
     // ── Header ─────────────────────────────────────────────────────────────────
 
-    private renderHeader(doc: PDFKit.PDFDocument, data: ContractData): void {
+    private renderHeader(doc: InstanceType<typeof PDFDocument>, data: ContractData): void {
         const ref = data.reservationId.slice(0, 8).toUpperCase();
 
         // Logo (left)
@@ -156,7 +155,7 @@ export class ContractPdfService {
 
     // ── Status banner ──────────────────────────────────────────────────────────
 
-    private renderStatusBanner(doc: PDFKit.PDFDocument, data: ContractData): void {
+    private renderStatusBanner(doc: InstanceType<typeof PDFDocument>, data: ContractData): void {
         const { statutContrat } = data;
 
         let bg: string, border: string, text: string, label: string, desc: string;
@@ -198,7 +197,7 @@ export class ContractPdfService {
 
     // ── Parties ────────────────────────────────────────────────────────────────
 
-    private renderParties(doc: PDFKit.PDFDocument, data: ContractData): void {
+    private renderParties(doc: InstanceType<typeof PDFDocument>, data: ContractData): void {
         this.sectionTitle(doc, 'LES PARTIES');
 
         const colW = (CW - 12) / 2;
@@ -238,7 +237,7 @@ export class ContractPdfService {
 
     // ── Vehicle ────────────────────────────────────────────────────────────────
 
-    private renderVehicle(doc: PDFKit.PDFDocument, data: ContractData): void {
+    private renderVehicle(doc: InstanceType<typeof PDFDocument>, data: ContractData): void {
         this.sectionTitle(doc, 'VÉHICULE');
 
         const v = data.vehicule;
@@ -298,7 +297,7 @@ export class ContractPdfService {
 
     // ── Pricing ────────────────────────────────────────────────────────────────
 
-    private renderPricing(doc: PDFKit.PDFDocument, data: ContractData): void {
+    private renderPricing(doc: InstanceType<typeof PDFDocument>, data: ContractData): void {
         this.sectionTitle(doc, 'DURÉE & TARIFS');
 
         const t = data.tarifs;
@@ -405,7 +404,7 @@ export class ContractPdfService {
 
     // ── Cancellation policy ────────────────────────────────────────────────────
 
-    private renderCancellationPolicy(doc: PDFKit.PDFDocument): void {
+    private renderCancellationPolicy(doc: InstanceType<typeof PDFDocument>): void {
         if (doc.y > 530) doc.addPage();
         this.sectionTitle(doc, 'POLITIQUE D\'ANNULATION');
 
@@ -460,7 +459,7 @@ export class ContractPdfService {
 
     // ── General conditions ─────────────────────────────────────────────────────
 
-    private renderConditions(doc: PDFKit.PDFDocument): void {
+    private renderConditions(doc: InstanceType<typeof PDFDocument>): void {
         if (doc.y > 480) doc.addPage();
         this.sectionTitle(doc, 'CONDITIONS GÉNÉRALES');
 
@@ -532,7 +531,7 @@ export class ContractPdfService {
 
     // ── Signatures ─────────────────────────────────────────────────────────────
 
-    private renderSignatures(doc: PDFKit.PDFDocument, data: ContractData): void {
+    private renderSignatures(doc: InstanceType<typeof PDFDocument>, data: ContractData): void {
         if (doc.y > 590) doc.addPage();
         this.sectionTitle(doc, 'SIGNATURES');
 
@@ -616,7 +615,7 @@ export class ContractPdfService {
 
     // ── Footer ─────────────────────────────────────────────────────────────────
 
-    private renderFooter(doc: PDFKit.PDFDocument, data: ContractData): void {
+    private renderFooter(doc: InstanceType<typeof PDFDocument>, data: ContractData): void {
         const y = doc.page.height - 36;
         const ref = data.reservationId.slice(0, 8).toUpperCase();
 
@@ -630,7 +629,7 @@ export class ContractPdfService {
 
     // ── Watermark ──────────────────────────────────────────────────────────────
 
-    private renderWatermark(doc: PDFKit.PDFDocument, statut: StatutContrat): void {
+    private renderWatermark(doc: InstanceType<typeof PDFDocument>, statut: StatutContrat): void {
         const pageCount = doc.bufferedPageRange().count;
         const label = statut === 'EXPIRE' ? 'EXPIRÉ' : 'ANNULÉ';
 
@@ -648,7 +647,7 @@ export class ContractPdfService {
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
-    private sectionTitle(doc: PDFKit.PDFDocument, title: string): void {
+    private sectionTitle(doc: InstanceType<typeof PDFDocument>, title: string): void {
         const y = doc.y + 4;
         doc.fontSize(7.5).fillColor(C.muted).font('Helvetica-Bold')
             .text(title, M, y, { characterSpacing: 1.2 });
