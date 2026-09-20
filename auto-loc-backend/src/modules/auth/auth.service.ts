@@ -930,6 +930,7 @@ export class AuthService {
     kycStatus?: ProfileResponse['kycStatus'];
     hasVehicles?: boolean;
     hasPermis?: boolean;
+    permisUrl?: string | null;
     prenom?: string | null;
     nom?: string | null;
     avatarUrl?: string | null;
@@ -960,6 +961,7 @@ export class AuthService {
       kycStatus: found.statutKyc as ProfileResponse['kycStatus'],
       hasVehicles: found._count.vehicules > 0,
       hasPermis: !!found.permisUrl,
+      permisUrl: found.permisUrl,
       prenom: found.prenom,
       nom: found.nom,
       avatarUrl: found.avatarUrl,
@@ -1035,6 +1037,7 @@ export class AuthService {
       kycStatus?: ProfileResponse['kycStatus'];
       hasVehicles?: boolean;
       hasPermis?: boolean;
+      permisUrl?: string | null;
       prenom?: string | null;
       nom?: string | null;
       avatarUrl?: string | null;
@@ -1057,6 +1060,7 @@ export class AuthService {
       telephone: p.phone,
       hasVehicles: flags.hasVehicles,
       hasPermis: flags.hasPermis,
+      permisUrl: flags.permisUrl,
       prenom: flags.prenom,
       nom: flags.nom,
       avatarUrl: flags.avatarUrl,

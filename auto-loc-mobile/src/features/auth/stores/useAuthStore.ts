@@ -53,8 +53,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         prenom: res.profile.prenom || '',
         nom: res.profile.nom || '',
         email: res.profile.email || email,
-        telephone: res.profile.phone,
-        statutKyc: res.profile.statutKyc,
+        telephone: res.profile.phone || res.profile.telephone,
+        phoneVerified: res.profile.phoneVerified,
+        statutKyc: res.profile.statutKyc || res.profile.kycStatus,
+        permisUrl: res.profile.permisUrl || (res.profile.hasPermis ? 'HAS_PERMIS' : null),
         avatarUrl: res.profile.avatarUrl,
       });
     } catch (err: any) {
@@ -104,8 +106,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         prenom: res.profile.prenom || '',
         nom: res.profile.nom || '',
         email: res.profile.email || '',
-        telephone: res.profile.phone || phone,
-        statutKyc: res.profile.statutKyc,
+        telephone: res.profile.phone || res.profile.telephone || phone,
+        phoneVerified: true,
+        statutKyc: res.profile.statutKyc || res.profile.kycStatus,
+        permisUrl: res.profile.permisUrl || (res.profile.hasPermis ? 'HAS_PERMIS' : null),
         avatarUrl: res.profile.avatarUrl,
       });
     } catch (err: any) {
@@ -139,8 +143,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         prenom: res.profile.prenom || '',
         nom: res.profile.nom || '',
         email: res.profile.email || '',
-        telephone: res.profile.phone,
-        statutKyc: res.profile.statutKyc,
+        telephone: res.profile.phone || res.profile.telephone,
+        phoneVerified: res.profile.phoneVerified,
+        statutKyc: res.profile.statutKyc || res.profile.kycStatus,
+        permisUrl: res.profile.permisUrl || (res.profile.hasPermis ? 'HAS_PERMIS' : null),
         avatarUrl: res.profile.avatarUrl,
       });
     } catch (err: any) {

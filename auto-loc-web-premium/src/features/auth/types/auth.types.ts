@@ -26,6 +26,8 @@ export interface ProfileResponse {
   dateNaissance?: string;
   avatarUrl?: string;
   permisUrl?: string | null;
+  hasPermis?: boolean;
+  hasVehicles?: boolean;
   role: UserRole;
   statutKyc?: KycStatus;
   kycStatus?: KycStatus;

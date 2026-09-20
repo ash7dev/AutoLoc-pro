@@ -92,7 +92,7 @@ export class AuthService {
       phoneVerified: Boolean(profile.phoneVerified),
       dateNaissance: profile.dateNaissance,
       avatarUrl: profile.avatarUrl,
-      permisUrl: profile.permisUrl,
+      permisUrl: profile.permisUrl || (profile.hasPermis ? 'HAS_PERMIS' : null),
       role: profile.role || 'LOCATAIRE',
       statutKyc: profile.statutKyc || profile.kycStatus || 'NON_VERIFIE',
       kycRejectionReason: profile.kycRejectionReason,

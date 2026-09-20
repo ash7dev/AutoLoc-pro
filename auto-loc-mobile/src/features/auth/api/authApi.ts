@@ -7,10 +7,15 @@ export interface UserProfileResponse {
   nom?: string;
   email?: string;
   phone?: string;
+  telephone?: string;
+  phoneVerified?: boolean;
   role: string;
   hasUtilisateur?: boolean;
   utilisateurId?: string;
   statutKyc?: string;
+  kycStatus?: string;
+  permisUrl?: string | null;
+  hasPermis?: boolean;
   avatarUrl?: string;
 }
 

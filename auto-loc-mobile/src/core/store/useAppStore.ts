@@ -206,7 +206,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           telephone: raw.telephone || raw.phone || get().user?.telephone || '',
           phoneVerified: raw.phoneVerified ?? get().user?.phoneVerified ?? false,
           dateNaissance: raw.dateNaissance || get().user?.dateNaissance,
-          permisUrl: raw.permisUrl ?? get().user?.permisUrl ?? null,
+          permisUrl: raw.permisUrl || (raw.hasPermis ? (get().user?.permisUrl || 'HAS_PERMIS') : (get().user?.permisUrl ?? null)),
           statutKyc: raw.statutKyc || raw.kycStatus || get().user?.statutKyc || 'NON_VERIFIE',
           kycRejectionReason: raw.kycRejectionReason || get().user?.kycRejectionReason || null,
           avatarUrl: raw.avatarUrl || raw.photoUrl || get().user?.avatarUrl,
