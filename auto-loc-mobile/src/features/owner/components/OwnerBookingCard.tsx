@@ -188,6 +188,27 @@ export const OwnerBookingCard: React.FC<OwnerBookingCardProps> = ({
               </Text>
             </View>
           </View>
+
+          {/* Badge Options de Livraison & Trajets */}
+          {(booking.typeLivraison === 'DAKAR' || booking.typeLivraison === 'AIBD' || booking.adresseLivraison || booking.horsDakar) && (
+            <View style={styles.deliveryBadgeRow}>
+              {booking.typeLivraison === 'AIBD' || (booking.adresseLivraison && booking.adresseLivraison.toLowerCase().includes('aibd')) ? (
+                <View style={styles.aibdBadgePill}>
+                  <Text style={styles.aibdBadgeText}>✈️ Aéroport AIBD</Text>
+                </View>
+              ) : (booking.typeLivraison === 'DAKAR' || booking.adresseLivraison) ? (
+                <View style={styles.dakarBadgePill}>
+                  <Text style={styles.dakarBadgeText}>🚚 Livraison Dakar</Text>
+                </View>
+              ) : null}
+
+              {booking.horsDakar && (
+                <View style={styles.horsDakarBadgePill}>
+                  <Text style={styles.horsDakarBadgeText}>🛣️ Hors Dakar</Text>
+                </View>
+              )}
+            </View>
+          )}
         </View>
       </View>
 
@@ -563,6 +584,52 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(52, 211, 153, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  deliveryBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+    flexWrap: 'wrap',
+  },
+  dakarBadgePill: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  dakarBadgeText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 10,
+    color: '#059669',
+  },
+  aibdBadgePill: {
+    backgroundColor: '#F0F9FF',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+  },
+  aibdBadgeText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 10,
+    color: '#0284C7',
+  },
+  horsDakarBadgePill: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  horsDakarBadgeText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 10,
+    color: '#B45309',
   },
 });
 

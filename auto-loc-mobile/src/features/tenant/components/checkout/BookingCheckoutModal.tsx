@@ -29,6 +29,10 @@ export interface BookingCheckoutModalProps {
     photoUrl?: string;
     tenantPricePerDay: number;
     joursMinimum?: number;
+    proposeLivraisonDakar?: boolean;
+    fraisLivraisonDakar?: number;
+    proposeLivraisonAibd?: boolean;
+    fraisLivraisonAibd?: number;
     hasDelivery?: boolean;
     fraisLivraison?: number;
     autoriseHorsDakar?: boolean;
@@ -58,7 +62,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
   const [step, setStep] = useState<1 | 2>(1);
   const [dateDebut, setDateDebut] = useState<string | undefined>(initialDateDebut);
   const [dateFin, setDateFin] = useState<string | undefined>(initialDateFin);
-  const [isDeliverySelected, setIsDeliverySelected] = useState(false);
+  const [typeLivraison, setTypeLivraison] = useState<'AUCUNE' | 'DAKAR' | 'AIBD'>('AUCUNE');
   const [adresseLivraison, setAdresseLivraison] = useState('');
   const [isHorsDakarSelected, setIsHorsDakarSelected] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -144,11 +148,16 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
 
   // Calcul du montant total
   const numTenantPrice = Number(vehicle.tenantPricePerDay) || 0;
-  const numFraisLivraison = Number(vehicle.fraisLivraison) || 0;
   const numSupplementHorsDakar = Number(vehicle.supplementHorsDakarParJour) || 0;
 
+  let deliveryTotal = 0;
+  if (typeLivraison === 'DAKAR') {
+    deliveryTotal = Number(vehicle.fraisLivraisonDakar ?? vehicle.fraisLivraison ?? 0);
+  } else if (typeLivraison === 'AIBD') {
+    deliveryTotal = Number(vehicle.fraisLivraisonAibd ?? 0);
+  }
+
   const rentalBaseTotal = numTenantPrice * nbJours;
-  const deliveryTotal = isDeliverySelected ? numFraisLivraison : 0;
   const horsDakarTotal = isHorsDakarSelected ? numSupplementHorsDakar * nbJours : 0;
   const grandTotal = rentalBaseTotal + deliveryTotal + horsDakarTotal;
 
@@ -202,7 +211,8 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
         targetPayment: params.paymentGateway,
         payerPhone: phoneClean,
         modePaiement: modePaiementStr,
-        ...(isDeliverySelected ? { adresseLivraison: adresseLivraison.trim() || 'Livraison à domicile' } : {}),
+        typeLivraison,
+        ...(typeLivraison !== 'AUCUNE' ? { adresseLivraison: adresseLivraison.trim() || (typeLivraison === 'AIBD' ? 'Aéroport AIBD' : 'Livraison Dakar') } : {}),
         ...(isHorsDakarSelected ? { horsDakar: true } : {}),
       };
 
@@ -273,8 +283,8 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
             nbJours={nbJours}
             isDatesBlocked={isDatesBlocked}
             onDatesChange={handleDatesChange}
-            isDeliverySelected={isDeliverySelected}
-            onToggleDelivery={setIsDeliverySelected}
+            typeLivraison={typeLivraison}
+            onSelectTypeLivraison={setTypeLivraison}
             adresseLivraison={adresseLivraison}
             onAdresseLivraisonChange={setAdresseLivraison}
             isHorsDakarSelected={isHorsDakarSelected}

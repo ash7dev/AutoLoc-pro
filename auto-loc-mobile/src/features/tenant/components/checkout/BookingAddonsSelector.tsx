@@ -1,14 +1,22 @@
 import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, TextInput } from 'react-native';
-import { Check, Truck, Navigation, MapPin, Zap } from 'lucide-react-native';
+import { Check, Truck, Navigation, MapPin, Zap, Plane, Home } from 'lucide-react-native';
 import { theme } from '../../../../core/theme';
 import { formatDirectPrice } from '../../../../core/utils/currency';
 
+export type TypeLivraison = 'AUCUNE' | 'DAKAR' | 'AIBD';
+
 interface BookingAddonsSelectorProps {
+  proposeLivraisonDakar?: boolean;
+  fraisLivraisonDakar?: number;
+  proposeLivraisonAibd?: boolean;
+  fraisLivraisonAibd?: number;
+  // Options legacy
   hasDelivery?: boolean;
   fraisLivraison?: number;
-  isDeliverySelected: boolean;
-  onToggleDelivery: (val: boolean) => void;
+
+  typeLivraison: TypeLivraison;
+  onSelectTypeLivraison: (val: TypeLivraison) => void;
   adresseLivraison?: string;
   onAdresseLivraisonChange?: (val: string) => void;
 
@@ -22,10 +30,14 @@ interface BookingAddonsSelectorProps {
 }
 
 export const BookingAddonsSelector: React.FC<BookingAddonsSelectorProps> = ({
+  proposeLivraisonDakar,
+  fraisLivraisonDakar,
+  proposeLivraisonAibd,
+  fraisLivraisonAibd,
   hasDelivery = false,
   fraisLivraison = 0,
-  isDeliverySelected,
-  onToggleDelivery,
+  typeLivraison = 'AUCUNE',
+  onSelectTypeLivraison,
   adresseLivraison = '',
   onAdresseLivraisonChange,
   autoriseHorsDakar = false,
@@ -35,72 +47,132 @@ export const BookingAddonsSelector: React.FC<BookingAddonsSelectorProps> = ({
   nbJours,
   selectedCurrency = 'XOF',
 }) => {
-  const showDelivery = hasDelivery && (fraisLivraison ?? 0) >= 0;
+  const canDeliverDakar = proposeLivraisonDakar ?? (hasDelivery || (fraisLivraison ?? 0) > 0);
+  const actualFraisDakar = fraisLivraisonDakar ?? fraisLivraison ?? 0;
+  const canDeliverAibd = Boolean(proposeLivraisonAibd);
+  const actualFraisAibd = fraisLivraisonAibd ?? 0;
+
+  const hasAnyDelivery = canDeliverDakar || canDeliverAibd;
   const showHorsDakar = autoriseHorsDakar && (supplementHorsDakarParJour ?? 0) >= 0;
 
-  if (!showDelivery && !showHorsDakar) {
+  if (!hasAnyDelivery && !showHorsDakar) {
     return null;
   }
 
-  const formattedDeliveryFee = formatDirectPrice(fraisLivraison, selectedCurrency as any);
+  const fmtCurrency = (val: number) => formatDirectPrice(val, selectedCurrency as any);
   const totalHorsDakar = (supplementHorsDakarParJour || 0) * nbJours;
-  const formattedHorsDakarFee = formatDirectPrice(totalHorsDakar, selectedCurrency as any);
-  const formattedHorsDakarDaily = formatDirectPrice(supplementHorsDakarParJour, selectedCurrency as any);
 
   return (
     <View style={styles.cardContainer}>
-      {/* En-tête de section avec badge sombre + titre Fraunces */}
+      {/* En-tête de section */}
       <View style={styles.headerRow}>
         <View style={styles.titleIconBadge}>
           <Zap size={14} color="#4ADE80" strokeWidth={2.25} />
         </View>
-        <Text style={styles.sectionTitle}>Options complémentaires</Text>
+        <Text style={styles.sectionTitle}>Options & Services</Text>
       </View>
 
       <View style={styles.optionsList}>
-        {/* Option 1 : Livraison à Domicile */}
-        {showDelivery && (
-          <View style={styles.addonWrapper}>
+        {/* Section Modes de Prise en Main / Livraison */}
+        {hasAnyDelivery && (
+          <View style={styles.deliverySection}>
+            <Text style={styles.subSectionTitle}>Lieu de prise en main</Text>
+
+            {/* Option 1: Adresse du véhicule (Gratuit) */}
             <TouchableOpacity
-              style={[styles.addonCard, isDeliverySelected && styles.addonCardActive]}
-              onPress={() => onToggleDelivery(!isDeliverySelected)}
+              style={[styles.addonCard, typeLivraison === 'AUCUNE' && styles.addonCardActive]}
+              onPress={() => onSelectTypeLivraison('AUCUNE')}
               activeOpacity={0.85}
             >
               <View style={styles.iconCircle}>
-                <Truck size={13} color="#4ADE80" strokeWidth={2.25} />
+                <Home size={13} color="#4ADE80" strokeWidth={2.25} />
               </View>
-
               <View style={styles.addonTextGroup}>
-                <Text style={styles.addonTitle}>Livraison & Restitution</Text>
-                <Text style={styles.addonSubtitle}>
-                  Remise des clés à l'adresse de votre choix ou à l'aéroport
-                </Text>
+                <Text style={styles.addonTitle}>Prise en main à l'adresse</Text>
+                <Text style={styles.addonSubtitle}>Récupération directe chez le propriétaire</Text>
               </View>
-
               <View style={styles.addonRightBox}>
-                <View style={[styles.priceBadgePill, isDeliverySelected && styles.priceBadgePillActive]}>
-                  <Text style={styles.priceBadgeText}>
-                    {fraisLivraison === 0 ? 'Gratuit' : `+${formattedDeliveryFee}`}
-                  </Text>
+                <View style={[styles.priceBadgePill, typeLivraison === 'AUCUNE' && styles.priceBadgePillActive]}>
+                  <Text style={styles.priceBadgeText}>Gratuit</Text>
                 </View>
-                <View style={[styles.checkboxIndicator, isDeliverySelected && styles.checkboxIndicatorActive]}>
-                  {isDeliverySelected && <Check size={11} color="#FFFFFF" strokeWidth={3} />}
+                <View style={[styles.checkboxIndicator, typeLivraison === 'AUCUNE' && styles.checkboxIndicatorActive]}>
+                  {typeLivraison === 'AUCUNE' && <Check size={11} color="#FFFFFF" strokeWidth={3} />}
                 </View>
               </View>
             </TouchableOpacity>
 
+            {/* Option 2: Livraison Dakar */}
+            {canDeliverDakar && (
+              <TouchableOpacity
+                style={[styles.addonCard, typeLivraison === 'DAKAR' && styles.addonCardActive]}
+                onPress={() => onSelectTypeLivraison('DAKAR')}
+                activeOpacity={0.85}
+              >
+                <View style={styles.iconCircle}>
+                  <Truck size={13} color="#4ADE80" strokeWidth={2.25} />
+                </View>
+                <View style={styles.addonTextGroup}>
+                  <Text style={styles.addonTitle}>Livraison sur Dakar (Ville)</Text>
+                  <Text style={styles.addonSubtitle}>Remise des clés à votre domicile ou hôtel</Text>
+                </View>
+                <View style={styles.addonRightBox}>
+                  <View style={[styles.priceBadgePill, typeLivraison === 'DAKAR' && styles.priceBadgePillActive]}>
+                    <Text style={styles.priceBadgeText}>
+                      {actualFraisDakar === 0 ? 'Gratuit' : `+${fmtCurrency(actualFraisDakar)}`}
+                    </Text>
+                  </View>
+                  <View style={[styles.checkboxIndicator, typeLivraison === 'DAKAR' && styles.checkboxIndicatorActive]}>
+                    {typeLivraison === 'DAKAR' && <Check size={11} color="#FFFFFF" strokeWidth={3} />}
+                  </View>
+                </View>
+              </TouchableOpacity>
+            )}
+
+            {/* Option 3: Livraison Aéroport AIBD */}
+            {canDeliverAibd && (
+              <TouchableOpacity
+                style={[styles.addonCard, typeLivraison === 'AIBD' && styles.addonCardActive]}
+                onPress={() => onSelectTypeLivraison('AIBD')}
+                activeOpacity={0.85}
+              >
+                <View style={styles.iconCircle}>
+                  <Plane size={13} color="#4ADE80" strokeWidth={2.25} />
+                </View>
+                <View style={styles.addonTextGroup}>
+                  <Text style={styles.addonTitle}>Livraison Aéroport AIBD</Text>
+                  <Text style={styles.addonSubtitle}>Accueil à la sortie du terminal avec la voiture</Text>
+                </View>
+                <View style={styles.addonRightBox}>
+                  <View style={[styles.priceBadgePill, typeLivraison === 'AIBD' && styles.priceBadgePillActive]}>
+                    <Text style={styles.priceBadgeText}>
+                      {actualFraisAibd === 0 ? 'Gratuit' : `+${fmtCurrency(actualFraisAibd)}`}
+                    </Text>
+                  </View>
+                  <View style={[styles.checkboxIndicator, typeLivraison === 'AIBD' && styles.checkboxIndicatorActive]}>
+                    {typeLivraison === 'AIBD' && <Check size={11} color="#FFFFFF" strokeWidth={3} />}
+                  </View>
+                </View>
+              </TouchableOpacity>
+            )}
+
             {/* Champ Saisie Adresse si Livraison cochée */}
-            {isDeliverySelected && (
+            {typeLivraison !== 'AUCUNE' && (
               <View style={styles.addressInputContainer}>
                 <View style={styles.addressHeaderRow}>
                   <MapPin size={13} color="#059669" strokeWidth={2.25} />
-                  <Text style={styles.addressLabel}>Adresse exacte de livraison *</Text>
+                  <Text style={styles.addressLabel}>
+                    {typeLivraison === 'AIBD' ? "Numéro de vol / Précisions AIBD (Optionnel)" : "Adresse exacte de livraison *"}
+                  </Text>
                 </View>
                 <TextInput
                   style={styles.addressInput}
                   value={adresseLivraison}
                   onChangeText={onAdresseLivraisonChange}
-                  placeholder="Ex: Les Almadies, Villa 12 / Aéroport DSS..."
+                  placeholder={
+                    typeLivraison === 'AIBD'
+                      ? "Ex: Vol AF718 / Arrivée 18h30..."
+                      : "Ex: Les Almadies, Villa 12 / Ngor..."
+                  }
                   placeholderTextColor="#94A3B8"
                 />
               </View>
@@ -108,37 +180,40 @@ export const BookingAddonsSelector: React.FC<BookingAddonsSelectorProps> = ({
           </View>
         )}
 
-        {/* Option 2 : Voyage Hors Dakar */}
+        {/* Option Voyage Hors Dakar */}
         {showHorsDakar && (
-          <TouchableOpacity
-            style={[styles.addonCard, isHorsDakarSelected && styles.addonCardActive]}
-            onPress={() => onToggleHorsDakar(!isHorsDakarSelected)}
-            activeOpacity={0.85}
-          >
-            <View style={styles.iconCircle}>
-              <Navigation size={13} color="#4ADE80" strokeWidth={2.25} />
-            </View>
+          <View style={{ gap: 6, marginTop: hasAnyDelivery ? 6 : 0 }}>
+            {hasAnyDelivery && <Text style={styles.subSectionTitle}>Zone de circulation</Text>}
+            <TouchableOpacity
+              style={[styles.addonCard, isHorsDakarSelected && styles.addonCardActive]}
+              onPress={() => onToggleHorsDakar(!isHorsDakarSelected)}
+              activeOpacity={0.85}
+            >
+              <View style={styles.iconCircle}>
+                <Navigation size={13} color="#4ADE80" strokeWidth={2.25} />
+              </View>
 
-            <View style={styles.addonTextGroup}>
-              <Text style={styles.addonTitle}>Voyage Hors Dakar</Text>
-              <Text style={styles.addonSubtitle}>
-                {supplementHorsDakarParJour && supplementHorsDakarParJour > 0
-                  ? `${formattedHorsDakarDaily} / jour · Trajets interurbains`
-                  : 'Autorisé sans supplément'}
-              </Text>
-            </View>
-
-            <View style={styles.addonRightBox}>
-              <View style={[styles.priceBadgePill, isHorsDakarSelected && styles.priceBadgePillActive]}>
-                <Text style={styles.priceBadgeText}>
-                  {supplementHorsDakarParJour === 0 ? 'Inclus' : `+${formattedHorsDakarFee}`}
+              <View style={styles.addonTextGroup}>
+                <Text style={styles.addonTitle}>Voyage Hors Dakar</Text>
+                <Text style={styles.addonSubtitle}>
+                  {supplementHorsDakarParJour && supplementHorsDakarParJour > 0
+                    ? `${fmtCurrency(supplementHorsDakarParJour)} / jour · Trajets interurbains`
+                    : 'Autorisé sans supplément'}
                 </Text>
               </View>
-              <View style={[styles.checkboxIndicator, isHorsDakarSelected && styles.checkboxIndicatorActive]}>
-                {isHorsDakarSelected && <Check size={11} color="#FFFFFF" strokeWidth={3} />}
+
+              <View style={styles.addonRightBox}>
+                <View style={[styles.priceBadgePill, isHorsDakarSelected && styles.priceBadgePillActive]}>
+                  <Text style={styles.priceBadgeText}>
+                    {supplementHorsDakarParJour === 0 ? 'Inclus' : `+${fmtCurrency(totalHorsDakar)}`}
+                  </Text>
+                </View>
+                <View style={[styles.checkboxIndicator, isHorsDakarSelected && styles.checkboxIndicatorActive]}>
+                  {isHorsDakarSelected && <Check size={11} color="#FFFFFF" strokeWidth={3} />}
+                </View>
               </View>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
     </View>
@@ -183,8 +258,16 @@ const styles = StyleSheet.create({
   optionsList: {
     gap: 12,
   },
-  addonWrapper: {
+  deliverySection: {
     gap: 10,
+  },
+  subSectionTitle: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 12.5,
+    color: '#5F6B59',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
   },
   addonCard: {
     flexDirection: 'row',
@@ -217,7 +300,7 @@ const styles = StyleSheet.create({
   },
   addonTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 15,
+    fontSize: 14.5,
     color: '#041912',
     letterSpacing: -0.2,
   },
@@ -263,7 +346,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#059669',
     borderColor: '#059669',
   },
-  /* Saisie Adresse de Livraison */
   addressInputContainer: {
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
@@ -271,6 +353,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 12,
     gap: 8,
+    marginTop: 4,
   },
   addressHeaderRow: {
     flexDirection: 'row',
@@ -294,3 +377,4 @@ const styles = StyleSheet.create({
     color: '#041912',
   },
 });
+

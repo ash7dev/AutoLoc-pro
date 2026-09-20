@@ -135,7 +135,9 @@ export const OwnerBookingDetailScreen: React.FC<Props> = ({ reservationId, onBac
           marque={booking.vehicule?.marque}
           modele={booking.vehicule?.modele}
           immatriculation={booking.vehicule?.immatriculation}
+          typeLivraison={booking.typeLivraison}
           adresseLivraison={booking.adresseLivraison}
+          horsDakar={booking.horsDakar}
           ville={booking.vehicule?.ville}
         />
 

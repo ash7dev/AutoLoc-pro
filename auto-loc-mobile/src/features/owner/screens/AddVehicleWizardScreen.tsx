@@ -115,6 +115,10 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
     supplementHorsDakarParJour: 0,
     fraisLivraison: 0,
     proposeLivraison: false,
+    proposeLivraisonDakar: false,
+    fraisLivraisonDakar: 0,
+    proposeLivraisonAibd: false,
+    fraisLivraisonAibd: 0,
   });
 
   // État initial de l'Étape 4 (Conditions & Assurance)
@@ -170,7 +174,11 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
             autoriseHorsDakar: hasHorsDakar,
             supplementHorsDakarParJour: Number(v.supplementHorsDakarParJour || 5000),
             fraisLivraison: Number(v.fraisLivraison || 0),
-            proposeLivraison: Boolean(v.proposeLivraison ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
+            proposeLivraison: Boolean(v.proposeLivraison ?? v.proposeLivraisonDakar ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
+            proposeLivraisonDakar: Boolean(v.proposeLivraisonDakar ?? v.proposeLivraison ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
+            fraisLivraisonDakar: Number(v.fraisLivraisonDakar ?? v.fraisLivraison ?? 0),
+            proposeLivraisonAibd: Boolean(v.proposeLivraisonAibd),
+            fraisLivraisonAibd: Number(v.fraisLivraisonAibd || 0),
           });
 
           setStep4({
@@ -485,7 +493,11 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
         equipements: step2.equipements,
         ville: step3.ville,
         adresse: step3.adresse.trim(),
-        fraisLivraison: step3.proposeLivraison ? Number(step3.fraisLivraison || 0) : 0,
+        fraisLivraison: step3.proposeLivraisonDakar ? Number(step3.fraisLivraisonDakar || step3.fraisLivraison || 0) : 0,
+        proposeLivraisonDakar: Boolean(step3.proposeLivraisonDakar),
+        fraisLivraisonDakar: step3.proposeLivraisonDakar ? Number(step3.fraisLivraisonDakar || 0) : undefined,
+        proposeLivraisonAibd: Boolean(step3.proposeLivraisonAibd),
+        fraisLivraisonAibd: step3.proposeLivraisonAibd ? Number(step3.fraisLivraisonAibd || 0) : undefined,
         autoriseHorsDakar: step3.autoriseHorsDakar,
         supplementHorsDakarParJour: step3.autoriseHorsDakar
           ? Number(step3.supplementHorsDakarParJour || 0)

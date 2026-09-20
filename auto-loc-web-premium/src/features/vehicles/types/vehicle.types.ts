@@ -72,6 +72,10 @@ export interface Vehicle {
   carburantCondition?: string | null;
   reglesSpecifiques?: string | null;
   fraisLivraison?: number | null;
+  proposeLivraisonDakar?: boolean;
+  fraisLivraisonDakar?: number | null;
+  proposeLivraisonAibd?: boolean;
+  fraisLivraisonAibd?: number | null;
   autoriseHorsDakar?: boolean;
   supplementHorsDakarParJour?: number | null;
   isFeatured?: boolean;

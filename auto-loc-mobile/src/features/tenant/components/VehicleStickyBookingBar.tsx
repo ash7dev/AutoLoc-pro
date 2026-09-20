@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,7 +7,7 @@ import {
   Animated,
   Platform,
 } from 'react-native';
-import { ArrowRight } from 'lucide-react-native';
+import { ArrowRight, Zap } from 'lucide-react-native';
 import { CurrencyCode, formatDirectPrice } from '../../../core/utils/currency';
 import { theme } from '../../../core/theme';
 
@@ -23,7 +23,39 @@ export const VehicleStickyBookingBar: React.FC<VehicleStickyBookingBarProps> = (
   onBookPress,
 }) => {
   const formattedPrice = formatDirectPrice(tenantPricePerDay, selectedCurrency);
-  const scale = React.useRef(new Animated.Value(1)).current;
+  const scale = useRef(new Animated.Value(1)).current;
+  const bounceAnim = useRef(new Animated.Value(0)).current;
+
+  // Animation continuelle "bounce" sur le flash icon ⚡️
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(bounceAnim, {
+          toValue: -5,
+          duration: 320,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bounceAnim, {
+          toValue: 0,
+          duration: 320,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bounceAnim, {
+          toValue: -2.5,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bounceAnim, {
+          toValue: 0,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+        Animated.delay(1100),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [bounceAnim]);
 
   const animateTo = (value: number) => {
     Animated.spring(scale, {
@@ -66,6 +98,10 @@ export const VehicleStickyBookingBar: React.FC<VehicleStickyBookingBarProps> = (
       >
         <Animated.View style={{ transform: [{ scale }] }}>
           <View style={styles.bookButtonDark}>
+            {/* Flash Icon ⚡️ animé avec Bounce */}
+            <Animated.View style={{ transform: [{ translateY: bounceAnim }] }}>
+              <Zap size={15} color="#F5C451" fill="#F5C451" />
+            </Animated.View>
             <Text style={styles.bookButtonText}>Réserver</Text>
             <View style={styles.emeraldArrowCircle}>
               <ArrowRight size={13} color="#4ADE80" strokeWidth={2.5} />

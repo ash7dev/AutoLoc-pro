@@ -92,6 +92,10 @@ model Vehicule {
   carteGrisePublicId         String?
   carteGriseUrl              String?
   fraisLivraison             Decimal?                  @db.Decimal(10, 2)
+  proposeLivraisonDakar      Boolean                   @default(true)
+  fraisLivraisonDakar        Decimal?                  @db.Decimal(10, 2)
+  proposeLivraisonAibd       Boolean                   @default(false)
+  fraisLivraisonAibd         Decimal?                  @db.Decimal(10, 2)
   autoriseHorsDakar          Boolean                   @default(false)
   supplementHorsDakarParJour Decimal?                  @db.Decimal(10, 2)
   carburantCondition         String?
@@ -205,6 +209,7 @@ model Reservation {
   checkinLocataireLe     DateTime?
   checkinProprietaireLe  DateTime?
   adresseLivraison       String?
+  typeLivraison          String?                 @default("AUCUNE")
   fraisLivraison         Decimal?                @db.Decimal(10, 2)
   horsDakar              Boolean                 @default(false)
   supplementHorsDakar    Decimal?                @db.Decimal(10, 2)

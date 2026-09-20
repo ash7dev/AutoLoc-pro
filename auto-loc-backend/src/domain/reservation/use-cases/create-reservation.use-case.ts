@@ -1,5 +1,4 @@
 import {
-    BadRequestException,
     ForbiddenException,
     Injectable,
     Logger,
@@ -19,7 +18,8 @@ import {
     IdempotencyResult,
 } from '../reservation-idempotency.service';
 import { RevalidateService } from '../../../infrastructure/revalidate/revalidate.service';
-import { TelegramService } from '../../../infrastructure/telegram/telegram.service';
+
+type TypeLivraison = 'AUCUNE' | 'DAKAR' | 'AIBD';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -35,6 +35,7 @@ export interface CreateReservationInput {
     dateFin: string;
     fournisseur: FournisseurPaiement;
     idempotencyKey?: string;
+    typeLivraison?: TypeLivraison;
     adresseLivraison?: string;
     fraisLivraison?: number;
     modePaiement?: ModePaiementReservation;
@@ -117,9 +118,25 @@ export class CreateReservationUseCase {
         );
 
         // Frais de livraison : source de vérité = véhicule en DB, jamais frontend
-        const fraisLivraison = input.adresseLivraison && vehicule.fraisLivraison
-            ? Number(vehicule.fraisLivraison)
-            : 0;
+        let fraisLivraison = 0;
+        let typeLivraisonResolved: TypeLivraison = (input.typeLivraison as TypeLivraison) ?? 'AUCUNE';
+
+        if (input.typeLivraison === 'DAKAR' || (!input.typeLivraison && input.adresseLivraison)) {
+            typeLivraisonResolved = 'DAKAR';
+            if (vehicule.proposeLivraisonDakar && vehicule.fraisLivraisonDakar !== null) {
+                fraisLivraison = Number(vehicule.fraisLivraisonDakar);
+            } else if (vehicule.fraisLivraison !== null) {
+                fraisLivraison = Number(vehicule.fraisLivraison);
+            }
+        } else if (input.typeLivraison === 'AIBD') {
+            typeLivraisonResolved = 'AIBD';
+            if (vehicule.proposeLivraisonAibd && vehicule.fraisLivraisonAibd !== null) {
+                fraisLivraison = Number(vehicule.fraisLivraisonAibd);
+            } else if (vehicule.fraisLivraison !== null) {
+                fraisLivraison = Number(vehicule.fraisLivraison);
+            }
+        }
+
         const totalAvecLivraison = price.totalLocataire.add(new Prisma.Decimal(fraisLivraison));
         const modePaiement = input.modePaiement ?? ModePaiementReservation.TOTAL_EN_LIGNE;
         const paymentBreakdown = this.calculatePaymentBreakdown(
@@ -204,6 +221,7 @@ export class CreateReservationUseCase {
                             statut: StatutReservation.EN_ATTENTE_PAIEMENT,
                             paymentUrl,
                             delaiSignature,
+                            typeLivraison: typeLivraisonResolved,
                             adresseLivraison: input.adresseLivraison ?? null,
                             fraisLivraison: fraisLivraison > 0 ? fraisLivraison : null,
                             horsDakar: !!input.horsDakar && vehicule.autoriseHorsDakar,
@@ -407,6 +425,10 @@ export class CreateReservationUseCase {
                 marque: true,
                 modele: true,
                 fraisLivraison: true,
+                proposeLivraisonDakar: true,
+                fraisLivraisonDakar: true,
+                proposeLivraisonAibd: true,
+                fraisLivraisonAibd: true,
                 autoriseHorsDakar: true,
                 supplementHorsDakarParJour: true,
                 tarifsProgressifs: {

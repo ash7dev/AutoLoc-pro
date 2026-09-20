@@ -20,6 +20,10 @@ interface BookingCheckoutStep1Props {
     photoUrl?: string;
     tenantPricePerDay: number;
     joursMinimum?: number;
+    proposeLivraisonDakar?: boolean;
+    fraisLivraisonDakar?: number;
+    proposeLivraisonAibd?: boolean;
+    fraisLivraisonAibd?: number;
     hasDelivery?: boolean;
     fraisLivraison?: number;
     autoriseHorsDakar?: boolean;
@@ -35,8 +39,8 @@ interface BookingCheckoutStep1Props {
   isDatesBlocked?: boolean;
   onDatesChange: (start: string, end?: string) => void;
 
-  isDeliverySelected: boolean;
-  onToggleDelivery: (val: boolean) => void;
+  typeLivraison: 'AUCUNE' | 'DAKAR' | 'AIBD';
+  onSelectTypeLivraison: (type: 'AUCUNE' | 'DAKAR' | 'AIBD') => void;
   adresseLivraison?: string;
   onAdresseLivraisonChange?: (val: string) => void;
 
@@ -54,8 +58,8 @@ export const BookingCheckoutStep1: React.FC<BookingCheckoutStep1Props> = ({
   nbJours,
   isDatesBlocked = false,
   onDatesChange,
-  isDeliverySelected,
-  onToggleDelivery,
+  typeLivraison,
+  onSelectTypeLivraison,
   adresseLivraison,
   onAdresseLivraisonChange,
   isHorsDakarSelected,
@@ -104,12 +108,16 @@ export const BookingCheckoutStep1: React.FC<BookingCheckoutStep1Props> = ({
           </View>
         )}
 
-        {/* 3. Options & Services Additionnels (Livraison, Hors Dakar) */}
+        {/* 3. Options & Services Additionnels (Livraison Dakar/AIBD, Hors Dakar) */}
         <BookingAddonsSelector
+          proposeLivraisonDakar={vehicle.proposeLivraisonDakar}
+          fraisLivraisonDakar={vehicle.fraisLivraisonDakar}
+          proposeLivraisonAibd={vehicle.proposeLivraisonAibd}
+          fraisLivraisonAibd={vehicle.fraisLivraisonAibd}
           hasDelivery={vehicle.hasDelivery}
           fraisLivraison={vehicle.fraisLivraison}
-          isDeliverySelected={isDeliverySelected}
-          onToggleDelivery={onToggleDelivery}
+          typeLivraison={typeLivraison}
+          onSelectTypeLivraison={onSelectTypeLivraison}
           adresseLivraison={adresseLivraison}
           onAdresseLivraisonChange={onAdresseLivraisonChange}
           autoriseHorsDakar={vehicle.autoriseHorsDakar}
@@ -124,7 +132,9 @@ export const BookingCheckoutStep1: React.FC<BookingCheckoutStep1Props> = ({
         <BookingPriceBreakdownCard
           tenantPricePerDay={vehicle.tenantPricePerDay}
           nbJours={nbJours}
-          isDeliverySelected={isDeliverySelected}
+          typeLivraison={typeLivraison}
+          fraisLivraisonDakar={vehicle.fraisLivraisonDakar}
+          fraisLivraisonAibd={vehicle.fraisLivraisonAibd}
           fraisLivraison={vehicle.fraisLivraison}
           isHorsDakarSelected={isHorsDakarSelected}
           supplementHorsDakarParJour={vehicle.supplementHorsDakarParJour}

@@ -213,7 +213,7 @@ export const VehicleImageGallery: React.FC<VehicleImageGalleryProps> = ({
         onRequestClose={closeModal}
       >
         <SafeAreaView style={styles.modalRoot}>
-          <StatusBar barStyle="light-content" backgroundColor="#000000" />
+          <StatusBar barStyle="light-content" backgroundColor="#020F0B" />
 
           {/* Lightbox Header Bar */}
           <View style={styles.modalHeader}>
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   container: {
     width: SCREEN_WIDTH,
     height: CAROUSEL_HEIGHT,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#04150F',
     position: 'relative',
   },
   slideContainer: {
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    backgroundColor: 'rgba(4, 25, 18, 0.85)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   // Modal Fullscreen Lightbox Styles
   modalRoot: {
     flex: 1,
-    backgroundColor: '#050811',
+    backgroundColor: '#020F0B',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -397,9 +397,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 14,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#041912',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: 'rgba(74, 222, 128, 0.20)',
   },
   modalHeaderTitleBox: {
     flex: 1,
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   modalHeaderSub: {
-    color: '#94A3B8',
+    color: '#A8D5C1',
     fontSize: 12,
     marginTop: 2,
   },
@@ -440,9 +440,9 @@ const styles = StyleSheet.create({
   },
   thumbnailStripContainer: {
     height: 76,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#041912',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    borderTopColor: 'rgba(74, 222, 128, 0.20)',
     justifyContent: 'center',
   },
   thumbnailScrollContent: {
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   thumbnailItemSelected: {
-    borderColor: '#6366F1',
+    borderColor: '#4ADE80',
     opacity: 1,
     transform: [{ scale: 1.05 }],
   },

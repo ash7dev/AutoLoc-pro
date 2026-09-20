@@ -53,6 +53,10 @@ export interface OwnerVehicle {
   supplementHorsDakarParJour?: number;
   fraisLivraison?: number;
   proposeLivraison?: boolean;
+  proposeLivraisonDakar?: boolean;
+  fraisLivraisonDakar?: number;
+  proposeLivraisonAibd?: boolean;
+  fraisLivraisonAibd?: number;
   tiers?: Array<{ joursMin: number; joursMax?: number; prix: number }>;
   photos?: Array<{ id?: string; url: string; publicId?: string; estPrincipale?: boolean }>;
   assurance?: string;
@@ -92,6 +96,10 @@ export interface OwnerBooking {
   montantNetProprietaire: number;
   statut: 'PENDING_APPROVAL' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED' | 'CANCELLED';
   dateDemande: string;
+  typeLivraison?: 'AUCUNE' | 'DAKAR' | 'AIBD';
+  adresseLivraison?: string;
+  fraisLivraison?: number;
+  horsDakar?: boolean;
 }
 
 export interface OwnerWalletBalance {
@@ -181,6 +189,10 @@ export interface CreateOwnerVehicleInput {
   reglesSpecifiques?: string;
   equipements?: string[];
   fraisLivraison?: number;
+  proposeLivraisonDakar?: boolean;
+  fraisLivraisonDakar?: number;
+  proposeLivraisonAibd?: boolean;
+  fraisLivraisonAibd?: number;
   autoriseHorsDakar?: boolean;
   supplementHorsDakarParJour?: number;
   tiers?: Array<{ joursMin: number; joursMax?: number; prix: number }>;
@@ -377,6 +389,10 @@ export const ownerApi = {
           supplementHorsDakarParJour: Number(v.supplementHorsDakarParJour || 0),
           fraisLivraison: Number(v.fraisLivraison || 0),
           proposeLivraison: Boolean(v.proposeLivraison ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
+          proposeLivraisonDakar: Boolean(v.proposeLivraisonDakar ?? v.proposeLivraison ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
+          fraisLivraisonDakar: Number(v.fraisLivraisonDakar ?? v.fraisLivraison ?? 0),
+          proposeLivraisonAibd: Boolean(v.proposeLivraisonAibd),
+          fraisLivraisonAibd: Number(v.fraisLivraisonAibd || 0),
           tiers: Array.isArray(v.tarifsProgressifs)
             ? v.tarifsProgressifs.map((t: any) => ({
                 joursMin: Number(t.joursMin),
@@ -474,6 +490,10 @@ export const ownerApi = {
             supplementHorsDakarParJour: Number(v.supplementHorsDakarParJour || 0),
             fraisLivraison: Number(v.fraisLivraison || 0),
             proposeLivraison: Boolean(v.proposeLivraison ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
+            proposeLivraisonDakar: Boolean(v.proposeLivraisonDakar ?? v.proposeLivraison ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
+            fraisLivraisonDakar: Number(v.fraisLivraisonDakar ?? v.fraisLivraison ?? 0),
+            proposeLivraisonAibd: Boolean(v.proposeLivraisonAibd),
+            fraisLivraisonAibd: Number(v.fraisLivraisonAibd || 0),
             tiers: Array.isArray(v.tarifsProgressifs)
               ? v.tarifsProgressifs.map((t: any) => ({
                   joursMin: Number(t.joursMin),
@@ -539,6 +559,10 @@ export const ownerApi = {
             montantNetProprietaire: Number(r.netProprietaire || r.montantNetProprietaire || 0),
             statut: mappedStatus,
             dateDemande: r.creeLe ? new Date(r.creeLe).toLocaleDateString('fr-FR') : 'Récemment',
+            typeLivraison: r.typeLivraison || (r.adresseLivraison ? 'DAKAR' : 'AUCUNE'),
+            adresseLivraison: r.adresseLivraison,
+            fraisLivraison: r.fraisLivraison ? Number(r.fraisLivraison) : undefined,
+            horsDakar: Boolean(r.horsDakar),
           };
         });
       }

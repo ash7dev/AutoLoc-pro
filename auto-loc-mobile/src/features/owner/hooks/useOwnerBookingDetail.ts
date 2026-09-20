@@ -40,8 +40,10 @@ export interface OwnerBookingDetailData {
   annuleeLe?: string;
   raisonAnnulation?: string;
   contratUrl?: string;
+  typeLivraison?: string | null;
   adresseLivraison?: string | null;
   fraisLivraison?: string | number | null;
+  horsDakar?: boolean | null;
   absenceSignalee?: boolean;
   occupantsSignales?: boolean;
   vehicule?: {

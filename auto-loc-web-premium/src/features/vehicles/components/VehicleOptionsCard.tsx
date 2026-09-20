@@ -8,6 +8,10 @@ import { formatCurrency } from '@/lib/utils';
 interface VehicleOptionsCardProps {
   autoriseHorsDakar?: boolean;
   supplementHorsDakarParJour?: number | null;
+  proposeLivraisonDakar?: boolean | null;
+  fraisLivraisonDakar?: number | null;
+  proposeLivraisonAibd?: boolean | null;
+  fraisLivraisonAibd?: number | null;
   fraisLivraison?: number | null;
 }
 
@@ -80,21 +84,33 @@ function OptionCell({
 export function VehicleOptionsCard({
   autoriseHorsDakar = false,
   supplementHorsDakarParJour,
+  proposeLivraisonDakar,
+  fraisLivraisonDakar,
+  proposeLivraisonAibd,
+  fraisLivraisonAibd,
   fraisLivraison,
 }: VehicleOptionsCardProps) {
-  const livraisonDisponible = fraisLivraison !== null && fraisLivraison !== undefined;
+  const isDakarAvailable = proposeLivraisonDakar ?? (fraisLivraison !== null && fraisLivraison !== undefined);
+  const actualFraisDakar = fraisLivraisonDakar ?? fraisLivraison ?? 0;
+
+  const isAibdAvailable = Boolean(proposeLivraisonAibd);
+  const actualFraisAibd = fraisLivraisonAibd ?? 0;
 
   const supplementValue =
     supplementHorsDakarParJour && supplementHorsDakarParJour > 0
       ? `+${formatCurrency(supplementHorsDakarParJour)} FCFA`
       : 'Inclus';
 
-  const livraisonValue =
-    fraisLivraison && fraisLivraison > 0
-      ? `${formatCurrency(fraisLivraison)} FCFA`
-      : fraisLivraison === 0
-        ? 'Gratuite'
-        : 'Selon distance';
+  let livraisonLabel = 'Non disponible';
+  if (isDakarAvailable && isAibdAvailable) {
+    livraisonLabel = `Dakar (${actualFraisDakar === 0 ? 'Gratuit' : formatCurrency(actualFraisDakar) + ' F'}) | AIBD (${actualFraisAibd === 0 ? 'Gratuit' : formatCurrency(actualFraisAibd) + ' F'})`;
+  } else if (isDakarAvailable) {
+    livraisonLabel = `Dakar (${actualFraisDakar === 0 ? 'Gratuit' : formatCurrency(actualFraisDakar) + ' FCFA'})`;
+  } else if (isAibdAvailable) {
+    livraisonLabel = `AIBD (${actualFraisAibd === 0 ? 'Gratuit' : formatCurrency(actualFraisAibd) + ' FCFA'})`;
+  }
+
+  const livraisonDisponible = isDakarAvailable || isAibdAvailable;
 
   return (
     <section
@@ -125,14 +141,14 @@ export function VehicleOptionsCard({
         <OptionCell
           icon={Truck}
           title="Service de livraison"
-          description="À domicile ou à l'aéroport (AIBD)"
+          description="À domicile (Dakar) ou à l'aéroport (AIBD)"
           status={
             livraisonDisponible
               ? { label: 'Disponible', tone: 'positive' }
-              : { label: 'Sur demande', tone: 'neutral' }
+              : { label: 'Non disponible', tone: 'neutral' }
           }
-          value={livraisonValue}
-          valueLabel="Frais de livraison"
+          value={livraisonLabel}
+          valueLabel="Options de livraison configurées"
           muted={!livraisonDisponible}
         />
       </div>

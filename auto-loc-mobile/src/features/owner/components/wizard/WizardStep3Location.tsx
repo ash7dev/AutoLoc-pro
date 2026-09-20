@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Coins,
   Navigation,
+  Plane,
 } from 'lucide-react-native';
 import { theme } from '../../../../core/theme';
 import { SENEGAL_LOCATIONS } from '../vehicleCatalog';
@@ -32,6 +33,10 @@ export interface Step3Data {
   supplementHorsDakarParJour: number;
   fraisLivraison: number;
   proposeLivraison?: boolean;
+  proposeLivraisonDakar?: boolean;
+  fraisLivraisonDakar?: number;
+  proposeLivraisonAibd?: boolean;
+  fraisLivraisonAibd?: number;
 }
 
 interface WizardStep3LocationProps {
@@ -40,7 +45,8 @@ interface WizardStep3LocationProps {
 }
 
 const SUPPLEMENT_PRESETS = [3000, 5000, 10000, 15000];
-const LIVRAISON_PRESETS = [0, 5000, 10000, 15000];
+const LIVRAISON_DAKAR_PRESETS = [0, 5000, 10000, 15000];
+const LIVRAISON_AIBD_PRESETS = [15000, 20000, 25000, 30000];
 
 export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({
   data,
@@ -49,8 +55,11 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Proposer livraison actif si proposeLivraison === true
-  const proposeLivraison = Boolean(data.proposeLivraison);
+  // Options de livraison
+  const proposeLivraisonDakar = Boolean(
+    data.proposeLivraisonDakar ?? data.proposeLivraison ?? (data.fraisLivraison && data.fraisLivraison > 0)
+  );
+  const proposeLivraisonAibd = Boolean(data.proposeLivraisonAibd);
 
   // Filtrage des villes/quartiers pour la modal de sélection
   const filteredLocations = useMemo(() => {
@@ -83,10 +92,22 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({
     });
   };
 
-  const handleToggleLivraison = (val: boolean) => {
+  const handleToggleLivraisonDakar = (val: boolean) => {
+    const fee = val ? (data.fraisLivraisonDakar || data.fraisLivraison || 5000) : 0;
     onChange({
-      proposeLivraison: val,
-      fraisLivraison: val ? (data.fraisLivraison || 5000) : 0,
+      proposeLivraisonDakar: val,
+      fraisLivraisonDakar: fee,
+      proposeLivraison: val || proposeLivraisonAibd,
+      fraisLivraison: val ? fee : (proposeLivraisonAibd ? (data.fraisLivraisonAibd || 0) : 0),
+    });
+  };
+
+  const handleToggleLivraisonAibd = (val: boolean) => {
+    const fee = val ? (data.fraisLivraisonAibd || 20000) : 0;
+    onChange({
+      proposeLivraisonAibd: val,
+      fraisLivraisonAibd: fee,
+      proposeLivraison: proposeLivraisonDakar || val,
     });
   };
 
@@ -246,7 +267,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({
         )}
       </View>
 
-      {/* SECTION 4: SERVICE DE LIVRAISON */}
+      {/* SECTION 4A: LIVRAISON DAKAR */}
       <View style={styles.sectionCard}>
         <View style={styles.toggleHeaderRow}>
           <View style={styles.toggleHeaderLeft}>
@@ -254,29 +275,29 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({
               <Truck size={20} color="#7C3AED" />
             </View>
             <View style={styles.toggleTextCol}>
-              <Text style={styles.toggleTitle}>Service de Livraison</Text>
+              <Text style={styles.toggleTitle}>Livraison sur Dakar (Ville)</Text>
               <Text style={styles.toggleSub}>
-                Livrer le véhicule chez le locataire ou à l’aéroport AIBD.
+                Livrer le véhicule à l'adresse ou à l'hôtel du locataire dans Dakar.
               </Text>
             </View>
           </View>
           <Switch
-            value={proposeLivraison}
-            onValueChange={handleToggleLivraison}
+            value={proposeLivraisonDakar}
+            onValueChange={handleToggleLivraisonDakar}
             trackColor={{ false: '#E2E8F0', true: '#7C3AED' }}
             thumbColor="#FFFFFF"
           />
         </View>
 
-        {proposeLivraison && (
+        {proposeLivraisonDakar && (
           <View style={styles.expandableContent}>
             <View style={styles.divider} />
-            <Text style={styles.subFieldTitle}>Montant de la livraison (FCFA)</Text>
+            <Text style={styles.subFieldTitle}>Frais de livraison Dakar (FCFA)</Text>
 
             {/* Presets Chips */}
             <View style={styles.chipsRow}>
-              {LIVRAISON_PRESETS.map((preset) => {
-                const isSelected = data.fraisLivraison === preset;
+              {LIVRAISON_DAKAR_PRESETS.map((preset) => {
+                const isSelected = (data.fraisLivraisonDakar ?? data.fraisLivraison ?? 0) === preset;
                 return (
                   <TouchableOpacity
                     key={preset}
@@ -284,7 +305,12 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({
                       styles.presetChip,
                       isSelected && styles.presetChipPurpleActive,
                     ]}
-                    onPress={() => onChange({ fraisLivraison: preset })}
+                    onPress={() => {
+                      onChange({
+                        fraisLivraisonDakar: preset,
+                        fraisLivraison: preset,
+                      });
+                    }}
                   >
                     <Text
                       style={[
@@ -305,12 +331,89 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({
               <TextInput
                 style={styles.amountInput}
                 keyboardType="numeric"
-                value={data.fraisLivraison ? String(data.fraisLivraison) : '0'}
+                value={
+                  (data.fraisLivraisonDakar ?? data.fraisLivraison) !== undefined
+                    ? String(data.fraisLivraisonDakar ?? data.fraisLivraison)
+                    : '0'
+                }
                 onChangeText={(val) => {
                   const num = parseInt(val.replace(/[^0-9]/g, ''), 10) || 0;
-                  onChange({ fraisLivraison: num });
+                  onChange({ fraisLivraisonDakar: num, fraisLivraison: num });
                 }}
                 placeholder="0"
+                placeholderTextColor="#94A3B8"
+              />
+              <Text style={styles.currencyTag}>FCFA total</Text>
+            </View>
+          </View>
+        )}
+      </View>
+
+      {/* SECTION 4B: LIVRAISON AÉROPORT AIBD */}
+      <View style={styles.sectionCard}>
+        <View style={styles.toggleHeaderRow}>
+          <View style={styles.toggleHeaderLeft}>
+            <View style={styles.toggleIconBgAmber}>
+              <Plane size={20} color="#D97706" />
+            </View>
+            <View style={styles.toggleTextCol}>
+              <Text style={styles.toggleTitle}>Livraison Aéroport AIBD (Diass)</Text>
+              <Text style={styles.toggleSub}>
+                Remettre le véhicule directement au parking des arrivées AIBD.
+              </Text>
+            </View>
+          </View>
+          <Switch
+            value={proposeLivraisonAibd}
+            onValueChange={handleToggleLivraisonAibd}
+            trackColor={{ false: '#E2E8F0', true: '#D97706' }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+
+        {proposeLivraisonAibd && (
+          <View style={styles.expandableContent}>
+            <View style={styles.divider} />
+            <Text style={styles.subFieldTitle}>Frais de livraison AIBD (FCFA)</Text>
+
+            {/* Presets Chips */}
+            <View style={styles.chipsRow}>
+              {LIVRAISON_AIBD_PRESETS.map((preset) => {
+                const isSelected = (data.fraisLivraisonAibd ?? 0) === preset;
+                return (
+                  <TouchableOpacity
+                    key={preset}
+                    style={[
+                      styles.presetChip,
+                      isSelected && styles.presetChipAmberActive,
+                    ]}
+                    onPress={() => onChange({ fraisLivraisonAibd: preset })}
+                  >
+                    <Text
+                      style={[
+                        styles.presetChipText,
+                        isSelected && styles.presetChipTextAmberActive,
+                      ]}
+                    >
+                      {`${preset.toLocaleString('fr-FR')} F`}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Custom Input */}
+            <View style={styles.amountInputRow}>
+              <Plane size={18} color="#D97706" style={{ marginRight: 8 }} />
+              <TextInput
+                style={styles.amountInput}
+                keyboardType="numeric"
+                value={data.fraisLivraisonAibd ? String(data.fraisLivraisonAibd) : '0'}
+                onChangeText={(val) => {
+                  const num = parseInt(val.replace(/[^0-9]/g, ''), 10) || 0;
+                  onChange({ fraisLivraisonAibd: num });
+                }}
+                placeholder="20000"
                 placeholderTextColor="#94A3B8"
               />
               <Text style={styles.currencyTag}>FCFA total</Text>
@@ -642,6 +745,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  toggleIconBgAmber: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#FEF3C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   toggleTextCol: {
     flex: 1,
   },
@@ -697,6 +808,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#041912',
     borderColor: '#041912',
   },
+  presetChipAmberActive: {
+    backgroundColor: '#041912',
+    borderColor: '#041912',
+  },
   presetChipText: {
     fontSize: 12.5,
     fontFamily: theme.typography.fontFamily.medium,
@@ -708,6 +823,10 @@ const styles = StyleSheet.create({
   },
   presetChipTextPurpleActive: {
     color: '#4ADE80',
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+  },
+  presetChipTextAmberActive: {
+    color: '#F59E0B',
     fontFamily: theme.typography.fontFamily.displaySemiBold,
   },
 

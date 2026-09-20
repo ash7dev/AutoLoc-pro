@@ -246,6 +246,10 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
                 <VehicleOptionsCard
                   autoriseHorsDakar={vehicle.autoriseHorsDakar}
                   supplementHorsDakarParJour={vehicle.supplementHorsDakarParJour}
+                  proposeLivraisonDakar={vehicle.proposeLivraisonDakar}
+                  fraisLivraisonDakar={vehicle.fraisLivraisonDakar}
+                  proposeLivraisonAibd={vehicle.proposeLivraisonAibd}
+                  fraisLivraisonAibd={vehicle.fraisLivraisonAibd}
                   fraisLivraison={vehicle.fraisLivraison}
                 />
 

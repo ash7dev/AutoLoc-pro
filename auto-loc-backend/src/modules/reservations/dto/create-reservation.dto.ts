@@ -12,6 +12,12 @@ import {
 import { Type } from 'class-transformer';
 import { FournisseurPaiement } from '@prisma/client';
 
+export enum TypeLivraisonEnum {
+  AUCUNE = 'AUCUNE',
+  DAKAR = 'DAKAR',
+  AIBD = 'AIBD',
+}
+
 export enum ModePaiementReservationDto {
   TOTAL_EN_LIGNE = 'TOTAL_EN_LIGNE',
   ACOMPTE_SOLDE_CHECKIN = 'ACOMPTE_SOLDE_CHECKIN',
@@ -52,6 +58,10 @@ export class CreateReservationDto {
   payerPhone?: string;
 
   // ── Livraison (optionnel) ──────────────────────────────────────────────────
+
+  @IsOptional()
+  @IsEnum(TypeLivraisonEnum)
+  typeLivraison?: TypeLivraisonEnum;
 
   @IsOptional()
   @IsString()

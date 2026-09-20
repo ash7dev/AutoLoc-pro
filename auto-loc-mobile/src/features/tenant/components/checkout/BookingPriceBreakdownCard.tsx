@@ -4,10 +4,15 @@ import { Wallet, CreditCard, CheckCircle2 } from 'lucide-react-native';
 import { theme } from '../../../../core/theme';
 import { formatDirectPrice } from '../../../../core/utils/currency';
 
+export type TypeLivraison = 'AUCUNE' | 'DAKAR' | 'AIBD';
+
 interface BookingPriceBreakdownCardProps {
   tenantPricePerDay: number;
   nbJours: number;
 
+  typeLivraison?: TypeLivraison;
+  fraisLivraisonDakar?: number;
+  fraisLivraisonAibd?: number;
   isDeliverySelected?: boolean;
   fraisLivraison?: number;
 
@@ -20,6 +25,9 @@ interface BookingPriceBreakdownCardProps {
 export const BookingPriceBreakdownCard: React.FC<BookingPriceBreakdownCardProps> = ({
   tenantPricePerDay,
   nbJours,
+  typeLivraison,
+  fraisLivraisonDakar = 0,
+  fraisLivraisonAibd = 0,
   isDeliverySelected = false,
   fraisLivraison = 0,
   isHorsDakarSelected = false,
@@ -27,11 +35,25 @@ export const BookingPriceBreakdownCard: React.FC<BookingPriceBreakdownCardProps>
   selectedCurrency = 'XOF',
 }) => {
   const numTenantPrice = Number(tenantPricePerDay) || 0;
-  const numFraisLivraison = Number(fraisLivraison) || 0;
   const numSupplementHorsDakar = Number(supplementHorsDakarParJour) || 0;
 
+  // Calcul du tarif de livraison selon le type de livraison
+  let deliveryFee = 0;
+  let deliveryLabel = '';
+
+  if (typeLivraison === 'DAKAR') {
+    deliveryFee = Number(fraisLivraisonDakar || fraisLivraison || 0);
+    deliveryLabel = 'Livraison Dakar (Ville)';
+  } else if (typeLivraison === 'AIBD') {
+    deliveryFee = Number(fraisLivraisonAibd || 0);
+    deliveryLabel = 'Livraison Aéroport AIBD';
+  } else if (isDeliverySelected) { // Legacy fallback
+    deliveryFee = Number(fraisLivraison || 0);
+    deliveryLabel = 'Livraison & Restitution à domicile';
+  }
+
   const rentalBaseTotal = numTenantPrice * nbJours;
-  const deliveryTotal = isDeliverySelected ? numFraisLivraison : 0;
+  const deliveryTotal = deliveryFee;
   const horsDakarTotal = isHorsDakarSelected ? numSupplementHorsDakar * nbJours : 0;
 
   const grandTotal = rentalBaseTotal + deliveryTotal + horsDakarTotal;
@@ -65,14 +87,14 @@ export const BookingPriceBreakdownCard: React.FC<BookingPriceBreakdownCardProps>
           <Text style={styles.feeValue}>{fmtCurrency(rentalBaseTotal)}</Text>
         </View>
 
-        {/* Ligne 2 : Livraison à domicile (si cochée) */}
-        {isDeliverySelected && (
+        {/* Ligne 2 : Livraison (si sélectionnée) */}
+        {deliveryLabel !== '' && (
           <View style={styles.feeRow}>
             <Text style={styles.feeLabel} numberOfLines={1}>
-              Livraison & Restitution à domicile
+              {deliveryLabel}
             </Text>
             <Text style={styles.feeValue}>
-              {numFraisLivraison === 0 ? 'Gratuit' : fmtCurrency(deliveryTotal)}
+              {deliveryTotal === 0 ? 'Gratuit' : fmtCurrency(deliveryTotal)}
             </Text>
           </View>
         )}

@@ -3,19 +3,13 @@ import {
   StyleSheet,
   View,
   Text,
-  ScrollView,
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Star,
   MapPin,
-  Users,
-  Gauge,
-  Fuel,
-  Calendar,
   Navigation,
-  Sparkles,
 } from 'lucide-react-native';
 
 interface VehicleMainInfoCardProps {
@@ -59,21 +53,10 @@ export const VehicleMainInfoCard: React.FC<VehicleMainInfoCardProps> = ({
   note = 5.0,
   totalAvis = 0,
   totalLocations = 0,
-  transmission,
-  carburant,
-  nombrePlaces,
-  joursMinimum = 1,
   autoriseHorsDakar = false,
 }) => {
   const fullTitle = `${marque} ${modele}`.trim();
   const formattedCity = ville ? ville.replace(/-/g, ' ').toUpperCase() : 'DAKAR';
-
-  const quickSpecs = [
-    transmission ? { icon: Gauge, label: transmission } : null,
-    carburant ? { icon: Fuel, label: carburant } : null,
-    nombrePlaces ? { icon: Users, label: `${nombrePlaces} Places` } : null,
-    joursMinimum ? { icon: Calendar, label: `${joursMinimum}j min` } : null,
-  ].filter(Boolean) as { icon: typeof Gauge; label: string }[];
 
   return (
     <View style={styles.sheetContainer}>
@@ -135,29 +118,6 @@ export const VehicleMainInfoCard: React.FC<VehicleMainInfoCardProps> = ({
           </View>
         ) : null}
       </View>
-
-      <View style={styles.divider} />
-
-      {/* Micro-pills de caractéristiques rapides sur UNE SEULE LIGNE */}
-      {quickSpecs.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.quickSpecsRow}
-        >
-          {quickSpecs.map((spec, idx) => {
-            const Icon = spec.icon;
-            return (
-              <View key={idx} style={styles.specPill}>
-                <View style={styles.specIconBox}>
-                  <Icon size={12} color="#4ADE80" strokeWidth={2.25} />
-                </View>
-                <Text style={styles.specPillText}>{spec.label}</Text>
-              </View>
-            );
-          })}
-        </ScrollView>
-      )}
     </View>
   );
 };

@@ -218,11 +218,24 @@ export const WizardStep7Review: React.FC<WizardStep7ReviewProps> = ({
           </View>
 
           <View style={styles.recapItem}>
-            <Text style={styles.recapLabel}>Frais de Livraison</Text>
+            <Text style={styles.recapLabel}>Livraison sur Dakar</Text>
             <Text style={styles.recapValue}>
-              {step3.fraisLivraison && step3.fraisLivraison > 0
-                ? `${step3.fraisLivraison.toLocaleString('fr-FR')} FCFA`
-                : 'Sur place (Gratuit)'}
+              {step3.proposeLivraisonDakar
+                ? (step3.fraisLivraisonDakar ?? step3.fraisLivraison ?? 0) > 0
+                  ? `${(step3.fraisLivraisonDakar ?? step3.fraisLivraison ?? 0).toLocaleString('fr-FR')} FCFA`
+                  : 'Gratuit'
+                : 'Non proposée'}
+            </Text>
+          </View>
+
+          <View style={styles.recapItem}>
+            <Text style={styles.recapLabel}>Livraison Aéroport AIBD</Text>
+            <Text style={styles.recapValue}>
+              {step3.proposeLivraisonAibd
+                ? (step3.fraisLivraisonAibd ?? 0) > 0
+                  ? `${(step3.fraisLivraisonAibd ?? 0).toLocaleString('fr-FR')} FCFA`
+                  : 'Gratuit'
+                : 'Non proposée'}
             </Text>
           </View>
         </View>

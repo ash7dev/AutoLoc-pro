@@ -174,6 +174,26 @@ export class CreateVehicleDto {
   @Type(() => Number)
   fraisLivraison?: number;
 
+  @IsOptional()
+  @IsBoolean()
+  proposeLivraisonDakar?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  fraisLivraisonDakar?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  proposeLivraisonAibd?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  fraisLivraisonAibd?: number;
+
   // ── Documents (uploadés directement) ───────────────────────────
 
   @IsOptional()

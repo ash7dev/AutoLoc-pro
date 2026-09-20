@@ -148,6 +148,26 @@ export class UpdateVehicleDto {
   @Type(() => Number)
   fraisLivraison?: number;
 
+  @IsOptional()
+  @IsBoolean()
+  proposeLivraisonDakar?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  fraisLivraisonDakar?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  proposeLivraisonAibd?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  fraisLivraisonAibd?: number;
+
   // ── Photos & Documents (niveaux de mise à jour) ───────────────────────────
 
   @IsOptional()
