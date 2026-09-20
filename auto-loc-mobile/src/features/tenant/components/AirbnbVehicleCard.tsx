@@ -84,17 +84,12 @@ export const AirbnbVehicleCard: React.FC<AirbnbVehicleCardProps> = ({
       list = [vehicle.photoUrl];
     }
 
-    if (list.length === 0) return DEMO_EXTRA_CAR_PHOTOS;
-
-    if (list.length === 1) {
-      const charCode = vehicle.id ? vehicle.id.charCodeAt(0) : 0;
-      const extra1 = DEMO_EXTRA_CAR_PHOTOS[charCode % DEMO_EXTRA_CAR_PHOTOS.length];
-      const extra2 = DEMO_EXTRA_CAR_PHOTOS[(charCode + 1) % DEMO_EXTRA_CAR_PHOTOS.length];
-      return [list[0], extra1, extra2];
+    if (list.length === 0) {
+      return ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80'];
     }
 
     return list;
-  }, [vehicle.photos, vehicle.photoUrl, vehicle.id]);
+  }, [vehicle.photos, vehicle.photoUrl]);
 
   const handleLayout = (event: LayoutChangeEvent) => {
     const { width } = event.nativeEvent.layout;

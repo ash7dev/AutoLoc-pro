@@ -31,6 +31,7 @@ import { theme } from '../../../core/theme';
 
 interface VehicleFeedCardProps {
   vehicle: VehicleFeedItem & {
+    photos?: Array<{ url: string }> | string[];
     allowsOutsideDakar?: boolean;
     horsDakar?: boolean;
     isSuperhost?: boolean;
@@ -108,20 +109,20 @@ export const VehicleFeedCard: React.FC<VehicleFeedCardProps> = ({
 
   const photosList: string[] = React.useMemo(() => {
     let list: string[] = [];
-    if (vehicle.photoUrl) {
+    if (vehicle.photos && Array.isArray(vehicle.photos) && vehicle.photos.length > 0) {
+      list = vehicle.photos
+        .map((p: any) => (typeof p === 'string' ? p : p?.url))
+        .filter(Boolean) as string[];
+    } else if (vehicle.photoUrl) {
       list = [vehicle.photoUrl];
     }
+
     if (list.length === 0) {
-      return EXTRA_CAR_PHOTOS;
+      return ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80'];
     }
-    if (list.length === 1) {
-      const charCode = vehicle.id ? vehicle.id.charCodeAt(0) : 0;
-      const extra1 = EXTRA_CAR_PHOTOS[charCode % EXTRA_CAR_PHOTOS.length];
-      const extra2 = EXTRA_CAR_PHOTOS[(charCode + 1) % EXTRA_CAR_PHOTOS.length];
-      return [list[0], extra1, extra2];
-    }
+
     return list;
-  }, [vehicle.photoUrl, vehicle.id]);
+  }, [vehicle.photos, vehicle.photoUrl]);
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {

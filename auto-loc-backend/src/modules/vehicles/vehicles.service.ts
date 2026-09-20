@@ -46,6 +46,7 @@ interface VehicleSearchRow {
   note: unknown;
   totalLocations: number;
   photoUrl: string | null;
+  photos?: any;
   carburant: string | null;
   transmission: string | null;
   nombrePlaces: number | null;
@@ -91,7 +92,12 @@ export class VehiclesService {
       FROM "PhotoVehicule" p
       WHERE p."vehiculeId" = v.id AND p."estPrincipale" = true
       LIMIT 1
-    ) AS "photoUrl"
+    ) AS "photoUrl",
+    (
+      SELECT COALESCE(json_agg(p.url ORDER BY p."estPrincipale" DESC, p.position ASC), '[]'::json)
+      FROM "PhotoVehicule" p
+      WHERE p."vehiculeId" = v.id
+    ) AS "photos"
   `;
 
 
@@ -1065,6 +1071,20 @@ export class VehiclesService {
 
   /** Convertit une ligne SQL brute + ses tarifs en objet exposé côté API (réutilisé par search() et getHomeFeed()). */
   private mapSearchRow(r: VehicleSearchRow, tiersByVehicle: Map<string, TarifTierRow[]>) {
+    let photosList: string[] = [];
+    if (r.photos && Array.isArray(r.photos)) {
+      photosList = r.photos.filter(Boolean);
+    } else if (typeof r.photos === 'string') {
+      try {
+        photosList = JSON.parse(r.photos);
+      } catch {
+        photosList = [];
+      }
+    }
+    if (photosList.length === 0 && r.photoUrl) {
+      photosList = [r.photoUrl];
+    }
+
     return {
       id: r.id,
       marque: r.marque,
@@ -1083,6 +1103,7 @@ export class VehiclesService {
       isFeatured: Boolean(r.isFeatured),
       scoreGlobal: Number((r as any).scoreGlobal ?? 0), // Score ML-like
       photoUrl: r.photoUrl,
+      photos: photosList,
       tarifsProgressifs: (tiersByVehicle.get(r.id) ?? []).map((t) => ({
         id: t.id,
         joursMin: t.joursMin,
