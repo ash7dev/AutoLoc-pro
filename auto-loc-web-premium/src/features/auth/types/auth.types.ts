@@ -20,13 +20,15 @@ export interface ProfileResponse {
   prenom: string;
   nom: string;
   email: string;
-  telephone: string;
-  phoneVerified: boolean;
+  phone?: string | null;
+  telephone?: string | null;
+  phoneVerified?: boolean;
   dateNaissance?: string;
   avatarUrl?: string;
   permisUrl?: string | null;
   role: UserRole;
-  statutKyc: KycStatus;
+  statutKyc?: KycStatus;
+  kycStatus?: KycStatus;
   kycRejectionReason?: string | null;
   createdAt?: string;
 }

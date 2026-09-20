@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { UserProfile, UserCapabilities, PendingIntent } from '../../types/user';
 import { computeUserCapabilities } from '../auth/capabilities';
 import { broadcastAuthEvent } from '../auth/crossTabSync';
+import { AuthService } from '../../features/auth/services/authService';
 
 interface UserState {
   // État d'initialisation et session
@@ -53,11 +54,19 @@ export const useUserStore = create<UserState>((set, get) => ({
 
   setUser: (userProfile) => {
     set({
+      isInitialized: true,
       isAuthenticated: Boolean(userProfile),
       isGuestMode: !userProfile,
       user: userProfile,
       capabilities: computeUserCapabilities(userProfile),
     });
+    if (typeof window !== 'undefined') {
+      if (userProfile) {
+        localStorage.setItem('autoloc_user', JSON.stringify(userProfile));
+      } else {
+        localStorage.removeItem('autoloc_user');
+      }
+    }
     if (userProfile) {
       broadcastAuthEvent({
         type: 'USER_UPDATED',
@@ -76,6 +85,9 @@ export const useUserStore = create<UserState>((set, get) => ({
       user: updated,
       capabilities: computeUserCapabilities(updated),
     });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('autoloc_user', JSON.stringify(updated));
+    }
     broadcastAuthEvent({
       type: 'USER_UPDATED',
       payload: updated,
@@ -106,61 +118,54 @@ export const useUserStore = create<UserState>((set, get) => ({
   },
 
   refreshProfileSilently: async () => {
-    if (!get().isAuthenticated) return null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('autoloc_token') : null;
+    if (!token && !get().isAuthenticated) {
+      set({ isInitialized: true, isAuthenticated: false, isGuestMode: true, user: null, capabilities: computeUserCapabilities(null) });
+      return null;
+    }
+
     try {
-      const res = await fetch('/api/auth/me', {
-        headers: { 'Cache-Control': 'no-cache' },
-      });
-      if (!res.ok) {
-        if (res.status === 401) {
-          get().logout();
-        }
-        return null;
-      }
-      const rawUser = await res.json();
-      const updatedUser: UserProfile = {
-        id: rawUser.id || rawUser.userId,
-        prenom: rawUser.prenom || '',
-        nom: rawUser.nom || '',
-        email: rawUser.email || '',
-        telephone: rawUser.telephone || rawUser.phone,
-        phoneVerified: rawUser.phoneVerified ?? false,
-        dateNaissance: rawUser.dateNaissance,
-        avatarUrl: rawUser.avatarUrl || rawUser.photoUrl,
-        permisUrl: rawUser.permisUrl,
-        role: rawUser.role || 'LOCATAIRE',
-        statutKyc: rawUser.statutKyc || rawUser.kycStatus || 'NON_VERIFIE',
-        kycRejectionReason: rawUser.kycRejectionReason,
-        createdAt: rawUser.createdAt,
-      };
+      const profile = await AuthService.getMe();
+      const updatedUser = AuthService.mapProfileResponseToUserProfile(profile);
 
       set({
+        isInitialized: true,
+        isAuthenticated: true,
+        isGuestMode: false,
         user: updatedUser,
         capabilities: computeUserCapabilities(updatedUser),
       });
 
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('autoloc_user', JSON.stringify(updatedUser));
+      }
+
       return updatedUser;
-    } catch (error) {
+    } catch (error: any) {
       console.warn('[useUserStore] Silent revalidation failed:', error);
+      if (error?.status === 401 || error?.statusCode === 401 || error?.message?.includes('401')) {
+        get().logout();
+      } else {
+        set({ isInitialized: true });
+      }
       return null;
     }
   },
 
   logout: async () => {
-    try {
-      await fetch('/api/auth/signout', { method: 'POST' });
-    } catch {
-      // Ignorer erreur si hors ligne
-    } finally {
-      set({
-        isAuthenticated: false,
-        isGuestMode: true,
-        user: null,
-        capabilities: computeUserCapabilities(null),
-        pendingIntent: null,
-        guestAuthModalVisible: false,
-      });
-      broadcastAuthEvent({ type: 'LOGOUT' });
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('autoloc_token');
+      localStorage.removeItem('autoloc_user');
     }
+    set({
+      isInitialized: true,
+      isAuthenticated: false,
+      isGuestMode: true,
+      user: null,
+      capabilities: computeUserCapabilities(null),
+      pendingIntent: null,
+      guestAuthModalVisible: false,
+    });
+    broadcastAuthEvent({ type: 'LOGOUT' });
   },
 }));

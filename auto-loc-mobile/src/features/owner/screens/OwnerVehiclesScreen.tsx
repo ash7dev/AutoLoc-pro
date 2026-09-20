@@ -3,6 +3,7 @@ import {
   StyleSheet,
   Text,
   View,
+  FlatList,
   ScrollView,
   TouchableOpacity,
   TextInput,
@@ -10,6 +11,7 @@ import {
   Alert,
   StatusBar,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import {
   Search,
@@ -51,8 +53,18 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
   const setAuth = useAppStore((state) => state.setAuth);
   const triggerGuestAuthGuard = useAppStore((state) => state.triggerGuestAuthGuard);
 
-  // TanStack Query integration with shared memory cache ['owner', 'vehicles']
-  const { vehicles, loading, refreshing, refetch } = useOwnerVehicles();
+  // TanStack Query integration avec pagination infinie (Instagram Smart Scroll)
+  const {
+    vehicles,
+    total,
+    loading,
+    refreshing,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useOwnerVehicles(10);
+
   const {
     updateVehicleStatusMutation,
     archiveVehicleMutation,
@@ -219,7 +231,6 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
     return v.statut === activeFilter;
   });
 
-  // Rendu contextualisé premium des états vides
   const renderEmptyState = () => {
     if (searchQuery.trim().length > 0) {
       return (
@@ -348,13 +359,8 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
     );
   };
 
-  if (loading) {
-    return <OwnerVehicleSkeleton />;
-  }
-
-  return (
-    <View style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#041912" />
+  const renderListHeader = () => (
+    <View>
       {/* Full-bleed Dark Obsidian Glass Hero Header */}
       <OwnerVehiclesGlassHeroHeader
         user={user}
@@ -363,11 +369,120 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
         onSwitchToTenant={onSwitchToTenant}
         onAddVehiclePress={handleAddVehiclePress}
       />
+      <View style={styles.container}>
+        {/* Section Recherche & Filtres Ultra-Pro */}
+        <View style={styles.searchFilterSection}>
+          {/* Barre de Recherche Dynamique */}
+          <View style={[styles.searchBox, isSearchFocused && styles.searchBoxFocused]}>
+            <Search size={18} color={isSearchFocused ? '#059669' : '#94A3B8'} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Rechercher par immatriculation, marque ou modèle..."
+              placeholderTextColor="#94A3B8"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearSearchBtn}
+                onPress={() => setSearchQuery('')}
+                hitSlop={10}
+              >
+                <X size={13} color="#64748B" />
+              </TouchableOpacity>
+            )}
+          </View>
 
-      <ScrollView
-        style={styles.scrollContainer}
-        contentContainerStyle={styles.scrollList}
+          {/* Barre de Filtres Horizontale avec Badges de Compteur */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScrollRow}
+          >
+            {filterTabs.map((f) => {
+              const isActive = activeFilter === f.id;
+              const count = statusCounts[f.id] || 0;
+              return (
+                <TouchableOpacity
+                  key={f.id}
+                  style={[styles.filterPill, isActive && styles.filterPillActive]}
+                  onPress={() => setActiveFilter(f.id as any)}
+                  activeOpacity={0.75}
+                >
+                  <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
+                    {f.label}
+                  </Text>
+                  <View style={[styles.badgeCount, isActive && styles.badgeCountActive]}>
+                    <Text style={[styles.badgeCountText, isActive && styles.badgeCountTextActive]}>
+                      {count}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderVehicleItem = ({ item }: { item: OwnerVehicle }) => (
+    <View style={styles.cardWrapper}>
+      <OwnerVehicleCard
+        vehicle={item}
+        onToggleStatus={handleToggleStatus}
+        onQuickActionPress={(v) => setQuickActionVehicle(v)}
+        onEditPress={(v) => handleEditVehicle(v)}
+      />
+    </View>
+  );
+
+  const renderListFooter = () => {
+    if (isFetchingNextPage) {
+      return (
+        <View style={styles.loadingFooter}>
+          <ActivityIndicator size="small" color="#34D399" />
+          <Text style={styles.loadingFooterText}>Chargement des véhicules suivants...</Text>
+        </View>
+      );
+    }
+    if (!hasNextPage && filteredVehicles.length > 0) {
+      return (
+        <View style={styles.endFooter}>
+          <Text style={styles.endFooterText}>• Toute votre flotte est affichée ({total} véhicule{total > 1 ? 's' : ''}) •</Text>
+        </View>
+      );
+    }
+    return null;
+  };
+
+  const handleEndReached = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  if (loading) {
+    return <OwnerVehicleSkeleton />;
+  }
+
+  return (
+    <View style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#041912" />
+
+      <FlatList
+        data={filteredVehicles}
+        keyExtractor={(item) => item.id}
+        renderItem={renderVehicleItem}
+        ListHeaderComponent={renderListHeader}
+        ListFooterComponent={renderListFooter}
+        ListEmptyComponent={renderEmptyState}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.4}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollList}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -375,79 +490,7 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
             tintColor="#34D399"
           />
         }
-      >
-        <View style={styles.container}>
-          {/* Section Recherche & Filtres Ultra-Pro */}
-          <View style={styles.searchFilterSection}>
-            {/* Barre de Recherche Dynamique */}
-            <View style={[styles.searchBox, isSearchFocused && styles.searchBoxFocused]}>
-              <Search size={18} color={isSearchFocused ? '#059669' : '#94A3B8'} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Rechercher par immatriculation, marque ou modèle..."
-                placeholderTextColor="#94A3B8"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity
-                  style={styles.clearSearchBtn}
-                  onPress={() => setSearchQuery('')}
-                  hitSlop={10}
-                >
-                  <X size={13} color="#64748B" />
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {/* Barre de Filtres Horizontale avec Badges de Compteur */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filterScrollRow}
-            >
-              {filterTabs.map((f) => {
-                const isActive = activeFilter === f.id;
-                const count = statusCounts[f.id] || 0;
-                return (
-                  <TouchableOpacity
-                    key={f.id}
-                    style={[styles.filterPill, isActive && styles.filterPillActive]}
-                    onPress={() => setActiveFilter(f.id as any)}
-                    activeOpacity={0.75}
-                  >
-                    <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
-                      {f.label}
-                    </Text>
-                    <View style={[styles.badgeCount, isActive && styles.badgeCountActive]}>
-                      <Text style={[styles.badgeCountText, isActive && styles.badgeCountTextActive]}>
-                        {count}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          {/* Liste des véhicules de flotte */}
-          {filteredVehicles.length > 0 ? (
-            filteredVehicles.map((vehicle) => (
-              <OwnerVehicleCard
-                key={vehicle.id}
-                vehicle={vehicle}
-                onToggleStatus={handleToggleStatus}
-                onQuickActionPress={(v) => setQuickActionVehicle(v)}
-                onEditPress={(v) => handleEditVehicle(v)}
-              />
-            ))
-          ) : (
-            renderEmptyState()
-          )}
-        </View>
-      </ScrollView>
+      />
 
       {/* Modal Quick Actions */}
       <OwnerVehicleQuickActionModal
@@ -528,16 +571,39 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#041912',
   },
-  scrollContainer: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
   scrollList: {
     paddingBottom: 110,
+    backgroundColor: '#F8FAFC',
   },
   container: {
     paddingHorizontal: 16,
     paddingTop: 12,
+  },
+  cardWrapper: {
+    paddingHorizontal: 16,
+  },
+  loadingFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    gap: 10,
+  },
+  loadingFooterText: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12.5,
+    color: '#059669',
+  },
+  endFooter: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+  },
+  endFooterText: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12,
+    color: '#94A3B8',
+    letterSpacing: 0.2,
   },
   searchFilterSection: {
     marginBottom: 16,
@@ -644,6 +710,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
     marginTop: 8,
+    marginHorizontal: 16,
     gap: 12,
     ...Platform.select({
       ios: {
@@ -720,3 +787,4 @@ const styles = StyleSheet.create({
     color: '#475569',
   },
 });
+

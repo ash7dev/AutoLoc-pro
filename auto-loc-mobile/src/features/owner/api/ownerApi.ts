@@ -205,7 +205,67 @@ export interface CreateOwnerVehicleInput {
 
 export type UpdateOwnerVehicleInput = Partial<CreateOwnerVehicleInput>;
 
+export interface OwnerVehiclesPaginatedResponse {
+  data: OwnerVehicle[];
+  total: number;
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
 
+const mapRawVehicleToOwnerVehicle = (v: any): OwnerVehicle => {
+  let mappedStatus: OwnerVehicle['statut'] = (v.statut as OwnerVehicle['statut']) || 'DISPONIBLE';
+  if (v.statut === 'VERIFIE') mappedStatus = 'DISPONIBLE';
+
+  const primaryPhoto = v.photos?.find((p: any) => p.estPrincipale)?.url || v.photos?.[0]?.url;
+
+  return {
+    id: v.id,
+    marque: v.marque || 'Véhicule',
+    modele: v.modele || 'AutoLoc',
+    annee: v.annee || 2023,
+    immatriculation: v.immatriculation || 'DK-0000-XX',
+    prixParJour: Number(v.prixParJour || 30000),
+    caution: Number(v.caution || 200000),
+    statut: mappedStatus,
+    photoUrl: primaryPhoto || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
+    totalReservations: v._count?.reservations || v.totalReservations || 0,
+    noteMoyenne: Number(v.note || v.noteMoyenne || 0),
+    revenusCumules: Number(v.revenusCumules || 0),
+    ville: v.ville || 'Dakar',
+    carburant: v.carburant || 'Essence',
+    transmission: v.transmission || v.boiteVitesses || 'Automatique',
+    places: v.places || v.nombrePlaces || 5,
+    options: v.equipements?.map((e: any) => e.equipement?.nom || e.nom) || v.options || ['Climatisation', 'Bluetooth'],
+    type: v.type || 'SUV',
+    adresse: v.adresse || '',
+    autoriseHorsDakar: Boolean(v.autoriseHorsDakar),
+    supplementHorsDakarParJour: Number(v.supplementHorsDakarParJour || 0),
+    fraisLivraison: Number(v.fraisLivraison || 0),
+    proposeLivraison: Boolean(v.proposeLivraison ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
+    proposeLivraisonDakar: Boolean(v.proposeLivraisonDakar ?? v.proposeLivraison ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
+    fraisLivraisonDakar: Number(v.fraisLivraisonDakar ?? v.fraisLivraison ?? 0),
+    proposeLivraisonAibd: Boolean(v.proposeLivraisonAibd),
+    fraisLivraisonAibd: Number(v.fraisLivraisonAibd || 0),
+    tiers: Array.isArray(v.tarifsProgressifs)
+      ? v.tarifsProgressifs.map((t: any) => ({
+          joursMin: Number(t.joursMin),
+          joursMax: t.joursMax ? Number(t.joursMax) : undefined,
+          prix: Number(t.prix),
+        }))
+      : Array.isArray(v.tiers)
+      ? v.tiers
+      : [],
+    photos: Array.isArray(v.photos) ? v.photos : [],
+    assurance: v.assurance || 'Locataire responsable',
+    carburantCondition: v.carburantCondition || 'Plein à plein',
+    reglesSpecifiques: v.reglesSpecifiques || '',
+    ageMinimum: Number(v.ageMinimum || 21),
+    joursMinimum: Number(v.joursMinimum || 1),
+    carteGriseUrl: v.carteGriseUrl || v.carteGrise,
+    assuranceDocUrl: v.assuranceDocUrl || v.assuranceDoc,
+  };
+};
 
 export const DEFAULT_MOCK_OWNER_BOOKINGS: OwnerBooking[] = [
   {
@@ -454,71 +514,37 @@ export const ownerApi = {
     }
   },
 
-  // Flotte réelle du propriétaire depuis NestJS GET /vehicles/me
-  getOwnerVehicles: async (): Promise<OwnerVehicle[]> => {
+  // Flotte réelle du propriétaire avec pagination (Scroll intelligent Instagram)
+  getOwnerVehiclesPaginated: async (
+    limit = 10,
+    offset = 0
+  ): Promise<OwnerVehiclesPaginatedResponse> => {
     try {
-      const res = await apiClient.get('/vehicles/me');
-      const rawList = Array.isArray(res.data) ? res.data : res.data?.data;
+      const res = await apiClient.get('/vehicles/me', { params: { limit, offset } });
+      const rawList = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      const totalCount = typeof res.data?.total === 'number' ? res.data.total : rawList.length;
+
       if (Array.isArray(rawList)) {
-        return rawList.map((v: any) => {
-          let mappedStatus: OwnerVehicle['statut'] = (v.statut as OwnerVehicle['statut']) || 'DISPONIBLE';
-          if (v.statut === 'VERIFIE') mappedStatus = 'DISPONIBLE';
-
-          const primaryPhoto = v.photos?.find((p: any) => p.estPrincipale)?.url || v.photos?.[0]?.url;
-
-          return {
-            id: v.id,
-            marque: v.marque || 'Véhicule',
-            modele: v.modele || 'AutoLoc',
-            annee: v.annee || 2023,
-            immatriculation: v.immatriculation || 'DK-0000-XX',
-            prixParJour: Number(v.prixParJour || 30000),
-            caution: Number(v.caution || 200000),
-            statut: mappedStatus,
-            photoUrl: primaryPhoto || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
-            totalReservations: v._count?.reservations || v.totalReservations || 0,
-            noteMoyenne: Number(v.note || v.noteMoyenne || 0),
-            revenusCumules: Number(v.revenusCumules || 0),
-            ville: v.ville || 'Dakar',
-            carburant: v.carburant || 'Essence',
-            transmission: v.transmission || v.boiteVitesses || 'Automatique',
-            places: v.places || v.nombrePlaces || 5,
-            options: v.equipements?.map((e: any) => e.equipement?.nom || e.nom) || v.options || ['Climatisation', 'Bluetooth'],
-            type: v.type || 'SUV',
-            adresse: v.adresse || '',
-            autoriseHorsDakar: Boolean(v.autoriseHorsDakar),
-            supplementHorsDakarParJour: Number(v.supplementHorsDakarParJour || 0),
-            fraisLivraison: Number(v.fraisLivraison || 0),
-            proposeLivraison: Boolean(v.proposeLivraison ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
-            proposeLivraisonDakar: Boolean(v.proposeLivraisonDakar ?? v.proposeLivraison ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
-            fraisLivraisonDakar: Number(v.fraisLivraisonDakar ?? v.fraisLivraison ?? 0),
-            proposeLivraisonAibd: Boolean(v.proposeLivraisonAibd),
-            fraisLivraisonAibd: Number(v.fraisLivraisonAibd || 0),
-            tiers: Array.isArray(v.tarifsProgressifs)
-              ? v.tarifsProgressifs.map((t: any) => ({
-                  joursMin: Number(t.joursMin),
-                  joursMax: t.joursMax ? Number(t.joursMax) : undefined,
-                  prix: Number(t.prix),
-                }))
-              : Array.isArray(v.tiers)
-              ? v.tiers
-              : [],
-            photos: Array.isArray(v.photos) ? v.photos : [],
-            assurance: v.assurance || 'Locataire responsable',
-            carburantCondition: v.carburantCondition || 'Plein à plein',
-            reglesSpecifiques: v.reglesSpecifiques || '',
-            ageMinimum: Number(v.ageMinimum || 21),
-            joursMinimum: Number(v.joursMinimum || 1),
-            carteGriseUrl: v.carteGriseUrl || v.carteGrise,
-            assuranceDocUrl: v.assuranceDocUrl || v.assuranceDoc,
-          };
-        });
+        const vehicles = rawList.map(mapRawVehicleToOwnerVehicle);
+        return {
+          data: vehicles,
+          total: totalCount,
+          limit,
+          offset,
+          hasMore: offset + vehicles.length < totalCount,
+        };
       }
-      return [];
+      return { data: [], total: 0, limit, offset, hasMore: false };
     } catch (err) {
       console.warn('Backend /vehicles/me indisponible:', err);
-      return [];
+      return { data: [], total: 0, limit, offset, hasMore: false };
     }
+  },
+
+  // Récupérer la liste des véhicules (défaut limit=100 pour compatibilité globale)
+  getOwnerVehicles: async (limit = 100, offset = 0): Promise<OwnerVehicle[]> => {
+    const paginated = await ownerApi.getOwnerVehiclesPaginated(limit, offset);
+    return paginated.data;
   },
 
   // Réservations réelles de l'hôte depuis NestJS GET /reservations/owner

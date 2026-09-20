@@ -73,6 +73,13 @@ export class AuthService {
   }
 
   /**
+   * Récupère le profil complet de l'utilisateur connecté auprès du backend NestJS
+   */
+  public static async getMe(): Promise<ProfileResponse> {
+    return await fetchApi<ProfileResponse>('/auth/me');
+  }
+
+  /**
    * Mappe le ProfileResponse NestJS vers notre UserProfile standard
    */
   public static mapProfileResponseToUserProfile(profile: ProfileResponse): UserProfile {
@@ -81,13 +88,13 @@ export class AuthService {
       prenom: profile.prenom || '',
       nom: profile.nom || '',
       email: profile.email || '',
-      telephone: profile.telephone,
-      phoneVerified: profile.phoneVerified,
+      telephone: profile.telephone || profile.phone || undefined,
+      phoneVerified: Boolean(profile.phoneVerified),
       dateNaissance: profile.dateNaissance,
       avatarUrl: profile.avatarUrl,
       permisUrl: profile.permisUrl,
       role: profile.role || 'LOCATAIRE',
-      statutKyc: profile.statutKyc || 'NON_VERIFIE',
+      statutKyc: profile.statutKyc || profile.kycStatus || 'NON_VERIFIE',
       kycRejectionReason: profile.kycRejectionReason,
       createdAt: profile.createdAt,
     };

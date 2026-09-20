@@ -41,6 +41,8 @@ export interface ProfileResponse {
   // Flags de vérification — utilisés par le frontend pour les guards progressifs.
   phoneVerified?: boolean;
   kycStatus?: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
+  statutKyc?: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
+  telephone?: string | null;
   // Indique si l'utilisateur possède au moins un véhicule (quel que soit le statut).
   hasVehicles?: boolean;
   hasPermis?: boolean;

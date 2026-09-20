@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
 import { RedisService } from '../../infrastructure/redis/redis.service';
 import { Prisma } from '@prisma/client';
 
@@ -24,10 +23,8 @@ export class FeedOptimizerService {
 
   // Quotas de diversification
   private readonly MAX_VEHICLES_PER_CITY_RATIO = 0.4; // Max 40% d'une même ville
-  private readonly PREFERRED_CITY_DISTRIBUTION = 3; // Idéalement 3+ villes différentes
 
   constructor(
-    private readonly prisma: PrismaService,
     private readonly redis: RedisService,
   ) {}
 

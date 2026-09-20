@@ -1313,7 +1313,7 @@ export class ReservationsService {
 
   // ── SIGNALER NO-SHOW LOCATAIRE ─────────────────────────────────────────────
 
-  async signalTenantNoshow(user: RequestUser, reservationId: string, commentaire?: string) {
+  async signalTenantNoshow(user: RequestUser, reservationId: string, _commentaire?: string) {
     // 1. Vérifier propriétaire
     const utilisateur = await this.prisma.utilisateur.findUnique({
       where: { userId: user.sub },

@@ -1053,6 +1053,8 @@ export class AuthService {
       utilisateurId: flags.id,
       phoneVerified: flags.phoneVerified,
       kycStatus: flags.kycStatus,
+      statutKyc: flags.kycStatus,
+      telephone: p.phone,
       hasVehicles: flags.hasVehicles,
       hasPermis: flags.hasPermis,
       prenom: flags.prenom,
