@@ -13,6 +13,7 @@ import {
 import {
   AlertCircle,
   AlertTriangle,
+  ArrowRight,
   CheckCircle2,
   ChevronRight,
   Clock,
@@ -25,6 +26,7 @@ import {
 import { apiClient } from '../../../core/api/apiClient';
 import { theme } from '../../../core/theme';
 import { formatCurrency } from '../../../core/utils/currency';
+import { isMockBookingId, sanitizeErrorMessage } from '../../owner/hooks/useOwnerBookingDetail';
 
 interface CancellationQuote {
   canCancel: boolean;
@@ -68,13 +70,32 @@ export const BookingCancellationPreviewModal: React.FC<BookingCancellationPrevie
     setQuote(null);
     setError(null);
     setDone(false);
+
+    if (isMockBookingId(reservationId)) {
+      setQuote({
+        canCancel: true,
+        isOwner: true,
+        refundPercentage: 100,
+        refundAmount: '135000',
+        commissionRetained: '0',
+        ownerPenaltyAmount: '0',
+        ownerPenaltyPercentage: 0,
+        warnings: [
+          'Annulation simulée en mode démonstration.',
+          'Le locataire recevra un remboursement intégral de 100% sans pénalité.',
+        ],
+      });
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     apiClient
       .get<CancellationQuote>(`/reservations/${reservationId}/cancellation-quote`)
       .then((r) => setQuote(r.data))
       .catch((e) =>
-        setError(e?.response?.data?.message || 'Impossible de calculer la politique d’annulation.')
+        setError(sanitizeErrorMessage(e?.response?.data?.message))
       )
       .finally(() => setLoading(false));
   }, [reservationId, visible]);
@@ -91,7 +112,8 @@ export const BookingCancellationPreviewModal: React.FC<BookingCancellationPrevie
         onClose();
       }, 1800);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'L’annulation a échoué.');
+      const msg = err?.response?.data?.message || err?.message;
+      setError(sanitizeErrorMessage(msg));
     }
   };
 
@@ -116,6 +138,12 @@ export const BookingCancellationPreviewModal: React.FC<BookingCancellationPrevie
                 <XCircle size={22} color="#FFFFFF" />
               </View>
               <View style={{ flex: 1 }}>
+                <View style={[styles.badgeKycGlass, isOwner && ownerPenalty > 0 && styles.badgeRedGlass]}>
+                  <ShieldAlert size={11} color={isOwner && ownerPenalty > 0 ? '#DC2626' : '#D97706'} />
+                  <Text style={[styles.badgeKycText, isOwner && ownerPenalty > 0 && styles.badgeRedText]}>
+                    POLITIQUE D’ANNULATION
+                  </Text>
+                </View>
                 <Text style={styles.title}>Annuler la réservation</Text>
                 <Text style={styles.subtitle} numberOfLines={1}>
                   {vehicleName ? `Réf. ${reservationId.slice(0, 8).toUpperCase()} · ${vehicleName}` : `Réf. ${reservationId.slice(0, 8).toUpperCase()}`}
@@ -209,6 +237,27 @@ export const BookingCancellationPreviewModal: React.FC<BookingCancellationPrevie
                     <Text style={styles.requiredAsterisk}>*</Text>
                   </View>
 
+                  {/* Quick Preset Chips */}
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetChipsScroll}>
+                    {[
+                      'Changement de programme',
+                      'Imprévu personnel',
+                      'Erreur de dates',
+                      'Véhicule plus nécessaire',
+                    ].map((preset, idx) => (
+                      <TouchableOpacity
+                        key={idx}
+                        onPress={() => setReason(preset)}
+                        style={[styles.presetChip, reason === preset && styles.presetChipActive]}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={[styles.presetChipText, reason === preset && styles.presetChipTextActive]}>
+                          {preset}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+
                   <TextInput
                     value={reason}
                     onChangeText={setReason}
@@ -255,13 +304,17 @@ export const BookingCancellationPreviewModal: React.FC<BookingCancellationPrevie
                   styles.submitBtn,
                   (!canSubmit || quote?.canCancel === false) && styles.submitBtnDisabled,
                 ]}
+                activeOpacity={0.85}
               >
                 {submitting ? (
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
                   <>
-                    <ChevronRight size={18} color="#FFFFFF" />
+                    <XCircle size={18} color="#FFFFFF" />
                     <Text style={styles.submitText}>Confirmer l’annulation</Text>
+                    <View style={styles.dangerArrowCircle}>
+                      <ArrowRight size={13} color="#FECACA" />
+                    </View>
                   </>
                 )}
               </TouchableOpacity>
@@ -325,6 +378,32 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  badgeKycGlass: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: theme.radius.full,
+    gap: 4,
+    marginBottom: 4,
+  },
+  badgeKycText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 8.5,
+    letterSpacing: 0.6,
+    color: '#D97706',
+  },
+  badgeRedGlass: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
+  },
+  badgeRedText: {
+    color: '#DC2626',
   },
   headerIconRed: {
     backgroundColor: '#EF4444',
@@ -491,6 +570,31 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 12,
   },
+  presetChipsScroll: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  presetChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 16,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  presetChipActive: {
+    backgroundColor: '#DC2626',
+    borderColor: '#DC2626',
+  },
+  presetChipText: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 11,
+    color: '#475569',
+  },
+  presetChipTextActive: {
+    color: '#FFFFFF',
+  },
   reasonInput: {
     minHeight: 90,
     borderRadius: 16,
@@ -548,8 +652,8 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     paddingHorizontal: 16,
-    height: 48,
-    borderRadius: 24,
+    height: 50,
+    borderRadius: 25,
     borderWidth: 1,
     borderColor: '#CBD5E1',
     alignItems: 'center',
@@ -562,18 +666,20 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     flex: 1,
-    height: 48,
-    borderRadius: 24,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: '#DC2626',
+    borderWidth: 1,
+    borderColor: '#EF4444',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     shadowColor: '#DC2626',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   submitBtnDisabled: {
     opacity: 0.45,
@@ -582,5 +688,16 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 13.5,
     color: '#FFFFFF',
+  },
+  dangerArrowCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(255, 255, 255, 0.20)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.30)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
   },
 });

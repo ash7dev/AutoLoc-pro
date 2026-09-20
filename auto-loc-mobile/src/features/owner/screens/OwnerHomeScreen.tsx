@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -16,8 +16,9 @@ import { OwnerPendingRequestsWidget } from '../components/OwnerPendingRequestsWi
 import { OwnerFleetPreviewWidget } from '../components/OwnerFleetPreviewWidget';
 import { OwnerQuickActionsWidget } from '../components/OwnerQuickActionsWidget';
 import { OwnerHomeSkeleton } from '../components/OwnerHomeSkeleton';
-import { ownerApi, OwnerDashboardStats, OwnerBooking, OwnerVehicle } from '../api/ownerApi';
 import { useHostGate } from '../hooks/useHostGate';
+import { useOwnerDashboard } from '../hooks/useOwnerDashboard';
+import { useOwnerMutations } from '../hooks/useOwnerMutations';
 import { ReservationGateModal } from '../../tenant/components/gates/ReservationGateModal';
 import { AddVehicleWizardScreen } from './AddVehicleWizardScreen';
 import { becomeAutoLocHost } from '../../tenant/api/tenantProfileApi';
@@ -39,16 +40,23 @@ export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
   const selectedCurrency = useAppStore((state) => state.selectedCurrency);
   const triggerGuestAuthGuard = useAppStore((state) => state.triggerGuestAuthGuard);
 
-  const [stats, setStats] = useState<OwnerDashboardStats | null>(null);
-  const [allBookings, setAllBookings] = useState<OwnerBooking[]>([]);
-  const [pendingBookings, setPendingBookings] = useState<OwnerBooking[]>([]);
-  const [vehicles, setVehicles] = useState<OwnerVehicle[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [gateModalVisible, setGateModalVisible] = useState(false);
   const [addWizardVisible, setAddWizardVisible] = useState(false);
 
   const hostGate = useHostGate();
+
+  // Integrated TanStack Query cache & SWR strategy
+  const {
+    stats,
+    allBookings,
+    pendingBookings,
+    vehicles,
+    loading,
+    refreshing,
+    refetch,
+  } = useOwnerDashboard();
+
+  const { respondBookingMutation } = useOwnerMutations();
 
   const handleAddVehiclePress = async () => {
     const allowed = triggerGuestAuthGuard(
@@ -69,8 +77,10 @@ export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
     if (user && user.role !== 'PROPRIETAIRE') {
       try {
         const result = await becomeAutoLocHost();
-        await secureStorage.setRefreshToken(result.refreshToken);
-        await setAuth(result.accessToken, { ...user, role: result.role });
+        if (result.accessToken && result.refreshToken) {
+          await secureStorage.setRefreshToken(result.refreshToken);
+          await setAuth(result.accessToken, { ...user, role: result.role });
+        }
       } catch {
         // En cas de problème de token
       }
@@ -78,41 +88,22 @@ export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
     setAddWizardVisible(true);
   };
 
-  const loadData = async () => {
+  const handleApprove = async (bookingId: string) => {
     try {
-      setLoading(true);
-      const [statsRes, bookingsRes, vehiclesRes] = await Promise.all([
-        ownerApi.getDashboardStats(),
-        ownerApi.getOwnerBookings(),
-        ownerApi.getOwnerVehicles(),
-      ]);
-
-      setStats(statsRes);
-      setAllBookings(bookingsRes);
-      setPendingBookings(bookingsRes.filter((b) => b.statut === 'PENDING_APPROVAL'));
-      setVehicles(vehiclesRes);
+      await respondBookingMutation.mutateAsync({ bookingId, accept: true });
+      Alert.alert('Réservation confirmée !', 'Le locataire a été notifié.');
     } catch {
-      // Fallback est déjà géré dans ownerApi
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+      Alert.alert('Erreur', 'Impossible de confirmer la réservation pour le moment.');
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const handleApprove = async (bookingId: string) => {
-    await ownerApi.respondToBookingRequest(bookingId, true);
-    Alert.alert('Réservation confirmée !', 'Le locataire a été notifié.');
-    loadData();
-  };
-
   const handleReject = async (bookingId: string) => {
-    await ownerApi.respondToBookingRequest(bookingId, false);
-    Alert.alert('Demande refusée', 'La réservation a été déclinée.');
-    loadData();
+    try {
+      await respondBookingMutation.mutateAsync({ bookingId, accept: false });
+      Alert.alert('Demande refusée', 'La réservation a été déclinée.');
+    } catch {
+      Alert.alert('Erreur', 'Impossible de décliner la réservation.');
+    }
   };
 
   return (
@@ -124,10 +115,7 @@ export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              loadData();
-            }}
+            onRefresh={refetch}
             tintColor="#34D399"
           />
         }
@@ -136,13 +124,14 @@ export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
         <OwnerGlassHeroHeader
           user={user}
           stats={stats}
+          allBookings={allBookings}
           selectedCurrency={selectedCurrency}
           onProfilePress={onProfilePress}
           onSwitchToTenant={onSwitchToTenant}
         />
 
         <View style={styles.bodyContent}>
-          {loading && !refreshing ? (
+          {loading ? (
             <OwnerHomeSkeleton />
           ) : (
             <>
@@ -204,7 +193,7 @@ export const OwnerHomeScreen: React.FC<OwnerHomeScreenProps> = ({
         onClose={() => setAddWizardVisible(false)}
         onVehicleCreated={() => {
           setAddWizardVisible(false);
-          loadData();
+          refetch();
         }}
       />
     </View>

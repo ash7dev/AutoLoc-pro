@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   AUTOLOC WEB PREMIUM — CLEAN WHITE DESIGN SYSTEM TOKENS
+   Display Font: Gloock | Body Font: Plus Jakarta Sans
+───────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    --background: #FFFFFF;
+    --foreground: #0F172A;
+    --card: #FFFFFF;
+    --card-foreground: #0F172A;
+    --primary: #10b981;
+    --primary-foreground: #FFFFFF;
+    --muted: #F1F5F9;
+    --muted-foreground: #64748B;
+    --border: #E2E8F0;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-jakarta), system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-display, .font-fraunces {
+    font-family: var(--font-fraunces), Georgia, serif !important;
+    letter-spacing: -0.01em;
+  }
+
+
+
+  /* Masquer l'indicateur de scroll (scrollbar) sur mobile */
+  @media (max-width: 1023px) {
+    html, body {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
+
+@layer components {
+  /* Panel Glassmorphism White */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Card White */
+  .glass-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-card:hover {
+    border-color: rgba(16, 185, 129, 0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 36px -10px rgba(16, 185, 129, 0.15);
+  }
+
+  /* Badge Pill Glass White */
+  .glass-pill {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    backdrop-filter: blur(8px);
+    color: #059669;
+  }
+
+  /* Bouton Primary Émeraude */
+  .btn-emerald {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #FFFFFF;
+    font-weight: 700;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  }
+
+  .btn-emerald:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+    transform: translateY(-1px);
+  }
+
+  /* Gradient Text Display */
+  .text-gradient-emerald {
+    background: linear-gradient(135deg, #0F172A 30%, #047857 70%, #10b981 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.3; filter: blur(40px); }
+  50% { opacity: 0.6; filter: blur(60px); }
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 6s ease-in-out infinite;
+}

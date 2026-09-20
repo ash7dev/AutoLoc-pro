@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "719963815802",
+    "project_id": "autoloc-f82d8",
+    "storage_bucket": "autoloc-f82d8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:719963815802:android:7bc80bb1f1a4ed8b33e0c3",
+        "android_client_info": {
+          "package_name": "sn.autoloc.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVUoj9FBOPZSNCEt8ZYW0od5QHGQ3brYs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

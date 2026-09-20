@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../../core/api/apiClient';
 import { TenantBookingItem } from '../components/TenantBookingCard';
 
@@ -21,6 +22,7 @@ export interface BookingDetail extends TenantBookingItem {
 }
 
 export function useTenantBookingDetail(reservationId: string) {
+  const queryClient = useQueryClient();
   const [booking, setBooking] = useState<BookingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -48,6 +50,9 @@ export function useTenantBookingDetail(reservationId: string) {
       setSubmitting(true);
       await request();
       await fetchBooking(true);
+      queryClient.invalidateQueries({ queryKey: ['tenantBookings'] });
+      queryClient.invalidateQueries({ queryKey: ['owner', 'bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['owner', 'stats'] });
       return true;
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Cette action n’a pas pu être effectuée.');
@@ -55,7 +60,7 @@ export function useTenantBookingDetail(reservationId: string) {
     } finally {
       setSubmitting(false);
     }
-  }, [fetchBooking]);
+  }, [fetchBooking, queryClient]);
 
   return {
     booking, loading, refreshing, error, submitting,

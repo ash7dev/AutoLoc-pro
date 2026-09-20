@@ -2,11 +2,14 @@
   "expo": {
     "name": "auto-loc-mobile",
     "slug": "auto-loc-mobile",
+    "scheme": "autoloc",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
+      "bundleIdentifier": "sn.autoloc.app",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "AutoLoc a besoin d'accéder à votre appareil photo pour capturer votre selfie de vérification d'identité et vos documents officiels.",
@@ -15,6 +18,8 @@
       }
     },
     "android": {
+      "package": "sn.autoloc.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

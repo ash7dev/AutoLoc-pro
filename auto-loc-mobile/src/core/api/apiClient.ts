@@ -10,7 +10,7 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000,
+  timeout: 30000,
 });
 
 // Request Interceptor: Inserer automatiquement le Bearer token s'il existe
@@ -72,7 +72,9 @@ apiClient.interceptors.response.use(
       try {
         const refreshToken = await secureStorage.getRefreshToken();
         if (!refreshToken) {
-          throw new Error('Aucun refresh token disponible');
+          isRefreshing = false;
+          delete apiClient.defaults.headers.common.Authorization;
+          return Promise.reject(error);
         }
 
         // Tenter le rafraîchissement silencieux auprès du serveur NestJS
@@ -102,7 +104,7 @@ apiClient.interceptors.response.use(
         processQueue(refreshErr, null);
         isRefreshing = false;
 
-        console.warn('Échec du rafraîchissement silencieux. Bascule fluide en Mode Invité.');
+        delete apiClient.defaults.headers.common.Authorization;
         await secureStorage.clearSession();
       }
     }

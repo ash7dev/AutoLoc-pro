@@ -10,6 +10,7 @@ import {
   Image,
   Alert,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Mail, Lock, ArrowRight, ShieldCheck, Eye, EyeOff, X, Sparkles } from 'lucide-react-native';
@@ -18,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../../core/theme';
 import { AutoInput, PhoneField, AutoButton } from '../../../shared/components';
 import { useAuthStore } from '../stores/useAuthStore';
+import { nativeGoogleAuthService } from '../services/nativeGoogleAuthService';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -40,8 +42,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
-  const { sendPhoneOtp, isLoading, error, clearError } = useAuthStore();
+  const { sendPhoneOtp, loginWithGoogleOrSupabase, isLoading, error, clearError } = useAuthStore();
 
   const handlePhoneSubmit = async () => {
     if (!telephone.trim() || telephone.length < 9) {
@@ -70,8 +73,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }
   };
 
-  const handleGoogleAuth = () => {
-    Alert.alert('Connexion Google', 'Module Google OAuth initialisé...');
+  const handleGoogleAuth = async () => {
+    try {
+      setGoogleLoading(true);
+      const token = await nativeGoogleAuthService.signInWithGoogle();
+      if (token) {
+        await loginWithGoogleOrSupabase(token);
+        onLoginSuccess();
+      }
+    } catch (err: any) {
+      console.warn('[LoginScreen] Échec authentification Google:', err);
+      Alert.alert('Connexion Google', err?.message || 'Erreur lors de la connexion Google.');
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -266,16 +281,23 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
                 {/* Google Auth Button Glass */}
                 <TouchableOpacity
-                  style={styles.googleGlassBtn}
+                  style={[styles.googleGlassBtn, googleLoading && { opacity: 0.6 }]}
                   onPress={handleGoogleAuth}
+                  disabled={googleLoading}
                   activeOpacity={0.8}
                 >
-                  <Image
-                    source={{ uri: 'https://cdn-icons-png.flaticon.com/512/300/300221.png' }}
-                    style={styles.googleIcon}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.googleGlassText}>Continuer avec Google</Text>
+                  {googleLoading ? (
+                    <ActivityIndicator color="#A7F3D0" size="small" />
+                  ) : (
+                    <>
+                      <Image
+                        source={{ uri: 'https://cdn-icons-png.flaticon.com/512/300/300221.png' }}
+                        style={styles.googleIcon}
+                        resizeMode="contain"
+                      />
+                      <Text style={styles.googleGlassText}>Continuer avec Google</Text>
+                    </>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>

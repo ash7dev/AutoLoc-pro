@@ -146,24 +146,27 @@ export const OwnerTenantContactCard: React.FC<OwnerTenantContactCardProps> = ({
       {/* Phone Contact Block */}
       {isPhoneVisible && telephone ? (
         <View style={styles.phoneContainer}>
-          <View style={styles.phoneLeft}>
+          <View style={styles.phoneHeaderRow}>
             <View style={styles.phoneIconCircle}>
-              <Phone size={14} color="#059669" />
+              <Phone size={15} color="#059669" />
             </View>
-            <View>
+            <View style={styles.phoneTextContainer}>
               <Text style={styles.phoneLabel}>Téléphone locataire</Text>
-              <Text style={styles.phoneNumber}>{telephone}</Text>
+              <Text style={styles.phoneNumber} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+                {telephone}
+              </Text>
             </View>
           </View>
 
           <View style={styles.contactButtonsRow}>
             <TouchableOpacity activeOpacity={0.8} onPress={handleWhatsApp} style={styles.whatsAppPill}>
-              <MessageSquare size={13} color="#FFFFFF" />
+              <MessageSquare size={14} color="#FFFFFF" />
               <Text style={styles.whatsAppText}>WhatsApp</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity activeOpacity={0.8} onPress={handleCall} style={styles.callCircle}>
-              <Phone size={13} color="#047857" />
+            <TouchableOpacity activeOpacity={0.8} onPress={handleCall} style={styles.callPill}>
+              <Phone size={14} color="#047857" />
+              <Text style={styles.callText}>Appeler</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -327,76 +330,89 @@ const styles = StyleSheet.create({
 
   /* Visible Phone Container */
   phoneContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: '#F0FDF4',
     borderWidth: 1,
     borderColor: '#BBF7D0',
     borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    padding: 12,
+    gap: 10,
   },
-  phoneLeft: {
+  phoneHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    flex: 1,
   },
   phoneIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: '#DCFCE7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  phoneLabel: {
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 10,
-    color: '#059669',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  phoneNumber: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 13.5,
-    color: '#047857',
-    marginTop: 1,
-  },
-  contactButtonsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  whatsAppPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#10B981',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 10,
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  whatsAppText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 11.5,
-    color: '#FFFFFF',
-  },
-  callCircle: {
-    width: 30,
-    height: 30,
+    width: 36,
+    height: 36,
     borderRadius: 10,
     backgroundColor: '#DCFCE7',
     borderWidth: 1,
     borderColor: '#86EFAC',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
+  },
+  phoneTextContainer: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
+  },
+  phoneLabel: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 10,
+    color: '#059669',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  phoneNumber: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 15,
+    color: '#047857',
+    marginTop: 1,
+    letterSpacing: 0.3,
+  },
+  contactButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  whatsAppPill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#10B981',
+    paddingVertical: 9,
+    borderRadius: 10,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  whatsAppText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 12.5,
+    color: '#FFFFFF',
+  },
+  callPill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#DCFCE7',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    paddingVertical: 9,
+    borderRadius: 10,
+  },
+  callText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 12.5,
+    color: '#047857',
   },
 
   /* Masked Phone Container */

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   RefreshControl,
-  SafeAreaView,
   Alert,
   StatusBar,
   Platform,
@@ -17,21 +16,20 @@ import {
   Plus,
   Car,
   X,
-  Filter,
   SearchX,
   CheckCircle2,
   Key,
   ShieldAlert,
   EyeOff,
 } from 'lucide-react-native';
-import { theme } from '../../../core/theme';
-import { OwnerHeader } from '../../../shared/components';
 import { OwnerVehicleCard } from '../components/OwnerVehicleCard';
 import { OwnerVehiclesGlassHeroHeader } from '../components/OwnerVehiclesGlassHeroHeader';
 import { OwnerVehicleQuickActionModal } from '../components/OwnerVehicleQuickActionModal';
 import { OwnerVehicleSkeleton } from '../components/OwnerVehicleSkeleton';
-import { ownerApi, OwnerVehicle } from '../api/ownerApi';
+import { OwnerVehicle } from '../api/ownerApi';
 import { useHostGate } from '../hooks/useHostGate';
+import { useOwnerVehicles } from '../hooks/useOwnerVehicles';
+import { useOwnerMutations } from '../hooks/useOwnerMutations';
 import { ReservationGateModal } from '../../tenant/components/gates/ReservationGateModal';
 import { AddVehicleWizardScreen } from './AddVehicleWizardScreen';
 import { VehicleCalendarModal } from '../components/calendar/VehicleCalendarModal';
@@ -52,14 +50,18 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
   const user = useAppStore((state) => state.user);
   const setAuth = useAppStore((state) => state.setAuth);
   const triggerGuestAuthGuard = useAppStore((state) => state.triggerGuestAuthGuard);
-  const selectedCurrency = useAppStore((state) => state.selectedCurrency);
 
-  const [vehicles, setVehicles] = useState<OwnerVehicle[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  // TanStack Query integration with shared memory cache ['owner', 'vehicles']
+  const { vehicles, loading, refreshing, refetch } = useOwnerVehicles();
+  const {
+    updateVehicleStatusMutation,
+    archiveVehicleMutation,
+    purgeVehicleMutation,
+  } = useOwnerMutations();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'TOUS' | 'DISPONIBLE' | 'EN_LOCATION' | 'EN_ATTENTE_VALIDATION' | 'DESACTIVE'>('TOUS');
-  const [refreshing, setRefreshing] = useState(false);
   const [gateModalVisible, setGateModalVisible] = useState(false);
   const [addWizardVisible, setAddWizardVisible] = useState(false);
 
@@ -75,22 +77,6 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
   };
 
   const hostGate = useHostGate();
-
-  const loadVehicles = useCallback(async () => {
-    try {
-      const data = await ownerApi.getOwnerVehicles();
-      setVehicles(data);
-    } catch (err) {
-      console.warn('Erreur lors du chargement de la flotte:', err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadVehicles();
-  }, [loadVehicles]);
 
   const handleAddVehiclePress = async () => {
     const allowed = triggerGuestAuthGuard(
@@ -111,8 +97,10 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
     if (user && user.role !== 'PROPRIETAIRE') {
       try {
         const result = await becomeAutoLocHost();
-        await secureStorage.setRefreshToken(result.refreshToken);
-        await setAuth(result.accessToken, { ...user, role: result.role });
+        if (result.accessToken && result.refreshToken) {
+          await secureStorage.setRefreshToken(result.refreshToken);
+          await setAuth(result.accessToken, { ...user, role: result.role });
+        }
       } catch {
         // En cas de problème de token
       }
@@ -125,14 +113,10 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
     const vehicleName = targetVehicle ? `${targetVehicle.marque} ${targetVehicle.modele}` : 'ce véhicule';
 
     const executeToggle = async (nextStatus: OwnerVehicle['statut']) => {
-      setVehicles((prev) =>
-        prev.map((v) => (v.id === vehicleId ? { ...v, statut: nextStatus } : v))
-      );
       try {
-        await ownerApi.updateVehicleStatus(vehicleId, nextStatus);
+        await updateVehicleStatusMutation.mutateAsync({ vehicleId, status: nextStatus });
       } catch {
-        // Revert if error
-        loadVehicles();
+        Alert.alert('Erreur', 'Impossible de modifier le statut du véhicule.');
       }
     };
 
@@ -164,11 +148,10 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
           text: 'Archiver',
           style: 'destructive',
           onPress: async () => {
-            setVehicles((prev) => prev.filter((v) => v.id !== vehicle.id));
             try {
-              await ownerApi.archiveVehicle(vehicle.id);
+              await archiveVehicleMutation.mutateAsync(vehicle.id);
             } catch {
-              loadVehicles();
+              Alert.alert('Erreur', 'Impossible d’archiver le véhicule.');
             }
           },
         },
@@ -186,11 +169,10 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
           text: 'Supprimer',
           style: 'destructive',
           onPress: async () => {
-            setVehicles((prev) => prev.filter((v) => v.id !== vehicle.id));
             try {
-              await ownerApi.purgeVehiclePermanently(vehicle.id);
+              await purgeVehicleMutation.mutateAsync(vehicle.id);
             } catch {
-              loadVehicles();
+              Alert.alert('Erreur', 'Impossible de supprimer le véhicule.');
             }
           },
         },
@@ -239,7 +221,6 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
 
   // Rendu contextualisé premium des états vides
   const renderEmptyState = () => {
-    // 1. Recherche par mot-clé sans résultat
     if (searchQuery.trim().length > 0) {
       return (
         <View style={styles.emptyContainer}>
@@ -262,7 +243,6 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
       );
     }
 
-    // 2. Onglet "Disponibles" vide
     if (activeFilter === 'DISPONIBLE') {
       return (
         <View style={styles.emptyContainer}>
@@ -284,7 +264,6 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
       );
     }
 
-    // 3. Onglet "En location" vide
     if (activeFilter === 'EN_LOCATION') {
       return (
         <View style={styles.emptyContainer}>
@@ -306,7 +285,6 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
       );
     }
 
-    // 4. Onglet "En vérification" vide
     if (activeFilter === 'EN_ATTENTE_VALIDATION') {
       return (
         <View style={styles.emptyContainer}>
@@ -328,7 +306,6 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
       );
     }
 
-    // 5. Onglet "Désactivés" vide
     if (activeFilter === 'DESACTIVE') {
       return (
         <View style={styles.emptyContainer}>
@@ -350,7 +327,6 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
       );
     }
 
-    // 6. Flotte totalement vide ('TOUS')
     return (
       <View style={styles.emptyContainer}>
         <View style={styles.emptyIconBadge}>
@@ -372,7 +348,7 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
     );
   };
 
-  if (loading && !refreshing) {
+  if (loading) {
     return <OwnerVehicleSkeleton />;
   }
 
@@ -390,92 +366,88 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
 
       <ScrollView
         style={styles.scrollContainer}
-          contentContainerStyle={styles.scrollList}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => {
-                setRefreshing(true);
-                loadVehicles();
-              }}
-              tintColor="#34D399"
-            />
-          }
-        >
-          <View style={styles.container}>
-
-            {/* Section Recherche & Filtres Ultra-Pro */}
-            <View style={styles.searchFilterSection}>
-              {/* Barre de Recherche Dynamique */}
-              <View style={[styles.searchBox, isSearchFocused && styles.searchBoxFocused]}>
-                <Search size={18} color={isSearchFocused ? '#059669' : '#94A3B8'} />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Rechercher par immatriculation, marque ou modèle..."
-                  placeholderTextColor="#94A3B8"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  onFocus={() => setIsSearchFocused(true)}
-                  onBlur={() => setIsSearchFocused(false)}
-                />
-                {searchQuery.length > 0 && (
-                  <TouchableOpacity
-                    style={styles.clearSearchBtn}
-                    onPress={() => setSearchQuery('')}
-                    hitSlop={10}
-                  >
-                    <X size={13} color="#64748B" />
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              {/* Barre de Filtres Horizontale avec Badges de Compteur */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.filterScrollRow}
-              >
-                {filterTabs.map((f) => {
-                  const isActive = activeFilter === f.id;
-                  const count = statusCounts[f.id] || 0;
-                  return (
-                    <TouchableOpacity
-                      key={f.id}
-                      style={[styles.filterPill, isActive && styles.filterPillActive]}
-                      onPress={() => setActiveFilter(f.id as any)}
-                      activeOpacity={0.75}
-                    >
-                      <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
-                        {f.label}
-                      </Text>
-                      <View style={[styles.badgeCount, isActive && styles.badgeCountActive]}>
-                        <Text style={[styles.badgeCountText, isActive && styles.badgeCountTextActive]}>
-                          {count}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
+        contentContainerStyle={styles.scrollList}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refetch}
+            tintColor="#34D399"
+          />
+        }
+      >
+        <View style={styles.container}>
+          {/* Section Recherche & Filtres Ultra-Pro */}
+          <View style={styles.searchFilterSection}>
+            {/* Barre de Recherche Dynamique */}
+            <View style={[styles.searchBox, isSearchFocused && styles.searchBoxFocused]}>
+              <Search size={18} color={isSearchFocused ? '#059669' : '#94A3B8'} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Rechercher par immatriculation, marque ou modèle..."
+                placeholderTextColor="#94A3B8"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity
+                  style={styles.clearSearchBtn}
+                  onPress={() => setSearchQuery('')}
+                  hitSlop={10}
+                >
+                  <X size={13} color="#64748B" />
+                </TouchableOpacity>
+              )}
             </View>
 
-            {/* Liste des véhicules de flotte */}
-            {filteredVehicles.length > 0 ? (
-              filteredVehicles.map((vehicle) => (
-                <OwnerVehicleCard
-                  key={vehicle.id}
-                  vehicle={vehicle}
-                  onToggleStatus={handleToggleStatus}
-                  onQuickActionPress={(v) => setQuickActionVehicle(v)}
-                  onEditPress={(v) => handleEditVehicle(v)}
-                />
-              ))
-            ) : (
-              renderEmptyState()
-            )}
+            {/* Barre de Filtres Horizontale avec Badges de Compteur */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterScrollRow}
+            >
+              {filterTabs.map((f) => {
+                const isActive = activeFilter === f.id;
+                const count = statusCounts[f.id] || 0;
+                return (
+                  <TouchableOpacity
+                    key={f.id}
+                    style={[styles.filterPill, isActive && styles.filterPillActive]}
+                    onPress={() => setActiveFilter(f.id as any)}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
+                      {f.label}
+                    </Text>
+                    <View style={[styles.badgeCount, isActive && styles.badgeCountActive]}>
+                      <Text style={[styles.badgeCountText, isActive && styles.badgeCountTextActive]}>
+                        {count}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
-        </ScrollView>
+
+          {/* Liste des véhicules de flotte */}
+          {filteredVehicles.length > 0 ? (
+            filteredVehicles.map((vehicle) => (
+              <OwnerVehicleCard
+                key={vehicle.id}
+                vehicle={vehicle}
+                onToggleStatus={handleToggleStatus}
+                onQuickActionPress={(v) => setQuickActionVehicle(v)}
+                onEditPress={(v) => handleEditVehicle(v)}
+              />
+            ))
+          ) : (
+            renderEmptyState()
+          )}
+        </View>
+      </ScrollView>
 
       {/* Modal Quick Actions */}
       <OwnerVehicleQuickActionModal
@@ -532,7 +504,7 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
         onClose={() => setAddWizardVisible(false)}
         onVehicleCreated={() => {
           setAddWizardVisible(false);
-          loadVehicles();
+          refetch();
         }}
       />
 
@@ -544,7 +516,7 @@ export const OwnerVehiclesScreen: React.FC<OwnerVehiclesScreenProps> = ({
         onClose={() => setEditingVehicle(null)}
         onVehicleUpdated={() => {
           setEditingVehicle(null);
-          loadVehicles();
+          refetch();
         }}
       />
     </View>
@@ -662,7 +634,6 @@ const styles = StyleSheet.create({
   badgeCountTextActive: {
     color: '#FFFFFF',
   },
-  /* États vides premium */
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,14 +7,13 @@ import {
   RefreshControl,
   StatusBar,
   TouchableOpacity,
-  Alert,
   Platform,
 } from 'react-native';
 import {
-  Calendar,
   History,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   Sparkles,
   SearchX,
   Clock,
@@ -27,14 +26,12 @@ import {
 } from 'lucide-react-native';
 import { useAppStore } from '../../../core/store/useAppStore';
 import { useNavigation } from '../../../core/navigation/RootNavigator';
-import {
-  OwnerReservationsGlassHeroHeader,
-  ReservationHeaderStats,
-} from '../components/OwnerReservationsGlassHeroHeader';
+import { OwnerReservationsGlassHeroHeader } from '../components/OwnerReservationsGlassHeroHeader';
 import { OwnerReservationsSearchBar } from '../components/OwnerReservationsSearchBar';
 import { OwnerBookingCard } from '../components/OwnerBookingCard';
 import { OwnerBookingSkeleton } from '../components/OwnerBookingSkeleton';
-import { ownerApi, OwnerBooking } from '../api/ownerApi';
+import { OwnerBooking } from '../api/ownerApi';
+import { useOwnerBookings } from '../hooks/useOwnerBookings';
 
 interface OwnerBookingsScreenProps {
   onSwitchToTenant?: () => void;
@@ -49,49 +46,13 @@ export const OwnerBookingsScreen: React.FC<OwnerBookingsScreenProps> = ({
 }) => {
   const { navigateToOwnerBookingDetail } = useNavigation();
   const user = useAppStore((state) => state.user);
-  const [bookings, setBookings] = useState<OwnerBooking[]>([]);
-  const [stats, setStats] = useState<ReservationHeaderStats | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  // TanStack Query integration with shared memory cache ['owner', 'bookings']
+  const { bookings, stats, loading, refreshing, refetch } = useOwnerBookings();
+
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<FilterTabId>('TOUTES');
   const [isHistoryExpanded, setIsHistoryExpanded] = useState<boolean>(false);
-
-  const loadData = useCallback(async () => {
-    try {
-      const data: OwnerBooking[] = await ownerApi.getOwnerBookings();
-      setBookings(data);
-
-      const total = data.length;
-      const pendingCount = data.filter((b) => b.statut === 'PENDING_APPROVAL').length;
-      const inProgressCount = data.filter(
-        (b) => b.statut === 'IN_PROGRESS' || b.statut === 'CONFIRMED'
-      ).length;
-      const completedCount = data.filter((b) => b.statut === 'COMPLETED').length;
-
-      setStats({
-        total,
-        pendingCount,
-        inProgressCount,
-        completedCount,
-      });
-    } catch {
-      setBookings([]);
-      setStats({
-        total: 0,
-        pendingCount: 0,
-        inProgressCount: 0,
-        completedCount: 0,
-      });
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
 
   const handleDetailPress = (bookingId: string) => {
     navigateToOwnerBookingDetail(bookingId);
@@ -159,7 +120,6 @@ export const OwnerBookingsScreen: React.FC<OwnerBookingsScreenProps> = ({
 
   // Rendu contextualisé premium des états vides
   const renderEmptyState = () => {
-    // 1. Recherche active sans résultat
     if (searchQuery.trim().length > 0) {
       return (
         <View style={styles.emptyContainer}>
@@ -182,7 +142,6 @@ export const OwnerBookingsScreen: React.FC<OwnerBookingsScreenProps> = ({
       );
     }
 
-    // 2. Onglet "En attente" vide
     if (activeFilter === 'PENDING') {
       return (
         <View style={styles.emptyContainer}>
@@ -204,7 +163,6 @@ export const OwnerBookingsScreen: React.FC<OwnerBookingsScreenProps> = ({
       );
     }
 
-    // 3. Onglet "En cours" / "Confirmées" vide
     if (activeFilter === 'IN_PROGRESS') {
       return (
         <View style={styles.emptyContainer}>
@@ -226,7 +184,6 @@ export const OwnerBookingsScreen: React.FC<OwnerBookingsScreenProps> = ({
       );
     }
 
-    // 4. Onglet "Terminées" vide
     if (activeFilter === 'COMPLETED') {
       return (
         <View style={styles.emptyContainer}>
@@ -248,7 +205,6 @@ export const OwnerBookingsScreen: React.FC<OwnerBookingsScreenProps> = ({
       );
     }
 
-    // 5. Onglet "Annulées" vide
     if (activeFilter === 'CANCELLED') {
       return (
         <View style={styles.emptyContainer}>
@@ -270,7 +226,6 @@ export const OwnerBookingsScreen: React.FC<OwnerBookingsScreenProps> = ({
       );
     }
 
-    // 6. Aucune réservation globale du tout ('TOUTES')
     return (
       <View style={styles.emptyContainer}>
         <View style={styles.emptyIconBadge}>
@@ -282,10 +237,7 @@ export const OwnerBookingsScreen: React.FC<OwnerBookingsScreenProps> = ({
         </Text>
         <TouchableOpacity
           style={styles.emptyPrimaryBtn}
-          onPress={() => {
-            setRefreshing(true);
-            loadData();
-          }}
+          onPress={() => refetch()}
           activeOpacity={0.8}
         >
           <RefreshCw size={14} color="#FFFFFF" strokeWidth={2.25} />
@@ -314,10 +266,7 @@ export const OwnerBookingsScreen: React.FC<OwnerBookingsScreenProps> = ({
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              loadData();
-            }}
+            onRefresh={refetch}
             tintColor="#34D399"
           />
         }
@@ -372,8 +321,26 @@ export const OwnerBookingsScreen: React.FC<OwnerBookingsScreenProps> = ({
           </ScrollView>
         </View>
 
+        {/* Banner d'accès direct au Simulateur de Réservation VIP */}
+        <TouchableOpacity
+          style={styles.demoBanner}
+          onPress={() => handleDetailPress('demo-res-98421')}
+          activeOpacity={0.85}
+        >
+          <View style={styles.demoIconBadge}>
+            <Sparkles size={16} color="#041912" strokeWidth={2.5} />
+          </View>
+          <View style={styles.demoTextContainer}>
+            <Text style={styles.demoTitle}>Simulateur de Réservation VIP</Text>
+            <Text style={styles.demoSub}>
+              Tester la réservation BMW X5, modaux & actions en direct
+            </Text>
+          </View>
+          <ChevronRight size={18} color="#041912" strokeWidth={2.5} />
+        </TouchableOpacity>
+
         {/* Liste des Cartes de Réservations Premium */}
-        {loading && !refreshing ? (
+        {loading ? (
           <View style={styles.skeletonList}>
             <OwnerBookingSkeleton />
             <OwnerBookingSkeleton />
@@ -537,18 +504,6 @@ const styles = StyleSheet.create({
   skeletonList: {
     gap: 12,
   },
-  emptyBox: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  /* États vides premium */
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -634,7 +589,6 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: '#475569',
   },
-  /* Banner si aucune réservation active */
   noActiveCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -683,7 +637,6 @@ const styles = StyleSheet.create({
     color: '#64748B',
     lineHeight: 17,
   },
-  /* Accordéon Historique */
   historyAccordionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -752,7 +705,42 @@ const styles = StyleSheet.create({
     gap: 14,
     marginTop: 4,
   },
+  demoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1.5,
+    borderColor: '#A7F3D0',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 12,
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  demoIconBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: '#34D399',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  demoTextContainer: {
+    flex: 1,
+    gap: 2,
+  },
+  demoTitle: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 13.5,
+    color: '#041912',
+  },
+  demoSub: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 11.5,
+    color: '#059669',
+  },
 });
-
-
-

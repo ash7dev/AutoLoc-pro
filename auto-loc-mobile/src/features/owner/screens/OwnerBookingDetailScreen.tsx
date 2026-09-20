@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AlertTriangle, ArrowLeft } from 'lucide-react-native';
 import { theme } from '../../../core/theme';
 import { useOwnerBookingDetail } from '../hooks/useOwnerBookingDetail';
@@ -27,18 +28,20 @@ import { OwnerTenantDocsModal } from '../components/reservations/OwnerTenantDocs
 import { OwnerCheckinModal } from '../components/reservations/OwnerCheckinModal';
 import { OwnerCheckoutModal } from '../components/reservations/OwnerCheckoutModal';
 import { OwnerSignalNoShowModal } from '../components/reservations/OwnerSignalNoShowModal';
-import { OwnerSignalOverloadModal } from '../components/reservations/OwnerSignalOverloadModal';
+import { OwnerCreateDisputeModal } from '../components/reservations/OwnerCreateDisputeModal';
 
 // Composants partagés
 import { BookingContractCard } from '../../tenant/components/BookingContractCard';
 import { BookingEtatLieuxPhotos } from '../../tenant/components/BookingEtatLieuxPhotos';
 import { BookingEtatLieuxGalleryModal } from '../../tenant/components/BookingEtatLieuxGalleryModal';
+import { BookingCancellationPreviewModal } from '../../tenant/components/BookingCancellationPreviewModal';
 import { BookingTimelineSection } from '../../tenant/components/BookingTimelineSection';
 import { TenantBookingDetailSkeleton } from '../../tenant/components/TenantBookingDetailSkeleton';
 
 type Props = { reservationId: string; onBack: () => void };
 
 export const OwnerBookingDetailScreen: React.FC<Props> = ({ reservationId, onBack }) => {
+  const insets = useSafeAreaInsets();
   const {
     booking,
     locataireDocs,
@@ -53,6 +56,7 @@ export const OwnerBookingDetailScreen: React.FC<Props> = ({ reservationId, onBac
     signalNoshow,
     signalOverload,
     openDispute,
+    cancelBooking,
     linkPhotoEtat,
   } = useOwnerBookingDetail(reservationId);
 
@@ -62,8 +66,9 @@ export const OwnerBookingDetailScreen: React.FC<Props> = ({ reservationId, onBac
   const [checkinModalVisible, setCheckinModalVisible] = useState(false);
   const [checkoutModalVisible, setCheckoutModalVisible] = useState(false);
   const [noshowModalVisible, setNoshowModalVisible] = useState(false);
-  const [overloadModalVisible, setOverloadModalVisible] = useState(false);
   const [galleryModalVisible, setGalleryModalVisible] = useState(false);
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const [disputeModalVisible, setDisputeModalVisible] = useState(false);
 
   const vehiclePhoto = useMemo(() => {
     const first = booking?.vehicule?.photos?.[0];
@@ -79,7 +84,7 @@ export const OwnerBookingDetailScreen: React.FC<Props> = ({ reservationId, onBac
   if (loading) return <TenantBookingDetailSkeleton onBack={onBack} />;
   if (!booking) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
         <View style={styles.errorState}>
           <AlertTriangle size={36} color="#B45309" />
           <Text style={styles.errorTitle}>Réservation introuvable</Text>
@@ -91,19 +96,19 @@ export const OwnerBookingDetailScreen: React.FC<Props> = ({ reservationId, onBac
             <Text style={styles.backText}>Retour aux réservations</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.container}>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refetch} tintColor={theme.colors.brand.main} />}
       >
         {/* Top Header Bar */}
-        <View style={styles.topBar}>
+        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 12) }]}>
           <TouchableOpacity onPress={onBack} style={styles.backButton} accessibilityLabel="Retour aux réservations">
             <ArrowLeft size={19} color="#072A20" />
           </TouchableOpacity>
@@ -134,7 +139,23 @@ export const OwnerBookingDetailScreen: React.FC<Props> = ({ reservationId, onBac
           ville={booking.vehicule?.ville}
         />
 
-        {/* 3. Tenant Profile & KYC Inspection Card */}
+        {/* 3. Lifecycle Action Panel */}
+        <OwnerBookingLifecyclePanel
+          statut={booking.statut}
+          dateDebut={booking.dateDebut}
+          hasOwnerCheckin={Boolean(booking.checkinProprietaireLe)}
+          hasTenantCheckin={Boolean(booking.checkinLocataireLe)}
+          absenceSignalee={booking.absenceSignalee}
+          submitting={submitting}
+          onOpenConfirm={() => setConfirmModalVisible(true)}
+          onOpenCheckin={() => setCheckinModalVisible(true)}
+          onOpenCheckout={() => setCheckoutModalVisible(true)}
+          onOpenSignalNoshow={() => setNoshowModalVisible(true)}
+          onOpenCancel={() => setCancelModalVisible(true)}
+          onOpenDispute={() => setDisputeModalVisible(true)}
+        />
+
+        {/* 4. Tenant Profile & KYC Inspection Card */}
         <OwnerTenantContactCard
           reservationId={booking.id}
           prenom={booking.locataire?.prenom}
@@ -146,35 +167,8 @@ export const OwnerBookingDetailScreen: React.FC<Props> = ({ reservationId, onBac
           onInspectDocs={() => setTenantDocsModalVisible(true)}
         />
 
-        {/* 4. Contract Card */}
+        {/* 5. Contract Card */}
         <BookingContractCard reservationId={booking.id} statut={booking.statut} />
-
-        {/* 5. Lifecycle Action Panel */}
-        <OwnerBookingLifecyclePanel
-          statut={booking.statut}
-          dateDebut={booking.dateDebut}
-          hasOwnerCheckin={Boolean(booking.checkinProprietaireLe)}
-          hasTenantCheckin={Boolean(booking.checkinLocataireLe)}
-          absenceSignalee={booking.absenceSignalee}
-          occupantsSignales={booking.occupantsSignales}
-          submitting={submitting}
-          onOpenConfirm={() => setConfirmModalVisible(true)}
-          onOpenCheckin={() => setCheckinModalVisible(true)}
-          onOpenCheckout={() => setCheckoutModalVisible(true)}
-          onOpenSignalNoshow={() => setNoshowModalVisible(true)}
-          onOpenSignalOverload={() => setOverloadModalVisible(true)}
-          onOpenDispute={() =>
-            Alert.prompt(
-              'Signalement de litige',
-              'Décrivez le problème constaté avec le locataire :',
-              (text) => {
-                if (text && text.trim()) {
-                  void openDispute('LITIGE_PROPRIETAIRE', text.trim());
-                }
-              }
-            )
-          }
-        />
 
         {/* 6. Financial Breakdown Section */}
         <OwnerBookingFinancialCard
@@ -260,28 +254,40 @@ export const OwnerBookingDetailScreen: React.FC<Props> = ({ reservationId, onBac
         }}
       />
 
-      <OwnerSignalOverloadModal
-        visible={overloadModalVisible}
-        loading={submitting}
-        maxPlaces={booking.vehicule?.nombrePlaces || 5}
-        onClose={() => setOverloadModalVisible(false)}
-        onConfirm={async (num, comment) => {
-          if (await signalOverload(num, comment)) setOverloadModalVisible(false);
-        }}
-      />
-
       <BookingEtatLieuxGalleryModal
         visible={galleryModalVisible}
         photos={booking.photosEtatLieu || []}
         onClose={() => setGalleryModalVisible(false)}
       />
-    </SafeAreaView>
+
+      <BookingCancellationPreviewModal
+        visible={cancelModalVisible}
+        reservationId={booking.id}
+        statut={booking.statut}
+        submitting={submitting}
+        onClose={() => setCancelModalVisible(false)}
+        onConfirm={async (raison: string) => {
+          const success = await cancelBooking(raison);
+          if (success) setCancelModalVisible(false);
+        }}
+      />
+
+      <OwnerCreateDisputeModal
+        visible={disputeModalVisible}
+        loading={submitting}
+        onClose={() => setDisputeModalVisible(false)}
+        onConfirm={async (motif, description) => {
+          const success = await openDispute(motif, description);
+          if (success) setDisputeModalVisible(false);
+        }}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F8FAFC' },
-  content: { padding: 16, gap: 16, paddingBottom: 40 },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  content: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 40, gap: 16 },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   backButton: {
     width: 40,

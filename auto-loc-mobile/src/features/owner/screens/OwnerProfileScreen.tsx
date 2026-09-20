@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { HelpCircle, LogOut, ArrowLeft } from 'lucide-react-native';
+import { HelpCircle, LogOut } from 'lucide-react-native';
 import { theme } from '../../../core/theme';
 import { useAppStore } from '../../../core/store/useAppStore';
 import { AutoButton, OwnerHeader } from '../../../shared/components';
@@ -11,7 +11,9 @@ import { TenantProfileHero } from '../../tenant/components/profile/TenantProfile
 import { TenantProfileInformationCard } from '../../tenant/components/profile/TenantProfileInformationCard';
 import { TenantSecurityCard } from '../../tenant/components/profile/TenantSecurityCard';
 import { TenantVerificationCard } from '../../tenant/components/profile/TenantVerificationCard';
-import { fetchTenantProfile, TenantProfile } from '../../tenant/api/tenantProfileApi';
+import { TenantProfile } from '../../tenant/api/tenantProfileApi';
+import { useTenantProfile } from '../../tenant/hooks/useTenantProfile';
+import { OwnerProfileSkeleton } from '../components/OwnerProfileSkeleton';
 import { calculateAge, GateStep } from '../../tenant/hooks/useBookingGate';
 
 interface OwnerProfileScreenProps {
@@ -34,31 +36,11 @@ export const OwnerProfileScreen: React.FC<OwnerProfileScreenProps> = ({
 }) => {
   const updateUserProfile = useAppStore((state) => state.updateUserProfile);
   const logout = useAppStore((state) => state.logout);
-  const [profile, setProfile] = useState<TenantProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+
+  const { data: profile, isLoading, isRefetching, refetch } = useTenantProfile();
+
   const [gateVisible, setGateVisible] = useState(false);
   const [gateSteps, setGateSteps] = useState<GateStep[]>([]);
-
-  const syncProfile = useCallback(async (silent = false) => {
-    try {
-      if (!silent) setLoading(true);
-      const next = await fetchTenantProfile();
-      setProfile(next);
-      await updateUserProfile({
-        prenom: next.prenom, nom: next.nom, email: next.email, telephone: next.telephone,
-        avatarUrl: next.avatarUrl || undefined, dateNaissance: next.dateNaissance || undefined,
-        statutKyc: next.statutKyc, permisUrl: next.permisUrl, phoneVerified: next.phoneVerified, role: next.role,
-      });
-    } catch {
-      if (!silent) Alert.alert('Profil indisponible', 'Vérifiez votre connexion puis réessayez.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [updateUserProfile]);
-
-  useEffect(() => { syncProfile(); }, [syncProfile]);
 
   const openVerification = (steps = profile ? verificationSteps(profile) : []) => {
     if (!profile) return;
@@ -71,17 +53,8 @@ export const OwnerProfileScreen: React.FC<OwnerProfileScreenProps> = ({
     setGateVisible(true);
   };
 
-  if (loading && !profile) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="dark" />
-        <OwnerHeader variant="MANAGEMENT" title="Mon Profil Hôte" subtitle="Gestion de votre compte" />
-        <View style={styles.loading}>
-          <ActivityIndicator color={theme.colors.brand.main} />
-          <Text style={styles.loadingText}>Préparation de votre profil Hôte…</Text>
-        </View>
-      </SafeAreaView>
-    );
+  if (isLoading && !profile) {
+    return <OwnerProfileSkeleton />;
   }
 
   if (!profile) {
@@ -89,7 +62,7 @@ export const OwnerProfileScreen: React.FC<OwnerProfileScreenProps> = ({
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loading}>
           <Text style={styles.loadingText}>Impossible de charger le profil.</Text>
-          <AutoButton title="Réessayer" onPress={() => syncProfile()} />
+          <AutoButton title="Réessayer" onPress={() => refetch()} />
         </View>
       </SafeAreaView>
     );
@@ -108,11 +81,8 @@ export const OwnerProfileScreen: React.FC<OwnerProfileScreenProps> = ({
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              syncProfile(true);
-            }}
+            refreshing={isRefetching}
+            onRefresh={() => refetch()}
             tintColor={theme.colors.brand.main}
           />
         }
@@ -123,34 +93,55 @@ export const OwnerProfileScreen: React.FC<OwnerProfileScreenProps> = ({
           isOwnerMode={true}
           onVerificationPress={() => openVerification()}
           onAvatarUpdated={async (avatarUrl) => {
-            setProfile({ ...profile, avatarUrl });
             await updateUserProfile({ avatarUrl });
+            refetch();
           }}
         />
 
         {/* Carte de Basculement vers le Mode Locataire */}
         <TenantBecomeHostCard
+          currentMode="OWNER"
           isHost={true}
-          onConfirm={async () => {
-            onSwitchToTenant?.();
-          }}
+          onSwitchToTenant={onSwitchToTenant}
         />
 
         {/* Composants de vérification, infos personnelles et sécurité */}
         <TenantVerificationCard profile={profile} onPress={() => openVerification()} />
         <TenantProfileInformationCard
           profile={profile}
-          onPhonePress={() => openVerification(['PREGATE', 'PHONE'])}
           onUpdated={async (partial) => {
-            setProfile({ ...profile, ...partial });
-            await syncProfile(true);
+            await updateUserProfile({
+              prenom: partial.prenom,
+              nom: partial.nom,
+              dateNaissance: partial.dateNaissance || undefined,
+            });
+            const res = await refetch();
+            const updatedProfile = res.data;
+            if (updatedProfile) {
+              const missing = verificationSteps(updatedProfile);
+              if (missing.length > 0) {
+                Alert.alert(
+                  'Vérification requise 🛡️',
+                  'Vos informations ont été enregistrées. Une vérification d’identité (KYC) est nécessaire pour débloquer ou maintenir vos accès.',
+                  [
+                    { text: 'Plus tard', style: 'cancel' },
+                    {
+                      text: 'Vérifier mon identité ⚡️',
+                      onPress: () => openVerification(missing),
+                    },
+                  ]
+                );
+              } else {
+                Alert.alert('Profil mis à jour', 'Vos informations personnelles ont été enregistrées avec succès.');
+              }
+            }
           }}
         />
         <TenantSecurityCard
           profile={profile}
           onUpdated={async (partial) => {
-            setProfile({ ...profile, ...partial });
             if (partial.email) await updateUserProfile({ email: partial.email });
+            refetch();
           }}
         />
 
@@ -185,7 +176,7 @@ export const OwnerProfileScreen: React.FC<OwnerProfileScreenProps> = ({
         onClose={() => setGateVisible(false)}
         onAllCompleted={() => {
           setGateVisible(false);
-          syncProfile(true);
+          refetch();
         }}
       />
     </SafeAreaView>

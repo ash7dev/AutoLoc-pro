@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { secureStorage } from '../storage/secureStore';
 import { CurrencyCode } from '../../shared/components/CurrencyPickerModal';
 import { apiClient } from '../api/apiClient';
+import { queryClient } from '../api/queryClient';
+import { authApi } from '../../features/auth/api/authApi';
 
 export type PendingIntentAction =
   | 'BOOK_VEHICLE'
@@ -42,6 +44,12 @@ export interface SearchFilters {
   carburant?: string;
   transmission?: string;
   sort?: 'RELEVANCE' | 'PRICE_ASC' | 'PRICE_DESC' | 'RATING';
+  bbox?: {
+    minLat: number;
+    maxLat: number;
+    minLng: number;
+    maxLng: number;
+  };
 }
 
 interface AppState {
@@ -210,14 +218,21 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   logout: async () => {
-    await secureStorage.clearSession();
-    set({
-      isAuthenticated: false,
-      isGuestMode: true,
-      token: null,
-      user: null,
-      pendingIntent: null,
-    });
+    try {
+      await authApi.logout().catch(() => {});
+    } catch {
+      // Silent catch if offline
+    } finally {
+      await secureStorage.clearSession();
+      queryClient.clear();
+      set({
+        isAuthenticated: false,
+        isGuestMode: true,
+        token: null,
+        user: null,
+        pendingIntent: null,
+      });
+    }
   },
 
   setPendingIntent: (intent) => {

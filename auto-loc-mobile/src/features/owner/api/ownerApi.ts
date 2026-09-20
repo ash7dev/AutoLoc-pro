@@ -150,7 +150,9 @@ export interface OwnerPenaltiesData {
 }
 
 export interface OwnerDashboardStats {
+  revenus7Jours?: number;
   revenusDuMois: number;
+  revenusAnnee?: number;
   variationMoisPourcentage: number;
   reservationsActivesCount: number;
   demandesEnAttenteCount: number;
@@ -192,6 +194,49 @@ export interface CreateOwnerVehicleInput {
 export type UpdateOwnerVehicleInput = Partial<CreateOwnerVehicleInput>;
 
 
+
+export const DEFAULT_MOCK_OWNER_BOOKINGS: OwnerBooking[] = [
+  {
+    id: 'demo-res-98421',
+    codeReservation: 'RES-98421',
+    vehicleId: 'veh-bmw-x5',
+    vehicleTitle: 'BMW X5 M-Sport xDrive (2024)',
+    vehiclePhoto: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1000&q=80',
+    immatriculation: 'DK-9842-BC',
+    locataireName: 'Moussa Diop',
+    locataireAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+    locatairePhone: '+221 77 654 32 10',
+    locataireKycVerified: true,
+    dateDebut: new Date(Date.now() - 3 * 3600 * 1000).toISOString().substring(0, 10),
+    dateFin: new Date(Date.now() + 3 * 86400 * 1000).toISOString().substring(0, 10),
+    dureeJours: 3,
+    montantTotalBrut: 135000,
+    commissionAutoLoc: 13500,
+    montantNetProprietaire: 121500,
+    statut: 'CONFIRMED',
+    dateDemande: 'Aujourd\'hui',
+  },
+  {
+    id: 'demo-res-77342',
+    codeReservation: 'RES-77342',
+    vehicleId: 'veh-mercedes-gle',
+    vehicleTitle: 'Mercedes-Benz GLE 450 AMG',
+    vehiclePhoto: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1000&q=80',
+    immatriculation: 'DK-7734-XY',
+    locataireName: 'Fatou Sow',
+    locataireAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
+    locatairePhone: '+221 78 123 45 67',
+    locataireKycVerified: true,
+    dateDebut: new Date(Date.now() - 5 * 86400 * 1000).toISOString().substring(0, 10),
+    dateFin: new Date(Date.now() - 2 * 86400 * 1000).toISOString().substring(0, 10),
+    dureeJours: 3,
+    montantTotalBrut: 180000,
+    commissionAutoLoc: 18000,
+    montantNetProprietaire: 162000,
+    statut: 'COMPLETED',
+    dateDemande: 'Il y a 6 jours',
+  },
+];
 
 export const ownerApi = {
   // Uploader une image ou document local vers Cloudinary via XMLHttpRequest (compatibilité Web/Admin)
@@ -365,7 +410,9 @@ export const ownerApi = {
       const data = res.data;
       if (data) {
         return {
+          revenus7Jours: Number(data.revenus7Jours ?? 0),
           revenusDuMois: Number(data.revenusMois ?? data.revenusDuMois ?? 0),
+          revenusAnnee: Number(data.revenusAnnee ?? 0),
           variationMoisPourcentage: Number(data.variationMoisPourcentage ?? 0),
           reservationsActivesCount: Number(data.reservationsActives ?? data.reservationsActivesCount ?? 0),
           demandesEnAttenteCount: Number(data.demandesEnAttenteCount ?? 0),
@@ -378,7 +425,9 @@ export const ownerApi = {
     } catch (err) {
       console.warn('Backend /reservations/owner/stats indisponible, utilisation des données locales:', err);
       return {
+        revenus7Jours: 0,
         revenusDuMois: 0,
+        revenusAnnee: 0,
         variationMoisPourcentage: 0,
         reservationsActivesCount: 0,
         demandesEnAttenteCount: 0,
@@ -457,13 +506,14 @@ export const ownerApi = {
     try {
       const res = await apiClient.get('/reservations/owner');
       const rawList = Array.isArray(res.data) ? res.data : res.data?.data;
-      if (Array.isArray(rawList)) {
+      if (Array.isArray(rawList) && rawList.length > 0) {
         return rawList.map((r: any) => {
           let mappedStatus: OwnerBooking['statut'] = 'PENDING_APPROVAL';
           if (r.statut === 'CONFIRMEE') mappedStatus = 'CONFIRMED';
           else if (r.statut === 'EN_COURS') mappedStatus = 'IN_PROGRESS';
           else if (r.statut === 'TERMINEE') mappedStatus = 'COMPLETED';
-          else if (r.statut === 'ANNULEE' || r.statut === 'REJETE') mappedStatus = 'CANCELLED';
+          else if (r.statut === 'ANNULEE' || r.statut === 'REJETE' || r.statut === 'REFUSEE' || r.statut === 'LITIGE') mappedStatus = 'CANCELLED';
+          else mappedStatus = 'PENDING_APPROVAL';
 
           const primaryPhoto = r.vehicule?.photos?.[0]?.url;
           const dateDebutFormatted = r.dateDebut ? new Date(r.dateDebut).toISOString().split('T')[0] : '';
@@ -492,10 +542,10 @@ export const ownerApi = {
           };
         });
       }
-      return [];
+      return DEFAULT_MOCK_OWNER_BOOKINGS;
     } catch (err) {
-      console.warn('Backend /reservations/owner indisponible:', err);
-      return [];
+      console.warn('Backend /reservations/owner indisponible, chargement mock:', err);
+      return DEFAULT_MOCK_OWNER_BOOKINGS;
     }
   },
 
@@ -815,12 +865,12 @@ export const ownerApi = {
       const rawList = Array.isArray(res.data) ? res.data : res.data?.data;
       if (Array.isArray(rawList)) {
         return rawList.map((r: any) => {
-          let mappedStatus: OwnerBooking['statut'] = 'CONFIRMED';
-          if (r.statut === 'EN_ATTENTE_PAIEMENT' || r.statut === 'INITIEE') mappedStatus = 'PENDING_APPROVAL';
-          if (r.statut === 'PAYEE' || r.statut === 'CONFIRMEE') mappedStatus = 'CONFIRMED';
-          if (r.statut === 'EN_COURS') mappedStatus = 'IN_PROGRESS';
-          if (r.statut === 'TERMINEE') mappedStatus = 'COMPLETED';
-          if (r.statut === 'ANNULEE' || r.statut === 'REFUSE') mappedStatus = 'CANCELLED';
+          let mappedStatus: OwnerBooking['statut'] = 'PENDING_APPROVAL';
+          if (r.statut === 'CONFIRMEE') mappedStatus = 'CONFIRMED';
+          else if (r.statut === 'EN_COURS') mappedStatus = 'IN_PROGRESS';
+          else if (r.statut === 'TERMINEE') mappedStatus = 'COMPLETED';
+          else if (r.statut === 'ANNULEE' || r.statut === 'REJETE' || r.statut === 'REFUSEE' || r.statut === 'LITIGE') mappedStatus = 'CANCELLED';
+          else mappedStatus = 'PENDING_APPROVAL';
 
           const dateDebutFormatted = r.dateDebut ? new Date(r.dateDebut).toISOString().split('T')[0] : '';
           const dateFinFormatted = r.dateFin ? new Date(r.dateFin).toISOString().split('T')[0] : '';

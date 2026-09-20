@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -6,13 +6,15 @@ import {
   RefreshControl,
   StatusBar,
 } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAppStore } from '../../../core/store/useAppStore';
 import { PayoutModal } from '../components/PayoutModal';
 import { OwnerWalletGlassHeroHeader } from '../components/OwnerWalletGlassHeroHeader';
 import { OwnerMobileMoneyAccountsCard } from '../components/OwnerMobileMoneyAccountsCard';
 import { OwnerWalletTransactionsHistoryCard } from '../components/OwnerWalletTransactionsHistoryCard';
 import { OwnerWalletSkeleton } from '../components/OwnerWalletSkeleton';
-import { ownerApi, OwnerWalletData } from '../api/ownerApi';
+import { OwnerWalletData } from '../api/ownerApi';
+import { useOwnerWallet, OWNER_WALLET_QUERY_KEY } from '../hooks/useOwnerWallet';
 
 interface OwnerWalletScreenProps {
   onSwitchToTenant?: () => void;
@@ -25,10 +27,10 @@ export const OwnerWalletScreen: React.FC<OwnerWalletScreenProps> = ({
 }) => {
   const user = useAppStore((state) => state.user);
   const selectedCurrency = useAppStore((state) => state.selectedCurrency);
+  const queryClient = useQueryClient();
 
-  const [walletData, setWalletData] = useState<OwnerWalletData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { data: walletData, isLoading, refetch, isRefetching } = useOwnerWallet();
+
   const [payoutModalVisible, setPayoutModalVisible] = useState(false);
   const [selectedPayoutMethod, setSelectedPayoutMethod] = useState<'WAVE' | 'ORANGE_MONEY'>('WAVE');
 
@@ -37,25 +39,9 @@ export const OwnerWalletScreen: React.FC<OwnerWalletScreenProps> = ({
     setPayoutModalVisible(true);
   };
 
-  const loadWallet = async () => {
-    try {
-      const data = await ownerApi.getOwnerWallet();
-      setWalletData(data);
-    } catch {
-      // Handled
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    loadWallet();
-  }, []);
-
   const handlePayoutSuccess = (montant: number) => {
     if (!walletData) return;
-    setWalletData({
+    const updated: OwnerWalletData = {
       ...walletData,
       soldeDisponible: walletData.soldeDisponible - montant,
       balance: {
@@ -79,10 +65,11 @@ export const OwnerWalletScreen: React.FC<OwnerWalletScreenProps> = ({
         },
         ...walletData.transactions,
       ],
-    });
+    };
+    queryClient.setQueryData(OWNER_WALLET_QUERY_KEY, updated);
   };
 
-  if (loading && !walletData) {
+  if (isLoading && !walletData) {
     return <OwnerWalletSkeleton />;
   }
 
@@ -93,7 +80,7 @@ export const OwnerWalletScreen: React.FC<OwnerWalletScreenProps> = ({
       {/* Hero Glass Header VIP Portefeuille */}
       <OwnerWalletGlassHeroHeader
         user={user}
-        walletData={walletData}
+        walletData={walletData || null}
         selectedCurrency={selectedCurrency}
         onProfilePress={onProfilePress}
         onSwitchToTenant={onSwitchToTenant}
@@ -106,18 +93,15 @@ export const OwnerWalletScreen: React.FC<OwnerWalletScreenProps> = ({
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              loadWallet();
-            }}
+            refreshing={isRefetching}
+            onRefresh={() => refetch()}
             tintColor="#34D399"
           />
         }
       >
         {/* Carte Dédiée : Comptes de Retrait Mobile Money (Wave & Orange Money) */}
         <OwnerMobileMoneyAccountsCard
-          walletData={walletData}
+          walletData={walletData || null}
           selectedCurrency={selectedCurrency}
           onRequestPayoutPress={(method) => handleOpenPayout(method)}
         />

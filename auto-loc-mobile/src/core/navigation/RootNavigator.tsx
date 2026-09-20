@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { StyleSheet, View, BackHandler } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   useFonts,
   Fraunces_600SemiBold,
@@ -30,6 +31,8 @@ import { OtpScreen } from '../../features/auth/screens/OtpScreen';
 import { GuestAuthModal } from '../../shared/components';
 
 import { OwnerBookingDetailScreen } from '../../features/owner/screens/OwnerBookingDetailScreen';
+import { switchAutoLocRole } from '../../features/tenant/api/tenantProfileApi';
+import { secureStorage } from '../storage/secureStore';
 
 // Définition typée des routes de l'application
 export type AppScreenRoute =
@@ -115,11 +118,41 @@ export const RootNavigator: React.FC = () => {
     }
   };
 
-  const switchToOwnerSpace = () => {
+  const switchToOwnerSpace = async () => {
+    const state = useAppStore.getState();
+    const user = state.user;
+    if (user && user.role !== 'PROPRIETAIRE') {
+      try {
+        const res = await switchAutoLocRole('PROPRIETAIRE');
+        if (res.accessToken && res.refreshToken) {
+          await secureStorage.setRefreshToken(res.refreshToken);
+          await state.setAuth(res.accessToken, { ...user, role: 'PROPRIETAIRE' });
+        } else {
+          await state.updateUserProfile({ role: 'PROPRIETAIRE' });
+        }
+      } catch (err) {
+        console.warn('Changement de rôle proprietaire échoué:', err);
+      }
+    }
     navigateTo({ name: 'OWNER_MAIN' });
   };
 
-  const switchToTenantSpace = () => {
+  const switchToTenantSpace = async () => {
+    const state = useAppStore.getState();
+    const user = state.user;
+    if (user && user.role !== 'LOCATAIRE') {
+      try {
+        const res = await switchAutoLocRole('LOCATAIRE');
+        if (res.accessToken && res.refreshToken) {
+          await secureStorage.setRefreshToken(res.refreshToken);
+          await state.setAuth(res.accessToken, { ...user, role: 'LOCATAIRE' });
+        } else {
+          await state.updateUserProfile({ role: 'LOCATAIRE' });
+        }
+      } catch (err) {
+        console.warn('Changement de rôle locataire échoué:', err);
+      }
+    }
     navigateTo({ name: 'TENANT_MAIN' });
   };
 
@@ -177,11 +210,52 @@ export const RootNavigator: React.FC = () => {
     });
   };
 
+  const handleOwnerBookingBack = () => {
+    setActiveOwnerTab('RESERVATIONS');
+    setRouteHistory((prev) => {
+      const filtered = prev.filter((r) => r.name !== 'OWNER_BOOKING_DETAIL');
+      if (filtered.length > 0) {
+        return filtered;
+      }
+      return [{ name: 'OWNER_MAIN', initialTab: 'RESERVATIONS' }];
+    });
+  };
+
+  const handleTenantBookingBack = () => {
+    setActiveTenantTab('RESERVATIONS');
+    setRouteHistory((prev) => {
+      const filtered = prev.filter((r) => r.name !== 'BOOKING_DETAIL');
+      if (filtered.length > 0) {
+        return filtered;
+      }
+      return [{ name: 'TENANT_MAIN', initialTab: 'RESERVATIONS' }];
+    });
+  };
+
+  const isAuthenticated = useAppStore((state) => state.isAuthenticated);
+
+  // Déconnexion : Lorsque l'utilisateur se déconnecte, réinitialiser automatiquement la navigation vers l'Accueil Locataire Invité
+  useEffect(() => {
+    if (!isAuthenticated && splashFinished) {
+      setRouteHistory([{ name: 'TENANT_MAIN', initialTab: 'ACCUEIL' }]);
+      setActiveTenantTab('ACCUEIL');
+      setActiveOwnerTab('ACCUEIL');
+    }
+  }, [isAuthenticated, splashFinished]);
+
   // Gestionnaire du bouton Retour Matériel Android
   useEffect(() => {
     const onBackPress = () => {
       if (currentRoute.name === 'VEHICLE_DETAIL') {
         handleVehicleDetailBack();
+        return true;
+      }
+      if (currentRoute.name === 'OWNER_BOOKING_DETAIL') {
+        handleOwnerBookingBack();
+        return true;
+      }
+      if (currentRoute.name === 'BOOKING_DETAIL') {
+        handleTenantBookingBack();
         return true;
       }
       if (canGoBack) {
@@ -234,7 +308,7 @@ export const RootNavigator: React.FC = () => {
 
   return (
     <NavigationContext.Provider value={contextValue}>
-      <View style={styles.rootContainer}>
+      <GestureHandlerRootView style={styles.rootContainer}>
         <StatusBar style="dark" />
 
         {/* Rendu dynamique de l'écran actif */}
@@ -287,10 +361,20 @@ export const RootNavigator: React.FC = () => {
               );
 
             case 'BOOKING_DETAIL':
-              return <TenantBookingDetailScreen reservationId={currentRoute.reservationId} onBack={goBack} />;
+              return (
+                <TenantBookingDetailScreen
+                  reservationId={currentRoute.reservationId}
+                  onBack={handleTenantBookingBack}
+                />
+              );
 
             case 'OWNER_BOOKING_DETAIL':
-              return <OwnerBookingDetailScreen reservationId={currentRoute.reservationId} onBack={goBack} />;
+              return (
+                <OwnerBookingDetailScreen
+                  reservationId={currentRoute.reservationId}
+                  onBack={handleOwnerBookingBack}
+                />
+              );
 
             case 'OWNER_MAIN':
               return (
@@ -311,7 +395,7 @@ export const RootNavigator: React.FC = () => {
           onNavigateToLogin={() => navigateTo({ name: 'LOGIN' })}
           onNavigateToRegister={() => navigateTo({ name: 'REGISTER' })}
         />
-      </View>
+      </GestureHandlerRootView>
     </NavigationContext.Provider>
   );
 };

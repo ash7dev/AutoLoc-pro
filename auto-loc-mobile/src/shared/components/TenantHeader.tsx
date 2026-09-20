@@ -85,7 +85,7 @@ export const TenantHeader: React.FC<TenantHeaderProps> = ({
                 {title || 'Espace Client'}
               </Text>
               {subtitle ? (
-                <Text style={styles.managementSubtitle} numberOfLines={1}>
+                <Text style={styles.managementSubtitle} numberOfLines={2}>
                   {subtitle}
                 </Text>
               ) : null}
@@ -208,10 +208,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(16, 185, 129, 0.08)',
     borderWidth: 1,
     borderColor: 'rgba(16, 185, 129, 0.22)',
-    paddingHorizontal: 13,
-    paddingVertical: 7,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: theme.radius.full,
-    gap: 6,
+    gap: 5,
   },
   supportIconBadge: {
     position: 'relative',

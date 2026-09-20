@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import {
   AlertTriangle,
   ArrowRight,
+  CarFront,
   CheckCircle2,
   Clock3,
+  CreditCard,
+  Flag,
   History,
+  Key,
   ShieldCheck,
   Sparkles,
   User,
@@ -29,7 +33,7 @@ interface BookingTimelineSectionProps {
 type StatusTone = 'success' | 'warning' | 'info' | 'danger' | 'neutral';
 
 const statusLabels: Record<string, { label: string; tone: StatusTone }> = {
-  INITIEE: { label: 'Réservation initiée', tone: 'neutral' },
+  INITIEE: { label: 'Demande initiée', tone: 'neutral' },
   EN_ATTENTE_PAIEMENT: { label: 'En attente de paiement', tone: 'warning' },
   PAYEE: { label: 'Paiement en ligne confirmé', tone: 'info' },
   CONFIRMEE: { label: 'Réservation confirmée par l’hôte', tone: 'success' },
@@ -40,21 +44,26 @@ const statusLabels: Record<string, { label: string; tone: StatusTone }> = {
   REFUSEE: { label: 'Véhicule refusé au check-in', tone: 'danger' },
 };
 
+const isUuid = (str?: string | null) => Boolean(str && /^[0-9a-fA-F-]{20,}$/.test(str));
+
 const getEventActor = (modifiePar?: string | null) => {
-  if (!modifiePar) return { label: 'Système', type: 'SYSTEM' };
+  if (!modifiePar) return { label: 'AutoLoc System', type: 'AUTO' };
   const upper = modifiePar.toUpperCase();
 
-  if (upper === 'SYSTEM_TACIT_CHECKIN' || upper.startsWith('SYSTEM')) {
+  if (upper === 'SYSTEM_TACIT_CHECKIN' || upper.startsWith('SYSTEM') || upper.startsWith('AUTO')) {
     return { label: 'AutoLoc System', type: 'AUTO' };
   }
   if (upper === 'ADMIN' || upper.includes('SUPPORT')) {
     return { label: 'Support AutoLoc', type: 'ADMIN' };
   }
-  if (upper === 'PROPRIETAIRE' || upper === 'HOST' || upper === 'OWNER') {
+  if (upper === 'PROPRIETAIRE' || upper === 'HOST' || upper === 'OWNER' || upper.startsWith('OWNER_')) {
     return { label: 'Hôte', type: 'HOST' };
   }
   if (upper === 'LOCATAIRE' || upper === 'TENANT') {
-    return { label: 'Vous (Locataire)', type: 'TENANT' };
+    return { label: 'Locataire', type: 'TENANT' };
+  }
+  if (isUuid(modifiePar)) {
+    return { label: `Utilisateur #${modifiePar!.slice(0, 8).toUpperCase()}`, type: 'USER' };
   }
   return { label: modifiePar, type: 'USER' };
 };
@@ -76,7 +85,33 @@ const formatEventDate = (raw: string | Date) => {
 };
 
 export const BookingTimelineSection: React.FC<BookingTimelineSectionProps> = ({ events }) => {
-  if (!events || events.length === 0) {
+  // Tri chronologique et nettoyage des doublons consécutifs identiques
+  const cleanedEvents = useMemo(() => {
+    if (!events || events.length === 0) return [];
+
+    const sorted = [...events].sort(
+      (a, b) => new Date(a.modifieLe).getTime() - new Date(b.modifieLe).getTime()
+    );
+
+    // Filtrer les événements purement identiques consécutifs enregistrés dans la même seconde
+    const filtered: TimelineEvent[] = [];
+    for (const evt of sorted) {
+      const prev = filtered[filtered.length - 1];
+      if (
+        prev &&
+        prev.nouveauStatut === evt.nouveauStatut &&
+        prev.ancienStatut === evt.ancienStatut &&
+        prev.modifiePar === evt.modifiePar &&
+        Math.abs(new Date(prev.modifieLe).getTime() - new Date(evt.modifieLe).getTime()) < 2000
+      ) {
+        continue; // Ignorer le doublon technique
+      }
+      filtered.push(evt);
+    }
+    return filtered;
+  }, [events]);
+
+  if (cleanedEvents.length === 0) {
     return (
       <View style={styles.card}>
         <View style={styles.header}>
@@ -90,11 +125,6 @@ export const BookingTimelineSection: React.FC<BookingTimelineSectionProps> = ({ 
     );
   }
 
-  // Tri chronologique (du plus ancien au plus récent) pour la présentation en timeline
-  const sortedEvents = [...events].sort(
-    (a, b) => new Date(a.modifieLe).getTime() - new Date(b.modifieLe).getTime()
-  );
-
   return (
     <View style={styles.card}>
       {/* Header */}
@@ -103,22 +133,22 @@ export const BookingTimelineSection: React.FC<BookingTimelineSectionProps> = ({ 
           <View style={styles.iconBox}>
             <History size={17} color={theme.colors.brand.main} />
           </View>
-          <View>
+          <View style={styles.titleContainer}>
             <Text style={styles.title}>Chronologie des étapes</Text>
             <Text style={styles.subtitle}>Historique horodaté et infalsifiable</Text>
           </View>
         </View>
         <View style={styles.countBadge}>
           <Text style={styles.countBadgeText}>
-            {sortedEvents.length} étape{sortedEvents.length > 1 ? 's' : ''}
+            {cleanedEvents.length} étape{cleanedEvents.length > 1 ? 's' : ''}
           </Text>
         </View>
       </View>
 
       {/* Timeline List */}
       <View style={styles.list}>
-        {sortedEvents.map((event, index) => {
-          const isLast = index === sortedEvents.length - 1;
+        {cleanedEvents.map((event, index) => {
+          const isLast = index === cleanedEvents.length - 1;
           const statusKey = event.nouveauStatut ? event.nouveauStatut.toUpperCase() : '';
           const statusInfo = statusLabels[statusKey] ?? {
             label: event.nouveauStatut || 'Mise à jour',
@@ -130,9 +160,18 @@ export const BookingTimelineSection: React.FC<BookingTimelineSectionProps> = ({ 
           const isDanger = statusInfo.tone === 'danger';
           const isSuccess = statusInfo.tone === 'success';
           const isWarning = statusInfo.tone === 'warning';
+          const isInfo = statusInfo.tone === 'info';
 
           const { date: formattedDate, time: formattedTime } = formatEventDate(event.modifieLe);
           const ancienLabel = getStatusShortLabel(event.ancienStatut);
+
+          // Afficher la transition uniquement si l'ancien statut est valide et différent du nouveau
+          const showTransition = Boolean(
+            event.ancienStatut &&
+            event.ancienStatut !== event.nouveauStatut &&
+            ancienLabel &&
+            ancienLabel.toLowerCase() !== statusInfo.label.toLowerCase()
+          );
 
           return (
             <View key={event.id ?? `event-${index}`} style={styles.eventRow}>
@@ -142,20 +181,26 @@ export const BookingTimelineSection: React.FC<BookingTimelineSectionProps> = ({ 
                   style={[
                     styles.nodeRing,
                     isWarning && styles.nodeRingWarning,
+                    isInfo && styles.nodeRingInfo,
                     isDanger && styles.nodeRingDanger,
                     isSuccess && styles.nodeRingSuccess,
                     isLast && styles.nodeRingActive,
                   ]}
                 >
-                  {/* Le check-in automatique a priorité visuelle sur le tone du statut résultant */}
                   {isTacit ? (
                     <Sparkles size={13} color="#2563EB" />
                   ) : isDanger ? (
                     <XCircle size={14} color="#DC2626" />
+                  ) : statusKey === 'PAYEE' ? (
+                    <CreditCard size={13} color="#2563EB" />
+                  ) : statusKey === 'EN_COURS' ? (
+                    <CarFront size={13} color="#059669" />
+                  ) : statusKey === 'TERMINEE' ? (
+                    <Flag size={13} color="#475569" />
                   ) : isSuccess ? (
                     <CheckCircle2 size={14} color="#059669" />
                   ) : isWarning ? (
-                    <AlertTriangle size={13} color="#D97706" />
+                    <Clock3 size={13} color="#D97706" />
                   ) : (
                     <Clock3 size={13} color={isLast ? theme.colors.brand.main : '#64748B'} />
                   )}
@@ -169,21 +214,25 @@ export const BookingTimelineSection: React.FC<BookingTimelineSectionProps> = ({ 
               {/* Event Content Box */}
               <View style={styles.eventBody}>
                 <View style={styles.titleAndActorRow}>
-                  <Text style={[styles.eventTitle, isLast && styles.eventTitleActive]}>
+                  <Text style={[styles.eventTitle, isLast && styles.eventTitleActive]} numberOfLines={1}>
                     {isTacit ? 'Check-in automatique appliqué' : statusInfo.label}
                   </Text>
                 </View>
 
-                {/* Transition breadcrumb if available */}
-                {ancienLabel && (
+                {/* Transition breadcrumb cleanly formatted without overflow */}
+                {showTransition && (
                   <View style={styles.transitionRow}>
-                    <Text style={styles.transitionText}>{ancienLabel}</Text>
-                    <ArrowRight size={10} color="#94A3B8" />
-                    <Text style={styles.transitionTextTarget}>{statusInfo.label}</Text>
+                    <Text style={styles.transitionText} numberOfLines={1} ellipsizeMode="tail">
+                      {ancienLabel}
+                    </Text>
+                    <ArrowRight size={10} color="#94A3B8" style={styles.transitionArrow} />
+                    <Text style={styles.transitionTextTarget} numberOfLines={1} ellipsizeMode="tail">
+                      {statusInfo.label}
+                    </Text>
                   </View>
                 )}
 
-                {/* Metadata Row */}
+                {/* Metadata Row: Date & Clean Actor Badge */}
                 <View style={styles.metaRow}>
                   <Text style={styles.eventDate}>
                     {formattedTime ? `${formattedDate} à ${formattedTime}` : formattedDate}
@@ -206,8 +255,10 @@ export const BookingTimelineSection: React.FC<BookingTimelineSectionProps> = ({ 
                       <ShieldCheck size={10} color="#7C3AED" />
                     ) : actor.type === 'HOST' ? (
                       <UserCheck size={10} color="#047857" />
+                    ) : actor.type === 'TENANT' ? (
+                      <User size={10} color="#047857" />
                     ) : (
-                      <User size={10} color="#072A20" />
+                      <User size={10} color="#475569" />
                     )}
                     <Text
                       style={[
@@ -217,6 +268,7 @@ export const BookingTimelineSection: React.FC<BookingTimelineSectionProps> = ({ 
                         actor.type === 'HOST' && styles.actorTextHost,
                         actor.type === 'TENANT' && styles.actorTextTenant,
                       ]}
+                      numberOfLines={1}
                     >
                       {actor.label}
                     </Text>
@@ -249,11 +301,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 10,
   },
   headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    flex: 1,
   },
   iconBox: {
     width: 36,
@@ -262,10 +316,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#ECFDF5',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
+  },
+  titleContainer: {
+    flex: 1,
   },
   title: {
     color: '#072A20',
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontFamily: theme.typography.fontFamily.displayBold,
     fontSize: 16,
   },
   subtitle: {
@@ -279,6 +337,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
+    flexShrink: 0,
   },
   countBadgeText: {
     color: '#475569',
@@ -321,6 +380,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#ECFDF5',
     borderColor: '#10B981',
   },
+  nodeRingInfo: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#3B82F6',
+  },
   nodeRingWarning: {
     backgroundColor: '#FFFBEB',
     borderColor: '#F59E0B',
@@ -342,6 +405,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: 16,
     gap: 4,
+    minWidth: 0,
   },
   titleAndActorRow: {
     flexDirection: 'row',
@@ -351,41 +415,49 @@ const styles = StyleSheet.create({
   },
   eventTitle: {
     color: '#1E293B',
-    fontFamily: theme.typography.fontFamily.medium,
-    fontSize: 14,
-    lineHeight: 20,
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 13.5,
+    lineHeight: 19,
+    flexShrink: 1,
   },
   eventTitleActive: {
     color: '#072A20',
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontFamily: theme.typography.fontFamily.displayBold,
   },
   transitionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
     marginTop: 1,
+    flexWrap: 'nowrap',
+    overflow: 'hidden',
   },
   transitionText: {
     color: '#94A3B8',
     fontFamily: theme.typography.fontFamily.regular,
     fontSize: 11,
+    flexShrink: 1,
+  },
+  transitionArrow: {
+    flexShrink: 0,
   },
   transitionTextTarget: {
     color: '#475569',
     fontFamily: theme.typography.fontFamily.semiBold,
     fontSize: 11,
+    flexShrink: 1,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     flexWrap: 'wrap',
-    marginTop: 2,
+    marginTop: 3,
   },
   eventDate: {
     color: '#64748B',
     fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 12,
+    fontSize: 11.5,
   },
   metaDot: {
     color: '#CBD5E1',
@@ -402,6 +474,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    maxWidth: '100%',
   },
   actorPillAuto: {
     backgroundColor: '#EFF6FF',
@@ -416,13 +489,14 @@ const styles = StyleSheet.create({
     borderColor: '#A7F3D0',
   },
   actorPillTenant: {
-    backgroundColor: '#F0FDF4',
-    borderColor: '#BBF7D0',
+    backgroundColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
   },
   actorText: {
     color: '#475569',
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 10,
+    flexShrink: 1,
   },
   actorTextAuto: {
     color: '#1D4ED8',
@@ -434,6 +508,6 @@ const styles = StyleSheet.create({
     color: '#047857',
   },
   actorTextTenant: {
-    color: '#072A20',
+    color: '#047857',
   },
 });

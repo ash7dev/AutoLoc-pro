@@ -77,38 +77,56 @@ export const OwnerBookingHeroSection: React.FC<OwnerBookingHeroSectionProps> = (
 
   return (
     <View style={styles.hero}>
+      {/* Top row: Badge and Creation Date */}
       <View style={styles.heroBadgeRow}>
         <View style={[styles.statusBadge, getStatusToneStyle(config.tone)]}>
           <CheckCircle2 size={13} color={config.tone === 'danger' ? '#FECACA' : '#D1FAE5'} />
-          <Text style={styles.statusText}>{config.label}</Text>
+          <Text style={styles.statusText} numberOfLines={1}>
+            {config.label}
+          </Text>
         </View>
-        <Text style={styles.createdAt}>Créée le {formatDate(creeLe)}</Text>
+        <Text style={styles.createdAt} numberOfLines={1}>
+          Créée le {formatDate(creeLe)}
+        </Text>
       </View>
 
-      <Text style={styles.heroEyebrow}>
+      {/* Vehicle Type & Location Subhead */}
+      <Text style={styles.heroEyebrow} numberOfLines={1}>
         {(vehicleType || 'VÉHICULE').toUpperCase()} · {vehicleVille || 'Sénégal'}
       </Text>
-      <Text style={styles.heroTitle}>
+
+      {/* Title */}
+      <Text style={styles.heroTitle} numberOfLines={2}>
         {vehicleMarque} {vehicleModele}
       </Text>
+
+      {/* Description */}
       <Text style={styles.heroDescription}>{config.detail}</Text>
 
+      {/* Dates & Duration Card */}
       <View style={styles.heroDates}>
         <View style={styles.dateBlock}>
           <Text style={styles.dateLabel}>DÉPART</Text>
-          <Text style={styles.dateValue}>{formatDate(dateDebut)}</Text>
+          <Text style={styles.dateValue} numberOfLines={1}>
+            {formatDate(dateDebut)}
+          </Text>
         </View>
+
         <View style={styles.duration}>
           <CalendarDays size={15} color="#A7F3D0" />
           <Text style={styles.durationValue}>{nbJours}</Text>
           <Text style={styles.durationLabel}>JOUR{nbJours > 1 ? 'S' : ''}</Text>
         </View>
+
         <View style={styles.dateBlock}>
           <Text style={styles.dateLabel}>RETOUR</Text>
-          <Text style={styles.dateValue}>{formatDate(dateFin)}</Text>
+          <Text style={styles.dateValue} numberOfLines={1}>
+            {formatDate(dateFin)}
+          </Text>
         </View>
       </View>
 
+      {/* Total Earnings Hero Banner */}
       <View style={styles.totalHero}>
         <Text style={styles.totalHeroLabel}>GAIN NET PROPRIÉTAIRE</Text>
         <Text style={styles.totalHeroValue}>{formatCurrency(montantProprietaire)}</Text>
@@ -137,7 +155,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: 10,
+    flexWrap: 'wrap',
   },
   statusBadge: {
     flexDirection: 'row',
@@ -146,16 +165,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 20,
+    flexShrink: 1,
   },
   status_success: { backgroundColor: 'rgba(16,185,129,0.28)' },
   status_warning: { backgroundColor: 'rgba(245,158,11,0.28)' },
   status_info: { backgroundColor: 'rgba(59,130,246,0.28)' },
   status_danger: { backgroundColor: 'rgba(220,38,38,0.30)' },
   status_neutral: { backgroundColor: 'rgba(148,163,184,0.28)' },
-  statusText: { color: '#FFFFFF', fontFamily: theme.typography.fontFamily.bold, fontSize: 11 },
+  statusText: { color: '#FFFFFF', fontFamily: theme.typography.fontFamily.bold, fontSize: 11, flexShrink: 1 },
   createdAt: { color: '#A7F3D0', fontFamily: theme.typography.fontFamily.medium, fontSize: 11 },
-  heroEyebrow: { color: '#A7F3D0', fontFamily: theme.typography.fontFamily.bold, fontSize: 10, letterSpacing: 0.9 },
-  heroTitle: { color: '#FFFFFF', fontFamily: theme.typography.fontFamily.displaySemiBold, fontSize: 27 },
+  heroEyebrow: { color: '#A7F3D0', fontFamily: theme.typography.fontFamily.bold, fontSize: 10.5, letterSpacing: 0.9 },
+  heroTitle: { color: '#FFFFFF', fontFamily: theme.typography.fontFamily.displayBold, fontSize: 26, lineHeight: 32 },
   heroDescription: { color: '#D1FAE5', fontFamily: theme.typography.fontFamily.regular, fontSize: 13, lineHeight: 19 },
   heroDates: {
     flexDirection: 'row',
@@ -165,23 +185,32 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     marginTop: 4,
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
-  dateBlock: { flex: 1, padding: 12, alignItems: 'center' },
-  dateLabel: { color: '#A7F3D0', fontFamily: theme.typography.fontFamily.bold, fontSize: 8, letterSpacing: 0.6, textAlign: 'center' },
-  dateValue: { color: '#FFFFFF', fontFamily: theme.typography.fontFamily.semiBold, fontSize: 12, marginTop: 5, textAlign: 'center' },
+  dateBlock: { flex: 1, padding: 12, alignItems: 'center', justifyContent: 'center' },
+  dateLabel: { color: '#A7F3D0', fontFamily: theme.typography.fontFamily.bold, fontSize: 8.5, letterSpacing: 0.6, textAlign: 'center' },
+  dateValue: { color: '#FFFFFF', fontFamily: theme.typography.fontFamily.semiBold, fontSize: 12.5, marginTop: 4, textAlign: 'center' },
   duration: {
-    width: 58,
+    width: 60,
     alignItems: 'center',
     justifyContent: 'center',
     borderLeftWidth: 1,
     borderRightWidth: 1,
     borderColor: 'rgba(255,255,255,.16)',
-    backgroundColor: 'rgba(255,255,255,.05)',
+    backgroundColor: 'rgba(255,255,255,.06)',
     gap: 2,
+    paddingVertical: 6,
   },
   durationValue: { color: '#FFFFFF', fontFamily: theme.typography.fontFamily.bold, fontSize: 16 },
   durationLabel: { color: '#A7F3D0', fontFamily: theme.typography.fontFamily.bold, fontSize: 8 },
-  totalHero: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 3 },
-  totalHeroLabel: { color: '#A7F3D0', fontFamily: theme.typography.fontFamily.bold, fontSize: 10, letterSpacing: 0.7 },
-  totalHeroValue: { color: '#FFFFFF', fontFamily: theme.typography.fontFamily.displaySemiBold, fontSize: 22 },
+  totalHero: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginTop: 4,
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  totalHeroLabel: { color: '#A7F3D0', fontFamily: theme.typography.fontFamily.bold, fontSize: 10, letterSpacing: 0.8 },
+  totalHeroValue: { color: '#FFFFFF', fontFamily: theme.typography.fontFamily.displayBold, fontSize: 22 },
 });

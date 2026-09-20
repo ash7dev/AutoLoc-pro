@@ -4,7 +4,6 @@ import {
   Alert,
   Modal,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -16,32 +15,57 @@ import {
   CheckCircle2,
   ChevronRight,
   Sparkles,
+  UserCheck,
   X,
 } from 'lucide-react-native';
 import { theme } from '../../../../core/theme';
 import { useNavigation } from '../../../../core/navigation/RootNavigator';
 
-interface TenantBecomeHostCardProps {
+export interface TenantBecomeHostCardProps {
+  currentMode?: 'TENANT' | 'OWNER';
   isHost: boolean;
   listingsCount?: number;
-  onConfirm: () => Promise<void>;
+  onConfirm?: () => Promise<void>;
+  onSwitchToTenant?: () => void;
+  onSwitchToOwner?: () => void;
 }
 
 export function TenantBecomeHostCard({
+  currentMode = 'TENANT',
   isHost,
   listingsCount = 0,
   onConfirm,
+  onSwitchToTenant,
+  onSwitchToOwner,
 }: TenantBecomeHostCardProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { switchToOwnerSpace } = useNavigation();
+  const { switchToOwnerSpace, switchToTenantSpace } = useNavigation();
 
-  const confirm = async () => {
+  const handleSwitchToOwner = () => {
+    if (onSwitchToOwner) {
+      onSwitchToOwner();
+    } else {
+      switchToOwnerSpace();
+    }
+  };
+
+  const handleSwitchToTenant = () => {
+    if (onSwitchToTenant) {
+      onSwitchToTenant();
+    } else {
+      switchToTenantSpace();
+    }
+  };
+
+  const confirmHostActivation = async () => {
     try {
       setLoading(true);
-      await onConfirm();
+      if (onConfirm) {
+        await onConfirm();
+      }
       setOpen(false);
-      switchToOwnerSpace();
+      handleSwitchToOwner();
     } catch {
       Alert.alert(
         'Activation impossible',
@@ -52,87 +76,93 @@ export function TenantBecomeHostCard({
     }
   };
 
-  // CAS 1 : L'utilisateur est DÉJÀ un Hôte avec des annonces actives
-  if (isHost && listingsCount > 0) {
+  // CAS 1 : On est sur l'écran PROFIL PROPRIÉTAIRE/HÔTE -> Proposer de repasser en MODE LOCATAIRE
+  if (currentMode === 'OWNER') {
     return (
       <View style={styles.cardHostActive}>
-        <View style={styles.headerRow}>
+        <View style={styles.cardTopBar}>
           <View style={styles.darkIconBadgeActive}>
-            <Sparkles size={18} color="#4ADE80" strokeWidth={2.25} />
+            <UserCheck size={18} color="#4ADE80" strokeWidth={2.25} />
           </View>
-          <View style={styles.titleGroup}>
-            <Text style={styles.titleHostActive}>
-              Espace Hôte ({listingsCount} {listingsCount > 1 ? 'véhicules' : 'véhicule'})
-            </Text>
-            <Text style={styles.subtitleHostActive}>
-              Gérez vos annonces, vos réservations entrantes et vos revenus Hôte.
-            </Text>
-          </View>
-
           <View style={styles.activePill}>
             <CheckCircle2 size={11} color="#4ADE80" strokeWidth={2.2} />
             <Text style={styles.activePillText}>HÔTE ACTIF</Text>
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.switchBtnHost}
-          onPress={switchToOwnerSpace}
-          activeOpacity={0.8}
-          accessibilityRole="button"
-          accessibilityLabel="Accéder au Mode Hôte"
-        >
-          <Text style={styles.switchBtnHostText}>Accéder au Mode Hôte ⚡️</Text>
-          <ArrowRight size={15} color="#041912" strokeWidth={2.25} />
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  // CAS 2 : L'utilisateur est Hôte actif mais N'A PAS ENCORE d'annonce publiée
-  if (isHost) {
-    return (
-      <View style={styles.cardHostActive}>
-        <View style={styles.headerRow}>
-          <View style={styles.darkIconBadgeActive}>
-            <CarFront size={18} color="#4ADE80" strokeWidth={2.25} />
-          </View>
-          <View style={styles.titleGroup}>
-            <Text style={styles.titleHostActive}>Espace Hôte Débloqué ⚡️</Text>
-            <Text style={styles.subtitleHostActive}>
-              Ajoutez votre 1ère voiture pour commencer à recevoir des réservations.
-            </Text>
-          </View>
+        <View style={styles.titleGroup}>
+          <Text style={styles.titleHostActive}>Espace Propriétaire Hôte ⚡️</Text>
+          <Text style={styles.subtitleHostActive}>
+            Basculez en mode Locataire pour rechercher des véhicules et louer une voiture.
+          </Text>
         </View>
 
         <TouchableOpacity
           style={styles.switchBtnHost}
-          onPress={switchToOwnerSpace}
+          onPress={handleSwitchToTenant}
           activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel="Publier mon 1er véhicule"
+          accessibilityLabel="Passer en Mode Locataire"
         >
-          <Text style={styles.switchBtnHostText}>Publier mon 1er véhicule</Text>
+          <Text style={styles.switchBtnHostText}>Passer en Mode Locataire 🚗</Text>
           <ArrowRight size={15} color="#041912" strokeWidth={2.25} />
         </TouchableOpacity>
       </View>
     );
   }
 
-  // CAS 2 : L'utilisateur N'EST PAS encore un Hôte
+  // CAS 2 : On est sur l'écran PROFIL LOCATAIRE & l'utilisateur est DÉJÀ un Hôte
+  if (isHost) {
+    return (
+      <View style={styles.cardHostActive}>
+        <View style={styles.cardTopBar}>
+          <View style={styles.darkIconBadgeActive}>
+            <Sparkles size={18} color="#4ADE80" strokeWidth={2.25} />
+          </View>
+          <View style={styles.activePill}>
+            <CheckCircle2 size={11} color="#4ADE80" strokeWidth={2.2} />
+            <Text style={styles.activePillText}>HÔTE DISPONIBLE</Text>
+          </View>
+        </View>
+
+        <View style={styles.titleGroup}>
+          <Text style={styles.titleHostActive}>
+            Espace Hôte Débloqué {listingsCount > 0 ? `(${listingsCount} voiture${listingsCount > 1 ? 's' : ''})` : '⚡️'}
+          </Text>
+          <Text style={styles.subtitleHostActive}>
+            Accédez à votre tableau de bord hôte pour gérer vos véhicules, vos réservations et vos revenus.
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.switchBtnHost}
+          onPress={handleSwitchToOwner}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Accéder au Mode Hôte"
+        >
+          <Text style={styles.switchBtnHostText}>Basculer vers l'Espace Hôte ⚡️</Text>
+          <ArrowRight size={15} color="#041912" strokeWidth={2.25} />
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // CAS 3 : On est sur l'écran PROFIL LOCATAIRE & l'utilisateur N'EST PAS ENCORE un Hôte
   return (
     <>
       <View style={styles.cardBecomeHost}>
-        <View style={styles.headerRow}>
+        <View style={styles.cardTopBar}>
           <View style={styles.darkIconBadge}>
             <CarFront size={18} color="#4ADE80" strokeWidth={2.25} />
           </View>
-          <View style={styles.titleGroup}>
-            <Text style={styles.titleBecomeHost}>Vous avez un véhicule à louer ?</Text>
-            <Text style={styles.subtitleBecomeHost}>
-              Proposez votre véhicule sur AutoLoc et générez des revenus en toute sécurité.
-            </Text>
-          </View>
+        </View>
+
+        <View style={styles.titleGroup}>
+          <Text style={styles.titleBecomeHost}>Vous avez un véhicule à louer ?</Text>
+          <Text style={styles.subtitleBecomeHost}>
+            Proposez votre véhicule sur AutoLoc et générez des revenus en toute sécurité.
+          </Text>
         </View>
 
         <TouchableOpacity
@@ -177,7 +207,7 @@ export function TenantBecomeHostCard({
             <View style={styles.modalActions}>
               <TouchableOpacity
                 disabled={loading}
-                onPress={confirm}
+                onPress={confirmHostActivation}
                 style={styles.modalPrimaryBtn}
                 activeOpacity={0.8}
               >
@@ -207,7 +237,7 @@ export function TenantBecomeHostCard({
 }
 
 const styles = StyleSheet.create({
-  /* Card CAS 1 : Hôte déjà Actif */
+  /* Card Hôte Actif */
   cardHostActive: {
     backgroundColor: '#041912',
     borderRadius: 22,
@@ -226,6 +256,12 @@ const styles = StyleSheet.create({
         elevation: 4,
       },
     }),
+  },
+  cardTopBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
   },
   headerRow: {
     flexDirection: 'row',
@@ -293,7 +329,7 @@ const styles = StyleSheet.create({
     color: '#041912',
   },
 
-  /* Card CAS 2 : Pas encore Hôte */
+  /* Card Pas encore Hôte */
   cardBecomeHost: {
     backgroundColor: '#041912',
     borderRadius: 22,

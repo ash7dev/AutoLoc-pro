@@ -34,13 +34,14 @@ import {
 import { theme } from '../../../../core/theme';
 import { AutoInput, AutoButton, DatePickerField } from '../../../../shared/components';
 import { TenantProfile, updateTenantProfile } from '../../api/tenantProfileApi';
+import { PhoneUpdateGateModal } from './PhoneUpdateGateModal';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 interface TenantProfileInformationCardProps {
   profile: TenantProfile;
   onUpdated: (profile: Partial<TenantProfile>) => Promise<void> | void;
-  onPhonePress: () => void;
+  onPhonePress?: () => void;
 }
 
 const MOIS_NOMS = [
@@ -107,6 +108,7 @@ export function TenantProfileInformationCard({
 }: TenantProfileInformationCardProps) {
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
+  const [phoneModalVisible, setPhoneModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [prenom, setPrenom] = useState(profile.prenom || '');
   const [nom, setNom] = useState(profile.nom || '');
@@ -170,9 +172,10 @@ export function TenantProfileInformationCard({
         nom: nom.trim(),
         dateNaissance: dateNaissance.trim() || null,
       });
-      await onUpdated(updated);
       setOpen(false);
-      Alert.alert('Profil mis à jour', 'Vos informations personnelles ont été enregistrées avec succès.');
+      if (onUpdated) {
+        await onUpdated(updated);
+      }
     } catch (err: any) {
       setError(err?.response?.data?.message || 'La mise à jour a échoué.');
     } finally {
@@ -228,7 +231,7 @@ export function TenantProfileInformationCard({
             icon={Phone}
             label="NUMÉRO DE TÉLÉPHONE"
             value={profile.telephone}
-            action={onPhonePress}
+            action={onPhonePress || (() => setPhoneModalVisible(true))}
             verified={profile.phoneVerified}
           />
           <FieldRow
@@ -238,6 +241,11 @@ export function TenantProfileInformationCard({
           />
         </View>
       </View>
+
+      <PhoneUpdateGateModal
+        visible={phoneModalVisible}
+        onClose={() => setPhoneModalVisible(false)}
+      />
 
       {/* Modal d'édition FULL-SCREEN Centré (Exactement comme Login/Register) */}
       <Modal

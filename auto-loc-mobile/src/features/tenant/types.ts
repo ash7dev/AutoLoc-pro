@@ -15,6 +15,8 @@ export interface VehicleFeedItem {
   prixParJour: number;
   prixBarre?: number;
   ville: string;
+  latitude?: number | null;
+  longitude?: number | null;
   note: number;
   totalAvis: number;
   statut: string;

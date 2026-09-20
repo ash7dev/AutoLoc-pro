@@ -67,11 +67,13 @@ export const HostGateModal: React.FC<HostGateModalProps> = ({
         setUpgradingRole(true);
         if (user && user.role !== 'PROPRIETAIRE') {
           const result = await becomeAutoLocHost();
-          await secureStorage.setRefreshToken(result.refreshToken);
-          await setAuth(result.accessToken, {
-            ...user,
-            role: result.role,
-          });
+          if (result.accessToken && result.refreshToken) {
+            await secureStorage.setRefreshToken(result.refreshToken);
+            await setAuth(result.accessToken, {
+              ...user,
+              role: result.role,
+            });
+          }
         }
       } catch {
         // Fallback

@@ -12,6 +12,7 @@ import { BookingCheckoutStep1 } from './BookingCheckoutStep1';
 import { BookingCheckoutStep2 } from './BookingCheckoutStep2';
 import { PaymentMode } from './BookingPaymentModeSelector';
 import { PaymentGateway } from './BookingPaymentGatewaySelector';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAppStore } from '../../../../core/store/useAppStore';
 import { apiClient } from '../../../../core/api/apiClient';
 
@@ -50,6 +51,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
   initialDateFin,
   onBookingSuccess,
 }) => {
+  const queryClient = useQueryClient();
   const user = useAppStore((state) => state.user);
   const selectedCurrency = useAppStore((state) => state.selectedCurrency);
 
@@ -210,6 +212,13 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
       );
 
       const { reservationId, paymentUrl } = response.data;
+
+      // Invalidation croisée synchrone des caches Tenant & Owner
+      queryClient.invalidateQueries({ queryKey: ['tenantBookings'] });
+      queryClient.invalidateQueries({ queryKey: ['owner', 'bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['owner', 'stats'] });
+      queryClient.invalidateQueries({ queryKey: ['mobileTenantFeed'] });
+      queryClient.invalidateQueries({ queryKey: ['exploreVehiclesFeed'] });
 
       setIsProcessing(false);
       onClose();

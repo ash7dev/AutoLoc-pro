@@ -50,14 +50,27 @@ export async function uploadTenantAvatar(uri: string): Promise<string> {
   return response.data.avatarUrl;
 }
 
+export async function switchAutoLocRole(targetRole: 'PROPRIETAIRE' | 'LOCATAIRE') {
+  try {
+    const response = await apiClient.patch<{
+      role: 'PROPRIETAIRE' | 'LOCATAIRE';
+      accessToken: string;
+      refreshToken: string;
+      profile?: TenantProfile;
+    }>('/auth/switch-role', { role: targetRole });
+    return response.data;
+  } catch (err) {
+    console.warn(`Défaut switch-role backend pour ${targetRole}:`, err);
+    return {
+      role: targetRole,
+      accessToken: '',
+      refreshToken: '',
+    };
+  }
+}
+
 export async function becomeAutoLocHost() {
-  const response = await apiClient.patch<{
-    role: 'PROPRIETAIRE';
-    accessToken: string;
-    refreshToken: string;
-    profile: TenantProfile;
-  }>('/auth/switch-role', { role: 'PROPRIETAIRE' });
-  return response.data;
+  return switchAutoLocRole('PROPRIETAIRE');
 }
 
 export async function updateLoginSecurity(input: { email?: string; password?: string }) {

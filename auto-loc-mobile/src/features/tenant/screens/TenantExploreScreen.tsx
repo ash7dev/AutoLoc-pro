@@ -1,20 +1,22 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   SafeAreaView,
-  FlatList,
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
   Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { MapPin, List, SearchX, RotateCcw, SlidersHorizontal, X } from 'lucide-react-native';
+import { MapPin, List, SearchX, RotateCcw, SlidersHorizontal, X, Star, ArrowRight } from 'lucide-react-native';
+import { Image } from 'expo-image';
+import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { theme } from '../../../core/theme';
 import { useAppStore } from '../../../core/store/useAppStore';
 import { useNavigation } from '../../../core/navigation/RootNavigator';
+import { formatConvertedPrice } from '../../../core/utils/currency';
 import { WhereToSearchTrigger } from '../components/WhereToSearchTrigger';
 import { AirbnbSearchModal } from '../components/AirbnbSearchModal';
 import { CategoryChipsBar, CategoryFilterKey } from '../components/CategoryChipsBar';
@@ -31,12 +33,18 @@ export const TenantExploreScreen: React.FC = () => {
   const triggerGuestAuthGuard = useAppStore((state) => state.triggerGuestAuthGuard);
   const searchFilters = useAppStore((state) => state.searchFilters);
   const setSearchFilters = useAppStore((state) => state.setSearchFilters);
+  const selectedCurrency = useAppStore((state) => state.selectedCurrency);
 
   const [searchModalVisible, setSearchModalVisible] = useState<boolean>(false);
   const [refinementModalVisible, setRefinementModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilterKey>('ALL');
   const [viewMode, setViewMode] = useState<'SPLIT' | 'MAP' | 'LIST'>('SPLIT');
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleFeedItem | null>(null);
   const { favoriteIds, toggleFavorite } = useFavoriteVehicles();
+
+  // BottomSheet References & Snap Points
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const snapPoints = useMemo(() => ['28%', '55%', '92%'], []);
 
   // Merge store filters with selected category chip
   const activeFilters = useMemo(() => {
@@ -81,12 +89,30 @@ export const TenantExploreScreen: React.FC = () => {
     navigation.navigateToVehicleDetail(vehicle.id, vehicle);
   };
 
+  const handleSearchInArea = useCallback((region?: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number }) => {
+    if (!region) return;
+    const minLat = region.latitude - region.latitudeDelta / 2;
+    const maxLat = region.latitude + region.latitudeDelta / 2;
+    const minLng = region.longitude - region.longitudeDelta / 2;
+    const maxLng = region.longitude + region.longitudeDelta / 2;
+
+    setSearchFilters({
+      ...searchFilters,
+      bbox: { minLat, maxLat, minLng, maxLng },
+    });
+  }, [searchFilters, setSearchFilters]);
+
   const handleToggleViewMode = async () => {
-    if (viewMode === 'SPLIT' || viewMode === 'LIST') {
+    if (viewMode === 'MAP') {
+      setViewMode('SPLIT');
+      bottomSheetRef.current?.snapToIndex(1); // 55%
+    } else if (viewMode === 'SPLIT') {
+      setViewMode('LIST');
+      bottomSheetRef.current?.snapToIndex(2); // 92%
+    } else {
       await requestLocationPermission();
       setViewMode('MAP');
-    } else {
-      setViewMode('SPLIT');
+      bottomSheetRef.current?.snapToIndex(0); // 28%
     }
   };
 
@@ -101,12 +127,54 @@ export const TenantExploreScreen: React.FC = () => {
     setSearchFilters({ zone: '', type: '', prixMin: undefined, prixMax: undefined, carburant: '', transmission: '', sort: 'RELEVANCE' });
   };
 
-  const activeZoneLabel = searchFilters.zone ? searchFilters.zone : 'Sénégal';
+function formatLocationPreposition(zone?: string): string {
+  if (!zone || !zone.trim() || zone.trim().toLowerCase() === 'sénégal' || zone.trim().toLowerCase() === 'senegal') {
+    return 'au Sénégal';
+  }
+
+  const trimmed = zone.trim();
+  const lower = trimmed.toLowerCase();
+
+  if (
+    lower.startsWith('à ') ||
+    lower.startsWith('au ') ||
+    lower.startsWith('aux ') ||
+    lower.startsWith('en ') ||
+    lower.startsWith('dans ') ||
+    lower.startsWith('hors ')
+  ) {
+    return trimmed;
+  }
+
+  if (lower === 'almadies' || lower === 'les almadies') {
+    return 'aux Almadies';
+  }
+
+  if (lower === 'maristes' || lower === 'les maristes') {
+    return 'aux Maristes';
+  }
+
+  if (lower === 'mermoz') {
+    return 'à Mermoz';
+  }
+
+  if (lower === 'aibd' || lower === 'aéroport aibd') {
+    return "à l'Aéroport AIBD";
+  }
+
+  if (lower === 'horsdakar' || lower === 'hors dakar') {
+    return 'hors de Dakar';
+  }
+
+  return `à ${trimmed}`;
+}
+
+  const locationText = formatLocationPreposition(searchFilters.zone);
   const countLabel = loading
     ? 'Recherche des véhicules...'
     : (total ?? vehicles.length) > 0
-    ? `${total ?? vehicles.length} véhicule${(total ?? vehicles.length) > 1 ? 's' : ''} disponible${(total ?? vehicles.length) > 1 ? 's' : ''} à ${activeZoneLabel}`
-    : `Aucun véhicule disponible à ${activeZoneLabel}`;
+    ? `${total ?? vehicles.length} véhicule${(total ?? vehicles.length) > 1 ? 's' : ''} disponible${(total ?? vehicles.length) > 1 ? 's' : ''} ${locationText}`
+    : `Aucun véhicule disponible ${locationText}`;
 
   const activeFilterCount = [
     selectedCategory !== 'ALL',
@@ -120,7 +188,7 @@ export const TenantExploreScreen: React.FC = () => {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
 
-      {/* En-Tête Supérieur Style Airbnb (Remplace le header d'accueil générique) */}
+      {/* En-Tête Supérieur Style Airbnb */}
       <View style={styles.topFilterSection}>
         <WhereToSearchTrigger
           onPress={() => setSearchModalVisible(true)}
@@ -151,131 +219,176 @@ export const TenantExploreScreen: React.FC = () => {
         ) : null}
       </View>
 
-      {/* Zone de Contenu Principale (Carte en haut + Fiche liste à coins arrondis) */}
-      {/* Zone de Contenu Principale (Carte en arrière-plan + Liste qui glisse par-dessus) */}
-      {viewMode === 'MAP' ? (
-        <View style={styles.fullMapContainer}>
-          <ExploreMapViewer
-            vehicles={vehicles}
-            userLocation={userLocation}
-            onVehiclePress={handleVehiclePress}
-          />
+      {/* Zone de Contenu Principale (Carte Plein Écran en Fond d'Écran) */}
+      <View style={styles.fullMapBackground}>
+        <ExploreMapViewer
+          vehicles={vehicles}
+          userLocation={userLocation}
+          onVehiclePress={handleVehiclePress}
+          onSearchInArea={handleSearchInArea}
+          onSelectVehicle={setSelectedVehicle}
+          hideCarousel={viewMode === 'LIST'}
+        />
+      </View>
+
+      {/* Vrai Bottom Sheet Natif avec Gesture Handler */}
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={1}
+        snapPoints={snapPoints}
+        onChange={(index) => {
+          if (index === 0) setViewMode('MAP');
+          else if (index === 1) setViewMode('SPLIT');
+          else if (index === 2) setViewMode('LIST');
+        }}
+        handleIndicatorStyle={styles.sheetHandleIndicator}
+        backgroundStyle={styles.sheetBackground}
+      >
+        {/* Titre Compteur de Véhicules */}
+        <View style={styles.countTitleRow}>
+          <Text style={styles.countTitleText}>{countLabel}</Text>
         </View>
-      ) : (
-        <View style={styles.mainContainer}>
-          {/* Section Carte Positionnée en Arrière-Plan en mode SPLIT */}
-          {viewMode === 'SPLIT' && (
-            <View style={styles.absoluteMapBackground}>
-              <ExploreMapViewer
-                vehicles={vehicles}
-                userLocation={userLocation}
-                onVehiclePress={handleVehiclePress}
+
+        {/* Liste des Véhicules via BottomSheetFlatList */}
+        <BottomSheetFlatList
+          data={loading && vehicles.length === 0 ? [] : vehicles}
+          keyExtractor={(item, index) => `${item.id}-${index}`}
+          renderItem={({ item }) => (
+            <View style={styles.cardItemWrapper}>
+              <AirbnbVehicleCard
+                vehicle={item}
+                onPress={handleVehiclePress}
+                onFavoriteToggle={handleFavoriteToggle}
+                isFavorited={favoriteIds.has(item.id)}
               />
             </View>
           )}
-
-          {/* Liste des Véhicules qui défile au-dessus de la carte */}
-          <FlatList
-            data={loading && vehicles.length === 0 ? [] : vehicles}
-            keyExtractor={(item, index) => `${item.id}-${index}`}
-            renderItem={({ item }) => (
-              <View style={styles.cardItemWrapper}>
-                <AirbnbVehicleCard
-                  vehicle={item}
-                  onPress={handleVehiclePress}
-                  onFavoriteToggle={handleFavoriteToggle}
-                  isFavorited={favoriteIds.has(item.id)}
-                />
+          contentContainerStyle={styles.listContentContainer}
+          showsVerticalScrollIndicator={false}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.4}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={refetch}
+              tintColor={theme.colors.brand.main}
+              colors={[theme.colors.brand.main]}
+            />
+          }
+          ListEmptyComponent={
+            loading && vehicles.length === 0 ? (
+              <View style={[styles.cardItemWrapper, styles.skeletonPadding]}>
+                <FeedSkeleton />
               </View>
-            )}
-            contentContainerStyle={styles.listContentContainer}
-            showsVerticalScrollIndicator={false}
-            onEndReached={loadMore}
-            onEndReachedThreshold={0.4}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={refetch}
-                tintColor={theme.colors.brand.main}
-                colors={[theme.colors.brand.main]}
-                progressViewOffset={viewMode === 'SPLIT' ? 220 : 0}
-              />
-            }
-            ListHeaderComponent={
-              <View style={styles.sheetHeaderWrapper}>
-                {/* Espace transparent pour laisser apparaître la carte en mode SPLIT */}
-                {viewMode === 'SPLIT' && <View style={styles.mapSpacer} pointerEvents="none" />}
+            ) : error ? (
+              <View style={styles.emptyWrapper}>
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyTitle}>La recherche n’a pas abouti</Text>
+                  <Text style={styles.emptySubtitle}>{error}</Text>
+                  <TouchableOpacity style={styles.resetBtn} onPress={refetch} activeOpacity={0.8}>
+                    <RotateCcw size={15} color="#FFFFFF" />
+                    <Text style={styles.resetBtnText}>Réessayer</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.emptyWrapper}>
+                <View style={styles.emptyContainer}>
+                  <View style={styles.emptyIconCircle}>
+                    <SearchX size={32} color="#64748B" />
+                  </View>
+                  <Text style={styles.emptyTitle}>Aucun véhicule disponible</Text>
+                  <Text style={styles.emptySubtitle}>
+                    {searchFilters.zone
+                      ? `Aucun véhicule ne correspond à votre recherche ${formatLocationPreposition(searchFilters.zone)}. Assurez-vous que l'option Hors Dakar est activée ou réinitialisez les filtres.`
+                      : 'Essayez de modifier vos critères de dates ou de catégories pour afficher plus d’annonces.'}
+                  </Text>
 
-                {/* En-Tête de la Feuille à Coins Arrondis (Masque la carte quand la liste monte) */}
-                <View
-                  style={[
-                    styles.roundedSheetHeader,
-                    viewMode === 'LIST' && styles.fullSheetHeader,
-                  ]}
+                  <TouchableOpacity
+                    style={styles.resetBtn}
+                    onPress={handleResetFilters}
+                    activeOpacity={0.8}
+                  >
+                    <RotateCcw size={15} color="#FFFFFF" />
+                    <Text style={styles.resetBtnText}>Réinitialiser les filtres</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )
+          }
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={styles.footerWrapper}>
+                <View style={styles.footerLoader}>
+                  <ActivityIndicator size="small" color={theme.colors.brand.main} />
+                  <Text style={styles.loadingMoreText}>Chargement des véhicules suivants...</Text>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.endOfList}>
+                {!loading && vehicles.length > 0 && !hasMore ? <Text style={styles.endOfListText}>Vous avez vu tous les véhicules</Text> : null}
+              </View>
+            )
+          }
+        />
+      </BottomSheet>
+
+      {/* Carte Flottante de Véhicule Sélectionné (Rendue AU-DESSUS du BottomSheet à zIndex 999) */}
+      {selectedVehicle && viewMode !== 'LIST' && (
+        <View style={styles.floatingCardOverlay} pointerEvents="box-none">
+          <TouchableOpacity
+            style={styles.floatingCardContainer}
+            onPress={() => handleVehiclePress(selectedVehicle)}
+            activeOpacity={0.9}
+          >
+            <Image
+              source={{
+                uri:
+                  selectedVehicle.photoUrl ||
+                  'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=800&auto=format&fit=crop',
+              }}
+              style={styles.floatingCardImg}
+              contentFit="cover"
+            />
+
+            <View style={styles.floatingCardBody}>
+              <View style={styles.floatingCardHeaderRow}>
+                <Text style={styles.floatingCardTitle} numberOfLines={1}>
+                  {selectedVehicle.marque} {selectedVehicle.modele}
+                </Text>
+
+                {selectedVehicle.note > 0 && (
+                  <View style={styles.ratingBadge}>
+                    <Star size={11} color="#F59E0B" fill="#F59E0B" />
+                    <Text style={styles.ratingText}>{selectedVehicle.note.toFixed(1)}</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.locationRow}>
+                <MapPin size={11} color="#64748B" />
+                <Text style={styles.floatingCardLoc} numberOfLines={1}>
+                  {selectedVehicle.ville || 'Dakar'}
+                </Text>
+              </View>
+
+              <View style={styles.floatingCardPriceRow}>
+                <Text style={styles.floatingCardPrice}>
+                  {formatConvertedPrice(selectedVehicle.prixParJour, selectedCurrency)}
+                  <Text style={styles.perDay}> / j</Text>
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.viewDetailBtn}
+                  onPress={() => handleVehiclePress(selectedVehicle)}
+                  activeOpacity={0.8}
                 >
-                  {/* Titre Compteur de Véhicules */}
-                  <View style={styles.countTitleRow}>
-                    <Text style={styles.countTitleText}>{countLabel}</Text>
-                  </View>
-                </View>
+                  <Text style={styles.viewDetailText}>Voir</Text>
+                  <ArrowRight size={12} color="#FFFFFF" />
+                </TouchableOpacity>
               </View>
-            }
-            ListEmptyComponent={
-              loading && vehicles.length === 0 ? (
-                <View style={[styles.cardItemWrapper, styles.skeletonPadding]}>
-                  <FeedSkeleton />
-                </View>
-              ) : error ? (
-                <View style={styles.emptyWrapper}>
-                  <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyTitle}>La recherche n’a pas abouti</Text>
-                    <Text style={styles.emptySubtitle}>{error}</Text>
-                    <TouchableOpacity style={styles.resetBtn} onPress={refetch} activeOpacity={0.8}>
-                      <RotateCcw size={15} color="#FFFFFF" />
-                      <Text style={styles.resetBtnText}>Réessayer</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.emptyWrapper}>
-                  <View style={styles.emptyContainer}>
-                    <View style={styles.emptyIconCircle}>
-                      <SearchX size={32} color="#64748B" />
-                    </View>
-                    <Text style={styles.emptyTitle}>Aucun véhicule disponible</Text>
-                    <Text style={styles.emptySubtitle}>
-                      {searchFilters.zone
-                        ? `Aucun véhicule ne correspond à votre recherche à ${searchFilters.zone}. Assurez-vous que l'option Hors Dakar est activée ou réinitialisez les filtres.`
-                        : 'Essayez de modifier vos critères de dates ou de catégories pour afficher plus d’annonces.'}
-                    </Text>
-
-                    <TouchableOpacity
-                      style={styles.resetBtn}
-                      onPress={handleResetFilters}
-                      activeOpacity={0.8}
-                    >
-                      <RotateCcw size={15} color="#FFFFFF" />
-                      <Text style={styles.resetBtnText}>Réinitialiser les filtres</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )
-            }
-            ListFooterComponent={
-              loadingMore ? (
-                <View style={styles.footerWrapper}>
-                  <View style={styles.footerLoader}>
-                    <ActivityIndicator size="small" color={theme.colors.brand.main} />
-                    <Text style={styles.loadingMoreText}>Chargement des véhicules suivants...</Text>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.endOfList}>
-                  {!loading && vehicles.length > 0 && !hasMore ? <Text style={styles.endOfListText}>Vous avez vu tous les véhicules</Text> : null}
-                </View>
-              )
-            }
-          />
+            </View>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -289,18 +402,23 @@ export const TenantExploreScreen: React.FC = () => {
           {viewMode === 'MAP' ? (
             <>
               <List size={16} color="#FFFFFF" />
-              <Text style={styles.floatingToggleText}>Liste</Text>
+              <Text style={styles.floatingToggleText}>Agrandir la Liste</Text>
+            </>
+          ) : viewMode === 'LIST' ? (
+            <>
+              <MapPin size={16} color="#FFFFFF" />
+              <Text style={styles.floatingToggleText}>Voir la Carte</Text>
             </>
           ) : (
             <>
               <MapPin size={16} color="#FFFFFF" />
-              <Text style={styles.floatingToggleText}>Carte</Text>
+              <Text style={styles.floatingToggleText}>Carte Plein Écran</Text>
             </>
           )}
         </TouchableOpacity>
       </View>
 
-      {/* Modal de Recherche Style Airbnb */}
+      {/* Modales de Recherche & Filtres */}
       <AirbnbSearchModal
         visible={searchModalVisible}
         onClose={() => setSearchModalVisible(false)}
@@ -401,57 +519,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: theme.colors.brand.main,
   },
-  mainContainer: {
-    flex: 1,
-    position: 'relative',
-    backgroundColor: '#F8FAFC',
-  },
-  fullMapContainer: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-  absoluteMapBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 260,
+  fullMapBackground: {
+    ...StyleSheet.absoluteFill,
     zIndex: 0,
   },
-  listContentContainer: {
-    backgroundColor: 'transparent',
-  },
-  sheetHeaderWrapper: {
-    backgroundColor: 'transparent',
-  },
-  mapSpacer: {
-    height: 215,
-    backgroundColor: 'transparent',
-  },
-  roundedSheetHeader: {
+  sheetBackground: {
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    paddingTop: 4,
-    paddingBottom: 4,
     ...Platform.select({
       ios: {
         shadowColor: '#000000',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 10,
+        shadowOffset: { width: 0, height: -6 },
+        shadowOpacity: 0.16,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 10,
+        elevation: 12,
       },
     }),
   },
-  fullSheetHeader: {
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-    shadowOpacity: 0,
-    elevation: 0,
+  sheetHandleIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#CBD5E1',
+    borderRadius: 2,
   },
   countTitleRow: {
     paddingHorizontal: 20,
@@ -463,6 +555,9 @@ const styles = StyleSheet.create({
     fontSize: 16.5,
     color: theme.primitives.forest[800],
     textAlign: 'center',
+  },
+  listContentContainer: {
+    backgroundColor: '#FFFFFF',
   },
   cardItemWrapper: {
     backgroundColor: '#FFFFFF',
@@ -557,10 +652,10 @@ const styles = StyleSheet.create({
   floatingToggleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#072A20', // Forest 950
+    backgroundColor: '#072A20',
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: theme.radius.full, // 9999px
+    borderRadius: theme.radius.full,
     gap: 8,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.15)',
@@ -581,5 +676,106 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     color: '#FFFFFF',
     letterSpacing: 0.3,
+  },
+  floatingCardOverlay: {
+    position: 'absolute',
+    bottom: 82,
+    left: 16,
+    right: 16,
+    zIndex: 999,
+  },
+  floatingCardContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: theme.radius.card,
+    padding: 10,
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1.5,
+    borderColor: theme.primitives.forest[800],
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 14,
+      },
+      android: {
+        elevation: 10,
+      },
+    }),
+  },
+  floatingCardImg: {
+    width: 85,
+    height: 75,
+    borderRadius: 14,
+    backgroundColor: '#0F172A',
+  },
+  floatingCardBody: {
+    flex: 1,
+    gap: 2,
+  },
+  floatingCardHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  floatingCardTitle: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 14,
+    color: theme.primitives.forest[800],
+    flex: 1,
+    marginRight: 6,
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  ratingText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 11,
+    color: '#0F172A',
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  floatingCardLoc: {
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 11,
+    color: '#64748B',
+    flex: 1,
+  },
+  floatingCardPriceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  floatingCardPrice: {
+    fontFamily: theme.typography.fontFamily.extraBold,
+    fontSize: 13,
+    color: theme.primitives.forest[800],
+  },
+  perDay: {
+    fontSize: 10.5,
+    fontFamily: theme.typography.fontFamily.regular,
+    color: '#64748B',
+  },
+  viewDetailBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.primitives.forest[800],
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: theme.radius.full,
+    gap: 5,
+  },
+  viewDetailText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    fontSize: 11.5,
+    color: '#FFFFFF',
   },
 });

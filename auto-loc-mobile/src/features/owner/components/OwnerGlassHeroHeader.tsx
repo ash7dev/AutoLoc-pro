@@ -17,13 +17,14 @@ import {
 } from 'lucide-react-native';
 import { theme } from '../../../core/theme';
 import { UserProfile } from '../../../core/store/useAppStore';
-import { OwnerDashboardStats } from '../api/ownerApi';
+import { OwnerDashboardStats, OwnerBooking } from '../api/ownerApi';
 import { formatCurrency } from '../../../core/utils/currency';
 import { CurrencyCode } from '../../../shared/components/CurrencyPickerModal';
 
 interface OwnerGlassHeroHeaderProps {
   user: UserProfile | null;
   stats: OwnerDashboardStats | null;
+  allBookings?: OwnerBooking[];
   selectedCurrency: CurrencyCode;
   onProfilePress?: () => void;
   onSwitchToTenant?: () => void;
@@ -34,6 +35,7 @@ export type RevenuePeriod = 'CE_MOIS' | 'SEPT_JOURS' | 'CETTE_ANNEE';
 export const OwnerGlassHeroHeader: React.FC<OwnerGlassHeroHeaderProps> = ({
   user,
   stats,
+  allBookings,
   selectedCurrency,
   onProfilePress,
   onSwitchToTenant,
@@ -44,20 +46,47 @@ export const OwnerGlassHeroHeader: React.FC<OwnerGlassHeroHeaderProps> = ({
   // Top padding ajusté sous l'encoche / status bar
   const topPadding = Math.max(insets.top + 36, Platform.OS === 'ios' ? 80 : 64);
 
-  // Calcul dynamique du chiffre d'affaires selon la période sélectionnée
-  const baseRevenu = stats?.revenusDuMois ?? 0;
+  // Calcul dynamique et réel du chiffre d'affaires selon la période sélectionnée
   const displayedRevenue = React.useMemo(() => {
-    switch (period) {
-      case 'SEPT_JOURS':
-        return Math.round(baseRevenu * 0.32);
-      case 'CE_MOIS':
-        return baseRevenu;
-      case 'CETTE_ANNEE':
-        return Math.round(baseRevenu * 3.8);
-      default:
-        return baseRevenu;
+    if (period === 'SEPT_JOURS' && typeof stats?.revenus7Jours === 'number' && stats.revenus7Jours > 0) {
+      return stats.revenus7Jours;
     }
-  }, [baseRevenu, period]);
+    if (period === 'CE_MOIS' && typeof stats?.revenusDuMois === 'number' && stats.revenusDuMois > 0) {
+      return stats.revenusDuMois;
+    }
+    if (period === 'CETTE_ANNEE' && typeof stats?.revenusAnnee === 'number' && stats.revenusAnnee > 0) {
+      return stats.revenusAnnee;
+    }
+
+    if (allBookings && allBookings.length > 0) {
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+      const validBookings = allBookings.filter(
+        (b) => b.statut !== 'CANCELLED' && b.statut !== 'REJECTED'
+      );
+
+      let total = 0;
+      for (const b of validBookings) {
+        const bDate = b.dateDebut ? new Date(b.dateDebut) : null;
+        if (!bDate || isNaN(bDate.getTime())) continue;
+
+        if (period === 'SEPT_JOURS' && bDate >= sevenDaysAgo) {
+          total += b.montantNetProprietaire || 0;
+        } else if (period === 'CE_MOIS' && bDate >= startOfMonth) {
+          total += b.montantNetProprietaire || 0;
+        } else if (period === 'CETTE_ANNEE' && bDate >= startOfYear) {
+          total += b.montantNetProprietaire || 0;
+        }
+      }
+
+      if (total > 0) return total;
+    }
+
+    return stats?.revenusDuMois ?? 0;
+  }, [stats, period, allBookings]);
 
   const currentHour = new Date().getHours();
   const timeGreeting = currentHour >= 18 || currentHour < 5 ? 'Bonsoir' : 'Bonjour';

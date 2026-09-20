@@ -11,12 +11,14 @@ import {
 } from 'react-native';
 import {
   AlertTriangle,
+  ArrowRight,
   Calendar,
   CheckCircle2,
   Clock,
   Info,
   Minus,
   Plus,
+  ShieldCheck,
   Sparkles,
   X,
 } from 'lucide-react-native';
@@ -159,6 +161,10 @@ export const OwnerConfirmBookingModal: React.FC<OwnerConfirmBookingModalProps> =
                 <CheckCircle2 size={22} color="#059669" />
               </View>
               <View style={{ flex: 1 }}>
+                <View style={styles.badgeKycGlass}>
+                  <ShieldCheck size={11} color="#059669" />
+                  <Text style={styles.badgeKycText}>ESPACE PROPRIÉTAIRE · SÉCURISÉ</Text>
+                </View>
                 <Text style={styles.title}>Confirmer la réservation</Text>
                 <Text style={styles.subtitle}>Fixez l’heure de mise à disposition du véhicule</Text>
               </View>
@@ -285,11 +291,15 @@ export const OwnerConfirmBookingModal: React.FC<OwnerConfirmBookingModalProps> =
               disabled={!canConfirm}
               onPress={handleSubmit}
               style={[styles.submitBtn, !canConfirm && styles.submitBtnDisabled]}
+              activeOpacity={0.85}
             >
               <CheckCircle2 size={18} color="#FFFFFF" />
               <Text style={styles.submitText}>
                 {loading ? 'Validation…' : `Confirmer à ${isValidFormat ? heureDebut : ''}`}
               </Text>
+              <View style={styles.emeraldArrowCircle}>
+                <ArrowRight size={13} color="#4ADE80" />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -353,6 +363,25 @@ const styles = StyleSheet.create({
     borderColor: '#A7F3D0',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  badgeKycGlass: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: theme.radius.full,
+    gap: 4,
+    marginBottom: 4,
+  },
+  badgeKycText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 8.5,
+    letterSpacing: 0.6,
+    color: '#059669',
   },
   title: {
     fontFamily: theme.typography.fontFamily.displayBold,
@@ -600,8 +629,8 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     paddingHorizontal: 16,
-    height: 48,
-    borderRadius: 24,
+    height: 50,
+    borderRadius: 25,
     borderWidth: 1,
     borderColor: '#CBD5E1',
     alignItems: 'center',
@@ -614,18 +643,20 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     flex: 1,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#072A20',
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.30)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    shadowColor: '#072A20',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
   },
   submitBtnDisabled: {
     opacity: 0.45,
@@ -634,5 +665,16 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 13.5,
     color: '#FFFFFF',
+  },
+  emeraldArrowCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
   },
 });

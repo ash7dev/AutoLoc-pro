@@ -10,6 +10,7 @@ import {
   Image,
   Alert,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { User, Mail, Lock, ArrowRight, ChevronLeft, Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-react-native';
@@ -18,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../../core/theme';
 import { AutoInput, PhoneField, AutoButton } from '../../../shared/components';
 import { useAuthStore } from '../stores/useAuthStore';
+import { nativeGoogleAuthService } from '../services/nativeGoogleAuthService';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -75,8 +77,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const [telephone, setTelephone] = useState('+221770000000');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
-  const { registerProfile, isLoading, error, clearError } = useAuthStore();
+  const { registerProfile, loginWithGoogleOrSupabase, isLoading, error, clearError } = useAuthStore();
 
   const handleRegister = async () => {
     if (!prenom.trim() || !nom.trim() || !email.trim() || !telephone.trim()) {
@@ -92,8 +95,20 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
     }
   };
 
-  const handleGoogleSignup = () => {
-    Alert.alert('Inscription Google', 'Ouverture du module Google OAuth...');
+  const handleGoogleSignup = async () => {
+    try {
+      setGoogleLoading(true);
+      const token = await nativeGoogleAuthService.signInWithGoogle();
+      if (token) {
+        await loginWithGoogleOrSupabase(token);
+        if (onClose) onClose();
+      }
+    } catch (err: any) {
+      console.warn('[RegisterScreen] Échec inscription Google:', err);
+      Alert.alert('Inscription Google', err?.message || 'Erreur lors de l’inscription Google.');
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -263,16 +278,23 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
                 {/* Google Auth Button */}
                 <TouchableOpacity
-                  style={styles.googleGlassBtn}
+                  style={[styles.googleGlassBtn, googleLoading && { opacity: 0.6 }]}
                   onPress={handleGoogleSignup}
+                  disabled={googleLoading}
                   activeOpacity={0.8}
                 >
-                  <Image
-                    source={{ uri: 'https://cdn-icons-png.flaticon.com/512/300/300221.png' }}
-                    style={styles.googleIcon}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.googleGlassText}>S'inscrire avec Google</Text>
+                  {googleLoading ? (
+                    <ActivityIndicator color="#041912" size="small" />
+                  ) : (
+                    <>
+                      <Image
+                        source={{ uri: 'https://cdn-icons-png.flaticon.com/512/300/300221.png' }}
+                        style={styles.googleIcon}
+                        resizeMode="contain"
+                      />
+                      <Text style={styles.googleGlassText}>S'inscrire avec Google</Text>
+                    </>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>

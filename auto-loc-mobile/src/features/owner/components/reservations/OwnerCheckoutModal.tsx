@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import {
+  ActionSheetIOS,
   ActivityIndicator,
   Alert,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,12 +14,14 @@ import {
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import {
+  ArrowRight,
   Camera,
   CheckCircle2,
   Eye,
   FileCheck,
   ImagePlus,
   LogOut,
+  ShieldCheck,
   X,
 } from 'lucide-react-native';
 import { theme } from '../../../../core/theme';
@@ -55,6 +59,43 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
   } | null>(null);
 
   const checkoutPhotos = existingPhotos.filter((p) => p.type === 'CHECKOUT');
+
+  const openImageSourcePicker = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Annuler', '📸 Appareil photo', '🖼️ Photothèque (Choix multiple)'],
+          cancelButtonIndex: 0,
+          title: 'Ajouter des photos d’état des lieux retour',
+          message: 'Choisissez la source de vos visuels :',
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) handlePickAndUploadPhotos('camera');
+          else if (buttonIndex === 2) handlePickAndUploadPhotos('library');
+        }
+      );
+    } else {
+      Alert.alert(
+        'Ajouter des photos d’état des lieux retour',
+        'Choisissez la source de vos visuels :',
+        [
+          {
+            text: '📸 Appareil photo',
+            onPress: () => handlePickAndUploadPhotos('camera'),
+          },
+          {
+            text: '🖼️ Photothèque (Choix multiple)',
+            onPress: () => handlePickAndUploadPhotos('library'),
+          },
+          {
+            text: 'Annuler',
+            style: 'cancel',
+          },
+        ],
+        { cancelable: true }
+      );
+    }
+  };
 
   const handlePickAndUploadPhotos = async (source: 'camera' | 'library') => {
     try {
@@ -175,6 +216,10 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
                 <LogOut size={22} color="#059669" />
               </View>
               <View style={{ flex: 1 }}>
+                <View style={styles.badgeKycGlass}>
+                  <ShieldCheck size={11} color="#059669" />
+                  <Text style={styles.badgeKycText}>ESPACE PROPRIÉTAIRE · SÉCURISÉ</Text>
+                </View>
                 <Text style={styles.title}>Check-out & Restitution</Text>
                 <Text style={styles.subtitle}>État des lieux de retour & clôture de la location</Text>
               </View>
@@ -214,8 +259,10 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
               {/* Return Inspection Angles Chips */}
               <View style={styles.anglesRow}>
                 {['Face avant', 'Arrière', 'Côtés', 'Jauge Carburant', 'Compteur KM'].map((angle, i) => (
-                  <View key={i} style={styles.angleChip}>
-                    <Text style={styles.angleChipText}>✓ {angle}</Text>
+                  <View key={i} style={[styles.angleChip, checkoutPhotos.length > i && styles.angleChipActive]}>
+                    <Text style={[styles.angleChipText, checkoutPhotos.length > i && styles.angleChipTextActive]}>
+                      ✓ {angle}
+                    </Text>
                   </View>
                 ))}
               </View>
@@ -256,26 +303,19 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
                   </TouchableOpacity>
                 ))}
 
-                {/* Pick / Upload Action Buttons */}
-                <View style={styles.uploadButtonsGroup}>
-                  <TouchableOpacity
-                    disabled={uploadProgress?.isUploading}
-                    onPress={() => handlePickAndUploadPhotos('camera')}
-                    style={[styles.addPhotoBtn, uploadProgress?.isUploading && styles.addPhotoBtnDisabled]}
-                  >
-                    <Camera size={18} color="#059669" />
-                    <Text style={styles.addPhotoText}>Appareil Photo</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    disabled={uploadProgress?.isUploading}
-                    onPress={() => handlePickAndUploadPhotos('library')}
-                    style={[styles.addPhotoBtn, styles.addPhotoBtnGallery, uploadProgress?.isUploading && styles.addPhotoBtnDisabled]}
-                  >
-                    <ImagePlus size={18} color="#047857" />
-                    <Text style={[styles.addPhotoText, { color: '#047857' }]}>Galerie (Batch)</Text>
-                  </TouchableOpacity>
-                </View>
+                {/* Single Action Button with Alert / ActionSheet Picker */}
+                <TouchableOpacity
+                  disabled={uploadProgress?.isUploading}
+                  onPress={openImageSourcePicker}
+                  style={[styles.addSinglePhotoBtn, uploadProgress?.isUploading && styles.addPhotoBtnDisabled]}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.addPhotoIconCircle}>
+                    <Camera size={20} color="#059669" />
+                  </View>
+                  <Text style={styles.addSinglePhotoText}>Ajouter des photos</Text>
+                  <Text style={styles.addSinglePhotoSub}>Appareil photo ou Galerie</Text>
+                </TouchableOpacity>
               </ScrollView>
             </View>
 
@@ -307,6 +347,7 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
                 styles.submitBtn,
                 (!checkedTerms || loading || uploadProgress?.isUploading) && styles.submitBtnDisabled,
               ]}
+              activeOpacity={0.85}
             >
               {loading ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
@@ -314,6 +355,9 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
                 <>
                   <CheckCircle2 size={18} color="#FFFFFF" />
                   <Text style={styles.submitText}>Finaliser le Check-out</Text>
+                  <View style={styles.emeraldArrowCircle}>
+                    <ArrowRight size={13} color="#4ADE80" />
+                  </View>
                 </>
               )}
             </TouchableOpacity>
@@ -392,6 +436,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  badgeKycGlass: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: theme.radius.full,
+    gap: 4,
+    marginBottom: 4,
+  },
+  badgeKycText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 8.5,
+    letterSpacing: 0.6,
+    color: '#059669',
+  },
   title: {
     fontFamily: theme.typography.fontFamily.displayBold,
     fontSize: 17,
@@ -468,11 +531,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  angleChipActive: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
   },
   angleChipText: {
     fontFamily: theme.typography.fontFamily.medium,
     fontSize: 10,
     color: '#475569',
+  },
+  angleChipTextActive: {
+    color: '#047857',
+    fontFamily: theme.typography.fontFamily.semiBold,
   },
 
   /* Parallel Upload Progress Bar Card */
@@ -551,12 +624,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  uploadButtonsGroup: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  addPhotoBtn: {
-    width: 90,
+  addSinglePhotoBtn: {
+    width: 130,
     height: 84,
     borderRadius: 14,
     backgroundColor: '#ECFDF5',
@@ -565,20 +634,30 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    paddingHorizontal: 6,
+    gap: 4,
+    paddingHorizontal: 8,
   },
-  addPhotoBtnGallery: {
-    backgroundColor: '#F0FDF4',
-    borderColor: '#86EFAC',
+  addPhotoIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#D1FAE5',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   addPhotoBtnDisabled: {
     opacity: 0.5,
   },
-  addPhotoText: {
+  addSinglePhotoText: {
     fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 10,
+    fontSize: 11,
     color: '#059669',
+    textAlign: 'center',
+  },
+  addSinglePhotoSub: {
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 9,
+    color: '#047857',
     textAlign: 'center',
   },
 
@@ -625,8 +704,8 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     paddingHorizontal: 16,
-    height: 48,
-    borderRadius: 24,
+    height: 50,
+    borderRadius: 25,
     borderWidth: 1,
     borderColor: '#CBD5E1',
     alignItems: 'center',
@@ -639,18 +718,20 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     flex: 1,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#072A20',
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#041912',
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.30)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    shadowColor: '#072A20',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
   },
   submitBtnDisabled: {
     opacity: 0.45,
@@ -659,6 +740,17 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 13.5,
     color: '#FFFFFF',
+  },
+  emeraldArrowCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
   },
 
   /* Fullscreen Preview */
