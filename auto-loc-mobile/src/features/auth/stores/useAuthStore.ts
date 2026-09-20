@@ -14,6 +14,7 @@ interface AuthState {
   sendPhoneOtp: (phone: string, channel?: 'whatsapp' | 'sms' | 'auto') => Promise<number>;
   verifyPhoneOtp: (phone: string, code: string) => Promise<void>;
   loginWithGoogleOrSupabase: (supabaseAccessToken: string) => Promise<void>;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
   registerProfile: (data: { prenom: string; nom: string; telephone: string; email: string }) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
@@ -27,6 +28,41 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
 
   clearError: () => set({ error: null }),
+
+  // Connexion Email & Mot de passe
+  loginWithEmail: async (email: string, password: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      const res = await authApi.loginWithEmail(email, password);
+
+      await secureStorage.setToken(res.accessToken);
+      if (res.refreshToken) {
+        await secureStorage.setRefreshToken(res.refreshToken);
+      }
+      await secureStorage.setUser(res.profile);
+
+      set({
+        token: res.accessToken,
+        user: res.profile,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      await useAppStore.getState().setAuth(res.accessToken, {
+        id: res.profile.userId,
+        prenom: res.profile.prenom || '',
+        nom: res.profile.nom || '',
+        email: res.profile.email || email,
+        telephone: res.profile.phone,
+        statutKyc: res.profile.statutKyc,
+        avatarUrl: res.profile.avatarUrl,
+      });
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Échec de la connexion. Vérifiez vos identifiants.';
+      set({ error: msg, isLoading: false });
+      throw new Error(msg);
+    }
+  },
 
   // Demander un code OTP par téléphone (WhatsApp ou SMS direct)
   sendPhoneOtp: async (phone: string, channel?: 'whatsapp' | 'sms' | 'auto') => {

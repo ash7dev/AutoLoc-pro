@@ -9,7 +9,9 @@ export interface BookingDetail extends TenantBookingItem {
   checkInLe?: string;
   checkOutLe?: string;
   raisonAnnulation?: string;
+  typeLivraison?: string | null;
   adresseLivraison?: string | null;
+  horsDakar?: boolean | null;
   contratUrl?: string;
   paymentUrl?: string;
   tacitCheckinDeadlineLe?: string;

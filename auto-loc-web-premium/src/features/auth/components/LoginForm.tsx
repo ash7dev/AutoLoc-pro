@@ -103,17 +103,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
     setIsLoading(true);
     try {
-      // Pour l'authentification email, mise à jour propre du store
-      setUser({
-        id: 'usr_email_' + Date.now(),
-        prenom: email.split('@')[0] || 'Client',
-        nom: 'Premium',
-        email: email,
-        telephone: '+221770000000',
-        phoneVerified: true,
-        role: 'LOCATAIRE',
-        statutKyc: 'VERIFIE',
-      });
+      const res = await AuthService.loginWithEmail(email.trim(), password);
+      if (res.accessToken && typeof window !== 'undefined') {
+        localStorage.setItem('autoloc_token', res.accessToken);
+      }
+      const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
+
+      setUser(userProfile);
 
       const pending = IntentEngine.consumePendingIntent();
       if (pending?.redirectToUrl) {
@@ -124,7 +120,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         router.push('/');
       }
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la connexion.');
+      setError(err.message || 'Erreur lors de la connexion. Vérifiez vos identifiants.');
     } finally {
       setIsLoading(false);
     }
@@ -338,10 +334,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                     type="email"
                     value={email}
                     onChange={(e) => {
-                      setError(null);
+                      if (error) setError(null);
                       setEmail(e.target.value);
                     }}
                     placeholder="vous@autoloc.sn"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-slate-50/50"
                     required
                   />
@@ -358,10 +357,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => {
-                      setError(null);
+                      if (error) setError(null);
                       setPassword(e.target.value);
                     }}
                     placeholder="••••••••"
+                    autoComplete="current-password"
+                    autoCapitalize="none"
+                    autoCorrect="off"
                     className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-slate-50/50"
                     required
                   />

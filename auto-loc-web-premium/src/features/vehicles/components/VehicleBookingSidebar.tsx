@@ -274,14 +274,27 @@ export function VehicleBookingSidebar({
           Réserver ce véhicule
         </button>
 
-        <ul className="space-y-2 text-sm text-[#F1DFB6]/75">
-          <li className="flex items-start gap-2.5">
-            <ShieldCheck
-              className="w-4 h-4 mt-0.5 shrink-0 text-[#F1DFB6]"
-              strokeWidth={1.5}
-              aria-hidden="true"
-            />
-            Paiement sécurisé via Wave, Orange Money ou carte
+        <ul className="space-y-3 text-sm text-[#F1DFB6]/75">
+          <li className="flex flex-col gap-2">
+            <div className="flex items-start gap-2.5">
+              <ShieldCheck
+                className="w-4 h-4 mt-0.5 shrink-0 text-[#F1DFB6]"
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
+              <span>Paiement sécurisé instantané</span>
+            </div>
+            {/* Visual Logo Badges */}
+            <div className="flex items-center gap-2 pl-6 pt-0.5">
+              <div className="flex items-center gap-1.5 bg-white/10 border border-[#F1DFB6]/20 px-2.5 py-1 rounded-lg">
+                <img src="/wave.png" alt="Wave" className="h-4 w-4 rounded-full object-cover shrink-0" />
+                <span className="text-[11px] font-bold text-[#F1DFB6]">Wave</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-white/10 border border-[#F1DFB6]/20 px-2.5 py-1 rounded-lg">
+                <img src="/orange_money.jpg" alt="Orange Money" className="h-4 w-4 rounded-full object-cover shrink-0" />
+                <span className="text-[11px] font-bold text-[#F1DFB6]">Orange Money</span>
+              </div>
+            </div>
           </li>
           <li className="flex items-start gap-2.5">
             <ShieldCheck

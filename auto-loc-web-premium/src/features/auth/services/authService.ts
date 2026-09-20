@@ -3,90 +3,63 @@ import {
   AuthSuccessResponse,
   CheckAvailabilityResponse,
   CompleteProfileRequest,
-  PhoneLoginSendOtpRequest,
   PhoneLoginSendOtpResponse,
-  PhoneLoginVerifyOtpRequest,
   ProfileResponse,
 } from '../types/auth.types';
 import { UserProfile } from '../../../types/user';
 
 export class AuthService {
   /**
-   * Envoie un code OTP de connexion par SMS ou WhatsApp
+   * Envoie un code OTP de connexion par SMS ou WhatsApp via l'API backend NestJS
    */
   public static async sendPhoneLoginOtp(
     phone: string,
     channel: 'sms' | 'whatsapp' | 'auto' = 'auto'
   ): Promise<PhoneLoginSendOtpResponse> {
-    try {
-      return await fetchApi<PhoneLoginSendOtpResponse>('/auth/phone-login/send-otp', {
-        method: 'POST',
-        body: JSON.stringify({ phone, channel }),
-      });
-    } catch (error) {
-      console.warn('[AuthService] Backend unreachable or error, falling back for dev:', error);
-      // Mode Fallback Dev/Demo si le backend local n'est pas encore démarré
-      return { expiresIn: 60 };
-    }
+    return await fetchApi<PhoneLoginSendOtpResponse>('/auth/phone-login/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone, channel }),
+    });
   }
 
   /**
-   * Vérifie le code OTP et retourne la session et le profil utilisateur NestJS
+   * Connexion par email et mot de passe via l'API backend NestJS
+   */
+  public static async loginWithEmail(
+    email: string,
+    password: string
+  ): Promise<AuthSuccessResponse> {
+    return await fetchApi<AuthSuccessResponse>('/auth/login-email', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  /**
+   * Vérifie le code OTP réel transmis au backend et retourne la session JWT & profil
    */
   public static async verifyPhoneLoginOtp(
     phone: string,
     code: string
   ): Promise<AuthSuccessResponse> {
-    try {
-      return await fetchApi<AuthSuccessResponse>('/auth/phone-login/verify-otp', {
-        method: 'POST',
-        body: JSON.stringify({ phone, code }),
-      });
-    } catch (error) {
-      console.warn('[AuthService] Backend verification error, fallback demo user:', error);
-      
-      // Si le code saisi est 123456 ou en dev fallback
-      if (code === '000000' || code === '123456' || process.env.NODE_ENV === 'development') {
-        const demoProfile: ProfileResponse = {
-          userId: 'usr_dev_' + Date.now(),
-          prenom: 'Client',
-          nom: 'AutoLoc',
-          email: 'client@autoloc.sn',
-          telephone: phone,
-          phoneVerified: true,
-          role: 'LOCATAIRE',
-          statutKyc: 'VERIFIE',
-        };
-        return {
-          accessToken: 'mock_jwt_access_token',
-          refreshToken: 'mock_jwt_refresh_token',
-          activeRole: 'LOCATAIRE',
-          profile: demoProfile,
-        };
-      }
-
-      throw new Error(
-        error instanceof Error ? error.message : 'Code OTP invalide ou expiré. Veuillez réessayer.'
-      );
-    }
+    return await fetchApi<AuthSuccessResponse>('/auth/phone-login/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone, code }),
+    });
   }
 
   /**
-   * Vérifie si un email ou numéro est disponible
+   * Vérifie la disponibilité d'un email ou numéro auprès du backend
    */
   public static async checkAvailability(
     email?: string,
     phone?: string
   ): Promise<CheckAvailabilityResponse> {
-    try {
-      const params = new URLSearchParams();
-      if (email) params.append('email', email);
-      if (phone) params.append('phone', phone);
+    const params = new URLSearchParams();
+    if (email) params.append('email', email);
+    if (phone) params.append('phone', phone);
 
-      return await fetchApi<CheckAvailabilityResponse>(`/auth/check-availability?${params.toString()}`);
-    } catch (error) {
-      return { available: true };
-    }
+    return await fetchApi<CheckAvailabilityResponse>(`/auth/check-availability?${params.toString()}`);
   }
 
   /**

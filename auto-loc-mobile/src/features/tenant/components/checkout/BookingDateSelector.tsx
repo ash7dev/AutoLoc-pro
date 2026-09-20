@@ -1,6 +1,15 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Modal } from 'react-native';
-import { Calendar as CalendarIcon, ChevronRight, Clock, Info } from 'lucide-react-native';
+import React, { useState, useRef } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  Pressable,
+  Animated,
+  PanResponder,
+} from 'react-native';
+import { Calendar as CalendarIcon, ChevronRight, Clock, Info, X } from 'lucide-react-native';
 import { theme } from '../../../../core/theme';
 import { AutoCalendar, BlockedRange } from '../../../../shared/components/AutoCalendar';
 import { AutoButton } from '../../../../shared/components/AutoButton';
@@ -25,6 +34,38 @@ export const BookingDateSelector: React.FC<BookingDateSelectorProps> = ({
   const [calendarModalVisible, setCalendarModalVisible] = useState(false);
   const [tempStart, setTempStart] = useState<string | undefined>(dateDebut);
   const [tempEnd, setTempEnd] = useState<string | undefined>(dateFin);
+
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dy) > 5,
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          translateY.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 70 || gestureState.vy > 0.5) {
+          Animated.timing(translateY, {
+            toValue: 400,
+            duration: 180,
+            useNativeDriver: true,
+          }).start(() => {
+            translateY.setValue(0);
+            setCalendarModalVisible(false);
+          });
+        } else {
+          Animated.spring(translateY, {
+            toValue: 0,
+            bounciness: 4,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
   const formatDateDisplay = (isoStr?: string) => {
     if (!isoStr) return 'Sélectionner une date';
@@ -66,7 +107,7 @@ export const BookingDateSelector: React.FC<BookingDateSelectorProps> = ({
       <View style={styles.headerRow}>
         <View style={styles.headerTitleGroup}>
           <View style={styles.titleIconBadge}>
-            <CalendarIcon size={14} color="#4ADE80" strokeWidth={2.25} />
+            <CalendarIcon size={11} color="#4ADE80" strokeWidth={2.25} />
           </View>
           <Text style={styles.sectionTitle}>Dates de réservation</Text>
         </View>
@@ -88,7 +129,7 @@ export const BookingDateSelector: React.FC<BookingDateSelectorProps> = ({
         {/* Ligne 1 : Date de départ */}
         <View style={styles.dateItemRow}>
           <View style={styles.iconCircle}>
-            <CalendarIcon size={13} color="#4ADE80" strokeWidth={2.25} />
+            <CalendarIcon size={11} color="#4ADE80" strokeWidth={2.25} />
           </View>
           <View style={styles.dateTextGroup}>
             <Text style={styles.dateLabel}>Date de départ</Text>
@@ -104,7 +145,7 @@ export const BookingDateSelector: React.FC<BookingDateSelectorProps> = ({
         {/* Ligne 2 : Date de retour */}
         <View style={styles.dateItemRow}>
           <View style={styles.iconCircle}>
-            <CalendarIcon size={13} color="#4ADE80" strokeWidth={2.25} />
+            <CalendarIcon size={11} color="#4ADE80" strokeWidth={2.25} />
           </View>
           <View style={styles.dateTextGroup}>
             <Text style={styles.dateLabel}>Date de retour</Text>
@@ -126,7 +167,7 @@ export const BookingDateSelector: React.FC<BookingDateSelectorProps> = ({
         </View>
       )}
 
-      {/* Modal du Calendrier AutoCalendar */}
+      {/* Modal du Calendrier AutoCalendar avec Backdrop Press & Pull-to-dismiss */}
       <Modal
         visible={calendarModalVisible}
         animationType="slide"
@@ -134,13 +175,41 @@ export const BookingDateSelector: React.FC<BookingDateSelectorProps> = ({
         onRequestClose={() => setCalendarModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <View style={styles.dragHandle} />
+          {/* Clic sur le fond sombre extérieur pour fermer */}
+          <Pressable style={styles.backdropPressArea} onPress={() => setCalendarModalVisible(false)} />
+
+          <Animated.View
+            style={[
+              styles.modalSheet,
+              { transform: [{ translateY }] }
+            ]}
+          >
+            {/* Poignée de glissement (Pull down to dismiss gesture + tap to close) */}
+            <TouchableOpacity
+              style={styles.dragHandleContainer}
+              onPress={() => setCalendarModalVisible(false)}
+              activeOpacity={0.8}
+              {...panResponder.panHandlers}
+            >
+              <View style={styles.dragHandle} />
+            </TouchableOpacity>
+
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Modifier les dates de réservation</Text>
-              <Text style={styles.modalSubtitle}>
-                Sélectionnez votre date de départ et de retour
-              </Text>
+              <View style={styles.modalHeaderTitleGroup}>
+                <Text style={styles.modalTitle}>Modifier les dates de réservation</Text>
+                <Text style={styles.modalSubtitle}>
+                  Sélectionnez votre date de départ et de retour
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.closeBtnCircle}
+                onPress={() => setCalendarModalVisible(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                accessibilityLabel="Fermer le calendrier"
+              >
+                <X size={16} color="#64748B" />
+              </TouchableOpacity>
             </View>
 
             <View style={styles.calendarWrap}>
@@ -164,7 +233,7 @@ export const BookingDateSelector: React.FC<BookingDateSelectorProps> = ({
                 disabled={!tempStart}
               />
             </View>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
     </View>
@@ -197,9 +266,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   titleIconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 9,
+    width: 22,
+    height: 22,
+    borderRadius: 7,
     backgroundColor: '#041912',
     alignItems: 'center',
     justifyContent: 'center',
@@ -243,9 +312,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   iconCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 9,
+    width: 24,
+    height: 24,
+    borderRadius: 7,
     backgroundColor: '#041912',
     borderWidth: 1,
     borderColor: 'rgba(74, 222, 128, 0.35)',
@@ -292,26 +361,46 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(4, 25, 18, 0.65)',
     justifyContent: 'flex-end',
   },
+  backdropPressArea: {
+    ...StyleSheet.absoluteFill,
+  },
   modalSheet: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: theme.radius.card,
-    borderTopRightRadius: theme.radius.card,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     maxHeight: '85%',
-    paddingTop: 12,
+    paddingTop: 8,
+    overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  dragHandleContainer: {
+    width: '100%',
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   dragHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#D4DCD0',
-    alignSelf: 'center',
-    marginBottom: 8,
+    width: 42,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#CBD5E1',
   },
   modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: theme.spacing[4],
     paddingBottom: theme.spacing[3],
     borderBottomWidth: 1,
     borderBottomColor: '#E4EBDB',
+  },
+  modalHeaderTitleGroup: {
+    flex: 1,
+    paddingRight: 10,
   },
   modalTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
@@ -323,6 +412,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#5F6B59',
     marginTop: 2,
+  },
+  closeBtnCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   calendarWrap: {
     padding: theme.spacing[4],

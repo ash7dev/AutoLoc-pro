@@ -7,6 +7,7 @@ import { RequestUser } from '../../common/types/auth.types';
 import { ProfileResponse } from '../../common/types/auth.types';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
 import { SwitchRoleDto } from './dto/switch-role.dto';
+import { LoginDto } from './dto/login.dto';
 import { RoleProfile, StatutKyc } from '@prisma/client';
 import { JwksService } from '../../infrastructure/jwt/jwks.service';
 import { JwtService } from '@nestjs/jwt';
@@ -15,6 +16,7 @@ import { RedisService } from '../../infrastructure/redis/redis.service';
 import { ALLOWED_MIMES } from '../upload/upload.config';
 import { NotificationService } from '../../infrastructure/notifications/notification.service';
 import { TelegramService } from '../../infrastructure/telegram/telegram.service';
+import { SupabaseAdminService } from '../../infrastructure/supabase/supabase-admin.service';
 const DEFAULT_ROLE = 'LOCATAIRE';
 const ACCESS_TOKEN_TTL_DEFAULT = '15m';
 const REFRESH_TOKEN_TTL_DEFAULT = '30d';
@@ -37,6 +39,7 @@ export class AuthService {
     private readonly cloudinary: CloudinaryService,
     private readonly notification: NotificationService,
     private readonly telegram: TelegramService,
+    private readonly supabaseAdmin: SupabaseAdminService,
   ) { }
 
   async checkAvailability(email?: string, phone?: string): Promise<{
@@ -781,6 +784,85 @@ export class AuthService {
       }
       throw new BadRequestException(`Login failed: ${err instanceof Error ? err.message : String(err)} - Stack: ${err instanceof Error ? err.stack : ''}`);
     }
+  }
+
+  /**
+   * Connexion par Adresse Email et Mot de passe.
+   * Tente d'abord de vérifier auprès de Supabase Auth, puis génère les jetons métier JWT.
+   */
+  async loginWithEmailPassword(
+    dto: LoginDto,
+  ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile; profile: ProfileResponse }> {
+    if (!dto.email?.trim() || !dto.password?.trim()) {
+      throw new BadRequestException('Veuillez renseigner votre email et mot de passe.');
+    }
+
+    const normalizedEmail = this.normalizeEmail(dto.email);
+
+    // 1. Tenter la vérification via Supabase Auth s'il est disponible
+    try {
+      if (this.supabaseAdmin) {
+        const { data, error } = await this.supabaseAdmin.auth.signInWithPassword({
+          email: normalizedEmail,
+          password: dto.password,
+        });
+
+        if (!error && data?.session?.access_token) {
+          console.log(`[Auth] Supabase email/password auth success for ${normalizedEmail}`);
+          return this.loginWithSupabase(data.session.access_token);
+        }
+      }
+    } catch (err) {
+      console.warn('[loginWithEmailPassword] Supabase login error:', err);
+    }
+
+    // 2. Fallback / Recherche directe du compte dans la base de données métiers (Utilisateur / Profile)
+    const utilisateur = await this.prisma.utilisateur.findFirst({
+      where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
+      select: { userId: true, email: true, telephone: true, actif: true, bloqueJusqua: true },
+    });
+
+    if (!utilisateur) {
+      throw new UnauthorizedException('Adresse email ou mot de passe incorrect.');
+    }
+
+    this.assertAccountIsAllowed({
+      actif: utilisateur.actif,
+      bloqueJusqua: utilisateur.bloqueJusqua ? utilisateur.bloqueJusqua.toISOString() : null,
+    });
+
+    const user: RequestUser = {
+      sub: utilisateur.userId,
+      email: utilisateur.email,
+      phone: utilisateur.telephone,
+    };
+
+    const profile = await this.getOrCreateProfile(user);
+    const flags = await this.getUtilisateurFlags(user.sub);
+    this.assertAccountIsAllowed(flags);
+
+    const accessToken = await this.signAccessToken({
+      sub: user.sub,
+      email: user.email,
+      phone: user.phone,
+      role: profile.role as RoleProfile,
+    });
+    const refreshToken = await this.signRefreshToken({
+      sub: user.sub,
+      email: user.email,
+      phone: user.phone,
+      role: profile.role as RoleProfile,
+    });
+    await this.storeRefreshSession(user.sub, refreshToken);
+
+    console.log(`[Auth] Direct email login success for ${normalizedEmail} (userId: ${user.sub})`);
+
+    return {
+      accessToken,
+      refreshToken,
+      activeRole: profile.role as RoleProfile,
+      profile: this.toResponse(profile, flags),
+    };
   }
 
   /**

@@ -55,6 +55,10 @@ export interface TenantBookingItem {
   discountLabel?: string;
   creeLe?: string | Date;
   contratUrl?: string;
+  typeLivraison?: 'AUCUNE' | 'DAKAR' | 'AIBD' | string | null;
+  adresseLivraison?: string | null;
+  fraisLivraison?: string | number | null;
+  horsDakar?: boolean | null;
   vehicule?: {
     id: string;
     marque: string;
@@ -260,6 +264,29 @@ export const TenantBookingCard: React.FC<TenantBookingCardProps> = ({
             <Text style={styles.carLocation}>
               {booking.vehicule?.ville || 'Dakar'} • Sénégal
             </Text>
+          </View>
+
+          {/* Badges Mode de Livraison */}
+          <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>
+            {booking.typeLivraison === 'AIBD' || (booking.adresseLivraison && booking.adresseLivraison.toLowerCase().includes('aibd')) ? (
+              <View style={{ backgroundColor: '#F0F9FF', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#BAE6FD' }}>
+                <Text style={{ fontFamily: theme.typography.fontFamily.bold, fontSize: 10, color: '#0284C7' }}>✈️ Livraison Aéroport AIBD</Text>
+              </View>
+            ) : booking.typeLivraison === 'DAKAR' || booking.adresseLivraison ? (
+              <View style={{ backgroundColor: '#ECFDF5', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#A7F3D0' }}>
+                <Text style={{ fontFamily: theme.typography.fontFamily.bold, fontSize: 10, color: '#059669' }}>🚚 Livraison Dakar</Text>
+              </View>
+            ) : (
+              <View style={{ backgroundColor: '#F8FAFC', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                <Text style={{ fontFamily: theme.typography.fontFamily.bold, fontSize: 10, color: '#475569' }}>📍 Prise chez l'hôte</Text>
+              </View>
+            )}
+
+            {booking.horsDakar && (
+              <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#FDE68A' }}>
+                <Text style={{ fontFamily: theme.typography.fontFamily.bold, fontSize: 10, color: '#B45309' }}>🛣️ Hors Dakar</Text>
+              </View>
+            )}
           </View>
 
           {ownerFirstName ? (

@@ -128,15 +128,18 @@ export const useAppStore = create<AppState>((set, get) => ({
       const token = await secureStorage.getToken();
       const user = await secureStorage.getUser<UserProfile>();
 
-      if (token && user) {
+      if (token) {
         set({
           isInitialized: true,
           hasSeenOnboarding,
           isAuthenticated: true,
           isGuestMode: false,
           token,
-          user,
+          user: user || null,
         });
+
+        // 3. Revalidation silencieuse en arrière-plan du profil auprès de /auth/me
+        get().refreshProfileSilently().catch(() => {});
       } else {
         set({
           isInitialized: true,

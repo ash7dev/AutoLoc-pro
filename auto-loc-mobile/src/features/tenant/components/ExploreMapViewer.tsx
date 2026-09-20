@@ -4,26 +4,17 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Pressable,
-  FlatList,
-  Dimensions,
   Platform,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import { Image } from 'expo-image';
-import { Star, ArrowRight, RefreshCw, MapPin } from 'lucide-react-native';
+import { RefreshCw } from 'lucide-react-native';
 import { VehicleFeedItem } from '../types';
 import { theme } from '../../../core/theme';
 import { useAppStore } from '../../../core/store/useAppStore';
 import { formatConvertedPrice } from '../../../core/utils/currency';
 import { clusterVehicleMarkers, MapRegion, MapMarkerCluster } from '../utils/geoClustering';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH * 0.82;
-const CARD_MARGIN = 12;
-const SNAP_INTERVAL = CARD_WIDTH + CARD_MARGIN;
 
 const DAKAR_REGION: MapRegion = {
   latitude: 14.7167,
@@ -52,7 +43,6 @@ export interface ExploreMapViewerProps {
   onVehiclePress: (vehicle: VehicleFeedItem) => void;
   onSearchInArea?: (region?: MapRegion) => void;
   onSelectVehicle?: (vehicle: VehicleFeedItem) => void;
-  hideCarousel?: boolean;
 }
 
 interface ProcessedVehicle extends VehicleFeedItem {
@@ -126,15 +116,12 @@ export const ExploreMapViewer: React.FC<ExploreMapViewerProps> = ({
   onVehiclePress,
   onSearchInArea,
   onSelectVehicle,
-  hideCarousel = false,
 }) => {
   const mapRef = useRef<MapView>(null);
-  const carouselRef = useRef<FlatList>(null);
   const selectedCurrency = useAppStore((state) => state.selectedCurrency);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [showSearchAreaBtn, setShowSearchAreaBtn] = useState<boolean>(false);
   const [currentRegion, setCurrentRegion] = useState<MapRegion>(DAKAR_REGION);
-  const isProgrammaticScrollRef = useRef<boolean>(false);
 
   // Dispersion en spirale pour étaler les marqueurs se superposant sur la même ville
   const processedVehicles = useMemo(() => {
@@ -231,13 +218,11 @@ export const ExploreMapViewer: React.FC<ExploreMapViewerProps> = ({
     }
   }, []);
 
-  // Clic sur un marqueur de la carte -> Fait défiler le carrousel vers la carte correspondante
+  // Clic sur un marqueur de la carte -> Notifie le parent pour scroll BottomSheet
   const handleMarkerSelect = (v: ProcessedVehicle) => {
     const index = processedVehicles.findIndex((pv) => pv.id === v.id);
     if (index !== -1) {
       setSelectedIndex(index);
-      isProgrammaticScrollRef.current = true;
-      carouselRef.current?.scrollToIndex({ index, animated: true });
       centerMapOnVehicle(v);
       if (onSelectVehicle) {
         onSelectVehicle(v);
@@ -245,27 +230,7 @@ export const ExploreMapViewer: React.FC<ExploreMapViewerProps> = ({
     }
   };
 
-  // Synchronisation en temps réel 120 FPS pendant le swipe du carrousel horizontal
-  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (isProgrammaticScrollRef.current) return;
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const newIndex = Math.max(0, Math.min(Math.round(offsetX / SNAP_INTERVAL), processedVehicles.length - 1));
-    if (newIndex !== selectedIndex && processedVehicles[newIndex]) {
-      setSelectedIndex(newIndex);
-      centerMapOnVehicle(processedVehicles[newIndex]);
-      if (onSelectVehicle) {
-        onSelectVehicle(processedVehicles[newIndex]);
-      }
-    }
-  }, [processedVehicles, selectedIndex, centerMapOnVehicle, onSelectVehicle]);
 
-  const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (isProgrammaticScrollRef.current) {
-      isProgrammaticScrollRef.current = false;
-      return;
-    }
-    handleScroll(event);
-  };
 
   const handleSearchAreaPress = () => {
     setShowSearchAreaBtn(false);
@@ -283,7 +248,7 @@ export const ExploreMapViewer: React.FC<ExploreMapViewerProps> = ({
     }
   };
 
-  const selectedVehicle = processedVehicles[selectedIndex] || null;
+  const selectedVehicleId = processedVehicles[selectedIndex]?.id || null;
 
   return (
     <View style={styles.container}>
@@ -320,7 +285,7 @@ export const ExploreMapViewer: React.FC<ExploreMapViewerProps> = ({
             <PriceMarker
               key={v.id}
               vehicle={v}
-              isSelected={selectedVehicle?.id === v.id}
+              isSelected={selectedVehicleId === v.id}
               onSelect={handleMarkerSelect}
               formattedPrice={formatConvertedPrice(v.prixParJour, selectedCurrency)}
             />
@@ -344,92 +309,7 @@ export const ExploreMapViewer: React.FC<ExploreMapViewerProps> = ({
         </View>
       )}
 
-      {/* Carrousel Horizontal Style Airbnb en Bas de Carte */}
-      {processedVehicles.length > 0 && !hideCarousel && (
-        <View style={styles.carouselWrapper} pointerEvents="box-none">
-          <FlatList
-            ref={carouselRef}
-            data={processedVehicles}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={SNAP_INTERVAL}
-            snapToAlignment="start"
-            decelerationRate="fast"
-            contentContainerStyle={styles.carouselContentContainer}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-            onMomentumScrollEnd={handleMomentumScrollEnd}
-            getItemLayout={(_, index) => ({
-              length: SNAP_INTERVAL,
-              offset: SNAP_INTERVAL * index,
-              index,
-            })}
-            renderItem={({ item, index }) => {
-              const isCardSelected = index === selectedIndex;
-              return (
-                <Pressable
-                  style={[
-                    styles.cardContainer,
-                    isCardSelected && styles.cardContainerSelected,
-                  ]}
-                  onPress={() => {
-                    setSelectedIndex(index);
-                    centerMapOnVehicle(item);
-                    onVehiclePress(item);
-                  }}
-                >
-                  <Image
-                    source={{
-                      uri:
-                        item.photoUrl ||
-                        'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=800&auto=format&fit=crop',
-                    }}
-                    style={styles.cardImg}
-                    contentFit="cover"
-                  />
 
-                  <View style={styles.cardBody}>
-                    <View style={styles.cardHeaderRow}>
-                      <Text style={styles.cardTitle} numberOfLines={1}>
-                        {item.marque} {item.modele}
-                      </Text>
-
-                      {item.note > 0 && (
-                        <View style={styles.ratingBadge}>
-                          <Star size={11} color="#F59E0B" fill="#F59E0B" />
-                          <Text style={styles.ratingText}>
-                            {item.note.toFixed(1)}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-
-                    <View style={styles.locationRow}>
-                      <MapPin size={11} color="#64748B" />
-                      <Text style={styles.cardLoc} numberOfLines={1}>
-                        {item.ville || 'Dakar'}
-                      </Text>
-                    </View>
-
-                    <View style={styles.cardPriceRow}>
-                      <Text style={styles.cardPrice}>
-                        {formatConvertedPrice(item.prixParJour, selectedCurrency)}
-                        <Text style={styles.perDay}> / j</Text>
-                      </Text>
-
-                      <View style={styles.viewDetailBtn}>
-                        <Text style={styles.viewDetailText}>Voir</Text>
-                        <ArrowRight size={12} color="#FFFFFF" />
-                      </View>
-                    </View>
-                  </View>
-                </Pressable>
-              );
-            }}
-          />
-        </View>
-      )}
     </View>
   );
 };
@@ -557,115 +437,5 @@ const styles = StyleSheet.create({
     color: '#475569',
   },
 
-  /* Carrousel Horizontal Style Airbnb */
-  carouselWrapper: {
-    position: 'absolute',
-    bottom: 95,
-    left: 0,
-    right: 0,
-    zIndex: 100,
-  },
-  carouselContentContainer: {
-    paddingHorizontal: 16,
-  },
-  cardContainer: {
-    width: CARD_WIDTH,
-    marginRight: CARD_MARGIN,
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: theme.radius.card,
-    padding: 10,
-    alignItems: 'center',
-    gap: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.16,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
-  },
-  cardContainerSelected: {
-    borderColor: theme.primitives.forest[800],
-    borderWidth: 1.5,
-  },
-  cardImg: {
-    width: 90,
-    height: 80,
-    borderRadius: 14,
-    backgroundColor: '#0F172A',
-  },
-  cardBody: {
-    flex: 1,
-    gap: 2,
-  },
-  cardHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardTitle: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 14.5,
-    color: theme.primitives.forest[800],
-    flex: 1,
-    marginRight: 6,
-  },
-  ratingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  ratingText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 11,
-    color: '#0F172A',
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  cardLoc: {
-    fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 11.5,
-    color: '#64748B',
-    flex: 1,
-  },
-  cardPriceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  cardPrice: {
-    fontFamily: theme.typography.fontFamily.extraBold,
-    fontSize: 13.5,
-    color: theme.primitives.forest[800],
-  },
-  perDay: {
-    fontSize: 10.5,
-    fontFamily: theme.typography.fontFamily.regular,
-    color: '#64748B',
-  },
-  viewDetailBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.primitives.forest[800],
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: theme.radius.full,
-    gap: 4,
-  },
-  viewDetailText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 11,
-    color: '#FFFFFF',
-  },
+
 });

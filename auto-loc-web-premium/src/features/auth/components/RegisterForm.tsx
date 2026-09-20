@@ -122,6 +122,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     setIsLoading(true);
     try {
       const res = await AuthService.verifyPhoneLoginOtp(telephone, code);
+      
+      // Enregistrer prénom, nom et email auprès du backend
+      if (prenom || nom || email) {
+        try {
+          await AuthService.completeProfile({ prenom, nom, email });
+        } catch {
+          // Ignorer si le profil est déjà complet
+        }
+      }
+
       const userProfile = AuthService.mapProfileResponseToUserProfile({
         ...res.profile,
         prenom: prenom || res.profile.prenom,
@@ -304,10 +314,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                       type="email"
                       value={email}
                       onChange={(e) => {
-                        setError(null);
+                        if (error) setError(null);
                         setEmail(e.target.value);
                       }}
                       placeholder="vous@autoloc.sn"
+                      autoComplete="email"
+                      autoCapitalize="none"
+                      autoCorrect="off"
                       className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50/50"
                       required
                     />
@@ -325,10 +338,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => {
-                        setError(null);
+                        if (error) setError(null);
                         setPassword(e.target.value);
                       }}
                       placeholder="••••••••"
+                      autoComplete="new-password"
+                      autoCapitalize="none"
+                      autoCorrect="off"
                       className="w-full pl-10 pr-10 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50/50"
                       required
                     />

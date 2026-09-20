@@ -14,6 +14,7 @@ import { RequestUser } from '../../common/types/auth.types';
 import { ProfileResponse } from '../../common/types/auth.types';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
 import { SwitchRoleDto } from './dto/switch-role.dto';
+import { LoginDto } from './dto/login.dto';
 import { LoginWithSupabaseDto } from './dto/login-with-supabase.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { RoleProfile } from '@prisma/client';
@@ -65,6 +66,13 @@ export class AuthController {
     @Body() dto: LoginWithSupabaseDto,
   ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile; profile: ProfileResponse }> {
     return this.authService.loginWithSupabase(dto.accessToken);
+  }
+
+  @Post('login-email')
+  async loginWithEmail(
+    @Body() dto: LoginDto,
+  ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile; profile: ProfileResponse }> {
+    return this.authService.loginWithEmailPassword(dto);
   }
 
   @Post('refresh')

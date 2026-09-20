@@ -52,6 +52,15 @@ export const authApi = {
     return response.data;
   },
 
+  // 3b. Connexion directe Email & Mot de passe
+  async loginWithEmail(email: string, password: string): Promise<AuthSuccessResponse> {
+    const response = await apiClient.post<AuthSuccessResponse>('/auth/login-email', {
+      email,
+      password,
+    });
+    return response.data;
+  },
+
   // 4. Vérification de disponibilité Email & Téléphone
   async checkAvailability(email?: string, phone?: string): Promise<{ available: boolean; message?: string }> {
     const params = new URLSearchParams();

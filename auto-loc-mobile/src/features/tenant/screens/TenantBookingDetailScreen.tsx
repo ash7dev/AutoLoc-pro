@@ -104,7 +104,38 @@ export const TenantBookingDetailScreen: React.FC<Props> = ({ reservationId, onBa
 
         <View style={styles.vehicleCard}>
           <Image source={{ uri: photo }} contentFit="cover" style={styles.vehicleImage} />
-          <View style={styles.vehicleBody}><Text style={styles.vehicleName}>{booking.vehicule?.marque} {booking.vehicule?.modele}</Text><Text style={styles.vehicleMeta}>{booking.vehicule?.annee || '—'} · {booking.vehicule?.type || 'Véhicule'}</Text><View style={styles.locationRow}><MapPin size={13} color={theme.colors.brand.main} /><Text style={styles.locationText}>{booking.adresseLivraison || booking.vehicule?.ville || 'Lieu communiqué par l’hôte'}</Text></View></View>
+          <View style={styles.vehicleBody}>
+            <Text style={styles.vehicleName}>{booking.vehicule?.marque} {booking.vehicule?.modele}</Text>
+            <Text style={styles.vehicleMeta}>{booking.vehicule?.annee || '—'} · {booking.vehicule?.type || 'Véhicule'}</Text>
+            
+            {/* Badges Mode de Livraison / Prise en main */}
+            <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginVertical: 3 }}>
+              {booking.typeLivraison === 'AIBD' || (booking.adresseLivraison && booking.adresseLivraison.toLowerCase().includes('aibd')) ? (
+                <View style={{ backgroundColor: '#F0F9FF', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#BAE6FD' }}>
+                  <Text style={{ fontFamily: theme.typography.fontFamily.bold, fontSize: 10, color: '#0284C7' }}>✈️ Livraison Aéroport AIBD</Text>
+                </View>
+              ) : booking.typeLivraison === 'DAKAR' || booking.adresseLivraison ? (
+                <View style={{ backgroundColor: '#ECFDF5', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#A7F3D0' }}>
+                  <Text style={{ fontFamily: theme.typography.fontFamily.bold, fontSize: 10, color: '#059669' }}>🚚 Livraison Dakar</Text>
+                </View>
+              ) : (
+                <View style={{ backgroundColor: '#F8FAFC', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' }}>
+                  <Text style={{ fontFamily: theme.typography.fontFamily.bold, fontSize: 10, color: '#475569' }}>📍 Prise chez l'hôte</Text>
+                </View>
+              )}
+
+              {booking.horsDakar && (
+                <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#FDE68A' }}>
+                  <Text style={{ fontFamily: theme.typography.fontFamily.bold, fontSize: 10, color: '#B45309' }}>🛣️ Hors Dakar</Text>
+                </View>
+              )}
+            </View>
+
+            <View style={styles.locationRow}>
+              <MapPin size={13} color={theme.colors.brand.main} />
+              <Text style={styles.locationText}>{booking.adresseLivraison || booking.vehicule?.ville || 'Lieu communiqué par l’hôte'}</Text>
+            </View>
+          </View>
         </View>
 
         <BookingContractCard reservationId={booking.id} statut={booking.statut} />
@@ -128,7 +159,16 @@ export const TenantBookingDetailScreen: React.FC<Props> = ({ reservationId, onBa
         <Section title="Règlement & garanties" icon={<CircleDollarSign size={17} color="#A7F3D0" />} dark>
           <MoneyLine label={booking.modePaiement === 'ACOMPTE_SOLDE_CHECKIN' ? 'Acompte réglé en ligne' : 'Montant réglé en ligne'} value={paid} />
           {balance > 0 ? <MoneyLine label="Solde à la remise des clés" value={balance} /> : null}
-          {booking.fraisLivraison ? <MoneyLine label="Frais de livraison" value={Number(booking.fraisLivraison)} /> : null}
+          {booking.fraisLivraison ? (
+            <MoneyLine
+              label={
+                booking.typeLivraison === 'AIBD'
+                  ? 'Frais de livraison Aéroport AIBD'
+                  : 'Frais de livraison Dakar (Ville)'
+              }
+              value={Number(booking.fraisLivraison)}
+            />
+          ) : null}
           <View style={styles.moneyDivider} /><MoneyLine label="Total de la location" value={total} prominent />
           <View style={styles.guarantee}><ShieldCheck size={16} color="#A7F3D0" /><Text style={styles.guaranteeText}>{booking.modePaiement === 'ACOMPTE_SOLDE_CHECKIN' ? 'Le solde est remis au propriétaire lors du check-in.' : 'Votre paiement est tracé et sécurisé par AutoLoc.'}</Text></View>
         </Section>

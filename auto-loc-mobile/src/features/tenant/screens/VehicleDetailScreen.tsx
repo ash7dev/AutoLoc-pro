@@ -171,6 +171,10 @@ export const VehicleDetailScreen: React.FC<VehicleDetailScreenProps> = ({
         <VehicleOptionsCard
           autoriseHorsDakar={detail?.autoriseHorsDakar}
           supplementHorsDakarParJour={detail?.supplementHorsDakarParJour}
+          proposeLivraisonDakar={detail?.proposeLivraisonDakar}
+          fraisLivraisonDakar={detail?.fraisLivraisonDakar}
+          proposeLivraisonAibd={detail?.proposeLivraisonAibd}
+          fraisLivraisonAibd={detail?.fraisLivraisonAibd}
           fraisLivraison={detail?.fraisLivraison}
           selectedCurrency={selectedCurrency}
         />

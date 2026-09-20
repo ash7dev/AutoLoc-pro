@@ -11,9 +11,11 @@ import {
   Alert,
   Dimensions,
   ActivityIndicator,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Mail, Lock, ArrowRight, ShieldCheck, Eye, EyeOff, X, Sparkles } from 'lucide-react-native';
+import { Mail, Lock, ArrowRight, ShieldCheck, X, Sparkles } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../../core/theme';
@@ -41,10 +43,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [telephone, setTelephone] = useState('+221770000000');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const { sendPhoneOtp, loginWithGoogleOrSupabase, isLoading, error, clearError } = useAuthStore();
+  const { sendPhoneOtp, loginWithGoogleOrSupabase, loginWithEmail, isLoading, error, clearError } = useAuthStore();
 
   const handlePhoneSubmit = async () => {
     if (!telephone.trim() || telephone.length < 9) {
@@ -67,9 +68,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     }
 
     try {
+      await loginWithEmail(email.trim(), password);
       onLoginSuccess();
     } catch (e) {
-      // Handled
+      // Handled by store error banner
     }
   };
 
@@ -141,143 +143,141 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             {/* STACK CARDS SUPERPOSÉES (Layered Glass Architecture) */}
             <View style={styles.cardStackWrapper}>
               {/* Card d'arrière-plan en décalé (Back Layer Accent) */}
-              <View style={styles.backAccentCard} />
+              <View style={styles.backAccentCard} pointerEvents="none" />
 
               {/* Card Principale Translucide (Front Floating Glass Sheet) */}
               <View style={styles.frontGlassCard}>
-                {/* Header Card : Logo & Titre */}
-                <View style={styles.cardHeaderBox}>
-                  <View style={styles.logoContainer}>
-                    <Image
-                      source={require('../../../../assets/logo.png')}
-                      style={styles.logoImage}
-                      resizeMode="contain"
-                    />
-                  </View>
+                  {/* Header Card : Logo & Titre */}
+                  <View style={styles.cardHeaderBox}>
+                    <View style={styles.logoContainer}>
+                      <Image
+                        source={require('../../../../assets/logo.png')}
+                        style={styles.logoImage}
+                        resizeMode="contain"
+                      />
+                    </View>
 
-                  <View style={styles.badgeKycGlass}>
-                    <ShieldCheck size={12} color="#059669" />
-                    <Text style={styles.badgeKycText}>ESPACE CLIENT SÉCURISÉ</Text>
-                  </View>
+                    <View style={styles.badgeKycGlass}>
+                      <ShieldCheck size={12} color="#059669" />
+                      <Text style={styles.badgeKycText}>ESPACE CLIENT SÉCURISÉ</Text>
+                    </View>
 
-                  <Text style={styles.mainTitle}>Bon retour</Text>
-                  <Text style={styles.subtitle}>
-                    Accédez à vos réservations et votre garage mobile
-                  </Text>
-                </View>
-
-                {/* Bannière Erreur */}
-                {error ? (
-                  <View style={styles.errorBanner}>
-                    <Text style={styles.errorText}>{error}</Text>
-                    <TouchableOpacity onPress={clearError}>
-                      <Text style={styles.errorClose}>×</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : null}
-
-                {/* Switcher Méthode de Connexion (Segmented Pill) */}
-                <View style={styles.segmentedTrack}>
-                  <TouchableOpacity
-                    style={[styles.segmentedBtn, authMethod === 'PHONE' && styles.segmentedBtnActive]}
-                    onPress={() => { clearError(); setAuthMethod('PHONE'); }}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.segmentedText, authMethod === 'PHONE' && styles.segmentedTextActive]}>
-                      SMS / WhatsApp
+                    <Text style={styles.mainTitle}>Bon retour</Text>
+                    <Text style={styles.subtitle}>
+                      Accédez à vos réservations et votre garage mobile
                     </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.segmentedBtn, authMethod === 'EMAIL' && styles.segmentedBtnActive]}
-                    onPress={() => { clearError(); setAuthMethod('EMAIL'); }}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.segmentedText, authMethod === 'EMAIL' && styles.segmentedTextActive]}>
-                      Email & Pass
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Formulaire Dynamique */}
-                {authMethod === 'PHONE' ? (
-                  <View style={styles.formStack}>
-                    <PhoneField
-                      label="Numéro de téléphone"
-                      value={telephone}
-                      onChangeText={(t) => { clearError(); setTelephone(t); }}
-                    />
-
-                    <AutoButton
-                      title="Recevoir mon code d'accès"
-                      variant="dark"
-                      rightIcon={
-                        <View style={styles.emeraldArrowCircle}>
-                          <ArrowRight size={13} color="#4ADE80" />
-                        </View>
-                      }
-                      loading={isLoading}
-                      onPress={handlePhoneSubmit}
-                      size="md"
-                      style={styles.submitBtn}
-                    />
                   </View>
-                ) : (
-                  <View style={styles.formStack}>
-                    <AutoInput
-                      label="Adresse email"
-                      placeholder="vous@autoloc.sn"
-                      value={email}
-                      onChangeText={(t) => { clearError(); setEmail(t); }}
-                      leftIcon={<Mail size={18} color={theme.colors.text.tertiary} />}
-                      autoCapitalize="none"
-                      keyboardType="email-address"
-                    />
 
-                    <AutoInput
-                      label="Mot de passe"
-                      placeholder="••••••••"
-                      value={password}
-                      onChangeText={(t) => { clearError(); setPassword(t); }}
-                      leftIcon={<Lock size={18} color={theme.colors.text.tertiary} />}
-                      isPassword={!showPassword}
-                      rightIcon={
-                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                          {showPassword ? (
-                            <EyeOff size={18} color={theme.colors.text.tertiary} />
-                          ) : (
-                            <Eye size={18} color={theme.colors.text.tertiary} />
-                          )}
-                        </TouchableOpacity>
-                      }
-                    />
+                  {/* Bannière Erreur */}
+                  {error ? (
+                    <View style={styles.errorBanner}>
+                      <Text style={styles.errorText}>{error}</Text>
+                      <TouchableOpacity onPress={clearError}>
+                        <Text style={styles.errorClose}>×</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : null}
 
-                    <TouchableOpacity style={styles.forgotPassBtn}>
-                      <Text style={styles.forgotPassText}>Mot de passe oublié ?</Text>
+                  {/* Switcher Méthode de Connexion (Segmented Pill) */}
+                  <View style={styles.segmentedTrack}>
+                    <TouchableOpacity
+                      style={[styles.segmentedBtn, authMethod === 'PHONE' && styles.segmentedBtnActive]}
+                      onPress={() => { if (error) clearError(); setAuthMethod('PHONE'); }}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[styles.segmentedText, authMethod === 'PHONE' && styles.segmentedTextActive]}>
+                        SMS / WhatsApp
+                      </Text>
                     </TouchableOpacity>
 
-                    <AutoButton
-                      title="Se connecter"
-                      variant="dark"
-                      rightIcon={
-                        <View style={styles.emeraldArrowCircle}>
-                          <ArrowRight size={13} color="#4ADE80" />
-                        </View>
-                      }
-                      loading={isLoading}
-                      onPress={handleEmailSubmit}
-                      size="md"
-                      style={styles.submitBtn}
-                    />
+                    <TouchableOpacity
+                      style={[styles.segmentedBtn, authMethod === 'EMAIL' && styles.segmentedBtnActive]}
+                      onPress={() => { if (error) clearError(); setAuthMethod('EMAIL'); }}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[styles.segmentedText, authMethod === 'EMAIL' && styles.segmentedTextActive]}>
+                        Email & Pass
+                      </Text>
+                    </TouchableOpacity>
                   </View>
-                )}
 
-                {/* Divider Glass */}
-                <View style={styles.dividerRow}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>OU CONTINUER AVEC</Text>
-                  <View style={styles.dividerLine} />
-                </View>
+                  {/* Formulaire Dynamique */}
+                  {authMethod === 'PHONE' ? (
+                    <View style={styles.formStack}>
+                      <PhoneField
+                        label="Numéro de téléphone"
+                        value={telephone}
+                        onChangeText={(t) => { if (error) clearError(); setTelephone(t); }}
+                      />
+
+                      <AutoButton
+                        title="Recevoir mon code d'accès"
+                        variant="dark"
+                        rightIcon={
+                          <View style={styles.emeraldArrowCircle}>
+                            <ArrowRight size={13} color="#4ADE80" />
+                          </View>
+                        }
+                        loading={isLoading}
+                        onPress={handlePhoneSubmit}
+                        size="md"
+                        style={styles.submitBtn}
+                      />
+                    </View>
+                  ) : (
+                    <View style={styles.formStack}>
+                      <AutoInput
+                        label="Adresse email"
+                        placeholder="vous@autoloc.sn"
+                        value={email}
+                        onChangeText={(t) => { if (error) clearError(); setEmail(t); }}
+                        leftIcon={<Mail size={18} color={theme.colors.text.tertiary} />}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        keyboardType="email-address"
+                        textContentType="emailAddress"
+                        autoComplete="email"
+                      />
+
+                      <AutoInput
+                        label="Mot de passe"
+                        placeholder="••••••••"
+                        value={password}
+                        onChangeText={(t) => { if (error) clearError(); setPassword(t); }}
+                        leftIcon={<Lock size={18} color={theme.colors.text.tertiary} />}
+                        isPassword
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        textContentType="password"
+                        autoComplete="password"
+                      />
+
+                      <TouchableOpacity style={styles.forgotPassBtn}>
+                        <Text style={styles.forgotPassText}>Mot de passe oublié ?</Text>
+                      </TouchableOpacity>
+
+                      <AutoButton
+                        title="Se connecter"
+                        variant="dark"
+                        rightIcon={
+                          <View style={styles.emeraldArrowCircle}>
+                            <ArrowRight size={13} color="#4ADE80" />
+                          </View>
+                        }
+                        loading={isLoading}
+                        onPress={handleEmailSubmit}
+                        size="md"
+                        style={styles.submitBtn}
+                      />
+                    </View>
+                  )}
+
+                  {/* Divider Glass */}
+                  <View style={styles.dividerRow}>
+                    <View style={styles.dividerLine} />
+                    <Text style={styles.dividerText}>OU CONTINUER AVEC</Text>
+                    <View style={styles.dividerLine} />
+                  </View>
 
                 {/* Google Auth Button Glass */}
                 <TouchableOpacity

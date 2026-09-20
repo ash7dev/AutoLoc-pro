@@ -66,8 +66,11 @@ export const HeroSection: React.FC = () => {
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               <span>Vérification d'Identité KYC</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm">
+              <div className="flex items-center -space-x-1 shrink-0">
+                <img src="/wave.png" alt="Wave" className="w-5 h-5 rounded-full object-cover border border-white shadow-2xs" />
+                <img src="/orange_money.jpg" alt="Orange Money" className="w-5 h-5 rounded-full object-cover border border-white shadow-2xs" />
+              </div>
               <span>Wave & Orange Money</span>
             </div>
           </div>
@@ -90,8 +93,11 @@ export const HeroSection: React.FC = () => {
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   <span>Vérification d'Identité KYC</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm">
+                  <div className="flex items-center -space-x-1 shrink-0">
+                    <img src="/wave.png" alt="Wave" className="w-5 h-5 rounded-full object-cover border border-white shadow-2xs" />
+                    <img src="/orange_money.jpg" alt="Orange Money" className="w-5 h-5 rounded-full object-cover border border-white shadow-2xs" />
+                  </div>
                   <span>Wave & Orange Money</span>
                 </div>
               </div>

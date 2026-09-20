@@ -18,6 +18,8 @@ import { useVehicleDetails } from '../hooks/useVehicleDetails';
 import { useUserStore } from '@/src/core/store/useUserStore';
 import { useBookingGate } from '@/src/features/reservations/hooks/useBookingGate';
 import { ReservationGateModal } from '@/src/features/reservations/components/ReservationGateModal';
+import { BookingCheckoutModal } from '@/src/features/reservations/components/checkout/BookingCheckoutModal';
+import { getTenantPricePerDay } from '@/lib/utils';
 
 interface TenantVehicleDetailPageProps {
   vehicleId: string;
@@ -36,6 +38,7 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
   const [selectedEndDate, setSelectedEndDate] = useState<string | undefined>();
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
   const [isGateModalOpen, setIsGateModalOpen] = useState(false);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [pendingBookingParams, setPendingBookingParams] = useState<{
     startDate?: string;
     endDate?: string;
@@ -114,10 +117,8 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
 
     // 2ème VERROU : Connecté -> Évaluation instantanée des verrous (Profil, Téléphone OTP, KYC Identité, Permis, Âge)
     if (gateEval.canProceed) {
-      // Tous les verrous sont levés -> Confirmation / Réservation directe
-      alert(
-        `Demande de réservation initiée pour ${bookingData.daysCount} jour(s). Total: ${bookingData.totalAmount.toLocaleString('fr-FR')} FCFA`
-      );
+      // Tous les verrous sont levés -> Ouverture directe du tunnel checkout 2 étapes
+      setIsCheckoutModalOpen(true);
     } else {
       // Au moins un verrou manque -> Ouverture instantanée de la modale de vérification KYC (ReservationGateModal)
       setIsGateModalOpen(true);
@@ -348,16 +349,48 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
               onClose={() => setIsGateModalOpen(false)}
               onAllCompleted={() => {
                 setIsGateModalOpen(false);
-                const data = pendingBookingParams;
-                if (data) {
-                  alert(
-                    `Félicitations ! Vos pièces et informations sont validées. Demande de réservation initiée pour ${data.daysCount} jour(s) (${data.totalAmount.toLocaleString('fr-FR')} FCFA).`
-                  );
-                } else {
-                  alert('Félicitations ! Vos pièces et informations sont validées. Vous pouvez maintenant finaliser votre réservation.');
-                }
+                setIsCheckoutModalOpen(true);
               }}
             />
+
+            {/* Modale de Checkout Réservation en 2 Étapes (Utilisateur KYC Conforme) */}
+            {vehicle && (
+              <BookingCheckoutModal
+                isOpen={isCheckoutModalOpen}
+                onClose={() => setIsCheckoutModalOpen(false)}
+                vehicle={{
+                  id: vehicle.id,
+                  marque: vehicle.marque,
+                  modele: vehicle.modele,
+                  annee: vehicle.annee,
+                  type: vehicle.type,
+                  ville: vehicle.ville,
+                  photoUrl: vehicle.photoUrl,
+                  photos: vehicle.photos,
+                  prixParJour: vehicle.prixParJour,
+                  tenantPricePerDay: getTenantPricePerDay(vehicle.prixParJour),
+                  joursMinimum: vehicle.joursMinimum,
+                  proposeLivraisonDakar: vehicle.proposeLivraisonDakar,
+                  fraisLivraisonDakar: vehicle.fraisLivraisonDakar,
+                  proposeLivraisonAibd: vehicle.proposeLivraisonAibd,
+                  fraisLivraisonAibd: vehicle.fraisLivraisonAibd,
+                  fraisLivraison: vehicle.fraisLivraison,
+                  autoriseHorsDakar: vehicle.autoriseHorsDakar,
+                  supplementHorsDakarParJour: vehicle.supplementHorsDakarParJour,
+                  transmission: vehicle.transmission,
+                  carburant: vehicle.carburant,
+                  nombrePlaces: vehicle.nombrePlaces,
+                  note: vehicle.note,
+                }}
+                initialStartDate={pendingBookingParams?.startDate || selectedStartDate}
+                initialEndDate={pendingBookingParams?.endDate || selectedEndDate}
+                initialHorsDakar={pendingBookingParams?.horsDakar}
+                initialIncludeDelivery={pendingBookingParams?.includeDelivery}
+                onBookingSuccess={(resId) => {
+                  console.log('Réservation initiée avec succès:', resId);
+                }}
+              />
+            )}
           </>
         )}
 

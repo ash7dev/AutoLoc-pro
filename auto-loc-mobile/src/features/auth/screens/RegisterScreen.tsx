@@ -11,9 +11,11 @@ import {
   Alert,
   Dimensions,
   ActivityIndicator,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { User, Mail, Lock, ArrowRight, ChevronLeft, Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-react-native';
+import { User, Mail, Lock, ArrowRight, ChevronLeft, ShieldCheck, Sparkles } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../../core/theme';
@@ -76,7 +78,6 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const [email, setEmail] = useState('');
   const [telephone, setTelephone] = useState('+221770000000');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const { registerProfile, loginWithGoogleOrSupabase, isLoading, error, clearError } = useAuthStore();
@@ -161,98 +162,100 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
           >
             {/* STACK CARDS SUPERPOSÉES */}
             <View style={styles.cardStackWrapper}>
-              <View style={styles.backAccentCard} />
+              <View style={styles.backAccentCard} pointerEvents="none" />
 
               <View style={styles.frontGlassCard}>
-                {/* Header Card : Logo & Titre */}
-                <View style={styles.cardHeaderBox}>
-                  <View style={styles.logoContainer}>
-                    <Image
-                      source={require('../../../../assets/logo.png')}
-                      style={styles.logoImage}
-                      resizeMode="contain"
+                  {/* Header Card : Logo & Titre */}
+                  <View style={styles.cardHeaderBox}>
+                    <View style={styles.logoContainer}>
+                      <Image
+                        source={require('../../../../assets/logo.png')}
+                        style={styles.logoImage}
+                        resizeMode="contain"
+                      />
+                    </View>
+
+                    <View style={styles.badgeKycGlass}>
+                      <ShieldCheck size={12} color="#059669" />
+                      <Text style={styles.badgeKycText}>INSCRIPTION GRATUITE EN 1 MIN</Text>
+                    </View>
+
+                    <Text style={styles.mainTitle}>Créer un compte</Text>
+                    <Text style={styles.subtitle}>
+                      Rejoignez la plateforme leader de location au Sénégal
+                    </Text>
+                  </View>
+
+                  {/* Bannière Erreur */}
+                  {error ? (
+                    <View style={styles.errorBanner}>
+                      <Text style={styles.errorText}>{error}</Text>
+                      <TouchableOpacity onPress={clearError}>
+                        <Text style={styles.errorClose}>×</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : null}
+
+                  {/* Formulaire Grid */}
+                  <View style={styles.formStack}>
+                    <View style={styles.nameRow}>
+                      <View style={styles.halfCol}>
+                        <AutoInput
+                          label="Prénom"
+                          placeholder="Oumar"
+                          value={prenom}
+                          onChangeText={(t) => { if (error) clearError(); setPrenom(t); }}
+                          leftIcon={<User size={16} color={theme.colors.text.tertiary} />}
+                          autoCorrect={false}
+                          textContentType="givenName"
+                        />
+                      </View>
+                      <View style={styles.halfCol}>
+                        <AutoInput
+                          label="Nom"
+                          placeholder="Sy"
+                          value={nom}
+                          onChangeText={(t) => { if (error) clearError(); setNom(t); }}
+                          autoCorrect={false}
+                          textContentType="familyName"
+                        />
+                      </View>
+                    </View>
+
+                    <PhoneField
+                      label="Numéro de téléphone"
+                      value={telephone}
+                      onChangeText={(t) => { if (error) clearError(); setTelephone(t); }}
                     />
-                  </View>
 
-                  <View style={styles.badgeKycGlass}>
-                    <ShieldCheck size={12} color="#059669" />
-                    <Text style={styles.badgeKycText}>INSCRIPTION GRATUITE EN 1 MIN</Text>
-                  </View>
-
-                  <Text style={styles.mainTitle}>Créer un compte</Text>
-                  <Text style={styles.subtitle}>
-                    Rejoignez la plateforme leader de location au Sénégal
-                  </Text>
-                </View>
-
-                {/* Bannière Erreur */}
-                {error ? (
-                  <View style={styles.errorBanner}>
-                    <Text style={styles.errorText}>{error}</Text>
-                    <TouchableOpacity onPress={clearError}>
-                      <Text style={styles.errorClose}>×</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : null}
-
-                {/* Formulaire Grid */}
-                <View style={styles.formStack}>
-                  <View style={styles.nameRow}>
-                    <View style={styles.halfCol}>
-                      <AutoInput
-                        label="Prénom"
-                        placeholder="Oumar"
-                        value={prenom}
-                        onChangeText={(t) => { clearError(); setPrenom(t); }}
-                        leftIcon={<User size={16} color={theme.colors.text.tertiary} />}
-                      />
-                    </View>
-                    <View style={styles.halfCol}>
-                      <AutoInput
-                        label="Nom"
-                        placeholder="Sy"
-                        value={nom}
-                        onChangeText={(t) => { clearError(); setNom(t); }}
-                      />
-                    </View>
-                  </View>
-
-                  <PhoneField
-                    label="Numéro de téléphone"
-                    value={telephone}
-                    onChangeText={(t) => { clearError(); setTelephone(t); }}
-                  />
-
-                  <AutoInput
-                    label="Adresse email"
-                    placeholder="vous@autoloc.sn"
-                    value={email}
-                    onChangeText={(t) => { clearError(); setEmail(t); }}
-                    leftIcon={<Mail size={16} color={theme.colors.text.tertiary} />}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                  />
-
-                  <View style={styles.passwordBox}>
                     <AutoInput
-                      label="Mot de passe"
-                      placeholder="••••••••"
-                      value={password}
-                      onChangeText={(t) => { clearError(); setPassword(t); }}
-                      leftIcon={<Lock size={16} color={theme.colors.text.tertiary} />}
-                      isPassword={!showPassword}
-                      rightIcon={
-                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                          {showPassword ? (
-                            <EyeOff size={16} color={theme.colors.text.tertiary} />
-                          ) : (
-                            <Eye size={16} color={theme.colors.text.tertiary} />
-                          )}
-                        </TouchableOpacity>
-                      }
+                      label="Adresse email"
+                      placeholder="vous@autoloc.sn"
+                      value={email}
+                      onChangeText={(t) => { if (error) clearError(); setEmail(t); }}
+                      leftIcon={<Mail size={16} color={theme.colors.text.tertiary} />}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      keyboardType="email-address"
+                      textContentType="emailAddress"
+                      autoComplete="email"
                     />
-                    <PasswordStrengthBar password={password} />
-                  </View>
+
+                    <View style={styles.passwordBox}>
+                      <AutoInput
+                        label="Mot de passe"
+                        placeholder="••••••••"
+                        value={password}
+                        onChangeText={(t) => { if (error) clearError(); setPassword(t); }}
+                        leftIcon={<Lock size={16} color={theme.colors.text.tertiary} />}
+                        isPassword
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        textContentType="newPassword"
+                        autoComplete="password-new"
+                      />
+                      <PasswordStrengthBar password={password} />
+                    </View>
 
                   <AutoButton
                     title="Créer mon compte"

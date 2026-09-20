@@ -30,7 +30,7 @@ import { theme } from '../../../core/theme';
 import { useAppStore } from '../../../core/store/useAppStore';
 import { formatConvertedPrice } from '../../../core/utils/currency';
 
-const HERO_HEIGHT = 280;
+const HERO_HEIGHT = 200;
 
 const DEMO_EXTRA_CAR_PHOTOS = [
   'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=800&auto=format&fit=crop',

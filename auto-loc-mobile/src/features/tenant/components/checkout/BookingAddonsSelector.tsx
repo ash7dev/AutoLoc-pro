@@ -67,7 +67,7 @@ export const BookingAddonsSelector: React.FC<BookingAddonsSelectorProps> = ({
       {/* En-tête de section */}
       <View style={styles.headerRow}>
         <View style={styles.titleIconBadge}>
-          <Zap size={14} color="#4ADE80" strokeWidth={2.25} />
+          <Zap size={11} color="#4ADE80" strokeWidth={2.25} />
         </View>
         <Text style={styles.sectionTitle}>Options & Services</Text>
       </View>
@@ -85,7 +85,7 @@ export const BookingAddonsSelector: React.FC<BookingAddonsSelectorProps> = ({
               activeOpacity={0.85}
             >
               <View style={styles.iconCircle}>
-                <Home size={13} color="#4ADE80" strokeWidth={2.25} />
+                <Home size={11} color="#4ADE80" strokeWidth={2.25} />
               </View>
               <View style={styles.addonTextGroup}>
                 <Text style={styles.addonTitle}>Prise en main à l'adresse</Text>
@@ -109,7 +109,7 @@ export const BookingAddonsSelector: React.FC<BookingAddonsSelectorProps> = ({
                 activeOpacity={0.85}
               >
                 <View style={styles.iconCircle}>
-                  <Truck size={13} color="#4ADE80" strokeWidth={2.25} />
+                  <Truck size={11} color="#4ADE80" strokeWidth={2.25} />
                 </View>
                 <View style={styles.addonTextGroup}>
                   <Text style={styles.addonTitle}>Livraison sur Dakar (Ville)</Text>
@@ -136,7 +136,7 @@ export const BookingAddonsSelector: React.FC<BookingAddonsSelectorProps> = ({
                 activeOpacity={0.85}
               >
                 <View style={styles.iconCircle}>
-                  <Plane size={13} color="#4ADE80" strokeWidth={2.25} />
+                  <Plane size={11} color="#4ADE80" strokeWidth={2.25} />
                 </View>
                 <View style={styles.addonTextGroup}>
                   <Text style={styles.addonTitle}>Livraison Aéroport AIBD</Text>
@@ -155,24 +155,18 @@ export const BookingAddonsSelector: React.FC<BookingAddonsSelectorProps> = ({
               </TouchableOpacity>
             )}
 
-            {/* Champ Saisie Adresse si Livraison cochée */}
-            {typeLivraison !== 'AUCUNE' && (
+            {/* Champ Saisie Adresse uniquement pour la livraison Dakar */}
+            {typeLivraison === 'DAKAR' && (
               <View style={styles.addressInputContainer}>
                 <View style={styles.addressHeaderRow}>
-                  <MapPin size={13} color="#059669" strokeWidth={2.25} />
-                  <Text style={styles.addressLabel}>
-                    {typeLivraison === 'AIBD' ? "Numéro de vol / Précisions AIBD (Optionnel)" : "Adresse exacte de livraison *"}
-                  </Text>
+                  <MapPin size={11} color="#059669" strokeWidth={2.25} />
+                  <Text style={styles.addressLabel}>Adresse exacte de livraison *</Text>
                 </View>
                 <TextInput
                   style={styles.addressInput}
                   value={adresseLivraison}
                   onChangeText={onAdresseLivraisonChange}
-                  placeholder={
-                    typeLivraison === 'AIBD'
-                      ? "Ex: Vol AF718 / Arrivée 18h30..."
-                      : "Ex: Les Almadies, Villa 12 / Ngor..."
-                  }
+                  placeholder="Ex: Les Almadies, Villa 12 / Ngor..."
                   placeholderTextColor="#94A3B8"
                 />
               </View>
@@ -190,7 +184,7 @@ export const BookingAddonsSelector: React.FC<BookingAddonsSelectorProps> = ({
               activeOpacity={0.85}
             >
               <View style={styles.iconCircle}>
-                <Navigation size={13} color="#4ADE80" strokeWidth={2.25} />
+                <Navigation size={11} color="#4ADE80" strokeWidth={2.25} />
               </View>
 
               <View style={styles.addonTextGroup}>
@@ -240,9 +234,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   titleIconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 9,
+    width: 22,
+    height: 22,
+    borderRadius: 7,
     backgroundColor: '#041912',
     alignItems: 'center',
     justifyContent: 'center',
@@ -285,9 +279,9 @@ const styles = StyleSheet.create({
     borderColor: '#059669',
   },
   iconCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 9,
+    width: 24,
+    height: 24,
+    borderRadius: 7,
     backgroundColor: '#041912',
     alignItems: 'center',
     justifyContent: 'center',

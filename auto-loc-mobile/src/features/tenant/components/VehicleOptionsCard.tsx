@@ -5,13 +5,17 @@ import {
   Text,
   Platform,
 } from 'react-native';
-import { Navigation, Truck, Zap, CheckCircle2 } from 'lucide-react-native';
+import { Navigation, Truck, Zap, CheckCircle2, Plane } from 'lucide-react-native';
 import { CurrencyCode, formatDirectPrice } from '../../../core/utils/currency';
 import { theme } from '../../../core/theme';
 
 export interface VehicleOptionsCardProps {
   autoriseHorsDakar?: boolean | null;
   supplementHorsDakarParJour?: number | null;
+  proposeLivraisonDakar?: boolean | null;
+  fraisLivraisonDakar?: number | null;
+  proposeLivraisonAibd?: boolean | null;
+  fraisLivraisonAibd?: number | null;
   fraisLivraison?: number | null;
   selectedCurrency: CurrencyCode;
 }
@@ -19,14 +23,22 @@ export interface VehicleOptionsCardProps {
 export const VehicleOptionsCard: React.FC<VehicleOptionsCardProps> = ({
   autoriseHorsDakar,
   supplementHorsDakarParJour,
+  proposeLivraisonDakar,
+  fraisLivraisonDakar,
+  proposeLivraisonAibd,
+  fraisLivraisonAibd,
   fraisLivraison,
   selectedCurrency,
 }) => {
   const hasHorsDakar = Boolean(autoriseHorsDakar || (supplementHorsDakarParJour && supplementHorsDakarParJour > 0));
-  const hasLivraison = fraisLivraison !== undefined && fraisLivraison !== null && fraisLivraison >= 0;
+  
+  const canDeliverDakar = proposeLivraisonDakar ?? (fraisLivraison !== undefined && fraisLivraison !== null && fraisLivraison >= 0);
+  const actualFraisDakar = fraisLivraisonDakar ?? fraisLivraison ?? 0;
+  
+  const canDeliverAibd = Boolean(proposeLivraisonAibd);
+  const actualFraisAibd = fraisLivraisonAibd ?? 0;
 
-  // Si ni l'option Hors Dakar ni la livraison ne sont présentes, on masque le composant
-  if (!hasHorsDakar && !hasLivraison) {
+  if (!hasHorsDakar && !canDeliverDakar && !canDeliverAibd) {
     return null;
   }
 
@@ -34,9 +46,13 @@ export const VehicleOptionsCard: React.FC<VehicleOptionsCardProps> = ({
     ? `+ ${formatDirectPrice(supplementHorsDakarParJour, selectedCurrency)} / j`
     : 'Autorisé sans frais';
 
-  const fraisLivraisonText = fraisLivraison && fraisLivraison > 0
-    ? `+ ${formatDirectPrice(fraisLivraison, selectedCurrency)}`
-    : 'Livraison Gratuite';
+  const dakarText = actualFraisDakar > 0
+    ? `+ ${formatDirectPrice(actualFraisDakar, selectedCurrency)}`
+    : 'Gratuite';
+
+  const aibdText = actualFraisAibd > 0
+    ? `+ ${formatDirectPrice(actualFraisAibd, selectedCurrency)}`
+    : 'Gratuite';
 
   return (
     <View style={styles.container}>
@@ -71,25 +87,48 @@ export const VehicleOptionsCard: React.FC<VehicleOptionsCardProps> = ({
           </View>
         )}
 
-        {/* Option 2 : Livraison & Restitution */}
-        {hasLivraison && (
+        {/* Option 2 : Livraison sur Dakar */}
+        {canDeliverDakar && (
           <View style={styles.optionCard}>
             <View style={styles.cardHeader}>
               <View style={styles.iconCircle}>
                 <Truck size={13} color="#4ADE80" strokeWidth={2.25} />
               </View>
               <View style={styles.cardHeaderContent}>
-                <Text style={styles.optionTitle}>Livraison & Restitution</Text>
-                <View style={[styles.badgePill, (fraisLivraison ?? 0) === 0 && styles.freeBadgePill]}>
-                  <CheckCircle2 size={11} color={(fraisLivraison ?? 0) === 0 ? '#059669' : '#041912'} />
-                  <Text style={[styles.badgeText, (fraisLivraison ?? 0) === 0 && styles.freeBadgeText]}>
-                    {fraisLivraisonText}
+                <Text style={styles.optionTitle}>Livraison sur Dakar (Ville)</Text>
+                <View style={[styles.badgePill, actualFraisDakar === 0 && styles.freeBadgePill]}>
+                  <CheckCircle2 size={11} color={actualFraisDakar === 0 ? '#059669' : '#041912'} />
+                  <Text style={[styles.badgeText, actualFraisDakar === 0 && styles.freeBadgeText]}>
+                    {dakarText}
                   </Text>
                 </View>
               </View>
             </View>
             <Text style={styles.optionDescription}>
-              Faites-vous livrer le véhicule à l'adresse de votre choix ou à l'aéroport.
+              Remise des clés directement à votre domicile, hôtel ou bureau à Dakar.
+            </Text>
+          </View>
+        )}
+
+        {/* Option 3 : Livraison Aéroport AIBD */}
+        {canDeliverAibd && (
+          <View style={styles.optionCard}>
+            <View style={styles.cardHeader}>
+              <View style={styles.iconCircle}>
+                <Plane size={13} color="#4ADE80" strokeWidth={2.25} />
+              </View>
+              <View style={styles.cardHeaderContent}>
+                <Text style={styles.optionTitle}>Livraison Aéroport AIBD</Text>
+                <View style={[styles.badgePill, actualFraisAibd === 0 && styles.freeBadgePill]}>
+                  <CheckCircle2 size={11} color={actualFraisAibd === 0 ? '#059669' : '#041912'} />
+                  <Text style={[styles.badgeText, actualFraisAibd === 0 && styles.freeBadgeText]}>
+                    {aibdText}
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <Text style={styles.optionDescription}>
+              Prise en charge à votre arrivée à l'Aéroport International Blaise Diagne.
             </Text>
           </View>
         )}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   TextInput,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TextInputProps,
   TouchableOpacity,
+  Pressable,
 } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { theme } from '../../core/theme';
@@ -31,8 +32,10 @@ export const AutoInput: React.FC<AutoInputProps> = ({
   containerStyle,
   wrapperStyle,
   style,
+  secureTextEntry,
   ...props
 }) => {
+  const inputRef = useRef<TextInput>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -42,10 +45,20 @@ export const AutoInput: React.FC<AutoInputProps> = ({
     ? theme.colors.border.focus
     : theme.colors.border.default;
 
+  const isSecure =
+    secureTextEntry !== undefined
+      ? secureTextEntry
+      : isPassword && !showPassword;
+
   return (
     <View style={[styles.wrapper, wrapperStyle]}>
-      {label && <Text style={styles.label}>{label}</Text>}
-      <View
+      {label && (
+        <Text style={styles.label} onPress={() => inputRef.current?.focus()}>
+          {label}
+        </Text>
+      )}
+      <Pressable
+        onPress={() => inputRef.current?.focus()}
         style={[
           styles.inputContainer,
           { borderColor: containerBorderColor },
@@ -53,10 +66,15 @@ export const AutoInput: React.FC<AutoInputProps> = ({
           containerStyle,
         ]}
       >
-        {leftIcon && <View style={styles.leftIconContainer}>{leftIcon}</View>}
+        {leftIcon && (
+          <View style={styles.leftIconContainer} pointerEvents="none">
+            {leftIcon}
+          </View>
+        )}
         <TextInput
+          ref={inputRef}
           placeholderTextColor={theme.colors.text.tertiary}
-          secureTextEntry={isPassword && !showPassword}
+          secureTextEntry={isSecure}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           style={[styles.input, style]}
@@ -67,7 +85,9 @@ export const AutoInput: React.FC<AutoInputProps> = ({
         ) : isPassword ? (
           <TouchableOpacity
             style={styles.rightIconContainer}
-            onPress={() => setShowPassword(!showPassword)}
+            onPress={() => setShowPassword((prev) => !prev)}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             {showPassword ? (
               <EyeOff size={20} color={theme.colors.text.secondary} />
@@ -76,7 +96,7 @@ export const AutoInput: React.FC<AutoInputProps> = ({
             )}
           </TouchableOpacity>
         ) : null}
-      </View>
+      </Pressable>
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );

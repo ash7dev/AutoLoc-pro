@@ -10,13 +10,12 @@ import {
   Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { MapPin, List, SearchX, RotateCcw, SlidersHorizontal, X, Star, ArrowRight } from 'lucide-react-native';
-import { Image } from 'expo-image';
+import { MapPin, List, SearchX, RotateCcw, SlidersHorizontal, X } from 'lucide-react-native';
 import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { theme } from '../../../core/theme';
 import { useAppStore } from '../../../core/store/useAppStore';
 import { useNavigation } from '../../../core/navigation/RootNavigator';
-import { formatConvertedPrice } from '../../../core/utils/currency';
+
 import { WhereToSearchTrigger } from '../components/WhereToSearchTrigger';
 import { AirbnbSearchModal } from '../components/AirbnbSearchModal';
 import { CategoryChipsBar, CategoryFilterKey } from '../components/CategoryChipsBar';
@@ -38,13 +37,13 @@ export const TenantExploreScreen: React.FC = () => {
   const [searchModalVisible, setSearchModalVisible] = useState<boolean>(false);
   const [refinementModalVisible, setRefinementModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilterKey>('ALL');
-  const [viewMode, setViewMode] = useState<'SPLIT' | 'MAP' | 'LIST'>('SPLIT');
-  const [selectedVehicle, setSelectedVehicle] = useState<VehicleFeedItem | null>(null);
+  const [viewMode, setViewMode] = useState<'MAP' | 'LIST'>('LIST');
   const { favoriteIds, toggleFavorite } = useFavoriteVehicles();
 
   // BottomSheet References & Snap Points
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['28%', '55%', '92%'], []);
+  const listRef = useRef<any>(null);
+  const snapPoints = useMemo(() => ['15%', '50%', '92%'], []);
 
   // Merge store filters with selected category chip
   const activeFilters = useMemo(() => {
@@ -103,18 +102,31 @@ export const TenantExploreScreen: React.FC = () => {
   }, [searchFilters, setSearchFilters]);
 
   const handleToggleViewMode = async () => {
-    if (viewMode === 'MAP') {
-      setViewMode('SPLIT');
-      bottomSheetRef.current?.snapToIndex(1); // 55%
-    } else if (viewMode === 'SPLIT') {
-      setViewMode('LIST');
-      bottomSheetRef.current?.snapToIndex(2); // 92%
-    } else {
+    if (viewMode === 'LIST') {
       await requestLocationPermission();
       setViewMode('MAP');
-      bottomSheetRef.current?.snapToIndex(0); // 28%
+      bottomSheetRef.current?.snapToIndex(0); // 15% — carte plein écran
+    } else {
+      setViewMode('LIST');
+      bottomSheetRef.current?.snapToIndex(1); // 50%
     }
   };
+
+  // Callback quand un marqueur est cliqué sur la carte → scroll BottomSheet vers le véhicule
+  const handleMarkerSelectVehicle = useCallback((vehicle: VehicleFeedItem) => {
+    const index = vehicles.findIndex((v) => v.id === vehicle.id);
+    if (index !== -1) {
+      // Ouvrir le sheet à 50% si en mode MAP
+      if (viewMode === 'MAP') {
+        bottomSheetRef.current?.snapToIndex(1); // 50%
+        setViewMode('LIST');
+      }
+      // Scroll vers la carte du véhicule dans la liste
+      setTimeout(() => {
+        listRef.current?.scrollToIndex({ index, animated: true, viewOffset: 20 });
+      }, 300);
+    }
+  }, [vehicles, viewMode]);
 
   const datesSummaryText = searchFilters.dateDebut
     ? searchFilters.dateFin
@@ -226,8 +238,7 @@ function formatLocationPreposition(zone?: string): string {
           userLocation={userLocation}
           onVehiclePress={handleVehiclePress}
           onSearchInArea={handleSearchInArea}
-          onSelectVehicle={setSelectedVehicle}
-          hideCarousel={viewMode === 'LIST'}
+          onSelectVehicle={handleMarkerSelectVehicle}
         />
       </View>
 
@@ -238,8 +249,7 @@ function formatLocationPreposition(zone?: string): string {
         snapPoints={snapPoints}
         onChange={(index) => {
           if (index === 0) setViewMode('MAP');
-          else if (index === 1) setViewMode('SPLIT');
-          else if (index === 2) setViewMode('LIST');
+          else setViewMode('LIST');
         }}
         handleIndicatorStyle={styles.sheetHandleIndicator}
         backgroundStyle={styles.sheetBackground}
@@ -251,6 +261,7 @@ function formatLocationPreposition(zone?: string): string {
 
         {/* Liste des Véhicules via BottomSheetFlatList */}
         <BottomSheetFlatList
+          ref={listRef}
           data={loading && vehicles.length === 0 ? [] : vehicles}
           keyExtractor={(item, index) => `${item.id}-${index}`}
           renderItem={({ item }) => (
@@ -333,66 +344,7 @@ function formatLocationPreposition(zone?: string): string {
         />
       </BottomSheet>
 
-      {/* Carte Flottante de Véhicule Sélectionné (Rendue AU-DESSUS du BottomSheet à zIndex 999) */}
-      {selectedVehicle && viewMode !== 'LIST' && (
-        <View style={styles.floatingCardOverlay} pointerEvents="box-none">
-          <TouchableOpacity
-            style={styles.floatingCardContainer}
-            onPress={() => handleVehiclePress(selectedVehicle)}
-            activeOpacity={0.9}
-          >
-            <Image
-              source={{
-                uri:
-                  selectedVehicle.photoUrl ||
-                  'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=800&auto=format&fit=crop',
-              }}
-              style={styles.floatingCardImg}
-              contentFit="cover"
-            />
-
-            <View style={styles.floatingCardBody}>
-              <View style={styles.floatingCardHeaderRow}>
-                <Text style={styles.floatingCardTitle} numberOfLines={1}>
-                  {selectedVehicle.marque} {selectedVehicle.modele}
-                </Text>
-
-                {selectedVehicle.note > 0 && (
-                  <View style={styles.ratingBadge}>
-                    <Star size={11} color="#F59E0B" fill="#F59E0B" />
-                    <Text style={styles.ratingText}>{selectedVehicle.note.toFixed(1)}</Text>
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.locationRow}>
-                <MapPin size={11} color="#64748B" />
-                <Text style={styles.floatingCardLoc} numberOfLines={1}>
-                  {selectedVehicle.ville || 'Dakar'}
-                </Text>
-              </View>
-
-              <View style={styles.floatingCardPriceRow}>
-                <Text style={styles.floatingCardPrice}>
-                  {formatConvertedPrice(selectedVehicle.prixParJour, selectedCurrency)}
-                  <Text style={styles.perDay}> / j</Text>
-                </Text>
-
-                <TouchableOpacity
-                  style={styles.viewDetailBtn}
-                  onPress={() => handleVehiclePress(selectedVehicle)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.viewDetailText}>Voir</Text>
-                  <ArrowRight size={12} color="#FFFFFF" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Bouton Flottant Pilule de Bascule Liste / Carte (Style Airbnb) */}
+      {/* Bouton Flottant Pilule de Bascule Carte ↔ Liste (Style Airbnb) */}
       <View style={styles.floatingToggleContainer}>
         <TouchableOpacity
           style={styles.floatingToggleBtn}
@@ -402,17 +354,12 @@ function formatLocationPreposition(zone?: string): string {
           {viewMode === 'MAP' ? (
             <>
               <List size={16} color="#FFFFFF" />
-              <Text style={styles.floatingToggleText}>Agrandir la Liste</Text>
-            </>
-          ) : viewMode === 'LIST' ? (
-            <>
-              <MapPin size={16} color="#FFFFFF" />
-              <Text style={styles.floatingToggleText}>Voir la Carte</Text>
+              <Text style={styles.floatingToggleText}>Voir la Liste</Text>
             </>
           ) : (
             <>
               <MapPin size={16} color="#FFFFFF" />
-              <Text style={styles.floatingToggleText}>Carte Plein Écran</Text>
+              <Text style={styles.floatingToggleText}>Voir la Carte</Text>
             </>
           )}
         </TouchableOpacity>
@@ -677,105 +624,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     letterSpacing: 0.3,
   },
-  floatingCardOverlay: {
-    position: 'absolute',
-    bottom: 82,
-    left: 16,
-    right: 16,
-    zIndex: 999,
-  },
-  floatingCardContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: theme.radius.card,
-    padding: 10,
-    alignItems: 'center',
-    gap: 10,
-    borderWidth: 1.5,
-    borderColor: theme.primitives.forest[800],
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.25,
-        shadowRadius: 14,
-      },
-      android: {
-        elevation: 10,
-      },
-    }),
-  },
-  floatingCardImg: {
-    width: 85,
-    height: 75,
-    borderRadius: 14,
-    backgroundColor: '#0F172A',
-  },
-  floatingCardBody: {
-    flex: 1,
-    gap: 2,
-  },
-  floatingCardHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  floatingCardTitle: {
-    fontFamily: theme.typography.fontFamily.displaySemiBold,
-    fontSize: 14,
-    color: theme.primitives.forest[800],
-    flex: 1,
-    marginRight: 6,
-  },
-  ratingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  ratingText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 11,
-    color: '#0F172A',
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  floatingCardLoc: {
-    fontFamily: theme.typography.fontFamily.regular,
-    fontSize: 11,
-    color: '#64748B',
-    flex: 1,
-  },
-  floatingCardPriceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  floatingCardPrice: {
-    fontFamily: theme.typography.fontFamily.extraBold,
-    fontSize: 13,
-    color: theme.primitives.forest[800],
-  },
-  perDay: {
-    fontSize: 10.5,
-    fontFamily: theme.typography.fontFamily.regular,
-    color: '#64748B',
-  },
-  viewDetailBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.primitives.forest[800],
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: theme.radius.full,
-    gap: 5,
-  },
-  viewDetailText: {
-    fontFamily: theme.typography.fontFamily.bold,
-    fontSize: 11.5,
-    color: '#FFFFFF',
-  },
+
 });

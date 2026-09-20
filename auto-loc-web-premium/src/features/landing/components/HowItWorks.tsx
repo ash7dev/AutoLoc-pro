@@ -158,9 +158,17 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ className = "" }) => {
                 </span>
               </div>
 
-              <div className="mt-4 flex items-center gap-1.5 border-t border-[#0A3D2E]/10 pt-3 text-xs font-medium text-[#0A3D2E]">
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-[#9A7B32]" strokeWidth={1.75} />
-                <span>{feature}</span>
+              <div className="mt-4 flex items-center justify-between border-t border-[#0A3D2E]/10 pt-3 text-xs font-medium text-[#0A3D2E]">
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-[#9A7B32]" strokeWidth={1.75} />
+                  <span>{feature}</span>
+                </div>
+                {number === "2" && (
+                  <div className="flex items-center -space-x-1 shrink-0">
+                    <img src="/wave.png" alt="Wave" className="w-5 h-5 rounded-full object-cover border border-white shadow-2xs" />
+                    <img src="/orange_money.jpg" alt="Orange Money" className="w-5 h-5 rounded-full object-cover border border-white shadow-2xs" />
+                  </div>
+                )}
               </div>
             </li>
           ))}
