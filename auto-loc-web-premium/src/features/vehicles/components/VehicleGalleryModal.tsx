@@ -56,7 +56,7 @@ export const VehicleGalleryModal: React.FC<VehicleGalleryModalProps> = ({
   if (!isOpen || images.length === 0) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 bg-black/95 backdrop-blur-2xl flex flex-col justify-between text-white animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
@@ -134,11 +134,10 @@ export const VehicleGalleryModal: React.FC<VehicleGalleryModalProps> = ({
               <button
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
-                className={`relative w-16 h-12 sm:w-20 sm:h-14 shrink-0 rounded-xl overflow-hidden border-2 transition-all duration-200 cursor-pointer ${
-                  idx === currentIndex
+                className={`relative w-16 h-12 sm:w-20 sm:h-14 shrink-0 rounded-xl overflow-hidden border-2 transition-all duration-200 cursor-pointer ${idx === currentIndex
                     ? 'border-emerald-400 scale-105 shadow-lg shadow-emerald-500/20 opacity-100'
                     : 'border-transparent opacity-50 hover:opacity-80'
-                }`}
+                  }`}
               >
                 <Image
                   src={img}

@@ -41,6 +41,8 @@ export interface BookingCheckoutModalProps {
   initialEndDate?: string;
   initialHorsDakar?: boolean;
   initialIncludeDelivery?: boolean;
+  initialTypeLivraison?: 'AUCUNE' | 'DAKAR' | 'AIBD';
+  initialAdresseLivraison?: string;
   onBookingSuccess?: (reservationId: string) => void;
 }
 
@@ -52,6 +54,8 @@ export function BookingCheckoutModal({
   initialEndDate,
   initialHorsDakar = false,
   initialIncludeDelivery = false,
+  initialTypeLivraison,
+  initialAdresseLivraison,
   onBookingSuccess,
 }: BookingCheckoutModalProps) {
   const user = useUserStore((state) => state.user);
@@ -60,9 +64,9 @@ export function BookingCheckoutModal({
   const [startDate, setStartDate] = useState<string | undefined>(initialStartDate);
   const [endDate, setEndDate] = useState<string | undefined>(initialEndDate);
   const [typeLivraison, setTypeLivraison] = useState<'AUCUNE' | 'DAKAR' | 'AIBD'>(
-    initialIncludeDelivery ? 'DAKAR' : 'AUCUNE'
+    initialTypeLivraison || (initialIncludeDelivery ? 'DAKAR' : 'AUCUNE')
   );
-  const [adresseLivraison, setAdresseLivraison] = useState('');
+  const [adresseLivraison, setAdresseLivraison] = useState(initialAdresseLivraison || '');
   const [isHorsDakarSelected, setIsHorsDakarSelected] = useState<boolean>(initialHorsDakar);
   const [isProcessing, setIsProcessing] = useState(false);
   const [successData, setSuccessData] = useState<{ reservationId: string; paymentUrl?: string | null } | null>(null);
@@ -93,9 +97,12 @@ export function BookingCheckoutModal({
       setStartDate(startStr);
       setEndDate(endStr);
       setIsHorsDakarSelected(initialHorsDakar);
-      setTypeLivraison(initialIncludeDelivery ? 'DAKAR' : 'AUCUNE');
+      setTypeLivraison(initialTypeLivraison || (initialIncludeDelivery ? 'DAKAR' : 'AUCUNE'));
+      if (initialAdresseLivraison !== undefined) {
+        setAdresseLivraison(initialAdresseLivraison);
+      }
     }
-  }, [isOpen, initialStartDate, initialEndDate, initialHorsDakar, initialIncludeDelivery, vehicle.joursMinimum]);
+  }, [isOpen, initialStartDate, initialEndDate, initialHorsDakar, initialIncludeDelivery, initialTypeLivraison, initialAdresseLivraison, vehicle.joursMinimum]);
 
   // Calcul du nombre de jours
   const nbJours = useMemo(() => {
@@ -199,9 +206,9 @@ export function BookingCheckoutModal({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 lg:p-6 animate-in fade-in duration-200">
-      
+
       <div className="relative w-full max-w-5xl bg-slate-50 border border-slate-200 rounded-[28px] sm:rounded-[36px] shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-        
+
         {/* En-tête de la modale */}
         <BookingCheckoutHeader
           step={step}

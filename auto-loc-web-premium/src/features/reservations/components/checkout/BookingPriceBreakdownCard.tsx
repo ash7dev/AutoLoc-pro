@@ -47,7 +47,10 @@ export function BookingPriceBreakdownCard({
             <Sparkles className="w-4 h-4 text-[#F1DFB6]" />
           </div>
           <div>
-            <h4 className="text-base font-display font-bold text-[#F1DFB6]">
+            <h4 
+              className="text-base font-fraunces font-normal text-[#F1DFB6] tracking-tight"
+              style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+            >
               Détail du tarif
             </h4>
             <p className="text-xs text-[#F1DFB6]/75">Transparence totale AutoLoc</p>

@@ -2137,11 +2137,11 @@ export class VehiclesService {
     });
     if (!vehicle) throw new NotFoundException('Véhicule introuvable');
 
-    // Reservations actives (PAYEE, CONFIRMEE, EN_COURS)
+    // Reservations actives et en cours de paiement (EN_ATTENTE_PAIEMENT, PAYEE, CONFIRMEE, EN_COURS)
     const reservations = await this.prisma.reservation.findMany({
       where: {
         vehiculeId,
-        statut: { in: ['PAYEE', 'CONFIRMEE', 'EN_COURS'] },
+        statut: { in: ['EN_ATTENTE_PAIEMENT', 'PAYEE', 'CONFIRMEE', 'EN_COURS'] },
       },
       select: { dateDebut: true, dateFin: true },
     });

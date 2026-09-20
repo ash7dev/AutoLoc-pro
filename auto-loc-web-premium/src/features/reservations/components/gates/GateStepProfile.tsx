@@ -60,11 +60,11 @@ export const GateStepProfile: React.FC<GateStepProfileProps> = ({ onSuccess }) =
   return (
     <div className="w-full max-w-lg mx-auto py-2 px-1 animate-in fade-in zoom-in-95 duration-200">
       <div className="relative">
-        {/* Layer 1: Back Accent Card */}
-        <div className="absolute -top-1.5 -bottom-1.5 left-2 right-2 rounded-[32px] bg-emerald-500/20 border-[1.5px] border-emerald-400/35 pointer-events-none" />
+        {/* Layer 1: Back Accent Card - Decalé 3px à gauche */}
+        <div className="absolute inset-0 -left-[3px] top-[3px] rounded-[28px] bg-[#041912] border border-[#0A3D2E]/80 pointer-events-none shadow-md" />
 
         {/* Layer 2: Front Glass Card */}
-        <div className="relative bg-white border border-white/80 rounded-[28px] p-6 shadow-2xl">
+        <div className="relative bg-white border border-white/80 rounded-[28px] p-6 sm:p-7 pb-7 shadow-2xl">
           {/* Header Box */}
           <div className="flex flex-col items-center text-center mb-5">
             <div className="w-15 h-15 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-3">
@@ -155,20 +155,26 @@ export const GateStepProfile: React.FC<GateStepProfileProps> = ({ onSuccess }) =
             <button
               type="submit"
               disabled={!isFormValid || submitting}
-              className={`w-full h-12.5 rounded-full bg-[#041912] hover:bg-[#06291e] text-white font-medium text-sm flex items-center justify-center shadow-lg shadow-[#041912]/20 active:scale-[0.98] transition-all mt-3 ${
-                !isFormValid || submitting ? 'opacity-65 cursor-not-allowed' : ''
+              className={`w-full h-12 rounded-full font-semibold text-sm flex items-center justify-center transition-all mt-3 ${
+                !isFormValid || submitting
+                  ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                  : 'bg-[#041912] hover:bg-[#06291e] text-white shadow-lg shadow-[#041912]/20 active:scale-[0.98]'
               }`}
             >
               {submitting ? (
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
                   <span>Sauvegarde...</span>
                 </div>
               ) : (
                 <>
                   <span>Enregistrer et continuer</span>
-                  <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/35 flex items-center justify-center ml-2">
-                    <ArrowRight className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2.5} />
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ml-2 transition-all ${
+                    !isFormValid
+                      ? 'bg-slate-200 text-slate-400'
+                      : 'bg-emerald-500/20 border border-emerald-400/35 text-emerald-400'
+                  }`}>
+                    <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.5} />
                   </div>
                 </>
               )}

@@ -17,7 +17,7 @@ export function BookingCheckoutHeader({
   onClose,
 }: BookingCheckoutHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-30 bg-white border-b border-slate-200/90 px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
       {/* Bouton Retour */}
       <button
         type="button"
@@ -34,7 +34,10 @@ export function BookingCheckoutHeader({
           <ShieldCheck className="w-3.5 h-3.5 text-[#0A3D2E]" />
           <span>Étape {step} sur 2</span>
         </div>
-        <h2 className="text-lg sm:text-xl font-display font-bold text-slate-900 truncate">
+        <h2 
+          className="text-lg sm:text-xl font-fraunces font-normal text-[#041912] tracking-tight truncate"
+          style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+        >
           {title}
         </h2>
       </div>

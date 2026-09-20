@@ -92,32 +92,32 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
     : undefined;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-gradient-to-b from-[#062017] via-[#04150F] to-[#020B08] flex flex-col animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-black/60 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+      {/* Background click overlay */}
+      <div className="fixed inset-0" onClick={onClose} />
 
-      {/* 1. Aura Lumineuse Émeraude */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[90vw] max-w-xl h-96 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
-
-      {/* 2. En-tête Navigation Glassmorphism */}
-      <div className="relative z-10 w-full max-w-2xl mx-auto px-4 pt-4 pb-2">
-        <div className="flex items-center justify-between">
+      {/* Central Modal Container */}
+      <div className="relative z-10 w-full max-w-lg my-auto flex flex-col items-center">
+        {/* En-tête Navigation Modale */}
+        <div className="w-full flex items-center justify-between mb-3 px-1">
           {currentStepIndex > 0 ? (
             <button
               type="button"
               onClick={handleBack}
               disabled={upgradingRole}
-              className="w-9.5 h-9.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center transition-all active:scale-95 disabled:opacity-50"
+              className="w-9 h-9 rounded-full bg-white hover:bg-slate-100 text-slate-800 shadow-md border border-slate-200 flex items-center justify-center transition-all active:scale-95 disabled:opacity-50"
               aria-label="Précédent"
             >
-              <ChevronLeft className="w-5 h-5" strokeWidth={2.5} />
+              <ChevronLeft className="w-5 h-5 text-slate-700" strokeWidth={2.5} />
             </button>
           ) : (
-            <div className="w-9.5" />
+            <div className="w-9" />
           )}
 
-          {/* Indicateur de Progression en Pilule Glass */}
+          {/* Indicateur de Progression */}
           {!isPreGate && !isAgeWarning ? (
-            <div className="flex items-center gap-2.5 bg-white/10 border border-white/18 px-3.5 py-1.5 rounded-full backdrop-blur-md">
-              <span className="text-[11px] font-medium text-white">
+            <div className="flex items-center gap-2 bg-[#041912] border border-[#0A3D2E] px-3.5 py-1.5 rounded-full shadow-md text-white">
+              <span className="text-[11px] font-semibold text-white">
                 Étape {currentStepIndex} / {totalSteps - 1}
               </span>
               <div className="flex items-center gap-1.5">
@@ -135,7 +135,7 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
                           isActive
                             ? 'w-4 bg-emerald-400'
                             : isCompleted
-                            ? 'w-1.5 bg-emerald-600'
+                            ? 'w-1.5 bg-emerald-500'
                             : 'w-1.5 bg-white/30'
                         }`}
                       />
@@ -144,9 +144,9 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 bg-white/10 border border-emerald-400/30 px-3 py-1.5 rounded-full backdrop-blur-md">
+            <div className="flex items-center gap-1.5 bg-[#041912] border border-emerald-500/40 px-3.5 py-1.5 rounded-full shadow-md">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-[10px] font-medium tracking-wider text-emerald-400 uppercase">
+              <span className="text-[10px] font-bold tracking-wider text-emerald-400 uppercase">
                 {isOwnerMode ? 'ESPACE PROPRIÉTAIRE' : 'VÉRIFICATION SÉCURISÉE'}
               </span>
             </div>
@@ -156,50 +156,50 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
             type="button"
             onClick={onClose}
             disabled={upgradingRole}
-            className="w-9.5 h-9.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white flex items-center justify-center transition-all active:scale-95 disabled:opacity-50"
+            className="w-9 h-9 rounded-full bg-white hover:bg-slate-100 text-slate-800 shadow-md border border-slate-200 flex items-center justify-center transition-all active:scale-95 disabled:opacity-50"
             aria-label="Fermer"
           >
-            <X className="w-4.5 h-4.5" strokeWidth={2.5} />
+            <X className="w-4.5 h-4.5 text-slate-700" strokeWidth={2.5} />
           </button>
         </div>
-      </div>
 
-      {/* 3. Corps de la Modale */}
-      <div className="relative z-10 flex-1 flex items-center justify-center p-4">
-        {currentStep === 'PREGATE' && (
-          <BookingPreGateOverview
-            vehicleTitle={vehicleTitle}
-            missingSteps={missingSteps}
-            onStart={() => setCurrentStepIndex(1)}
-            onCancel={onClose}
-            customTitle={customTitle || defaultTitle}
-            customSubtitle={customSubtitle || defaultSubtitle}
-          />
-        )}
+        {/* Corps de la Modale */}
+        <div className="w-full">
+          {currentStep === 'PREGATE' && (
+            <BookingPreGateOverview
+              vehicleTitle={vehicleTitle}
+              missingSteps={missingSteps}
+              onStart={() => setCurrentStepIndex(1)}
+              onCancel={onClose}
+              customTitle={customTitle || defaultTitle}
+              customSubtitle={customSubtitle || defaultSubtitle}
+            />
+          )}
 
-        {currentStep === 'PROFILE' && (
-          <GateStepProfile onSuccess={handleStepSuccess} />
-        )}
+          {currentStep === 'PROFILE' && (
+            <GateStepProfile onSuccess={handleStepSuccess} />
+          )}
 
-        {currentStep === 'PHONE' && (
-          <GateStepPhoneOtp onSuccess={handleStepSuccess} />
-        )}
+          {currentStep === 'PHONE' && (
+            <GateStepPhoneOtp onSuccess={handleStepSuccess} />
+          )}
 
-        {currentStep === 'KYC' && (
-          <GateStepKycIdentity onSuccess={handleStepSuccess} />
-        )}
+          {currentStep === 'KYC' && (
+            <GateStepKycIdentity onSuccess={handleStepSuccess} />
+          )}
 
-        {currentStep === 'PERMIS' && (
-          <GateStepDriverLicense onSuccess={handleStepSuccess} />
-        )}
+          {currentStep === 'PERMIS' && (
+            <GateStepDriverLicense onSuccess={handleStepSuccess} />
+          )}
 
-        {currentStep === 'AGE_INSUFFICIENT' && (
-          <GateStepAgeWarning
-            vehicleMinimumAge={vehicleMinimumAge}
-            userAge={userAge}
-            onClose={onClose}
-          />
-        )}
+          {currentStep === 'AGE_INSUFFICIENT' && (
+            <GateStepAgeWarning
+              vehicleMinimumAge={vehicleMinimumAge}
+              userAge={userAge}
+              onClose={onClose}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

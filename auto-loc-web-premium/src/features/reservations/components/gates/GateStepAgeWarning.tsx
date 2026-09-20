@@ -15,8 +15,8 @@ export const GateStepAgeWarning: React.FC<GateStepAgeWarningProps> = ({
   return (
     <div className="w-full max-w-lg mx-auto py-2 px-1 animate-in fade-in zoom-in-95 duration-200">
       <div className="relative">
-        {/* Layer 1: Back Accent Card */}
-        <div className="absolute -top-1.5 -bottom-1.5 left-2 right-2 rounded-[32px] bg-rose-500/20 border-[1.5px] border-rose-400/35 pointer-events-none" />
+        {/* Layer 1: Back Accent Card - Decalé 3px à gauche */}
+        <div className="absolute inset-0 -left-[3px] top-[3px] rounded-[28px] bg-[#041912] border border-[#0A3D2E]/80 pointer-events-none shadow-md" />
 
         {/* Layer 2: Front Glass Card */}
         <div className="relative bg-white border border-white/80 rounded-[28px] p-6 shadow-2xl space-y-4">

@@ -152,11 +152,11 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
   return (
     <div className="w-full max-w-lg mx-auto py-2 px-1 animate-in fade-in zoom-in-95 duration-200">
       <div className="relative">
-        {/* Layer 1: Back Accent Card */}
-        <div className="absolute -top-1.5 -bottom-1.5 left-2 right-2 rounded-[32px] bg-emerald-500/20 border-[1.5px] border-emerald-400/35 pointer-events-none" />
+        {/* Layer 1: Back Accent Card - Decalé 3px à gauche */}
+        <div className="absolute inset-0 -left-[3px] top-[3px] rounded-[28px] bg-[#041912] border border-[#0A3D2E]/80 pointer-events-none shadow-md" />
 
         {/* Layer 2: Front Glass Card */}
-        <div className="relative bg-white border border-white/80 rounded-[28px] p-6 shadow-2xl">
+        <div className="relative bg-white border border-white/80 rounded-[28px] p-6 sm:p-7 pb-7 shadow-2xl">
           {/* Header Box */}
           <div className="flex flex-col items-center text-center mb-4">
             <div className="w-15 h-15 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-3">
@@ -412,22 +412,40 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
                 <button
                   type="button"
                   onClick={handleNextSubStep}
-                  className="h-11 px-5 rounded-full bg-[#041912] hover:bg-[#06291e] text-white font-medium text-xs flex items-center justify-center shadow-lg active:scale-[0.98] transition-all ml-auto"
+                  disabled={subStep === 1 ? !frontFile : !backFile}
+                  className={`h-11 px-5 rounded-full font-semibold text-xs flex items-center justify-center transition-all ml-auto ${
+                    (subStep === 1 && !frontFile) || (subStep === 2 && !backFile)
+                      ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                      : 'bg-[#041912] hover:bg-[#06291e] text-white shadow-lg active:scale-[0.98]'
+                  }`}
                 >
                   <span>Suivant</span>
-                  <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-400/35 flex items-center justify-center ml-2">
-                    <ArrowRight className="w-3 h-3 text-emerald-400" strokeWidth={2.5} />
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center ml-2 transition-all ${
+                    (subStep === 1 && !frontFile) || (subStep === 2 && !backFile)
+                      ? 'bg-slate-200 text-slate-400'
+                      : 'bg-emerald-500/20 border border-emerald-400/35 text-emerald-400'
+                  }`}>
+                    <ArrowRight className="w-3 h-3" strokeWidth={2.5} />
                   </div>
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={handleSubmitFinal}
-                  className="h-11 px-5 rounded-full bg-[#041912] hover:bg-[#06291e] text-white font-medium text-xs flex items-center justify-center shadow-lg active:scale-[0.98] transition-all ml-auto"
+                  disabled={!selfieFile}
+                  className={`h-11 px-5 rounded-full font-semibold text-xs flex items-center justify-center transition-all ml-auto ${
+                    !selfieFile
+                      ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                      : 'bg-[#041912] hover:bg-[#06291e] text-white shadow-lg active:scale-[0.98]'
+                  }`}
                 >
                   <span>Soumettre mon KYC</span>
-                  <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-400/35 flex items-center justify-center ml-2">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400" strokeWidth={2.5} />
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center ml-2 transition-all ${
+                    !selfieFile
+                      ? 'bg-slate-200 text-slate-400'
+                      : 'bg-emerald-500/20 border border-emerald-400/35 text-emerald-400'
+                  }`}>
+                    <CheckCircle2 className="w-3 h-3" strokeWidth={2.5} />
                   </div>
                 </button>
               )}

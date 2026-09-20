@@ -114,8 +114,8 @@ export const BookingDateSelector: React.FC<BookingDateSelectorProps> = ({
 
         <View style={styles.durationChip}>
           <Clock size={12} color="#059669" />
-          <Text style={styles.durationChipText}>
-            {durationDays} jour{durationDays > 1 ? 's' : ''}
+          <Text style={styles.durationChipText} numberOfLines={1}>
+            {durationDays} jour{durationDays > 1 ? 's' : ''} sélectionné{durationDays > 1 ? 's' : ''}
           </Text>
         </View>
       </View>
@@ -291,6 +291,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
+    flexShrink: 0,
   },
   durationChipText: {
     fontFamily: theme.typography.fontFamily.bold,

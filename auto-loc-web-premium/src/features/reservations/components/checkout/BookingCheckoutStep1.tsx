@@ -1,10 +1,26 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, AlertTriangle, ArrowRight, ShieldCheck, MapPin, Star, Truck, Compass } from 'lucide-react';
+import React, { useEffect, useId, useMemo, useState } from 'react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  Calendar,
+  Home,
+  MapPin,
+  Navigation,
+  Plane,
+  ShieldCheck,
+  Star,
+  Truck,
+  type LucideIcon,
+} from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { fetchApi } from '@/lib/config';
+import { AutoCalendar } from '@/src/shared/components/AutoCalendar';
 import { BookingPriceBreakdownCard } from './BookingPriceBreakdownCard';
+
+type TypeLivraison = 'AUCUNE' | 'DAKAR' | 'AIBD';
+type BlockedRange = { from: string; to: string; type?: string };
 
 interface BookingCheckoutStep1Props {
   vehicle: {
@@ -34,8 +50,8 @@ interface BookingCheckoutStep1Props {
   startDate?: string;
   endDate?: string;
   onDatesChange: (start: string, end?: string) => void;
-  typeLivraison: 'AUCUNE' | 'DAKAR' | 'AIBD';
-  onSelectTypeLivraison: (type: 'AUCUNE' | 'DAKAR' | 'AIBD') => void;
+  typeLivraison: TypeLivraison;
+  onSelectTypeLivraison: (type: TypeLivraison) => void;
   adresseLivraison: string;
   onAdresseLivraisonChange: (val: string) => void;
   isHorsDakarSelected: boolean;
@@ -43,12 +59,111 @@ interface BookingCheckoutStep1Props {
   onNext: () => void;
 }
 
-const formatShortDate = (value: string, withYear = false) =>
-  new Date(value).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    ...(withYear ? { year: 'numeric' } : {}),
-  });
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+const PLACEHOLDER_PHOTO = '/placeholder-car.jpg';
+
+const CARD_CLASS =
+  'rounded-3xl border border-slate-200/90 bg-white p-5 shadow-sm sm:p-6';
+
+/** "2026-09-20T00:00:00Z" -> "2026-09-20" */
+const toDateOnly = (value: string) => value.split('T')[0];
+
+/** Date locale à minuit (évite les décalages de fuseau d'un `new Date('YYYY-MM-DD')`). */
+const parseIsoDate = (value: string): Date => {
+  const [y, m, d] = toDateOnly(value).split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+
+/** Date -> valeur pour <input type="date">, en heure locale. */
+const toInputValue = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+    date.getDate(),
+  ).padStart(2, '0')}`;
+
+const addDays = (date: Date, days: number) => {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+};
+
+const toNumber = (value: number | string | null | undefined): number => {
+  const n = Number(value ?? 0);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''}`;
+
+const feeLabel = (fee: number) => (fee > 0 ? `+${formatCurrency(fee)} FCFA` : 'Gratuite');
+
+/* -------------------------------------------------------------------------- */
+/* Sous-composant : ligne d'option (radio ou case à cocher)                   */
+/* -------------------------------------------------------------------------- */
+
+interface OptionRowProps {
+  type: 'radio' | 'checkbox';
+  name?: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  icon: LucideIcon;
+  title: string;
+  hint?: string;
+  price: string;
+  isFree?: boolean;
+}
+
+function OptionRow({
+  type,
+  name,
+  checked,
+  onChange,
+  icon: Icon,
+  title,
+  hint,
+  price,
+  isFree = false,
+}: OptionRowProps) {
+  return (
+    <label
+      className={`flex cursor-pointer items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#0A3D2E] has-[:focus-visible]:ring-offset-2 ${checked
+          ? 'border-[#0A3D2E] bg-[#0A3D2E]/[0.04] ring-1 ring-[#0A3D2E]'
+          : 'border-slate-200 hover:border-slate-300'
+        }`}
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <input
+          type={type}
+          name={name}
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          className="h-4 w-4 shrink-0 cursor-pointer accent-[#0A3D2E]"
+        />
+        <Icon
+          className="h-[18px] w-[18px] shrink-0 text-[#0A3D2E]/70"
+          strokeWidth={1.5}
+          aria-hidden="true"
+        />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-slate-900">{title}</p>
+          {hint && <p className="text-xs leading-snug text-slate-500">{hint}</p>}
+        </div>
+      </div>
+      <span
+        className={`shrink-0 text-xs font-semibold tabular-nums ${isFree ? 'text-emerald-700' : 'text-slate-900'
+          }`}
+      >
+        {price}
+      </span>
+    </label>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Composant principal                                                        */
+/* -------------------------------------------------------------------------- */
 
 export function BookingCheckoutStep1({
   vehicle,
@@ -63,390 +178,492 @@ export function BookingCheckoutStep1({
   onToggleHorsDakar,
   onNext,
 }: BookingCheckoutStep1Props) {
-  const [blockedRanges, setBlockedRanges] = useState<Array<{ from: string; to: string }>>([]);
+  const deliveryGroupName = useId();
+  const ctaHintId = useId();
+
+  const [blockedRanges, setBlockedRanges] = useState<BlockedRange[]>([]);
   const [isLoadingBlocked, setIsLoadingBlocked] = useState(false);
 
-  // Vehicle photo principal
+  const joursMinimum = vehicle.joursMinimum && vehicle.joursMinimum > 0 ? vehicle.joursMinimum : 1;
+
+  /* ------------------------------ Photo ---------------------------------- */
+
   const photoPrincipal = useMemo(() => {
-    if (vehicle.photos && Array.isArray(vehicle.photos) && vehicle.photos.length > 0) {
+    if (Array.isArray(vehicle.photos) && vehicle.photos.length > 0) {
       const p = vehicle.photos[0];
       return typeof p === 'string' ? p : p.url;
     }
-    return vehicle.photoUrl || '/placeholder-car.jpg';
-  }, [vehicle]);
+    return vehicle.photoUrl || PLACEHOLDER_PHOTO;
+  }, [vehicle.photos, vehicle.photoUrl]);
 
-  // Chargement des dates bloquées du véhicule
+  /* ------------------------ Dates bloquées (API) -------------------------- */
+
   useEffect(() => {
-    if (vehicle.id) {
-      setIsLoadingBlocked(true);
-      fetchApi<{ blockedRanges: Array<{ from: string; to: string }> }>(`/vehicles/${vehicle.id}/blocked-dates`)
-        .then((res) => {
-          if (res?.blockedRanges) {
-            setBlockedRanges(res.blockedRanges);
-          }
-        })
-        .catch((err) => {
-          console.warn('Erreur chargement dates bloquées:', err);
-        })
-        .finally(() => {
-          setIsLoadingBlocked(false);
-        });
-    }
+    if (!vehicle.id) return;
+
+    // `cancelled` évite qu'une réponse tardive d'un ancien véhicule écrase l'état
+    let cancelled = false;
+    setIsLoadingBlocked(true);
+    setBlockedRanges([]);
+
+    fetchApi<{ blockedRanges: BlockedRange[] }>(`/vehicles/${vehicle.id}/blocked-dates`)
+      .then((res) => {
+        if (!cancelled && res?.blockedRanges) setBlockedRanges(res.blockedRanges);
+      })
+      .catch((err) => {
+        if (!cancelled) console.warn('Erreur chargement dates bloquées:', err);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingBlocked(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [vehicle.id]);
 
-  // Calcul du nombre de jours
+  /* ------------------------------ Dates ---------------------------------- */
+
+  const todayValue = useMemo(() => toInputValue(new Date()), []);
+  const startValue = startDate ? toDateOnly(startDate) : '';
+  const endValue = endDate ? toDateOnly(endDate) : '';
+
+  // La fin ne peut pas être avant le début + durée minimale
+  const minEndValue = startValue
+    ? toInputValue(addDays(parseIsoDate(startValue), joursMinimum > 1 ? joursMinimum : 0))
+    : todayValue;
+
+  const isInverted = Boolean(startValue && endValue && endValue < startValue);
+
+  // 0 tant que la période n'est pas complète et valide
   const nbJours = useMemo(() => {
-    if (!startDate || !endDate) return vehicle.joursMinimum || 1;
-    const start = new Date(startDate).getTime();
-    const end = new Date(endDate).getTime();
-    const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-    return diff > 0 ? diff : vehicle.joursMinimum || 1;
-  }, [startDate, endDate, vehicle.joursMinimum]);
+    if (!startValue || !endValue || isInverted) return 0;
+    const diff = Math.round(
+      (parseIsoDate(endValue).getTime() - parseIsoDate(startValue).getTime()) / MS_PER_DAY,
+    );
+    return Math.max(diff, 1);
+  }, [startValue, endValue, isInverted]);
 
-  // Vérification si la plage sélectionnée chevauche une période bloquée
+  const hasDates = nbJours > 0;
+  const belowMinimum = hasDates && nbJours < joursMinimum;
+
   const isDatesBlocked = useMemo(() => {
-    if (!startDate || !blockedRanges || blockedRanges.length === 0) return false;
+    if (!startValue || blockedRanges.length === 0) return false;
 
-    const parseIsoDate = (s: string): Date => {
-      const parts = s.split('T')[0].split('-').map(Number);
-      return new Date(parts[0], parts[1] - 1, parts[2]);
-    };
+    const start = parseIsoDate(startValue);
+    const end = endValue && !isInverted ? parseIsoDate(endValue) : start;
 
-    const start = parseIsoDate(startDate);
-    const end = endDate ? parseIsoDate(endDate) : start;
+    return blockedRanges.some((range) => {
+      if (!range.from || !range.to) return false;
+      return start <= parseIsoDate(range.to) && end >= parseIsoDate(range.from);
+    });
+  }, [startValue, endValue, isInverted, blockedRanges]);
 
-    for (const range of blockedRanges) {
-      if (!range.from || !range.to) continue;
-      const rStart = parseIsoDate(range.from);
-      const rEnd = parseIsoDate(range.to);
+  const handleStartChange = (value: string) => {
+    // Si le nouveau début dépasse la fin déjà choisie, on vide la fin
+    const keepEnd = value && endValue && endValue < value ? undefined : endDate;
+    onDatesChange(value, keepEnd);
+  };
 
-      if (start <= rEnd && end >= rStart) {
-        return true;
-      }
+  const handleEndChange = (value: string) => {
+    onDatesChange(startDate || '', value || undefined);
+  };
+
+  /* ------------------------------ Options -------------------------------- */
+
+  const dakarFee = toNumber(vehicle.fraisLivraisonDakar ?? vehicle.fraisLivraison);
+  const aibdFee = toNumber(vehicle.fraisLivraisonAibd);
+  const horsDakarSupplement = toNumber(vehicle.supplementHorsDakarParJour);
+
+  const canDeliverDakar =
+    Boolean(vehicle.proposeLivraisonDakar) ||
+    (vehicle.fraisLivraison !== undefined && vehicle.fraisLivraison !== null);
+  const canDeliverAibd = Boolean(vehicle.proposeLivraisonAibd);
+  const autoriseHorsDakar = Boolean(vehicle.autoriseHorsDakar);
+  const hasDeliveryOptions = canDeliverDakar || canDeliverAibd;
+  const hasOptions = hasDeliveryOptions || autoriseHorsDakar;
+
+  // Si une option sélectionnée n'existe pas pour ce véhicule, on la désélectionne
+  useEffect(() => {
+    if (
+      (typeLivraison === 'DAKAR' && !canDeliverDakar) ||
+      (typeLivraison === 'AIBD' && !canDeliverAibd)
+    ) {
+      onSelectTypeLivraison('AUCUNE');
     }
+    if (isHorsDakarSelected && !autoriseHorsDakar) {
+      onToggleHorsDakar(false);
+    }
+  }, [
+    typeLivraison,
+    canDeliverDakar,
+    canDeliverAibd,
+    isHorsDakarSelected,
+    autoriseHorsDakar,
+    onSelectTypeLivraison,
+    onToggleHorsDakar,
+  ]);
 
-    return false;
-  }, [startDate, endDate, blockedRanges]);
+  const needsAddress = typeLivraison !== 'AUCUNE';
+  const addressMissing = needsAddress && adresseLivraison.trim() === '';
+
+  /* ------------------------ État du bouton principal ---------------------- */
+
+  let blockingReason: string | null = null;
+  if (!startValue || !endValue) blockingReason = 'Choisissez vos dates pour continuer.';
+  else if (isInverted) blockingReason = 'La date de fin doit être après la date de début.';
+  else if (isDatesBlocked) blockingReason = 'Modifiez vos dates pour continuer.';
+  else if (belowMinimum)
+    blockingReason = `Durée minimale : ${plural(joursMinimum, 'jour')}.`;
+  else if (isLoadingBlocked) blockingReason = 'Vérification de la disponibilité…';
+  else if (addressMissing)
+    blockingReason =
+      typeLivraison === 'AIBD'
+        ? 'Indiquez votre vol et votre heure d’arrivée.'
+        : 'Indiquez l’adresse de livraison.';
+
+  /* ------------------------------ Rendu ---------------------------------- */
+
+  const hasRating = typeof vehicle.note === 'number' && vehicle.note > 0;
+  const specs = [
+    vehicle.transmission,
+    vehicle.carburant,
+    vehicle.nombrePlaces ? `${vehicle.nombrePlaces} places` : undefined,
+  ].filter(Boolean) as string[];
 
   return (
     <div className="space-y-6">
-      {/* Layout 2 colonnes sur Desktop / 1 colonne sur Mobile */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-        
-        {/* Colonne de Gauche (col-span-7 sur Desktop): Fiche Véhicule & Sélecteur de Dates */}
-        <div className="lg:col-span-7 space-y-6">
-          
-          {/* 1. Carte Synthèse Véhicule Hero Showcase */}
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row gap-5 items-start">
-            <div className="w-full sm:w-44 h-36 rounded-2xl overflow-hidden bg-slate-100 relative shrink-0 border border-slate-100">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12 lg:gap-8">
+        {/* Colonne gauche : véhicule, dates, garantie */}
+        <div className="space-y-6 lg:col-span-7">
+          {/* 1. Synthèse du véhicule */}
+          <section
+            aria-label="Véhicule sélectionné"
+            className={`${CARD_CLASS} flex flex-col items-start gap-5 sm:flex-row`}
+          >
+            <div className="relative h-36 w-full shrink-0 overflow-hidden rounded-2xl border border-slate-100 bg-slate-100 sm:w-44">
               <img
                 src={photoPrincipal}
                 alt={`${vehicle.marque} ${vehicle.modele}`}
-                className="w-full h-full object-cover"
+                decoding="async"
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  if (!img.src.endsWith(PLACEHOLDER_PHOTO)) img.src = PLACEHOLDER_PHOTO;
+                }}
               />
               {vehicle.type && (
-                <span className="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-[#0A3D2E] text-[#F1DFB6] text-[10px] font-bold uppercase tracking-wider">
+                <span className="absolute left-2 top-2 rounded-full bg-[#0A3D2E] px-2.5 py-0.5 text-xs font-semibold text-[#F1DFB6]">
                   {vehicle.type}
                 </span>
               )}
             </div>
 
             <div className="min-w-0 flex-1 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                <span className="flex items-center gap-1 text-amber-500">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                  {Number(vehicle.note || 4.9).toFixed(1)}
-                </span>
-                <span className="text-slate-300">•</span>
-                <span className="flex items-center gap-1 text-slate-600 font-medium">
-                  <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                  {vehicle.ville || 'Dakar'}
-                </span>
-              </div>
-
-              <h3 className="text-xl sm:text-2xl font-display font-bold text-slate-900 leading-tight">
-                {vehicle.marque} {vehicle.modele}{' '}
-                {vehicle.annee ? (
-                  <span className="text-slate-400 font-normal text-lg">({vehicle.annee})</span>
-                ) : null}
-              </h3>
-
-              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-600 font-medium">
-                {vehicle.transmission && (
-                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">
-                    {vehicle.transmission}
-                  </span>
-                )}
-                {vehicle.carburant && (
-                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">
-                    {vehicle.carburant}
-                  </span>
-                )}
-                {vehicle.nombrePlaces && (
-                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">
-                    {vehicle.nombrePlaces} places
-                  </span>
-                )}
-              </div>
-
-              <div className="pt-2 flex items-baseline gap-1">
-                <span className="text-2xl font-display font-extrabold text-[#0A3D2E] tabular-nums">
-                  {formatCurrency(vehicle.tenantPricePerDay)}
-                </span>
-                <span className="text-xs text-slate-500 font-medium">FCFA / jour</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. Sélecteur de Dates & Périodes Bloquées */}
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-[#0A3D2E] text-[#F1DFB6] flex items-center justify-center shrink-0 shadow-xs">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-base font-display font-bold text-slate-900">
-                    Dates de location
-                  </h4>
-                  <p className="text-xs text-slate-500">
-                    Minimum {vehicle.joursMinimum || 1} jour(s) de réservation
-                  </p>
-                </div>
-              </div>
-
-              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                {nbJours} jour{nbJours > 1 ? 's' : ''} sélectionné{nbJours > 1 ? 's' : ''}
-              </span>
-            </div>
-
-            {/* Inputs de dates directes */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-1">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                  Date de début (Prise en main)
-                </label>
-                <input
-                  type="date"
-                  value={startDate ? startDate.split('T')[0] : ''}
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => onDatesChange(e.target.value, endDate)}
-                  className="w-full bg-transparent font-semibold text-slate-900 text-sm focus:outline-none cursor-pointer"
-                />
-              </div>
-
-              <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-1">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                  Date de fin (Restitution)
-                </label>
-                <input
-                  type="date"
-                  value={endDate ? endDate.split('T')[0] : ''}
-                  min={startDate ? startDate.split('T')[0] : new Date().toISOString().split('T')[0]}
-                  onChange={(e) => onDatesChange(startDate || '', e.target.value)}
-                  className="w-full bg-transparent font-semibold text-slate-900 text-sm focus:outline-none cursor-pointer"
-                />
-              </div>
-            </div>
-
-            {/* Alerte si les dates sont bloquées */}
-            {isDatesBlocked && (
-              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-3 text-rose-800">
-                <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-                <div className="text-xs space-y-1">
-                  <p className="font-bold text-rose-900 text-sm">Période non disponible</p>
-                  <p className="text-rose-700">
-                    Ce véhicule est déjà réservé aux dates choisies. Veuillez sélectionner une autre période de disponibilité.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 3. Politique d'Annulation & Sérénité */}
-          <div className="bg-slate-50 border border-slate-200/80 rounded-3xl p-5 flex items-start gap-4 text-slate-700">
-            <div className="w-9 h-9 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div className="space-y-1 text-xs">
-              <h5 className="font-bold text-slate-900 text-sm">
-                Annulation gratuite & Garantie AutoLoc
-              </h5>
-              <p className="text-slate-600 leading-relaxed">
-                Annulation sans frais jusqu'à 48h avant le début de la location. En cas de doute, notre équipe de support dédiée basée à Dakar vous assiste en continu.
-              </p>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Colonne de Droite (col-span-5 sur Desktop): Options & Décomposition Tarifaire */}
-        <div className="lg:col-span-5 space-y-6">
-
-          {/* 4. Options & Services Additionnels */}
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-[#0A3D2E] text-[#F1DFB6] flex items-center justify-center shrink-0 shadow-xs">
-                <Truck className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-base font-display font-bold text-slate-900">
-                  Options & Services
-                </h4>
-                <p className="text-xs text-slate-500">Personnalisez votre prise en main</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {/* Option Livraison Dakar / AIBD */}
-              {(vehicle.proposeLivraisonDakar || vehicle.proposeLivraisonAibd || vehicle.fraisLivraison) && (
-                <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Truck className="w-4 h-4 text-emerald-700 shrink-0" />
-                    <span className="text-xs font-bold text-slate-900">
-                      Service de Livraison du véhicule
+              {(hasRating || vehicle.ville) && (
+                <div className="flex items-center gap-3 text-xs font-medium text-slate-600">
+                  {hasRating && (
+                    <span className="flex items-center gap-1 font-bold text-slate-800">
+                      <Star
+                        className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
+                        aria-hidden="true"
+                      />
+                      {Number(vehicle.note).toFixed(1)}
                     </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-2 text-xs">
-                    <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-white cursor-pointer hover:border-slate-300">
-                      <input
-                        type="radio"
-                        name="typeLivraison"
-                        checked={typeLivraison === 'AUCUNE'}
-                        onChange={() => onSelectTypeLivraison('AUCUNE')}
-                        className="accent-[#0A3D2E]"
-                      />
-                      <span className="font-semibold text-slate-800">
-                        Récupération au point de retrait hôte (Gratuit)
-                      </span>
-                    </label>
-
-                    {(vehicle.proposeLivraisonDakar || vehicle.fraisLivraison) && (
-                      <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white cursor-pointer hover:border-slate-300">
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="radio"
-                            name="typeLivraison"
-                            checked={typeLivraison === 'DAKAR'}
-                            onChange={() => onSelectTypeLivraison('DAKAR')}
-                            className="accent-[#0A3D2E]"
-                          />
-                          <span className="font-semibold text-slate-800">
-                            Livraison Dakar Métropole
-                          </span>
-                        </div>
-                        <span className="font-bold text-emerald-700">
-                          +{formatCurrency(Number(vehicle.fraisLivraisonDakar ?? vehicle.fraisLivraison ?? 0))} FCFA
-                        </span>
-                      </label>
-                    )}
-
-                    {vehicle.proposeLivraisonAibd && (
-                      <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white cursor-pointer hover:border-slate-300">
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="radio"
-                            name="typeLivraison"
-                            checked={typeLivraison === 'AIBD'}
-                            onChange={() => onSelectTypeLivraison('AIBD')}
-                            className="accent-[#0A3D2E]"
-                          />
-                          <span className="font-semibold text-slate-800">
-                            Livraison Aéroport AIBD (Diass)
-                          </span>
-                        </div>
-                        <span className="font-bold text-emerald-700">
-                          +{formatCurrency(Number(vehicle.fraisLivraisonAibd ?? 0))} FCFA
-                        </span>
-                      </label>
-                    )}
-                  </div>
-
-                  {typeLivraison !== 'AUCUNE' && (
-                    <div className="pt-1">
-                      <label className="text-[11px] font-bold text-slate-600 block mb-1">
-                        Adresse ou repère précis de livraison :
-                      </label>
-                      <input
-                        type="text"
-                        value={adresseLivraison}
-                        onChange={(e) => onAdresseLivraisonChange(e.target.value)}
-                        placeholder={
-                          typeLivraison === 'AIBD'
-                            ? 'Vol / Heure d’arrivée à AIBD'
-                            : 'Ex: Mermoz Pyrotechnie, près de la banque...'
-                        }
-                        className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]"
-                      />
-                    </div>
+                  )}
+                  {vehicle.ville && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5 text-emerald-700" aria-hidden="true" />
+                      {vehicle.ville}
+                    </span>
                   )}
                 </div>
               )}
 
-              {/* Option Hors Dakar */}
-              {vehicle.autoriseHorsDakar && (
-                <label className={`flex items-start gap-3.5 p-4 rounded-2xl border cursor-pointer transition-all ${
-                  isHorsDakarSelected
-                    ? 'border-[#0A3D2E] bg-[#F1DFB6]/20'
-                    : 'border-slate-200 bg-slate-50/50 hover:border-slate-300'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={isHorsDakarSelected}
-                    onChange={(e) => onToggleHorsDakar(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded accent-[#0A3D2E] cursor-pointer"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                        <Compass className="w-3.5 h-3.5 text-[#0A3D2E]" />
-                        Trajets Hors Dakar (Régions / Inter-urbain)
-                      </span>
-                      <span className="text-xs font-bold text-emerald-700">
-                        {vehicle.supplementHorsDakarParJour && vehicle.supplementHorsDakarParJour > 0
-                          ? `+${formatCurrency(vehicle.supplementHorsDakarParJour)} FCFA/j`
-                          : 'Gratuit'}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      Autorise la circulation vers Thiès, Saint-Louis, Saly, Casamance, etc.
-                    </p>
-                  </div>
-                </label>
+              <h3 className="font-display text-xl leading-tight text-slate-900 sm:text-2xl">
+                {vehicle.marque} {vehicle.modele}
+                {vehicle.annee ? (
+                  <span className="ml-2 text-lg text-slate-400">({vehicle.annee})</span>
+                ) : null}
+              </h3>
+
+              {specs.length > 0 && (
+                <ul className="flex flex-wrap items-center gap-2 pt-1 text-xs font-medium text-slate-700">
+                  {specs.map((spec) => (
+                    <li key={spec} className="rounded-lg bg-slate-100 px-2.5 py-1">
+                      {spec}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <p className="flex items-baseline gap-1.5 pt-2">
+                <span className="font-display text-2xl tabular-nums text-[#0A3D2E]">
+                  {formatCurrency(vehicle.tenantPricePerDay)}
+                </span>
+                <span className="text-xs font-medium text-slate-500">FCFA / jour</span>
+              </p>
+            </div>
+          </section>
+
+          {/* 2. Dates de location */}
+          <section aria-labelledby="dates-title" className={`${CARD_CLASS} space-y-4`}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <Calendar
+                  className="mt-1 h-5 w-5 shrink-0 text-[#0A3D2E]"
+                  strokeWidth={1.5}
+                  aria-hidden="true"
+                />
+                <div>
+                  <h3 id="dates-title" className="font-display text-lg text-[#041912]">
+                    Dates de location
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Durée minimale : {plural(joursMinimum, 'jour')}
+                  </p>
+                </div>
+              </div>
+
+              {hasDates && (
+                <span className="shrink-0 whitespace-nowrap rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
+                  {plural(nbJours, 'jour')}
+                </span>
               )}
             </div>
-          </div>
 
-          {/* 5. Décomposition financière */}
-          <BookingPriceBreakdownCard
-            tenantPricePerDay={vehicle.tenantPricePerDay}
-            nbJours={nbJours}
-            typeLivraison={typeLivraison}
-            fraisLivraisonDakar={vehicle.fraisLivraisonDakar}
-            fraisLivraisonAibd={vehicle.fraisLivraisonAibd}
-            fraisLivraison={vehicle.fraisLivraison}
-            isHorsDakarSelected={isHorsDakarSelected}
-            supplementHorsDakarParJour={vehicle.supplementHorsDakarParJour}
-          />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="block cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 transition-colors focus-within:border-[#0A3D2E] focus-within:ring-1 focus-within:ring-[#0A3D2E] hover:border-slate-300">
+                <span className="block text-xs font-medium text-slate-500">Prise en main</span>
+                <input
+                  type="date"
+                  value={startValue}
+                  min={todayValue}
+                  onChange={(e) => handleStartChange(e.target.value)}
+                  className="w-full cursor-pointer bg-transparent text-base font-semibold text-slate-900 focus:outline-none sm:text-sm"
+                />
+              </label>
 
-          {/* 6. Bouton CTA Étape 1 */}
-          <button
-            type="button"
-            onClick={onNext}
-            disabled={isDatesBlocked || !startDate || !endDate}
-            className="w-full py-4 px-6 rounded-full bg-[#0A3D2E] hover:bg-[#0F4F3B] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed text-[#F1DFB6] font-bold text-base flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md"
-          >
-            <span>
-              {isDatesBlocked
-                ? 'Dates indisponibles'
-                : 'Continuer vers le paiement'}
-            </span>
-            <ArrowRight className="w-5 h-5 text-[#F1DFB6]" />
-          </button>
+              <label className="block cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 transition-colors focus-within:border-[#0A3D2E] focus-within:ring-1 focus-within:ring-[#0A3D2E] hover:border-slate-300">
+                <span className="block text-xs font-medium text-slate-500">Restitution</span>
+                <input
+                  type="date"
+                  value={endValue}
+                  min={minEndValue}
+                  onChange={(e) => handleEndChange(e.target.value)}
+                  className="w-full cursor-pointer bg-transparent text-base font-semibold text-slate-900 focus:outline-none sm:text-sm"
+                />
+              </label>
+            </div>
 
+            {/* Calendrier interactif avec dates bloquées / réservées */}
+            <div className="pt-2">
+              <AutoCalendar
+                vehicleId={vehicle.id}
+                blockedRanges={blockedRanges}
+                startDate={startValue}
+                endDate={endValue}
+                onSelectDates={(start, end) => {
+                  onDatesChange(start, end);
+                }}
+              />
+            </div>
+
+            {isDatesBlocked && (
+              <div
+                role="alert"
+                className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4"
+              >
+                <AlertTriangle
+                  className="mt-0.5 h-5 w-5 shrink-0 text-rose-600"
+                  aria-hidden="true"
+                />
+                <div className="space-y-1 text-xs">
+                  <p className="text-sm font-bold text-rose-900">Période non disponible</p>
+                  <p className="text-rose-700">
+                    Ce véhicule est déjà réservé à ces dates. Choisissez une autre période.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {belowMinimum && !isDatesBlocked && (
+              <p role="alert" className="text-xs text-amber-700">
+                Ce véhicule se loue {plural(joursMinimum, 'jour')} minimum. Ajoutez{' '}
+                {plural(joursMinimum - nbJours, 'jour')} à votre période.
+              </p>
+            )}
+
+            {isInverted && (
+              <p role="alert" className="text-xs text-rose-700">
+                La date de fin doit être après la date de début.
+              </p>
+            )}
+
+            {isLoadingBlocked && startValue && (
+              <p role="status" className="text-xs text-slate-500">
+                Vérification de la disponibilité…
+              </p>
+            )}
+          </section>
+
+          {/* 3. Annulation et garantie */}
+          <section className="flex items-start gap-4 rounded-3xl border border-slate-200/80 bg-slate-50 p-5 text-slate-700">
+            <ShieldCheck
+              className="mt-0.5 h-5 w-5 shrink-0 text-emerald-800"
+              strokeWidth={1.5}
+              aria-hidden="true"
+            />
+            <div className="space-y-1 text-xs">
+              <h3 className="text-sm font-bold text-slate-900">
+                Annulation gratuite et garantie AutoLoc
+              </h3>
+              <p className="leading-relaxed text-slate-600">
+                Annulation sans frais jusqu’à 48 h avant le début de la location. Notre équipe
+                support, basée à Dakar, vous accompagne à chaque étape.
+              </p>
+            </div>
+          </section>
         </div>
 
+        {/* Colonne droite : options, prix, action */}
+        <div className="space-y-6 lg:col-span-5">
+          {/* 4. Options */}
+          {hasOptions && (
+            <section aria-labelledby="options-title" className={`${CARD_CLASS} space-y-5`}>
+              <h3 id="options-title" className="font-display text-lg text-[#041912]">
+                Options
+              </h3>
+
+              {hasDeliveryOptions && (
+                <fieldset className="space-y-2">
+                  <legend className="mb-2 text-sm font-semibold text-slate-900">
+                    Remise du véhicule
+                  </legend>
+
+                  <OptionRow
+                    type="radio"
+                    name={deliveryGroupName}
+                    checked={typeLivraison === 'AUCUNE'}
+                    onChange={() => onSelectTypeLivraison('AUCUNE')}
+                    icon={Home}
+                    title="Retrait chez l’hôte"
+                    hint="Vous récupérez les clés sur place"
+                    price="Gratuit"
+                    isFree
+                  />
+
+                  {canDeliverDakar && (
+                    <OptionRow
+                      type="radio"
+                      name={deliveryGroupName}
+                      checked={typeLivraison === 'DAKAR'}
+                      onChange={() => onSelectTypeLivraison('DAKAR')}
+                      icon={Truck}
+                      title="Livraison à Dakar"
+                      hint="À votre adresse ou à l’hôtel"
+                      price={feeLabel(dakarFee)}
+                      isFree={dakarFee <= 0}
+                    />
+                  )}
+
+                  {canDeliverAibd && (
+                    <OptionRow
+                      type="radio"
+                      name={deliveryGroupName}
+                      checked={typeLivraison === 'AIBD'}
+                      onChange={() => onSelectTypeLivraison('AIBD')}
+                      icon={Plane}
+                      title="Livraison à l’aéroport AIBD"
+                      hint="Remise des clés à votre arrivée"
+                      price={feeLabel(aibdFee)}
+                      isFree={aibdFee <= 0}
+                    />
+                  )}
+
+                  {needsAddress && (
+                    <label className="block pt-2">
+                      <span className="mb-1 block text-xs font-medium text-slate-700">
+                        {typeLivraison === 'AIBD'
+                          ? 'Vol et heure d’arrivée'
+                          : 'Adresse ou repère de livraison'}
+                      </span>
+                      <input
+                        type="text"
+                        value={adresseLivraison}
+                        onChange={(e) => onAdresseLivraisonChange(e.target.value)}
+                        required
+                        aria-required="true"
+                        autoComplete={typeLivraison === 'DAKAR' ? 'street-address' : 'off'}
+                        placeholder={
+                          typeLivraison === 'AIBD'
+                            ? 'Ex : numéro de vol et heure d’arrivée'
+                            : 'Ex : Mermoz Pyrotechnie, près de la banque'
+                        }
+                        className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] sm:text-sm"
+                      />
+                    </label>
+                  )}
+                </fieldset>
+              )}
+
+              {autoriseHorsDakar && (
+                <OptionRow
+                  type="checkbox"
+                  checked={isHorsDakarSelected}
+                  onChange={onToggleHorsDakar}
+                  icon={Navigation}
+                  title="Trajets hors Dakar"
+                  hint="Autorisé partout au Sénégal : Thiès, Saint-Louis, Saly, Casamance…"
+                  price={
+                    horsDakarSupplement > 0
+                      ? `+${formatCurrency(horsDakarSupplement)} FCFA/j`
+                      : 'Inclus'
+                  }
+                  isFree={horsDakarSupplement <= 0}
+                />
+              )}
+            </section>
+          )}
+
+          {/* 5. Décomposition du prix */}
+          {hasDates ? (
+            <BookingPriceBreakdownCard
+              tenantPricePerDay={vehicle.tenantPricePerDay}
+              nbJours={nbJours}
+              typeLivraison={typeLivraison}
+              fraisLivraisonDakar={vehicle.fraisLivraisonDakar}
+              fraisLivraisonAibd={vehicle.fraisLivraisonAibd}
+              fraisLivraison={vehicle.fraisLivraison}
+              isHorsDakarSelected={isHorsDakarSelected}
+              supplementHorsDakarParJour={vehicle.supplementHorsDakarParJour}
+            />
+          ) : (
+            <div className="rounded-3xl border border-dashed border-slate-300 bg-white/60 p-5 text-sm text-slate-500">
+              Le détail du prix s’affiche dès que vous choisissez vos dates.
+            </div>
+          )}
+
+          {/* 6. Action */}
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={blockingReason !== null}
+              aria-describedby={blockingReason ? ctaHintId : undefined}
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-6 py-4 text-base font-bold text-[#F1DFB6] shadow-md transition-all hover:bg-[#0F4F3B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
+            >
+              <span>{isDatesBlocked ? 'Dates indisponibles' : 'Continuer vers le paiement'}</span>
+              <ArrowRight className="h-5 w-5" aria-hidden="true" />
+            </button>
+
+            {blockingReason && (
+              <p id={ctaHintId} aria-live="polite" className="text-center text-xs text-slate-500">
+                {blockingReason}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -13,6 +13,12 @@ type PrismaTx = {
             select: Record<string, boolean>;
         }) => Promise<{ id: string } | null>;
     };
+    indisponibiliteVehicule?: {
+        findFirst: (args: {
+            where: Record<string, unknown>;
+            select: Record<string, boolean>;
+        }) => Promise<{ id: string } | null>;
+    };
 };
 
 // ── Service ────────────────────────────────────────────────────────────────────
@@ -35,7 +41,7 @@ export class ReservationAvailabilityService {
     }
 
     /**
-     * Vérifie qu'aucune réservation active ne chevauche la période demandée.
+     * Vérifie qu'aucune réservation active ni indisponibilité manuelle ne chevauche la période demandée.
      * Retourne true s'il y a un chevauchement, false sinon.
      */
     async hasOverlap(
@@ -44,7 +50,7 @@ export class ReservationAvailabilityService {
         debut: Date,
         fin: Date,
     ): Promise<boolean> {
-        const overlap = await tx.reservation.findFirst({
+        const overlapReservation = await tx.reservation.findFirst({
             where: {
                 vehiculeId,
                 statut: {
@@ -60,7 +66,26 @@ export class ReservationAvailabilityService {
             },
             select: { id: true },
         });
-        return overlap !== null;
+
+        if (overlapReservation !== null) {
+            return true;
+        }
+
+        if (tx.indisponibiliteVehicule) {
+            const overlapIndispo = await tx.indisponibiliteVehicule.findFirst({
+                where: {
+                    vehiculeId,
+                    dateDebut: { lt: fin },
+                    dateFin: { gt: debut },
+                },
+                select: { id: true },
+            });
+            if (overlapIndispo !== null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -82,11 +82,14 @@ export function BookingCheckoutStep2({
           {/* 3. Numéro de Téléphone Mobile Money */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-[#0A3D2E] text-[#F1DFB6] flex items-center justify-center shrink-0 shadow-xs">
-                <Phone className="w-4 h-4" />
+              <div className="w-7 h-7 rounded-xl bg-[#041912] border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
+                <Phone className="w-3.5 h-3.5 text-emerald-400" />
               </div>
               <div>
-                <h4 className="text-base font-display font-bold text-slate-900">
+                <h4 
+                  className="text-base font-fraunces font-normal text-[#041912] tracking-tight"
+                  style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                >
                   Numéro de téléphone
                 </h4>
                 <p className="text-xs text-slate-500">Pour valider le push Mobile Money</p>
@@ -118,7 +121,10 @@ export function BookingCheckoutStep2({
           <div className="bg-[#0A3D2E] border border-[#0A3D2E]/80 rounded-3xl p-6 text-[#F1DFB6] space-y-4 shadow-xl">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#F1DFB6]" />
-              <h4 className="text-sm font-display font-bold text-[#F1DFB6]">
+              <h4 
+                className="text-sm font-fraunces font-normal text-[#F1DFB6] tracking-tight"
+                style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+              >
                 Montant à régler en ligne
               </h4>
             </div>
