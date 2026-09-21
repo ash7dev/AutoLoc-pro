@@ -1,5 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Prisma, StatutReservation, StatutVehicule } from '@prisma/client';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { StatutReservation, StatutVehicule } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RequestUser } from '../../common/types/auth.types';
 import {
@@ -16,7 +16,6 @@ import { OwnerInsightsResponseDto, OwnerInsightItemDto } from './dto/owner-insig
 
 @Injectable()
 export class AnalyticsService {
-  private readonly logger = new Logger(AnalyticsService.name);
 
   constructor(private readonly prisma: PrismaService) { }
 
@@ -351,9 +350,11 @@ export class AnalyticsService {
       if (groupBy === GroupByPeriod.MONTH) {
         groupKey = dateKey.substring(0, 7); // "YYYY-MM"
       } else if (groupBy === GroupByPeriod.WEEK) {
-        const d = new Date(dateKey);
-        const firstDayOfWeek = new Date(d.setDate(d.getDate() - d.getDay() + 1));
-        groupKey = firstDayOfWeek.toISOString().split('T')[0];
+        const d = new Date(dateKey + 'T00:00:00');
+        const day = d.getDay();
+        const diffToMonday = day === 0 ? -6 : 1 - day;
+        d.setDate(d.getDate() + diffToMonday);
+        groupKey = d.toISOString().split('T')[0];
       }
 
       if (!groupedPoints.has(groupKey)) {

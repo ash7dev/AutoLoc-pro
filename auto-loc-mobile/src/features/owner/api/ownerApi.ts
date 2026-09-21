@@ -1,4 +1,7 @@
 import { apiClient } from '../../../core/api/apiClient';
+import { analyticsApi } from './analyticsApi';
+
+export * from './analyticsApi';
 
 export const parseDateSafe = (value?: string): number | null => {
   if (!value) return null;
@@ -73,6 +76,7 @@ export interface VehicleIndisponibilite {
   vehiculeId: string;
   dateDebut: string;
   dateFin: string;
+  type?: 'MAINTENANCE' | 'USAGE_PERSONNEL' | 'RESERVATION_EXTERNE';
   motif?: string;
   creeLe?: string;
 }
@@ -113,7 +117,19 @@ export interface OwnerWalletBalance {
 
 export interface OwnerWalletTransaction {
   id: string;
-  type: 'CREDIT_LOCATION' | 'DEBIT_PENALITE' | 'DEBIT_RETRAIT' | 'GAIN_LOCATION' | 'RETRAIT_WAVE' | 'RETRAIT_ORANGE' | 'RETRAIT_BANQUE' | 'BONUS';
+  type:
+  | 'CREDIT_LOCATION'
+  | 'CREDIT_LOCATION_ACOMPTE'
+  | 'CREDIT_LOCATION_SOLDE'
+  | 'DEBIT_PENALITE'
+  | 'DEBIT_PENALITE_ANNULATION'
+  | 'CREDIT_COMPENSATION_LITIGE'
+  | 'DEBIT_RETRAIT'
+  | 'GAIN_LOCATION'
+  | 'RETRAIT_WAVE'
+  | 'RETRAIT_ORANGE'
+  | 'RETRAIT_BANQUE'
+  | 'BONUS';
   sens: 'CREDIT' | 'DEBIT';
   montant: number;
   soldeApres: number;
@@ -249,13 +265,13 @@ const mapRawVehicleToOwnerVehicle = (v: any): OwnerVehicle => {
     fraisLivraisonAibd: Number(v.fraisLivraisonAibd || 0),
     tiers: Array.isArray(v.tarifsProgressifs)
       ? v.tarifsProgressifs.map((t: any) => ({
-          joursMin: Number(t.joursMin),
-          joursMax: t.joursMax ? Number(t.joursMax) : undefined,
-          prix: Number(t.prix),
-        }))
+        joursMin: Number(t.joursMin),
+        joursMax: t.joursMax ? Number(t.joursMax) : undefined,
+        prix: Number(t.prix),
+      }))
       : Array.isArray(v.tiers)
-      ? v.tiers
-      : [],
+        ? v.tiers
+        : [],
     photos: Array.isArray(v.photos) ? v.photos : [],
     assurance: v.assurance || 'Locataire responsable',
     carburantCondition: v.carburantCondition || 'Plein à plein',
@@ -380,9 +396,6 @@ export const ownerApi = {
 
     const fallbackCarPhotos = [
       'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80',
     ];
     const randomFallback = fallbackCarPhotos[Math.floor(Math.random() * fallbackCarPhotos.length)];
 
@@ -455,13 +468,13 @@ export const ownerApi = {
           fraisLivraisonAibd: Number(v.fraisLivraisonAibd || 0),
           tiers: Array.isArray(v.tarifsProgressifs)
             ? v.tarifsProgressifs.map((t: any) => ({
-                joursMin: Number(t.joursMin),
-                joursMax: t.joursMax ? Number(t.joursMax) : undefined,
-                prix: Number(t.prix),
-              }))
+              joursMin: Number(t.joursMin),
+              joursMax: t.joursMax ? Number(t.joursMax) : undefined,
+              prix: Number(t.prix),
+            }))
             : Array.isArray(v.tiers)
-            ? v.tiers
-            : [],
+              ? v.tiers
+              : [],
           photos: Array.isArray(v.photos) ? v.photos : [],
           assurance: v.assurance || 'Locataire responsable',
           carburantCondition: v.carburantCondition || 'Plein à plein',
@@ -833,7 +846,7 @@ export const ownerApi = {
   // Bloquer une période (POST /vehicles/:id/indisponibilites)
   createIndisponibilite: async (
     vehicleId: string,
-    data: { dateDebut: string; dateFin: string; motif?: string }
+    data: { dateDebut: string; dateFin: string; type?: 'MAINTENANCE' | 'USAGE_PERSONNEL' | 'RESERVATION_EXTERNE'; motif?: string }
   ): Promise<VehicleIndisponibilite> => {
     try {
       const res = await apiClient.post(`/vehicles/${vehicleId}/indisponibilites`, data);
@@ -843,6 +856,7 @@ export const ownerApi = {
         vehiculeId: raw.vehiculeId || vehicleId,
         dateDebut: raw.dateDebut ? new Date(raw.dateDebut).toISOString().substring(0, 10) : data.dateDebut,
         dateFin: raw.dateFin ? new Date(raw.dateFin).toISOString().substring(0, 10) : data.dateFin,
+        type: raw.type || data.type || 'USAGE_PERSONNEL',
         motif: raw.motif || data.motif || 'Usage personnel',
       };
     } catch (error) {
@@ -954,4 +968,5 @@ export const ownerApi = {
       return [];
     }
   },
+  analytics: analyticsApi,
 };
