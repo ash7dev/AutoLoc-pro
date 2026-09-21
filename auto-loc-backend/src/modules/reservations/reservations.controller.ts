@@ -57,7 +57,7 @@ export class ReservationsController {
    */
   @Post()
   @UseGuards(RolesGuard)
-  @Roles(RoleProfile.LOCATAIRE)
+  @Roles(RoleProfile.LOCATAIRE, RoleProfile.PROPRIETAIRE)
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Req() req: Request & { user?: RequestUser },
@@ -156,7 +156,7 @@ export class ReservationsController {
    */
   @Post(':id/refus-checkin')
   @UseGuards(RolesGuard)
-  @Roles(RoleProfile.LOCATAIRE)
+  @Roles(RoleProfile.LOCATAIRE, RoleProfile.PROPRIETAIRE)
   @HttpCode(HttpStatus.CREATED)
   async refuseCheckin(
     @Req() req: Request & { user?: RequestUser },
@@ -338,7 +338,7 @@ export class ReservationsController {
    */
   @Get('tenant')
   @UseGuards(RolesGuard)
-  @Roles(RoleProfile.LOCATAIRE)
+  @Roles(RoleProfile.LOCATAIRE, RoleProfile.PROPRIETAIRE)
   @HttpCode(HttpStatus.OK)
   async findForTenant(
     @Req() req: Request & { user?: RequestUser },
