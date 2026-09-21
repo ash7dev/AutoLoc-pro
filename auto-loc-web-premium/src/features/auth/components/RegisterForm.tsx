@@ -188,10 +188,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   };
 
   const clearPendingIntent = useUserStore((s) => s.clearPendingIntent);
+  const closeGuestModal = useUserStore((s) => s.closeGuestModal);
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
     clearPendingIntent();
+    closeGuestModal();
     router.push('/');
   };
 

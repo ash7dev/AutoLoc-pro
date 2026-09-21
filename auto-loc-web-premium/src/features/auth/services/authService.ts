@@ -75,6 +75,27 @@ export class AuthService {
   }
 
   /**
+   * Switche le rôle de l'utilisateur ('PROPRIETAIRE' | 'LOCATAIRE') auprès du backend
+   * et récupère les nouveaux JWT tokens mis à jour.
+   */
+  public static async switchRole(role: 'PROPRIETAIRE' | 'LOCATAIRE'): Promise<{
+    role: string;
+    accessToken: string;
+    refreshToken: string;
+    profile: ProfileResponse;
+  }> {
+    return await fetchApi<{
+      role: string;
+      accessToken: string;
+      refreshToken: string;
+      profile: ProfileResponse;
+    }>('/auth/switch-role', {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    });
+  }
+
+  /**
    * Récupère le profil complet de l'utilisateur connecté auprès du backend NestJS
    */
   public static async getMe(): Promise<ProfileResponse> {

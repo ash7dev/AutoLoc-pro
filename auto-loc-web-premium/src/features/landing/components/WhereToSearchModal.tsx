@@ -49,7 +49,7 @@ export const WhereToSearchModal: React.FC<WhereToSearchModalProps> = ({ isOpen, 
 
         {/* Modal Body with WhereToSearchSection (Scrollbar masquée) */}
         <div className="overflow-y-auto p-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          <WhereToSearchSection />
+          <WhereToSearchSection onSearchSuccess={onClose} />
         </div>
 
       </div>

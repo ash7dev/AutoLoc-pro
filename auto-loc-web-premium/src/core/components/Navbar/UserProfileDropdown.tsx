@@ -52,6 +52,7 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const logout = useUserStore((s) => s.logout);
+  const switchRole = useUserStore((s) => s.switchRole);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -144,16 +145,35 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }
 
           {/* Navigation */}
           <div className="space-y-0.5">
-            <Link
-              href="/dashboard"
-              onClick={() => setIsOpen(false)}
-              className={`${menuItemClass} text-slate-700 hover:bg-slate-900/[0.04] hover:text-slate-900`}
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0A3D2E]/[0.07] text-[#0A3D2E]">
-                <LayoutDashboard className="h-4 w-4" />
-              </span>
-              <span>Mon espace</span>
-            </Link>
+            {user.role === 'PROPRIETAIRE' || (user.vehiculesCount && user.vehiculesCount > 0) ? (
+              <Link
+                href="/dashboard"
+                onClick={() => setIsOpen(false)}
+                className={`${menuItemClass} text-slate-700 hover:bg-slate-900/[0.04] hover:text-slate-900`}
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0A3D2E]/[0.07] text-[#0A3D2E]">
+                  <LayoutDashboard className="h-4 w-4" />
+                </span>
+                <span className="font-semibold">Mon Espace Hôte</span>
+              </Link>
+            ) : (
+              <Link
+                href="/dashboard"
+                onClick={() => {
+                  setIsOpen(false);
+                  switchRole('PROPRIETAIRE');
+                }}
+                className={`${menuItemClass} text-slate-700 hover:bg-slate-900/[0.04] hover:text-slate-900`}
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-800">
+                  <LayoutDashboard className="h-4 w-4 text-emerald-700" />
+                </span>
+                <div className="flex flex-col">
+                  <span className="font-bold text-slate-900">Devenir Hôte</span>
+                  <span className="text-[11px] text-slate-500 font-normal">Rentabiliser ma voiture</span>
+                </div>
+              </Link>
+            )}
 
             <Link
               href="/reservations"

@@ -4,7 +4,11 @@ export type VehicleType =
   | "FOUR_X_FOUR"
   | "PICKUP"
   | "LUXE"
-  | "UTILITAIRE";
+  | "UTILITAIRE"
+  | "CITADINE"
+  | "MINIVAN"
+  | "MONOSPACE"
+  | "MINIBUS";
 
 export type FuelType = "ESSENCE" | "DIESEL" | "HYBRIDE" | "ELECTRIQUE";
 export type TransmissionType = "AUTOMATIQUE" | "MANUELLE";
@@ -91,20 +95,31 @@ export interface Vehicle {
   };
 }
 
+export type VehicleSortOption = 'popular' | 'price-asc' | 'price-desc' | 'rating' | 'newest';
+
 export interface SearchVehiclesParams extends Record<string, string | number | boolean | undefined> {
+  q?: string;
   marque?: string;
-  type?: VehicleType;
-  transmission?: TransmissionType;
-  carburant?: FuelType;
+  ville?: string;
+  type?: VehicleType | '';
+  transmission?: TransmissionType | '';
+  carburant?: FuelType | '';
   prixMin?: number;
   prixMax?: number;
+  placesMin?: number;
+  noteMin?: number;
+  sortBy?: VehicleSortOption;
+  sortOrder?: 'asc' | 'desc';
   page?: number;
   limit?: number;
+  cursorId?: string;
 }
 
 export interface SearchVehiclesResponse {
   data: Vehicle[];
   page: number;
   total: number;
+  hasMore?: boolean;
+  nextCursor?: string;
 }
 

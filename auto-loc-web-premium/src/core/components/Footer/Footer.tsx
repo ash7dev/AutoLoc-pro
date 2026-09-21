@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import {
   ShieldCheck,
   Phone,
@@ -13,6 +14,10 @@ import {
 } from "lucide-react";
 
 export const Footer: React.FC = () => {
+  const pathname = usePathname();
+  if (pathname?.startsWith('/dashboard')) {
+    return null;
+  }
   return (
     <footer className="bg-[#F8FAF4] pt-8 pb-24 lg:pb-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-7xl mx-auto">

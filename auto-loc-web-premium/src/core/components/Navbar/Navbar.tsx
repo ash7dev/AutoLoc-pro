@@ -42,9 +42,9 @@ export const Navbar: React.FC = () => {
     };
   }, [setUser, logout]);
 
-  // Si on est sur la page /login (ou /register), masquer la Navbar desktop & mobile
-  if (pathname === '/login' || pathname === '/register') {
-    return <LoginModal isOpen={guestAuthModalVisible} onClose={closeGuestModal} />;
+  // Si on est sur les routes /login, /register ou tout l'espace owner /dashboard, masquer la Navbar et la modale d'invité
+  if (pathname === '/login' || pathname === '/register' || pathname?.startsWith('/dashboard')) {
+    return null;
   }
 
   if (!isMounted) {

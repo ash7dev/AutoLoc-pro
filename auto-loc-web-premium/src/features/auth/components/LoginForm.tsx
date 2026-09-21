@@ -44,7 +44,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const { setUser, clearPendingIntent } = useUserStore();
+  const { setUser, clearPendingIntent, closeGuestModal } = useUserStore();
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +78,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
 
       setUser(userProfile);
+      closeGuestModal();
 
       // Consommer et rejouer l'intention interceptée par le Gatekeeper
       const pending = IntentEngine.consumePendingIntent();
@@ -113,6 +114,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
 
       setUser(userProfile);
+      closeGuestModal();
 
       const pending = IntentEngine.consumePendingIntent();
       if (pending?.redirectToUrl) {
@@ -145,6 +147,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         role: 'LOCATAIRE',
         statutKyc: 'VERIFIE',
       });
+      closeGuestModal();
       const pending = IntentEngine.consumePendingIntent();
       if (pending?.redirectToUrl) {
         router.push(pending.redirectToUrl);
@@ -159,6 +162,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
     clearPendingIntent();
+    closeGuestModal();
     router.push('/');
   };
 

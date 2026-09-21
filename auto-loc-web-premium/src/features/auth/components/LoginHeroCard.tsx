@@ -9,10 +9,12 @@ import { useUserStore } from '../../../core/store/useUserStore';
 export const LoginHeroCard: React.FC = () => {
   const router = useRouter();
   const clearPendingIntent = useUserStore((s) => s.clearPendingIntent);
+  const closeGuestModal = useUserStore((s) => s.closeGuestModal);
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
     clearPendingIntent();
+    closeGuestModal();
     router.push('/');
   };
 

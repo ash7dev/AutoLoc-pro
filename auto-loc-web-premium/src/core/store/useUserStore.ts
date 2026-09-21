@@ -21,6 +21,7 @@ interface UserState {
   initializeFromSession: (user: UserProfile | null) => void;
   setUser: (user: UserProfile | null) => void;
   updateProfilePartial: (partial: Partial<UserProfile>) => void;
+  switchRole: (newRole: UserProfile['role']) => Promise<UserProfile | null>;
   setPendingIntent: (intent: PendingIntent | null) => void;
   clearPendingIntent: () => void;
   openGuestModal: (reason: string, intent?: PendingIntent) => void;
@@ -92,6 +93,35 @@ export const useUserStore = create<UserState>((set, get) => ({
       type: 'USER_UPDATED',
       payload: updated,
     });
+  },
+
+  switchRole: async (newRole) => {
+    try {
+      const res = await AuthService.switchRole(newRole as 'PROPRIETAIRE' | 'LOCATAIRE');
+      if (res.accessToken && typeof window !== 'undefined') {
+        localStorage.setItem('autoloc_token', res.accessToken);
+        if (res.refreshToken) {
+          localStorage.setItem('autoloc_refresh_token', res.refreshToken);
+        }
+      }
+      const updatedUser = AuthService.mapProfileResponseToUserProfile(res.profile);
+      set({
+        user: updatedUser,
+        capabilities: computeUserCapabilities(updatedUser),
+      });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('autoloc_user', JSON.stringify(updatedUser));
+      }
+      broadcastAuthEvent({
+        type: 'USER_UPDATED',
+        payload: updatedUser,
+      });
+      return updatedUser;
+    } catch (error) {
+      console.warn('[useUserStore] switchRole backend call failed, fallback to local update:', error);
+      get().updateProfilePartial({ role: newRole });
+      return get().user;
+    }
   },
 
   setPendingIntent: (intent) => {

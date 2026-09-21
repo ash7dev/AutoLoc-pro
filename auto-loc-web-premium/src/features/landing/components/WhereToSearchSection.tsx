@@ -24,9 +24,13 @@ type StepType = "zone" | "dates" | "type";
 
 interface WhereToSearchSectionProps {
   compact?: boolean;
+  onSearchSuccess?: () => void;
 }
 
-export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({ compact = false }) => {
+export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
+  compact = false,
+  onSearchSuccess,
+}) => {
   const router = useRouter();
   const [zone, setZone] = useState("");
   const [type, setType] = useState("");
@@ -94,6 +98,7 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({ comp
     if (dateDebut) params.set("dateDebut", dateDebut);
     if (dateFin) params.set("dateFin", dateFin);
 
+    onSearchSuccess?.();
     router.push(`/vehicles?${params.toString()}`);
   };
 

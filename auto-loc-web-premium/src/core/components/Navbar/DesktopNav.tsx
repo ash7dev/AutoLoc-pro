@@ -62,7 +62,6 @@ export const DesktopNav: React.FC = () => {
       return;
     }
 
-    // Si des vérifications manquent pour l'Hôte/Propriétaire (Profil, Phone, KYC, Permis), ouvrir la modale Owner Gate
     if (missingSteps.length > 0 && !canProceed) {
       setOwnerGateOpen(true);
     } else {
@@ -137,8 +136,6 @@ export const DesktopNav: React.FC = () => {
           </div>
         </div>
       </header>
-
-
 
       {/* Modale Host / Owner Gate */}
       <ReservationGateModal

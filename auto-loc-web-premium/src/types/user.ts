@@ -31,6 +31,7 @@ export interface UserProfile {
   role: UserRole;
   statutKyc: KycStatus;
   kycRejectionReason?: string | null;
+  vehiculesCount?: number;
   createdAt?: string;
 }
 

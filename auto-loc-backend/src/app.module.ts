@@ -22,19 +22,7 @@ import { RevalidateModule } from './infrastructure/revalidate/revalidate.module'
 import { WalletModule } from './modules/wallet/wallet.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SupabaseModule } from './infrastructure/supabase/supabase.module';
-
-
-// Sentry (optional — active only if SENTRY_DSN is set)
-const SENTRY_DSN = process.env.SENTRY_DSN;
-if (SENTRY_DSN) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const Sentry = require('@sentry/node');
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    environment: process.env.NODE_ENV ?? 'development',
-    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
-  });
-}
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 
 @Module({
   imports: [
@@ -81,6 +69,7 @@ if (SENTRY_DSN) {
     RevalidateModule,
     WalletModule,
     NotificationsModule,
+    AnalyticsModule,
   ],
   providers: [
     // Global rate limiter guard

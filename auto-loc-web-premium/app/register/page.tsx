@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
@@ -11,17 +11,25 @@ import { useUserStore } from '@/src/core/store/useUserStore';
 export default function RegisterPage() {
   const router = useRouter();
   const clearPendingIntent = useUserStore((s) => s.clearPendingIntent);
+  const closeGuestModal = useUserStore((s) => s.closeGuestModal);
+
+  useEffect(() => {
+    closeGuestModal();
+  }, [closeGuestModal]);
 
   const handleRegisterSuccess = () => {
+    closeGuestModal();
     router.push('/');
   };
 
   const handleNavigateToLogin = () => {
+    closeGuestModal();
     router.push('/login');
   };
 
   const handleClose = () => {
     clearPendingIntent();
+    closeGuestModal();
     router.push('/');
   };
 
