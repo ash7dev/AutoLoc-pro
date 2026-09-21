@@ -185,6 +185,20 @@ export class VehiclesController {
   }
 
   /**
+   * POST /vehicles/:id/track-click — Enregistrer un clic ou une interaction.
+   */
+  @Post(':id/track-click')
+  @UseGuards(OptionalJwtAuthGuard)
+  trackClick(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('actionType') actionType?: string,
+    @Req() req?: Request,
+  ) {
+    const user = (req as Request & { user?: RequestUser })?.user ?? null;
+    return this.vehiclesService.trackClick(id, user, actionType);
+  }
+
+  /**
    * GET /vehicles/:id/blocked-dates — Dates indisponibles (public).
    * Utilisé par le calendrier de réservation côté locataire.
    */

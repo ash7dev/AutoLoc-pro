@@ -23,6 +23,8 @@ export interface FleetVehicle {
   tauxOccupation?: Amount;
   vues?: Amount;
   clics?: Amount;
+  vues30j?: Amount;
+  clics30j?: Amount;
   tauxConversion?: Amount;
   noteMoyenne?: Amount;
 }
@@ -54,8 +56,8 @@ export const FleetPerformanceTable: React.FC<FleetPerformanceTableProps> = ({
             photoUrl: v.photoUrl,
             caNet: toNumber(v.caNet),
             occupation: clamp(toNumber(v.tauxOccupation), 0, 100),
-            vues: toNumber(v.vues),
-            clics: toNumber(v.clics),
+            vues: toNumber(v.vues ?? v.vues30j),
+            clics: toNumber(v.clics ?? v.clics30j),
             conversion: toNumber(v.tauxConversion),
             note: toNumber(v.noteMoyenne),
           };

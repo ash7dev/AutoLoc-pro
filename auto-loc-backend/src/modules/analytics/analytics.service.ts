@@ -584,8 +584,20 @@ export class AnalyticsService {
       const totalPeriodDays = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
       const tauxOccupation = Number(Math.min(100, (nbJoursLoues / totalPeriodDays) * 100).toFixed(1));
 
-      const vues30j = v.metrics?.vues30j ?? 0;
-      const clics30j = v.metrics?.clics30j ?? 0;
+      let vues30j = v.metrics?.vues30j ?? 0;
+      let clics30j = v.metrics?.clics30j ?? 0;
+
+      if (vues30j === 0) {
+        vues30j = await this.prisma.vehiculeView.count({
+          where: { vehiculeId: v.id, creeLe: { gte: startDate } },
+        });
+      }
+      if (clics30j === 0) {
+        clics30j = await this.prisma.vehiculeClick.count({
+          where: { vehiculeId: v.id, creeLe: { gte: startDate } },
+        });
+      }
+
       const tauxConversion = vues30j > 0 ? Number(((clics30j / vues30j) * 100).toFixed(1)) : 0;
 
       items.push({

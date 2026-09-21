@@ -362,6 +362,9 @@ export class VehiclesService {
    * - Public : uniquement si VERIFIE.
    */
   async findOne(user: RequestUser | null, id: string) {
+    // Tracking de la vue en arrière-plan (non bloquant)
+    this.feedScoring.trackView({ vehiculeId: id, userId: user?.sub }).catch(() => {});
+
     // ── Chemin public : cache Redis (user non authentifié) ──────────────
     // On ne cache que les requêtes sans token pour garantir qu'un propriétaire
     // voit toujours son véhicule en temps réel (quel que soit son statut).
@@ -457,6 +460,14 @@ export class VehiclesService {
     }
 
     return safeVehicle;
+  }
+
+  /**
+   * Enregistre un clic ou une interaction sur un véhicule.
+   */
+  async trackClick(id: string, user: RequestUser | null, actionType: string = 'CLICK_DETAIL') {
+    this.feedScoring.trackClick({ vehiculeId: id, userId: user?.sub, actionType }).catch(() => {});
+    return { success: true };
   }
 
   /**
