@@ -369,26 +369,37 @@ export class AuthService {
      et émet un JWT métier si le compte existe.
   ────────────────────────────────────────────────────────────────────────── */
 
-  async requestPhoneLoginOtp(rawPhone: string, channel?: 'whatsapp' | 'sms' | 'auto'): Promise<{ expiresIn: number }> {
+  async requestPhoneLoginOtp(
+    rawPhone: string,
+    channel?: 'whatsapp' | 'sms' | 'email' | 'auto',
+    isRegister?: boolean,
+    email?: string,
+  ): Promise<{ expiresIn: number }> {
     const phone = this.normalizePhone(rawPhone);
 
-    // 1. Vérifier que le numéro existe dans notre base
+    // 1. Vérifier si le numéro existe dans notre base
     const utilisateur = await this.prisma.utilisateur.findFirst({
       where: { telephone: phone },
-      select: { userId: true, prenom: true, actif: true, bloqueJusqua: true },
+      select: { userId: true, email: true, prenom: true, actif: true, bloqueJusqua: true },
     });
 
-    if (!utilisateur) {
-      throw new BadRequestException('Aucun compte n’est associé à ce numéro.');
+    if (!utilisateur && !isRegister) {
+      throw new BadRequestException('Aucun compte n’est associé à ce numéro. Veuillez d’abord créer un compte.');
     }
 
-    // 2. Vérifier que le compte n'est pas bloqué/désactivé
-    this.assertAccountIsAllowed({
-      actif: utilisateur.actif,
-      bloqueJusqua: utilisateur.bloqueJusqua ? utilisateur.bloqueJusqua.toISOString() : null,
-    });
+    if (utilisateur && isRegister) {
+      throw new BadRequestException('Ce numéro de téléphone est déjà associé à un compte. Veuillez vous connecter.');
+    }
 
-    // 3. Cooldown par canal (permets un basculement rapide vers SMS si WhatsApp n'a pas été reçu)
+    // 2. Si l'utilisateur existe, vérifier qu'il n'est pas bloqué/désactivé
+    if (utilisateur) {
+      this.assertAccountIsAllowed({
+        actif: utilisateur.actif,
+        bloqueJusqua: utilisateur.bloqueJusqua ? utilisateur.bloqueJusqua.toISOString() : null,
+      });
+    }
+
+    // 3. Cooldown par canal (permets un basculement rapide vers SMS/Email si WhatsApp n'a pas été reçu)
     const targetChannel = channel || 'auto';
     const cooldownKey = `${PHONE_LOGIN_COOLDOWN_PREFIX}${phone}:${targetChannel}`;
     const granted = await this.redisService.setNX(cooldownKey, '1', OTP_COOLDOWN_SECONDS);
@@ -401,11 +412,26 @@ export class AuthService {
     const key = `${PHONE_LOGIN_OTP_PREFIX}${phone}`;
     await this.redisService.set(key, code, OTP_TTL_SECONDS);
 
-    // 5. Envoi OTP via canal spécifié (WhatsApp avec fallback SMS, ou SMS direct)
-    await this.notification.sendInstantNotification(phone, 'auth.login_otp', { otp: code }, targetChannel)
-      .catch((err) => {
-        console.error(`[Auth] Phone login OTP delivery failed for ${phone} via ${targetChannel}`, err);
-      });
+    // 5. Envoi OTP via canal spécifié (Email, WhatsApp avec fallback SMS, ou SMS direct)
+    if (targetChannel === 'email') {
+      const destEmail = email || utilisateur?.email;
+      if (destEmail) {
+        await this.notification.send({
+          email: destEmail,
+          type: 'verification.code',
+          data: { code },
+        }).catch((err) => {
+          console.error(`[Auth] Email OTP delivery failed for ${destEmail}`, err);
+        });
+      } else {
+        throw new BadRequestException('Aucune adresse email spécifiée pour recevoir le code.');
+      }
+    } else {
+      await this.notification.sendInstantNotification(phone, 'auth.login_otp', { otp: code }, targetChannel)
+        .catch((err) => {
+          console.error(`[Auth] Phone login OTP delivery failed for ${phone} via ${targetChannel}`, err);
+        });
+    }
 
     return { expiresIn: OTP_COOLDOWN_SECONDS };
   }
@@ -436,14 +462,45 @@ export class AuthService {
 
     await this.redisService.del(key);
 
-    // 2. Trouver l'utilisateur
-    const utilisateur = await this.prisma.utilisateur.findFirst({
+    // 2. Trouver ou créer l'utilisateur
+    let utilisateur = await this.prisma.utilisateur.findFirst({
       where: { telephone: phone },
       select: { userId: true, email: true, telephone: true, actif: true, bloqueJusqua: true, phoneVerified: true },
     });
 
     if (!utilisateur) {
-      throw new BadRequestException('Ce compte est introuvable.');
+      // Création automatique du compte lors de l'inscription par OTP
+      const newUserId = randomUUID();
+      const placeholderEmail = `${newUserId}@autoloc.local`;
+
+      await this.prisma.profile.create({
+        data: {
+          userId: newUserId,
+          phone: phone,
+          role: DEFAULT_ROLE,
+        },
+      });
+
+      const created = await this.prisma.utilisateur.create({
+        data: {
+          userId: newUserId,
+          prenom: '',
+          nom: '',
+          telephone: phone,
+          email: placeholderEmail,
+          profileCompleted: false,
+          phoneVerified: true,
+        },
+      });
+
+      utilisateur = {
+        userId: created.userId,
+        email: created.email,
+        telephone: created.telephone,
+        actif: created.actif,
+        bloqueJusqua: created.bloqueJusqua,
+        phoneVerified: created.phoneVerified,
+      };
     }
 
     this.assertAccountIsAllowed({

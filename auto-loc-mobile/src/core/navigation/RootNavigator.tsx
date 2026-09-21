@@ -42,7 +42,7 @@ export type AppScreenRoute =
   | { name: 'OWNER_MAIN'; initialTab?: OwnerTabType }
   | { name: 'LOGIN' }
   | { name: 'REGISTER' }
-  | { name: 'OTP'; phone: string }
+  | { name: 'OTP'; phone: string; channel?: 'whatsapp' | 'sms' | 'email' | 'auto'; email?: string }
   | { name: 'VEHICLE_DETAIL'; vehicleId: string; vehicle?: VehicleFeedItem }
   | { name: 'BOOKING_DETAIL'; reservationId: string }
   | { name: 'OWNER_BOOKING_DETAIL'; reservationId: string };
@@ -56,7 +56,7 @@ interface NavigationContextType {
   navigateToOwnerTab: (tab: OwnerTabType) => void;
   switchToOwnerSpace: () => void;
   switchToTenantSpace: () => void;
-  navigateToOtp: (phone: string) => void;
+  navigateToOtp: (phone: string, channel?: 'whatsapp' | 'sms' | 'email' | 'auto', email?: string) => void;
   navigateToVehicleDetail: (vehicleId: string, vehicle?: VehicleFeedItem) => void;
   navigateToBookingDetail: (reservationId: string) => void;
   navigateToOwnerBookingDetail: (reservationId: string) => void;
@@ -156,8 +156,8 @@ export const RootNavigator: React.FC = () => {
     navigateTo({ name: 'TENANT_MAIN' });
   };
 
-  const navigateToOtp = (phone: string) => {
-    navigateTo({ name: 'OTP', phone });
+  const navigateToOtp = (phone: string, channel?: 'whatsapp' | 'sms' | 'email' | 'auto', email?: string) => {
+    navigateTo({ name: 'OTP', phone, channel, email });
   };
 
   const navigateToVehicleDetail = (vehicleId: string, vehicle?: VehicleFeedItem) => {
@@ -326,7 +326,7 @@ export const RootNavigator: React.FC = () => {
               return (
                 <LoginScreen
                   onNavigateToRegister={() => navigateTo({ name: 'REGISTER' })}
-                  onNavigateToOtp={(phone) => navigateToOtp(phone)}
+                  onNavigateToOtp={(phone, ch, em) => navigateToOtp(phone, ch, em)}
                   onLoginSuccess={handleAuthSuccess}
                   onClose={handleAuthClose}
                 />
@@ -336,7 +336,7 @@ export const RootNavigator: React.FC = () => {
               return (
                 <RegisterScreen
                   onNavigateToLogin={() => navigateTo({ name: 'LOGIN' })}
-                  onNavigateToOtp={(phone) => navigateToOtp(phone)}
+                  onNavigateToOtp={(phone, ch, em) => navigateToOtp(phone, ch, em)}
                   onClose={handleAuthClose}
                 />
               );
@@ -345,6 +345,8 @@ export const RootNavigator: React.FC = () => {
               return (
                 <OtpScreen
                   telephone={currentRoute.phone}
+                  channel={currentRoute.channel}
+                  email={currentRoute.email}
                   onNavigateBack={() => goBack()}
                   onSuccess={handleAuthSuccess}
                 />

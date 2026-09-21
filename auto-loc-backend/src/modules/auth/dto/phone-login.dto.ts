@@ -12,8 +12,15 @@ export class PhoneLoginSendOtpDto {
   phone!: string;
 
   @IsOptional()
-  @IsIn(['whatsapp', 'sms', 'auto'], { message: 'Canal invalide' })
-  channel?: 'whatsapp' | 'sms' | 'auto';
+  @IsIn(['whatsapp', 'sms', 'email', 'auto'], { message: 'Canal invalide' })
+  channel?: 'whatsapp' | 'sms' | 'email' | 'auto';
+
+  @IsOptional()
+  isRegister?: boolean;
+
+  @IsOptional()
+  @IsString()
+  email?: string;
 }
 
 export class PhoneLoginVerifyOtpDto {

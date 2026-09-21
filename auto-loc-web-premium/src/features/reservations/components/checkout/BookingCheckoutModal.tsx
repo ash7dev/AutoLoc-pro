@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { BookingCheckoutHeader } from './BookingCheckoutHeader';
 import { BookingCheckoutStep1 } from './BookingCheckoutStep1';
 import { BookingCheckoutStep2 } from './BookingCheckoutStep2';
@@ -60,6 +60,7 @@ export function BookingCheckoutModal({
 }: BookingCheckoutModalProps) {
   const user = useUserStore((state) => state.user);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState<1 | 2>(1);
   const [startDate, setStartDate] = useState<string | undefined>(initialStartDate);
   const [endDate, setEndDate] = useState<string | undefined>(initialEndDate);
@@ -103,6 +104,13 @@ export function BookingCheckoutModal({
       }
     }
   }, [isOpen, initialStartDate, initialEndDate, initialHorsDakar, initialIncludeDelivery, initialTypeLivraison, initialAdresseLivraison, vehicle.joursMinimum]);
+
+  // Remise à zéro du scroll au changement d'étape ou à l'ouverture
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [step, isOpen]);
 
   // Calcul du nombre de jours
   const nbJours = useMemo(() => {
@@ -263,7 +271,7 @@ export function BookingCheckoutModal({
           </div>
         ) : (
           /* Corps de la modale scrollable */
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
             {step === 1 && (
               <BookingCheckoutStep1
                 vehicle={vehicle}

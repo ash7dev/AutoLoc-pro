@@ -32,10 +32,17 @@ export interface SendPhoneOtpResponse {
 
 export const authApi = {
   // 1. Demande d'OTP pour connexion rapide téléphone (WhatsApp ou SMS direct)
-  async sendPhoneLoginOtp(phone: string, channel?: 'whatsapp' | 'sms' | 'auto'): Promise<SendPhoneOtpResponse> {
+  async sendPhoneLoginOtp(
+    phone: string,
+    channel?: 'whatsapp' | 'sms' | 'email' | 'auto',
+    isRegister?: boolean,
+    email?: string
+  ): Promise<SendPhoneOtpResponse> {
     const response = await apiClient.post<SendPhoneOtpResponse>('/auth/phone-login/send-otp', {
       phone,
       channel,
+      isRegister,
+      email,
     });
     return response.data;
   },

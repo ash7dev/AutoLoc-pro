@@ -19,16 +19,18 @@ export const MobileBottomNav: React.FC = () => {
   const pathname = usePathname();
   const isAuthenticated = useUserStore((s) => s.isAuthenticated);
 
-  // Masquer la navigation basse sur la page détail véhicule (ex: /vehicles/[id])
-  const isVehicleDetailPage = pathname?.startsWith('/vehicles/') && pathname !== '/vehicles';
-  if (isVehicleDetailPage) {
+  // Masquer la navigation basse sur les pages détails (ex: /vehicles/[id] et /reservations/[id])
+  const isDetailPage =
+    (pathname?.startsWith('/vehicles/') && pathname !== '/vehicles') ||
+    (pathname?.startsWith('/reservations/') && pathname !== '/reservations');
+  if (isDetailPage) {
     return null;
   }
 
   const handleReservationsClick = (e: React.MouseEvent) => {
     if (!isAuthenticated) {
       const allowed = IntentEngine.guardAction('VIEW_BOOKINGS', {
-        redirectToUrl: '/dashboard/reservations',
+        redirectToUrl: '/reservations',
         reasonMessage: 'Veuillez vous connecter pour consulter vos réservations.',
       });
       if (!allowed) {
@@ -56,7 +58,7 @@ export const MobileBottomNav: React.FC = () => {
     { label: 'Explorer', href: '/vehicles', icon: Compass },
     {
       label: 'Réservations',
-      href: '/dashboard/reservations',
+      href: '/reservations',
       icon: CalendarCheck,
       onClick: handleReservationsClick,
     },

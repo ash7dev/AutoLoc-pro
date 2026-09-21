@@ -134,7 +134,7 @@ export class AuthController {
   async sendPhoneLoginOtp(
     @Body() dto: PhoneLoginSendOtpDto,
   ): Promise<{ expiresIn: number }> {
-    return this.authService.requestPhoneLoginOtp(dto.phone, dto.channel);
+    return this.authService.requestPhoneLoginOtp(dto.phone, dto.channel, dto.isRegister, dto.email);
   }
 
   @Post('phone-login/verify-otp')

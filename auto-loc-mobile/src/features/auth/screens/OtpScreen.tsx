@@ -11,7 +11,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Smartphone, CheckCircle2, ChevronLeft, RefreshCw, ArrowRight, ShieldCheck, MessageSquare } from 'lucide-react-native';
+import { Smartphone, CheckCircle2, ChevronLeft, RefreshCw, ArrowRight, ShieldCheck, MessageSquare, Mail } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../../core/theme';
@@ -22,12 +22,16 @@ const { width: screenWidth } = Dimensions.get('window');
 
 interface OtpScreenProps {
   telephone: string;
+  channel?: 'whatsapp' | 'sms' | 'email' | 'auto';
+  email?: string;
   onNavigateBack: () => void;
   onSuccess: () => void;
 }
 
 export const OtpScreen: React.FC<OtpScreenProps> = ({
   telephone,
+  channel = 'auto',
+  email,
   onNavigateBack,
   onSuccess,
 }) => {
@@ -50,7 +54,8 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
   const handleVerify = async (codeToVerify?: string) => {
     const targetCode = codeToVerify || code;
     if (!targetCode.trim() || targetCode.length !== 6) {
-      Alert.alert('Code incomplet', 'Veuillez saisir le code à 6 chiffres reçu par SMS ou WhatsApp.');
+      const channelLabel = channel === 'email' ? 'par Email.' : 'par SMS ou WhatsApp.';
+      Alert.alert('Code incomplet', `Veuillez saisir le code à 6 chiffres reçu ${channelLabel}`);
       return;
     }
 
@@ -72,12 +77,15 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
     }
   };
 
-  const handleResend = async (channel: 'whatsapp' | 'sms' | 'auto' = 'auto') => {
+  const handleResend = async (targetChannel?: 'whatsapp' | 'sms' | 'email' | 'auto') => {
+    const selectedResendChannel = targetChannel || channel || 'auto';
     try {
       setIsResending(true);
-      const expiresIn = await sendPhoneOtp(telephone, channel);
+      const expiresIn = await sendPhoneOtp(telephone, selectedResendChannel, false, email);
       setCountdown(expiresIn || 60);
-      const canalLabel = channel === 'sms' ? 'par SMS direct' : 'par WhatsApp/SMS';
+      let canalLabel = 'par WhatsApp/SMS';
+      if (selectedResendChannel === 'email') canalLabel = 'par Email';
+      if (selectedResendChannel === 'sms') canalLabel = 'par SMS direct';
       Alert.alert('Code envoyé', `Un nouveau code de vérification vous a été réexpédié ${canalLabel}.`);
     } catch (e: any) {
       Alert.alert('Erreur', e.message || 'Impossible de renvoyer le code.');
@@ -118,7 +126,9 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
           >
             <ChevronLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
           </TouchableOpacity>
-          <Text style={styles.topNavTitle}>Vérification du numéro</Text>
+          <Text style={styles.topNavTitle}>
+            {channel === 'email' ? 'Vérification Email' : 'Vérification du numéro'}
+          </Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -135,18 +145,35 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
                 {/* Header Card : Icon & Titres */}
                 <View style={styles.cardHeaderBox}>
                   <View style={styles.iconCircle}>
-                    <Smartphone size={28} color="#059669" />
+                    {channel === 'email' ? (
+                      <Mail size={28} color="#059669" />
+                    ) : (
+                      <Smartphone size={28} color="#059669" />
+                    )}
                   </View>
 
                   <View style={styles.badgeKycGlass}>
                     <ShieldCheck size={12} color="#059669" />
-                    <Text style={styles.badgeKycText}>AUTHENTIFICATION SMS / WHATSAPP</Text>
+                    <Text style={styles.badgeKycText}>
+                      {channel === 'email' ? 'AUTHENTIFICATION EMAIL' : 'AUTHENTIFICATION SMS / WHATSAPP'}
+                    </Text>
                   </View>
 
-                  <Text style={styles.mainTitle}>Vérification OTP</Text>
+                  <Text style={styles.mainTitle}>
+                    {channel === 'email' ? 'Vérification Email' : 'Vérification OTP'}
+                  </Text>
                   <Text style={styles.subtitle}>
-                    Saisissez le code à 6 chiffres envoyé au{'\n'}
-                    <Text style={styles.phoneHighlight}>{telephone || '+221 77 000 00 00'}</Text>
+                    {channel === 'email' ? (
+                      <>
+                        Saisissez le code à 6 chiffres envoyé à{'\n'}
+                        <Text style={styles.phoneHighlight}>{email || 'votre adresse email'}</Text>
+                      </>
+                    ) : (
+                      <>
+                        Saisissez le code à 6 chiffres envoyé au{'\n'}
+                        <Text style={styles.phoneHighlight}>{telephone || '+221 77 000 00 00'}</Text>
+                      </>
+                    )}
                   </Text>
                 </View>
 
@@ -218,7 +245,39 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
 
             {/* Resend Capsule */}
             <View style={styles.footerGlassCapsule}>
-              {countdown > 0 ? (
+              {channel === 'email' ? (
+                countdown > 0 ? (
+                  <View style={styles.resendColumn}>
+                    <Text style={styles.timerText}>
+                      Renvoyer un nouveau code par Email dans <Text style={styles.timerBold}>{countdown}s</Text>
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.resendOptionsRow}>
+                    <TouchableOpacity
+                      style={styles.resendBtn}
+                      onPress={() => handleResend('email')}
+                      disabled={isResending}
+                      activeOpacity={0.7}
+                    >
+                      <RefreshCw size={13} color="#4ADE80" />
+                      <Text style={styles.resendBtnText}>
+                        {isResending ? 'Envoi en cours...' : 'Renvoyer par Email'}
+                      </Text>
+                    </TouchableOpacity>
+                    <Text style={styles.dividerDot}>•</Text>
+                    <TouchableOpacity
+                      style={styles.resendBtn}
+                      onPress={() => handleResend('sms')}
+                      disabled={isResending}
+                      activeOpacity={0.7}
+                    >
+                      <MessageSquare size={13} color="#4ADE80" />
+                      <Text style={styles.resendBtnText}>Recevoir par SMS à la place</Text>
+                    </TouchableOpacity>
+                  </View>
+                )
+              ) : countdown > 0 ? (
                 <View style={styles.resendColumn}>
                   <Text style={styles.timerText}>
                     Renvoyer un nouveau code dans <Text style={styles.timerBold}>{countdown}s</Text>

@@ -108,7 +108,7 @@ export const DesktopNav: React.FC = () => {
           <nav aria-label="Navigation principale" className="flex items-center gap-1">
             <NavItem href="/">Accueil</NavItem>
             <NavItem href="/vehicles">Explorer</NavItem>
-            {isAuthenticated && <NavItem href="/dashboard/reservations">Réservations</NavItem>}
+            {isAuthenticated && <NavItem href="/reservations">Réservations</NavItem>}
             <NavItem href="/contact">Contact</NavItem>
           </nav>
 

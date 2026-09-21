@@ -156,7 +156,7 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }
             </Link>
 
             <Link
-              href="/dashboard/reservations"
+              href="/reservations"
               onClick={() => setIsOpen(false)}
               className={`${menuItemClass} text-slate-700 hover:bg-slate-900/[0.04] hover:text-slate-900`}
             >

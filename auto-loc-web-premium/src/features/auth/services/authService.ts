@@ -14,11 +14,13 @@ export class AuthService {
    */
   public static async sendPhoneLoginOtp(
     phone: string,
-    channel: 'sms' | 'whatsapp' | 'auto' = 'auto'
+    channel: 'sms' | 'whatsapp' | 'email' | 'auto' = 'auto',
+    isRegister?: boolean,
+    email?: string
   ): Promise<PhoneLoginSendOtpResponse> {
     return await fetchApi<PhoneLoginSendOtpResponse>('/auth/phone-login/send-otp', {
       method: 'POST',
-      body: JSON.stringify({ phone, channel }),
+      body: JSON.stringify({ phone, channel, isRegister, email }),
     });
   }
 

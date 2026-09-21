@@ -55,6 +55,22 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
     }
   }, [isAuthenticated, refreshProfileSilently]);
 
+  // S'assurer que le scroll est remis au sommet au chargement et après le reload de la page
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && vehicle && typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
+  }, [isLoading, vehicle]);
+
   // 2ème VERROU : Évaluation instantanée (0ms latence) des verrous de réservation
   const gateEval = useBookingGate(vehicle?.ageMinimum);
 

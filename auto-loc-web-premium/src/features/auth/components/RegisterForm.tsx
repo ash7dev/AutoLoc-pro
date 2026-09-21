@@ -107,8 +107,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         return;
       }
 
-      // 2. Demander le code OTP
-      await AuthService.sendPhoneLoginOtp(telephone, 'auto');
+      // 2. Demander le code OTP (en mode inscription)
+      await AuthService.sendPhoneLoginOtp(telephone, 'auto', true);
       setStep('OTP');
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la création de compte.');

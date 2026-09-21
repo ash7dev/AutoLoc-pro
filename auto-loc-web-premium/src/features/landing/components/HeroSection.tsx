@@ -12,6 +12,16 @@ export const HeroSection: React.FC = () => {
   const { vehicles, isLoading } = useVehicles({ limit: 4 });
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
+  // S'assurer d'arriver tout en haut au chargement / reload de la page d'accueil
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
   return (
     <section className="relative min-h-0 lg:min-h-[85vh] bg-[#F8FAF4] text-slate-900 pt-16 sm:pt-28 pb-3 sm:pb-12 overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -11,11 +11,19 @@ interface AuthState {
   error: string | null;
 
   // Actions
-  sendPhoneOtp: (phone: string, channel?: 'whatsapp' | 'sms' | 'auto') => Promise<number>;
+  sendPhoneOtp: (
+    phone: string,
+    channel?: 'whatsapp' | 'sms' | 'email' | 'auto',
+    isRegister?: boolean,
+    email?: string
+  ) => Promise<number>;
   verifyPhoneOtp: (phone: string, code: string) => Promise<void>;
   loginWithGoogleOrSupabase: (supabaseAccessToken: string) => Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
-  registerProfile: (data: { prenom: string; nom: string; telephone: string; email: string }) => Promise<void>;
+  registerProfile: (
+    data: { prenom: string; nom: string; telephone: string; email: string },
+    channel?: 'whatsapp' | 'sms' | 'email' | 'auto'
+  ) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -66,15 +74,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  // Demander un code OTP par téléphone (WhatsApp ou SMS direct)
-  sendPhoneOtp: async (phone: string, channel?: 'whatsapp' | 'sms' | 'auto') => {
+  // Demander un code OTP par téléphone/email (WhatsApp, SMS ou Email)
+  sendPhoneOtp: async (
+    phone: string,
+    channel: 'whatsapp' | 'sms' | 'email' | 'auto' = 'auto',
+    isRegister?: boolean,
+    email?: string
+  ) => {
     try {
       set({ isLoading: true, error: null });
-      const res = await authApi.sendPhoneLoginOtp(phone, channel);
+      const res = await authApi.sendPhoneLoginOtp(phone, channel, isRegister, email);
       set({ isLoading: false });
       return res.expiresIn;
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Impossible d’envoyer le code SMS/WhatsApp.';
+      const msg = err.response?.data?.message || 'Impossible d’envoyer le code d’authentification.';
       set({ error: msg, isLoading: false });
       throw new Error(msg);
     }
@@ -157,7 +170,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   // Inscription / Enregistrement du profil
-  registerProfile: async (data) => {
+  registerProfile: async (data, channel = 'auto') => {
     try {
       set({ isLoading: true, error: null });
       // 1. Vérifier la disponibilité
@@ -166,8 +179,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error(check.message || 'Email ou téléphone déjà utilisé.');
       }
 
-      // 2. Déclencher la demande d'OTP téléphone
-      await authApi.sendPhoneLoginOtp(data.telephone);
+      // 2. Déclencher la demande d'OTP (en mode isRegister: true)
+      await authApi.sendPhoneLoginOtp(data.telephone, channel, true, data.email);
       set({ isLoading: false });
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || "Erreur lors de l'inscription.";

@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   ArrowRight,
   Calendar,
+  ChevronDown,
   Home,
   MapPin,
   Navigation,
@@ -183,6 +184,7 @@ export function BookingCheckoutStep1({
 
   const [blockedRanges, setBlockedRanges] = useState<BlockedRange[]>([]);
   const [isLoadingBlocked, setIsLoadingBlocked] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const joursMinimum = vehicle.joursMinimum && vehicle.joursMinimum > 0 ? vehicle.joursMinimum : 1;
 
@@ -433,41 +435,81 @@ export function BookingCheckoutStep1({
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <label className="block cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 transition-colors focus-within:border-[#0A3D2E] focus-within:ring-1 focus-within:ring-[#0A3D2E] hover:border-slate-300">
-                <span className="block text-xs font-medium text-slate-500">Prise en main</span>
-                <input
-                  type="date"
-                  value={startValue}
-                  min={todayValue}
-                  onChange={(e) => handleStartChange(e.target.value)}
-                  className="w-full cursor-pointer bg-transparent text-base font-semibold text-slate-900 focus:outline-none sm:text-sm"
+              <button
+                type="button"
+                onClick={() => setShowCalendar((prev) => !prev)}
+                className="flex items-center gap-3 text-left rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 transition-all hover:border-[#041912] cursor-pointer"
+              >
+                <div className="w-8 h-8 rounded-xl bg-[#041912] border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                  <Calendar className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="block text-xs font-medium text-slate-500">Prise en main</span>
+                  <span className="block truncate text-sm font-semibold text-slate-900">
+                    {startValue ? (
+                      new Date(`${startValue}T00:00:00`).toLocaleDateString('fr-FR', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    ) : (
+                      'Choisir la date'
+                    )}
+                  </span>
+                </div>
+                <ChevronDown
+                  className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+                    showCalendar ? 'rotate-180 text-[#041912]' : ''
+                  }`}
                 />
-              </label>
+              </button>
 
-              <label className="block cursor-pointer rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 transition-colors focus-within:border-[#0A3D2E] focus-within:ring-1 focus-within:ring-[#0A3D2E] hover:border-slate-300">
-                <span className="block text-xs font-medium text-slate-500">Restitution</span>
-                <input
-                  type="date"
-                  value={endValue}
-                  min={minEndValue}
-                  onChange={(e) => handleEndChange(e.target.value)}
-                  className="w-full cursor-pointer bg-transparent text-base font-semibold text-slate-900 focus:outline-none sm:text-sm"
+              <button
+                type="button"
+                onClick={() => setShowCalendar((prev) => !prev)}
+                className="flex items-center gap-3 text-left rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 transition-all hover:border-[#041912] cursor-pointer"
+              >
+                <div className="w-8 h-8 rounded-xl bg-[#041912] border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                  <Calendar className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="block text-xs font-medium text-slate-500">Restitution</span>
+                  <span className="block truncate text-sm font-semibold text-slate-900">
+                    {endValue ? (
+                      new Date(`${endValue}T00:00:00`).toLocaleDateString('fr-FR', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    ) : (
+                      'Choisir la date'
+                    )}
+                  </span>
+                </div>
+                <ChevronDown
+                  className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+                    showCalendar ? 'rotate-180 text-[#041912]' : ''
+                  }`}
                 />
-              </label>
+              </button>
             </div>
 
             {/* Calendrier interactif avec dates bloquées / réservées */}
-            <div className="pt-2">
-              <AutoCalendar
-                vehicleId={vehicle.id}
-                blockedRanges={blockedRanges}
-                startDate={startValue}
-                endDate={endValue}
-                onSelectDates={(start, end) => {
-                  onDatesChange(start, end);
-                }}
-              />
-            </div>
+            {showCalendar && (
+              <div id="checkout-custom-calendar" className="pt-2 animate-in fade-in duration-200">
+                <AutoCalendar
+                  vehicleId={vehicle.id}
+                  blockedRanges={blockedRanges}
+                  startDate={startValue}
+                  endDate={endValue}
+                  onSelectDates={(start, end) => {
+                    onDatesChange(start, end);
+                  }}
+                />
+              </div>
+            )}
 
             {isDatesBlocked && (
               <div

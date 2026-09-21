@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { DesktopNav } from './DesktopNav';
 import { MobileBottomNav } from './MobileBottomNav';
+import { MobileDetailHeader } from './MobileDetailHeader';
 import { UserProfileDropdown } from './UserProfileDropdown';
 import { useUserStore } from '../../store/useUserStore';
 import { initCrossTabSync } from '../../auth/crossTabSync';
@@ -62,6 +63,10 @@ export const Navbar: React.FC = () => {
     );
   }
 
+  const isDetailPage =
+    (pathname?.startsWith('/vehicles/') && pathname !== '/vehicles') ||
+    (pathname?.startsWith('/reservations/') && pathname !== '/reservations');
+
   return (
     <>
       {/* 1. Header Desktop (>= 1024px) */}
@@ -69,43 +74,43 @@ export const Navbar: React.FC = () => {
         <DesktopNav />
       </div>
 
-
-
-
-      {/* 2. Header Mobile (< 1024px) : même capsule que le desktop */}
-      <header className="pointer-events-none fixed inset-x-0 top-3 z-40 w-full px-4 lg:hidden">
-
-        <div className="pointer-events-auto flex h-14 items-center justify-between rounded-full border border-slate-900/10 bg-white/90 pl-5 pr-2 shadow-[0_10px_30px_-12px_rgba(15,23,42,0.25)] backdrop-blur-xl">
-          {/* Logo */}
-          <Link
-            href="/"
-            className="relative h-8 w-28 shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0A3D2E]"
-          >
-            <Image
-              src="/logo.png"
-              alt="AutoLoc"
-              fill
-              priority
-              sizes="112px"
-              className="object-contain object-left"
-            />
-          </Link>
-
-          {/* Action */}
-          {isAuthenticated && user ? (
-            <div className="pr-1">
-              <UserProfileDropdown user={user} />
-            </div>
-          ) : (
+      {/* 2. Header Mobile (< 1024px) */}
+      {isDetailPage ? (
+        <MobileDetailHeader />
+      ) : (
+        <header className="pointer-events-none fixed inset-x-0 top-3 z-40 w-full px-4 lg:hidden">
+          <div className="pointer-events-auto flex h-14 items-center justify-between rounded-full border border-slate-900/10 bg-white/90 pl-5 pr-2 shadow-[0_10px_30px_-12px_rgba(15,23,42,0.25)] backdrop-blur-xl">
+            {/* Logo */}
             <Link
-              href="/login"
-              className="rounded-full bg-[#0A3D2E] px-4 py-2 text-xs font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0F4F3B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]"
+              href="/"
+              className="relative h-8 w-28 shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0A3D2E]"
             >
-              Se connecter
+              <Image
+                src="/logo.png"
+                alt="AutoLoc"
+                fill
+                priority
+                sizes="112px"
+                className="object-contain object-left"
+              />
             </Link>
-          )}
-        </div>
-      </header>
+
+            {/* Action */}
+            {isAuthenticated && user ? (
+              <div className="pr-1">
+                <UserProfileDropdown user={user} />
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="rounded-full bg-[#0A3D2E] px-4 py-2 text-xs font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0F4F3B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]"
+              >
+                Se connecter
+              </Link>
+            )}
+          </div>
+        </header>
+      )}
 
       {/* 3. Navigation flottante basse pour mobile (< 1024px) */}
       <MobileBottomNav />

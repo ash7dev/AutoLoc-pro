@@ -13,9 +13,10 @@ import {
   ActivityIndicator,
   TouchableWithoutFeedback,
   Keyboard,
+  Modal,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { User, Mail, Lock, ArrowRight, ChevronLeft, ShieldCheck, Sparkles } from 'lucide-react-native';
+import { User, Mail, Lock, ArrowRight, ChevronLeft, ShieldCheck, Sparkles, MessageSquare, Smartphone, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../../core/theme';
@@ -27,7 +28,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 interface RegisterScreenProps {
   onNavigateToLogin: () => void;
-  onNavigateToOtp: (phone: string) => void;
+  onNavigateToOtp: (phone: string, channel?: 'whatsapp' | 'sms' | 'email' | 'auto', email?: string) => void;
   onClose?: () => void;
 }
 
@@ -79,20 +80,32 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const [telephone, setTelephone] = useState('+221770000000');
   const [password, setPassword] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
+  
+  // Modal de Choix de Canal OTP après création de compte
+  const [showChannelModal, setShowChannelModal] = useState(false);
+  const [selectedChannel, setSelectedChannel] = useState<'whatsapp' | 'sms' | 'email' | 'auto'>('auto');
 
   const { registerProfile, loginWithGoogleOrSupabase, isLoading, error, clearError } = useAuthStore();
 
-  const handleRegister = async () => {
+  const handleOpenChannelModal = () => {
     if (!prenom.trim() || !nom.trim() || !email.trim() || !telephone.trim()) {
       Alert.alert('Champs requis', 'Veuillez remplir tous les champs obligatoires.');
       return;
     }
+    if (password.length < 6) {
+      Alert.alert('Mot de passe trop court', 'Le mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+    setShowChannelModal(true);
+  };
 
+  const handleConfirmRegisterWithChannel = async () => {
     try {
-      await registerProfile({ prenom, nom, email, telephone });
-      onNavigateToOtp(telephone);
+      await registerProfile({ prenom, nom, email, telephone }, selectedChannel);
+      setShowChannelModal(false);
+      onNavigateToOtp(telephone, selectedChannel, email);
     } catch (e) {
-      // Handled
+      // Message d'erreur géré dans useAuthStore
     }
   };
 
@@ -266,7 +279,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                       </View>
                     }
                     loading={isLoading}
-                    onPress={handleRegister}
+                    onPress={handleOpenChannelModal}
                     size="md"
                     style={styles.submitBtn}
                   />
@@ -315,6 +328,113 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
           </ScrollView>
         </KeyboardAvoidingView>
       </View>
+
+      {/* MODAL CHOIX DU CANAL OTP (WHATSAPP, SMS OU EMAIL) */}
+      <Modal
+        visible={showChannelModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowChannelModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowChannelModal(false)}
+        >
+          <TouchableWithoutFeedback>
+            <View style={styles.modalContainer}>
+              <View style={styles.modalDragHandle} />
+              
+              <Text style={styles.modalTitle}>Vérification du compte</Text>
+              <Text style={styles.modalSubTitle}>
+                Où souhaitez-vous recevoir votre code d'activation à 6 chiffres ?
+              </Text>
+
+              {/* Options de Canal */}
+              <View style={styles.channelOptionsBox}>
+                {/* 1. WhatsApp / Auto */}
+                <TouchableOpacity
+                  style={[
+                    styles.channelCard,
+                    selectedChannel === 'auto' && styles.channelCardSelected,
+                  ]}
+                  onPress={() => setSelectedChannel('auto')}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.channelIconBox}>
+                    <MessageSquare size={20} color={selectedChannel === 'auto' ? '#059669' : '#64748B'} />
+                  </View>
+                  <View style={styles.channelTextCol}>
+                    <Text style={styles.channelName}>WhatsApp / SMS Auto</Text>
+                    <Text style={styles.channelTarget}>{telephone || '+221 77...'}</Text>
+                  </View>
+                  {selectedChannel === 'auto' && (
+                    <View style={styles.checkBadge}>
+                      <Check size={14} color="#FFFFFF" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+
+                {/* 2. SMS Direct */}
+                <TouchableOpacity
+                  style={[
+                    styles.channelCard,
+                    selectedChannel === 'sms' && styles.channelCardSelected,
+                  ]}
+                  onPress={() => setSelectedChannel('sms')}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.channelIconBox}>
+                    <Smartphone size={20} color={selectedChannel === 'sms' ? '#059669' : '#64748B'} />
+                  </View>
+                  <View style={styles.channelTextCol}>
+                    <Text style={styles.channelName}>SMS Télécom Direct</Text>
+                    <Text style={styles.channelTarget}>{telephone || '+221 77...'}</Text>
+                  </View>
+                  {selectedChannel === 'sms' && (
+                    <View style={styles.checkBadge}>
+                      <Check size={14} color="#FFFFFF" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+
+                {/* 3. Adresse Email */}
+                <TouchableOpacity
+                  style={[
+                    styles.channelCard,
+                    selectedChannel === 'email' && styles.channelCardSelected,
+                  ]}
+                  onPress={() => setSelectedChannel('email')}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.channelIconBox}>
+                    <Mail size={20} color={selectedChannel === 'email' ? '#059669' : '#64748B'} />
+                  </View>
+                  <View style={styles.channelTextCol}>
+                    <Text style={styles.channelName}>Adresse Email</Text>
+                    <Text style={styles.channelTarget}>{email || 'vous@email.com'}</Text>
+                  </View>
+                  {selectedChannel === 'email' && (
+                    <View style={styles.checkBadge}>
+                      <Check size={14} color="#FFFFFF" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              {/* Action Buttons */}
+              <AutoButton
+                title={isLoading ? 'Envoi du code...' : 'Recevoir mon code'}
+                variant="dark"
+                loading={isLoading}
+                onPress={handleConfirmRegisterWithChannel}
+                size="md"
+                style={styles.modalSubmitBtn}
+              />
+            </View>
+          </TouchableWithoutFeedback>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -600,5 +720,92 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#4ADE80',
     textDecorationLine: 'underline',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 24,
+    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+  },
+  modalDragHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E2E8F0',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 20,
+    color: '#041912',
+    textAlign: 'center',
+  },
+  modalSubTitle: {
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 6,
+    marginBottom: 20,
+  },
+  channelOptionsBox: {
+    gap: 12,
+    marginBottom: 24,
+  },
+  channelCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 18,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    gap: 12,
+  },
+  channelCardSelected: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#059669',
+  },
+  channelIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  channelTextCol: {
+    flex: 1,
+  },
+  channelName: {
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 14,
+    color: '#0F172A',
+  },
+  channelTarget: {
+    fontFamily: theme.typography.fontFamily.regular,
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  checkBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#059669',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalSubmitBtn: {
+    minHeight: 50,
+    borderRadius: 25,
+    backgroundColor: '#041912',
   },
 });
