@@ -105,12 +105,16 @@ export const OwnerReservationCard: React.FC<OwnerReservationCardProps> = ({ rese
   const StatusIcon = badge.icon;
   const netAmount = Number(netProprietaire || 0);
 
+  const firstPhoto = Array.isArray(vehicule?.photos) && vehicule.photos.length > 0
+    ? (typeof vehicule.photos[0] === 'string' ? vehicule.photos[0] : (vehicule.photos[0] as any)?.url)
+    : null;
+
   const vehiclePhoto =
     vehicule?.photoUrl ||
-    vehicule?.photos?.[0]?.url ||
-    'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=400&q=80';
+    firstPhoto ||
+    '/images/placeholder-car.jpg';
 
-  const tenantName = locataire?.prenom ? `${locataire.prenom} ${locataire.nom}` : 'Locataire AutoLoc';
+  const tenantName = locataire?.prenom ? `${locataire.prenom} ${locataire.nom || ''}`.trim() : 'Locataire AutoLoc';
 
   return (
     <motion.div

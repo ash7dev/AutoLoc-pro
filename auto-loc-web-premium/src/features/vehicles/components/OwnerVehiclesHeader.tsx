@@ -6,7 +6,6 @@ import {
   Car,
   Plus,
   Search,
-  Sparkles,
   RefreshCw,
   Clock,
   CheckCircle2,
@@ -196,17 +195,12 @@ export const OwnerVehiclesHeader: React.FC<OwnerVehiclesHeaderProps> = ({
       {/* ── Titre, Flotte & Bouton Ajouter ───────────────────────────────── */}
       <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0 space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#4ADE80]/30 bg-[#041912] px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-[#4ADE80]">
-            <Sparkles className="h-3.5 w-3.5 shrink-0" />
-            <span>Espace Hôte · Flotte AutoLoc</span>
-          </div>
-
           <h1 className="font-fraunces text-3xl font-normal leading-[1.1] tracking-tight text-[#041912] sm:text-4xl lg:text-5xl">
             Gestion de votre <span className="text-[#059669]">parc automobile</span>
           </h1>
 
-          <p className="max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
-            Consultez la liste de vos véhicules, ajustez les prix journaliers, gérez les indisponibilités et ajoutez de nouvelles annonces.
+          <p className="max-w-2xl text-xs sm:text-sm leading-relaxed text-slate-500 font-medium">
+            Pilotez la disponibilité, les tarifs et la publication de votre flotte.
           </p>
 
           {/* Badges d'état rapide */}
@@ -263,8 +257,8 @@ export const OwnerVehiclesHeader: React.FC<OwnerVehiclesHeaderProps> = ({
         </div>
       </div>
 
-      {/* ── KPI Tuiles Rapides ────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+      {/* ── KPI Tuiles Rapides (Masqués sur mobile) ────────────────────── */}
+      <div className="hidden sm:grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         <KpiTile
           label="Total Flotte"
           value={stats.total}

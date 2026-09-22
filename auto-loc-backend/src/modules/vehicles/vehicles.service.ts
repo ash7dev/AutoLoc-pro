@@ -2140,7 +2140,7 @@ export class VehiclesService {
       orderBy: { creeLe: 'desc' },
       include: {
         locataire: {
-          select: { id: true, prenom: true, nom: true, telephone: true },
+          select: { id: true, prenom: true, nom: true, telephone: true, avatarUrl: true },
         },
         paiement: {
           select: { statut: true, fournisseur: true },

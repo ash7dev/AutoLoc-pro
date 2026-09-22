@@ -14,13 +14,9 @@ import {
   Archive,
   Star,
   MapPin,
-  Lock,
   Fuel,
   Gauge,
   Users,
-  Calendar,
-  Sparkles,
-  ArrowUpRight,
   ShieldCheck,
 } from 'lucide-react';
 import { Vehicle } from '../types/vehicle.types';
@@ -51,194 +47,231 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
   const statusStr = (vehicle.statut || '').toUpperCase();
 
   let badgeInfo = {
-    label: 'Actif & En ligne',
-    bg: 'bg-emerald-500/90 text-white border-emerald-400/40',
+    label: 'Actif',
+    bg: 'bg-[#0A3D2E]/85 text-[#F1DFB6] border-white/10',
     icon: CheckCircle2,
-    dotColor: 'bg-[#4ADE80]',
+    dot: 'bg-[#4ADE80]',
   };
 
   if (statusStr === 'EN_ATTENTE_VALIDATION') {
     badgeInfo = {
-      label: 'En attente modération',
-      bg: 'bg-amber-500/90 text-white border-amber-400/40',
+      label: 'En modération',
+      bg: 'bg-amber-500/90 text-white border-amber-300/30',
       icon: Clock,
-      dotColor: 'bg-amber-300',
+      dot: 'bg-white',
     };
   } else if (statusStr === 'BROUILLON') {
     badgeInfo = {
       label: 'Brouillon',
-      bg: 'bg-slate-700/90 text-slate-100 border-slate-600/40',
+      bg: 'bg-slate-800/85 text-slate-100 border-white/10',
       icon: FileEdit,
-      dotColor: 'bg-slate-400',
+      dot: 'bg-slate-300',
     };
   } else if (statusStr === 'ARCHIVE') {
     badgeInfo = {
       label: 'Archivé',
-      bg: 'bg-rose-600/90 text-white border-rose-400/40',
+      bg: 'bg-rose-700/85 text-white border-rose-300/20',
       icon: Archive,
-      dotColor: 'bg-rose-300',
+      dot: 'bg-rose-200',
     };
   }
 
   const BadgeIcon = badgeInfo.icon;
   const priceNet = Number(vehicle.prixParJour || 0);
   const formattedPrice = formatCurrency(priceNet);
+  const totalLocations = vehicle.totalLocations || 0;
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
-      className={`group relative flex flex-col overflow-hidden rounded-[28px] border border-slate-200/90 bg-white shadow-[0_4px_20px_-4px_rgba(4,25,18,0.06)] transition-all duration-300 hover:border-slate-300 hover:shadow-[0_20px_40px_-15px_rgba(4,25,18,0.18)] ${className}`}
+      exit={{ opacity: 0, scale: 0.97 }}
+      whileHover={{ y: -3 }}
+      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      className={`group relative overflow-hidden rounded-2xl border border-[#041912]/8 bg-white shadow-[0_1px_2px_rgba(4,25,18,0.04),0_12px_28px_-14px_rgba(4,25,18,0.18)] transition-shadow duration-300 hover:shadow-[0_1px_2px_rgba(4,25,18,0.06),0_20px_36px_-16px_rgba(4,25,18,0.26)] sm:rounded-[26px] ${className}`}
     >
-      {/* ── Photo Banner & Overlays ─────────────────────────────────── */}
-      <div className="relative h-52 w-full overflow-hidden bg-[#041912]">
-        <Image
-          src={photoUrl}
-          alt={`${vehicle.marque} ${vehicle.modele}`}
-          fill
-          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-          unoptimized
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#041912]/90 via-[#041912]/20 to-black/30" />
-
-        {/* Top Floating Badges */}
-        <div className="pointer-events-none absolute left-3.5 right-3.5 top-3.5 z-10 flex items-center justify-between gap-2">
-          {/* Status Badge */}
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold shadow-md backdrop-blur-md ${badgeInfo.bg}`}
-          >
-            <span className={`h-1.5 w-1.5 rounded-full ${badgeInfo.dotColor}`} />
-            <BadgeIcon className="h-3.5 w-3.5" />
-            <span>{badgeInfo.label}</span>
-          </span>
-
-          {/* Active Rental Badge if locked */}
-          {isLocked ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/60 bg-amber-500/95 px-3 py-1 text-[11px] font-bold text-white shadow-md backdrop-blur-md">
-              <span className="h-2 w-2 rounded-full bg-white animate-ping" />
-              <span>Loué (En cours)</span>
-            </span>
-          ) : (
-            Number(vehicle.note || 0) > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-slate-950/70 px-2.5 py-1 text-[11px] font-bold text-amber-300 backdrop-blur-md">
-                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                <span>{Number(vehicle.note).toFixed(1)}</span>
-                {vehicle.totalAvis ? (
-                  <span className="text-white/60">({vehicle.totalAvis})</span>
-                ) : null}
+      {/* 📱 MOBILE — vue liste */}
+      <div className="flex sm:hidden flex-col p-3">
+        <div className="flex items-start gap-3">
+          <div className="relative h-[104px] w-[104px] shrink-0 overflow-hidden rounded-xl bg-[#041912]">
+            <Image
+              src={photoUrl}
+              alt={`${vehicle.marque} ${vehicle.modele}`}
+              fill
+              className="object-cover"
+              unoptimized
+            />
+            <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/55 to-transparent" />
+            {isLocked && (
+              <span className="absolute bottom-1.5 left-1.5 right-1.5 rounded-md bg-amber-500/95 px-1.5 py-0.5 text-center text-[9px] font-bold text-white">
+                En cours de location
               </span>
-            )
-          )}
+            )}
+          </div>
+
+          <div className="flex flex-1 flex-col justify-between min-w-0 min-h-[104px]">
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${badgeInfo.dot}`} />
+                <span className="text-[10px] font-semibold text-slate-500">{badgeInfo.label}</span>
+              </div>
+              <h3
+                className="mt-0.5 text-[17px] leading-tight text-[#041912] truncate"
+                style={{ fontFamily: SERIF }}
+              >
+                {vehicle.marque} {vehicle.modele}
+              </h3>
+              <p className="mt-0.5 text-[11px] text-slate-500">
+                {vehicle.annee} · {vehicle.type}
+                {vehicle.immatriculation ? ` · ${vehicle.immatriculation}` : ''}
+              </p>
+            </div>
+
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[15px] font-semibold text-[#0A3D2E]" style={{ fontFamily: SERIF }}>
+                {formattedPrice}
+                <span className="ml-1 text-[10px] font-sans font-normal text-slate-400">FCFA / jour</span>
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Bottom Banner Info: Immatriculation & Ville */}
-        <div className="absolute bottom-3.5 left-4 right-4 z-10 flex items-center justify-between text-white">
-          <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-100">
-            <MapPin className="h-3.5 w-3.5 text-[#4ADE80]" />
-            <span>{vehicle.ville || 'Dakar'}</span>
-          </span>
-
-          {vehicle.immatriculation && (
-            <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-[#041912]/90 px-2.5 py-1 font-mono text-[11px] font-bold tracking-wider text-[#4ADE80] shadow-xs backdrop-blur-xs">
-              <ShieldCheck className="h-3 w-3" />
-              <span>{vehicle.immatriculation}</span>
-            </span>
-          )}
+        <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-2.5">
+          <Link
+            href={`/dashboard/vehicles/${vehicle.id}`}
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 py-2 text-xs font-semibold text-slate-700 active:bg-slate-50"
+          >
+            <Eye className="h-3.5 w-3.5 text-slate-400" />
+            Fiche & réso
+          </Link>
+          <Link
+            href={`/dashboard/vehicles/${vehicle.id}/edit`}
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#041912] py-2 text-xs font-semibold text-[#F1DFB6] active:bg-[#0A3D2E]"
+          >
+            <Edit className="h-3.5 w-3.5 text-[#4ADE80]" />
+            Modifier
+          </Link>
         </div>
       </div>
 
-      {/* ── Content Section ────────────────────────────────────────── */}
-      <div className="flex flex-1 flex-col p-5">
-        {/* Title & Type */}
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3
-              className="text-xl font-normal leading-tight text-[#041912]"
-              style={{ fontFamily: SERIF }}
+      {/* 💻 DESKTOP — vue carte */}
+      <div className="hidden sm:flex sm:flex-col">
+        {/* Photo */}
+        <div className="relative h-48 w-full overflow-hidden bg-[#041912]">
+          <Image
+            src={photoUrl}
+            alt={`${vehicle.marque} ${vehicle.modele}`}
+            fill
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+            unoptimized
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#041912]/85 via-[#041912]/10 to-transparent" />
+
+          <div className="pointer-events-none absolute left-4 right-4 top-4 flex items-start justify-between gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold shadow-sm backdrop-blur-md ${badgeInfo.bg}`}
             >
+              <BadgeIcon className="h-3 w-3" />
+              {badgeInfo.label}
+            </span>
+
+            {isLocked ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-500/95 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                En cours
+              </span>
+            ) : (
+              Number(vehicle.note || 0) > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-amber-300 backdrop-blur-md">
+                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                  {Number(vehicle.note).toFixed(1)}
+                  {vehicle.totalAvis ? (
+                    <span className="text-white/55">({vehicle.totalAvis})</span>
+                  ) : null}
+                </span>
+              )
+            )}
+          </div>
+
+          <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
+            <span className="flex items-center gap-1.5 text-[13px] font-medium">
+              <MapPin className="h-3.5 w-3.5 text-[#4ADE80]" />
+              {vehicle.ville || 'Dakar'}
+            </span>
+            {vehicle.immatriculation && (
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-white/15 bg-[#041912]/70 px-2 py-1 font-mono text-[11px] tracking-wider text-[#F1DFB6]/90 backdrop-blur-sm">
+                <ShieldCheck className="h-3 w-3 text-[#4ADE80]" />
+                {vehicle.immatriculation}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Contenu */}
+        <div className="flex flex-1 flex-col px-5 pb-5 pt-4">
+          <div className="flex items-start justify-between gap-4">
+            <h3 className="text-[22px] leading-tight text-[#041912]" style={{ fontFamily: SERIF }}>
               {vehicle.marque} {vehicle.modele}
             </h3>
-            <p className="mt-1 text-xs font-medium text-slate-500">
-              Année {vehicle.annee} · Catégorie <span className="font-semibold text-slate-700">{vehicle.type}</span>
-            </p>
-          </div>
-
-          <div className="shrink-0 rounded-2xl bg-emerald-50 px-3 py-1.5 text-right border border-emerald-100">
-            <span className="block text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
-              Tarif / jour
-            </span>
-            <span className="font-fraunces text-lg font-bold text-[#0A3D2E]">
-              {formattedPrice} <span className="text-xs font-sans text-slate-600">FCFA</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Technical Features Grid */}
-        <div className="mt-4 grid grid-cols-3 divide-x divide-slate-100 rounded-2xl bg-slate-50/80 border border-slate-100 py-2.5 text-center text-xs text-slate-600">
-          <div className="flex items-center justify-center gap-1.5">
-            <Gauge className="h-3.5 w-3.5 text-[#059669]" />
-            <span className="font-medium">
-              {vehicle.transmission === 'AUTOMATIQUE' ? 'Auto' : 'Manuel'}
-            </span>
-          </div>
-          <div className="flex items-center justify-center gap-1.5">
-            <Fuel className="h-3.5 w-3.5 text-[#059669]" />
-            <span className="font-medium">{vehicle.carburant || 'Essence'}</span>
-          </div>
-          <div className="flex items-center justify-center gap-1.5">
-            <Users className="h-3.5 w-3.5 text-[#059669]" />
-            <span className="font-medium">{vehicle.nombrePlaces || 5} places</span>
-          </div>
-        </div>
-
-        {/* Performance KPI Row */}
-        <div className="mt-4 flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-3 text-xs">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-              <Car className="h-4 w-4" />
-            </div>
-            <div>
-              <span className="block text-[10px] font-semibold uppercase text-slate-400">
-                Total Locations
+            <div className="shrink-0 text-right">
+              <span className="block text-[20px] font-semibold leading-tight text-[#0A3D2E]" style={{ fontFamily: SERIF }}>
+                {formattedPrice}
               </span>
-              <span className="font-bold text-slate-900">
-                {vehicle.totalLocations || 0} réservation{vehicle.totalLocations && vehicle.totalLocations > 1 ? 's' : ''}
-              </span>
+              <span className="text-[11px] text-slate-400">FCFA / jour</span>
             </div>
           </div>
+          <p className="mt-1 text-[12.5px] text-slate-500">
+            {vehicle.annee} · {vehicle.type}
+          </p>
 
-          <div className="text-right">
-            <span className="block text-[10px] font-semibold uppercase text-slate-400">
-              Disponibilité
+          {/* Caractéristiques — ligne fine, pas de bloc encadré */}
+          <div className="mt-3.5 flex items-center gap-4 border-y border-slate-100 py-2.5 text-[12.5px] text-slate-600">
+            <span className="flex items-center gap-1.5">
+              <Gauge className="h-3.5 w-3.5 text-[#059669]" />
+              {vehicle.transmission === 'AUTOMATIQUE' ? 'Automatique' : 'Manuelle'}
             </span>
-            <span className="inline-flex items-center gap-1 font-bold text-emerald-700">
+            <span className="h-3 w-px bg-slate-200" />
+            <span className="flex items-center gap-1.5">
+              <Fuel className="h-3.5 w-3.5 text-[#059669]" />
+              {vehicle.carburant || 'Essence'}
+            </span>
+            <span className="h-3 w-px bg-slate-200" />
+            <span className="flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5 text-[#059669]" />
+              {vehicle.nombrePlaces || 5} places
+            </span>
+          </div>
+
+          {/* Ligne de performance, intégrée plutôt qu'encadrée */}
+          <div className="mt-3 flex items-center justify-between text-[12.5px]">
+            <span className="flex items-center gap-1.5 text-slate-500">
+              <Car className="h-3.5 w-3.5 text-slate-400" />
+              {totalLocations} réservation{totalLocations > 1 ? 's' : ''} au total
+            </span>
+            <span className="flex items-center gap-1.5 font-medium text-[#0A3D2E]">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Ouvert à la résa
+              Ouvert à la réservation
             </span>
           </div>
-        </div>
 
-        {/* Action Buttons Bar */}
-        <div className="mt-5 grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-100">
-          <Link
-            href={`/dashboard/vehicles/${vehicle.id}`}
-            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200/90 bg-slate-50 px-3.5 py-2.5 text-xs font-bold text-slate-700 transition-all hover:border-slate-300 hover:bg-slate-100 active:scale-[0.98]"
-          >
-            <Eye className="h-3.5 w-3.5 text-slate-500" />
-            <span>Fiche & Calendrier</span>
-          </Link>
-
-          <Link
-            href={`/dashboard/vehicles/${vehicle.id}/edit`}
-            className="inline-flex items-center justify-center gap-1.5 rounded-2xl bg-[#041912] px-3.5 py-2.5 text-xs font-bold text-[#F1DFB6] shadow-sm transition-all hover:bg-[#0A3D2E] active:scale-[0.98]"
-          >
-            <Edit className="h-3.5 w-3.5 text-[#4ADE80]" />
-            <span>Modifier l’annonce</span>
-          </Link>
+          {/* Actions */}
+          <div className="mt-4 grid grid-cols-2 gap-2.5">
+            <Link
+              href={`/dashboard/vehicles/${vehicle.id}`}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 py-2.5 text-[13px] font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+            >
+              <Eye className="h-3.5 w-3.5 text-slate-400" />
+              Fiche & calendrier
+            </Link>
+            <Link
+              href={`/dashboard/vehicles/${vehicle.id}/edit`}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#041912] py-2.5 text-[13px] font-semibold text-[#F1DFB6] shadow-sm transition-colors hover:bg-[#0A3D2E]"
+            >
+              <Edit className="h-3.5 w-3.5 text-[#4ADE80]" />
+              Modifier l'annonce
+            </Link>
+          </div>
         </div>
       </div>
     </motion.div>

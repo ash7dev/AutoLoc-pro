@@ -193,8 +193,8 @@ export const OwnerVehiclesView: React.FC = () => {
           </div>
         </motion.div>
       ) : (
-        /* 4. Grille des véhicules */
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        /* 4. Grille des véhicules (Mode Liste sur Mobile < sm, Grille sur Desktop >= sm) */
+        <div className="grid grid-cols-1 gap-3.5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence mode="popLayout">
             {filteredVehicles.map((vehicle) => (
               <OwnerVehicleCard

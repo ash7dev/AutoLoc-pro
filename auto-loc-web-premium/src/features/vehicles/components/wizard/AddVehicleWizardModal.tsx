@@ -50,6 +50,7 @@ const SHORT_STEP_NAMES = [
 export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
   isOpen,
   onClose,
+  onSuccess,
   onVehicleCreated,
   onVehicleUpdated,
   mode = 'CREATE',
@@ -458,11 +459,16 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
           <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/10 sm:border-slate-100 bg-white/5 sm:bg-white backdrop-blur-md shrink-0">
             <button
               type="button"
-              onClick={handleBack}
+              onClick={isEditMode ? handleCloseAttempt : handleBack}
               disabled={submitting}
               className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 sm:border-slate-200 bg-white/10 sm:bg-slate-50 text-white sm:text-slate-700 hover:bg-white/20 sm:hover:bg-slate-100 transition-all"
+              aria-label={isEditMode ? "Fermer l'édition" : "Retour"}
             >
-              <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />
+              {isEditMode ? (
+                <X className="h-5 w-5" strokeWidth={2.5} />
+              ) : (
+                <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />
+              )}
             </button>
 
             {isEditMode ? (

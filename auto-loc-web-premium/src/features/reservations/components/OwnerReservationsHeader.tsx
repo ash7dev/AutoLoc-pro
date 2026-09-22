@@ -6,14 +6,13 @@ import {
   CalendarCheck2,
   Clock,
   Car,
-  CheckCircle2,
   XCircle,
   RefreshCw,
   Search,
-  Sparkles,
   ShieldCheck,
   AlertCircle,
   CalendarDays,
+  CheckCircle2,
 } from 'lucide-react';
 
 export interface OwnerReservationStats {
@@ -124,8 +123,8 @@ const KpiTile: React.FC<KpiTileProps> = ({ label, value, icon: Icon, active, acc
       onClick={onClick}
       aria-pressed={active}
       className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl border p-4 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#059669] sm:p-5 ${active
-          ? `${a.activeBg} ${a.activeBorder} ${a.activeGlow} text-white`
-          : 'border-slate-200/80 bg-white text-slate-900 shadow-[0_1px_2px_rgba(4,25,18,0.04)] hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_8px_20px_-10px_rgba(4,25,18,0.15)]'
+        ? `${a.activeBg} ${a.activeBorder} ${a.activeGlow} text-white`
+        : 'border-slate-200/80 bg-white text-slate-900 shadow-[0_1px_2px_rgba(4,25,18,0.04)] hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_8px_20px_-10px_rgba(4,25,18,0.15)]'
         }`}
     >
       {/* Lueur décorative subtile en fond, uniquement à l'état actif */}
@@ -174,18 +173,12 @@ export const OwnerReservationsHeader: React.FC<OwnerReservationsHeaderProps> = (
       {/* ── Titre & statut de la flotte ─────────────────────────────────── */}
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#4ADE80]/30 bg-[#041912] px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-[#4ADE80]">
-            <Sparkles className="h-3.5 w-3.5 shrink-0" />
-            <span>Espace Hôte · AutoLoc Premium</span>
-          </div>
-
           <h1 className="font-fraunces text-3xl font-normal leading-[1.1] tracking-tight text-[#041912] sm:text-4xl lg:text-5xl">
             Gestion des <span className="text-[#059669]">réservations</span>
           </h1>
 
-          <p className="max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
-            Suivez en temps réel les demandes de location pour votre flotte, validez les remises de
-            clés et contrôlez l’historique des départs et retours.
+          <p className="max-w-2xl text-xs sm:text-sm leading-relaxed text-slate-500 font-medium">
+            Suivez les demandes en temps réel, validez les remises de clés et contrôlez les locations de votre flotte.
           </p>
 
           {/* Alerte contextuelle : une seule ligne, un seul signal, pas de double animation */}
@@ -222,8 +215,8 @@ export const OwnerReservationsHeader: React.FC<OwnerReservationsHeaderProps> = (
         )}
       </div>
 
-      {/* ── KPI / filtres rapides ───────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+      {/* ── KPI / filtres rapides (Masqués sur mobile) ────────────────────── */}
+      <div className="hidden sm:grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         <KpiTile
           label="Total"
           value={stats.total}

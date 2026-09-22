@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { AnimatePresence } from 'framer-motion';
-import { Calendar, Car } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar, Car, ChevronDown, History } from 'lucide-react';
 import { OwnerReservationItem } from '../../../core/api/reservationsApi';
 import { OwnerReservationCard } from './OwnerReservationCard';
 
@@ -22,12 +22,19 @@ const STATUS_LABELS: Record<string, string> = {
   ANNULEE: 'annulée',
 };
 
+const IS_HISTORY_STATUS = (statut: string) => {
+  const s = (statut || '').toUpperCase();
+  return s === 'TERMINEE' || s === 'ANNULEE' || s === 'EXPIREE' || s === 'LITIGE';
+};
+
 export const OwnerReservationsList: React.FC<OwnerReservationsListProps> = ({
   reservations,
   isLoading = false,
   selectedStatus = 'ALL',
   searchQuery = '',
 }) => {
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
   const filteredList = (reservations || []).filter((item) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
@@ -100,13 +107,114 @@ export const OwnerReservationsList: React.FC<OwnerReservationsListProps> = ({
     );
   }
 
+  // If user selected a specific historical status (TERMINEE or ANNULEE), show directly without accordion
+  if (selectedStatus === 'TERMINEE' || selectedStatus === 'ANNULEE') {
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <AnimatePresence initial={false}>
+          {filteredList.map((item) => (
+            <OwnerReservationCard key={item.id} reservation={item} />
+          ))}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // Separate active vs historical reservations
+  const activeReservations = filteredList.filter((item) => !IS_HISTORY_STATUS(item.statut));
+  const historyReservations = filteredList.filter((item) => IS_HISTORY_STATUS(item.statut));
+
+  // If there are no historical reservations, just show active reservations directly
+  if (historyReservations.length === 0) {
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <AnimatePresence initial={false}>
+          {activeReservations.map((item) => (
+            <OwnerReservationCard key={item.id} reservation={item} />
+          ))}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <AnimatePresence initial={false}>
-        {filteredList.map((item) => (
-          <OwnerReservationCard key={item.id} reservation={item} />
-        ))}
-      </AnimatePresence>
+    <div className="space-y-8">
+      {/* ── Active Reservations Section ──────────────────────────────── */}
+      {activeReservations.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Réservations actives & à venir ({activeReservations.length})
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <AnimatePresence initial={false}>
+              {activeReservations.map((item) => (
+                <OwnerReservationCard key={item.id} reservation={item} />
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
+
+      {/* ── Accordéon Historique ─────────────────────────────────────── */}
+      <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xs overflow-hidden transition-all duration-300">
+        <button
+          type="button"
+          onClick={() => setIsHistoryOpen((prev) => !prev)}
+          className="flex w-full items-center justify-between p-5 text-left transition-colors hover:bg-slate-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#041912]/5 text-[#0A3D2E]">
+              <History className="h-5 w-5 text-[#059669]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-fraunces text-base font-normal text-[#041912] sm:text-lg">
+                  Historique des réservations
+                </h3>
+                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-700">
+                  {historyReservations.length}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">
+                Réservations terminées, annulées ou archivées
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="hidden text-xs font-semibold text-slate-500 sm:inline">
+              {isHistoryOpen ? 'Masquer' : 'Afficher l’historique'}
+            </span>
+            <div
+              className={`flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-transform duration-300 ${
+                isHistoryOpen ? 'rotate-180' : ''
+              }`}
+            >
+              <ChevronDown className="h-4 w-4" />
+            </div>
+          </div>
+        </button>
+
+        <AnimatePresence>
+          {isHistoryOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="border-t border-slate-100 bg-slate-50/50 p-4 sm:p-6"
+            >
+              <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {historyReservations.map((item) => (
+                  <OwnerReservationCard key={item.id} reservation={item} />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

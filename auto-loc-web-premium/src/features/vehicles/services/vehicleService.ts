@@ -105,5 +105,38 @@ export const vehicleService = {
       };
     }
   },
+
+  /**
+   * Indisponibilités & Dates bloquées
+   */
+  async getIndisponibilites(id: string): Promise<any[]> {
+    return apiClient.get<any[]>(`/vehicles/${id}/indisponibilites`);
+  },
+
+  async createIndisponibilite(id: string, payload: { dateDebut: string; dateFin: string; motif?: string; type?: string }): Promise<any> {
+    return apiClient.post<any>(`/vehicles/${id}/indisponibilites`, payload);
+  },
+
+  async deleteIndisponibilite(id: string, indispoId: string): Promise<any> {
+    return apiClient.delete<any>(`/vehicles/${id}/indisponibilites/${indispoId}`);
+  },
+
+  /**
+   * Réservations d'un véhicule spécifique
+   */
+  async getVehicleReservations(id: string): Promise<any[]> {
+    return apiClient.get<any[]>(`/vehicles/${id}/reservations`);
+  },
+
+  /**
+   * Archiver ou Supprimer un véhicule
+   */
+  async archiveVehicle(id: string): Promise<any> {
+    return apiClient.delete<any>(`/vehicles/${id}`);
+  },
+
+  async purgeVehicle(id: string): Promise<any> {
+    return apiClient.delete<any>(`/vehicles/${id}/purge`);
+  },
 };
 

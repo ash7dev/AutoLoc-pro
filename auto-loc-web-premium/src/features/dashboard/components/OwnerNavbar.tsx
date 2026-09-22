@@ -147,10 +147,15 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
   ];
 
   const isReservationDetailPage = /^\/dashboard\/reservations\/[^/]+/.test(pathname);
+  const isVehicleDetailPage = /^\/dashboard\/vehicles\/[^/]+/.test(pathname);
+  const isReservationsPage = pathname.startsWith('/dashboard/reservations');
+  const isVehiclesPage = pathname.startsWith('/dashboard/vehicles');
+  const hideHeaderOnMobile = isReservationsPage || isVehiclesPage;
+  const hideBottomNavOnMobile = isReservationDetailPage || isVehicleDetailPage;
 
   return (
     <>
-      <header className={`sticky top-3 z-40 w-full px-3 sm:px-6 lg:px-8 pointer-events-none ${isReservationDetailPage ? 'hidden sm:block' : ''}`}>
+      <header className={`sticky top-3 z-40 w-full px-3 sm:px-6 lg:px-8 pointer-events-none ${hideHeaderOnMobile ? 'hidden sm:block' : ''}`}>
         <div className="pointer-events-auto mx-auto flex h-16 max-w-7xl items-center justify-between rounded-full border border-slate-900/10 bg-white px-4 shadow-lg shadow-slate-950/5 lg:px-8">
           {/* Logo à gauche */}
           <Link
@@ -344,8 +349,8 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
         </div>
       </header>
 
-      {/* Navigation Basse Mobile (Dock flottant vert forêt pour mobile, masqué sur la fiche détail réservation) */}
-      {!isReservationDetailPage && <OwnerMobileBottomNav />}
+      {/* Navigation Basse Mobile (Dock flottant vert forêt pour mobile, masqué sur la fiche détail réservation/véhicule) */}
+      {!hideBottomNavOnMobile && <OwnerMobileBottomNav />}
     </>
   );
 };
