@@ -26,6 +26,7 @@ const orangeMoneyLogo = require('../../../../assets/images/payment/orange_money.
 interface OwnerWalletTransactionsHistoryCardProps {
   transactions: OwnerWalletTransaction[];
   selectedCurrency: CurrencyCode;
+  onSelectTransaction?: (tx: OwnerWalletTransaction) => void;
 }
 
 type FilterTab = 'ALL' | 'CREDIT' | 'DEBIT';
@@ -33,6 +34,7 @@ type FilterTab = 'ALL' | 'CREDIT' | 'DEBIT';
 export const OwnerWalletTransactionsHistoryCard: React.FC<OwnerWalletTransactionsHistoryCardProps> = ({
   transactions,
   selectedCurrency,
+  onSelectTransaction,
 }) => {
   const [activeTab, setActiveTab] = useState<FilterTab>('ALL');
 
@@ -127,7 +129,12 @@ export const OwnerWalletTransactionsHistoryCard: React.FC<OwnerWalletTransaction
                 : 'Gains de location';
 
             return (
-              <View key={tx.id} style={styles.txRow}>
+              <TouchableOpacity
+                key={tx.id}
+                style={styles.txRow}
+                activeOpacity={0.7}
+                onPress={() => onSelectTransaction?.(tx)}
+              >
                 {/* Icône de statut */}
                 <View
                   style={[
@@ -204,7 +211,7 @@ export const OwnerWalletTransactionsHistoryCard: React.FC<OwnerWalletTransaction
                     </Text>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           })}
         </View>

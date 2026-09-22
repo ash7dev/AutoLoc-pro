@@ -9,11 +9,12 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useAppStore } from '../../../core/store/useAppStore';
 import { PayoutModal } from '../components/PayoutModal';
+import { TransactionReceiptModal } from '../components/TransactionReceiptModal';
 import { OwnerWalletGlassHeroHeader } from '../components/OwnerWalletGlassHeroHeader';
 import { OwnerMobileMoneyAccountsCard } from '../components/OwnerMobileMoneyAccountsCard';
 import { OwnerWalletTransactionsHistoryCard } from '../components/OwnerWalletTransactionsHistoryCard';
 import { OwnerWalletSkeleton } from '../components/OwnerWalletSkeleton';
-import { OwnerWalletData } from '../api/ownerApi';
+import { OwnerWalletData, OwnerWalletTransaction } from '../api/ownerApi';
 import { useOwnerWallet, OWNER_WALLET_QUERY_KEY } from '../hooks/useOwnerWallet';
 
 interface OwnerWalletScreenProps {
@@ -33,6 +34,7 @@ export const OwnerWalletScreen: React.FC<OwnerWalletScreenProps> = ({
 
   const [payoutModalVisible, setPayoutModalVisible] = useState(false);
   const [selectedPayoutMethod, setSelectedPayoutMethod] = useState<'WAVE' | 'ORANGE_MONEY'>('WAVE');
+  const [selectedTransaction, setSelectedTransaction] = useState<OwnerWalletTransaction | null>(null);
 
   const handleOpenPayout = (method: 'WAVE' | 'ORANGE_MONEY' = 'WAVE') => {
     setSelectedPayoutMethod(method);
@@ -110,6 +112,7 @@ export const OwnerWalletScreen: React.FC<OwnerWalletScreenProps> = ({
         <OwnerWalletTransactionsHistoryCard
           transactions={walletData?.transactions || []}
           selectedCurrency={selectedCurrency}
+          onSelectTransaction={(tx) => setSelectedTransaction(tx)}
         />
       </ScrollView>
 
@@ -121,6 +124,13 @@ export const OwnerWalletScreen: React.FC<OwnerWalletScreenProps> = ({
         initialMethod={selectedPayoutMethod}
         onClose={() => setPayoutModalVisible(false)}
         onPayoutSuccess={handlePayoutSuccess}
+      />
+
+      <TransactionReceiptModal
+        visible={selectedTransaction !== null}
+        transaction={selectedTransaction}
+        selectedCurrency={selectedCurrency}
+        onClose={() => setSelectedTransaction(null)}
       />
     </View>
   );

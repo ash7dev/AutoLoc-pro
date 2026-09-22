@@ -155,7 +155,7 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
 
   return (
     <>
-      <header className={`sticky top-3 z-40 w-full px-3 sm:px-6 lg:px-8 pointer-events-none ${hideHeaderOnMobile ? 'hidden sm:block' : ''}`}>
+      <header className="hidden sm:block sticky top-3 z-40 w-full px-3 sm:px-6 lg:px-8 pointer-events-none">
         <div className="pointer-events-auto mx-auto flex h-16 max-w-7xl items-center justify-between rounded-full border border-slate-900/10 bg-white px-4 shadow-lg shadow-slate-950/5 lg:px-8">
           {/* Logo à gauche */}
           <Link

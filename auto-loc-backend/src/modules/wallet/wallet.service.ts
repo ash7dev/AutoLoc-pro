@@ -264,6 +264,102 @@ export class WalletService {
     };
   }
 
+  async getLastWithdrawalAccounts(user: RequestUser) {
+    const utilisateur = await this.prisma.utilisateur.findUnique({
+      where: { userId: user.sub },
+      select: { id: true },
+    });
+    if (!utilisateur) return { wave: null, orangeMoney: null };
+
+    const wallet = await this.prisma.wallet.findUnique({
+      where: { utilisateurId: utilisateur.id },
+      select: { id: true },
+    });
+    if (!wallet) return { wave: null, orangeMoney: null };
+
+    const [lastWave, lastOm] = await Promise.all([
+      this.prisma.retrait.findFirst({
+        where: { walletId: wallet.id, methode: 'WAVE' },
+        orderBy: { demandeeLe: 'desc' },
+        select: { destinataire: true },
+      }),
+      this.prisma.retrait.findFirst({
+        where: { walletId: wallet.id, methode: 'ORANGE_MONEY' },
+        orderBy: { demandeeLe: 'desc' },
+        select: { destinataire: true },
+      }),
+    ]);
+
+    return {
+      wave: lastWave?.destinataire || null,
+      orangeMoney: lastOm?.destinataire || null,
+    };
+  }
+
+  async getTransactions(
+    user: RequestUser,
+    params: { page?: number; limit?: number; type?: string; sens?: string },
+  ) {
+    const utilisateur = await this.prisma.utilisateur.findUnique({
+      where: { userId: user.sub },
+      select: { id: true },
+    });
+    if (!utilisateur) throw new NotFoundException('Profil incomplet');
+
+    const wallet = await this.prisma.wallet.findUnique({
+      where: { utilisateurId: utilisateur.id },
+      select: { id: true },
+    });
+    if (!wallet) return { data: [], total: 0, page: 1, limit: 20 };
+
+    const page = Math.max(1, Number(params.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(params.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const whereClause: Prisma.TransactionWalletWhereInput = {
+      walletId: wallet.id,
+      ...(params.sens ? { sens: params.sens as SensTransaction } : {}),
+      ...(params.type ? { type: params.type as TypeTransactionWallet } : {}),
+    };
+
+    const [total, transactions] = await Promise.all([
+      this.prisma.transactionWallet.count({ where: whereClause }),
+      this.prisma.transactionWallet.findMany({
+        where: whereClause,
+        orderBy: { creeLe: 'desc' },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          type: true,
+          sens: true,
+          montant: true,
+          soldeApres: true,
+          creeLe: true,
+          reservationId: true,
+          fournisseur: true,
+        },
+      }),
+    ]);
+
+    return {
+      data: transactions.map((t) => ({
+        id: t.id,
+        type: t.type,
+        sens: t.sens,
+        montant: t.montant.toString(),
+        soldeApres: t.soldeApres.toString(),
+        creeLe: t.creeLe,
+        reservationId: t.reservationId ?? undefined,
+        fournisseur: t.fournisseur ?? undefined,
+      })),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
   async requestWithdrawal(user: RequestUser, montant: number, methode: 'WAVE' | 'ORANGE_MONEY', numeroDestinataire: string) {
     const utilisateur = await this.prisma.utilisateur.findUnique({
       where: { userId: user.sub },
@@ -271,77 +367,68 @@ export class WalletService {
     });
     if (!utilisateur) throw new NotFoundException('Profil incomplet');
 
-    const wallet = await this.prisma.wallet.findUnique({
-      where: { utilisateurId: utilisateur.id },
-      select: { id: true, soldeDisponible: true },
-    });
-    if (!wallet) throw new NotFoundException('Portefeuille introuvable');
-
     const amount = new Prisma.Decimal(montant);
     if (amount.lte(0)) throw new BadRequestException('Montant invalide');
 
-    // ⚠️ IMPORTANT : Calculer le solde retirable après déduction des pénalités
-    const penalites = await this.prisma.penaliteProprietaire.findMany({
-      where: {
-        utilisateurId: utilisateur.id,
-        preleveleLe: null, // Pas encore prélevées
-      },
-    });
-
-    const totalPenalites = penalites.reduce(
-      (sum, p) => sum.add(p.montant),
-      new Prisma.Decimal(0),
-    );
-
-    // Calculer le solde retirable (solde - pénalités)
-    const soldeRetirable = Prisma.Decimal.max(
-      new Prisma.Decimal(0),
-      wallet.soldeDisponible.sub(totalPenalites),
-    );
-
-    if (amount.gt(soldeRetirable)) {
-      throw new BadRequestException(
-        `Montant de retrait trop élevé. Solde retirable : ${soldeRetirable.toString()} FCFA (Solde : ${wallet.soldeDisponible.toString()} FCFA - Pénalités en attente : ${totalPenalites.toString()} FCFA)`,
-      );
-    }
-
-    // Calculer le solde disponible pour le fournisseur sélectionné
-    const allTransactions = await this.prisma.transactionWallet.findMany({
-      where: { walletId: wallet.id },
-      select: {
-        montant: true,
-        sens: true,
-        fournisseur: true,
-      },
-    });
-
-    let soldeProvider = new Prisma.Decimal(0);
     const targetProvider = methode === 'WAVE' ? 'WAVE' : 'ORANGE_MONEY';
 
-    for (const tx of allTransactions) {
-      const multiplier = tx.sens === SensTransaction.CREDIT ? 1 : -1;
-      const txAmount = tx.montant.mul(multiplier);
+    // 🔒 TRANSACTION ATOMIQUE COMPLÈTE : Verrouillage et vérification du solde à l'intérieur
+    const { retrait, transactionWalletId, walletId } = await this.prisma.$transaction(async (tx) => {
+      const wallet = await tx.wallet.findUnique({
+        where: { utilisateurId: utilisateur.id },
+        select: { id: true, soldeDisponible: true },
+      });
+      if (!wallet) throw new NotFoundException('Portefeuille introuvable');
 
-      if (tx.fournisseur === targetProvider) {
-        soldeProvider = soldeProvider.add(txAmount);
-      }
-    }
-
-    // Vérifier que le solde du fournisseur est suffisant
-    if (amount.gt(soldeProvider)) {
-      const methodeLabel = methode === 'WAVE' ? 'Wave' : 'Orange Money';
-      throw new BadRequestException(
-        `Solde ${methodeLabel} insuffisant. Disponible : ${soldeProvider.toString()} FCFA`,
+      // 1. Calcul des pénalités non prélevées
+      const penalites = await tx.penaliteProprietaire.findMany({
+        where: { utilisateurId: utilisateur.id, preleveleLe: null },
+      });
+      const totalPenalites = penalites.reduce(
+        (sum, p) => sum.add(p.montant),
+        new Prisma.Decimal(0),
       );
-    }
 
-    // Créer la demande de retrait et débiter le wallet
-    const { retrait, transactionWalletId } = await this.prisma.$transaction(async (tx) => {
+      // 2. Solde retirable atomique
+      const soldeRetirable = Prisma.Decimal.max(
+        new Prisma.Decimal(0),
+        wallet.soldeDisponible.sub(totalPenalites),
+      );
+
+      if (amount.gt(soldeRetirable)) {
+        throw new BadRequestException(
+          `Montant de retrait trop élevé. Solde retirable : ${soldeRetirable.toString()} FCFA (Solde : ${wallet.soldeDisponible.toString()} FCFA - Pénalités : ${totalPenalites.toString()} FCFA)`,
+        );
+      }
+
+      // 3. Calcul du solde par fournisseur atomique
+      const allTransactions = await tx.transactionWallet.findMany({
+        where: { walletId: wallet.id },
+        select: { montant: true, sens: true, fournisseur: true },
+      });
+
+      let soldeProvider = new Prisma.Decimal(0);
+      for (const t of allTransactions) {
+        const multiplier = t.sens === SensTransaction.CREDIT ? 1 : -1;
+        if (t.fournisseur === targetProvider) {
+          soldeProvider = soldeProvider.add(t.montant.mul(multiplier));
+        }
+      }
+
+      if (amount.gt(soldeProvider)) {
+        const methodeLabel = methode === 'WAVE' ? 'Wave' : 'Orange Money';
+        throw new BadRequestException(
+          `Solde ${methodeLabel} insuffisant. Disponible : ${soldeProvider.toString()} FCFA`,
+        );
+      }
+
+      // 4. Débit et créations
       const newSolde = wallet.soldeDisponible.sub(amount);
       await tx.wallet.update({
         where: { id: wallet.id },
         data: { soldeDisponible: newSolde },
       });
+
       const txWallet = await tx.transactionWallet.create({
         data: {
           walletId: wallet.id,
@@ -352,6 +439,7 @@ export class WalletService {
           fournisseur: targetProvider,
         },
       });
+
       const retraitResult = await tx.retrait.create({
         data: {
           walletId: wallet.id,
@@ -360,7 +448,8 @@ export class WalletService {
           destinataire: numeroDestinataire,
         },
       });
-      return { retrait: retraitResult, transactionWalletId: txWallet.id };
+
+      return { retrait: retraitResult, transactionWalletId: txWallet.id, walletId: wallet.id };
     });
 
     const retraitId = retrait.id;
@@ -427,7 +516,7 @@ export class WalletService {
         try {
           await this.prisma.$transaction([
             this.prisma.wallet.update({
-              where: { id: wallet.id },
+              where: { id: walletId },
               data: { soldeDisponible: { increment: amount } },
             }),
             this.prisma.retrait.update({

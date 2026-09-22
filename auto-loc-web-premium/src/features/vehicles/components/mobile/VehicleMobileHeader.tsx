@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Edit3, Share2, CheckCircle2, Clock } from 'lucide-react';
+import { ChevronLeft, Edit3, CheckCircle2, Clock, Trash2 } from 'lucide-react';
 
 export interface VehicleMobileHeaderProps {
   vehicleId?: string;
@@ -12,7 +12,7 @@ export interface VehicleMobileHeaderProps {
   statut?: string;
   onBack?: () => void;
   onEdit?: () => void;
-  onShare?: () => void;
+  onDelete?: () => void;
 }
 
 export const VehicleMobileHeader: React.FC<VehicleMobileHeaderProps> = ({
@@ -23,10 +23,9 @@ export const VehicleMobileHeader: React.FC<VehicleMobileHeaderProps> = ({
   statut,
   onBack,
   onEdit,
-  onShare,
+  onDelete,
 }) => {
   const router = useRouter();
-  const [copied, setCopied] = useState(false);
 
   const title = [marque, modele].filter(Boolean).join(' ') || 'Fiche Véhicule';
 
@@ -45,16 +44,6 @@ export const VehicleMobileHeader: React.FC<VehicleMobileHeaderProps> = ({
       onEdit();
     } else if (vehicleId) {
       router.push(`/dashboard/vehicles/${vehicleId}/edit`);
-    }
-  };
-
-  const handleShare = () => {
-    if (onShare) {
-      onShare();
-    } else if (typeof window !== 'undefined') {
-      navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -98,7 +87,7 @@ export const VehicleMobileHeader: React.FC<VehicleMobileHeaderProps> = ({
           </div>
         </div>
 
-        {/* Boutons d'Action Droite : Éditer + Partager */}
+        {/* Boutons d'Action Droite : Éditer + Supprimer */}
         <div className="flex items-center gap-1.5 shrink-0">
           {vehicleId && (
             <button
@@ -111,18 +100,16 @@ export const VehicleMobileHeader: React.FC<VehicleMobileHeaderProps> = ({
             </button>
           )}
 
-          <button
-            type="button"
-            onClick={handleShare}
-            aria-label="Partager"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0A3D2E] text-[#F1DFB6] transition-colors hover:bg-[#0F4F3B] active:scale-95 cursor-pointer shadow-xs"
-          >
-            {copied ? (
-              <span className="text-[10px] font-bold">✓</span>
-            ) : (
-              <Share2 className="h-3.5 w-3.5" />
-            )}
-          </button>
+          {onDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              aria-label="Supprimer"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-50 text-rose-600 border border-rose-200 transition-colors hover:bg-rose-100 active:scale-95 cursor-pointer"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
     </header>

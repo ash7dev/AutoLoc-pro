@@ -319,13 +319,33 @@ export const PayoutModal: React.FC<PayoutModalProps> = ({
               <View style={styles.fieldBlock}>
                 <View style={styles.fieldHeaderRow}>
                   <Text style={styles.fieldLabel}>Montant à retirer (FCFA)</Text>
-                  <TouchableOpacity
-                    onPress={handleMaxAmount}
-                    style={styles.maxChip}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.maxChipText}>Retirer tout (MAX)</Text>
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', gap: 4 }}>
+                    {[0.25, 0.5, 0.75, 1].map((ratio) => {
+                      const label = ratio === 1 ? 'MAX' : `${Math.round(ratio * 100)}%`;
+                      const targetAmt = Math.floor(effectiveSolde * ratio);
+                      const isCurrent = montant === targetAmt.toString() && targetAmt > 0;
+                      return (
+                        <TouchableOpacity
+                          key={label}
+                          onPress={() => setMontant(targetAmt.toString())}
+                          style={[
+                            styles.maxChip,
+                            isCurrent && { backgroundColor: '#059669', borderColor: '#059669' },
+                          ]}
+                          activeOpacity={0.8}
+                        >
+                          <Text
+                            style={[
+                              styles.maxChipText,
+                              isCurrent && { color: '#FFFFFF' },
+                            ]}
+                          >
+                            {label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                 </View>
 
                 <View style={styles.amountInputContainer}>

@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Calendar, Plus, Trash2, Clock, AlertCircle, ShieldAlert, Check } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Calendar, Plus, Trash2, Clock, Check, X } from 'lucide-react';
 import { vehicleService } from '../../services/vehicleService';
 import { formatDateFr } from '@/lib/utils';
+import { AutoCalendar, BlockedRange } from '@/src/shared/components/AutoCalendar';
 
 export interface IndisponibiliteItem {
   id: string;
@@ -20,6 +21,13 @@ export interface OwnerVehicleAvailabilityManagerProps {
   onRefresh?: () => void;
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  USAGE_PERSONNEL: 'Usage personnel',
+  ENTRETIEN: 'Entretien',
+  REPARATION: 'Réparation',
+  AUTRE: 'Autre',
+};
+
 export const OwnerVehicleAvailabilityManager: React.FC<OwnerVehicleAvailabilityManagerProps> = ({
   vehicleId,
   indisponibilites = [],
@@ -32,6 +40,35 @@ export const OwnerVehicleAvailabilityManager: React.FC<OwnerVehicleAvailabilityM
   const [type, setType] = useState('USAGE_PERSONNEL');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const list: IndisponibiliteItem[] = Array.isArray(indisponibilites)
+    ? indisponibilites
+    : Array.isArray((indisponibilites as any)?.data)
+      ? (indisponibilites as any).data
+      : [];
+
+  // Transform backend list to AutoCalendar BlockedRange[]
+  const blockedRanges: BlockedRange[] = useMemo(() => {
+    return list.map((item) => ({
+      from: item.dateDebut,
+      to: item.dateFin,
+      type: item.type || 'BLOCKED',
+    }));
+  }, [list]);
+
+  const handleSelectDatesFromCalendar = (start: string, end?: string) => {
+    setDateDebut(start);
+    setDateFin(end || start);
+    setIsAdding(true);
+  };
+
+  const resetForm = () => {
+    setDateDebut('');
+    setDateFin('');
+    setMotif('');
+    setType('USAGE_PERSONNEL');
+    setIsAdding(false);
+  };
 
   const handleAddIndisponibilite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,10 +83,7 @@ export const OwnerVehicleAvailabilityManager: React.FC<OwnerVehicleAvailabilityM
         type,
       });
 
-      setDateDebut('');
-      setDateFin('');
-      setMotif('');
-      setIsAdding(false);
+      resetForm();
       onRefresh?.();
     } catch (err) {
       console.error('Erreur lors de la création de l’indisponibilité:', err);
@@ -70,24 +104,16 @@ export const OwnerVehicleAvailabilityManager: React.FC<OwnerVehicleAvailabilityM
     }
   };
 
-  const list: IndisponibiliteItem[] = Array.isArray(indisponibilites)
-    ? indisponibilites
-    : Array.isArray((indisponibilites as any)?.data)
-    ? (indisponibilites as any).data
-    : [];
-
   return (
-    <div className="space-y-6 rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs sm:p-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="rounded-3xl border border-[#041912]/8 bg-white p-6 shadow-[0_1px_2px_rgba(4,25,18,0.04),0_12px_28px_-14px_rgba(4,25,18,0.14)] sm:p-8">
+      {/* En-tête */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-[#059669]" />
-            <h3 className="font-fraunces text-xl font-normal text-[#041912]">
-              Gestion de la disponibilité
-            </h3>
-          </div>
-          <p className="mt-1 text-xs text-slate-500 sm:text-sm">
-            Bloquez des dates pour vos besoins personnels, entretien ou réparations. Les locataires ne pourront pas réserver sur ces périodes.
+          <h3 className="font-fraunces text-xl leading-tight text-[#041912]">
+            Disponibilité du véhicule
+          </h3>
+          <p className="mt-1 max-w-md text-[13px] text-slate-500">
+            Sélectionnez des dates sur le calendrier pour bloquer une période où le véhicule ne sera pas louable.
           </p>
         </div>
 
@@ -95,148 +121,160 @@ export const OwnerVehicleAvailabilityManager: React.FC<OwnerVehicleAvailabilityM
           <button
             type="button"
             onClick={() => setIsAdding(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#041912] px-4 py-2.5 text-xs font-bold text-[#4ADE80] transition-colors hover:bg-[#0A3D2E] shrink-0"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#041912] px-4 py-2.5 text-[13px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E]"
           >
-            <Plus className="h-4 w-4" />
-            <span>Bloquer une période</span>
+            <Plus className="h-4 w-4 text-[#4ADE80]" />
+            Bloquer une période
           </button>
         )}
       </div>
 
-      {/* Formulaire d'ajout d'indisponibilité */}
+      {/* Calendrier */}
+      <div className="mt-5 rounded-2xl border border-slate-100 p-3 sm:p-4">
+        <AutoCalendar
+          vehicleId={vehicleId}
+          blockedRanges={blockedRanges}
+          startDate={dateDebut}
+          endDate={dateFin}
+          onSelectDates={handleSelectDatesFromCalendar}
+        />
+      </div>
+
+      {/* Formulaire d'ajout */}
       {isAdding && (
         <form
           onSubmit={handleAddIndisponibilite}
-          className="rounded-2xl border border-amber-200/80 bg-amber-50/50 p-4 sm:p-5 space-y-4"
+          className="mt-5 space-y-4 rounded-2xl border border-[#0A3D2E]/12 bg-[#F6F5EF] p-4 sm:p-5"
         >
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900">
-              Ajouter une période d'indisponibilité
+            <h4 className="text-[13px] font-semibold text-[#041912]">
+              Nouveau blocage
             </h4>
             <button
               type="button"
-              onClick={() => setIsAdding(false)}
-              className="text-xs text-amber-800 hover:underline font-semibold"
+              onClick={resetForm}
+              className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-900/5 hover:text-slate-600"
+              aria-label="Fermer"
             >
-              Annuler
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                Date de début *
-              </label>
-              <input
-                type="date"
-                required
-                value={dateDebut}
-                onChange={(e) => setDateDebut(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#059669] focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                Date de fin *
-              </label>
-              <input
-                type="date"
-                required
-                value={dateFin}
-                onChange={(e) => setDateFin(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#059669] focus:outline-none"
-              />
-            </div>
+          <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5">
+            <Calendar className="h-4 w-4 shrink-0 text-[#059669]" />
+            <span className="text-[12.5px] font-medium text-[#041912]">
+              {dateDebut ? formatDateFr(dateDebut) : 'Date de début'}
+            </span>
+            <span className="text-slate-300">→</span>
+            <span className="text-[12.5px] font-medium text-[#041912]">
+              {dateFin ? formatDateFr(dateFin) : 'Date de fin'}
+            </span>
+            {!dateDebut && (
+              <span className="ml-auto text-[11px] text-slate-400">Cliquez sur le calendrier</span>
+            )}
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                Motif du blocage
+              <label className="mb-1 block text-[11px] font-medium text-slate-500">
+                Motif
               </label>
               <input
                 type="text"
-                placeholder="Ex: Entretien technique, usage familial..."
+                placeholder="Entretien, usage familial..."
                 value={motif}
                 onChange={(e) => setMotif(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#059669] focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] text-slate-900 placeholder:text-slate-400 focus:border-[#0A3D2E] focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+              <label className="mb-1 block text-[11px] font-medium text-slate-500">
                 Catégorie
               </label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#059669] focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] text-slate-900 focus:border-[#0A3D2E] focus:outline-none"
               >
                 <option value="USAGE_PERSONNEL">Usage personnel</option>
-                <option value="ENTRETIEN">Entretien / Révision</option>
+                <option value="ENTRETIEN">Entretien / révision</option>
                 <option value="REPARATION">Réparation mécanique</option>
                 <option value="AUTRE">Autre raison</option>
               </select>
             </div>
           </div>
 
-          <div className="flex justify-end pt-1">
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={resetForm}
+              className="rounded-xl px-4 py-2 text-[13px] font-medium text-slate-500 hover:text-slate-700"
+            >
+              Annuler
+            </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#041912] px-5 py-2 text-xs font-bold text-[#4ADE80] transition-colors hover:bg-[#0A3D2E] disabled:opacity-50"
+              disabled={isSubmitting || !dateDebut || !dateFin}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#041912] px-4 py-2 text-[13px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E] disabled:opacity-40"
             >
-              <Check className="h-4 w-4" />
-              <span>{isSubmitting ? 'Enregistrement...' : 'Valider le blocage'}</span>
+              <Check className="h-3.5 w-3.5 text-[#4ADE80]" />
+              {isSubmitting ? 'Enregistrement...' : 'Valider le blocage'}
             </button>
           </div>
         </form>
       )}
 
-      {/* Liste des périodes d'indisponibilité actuelles */}
-      {list.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center text-slate-500">
-          <Clock className="mx-auto h-8 w-8 text-slate-400 mb-2" />
-          <p className="text-xs font-semibold text-slate-700">Aucune date bloquée actuellement</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">
-            Votre véhicule est disponible à la réservation en continu.
-          </p>
+      {/* Liste des périodes bloquées */}
+      <div className="mt-6">
+        <div className="flex items-center justify-between">
+          <h4 className="text-[13px] font-semibold text-[#041912]">
+            Périodes bloquées
+          </h4>
+          <span className="text-[12px] text-slate-400">{list.length}</span>
         </div>
-      ) : (
-        <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200/80 bg-white overflow-hidden">
-          {list.map((item) => {
-            const isDeleting = deletingId === item.id;
-            return (
-              <div
-                key={item.id}
-                className="flex items-center justify-between p-4 transition-colors hover:bg-slate-50/60"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-xs text-slate-900">
-                      Du {formatDateFr(item.dateDebut)} au {formatDateFr(item.dateFin)}
-                    </span>
-                    <span className="rounded-full bg-amber-100 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                      {item.motif || item.type || 'Bloqué'}
-                    </span>
-                  </div>
-                </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleDelete(item.id)}
-                  disabled={isDeleting}
-                  aria-label="Supprimer le blocage"
-                  className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-50 text-rose-600 transition-colors hover:bg-rose-100 active:scale-95 disabled:opacity-50"
+        {list.length === 0 ? (
+          <div className="mt-3 flex flex-col items-center gap-1.5 rounded-2xl border border-dashed border-slate-200 py-8 text-center">
+            <Clock className="h-5 w-5 text-slate-300" />
+            <p className="text-[13px] font-medium text-slate-600">Aucune date bloquée</p>
+            <p className="text-[12px] text-slate-400">
+              Le véhicule est ouvert à la réservation en continu.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-3 divide-y divide-slate-100">
+            {list.map((item) => {
+              const isDeleting = deletingId === item.id;
+              return (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 py-3"
                 >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-[#041912]">
+                      {formatDateFr(item.dateDebut)} → {formatDateFr(item.dateFin)}
+                    </p>
+                    <p className="mt-0.5 truncate text-[12px] text-slate-500">
+                      {item.motif || TYPE_LABELS[item.type || ''] || 'Bloqué'}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(item.id)}
+                    disabled={isDeleting}
+                    aria-label="Supprimer le blocage"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-40"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

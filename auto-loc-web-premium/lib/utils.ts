@@ -45,3 +45,20 @@ export function getTenantPricePerDay(prixProprietaire: number): number {
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("fr-FR").format(amount);
 }
+
+/**
+ * Formate une date ISO en chaîne lisible en français (ex: 15 oct. 2026).
+ */
+export function formatDateFr(isoString?: string): string {
+  if (!isoString) return '';
+  try {
+    const d = new Date(isoString);
+    return d.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch {
+    return isoString;
+  }
+}
