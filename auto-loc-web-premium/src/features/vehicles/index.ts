@@ -4,6 +4,7 @@ export * from "./hooks/useFeaturedVehicles";
 export * from "./hooks/useVehicles";
 export * from "./hooks/useVehicleDetails";
 export * from "./hooks/useSearchVehicles";
+export * from "./hooks/useOwnerVehicles";
 
 export * from "./components/PremiumVehicleCard";
 export * from "./components/VehicleHorizontalCarousel";
@@ -23,5 +24,6 @@ export * from "./components/mobile/MobileFloatingNavPill";
 export * from "./components/desktop/DesktopFilterSidebar";
 export * from "./components/desktop/DesktopVehicleLayout";
 export * from "./components/map/InteractiveVehiclesMap";
-
-
+export * from "./components/OwnerVehiclesHeader";
+export * from "./components/OwnerVehicleCard";
+export * from "./components/OwnerVehiclesView";

@@ -16,7 +16,7 @@ import type { OwnerReviewsResponse } from '../../../core/api/reviewsApi';
 
 interface UseOwnerDashboardOptions {
   revenueGroupBy?: 'day' | 'week' | 'month';
-  revenueTimeRange?: '30d' | '6m' | '1y';
+  revenueTimeRange?: '7d' | '30d' | '6m' | '1y';
 }
 
 /**
@@ -45,7 +45,7 @@ export function useOwnerDashboard(options?: UseOwnerDashboardOptions) {
 
   /**
    * 2. GET /analytics/owner/revenue-breakdown
-   * Rôle : Récupère les séries temporelles de revenus selon la plage (30d, 6m, 1y) et le groupement (jour, semaine, mois).
+   * Rôle : Récupère les séries temporelles de revenus selon la plage (7d, 30d, 6m, 1y) et le groupement (jour, semaine, mois).
    */
   const {
     data: revenue,
@@ -56,7 +56,10 @@ export function useOwnerDashboard(options?: UseOwnerDashboardOptions) {
     () => {
       const now = new Date();
       let startDate: string | undefined;
-      if (revenueTimeRange === '30d') {
+      if (revenueTimeRange === '7d') {
+        const d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        startDate = d.toISOString().split('T')[0];
+      } else if (revenueTimeRange === '30d') {
         const d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         startDate = d.toISOString().split('T')[0];
       } else if (revenueTimeRange === '6m') {

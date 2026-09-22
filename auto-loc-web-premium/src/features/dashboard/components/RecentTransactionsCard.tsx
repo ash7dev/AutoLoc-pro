@@ -37,11 +37,23 @@ const MAX_ITEMS = 5;
 const isDebit = (type: string | undefined, amount: number) =>
   amount < 0 || /DEBIT|RETRAIT|WITHDRAW/i.test(type ?? '');
 
-const isPending = (statut: string | undefined) => /ATTENTE|PENDING|EN_COURS/i.test(statut ?? '');
-
-/** "RETRAIT_WAVE" -> "Retrait wave" */
 const humanize = (value: string) =>
   value.charAt(0).toUpperCase() + value.slice(1).replace(/_/g, ' ').toLowerCase();
+
+const getStatusBadge = (statut?: string) => {
+  if (!statut) return null;
+  const s = statut.toUpperCase();
+  if (/ATTENTE|PENDING|EN_COURS/i.test(s)) {
+    return { text: 'En cours', className: 'bg-amber-100/80 text-amber-800 border border-amber-200/50' };
+  }
+  if (/VALIDE|SUCCESS|COMPLETE/i.test(s)) {
+    return { text: 'Validé', className: 'bg-emerald-100/70 text-emerald-800 border border-emerald-200/50' };
+  }
+  if (/ECHOUE|FAILED|REJETE/i.test(s)) {
+    return { text: 'Échoué', className: 'bg-rose-100/80 text-rose-800 border border-rose-200/50' };
+  }
+  return null;
+};
 
 export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
   wallet,
@@ -85,31 +97,36 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
             const Icon = debit ? ArrowUpRight : ArrowDownLeft;
             const label = t.description ?? t.libelle ?? (t.type ? humanize(t.type) : 'Transaction');
             const date = formatShortDate(t.createdAt ?? t.date);
+            const statusBadge = getStatusBadge(t.statut);
 
             return (
               <li key={t.id ?? `${label}-${i}`} className="flex items-center gap-4 py-3.5">
                 <span
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${debit ? 'bg-slate-100 text-slate-600' : 'bg-[#0A3D2E]/[0.08] text-[#0A3D2E]'
-                    }`}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${
+                    debit
+                      ? 'bg-rose-50 text-rose-600 ring-1 ring-rose-200/60'
+                      : 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200/60'
+                  }`}
                 >
-                  <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden="true" />
+                  <Icon className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden="true" />
                 </span>
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-[#041912]">{label}</p>
-                  <p className="text-xs text-slate-500">
-                    {date}
-                    {isPending(t.statut) && (
-                      <span className="ml-2 rounded-full bg-[#F1DFB6]/60 px-2 py-0.5 font-semibold text-[#5C4410]">
-                        En cours
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-semibold text-[#041912]">{label}</p>
+                    {statusBadge && (
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusBadge.className}`}>
+                        {statusBadge.text}
                       </span>
                     )}
-                  </p>
+                  </div>
+                  <p className="text-xs font-medium text-slate-500">{date}</p>
                 </div>
 
                 <p
-                  className={`shrink-0 text-sm font-semibold tabular-nums ${debit ? 'text-slate-700' : 'text-[#0A3D2E]'
-                    }`}
+                  className={`shrink-0 text-sm font-bold tabular-nums ${
+                    debit ? 'text-rose-600' : 'text-emerald-700'
+                  }`}
                 >
                   <span className="sr-only">{debit ? 'Débit de ' : 'Crédit de '}</span>
                   {debit ? '−' : '+'}

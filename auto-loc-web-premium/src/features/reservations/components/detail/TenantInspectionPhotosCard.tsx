@@ -3,10 +3,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Camera, ChevronLeft, ChevronRight, ShieldCheck, X } from 'lucide-react';
-import { PhotoEtatLieu } from '../../hooks/useTenantReservationDetail';
+export interface InspectionPhotoItem {
+  id: string;
+  url: string;
+  type: 'CHECKIN' | 'CHECKOUT' | string;
+  categorie?: string | null;
+}
 
 interface TenantInspectionPhotosCardProps {
-  photos?: PhotoEtatLieu[];
+  photos?: InspectionPhotoItem[];
 }
 
 const CATEGORY_LABELS: Record<string, string> = {

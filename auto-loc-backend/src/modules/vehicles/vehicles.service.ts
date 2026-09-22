@@ -314,20 +314,27 @@ export class VehiclesService {
       },
     });
 
+    if (vehicles.length === 0) {
+      return { data: [], total: 0, limit: take, offset: skip };
+    }
+
     // Get total count for pagination
     const total = await this.prisma.vehicule.count({
       where: { proprietaireId: utilisateur.id },
     });
 
     // Batch-check active/confirmed reservations to compute per-vehicle lock flag.
-    const activeResa = await this.prisma.reservation.findMany({
-      where: {
-        vehiculeId: { in: vehicles.map((v) => v.id) },
-        statut: { in: ['EN_COURS', 'CONFIRMEE'] },
-      },
-      select: { vehiculeId: true },
-      distinct: ['vehiculeId'],
-    });
+    const vehicleIds = vehicles.map((v) => v.id);
+    const activeResa = vehicleIds.length > 0
+      ? await this.prisma.reservation.findMany({
+          where: {
+            vehiculeId: { in: vehicleIds },
+            statut: { in: ['EN_COURS', 'CONFIRMEE'] },
+          },
+          select: { vehiculeId: true },
+          distinct: ['vehiculeId'],
+        })
+      : [];
     const lockedIds = new Set(activeResa.map((r) => r.vehiculeId));
 
     const data = vehicles.map((v) => ({ ...v, estVerrouille: lockedIds.has(v.id) }));

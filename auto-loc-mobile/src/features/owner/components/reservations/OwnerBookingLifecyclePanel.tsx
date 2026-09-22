@@ -12,12 +12,15 @@ import {
   Sparkles,
   Users,
   XCircle,
+  Zap,
 } from 'lucide-react-native';
 import { theme } from '../../../../core/theme';
 
 interface OwnerBookingLifecyclePanelProps {
   statut: string;
   dateDebut?: string;
+  creeLe?: string;
+  tacitCheckinDeadlineLe?: string;
   hasOwnerCheckin: boolean;
   hasTenantCheckin: boolean;
   absenceSignalee?: boolean;
@@ -30,9 +33,85 @@ interface OwnerBookingLifecyclePanelProps {
   onOpenCancel?: () => void;
 }
 
+const formatConfirmationDeadline = (
+  creeLe?: string,
+  dateDebut?: string,
+  tacitDeadline?: string
+): string => {
+  let target: Date | null = null;
+
+  if (tacitDeadline) {
+    const d = new Date(tacitDeadline);
+    if (!isNaN(d.getTime())) target = d;
+  }
+
+  if (!target && creeLe && dateDebut) {
+    const createdDate = new Date(creeLe);
+    const startDate = new Date(dateDebut);
+
+    if (!isNaN(createdDate.getTime()) && !isNaN(startDate.getTime())) {
+      const createdDay =
+        createdDate.getUTCFullYear() * 10000 +
+        (createdDate.getUTCMonth() + 1) * 100 +
+        createdDate.getUTCDate();
+      const startDay =
+        startDate.getUTCFullYear() * 10000 +
+        (startDate.getUTCMonth() + 1) * 100 +
+        startDate.getUTCDate();
+      const isSameDay = createdDay === startDay;
+
+      if (isSameDay) {
+        const diffMs = startDate.getTime() - createdDate.getTime();
+        if (diffMs <= 3 * 3600 * 1000) {
+          target = new Date(
+            Math.min(
+              createdDate.getTime() + 30 * 60 * 1000,
+              Math.max(createdDate.getTime() + 15 * 60 * 1000, startDate.getTime() - 15 * 60 * 1000)
+            )
+          );
+        } else {
+          target = new Date(startDate.getTime() - 2 * 3600 * 1000);
+        }
+      } else {
+        const date24h = new Date(createdDate.getTime() + 24 * 3600 * 1000);
+        const startMinus2h = new Date(startDate.getTime() - 2 * 3600 * 1000);
+        target = date24h.getTime() < startMinus2h.getTime() ? date24h : startMinus2h;
+      }
+    }
+  }
+
+  if (!target && dateDebut) {
+    const startDate = new Date(dateDebut);
+    if (!isNaN(startDate.getTime())) {
+      target = new Date(startDate.getTime() - 2 * 3600 * 1000);
+    }
+  }
+
+  if (!target) {
+    return 'dans un délai restreint';
+  }
+
+  try {
+    const formatted = target.toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+    const hours = target.getHours().toString().padStart(2, '0');
+    const minutes = target.getMinutes().toString().padStart(2, '0');
+    const capitalizedDay = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+    return `${capitalizedDay} à ${hours}:${minutes}`;
+  } catch {
+    return 'dans un délai restreint';
+  }
+};
+
 export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProps> = ({
   statut,
   dateDebut,
+  creeLe,
+  tacitCheckinDeadlineLe,
   hasOwnerCheckin,
   hasTenantCheckin,
   absenceSignalee,
@@ -179,6 +258,18 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
           <AlertTriangle size={14} color="#92400E" />
           <Text style={styles.litigeBadgeText}>
             Instruction en cours · Payout temporairement suspendu
+          </Text>
+        </View>
+      )}
+
+      {isPayee && (
+        <View style={styles.deadlineBadgeBox}>
+          <Clock size={14} color="#D97706" />
+          <Text style={styles.deadlineBadgeText}>
+            Délai d'acceptation : valider avant le{' '}
+            <Text style={styles.boldText}>
+              {formatConfirmationDeadline(creeLe, dateDebut, tacitCheckinDeadlineLe)}
+            </Text>
           </Text>
         </View>
       )}
@@ -540,6 +631,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#92400E',
     lineHeight: 17,
+  },
+  deadlineBadgeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+  },
+  deadlineBadgeText: {
+    flex: 1,
+    fontFamily: theme.typography.fontFamily.semiBold,
+    fontSize: 12,
+    color: '#92400E',
+    lineHeight: 17,
+  },
+  boldText: {
+    fontFamily: theme.typography.fontFamily.bold,
+    color: '#78350F',
   },
   badgeIcon: {
     marginTop: 1,

@@ -145,6 +145,8 @@ export const OwnerBookingDetailScreen: React.FC<Props> = ({ reservationId, onBac
         <OwnerBookingLifecyclePanel
           statut={booking.statut}
           dateDebut={booking.dateDebut}
+          creeLe={booking.creeLe}
+          tacitCheckinDeadlineLe={booking.tacitCheckinDeadlineLe}
           hasOwnerCheckin={Boolean(booking.checkinProprietaireLe)}
           hasTenantCheckin={Boolean(booking.checkinLocataireLe)}
           absenceSignalee={booking.absenceSignalee}
@@ -205,6 +207,8 @@ export const OwnerBookingDetailScreen: React.FC<Props> = ({ reservationId, onBac
         visible={confirmModalVisible}
         loading={submitting}
         dateDebut={booking.dateDebut}
+        creeLe={booking.creeLe}
+        tacitCheckinDeadlineLe={booking.tacitCheckinDeadlineLe}
         onClose={() => setConfirmModalVisible(false)}
         onConfirm={async (heureDebut) => {
           if (await confirmBooking(heureDebut)) setConfirmModalVisible(false);

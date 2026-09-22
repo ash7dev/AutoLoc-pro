@@ -3,7 +3,7 @@
 import React, { useId } from 'react';
 import { ArrowDownRight, ArrowUpRight, Minus } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
-import { clamp, fcfa } from './dashboardUtils';
+import { clamp, compactNumber, fcfa } from './dashboardUtils';
 
 interface FinancialHeroCardProps {
   netProprietaireMois: number;
@@ -60,7 +60,7 @@ function buildSparkline(values: number[]) {
 }
 
 const SHELL =
-  'relative overflow-hidden rounded-[32px] bg-[#0A3D2E] p-6 text-[#F1DFB6] ring-1 ring-inset ring-[#F1DFB6]/10 sm:p-9';
+  'relative overflow-hidden rounded-[28px] bg-[#0A3D2E] p-5 text-[#F1DFB6] ring-1 ring-inset ring-[#F1DFB6]/10 sm:rounded-[32px] sm:p-9';
 
 /* -------------------------------------------------------------------------- */
 /* Composant                                                                  */
@@ -82,16 +82,16 @@ export const FinancialHeroCard: React.FC<FinancialHeroCardProps> = ({
   if (isLoading) {
     return (
       <section aria-busy="true" aria-label="Synthèse financière du mois" className={SHELL}>
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           <div className="space-y-4">
             <div className="h-4 w-44 animate-pulse rounded bg-[#F1DFB6]/15" />
-            <div className="h-14 w-72 max-w-full animate-pulse rounded bg-[#F1DFB6]/15" />
-            <div className="h-7 w-40 animate-pulse rounded-full bg-[#F1DFB6]/10" />
+            <div className="h-12 w-60 max-w-full animate-pulse rounded bg-[#F1DFB6]/15 sm:h-14 sm:w-72" />
+            <div className="hidden h-7 w-40 animate-pulse rounded-full bg-[#F1DFB6]/10 sm:block" />
           </div>
           <div className="h-2 w-full animate-pulse rounded-full bg-[#F1DFB6]/10" />
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-16 animate-pulse rounded-xl bg-[#F1DFB6]/[0.07]" />
+              <div key={i} className="h-12 animate-pulse rounded-xl bg-[#F1DFB6]/[0.07] sm:h-16" />
             ))}
           </div>
         </div>
@@ -111,36 +111,44 @@ export const FinancialHeroCard: React.FC<FinancialHeroCardProps> = ({
       ? 'bg-rose-300/15 text-rose-200'
       : 'bg-[#F1DFB6]/10 text-[#F1DFB6]/80';
 
+  const variationShort =
+    variationMoisPourcentage === 0 ? 'Stable' : `${variationFormat.format(variationMoisPourcentage)}\u00a0%`;
+  const variationLong =
+    variationMoisPourcentage === 0
+      ? 'Stable par rapport au mois dernier'
+      : `${variationFormat.format(variationMoisPourcentage)}\u00a0% vs mois dernier`;
+
   const stats = [
-    { label: 'Encaissés ce mois', note: 'Validés au check-in', value: revenusEncaissesMois },
-    { label: 'En attente', note: 'Sécurisés jusqu’au check-in', value: revenusEnAttente },
-    { label: 'Solde du portefeuille', note: 'Disponible sur votre wallet', value: soldeDisponibleWallet },
+    { label: 'Encaissés ce mois', shortLabel: 'Encaissés', note: 'Validés au check-in', value: revenusEncaissesMois },
+    { label: 'En attente', shortLabel: 'En attente', note: 'Sécurisés jusqu’au check-in', value: revenusEnAttente },
+    { label: 'Solde du portefeuille', shortLabel: 'Wallet', note: 'Disponible sur votre wallet', value: soldeDisponibleWallet },
   ];
 
   return (
     <section aria-label="Synthèse financière du mois" className={SHELL}>
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-end">
-        {/* Net du mois */}
-        <div className="space-y-5">
+      <div className="grid gap-6 sm:gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-end">
+        {/* Net du mois : sur mobile, la variation passe à droite du libellé */}
+        <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-3 sm:flex sm:flex-col sm:items-start sm:gap-5">
           <p className="text-sm text-[#F1DFB6]/75">Net propriétaire du mois</p>
-          <p className="font-display text-5xl leading-none tracking-tight tabular-nums sm:text-6xl">
+          <p className="col-span-2 font-display text-[2.75rem] leading-none tracking-tight tabular-nums sm:text-6xl">
             {formatCurrency(netProprietaireMois)}
             <span className="ml-2 font-sans text-base text-[#F1DFB6]/60 sm:text-lg">FCFA</span>
           </p>
           <p
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${variationClass}`}
+            className={`col-start-2 row-start-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold sm:col-auto sm:row-auto sm:px-3 sm:text-sm ${variationClass}`}
           >
-            <VariationIcon className="h-4 w-4" aria-hidden="true" />
-            {variationMoisPourcentage === 0
-              ? 'Stable par rapport au mois dernier'
-              : `${variationFormat.format(variationMoisPourcentage)}\u00a0% vs mois dernier`}
+            <VariationIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
+            <span aria-hidden="true" className="sm:hidden">
+              {variationShort}
+            </span>
+            <span className="sr-only sm:not-sr-only">{variationLong}</span>
           </p>
         </div>
 
-        {/* Courbe d'évolution */}
-        <div>
+        {/* Courbe d'évolution (masquée sur mobile s'il n'y a rien à tracer) */}
+        <div className={spark ? '' : 'hidden sm:block'}>
           {spark ? (
-            <div className="relative h-28 pr-1.5 sm:h-32">
+            <div className="relative h-16 pr-1.5 sm:h-32">
               <svg
                 viewBox={`0 0 ${SPARK_W} ${SPARK_H}`}
                 preserveAspectRatio="none"
@@ -179,36 +187,50 @@ export const FinancialHeroCard: React.FC<FinancialHeroCardProps> = ({
       </div>
 
       {/* Décomposition du chiffre d'affaires */}
-      <div className="mt-9 space-y-3">
-        <div aria-hidden="true" className="flex h-2 gap-1">
+      <div className="mt-6 space-y-2.5 sm:mt-9 sm:space-y-3">
+        <div aria-hidden="true" className="flex h-1.5 gap-1 sm:h-2">
           <span className="rounded-full bg-[#F1DFB6]" style={{ width: `${netShare}%` }} />
           <span className="flex-1 rounded-full bg-[#F1DFB6]/20" />
         </div>
-        <dl className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1.5 text-sm">
+        <dl className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1.5 text-xs sm:gap-x-8 sm:text-sm">
           <div className="flex items-baseline gap-2">
             <dt className="flex items-center gap-2 text-[#F1DFB6]/75">
               <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[#F1DFB6]" />
-              Chiffre d’affaires brut
+              <span className="sm:hidden">Brut</span>
+              <span className="hidden sm:inline">Chiffre d’affaires brut</span>
             </dt>
             <dd className="font-medium tabular-nums">{fcfa(caBrutMois)}</dd>
           </div>
           <div className="flex items-baseline gap-2">
             <dt className="flex items-center gap-2 text-[#F1DFB6]/75">
               <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[#F1DFB6]/25" />
-              Commission AutoLoc
+              <span className="sm:hidden">Commission</span>
+              <span className="hidden sm:inline">Commission AutoLoc</span>
             </dt>
             <dd className="font-medium tabular-nums">{fcfa(commissionAutoLocMois)}</dd>
           </div>
         </dl>
       </div>
 
-      {/* Soldes */}
-      <dl className="mt-8 grid grid-cols-1 divide-y divide-[#F1DFB6]/15 border-t border-[#F1DFB6]/15 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      {/* Soldes : trois colonnes compactes sur mobile, détail complet dès sm */}
+      <dl className="mt-6 grid grid-cols-3 divide-x divide-[#F1DFB6]/15 border-t border-[#F1DFB6]/15 sm:mt-8">
         {stats.map((s) => (
-          <div key={s.label} className="space-y-1 py-4 sm:px-6 sm:first:pl-0 sm:last:pr-0">
-            <dt className="text-sm text-[#F1DFB6]/75">{s.label}</dt>
-            <dd className="font-display text-2xl tabular-nums">{fcfa(s.value)}</dd>
-            <p className="text-xs text-[#F1DFB6]/55">{s.note}</p>
+          <div
+            key={s.label}
+            className="min-w-0 space-y-1 px-3 py-3.5 first:pl-0 last:pr-0 sm:px-6 sm:py-4 sm:first:pl-0 sm:last:pr-0"
+          >
+            <dt className="truncate text-xs text-[#F1DFB6]/75 sm:text-sm">
+              <span className="sm:hidden">{s.shortLabel}</span>
+              <span className="hidden sm:inline">{s.label}</span>
+            </dt>
+            <dd className="font-display text-lg tabular-nums sm:text-2xl">
+              <span className="sm:hidden">
+                {compactNumber.format(s.value)}
+                <span className="ml-1 font-sans text-[10px] text-[#F1DFB6]/55">FCFA</span>
+              </span>
+              <span className="hidden sm:inline">{fcfa(s.value)}</span>
+            </dd>
+            <p className="hidden text-xs text-[#F1DFB6]/55 sm:block">{s.note}</p>
           </div>
         ))}
       </dl>

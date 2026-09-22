@@ -86,6 +86,6 @@ export const vehiclesApi = {
    * DELETE /vehicles/:id/indisponibilites/:indispoId — Débloquer une période
    */
   deleteIndisponibilite: (vehicleId: string, indispoId: string): Promise<{ success: boolean }> => {
-    return apiClient.get<{ success: boolean }>(`/vehicles/${vehicleId}/indisponibilites/${indispoId}`);
+    return apiClient.delete<{ success: boolean }>(`/vehicles/${vehicleId}/indisponibilites/${indispoId}`);
   },
 };

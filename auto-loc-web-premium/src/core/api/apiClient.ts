@@ -72,6 +72,78 @@ class ApiClient {
 
     return response.json();
   }
+
+  async patch<T>(endpoint: string, body?: unknown, options: ApiRequestOptions = {}): Promise<T> {
+    const { headers, ...rest } = options;
+    const url = this.buildUrl(endpoint);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('autoloc_token') : null;
+
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      ...rest,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Erreur API (${response.status})`);
+    }
+
+    return response.json();
+  }
+
+  async put<T>(endpoint: string, body?: unknown, options: ApiRequestOptions = {}): Promise<T> {
+    const { headers, ...rest } = options;
+    const url = this.buildUrl(endpoint);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('autoloc_token') : null;
+
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      ...rest,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Erreur API (${response.status})`);
+    }
+
+    return response.json();
+  }
+
+  async delete<T>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
+    const { params, headers, ...rest } = options;
+    const url = this.buildUrl(endpoint, params);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('autoloc_token') : null;
+
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+      },
+      ...rest,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Erreur API (${response.status})`);
+    }
+
+    return response.json();
+  }
 }
 
 export const apiClient = new ApiClient();
+

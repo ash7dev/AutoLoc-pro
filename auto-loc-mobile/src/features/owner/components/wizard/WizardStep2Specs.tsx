@@ -24,6 +24,7 @@ import {
   Usb,
   Users,
   Wifi,
+  Zap,
 } from 'lucide-react-native';
 import { theme } from '../../../../core/theme';
 
@@ -135,8 +136,25 @@ const StepperCounter: React.FC<{
 // Main Component
 // ----------------------------------------------------------------------------
 
+const ESSENTIAL_EQUIPMENT_IDS = ['CLIMATISATION', 'BLUETOOTH', 'USB_CHARGER', 'ROUE_SECOURS'];
+
 export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChange }) => {
   const selectedCount = data.equipements.length;
+
+  const areAllEssentialsSelected = useMemo(() => {
+    return ESSENTIAL_EQUIPMENT_IDS.every((id) => data.equipements.includes(id));
+  }, [data.equipements]);
+
+  const toggleEssentials = () => {
+    if (areAllEssentialsSelected) {
+      onChange({
+        equipements: data.equipements.filter((id) => !ESSENTIAL_EQUIPMENT_IDS.includes(id)),
+      });
+    } else {
+      const merged = Array.from(new Set([...data.equipements, ...ESSENTIAL_EQUIPMENT_IDS]));
+      onChange({ equipements: merged });
+    }
+  };
 
   const toggleEquipement = (id: string) => {
     const exists = data.equipements.includes(id);
@@ -244,6 +262,38 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
           <Text style={styles.equipCountText}>{selectedCount} sélectionné{selectedCount > 1 ? 's' : ''}</Text>
         </View>
         <Text style={styles.inputHelp}>Sélectionnez toutes les options présentes dans votre véhicule.</Text>
+
+        {/* Quick Select Shortcut Bar */}
+        <View style={styles.quickSelectBar}>
+          <TouchableOpacity
+            style={[
+              styles.quickSelectBtn,
+              areAllEssentialsSelected && styles.quickSelectBtnActive,
+            ]}
+            activeOpacity={0.8}
+            onPress={toggleEssentials}
+          >
+            <Zap size={14} color={areAllEssentialsSelected ? '#4ADE80' : '#047857'} strokeWidth={2.5} />
+            <Text
+              style={[
+                styles.quickSelectBtnText,
+                areAllEssentialsSelected && styles.quickSelectBtnTextActive,
+              ]}
+            >
+              {areAllEssentialsSelected ? 'Indispensables cochés' : 'Sélectionner les indispensables (Clim, Bluetooth, USB, Roue)'}
+            </Text>
+          </TouchableOpacity>
+
+          {selectedCount > 0 && (
+            <TouchableOpacity
+              style={styles.clearSelectBtn}
+              activeOpacity={0.7}
+              onPress={() => onChange({ equipements: [] })}
+            >
+              <Text style={styles.clearSelectBtnText}>Tout effacer</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         <View style={{ gap: 10 }}>
           {equipmentPairs.map((pair, rowIndex) => (
@@ -534,5 +584,50 @@ const styles = StyleSheet.create({
   },
   equipTagTextActive: {
     color: COLORS.primaryDark,
+  },
+  quickSelectBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 8,
+    marginTop: 2,
+  },
+  quickSelectBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1.5,
+    borderColor: '#A7F3D0',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  quickSelectBtnActive: {
+    backgroundColor: '#041912',
+    borderColor: '#041912',
+  },
+  quickSelectBtnText: {
+    fontFamily: theme.typography.fontFamily.displaySemiBold,
+    fontSize: 11.5,
+    color: '#047857',
+  },
+  quickSelectBtnTextActive: {
+    color: '#4ADE80',
+  },
+  clearSelectBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  clearSelectBtnText: {
+    fontFamily: theme.typography.fontFamily.medium,
+    fontSize: 11.5,
+    color: '#64748B',
   },
 });

@@ -41,6 +41,8 @@ export const initialsOf = (prenom?: string, nom?: string): string =>
 export const OWNER_ROUTES = {
     reservations: '/dashboard/reservations',
     wallet: '/dashboard/wallet',
-    fleet: '/dashboard/flotte',
-    newListing: '/dashboard/flotte/nouveau',
+    fleet: '/dashboard/vehicles',
+    newListing: '/dashboard/vehicles/new',
+    stats: '/dashboard#stats',
+    profile: '/profile',
 } as const;

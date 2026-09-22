@@ -15,6 +15,9 @@ export interface OccupancyData {
   joursDisponibles?: Amount;
   joursBloques?: Amount;
   joursMaintenance?: Amount;
+  joursDisponiblesEtNonLoues?: Amount;
+  joursBloquesProprietaire?: Amount;
+  joursMaintenanceOuSuspendus?: Amount;
 }
 
 interface OccupancyDonutCardProps {
@@ -32,9 +35,24 @@ const GAP = 3;
 export const OccupancyDonutCard: React.FC<OccupancyDonutCardProps> = ({ data, isLoading = false }) => {
   const slices = [
     { key: 'loues', label: 'Loués', color: '#0A3D2E', days: toNumber(data?.joursLoues) },
-    { key: 'dispo', label: 'Disponibles', color: '#E3CC94', days: toNumber(data?.joursDisponibles) },
-    { key: 'bloques', label: 'Bloqués par vous', color: '#CBD5E1', days: toNumber(data?.joursBloques) },
-    { key: 'maintenance', label: 'En maintenance', color: '#D98A7C', days: toNumber(data?.joursMaintenance) },
+    {
+      key: 'dispo',
+      label: 'Disponibles',
+      color: '#E3CC94',
+      days: toNumber(data?.joursDisponibles ?? data?.joursDisponiblesEtNonLoues),
+    },
+    {
+      key: 'bloques',
+      label: 'Bloqués par vous',
+      color: '#CBD5E1',
+      days: toNumber(data?.joursBloques ?? data?.joursBloquesProprietaire),
+    },
+    {
+      key: 'maintenance',
+      label: 'En maintenance',
+      color: '#D98A7C',
+      days: toNumber(data?.joursMaintenance ?? data?.joursMaintenanceOuSuspendus),
+    },
   ];
 
   const total = slices.reduce((sum, s) => sum + s.days, 0);
@@ -63,7 +81,7 @@ export const OccupancyDonutCard: React.FC<OccupancyDonutCardProps> = ({ data, is
           <Skeleton className="h-16 w-full" />
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-7">
+        <div className="flex h-full flex-col items-center justify-between gap-6 py-2">
           <div className="relative" style={{ width: SIZE, height: SIZE }}>
             <svg
               viewBox={`0 0 ${SIZE} ${SIZE}`}

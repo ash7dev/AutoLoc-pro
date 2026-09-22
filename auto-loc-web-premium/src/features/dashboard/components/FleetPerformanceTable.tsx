@@ -72,6 +72,7 @@ export const FleetPerformanceTable: React.FC<FleetPerformanceTableProps> = ({
     <DashboardCard
       title="Performance de la flotte"
       description="Classement de vos véhicules par revenu net"
+      className="h-full"
       action={
         rows.length > 0 ? (
           <Link

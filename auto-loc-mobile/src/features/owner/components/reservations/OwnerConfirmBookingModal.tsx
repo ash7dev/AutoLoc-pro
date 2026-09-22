@@ -28,9 +28,85 @@ interface OwnerConfirmBookingModalProps {
   visible: boolean;
   loading: boolean;
   dateDebut?: string;
+  creeLe?: string;
+  tacitCheckinDeadlineLe?: string;
   onClose: () => void;
   onConfirm: (heureDebut: string) => Promise<void>;
 }
+
+const formatConfirmationDeadline = (
+  creeLe?: string,
+  dateDebut?: string,
+  tacitDeadline?: string
+): string => {
+  let target: Date | null = null;
+
+  if (tacitDeadline) {
+    const d = new Date(tacitDeadline);
+    if (!isNaN(d.getTime())) target = d;
+  }
+
+  if (!target && creeLe && dateDebut) {
+    const createdDate = new Date(creeLe);
+    const startDate = new Date(dateDebut);
+
+    if (!isNaN(createdDate.getTime()) && !isNaN(startDate.getTime())) {
+      const createdDay =
+        createdDate.getUTCFullYear() * 10000 +
+        (createdDate.getUTCMonth() + 1) * 100 +
+        createdDate.getUTCDate();
+      const startDay =
+        startDate.getUTCFullYear() * 10000 +
+        (startDate.getUTCMonth() + 1) * 100 +
+        startDate.getUTCDate();
+      const isSameDay = createdDay === startDay;
+
+      if (isSameDay) {
+        const diffMs = startDate.getTime() - createdDate.getTime();
+        if (diffMs <= 3 * 3600 * 1000) {
+          target = new Date(
+            Math.min(
+              createdDate.getTime() + 30 * 60 * 1000,
+              Math.max(createdDate.getTime() + 15 * 60 * 1000, startDate.getTime() - 15 * 60 * 1000)
+            )
+          );
+        } else {
+          target = new Date(startDate.getTime() - 2 * 3600 * 1000);
+        }
+      } else {
+        const date24h = new Date(createdDate.getTime() + 24 * 3600 * 1000);
+        const startMinus2h = new Date(startDate.getTime() - 2 * 3600 * 1000);
+        target = date24h.getTime() < startMinus2h.getTime() ? date24h : startMinus2h;
+      }
+    }
+  }
+
+  if (!target && dateDebut) {
+    const startDate = new Date(dateDebut);
+    if (!isNaN(startDate.getTime())) {
+      target = new Date(startDate.getTime() - 2 * 3600 * 1000);
+    }
+  }
+
+  if (!target) {
+    return 'dans un délai restreint';
+  }
+
+  try {
+    const formatted = target.toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+    const hours = target.getHours().toString().padStart(2, '0');
+    const minutes = target.getMinutes().toString().padStart(2, '0');
+    const capitalizedDay = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+    return `${capitalizedDay} à ${hours}:${minutes}`;
+  } catch {
+    return 'dans un délai restreint';
+  }
+};
 
 const QUICK_HOURS = [
   '08:00',
@@ -51,6 +127,8 @@ export const OwnerConfirmBookingModal: React.FC<OwnerConfirmBookingModalProps> =
   visible,
   loading,
   dateDebut,
+  creeLe,
+  tacitCheckinDeadlineLe,
   onClose,
   onConfirm,
 }) => {
@@ -255,6 +333,21 @@ export const OwnerConfirmBookingModal: React.FC<OwnerConfirmBookingModalProps> =
                   })}
                 </ScrollView>
               </View>
+            </View>
+
+            {/* Confirmation Deadline Warning Card */}
+            <View style={styles.courtesyBox}>
+              <View style={styles.courtesyHeader}>
+                <Clock size={16} color="#D97706" />
+                <Text style={styles.courtesyTitle}>Délai d'acceptation obligatoire</Text>
+              </View>
+              <Text style={styles.courtesyText}>
+                Vous devez valider la réservation avant le{' '}
+                <Text style={styles.boldText}>
+                  {formatConfirmationDeadline(creeLe, dateDebut, tacitCheckinDeadlineLe)}
+                </Text>
+                . Passé ce délai, le dossier sera automatiquement expiré et annulé sans frais.
+              </Text>
             </View>
 
             {/* Courtesy Hour Information Card */}

@@ -128,14 +128,10 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
     reglesSpecifiques: '',
   });
 
-  // État initial de l'Étape 5 (Tarification & Remises - Paliers dégressifs pré-activés)
+  // État initial de l'Étape 5 (Tarification & Remises)
   const [step5, setStep5] = useState<Step5Data>({
     prixParJour: 25000,
-    tiers: [
-      { joursMin: 3, joursMax: 6, prix: 22500 },
-      { joursMin: 7, joursMax: 29, prix: 21250 },
-      { joursMin: 30, prix: 18750 },
-    ],
+    tiers: [],
   });
 
   // État initial de l'Étape 6 (Photos & Documents)

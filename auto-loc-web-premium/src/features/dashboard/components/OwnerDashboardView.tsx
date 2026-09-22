@@ -5,6 +5,7 @@ import { useOwnerDashboard } from '../hooks/useOwnerDashboard';
 
 import { OwnerDashboardGreeting } from './OwnerDashboardGreeting';
 import { QuickActionsBar } from './QuickActionsBar';
+import { OwnerMobileQuickActions } from './OwnerMobileQuickActions';
 import { FinancialHeroCard } from './FinancialHeroCard';
 import { KpiTile } from './KpiTile';
 import { RevenueChart } from './RevenueChart';
@@ -18,7 +19,7 @@ import { Calendar, CheckCircle2, Star, Percent } from 'lucide-react';
 
 export const OwnerDashboardView: React.FC = () => {
   const [revenueGroupBy, setRevenueGroupBy] = useState<'day' | 'week' | 'month'>('month');
-  const [revenueTimeRange, setRevenueTimeRange] = useState<'30d' | '6m' | '1y'>('6m');
+  const [revenueTimeRange, setRevenueTimeRange] = useState<'7d' | '30d' | '6m' | '1y'>('6m');
 
   const {
     user,
@@ -47,19 +48,22 @@ export const OwnerDashboardView: React.FC = () => {
 
   return (
     <div className="space-y-10">
-      {/* 1. Salutation / Greeting Header */}
+      {/* 1. Salutation / Greeting Header (Gère sa propre vue mobile épurée) */}
       <OwnerDashboardGreeting
         prenom={user?.prenom}
         checkinsCount={operational?.checkinsAujourdhuiCount}
         checkoutsCount={operational?.checkoutsAujourdhuiCount}
         demandesCount={operational?.demandesEnAttenteCount}
-      />
-
-      {/* 2. Actions Rapides */}
-      <QuickActionsBar
-        demandesEnAttenteCount={operational?.demandesEnAttenteCount || notifications?.pendingConfirmations}
         soldeRetirableWallet={financials?.soldeRetirableWallet || parseFloat(wallet?.balance?.soldeRetirable || '0')}
       />
+
+      {/* 2. Actions Rapides Desktop */}
+      <div className="hidden md:block">
+        <QuickActionsBar
+          demandesEnAttenteCount={operational?.demandesEnAttenteCount || notifications?.pendingConfirmations}
+          soldeRetirableWallet={financials?.soldeRetirableWallet || parseFloat(wallet?.balance?.soldeRetirable || '0')}
+        />
+      </div>
 
       {/* SECTION 1: PILOTAGE FINANCIER & PERFORMANCE GLOBALE */}
       <section className="space-y-6">
@@ -88,8 +92,8 @@ export const OwnerDashboardView: React.FC = () => {
           isLoading={isLoadingOverview}
         />
 
-        {/* 4 KPI Tiles Grid */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* 4 KPI Tiles Grid (Grille de 2 cards par ligne sur mobile) */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <KpiTile
             title="Taux d'occupation"
             value={`${Math.round(fleetOverview?.tauxOccupationReelMois ?? occupancy?.tauxOccupationCommercialPourcentage ?? 0)}%`}
@@ -143,8 +147,11 @@ export const OwnerDashboardView: React.FC = () => {
         </div>
       </section>
 
-      {/* SECTION 2: ANALYSE DES REVENUS & PERFORMANCE FLOTTE */}
-      <section className="space-y-6 pt-2">
+      {/* 2. Menu d'actions rapides (Visible uniquement sur mobile, placé après les KPI tiles) */}
+      <OwnerMobileQuickActions />
+
+      {/* SECTION 2: ANALYSE DES REVENUS & PERFORMANCE FLOTTE (Masqué sur mobile) */}
+      <section className="hidden space-y-6 pt-2 md:block">
         <div className="flex items-center justify-between border-b border-[#0A3D2E]/10 pb-3">
           <div>
             <h2 className="font-display text-xl font-medium tracking-tight text-[#041912]">
@@ -165,7 +172,7 @@ export const OwnerDashboardView: React.FC = () => {
         />
 
         {/* Fleet Performance Table (2/3) + Occupancy Donut (1/3) */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="hidden gap-6 lg:grid lg:grid-cols-3">
           <div className="lg:col-span-2">
             <FleetPerformanceTable vehicles={fleet?.vehicles} isLoading={isLoadingFleet} />
           </div>
@@ -175,8 +182,8 @@ export const OwnerDashboardView: React.FC = () => {
         </div>
       </section>
 
-      {/* SECTION 3: PORTEFEUILLE, CONSEILS IA & AVIS */}
-      <section className="space-y-6 pt-2">
+      {/* SECTION 3: PORTEFEUILLE, CONSEILS IA & AVIS (Masqué sur mobile) */}
+      <section className="hidden space-y-6 pt-2 md:block">
         <div className="flex items-center justify-between border-b border-[#0A3D2E]/10 pb-3">
           <div>
             <h2 className="font-display text-xl font-medium tracking-tight text-[#041912]">

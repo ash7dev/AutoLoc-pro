@@ -11,7 +11,7 @@ export default function OwnerDashboardLayout({
     <OwnerGuard>
       <div className="min-h-screen bg-slate-50">
         <OwnerNavbar />
-        <main className="mx-auto w-full max-w-7xl px-4 pb-16 pt-28 sm:px-6 lg:px-8">
+        <main className="mx-auto w-full max-w-7xl px-4 pb-4 sm:pb-16 pt-10 sm:pt-24 lg:pt-28 sm:px-6 lg:px-8">
           {children}
         </main>
       </div>
