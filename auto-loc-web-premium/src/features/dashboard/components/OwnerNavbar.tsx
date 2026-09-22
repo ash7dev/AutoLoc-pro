@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { useUserStore } from '../../../core/store/useUserStore';
 import { UserProfile } from '../../../types/user';
+import { useHostGate } from '../../owner/hooks/useHostGate';
+import { ReservationGateModal } from '../../reservations/components/ReservationGateModal';
 
 import { OwnerMobileBottomNav } from './OwnerMobileBottomNav';
 
@@ -71,8 +73,27 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
   const panelId = useId();
 
   const user = useUserStore((s) => s.user);
+  const isAuthenticated = useUserStore((s) => s.isAuthenticated);
   const switchRole = useUserStore((s) => s.switchRole);
   const logout = useUserStore((s) => s.logout);
+
+  const { canProceed, missingSteps, userAge } = useHostGate();
+  const [isGateOpen, setIsGateOpen] = useState(false);
+
+  const handleAddVehicleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    if (!canProceed && missingSteps.length > 0) {
+      setIsGateOpen(true);
+    } else {
+      router.push('/dashboard/vehicles/new');
+    }
+  };
 
   // Ferme le menu à chaque changement de page
   useEffect(() => {
@@ -131,7 +152,7 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
     try {
       await logout();
       setIsOpen(false);
-      router.push('/login');
+      router.push('/');
     } catch {
       setActionError('La déconnexion a échoué. Réessayez.');
     } finally {
@@ -221,6 +242,7 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
                 <sm : « Ajouter » · sm→md : libellé complet · md→lg : icône seule · lg+ : libellé complet */}
             <Link
               href="/dashboard/vehicles/new"
+              onClick={handleAddVehicleClick}
               aria-label="Ajouter un véhicule"
               className={`inline-flex items-center justify-center gap-1.5 rounded-full bg-[#F1DFB6] px-3.5 py-2 text-xs font-semibold text-[#0A3D2E] ring-1 ring-inset ring-[#0A3D2E]/15 transition-colors hover:bg-[#EBD49A] sm:px-5 sm:py-2.5 sm:text-sm md:p-2.5 lg:px-5 lg:py-2.5 ${focusRing}`}
             >
@@ -293,7 +315,7 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
 
                     {/* Profil */}
                     <Link
-                      href="/profile"
+                      href="/dashboard/profile"
                       onClick={() => setIsOpen(false)}
                       className={`${menuItem} text-slate-700 hover:bg-slate-100 hover:text-slate-900`}
                     >
@@ -347,6 +369,19 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Modale Host Gate (Profil, SMS OTP, KYC, Permis) */}
+        <ReservationGateModal
+          visible={isGateOpen}
+          mode="OWNER"
+          missingSteps={missingSteps}
+          userAge={userAge}
+          onClose={() => setIsGateOpen(false)}
+          onAllCompleted={() => {
+            setIsGateOpen(false);
+            router.push('/dashboard/vehicles/new');
+          }}
+        />
       </header>
 
       {/* Navigation Basse Mobile (Dock flottant vert forêt pour mobile, masqué sur la fiche détail réservation/véhicule) */}

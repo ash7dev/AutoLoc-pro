@@ -1,10 +1,59 @@
 'use client';
 
 import React from 'react';
-import { Search, ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import { Search, ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, FileText, SearchX, ShieldCheck } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { WalletTransactionItem } from '../../../../core/api/walletApi';
 import type { WalletFilterState } from '../../hooks/useOwnerWalletView';
+
+const WalletLedgerEmptyState: React.FC<{
+  tab: 'ALL' | 'GAINS' | 'RETRAITS' | 'PENALITES';
+  searchQuery: string;
+  onReset: () => void;
+}> = ({ tab, searchQuery, onReset }) => {
+  let title = 'Aucune transaction enregistrée';
+  let description = 'L’historique de vos mouvements financiers apparaîtra ici au fur et à mesure de vos activités.';
+  let IconComp: any = FileText;
+
+  if (searchQuery) {
+    title = `Aucun résultat pour « ${searchQuery} »`;
+    description = 'Aucune opération ne correspond à votre recherche. Vérifiez l’orthographe ou réinitialisez le filtre.';
+    IconComp = SearchX;
+  } else if (tab === 'GAINS') {
+    title = 'Aucun gain de location pour le moment';
+    description = 'Vos revenus de location apparaîtront automatiquement dès qu’une réservation franchit la validation check-in.';
+    IconComp = ArrowDownLeft;
+  } else if (tab === 'RETRAITS') {
+    title = 'Aucun virement Mobile Money';
+    description = 'Vous n’avez pas encore effectué de demande de retrait vers Wave ou Orange Money.';
+    IconComp = ArrowUpRight;
+  } else if (tab === 'PENALITES') {
+    title = 'Aucune pénalité enregistrée';
+    description = 'Excellente nouvelle ! Votre compte ne comporte aucune retenue pour annulation tardive ni pénalité d’infraction.';
+    IconComp = ShieldCheck;
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50/60 p-8 text-center sm:p-12 my-2 w-full">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[#059669] shadow-xs ring-1 ring-slate-200/80 mb-4">
+        <IconComp className="h-7 w-7 text-[#059669]" />
+      </div>
+      <h3 className="font-fraunces text-lg sm:text-xl font-normal text-[#041912]">{title}</h3>
+      <p className="mt-1.5 max-w-md text-xs sm:text-sm text-slate-500 leading-relaxed">
+        {description}
+      </p>
+      {(searchQuery || tab !== 'ALL') && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="mt-5 inline-flex items-center justify-center rounded-xl bg-[#041912] px-4 py-2 text-xs font-bold text-[#F1DFB6] shadow-xs hover:bg-[#0A3D2E] transition-all cursor-pointer"
+        >
+          Réinitialiser tous les filtres
+        </button>
+      )}
+    </div>
+  );
+};
 
 
 
@@ -83,18 +132,36 @@ export const WalletTransactionLedger: React.FC<WalletTransactionLedgerProps> = (
     };
   };
 
-  // Filter client-side by search query if present
+  // Filter client-side by tab and search query
   const filteredTransactions = transactions.filter((tx) => {
-    if (!filters.searchQuery) return true;
-    const q = filters.searchQuery.toLowerCase();
-    const montant = tx.montant?.toString() || '';
-    const resId = tx.reservationId || '';
-    const type = tx.type || '';
-    return (
-      montant.includes(q) ||
-      resId.toLowerCase().includes(q) ||
-      type.toLowerCase().includes(q)
-    );
+    // 1. Tab filtering
+    if (filters.tab === 'GAINS') {
+      const isGain = tx.type === 'CREDIT_LOCATION' || tx.sens === 'CREDIT';
+      if (!isGain) return false;
+    } else if (filters.tab === 'RETRAITS') {
+      const isRetrait = (tx.type === 'RETRAIT' || tx.sens === 'DEBIT') && tx.type !== 'PENALITE_DEBIT' && tx.type !== 'PENALITE';
+      if (!isRetrait) return false;
+    } else if (filters.tab === 'PENALITES') {
+      const isPenalite = tx.type === 'PENALITE_DEBIT' || tx.type === 'PENALITE';
+      if (!isPenalite) return false;
+    }
+
+    // 2. Search query filtering
+    if (filters.searchQuery) {
+      const q = filters.searchQuery.toLowerCase();
+      const montant = tx.montant?.toString() || '';
+      const resId = tx.reservationId || '';
+      const type = tx.type || '';
+      const provider = tx.fournisseur || '';
+      const matches =
+        montant.includes(q) ||
+        resId.toLowerCase().includes(q) ||
+        type.toLowerCase().includes(q) ||
+        provider.toLowerCase().includes(q);
+      if (!matches) return false;
+    }
+
+    return true;
   });
 
   return (
@@ -103,11 +170,11 @@ export const WalletTransactionLedger: React.FC<WalletTransactionLedgerProps> = (
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <h2 className="font-display text-lg sm:text-2xl font-bold text-slate-900">
+            <h2 className="font-fraunces text-xl sm:text-3xl font-normal tracking-tight text-[#041912]">
               Grand Livre des Transactions
             </h2>
             <span className="whitespace-nowrap shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
-              {total} {total > 1 ? 'opérations' : 'opération'}
+              {filteredTransactions.length} {filteredTransactions.length > 1 ? 'opérations' : 'opération'}
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
@@ -142,11 +209,10 @@ export const WalletTransactionLedger: React.FC<WalletTransactionLedgerProps> = (
               key={tabItem.key}
               type="button"
               onClick={() => onFilterChange({ ...filters, tab: tabItem.key as any, page: 1 })}
-              className={`shrink-0 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
-                isActive
+              className={`shrink-0 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${isActive
                   ? 'bg-[#041912] text-[#F1DFB6] shadow-xs'
                   : 'bg-slate-100/80 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
-              }`}
+                }`}
             >
               {tabItem.label}
             </button>
@@ -161,10 +227,11 @@ export const WalletTransactionLedger: React.FC<WalletTransactionLedgerProps> = (
             <div key={idx} className="h-24 animate-pulse rounded-2xl bg-slate-100" />
           ))
         ) : filteredTransactions.length === 0 ? (
-          <div className="py-8 text-center text-slate-400 space-y-2">
-            <FileText className="mx-auto h-7 w-7 text-slate-300" />
-            <p className="text-xs font-medium">Aucune transaction trouvée.</p>
-          </div>
+          <WalletLedgerEmptyState
+            tab={filters.tab}
+            searchQuery={filters.searchQuery}
+            onReset={() => onFilterChange({ ...filters, tab: 'ALL', searchQuery: '', page: 1 })}
+          />
         ) : (
           filteredTransactions.map((tx) => {
             const info = getTxTypeInfo(tx.type, tx.sens, tx.fournisseur);
@@ -195,11 +262,11 @@ export const WalletTransactionLedger: React.FC<WalletTransactionLedgerProps> = (
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className={`font-mono font-bold text-xs ${isCredit ? 'text-emerald-700' : 'text-slate-900'}`}>
-                      {isCredit ? '+' : '-'}&nbsp;{formatCurrency(numericMontant)} <span className="text-[10px]">FCFA</span>
+                    <p className={`font-fraunces font-bold text-sm sm:text-base tabular-nums ${isCredit ? 'text-emerald-700' : 'text-slate-900'}`}>
+                      {isCredit ? '+' : '-'}&nbsp;{formatCurrency(numericMontant)} <span className="font-sans text-[10px] text-slate-400 font-normal">FCFA</span>
                     </p>
-                    <p className="text-[10px] text-slate-400 font-mono">
-                      Solde: {formatCurrency(numericSoldeApres)}
+                    <p className="text-[10px] text-slate-400 font-sans">
+                      Solde: <span className="font-fraunces font-semibold tabular-nums">{formatCurrency(numericSoldeApres)}</span>
                     </p>
                   </div>
                 </div>
@@ -262,14 +329,17 @@ export const WalletTransactionLedger: React.FC<WalletTransactionLedgerProps> = (
                   <td className="py-4"><div className="h-4 w-12 rounded bg-slate-100 ml-auto" /></td>
                 </tr>
               ))
-            ) : filteredTransactions.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-12 text-center text-slate-400 space-y-2">
-                  <FileText className="mx-auto h-8 w-8 text-slate-300" />
-                  <p className="text-sm font-medium">Aucune transaction trouvée.</p>
-                </td>
-              </tr>
-            ) : (
+        ) : filteredTransactions.length === 0 ? (
+          <tr>
+            <td colSpan={6} className="py-6">
+              <WalletLedgerEmptyState
+                tab={filters.tab}
+                searchQuery={filters.searchQuery}
+                onReset={() => onFilterChange({ ...filters, tab: 'ALL', searchQuery: '', page: 1 })}
+              />
+            </td>
+          </tr>
+        ) : (
               filteredTransactions.map((tx) => {
                 const info = getTxTypeInfo(tx.type, tx.sens, tx.fournisseur);
                 const isCredit = tx.sens === 'CREDIT';
@@ -326,14 +396,14 @@ export const WalletTransactionLedger: React.FC<WalletTransactionLedgerProps> = (
                     </td>
 
                     {/* Montant */}
-                    <td className="py-4 text-right font-mono font-bold text-sm">
+                    <td className="py-4 text-right font-fraunces font-bold text-[#041912] text-base tabular-nums">
                       <span className={isCredit ? 'text-emerald-700' : 'text-slate-900'}>
                         {isCredit ? '+' : '-'}&nbsp;{formatCurrency(numericMontant)}
                       </span>
                     </td>
 
                     {/* Solde Après */}
-                    <td className="py-4 text-right font-mono text-xs text-slate-500">
+                    <td className="py-4 text-right font-fraunces text-xs text-slate-500 tabular-nums">
                       {formatCurrency(numericSoldeApres)} FCFA
                     </td>
 

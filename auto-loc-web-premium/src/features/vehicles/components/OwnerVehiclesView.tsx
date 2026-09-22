@@ -25,16 +25,29 @@ import { OwnerVehiclesHeader, OwnerVehicleStats } from './OwnerVehiclesHeader';
 import { OwnerVehicleCard } from './OwnerVehicleCard';
 import { useOwnerVehicles } from '../hooks/useOwnerVehicles';
 import { useUserStore } from '../../../core/store/useUserStore';
+import { useHostGate } from '../../owner/hooks/useHostGate';
+import { ReservationGateModal } from '../../reservations/components/ReservationGateModal';
 import { formatCurrency } from '@/lib/utils';
 import { AddVehicleWizardModal } from './wizard/AddVehicleWizardModal';
 
 export const OwnerVehiclesView: React.FC = () => {
   const { vehicles, isLoading, isForbidden, mutate: fetchVehicles } = useOwnerVehicles(100, 0);
   const switchRole = useUserStore((s) => s.switchRole);
+  const { canProceed, missingSteps, userAge } = useHostGate();
+  
   const [isSwitching, setIsSwitching] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isAddWizardOpen, setIsAddWizardOpen] = useState(false);
+  const [isGateOpen, setIsGateOpen] = useState(false);
+
+  const handleOpenAddVehicle = () => {
+    if (!canProceed && missingSteps.length > 0) {
+      setIsGateOpen(true);
+    } else {
+      setIsAddWizardOpen(true);
+    }
+  };
 
   // Compute stats
   const stats: OwnerVehicleStats = useMemo(() => {
@@ -104,7 +117,7 @@ export const OwnerVehiclesView: React.FC = () => {
         onStatusChange={setSelectedStatus}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onAddVehicle={() => setIsAddWizardOpen(true)}
+        onAddVehicle={handleOpenAddVehicle}
         onRefresh={fetchVehicles}
         isLoading={isLoading}
       />
@@ -177,14 +190,14 @@ export const OwnerVehiclesView: React.FC = () => {
                   setSelectedStatus('ALL');
                   setSearchQuery('');
                 }}
-                className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="rounded-xl border border-[#0A3D2E]/10 bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 Réinitialiser les filtres
               </button>
             )}
             <button
               type="button"
-              onClick={() => setIsAddWizardOpen(true)}
+              onClick={handleOpenAddVehicle}
               className="inline-flex items-center gap-2 rounded-xl bg-[#0A3D2E] px-5 py-2.5 text-xs font-bold text-[#F1DFB6] shadow-md hover:bg-[#0F4F3B] transition-all cursor-pointer"
             >
               <Plus className="h-4 w-4" />
@@ -206,6 +219,19 @@ export const OwnerVehiclesView: React.FC = () => {
           </AnimatePresence>
         </div>
       )}
+
+      {/* Modale Host Gate (Profil, Téléphone OTP, KYC, Permis) */}
+      <ReservationGateModal
+        visible={isGateOpen}
+        mode="OWNER"
+        missingSteps={missingSteps}
+        userAge={userAge}
+        onClose={() => setIsGateOpen(false)}
+        onAllCompleted={() => {
+          setIsGateOpen(false);
+          setIsAddWizardOpen(true);
+        }}
+      />
 
       {/* Wizard Modale pour Ajouter un Véhicule */}
       <AddVehicleWizardModal

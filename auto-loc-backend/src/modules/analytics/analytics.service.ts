@@ -676,7 +676,7 @@ export class AnalyticsService {
       }),
     ]);
 
-    // Règle 1 : Confirmation en attente (Urgence Opérationnelle)
+    // Règle 1 : Confirmation en attente (Urgence Opérationnelle - Priorité 100)
     if (pendingConfirmations.length > 0) {
       insights.push({
         id: 'ins-pending-confirmations',
@@ -684,45 +684,35 @@ export class AnalyticsService {
         category: 'OPERATIONNEL',
         titre: 'Réservation en attente de confirmation',
         message: `Vous avez ${pendingConfirmations.length} réservation(s) payée(s) en attente de votre confirmation.`,
+        scorePriorite: 100,
         actionCode: 'CONFIRM_RESERVATION',
       });
     }
 
-    // Règle 2 : Solde disponible retirable
+    // Règle 2 : Solde disponible retirable (Priorité 90)
     const solde = wallet ? Number(wallet.soldeDisponible) : 0;
     const penaliteTotal = penalites.reduce((sum, p) => sum + Number(p.montant), 0);
     const retirable = Math.max(0, solde - penaliteTotal);
-    if (retirable >= 25000) {
+    if (retirable >= 10000) {
       insights.push({
         id: 'ins-wallet-retrait',
         niveau: 'DESCRIPTIF',
         category: 'PERFORMANCE',
         titre: 'Solde retirable disponible',
         message: `Vous disposez de ${retirable.toLocaleString('fr-FR')} FCFA prêts à être retirés vers votre compte Wave ou Orange Money.`,
+        scorePriorite: 90,
         actionCode: 'WITHDRAW_FUNDS',
       });
     }
 
     // Analyse par véhicule
+    let totalReservationsFlotte = 0;
     for (const v of vehicules) {
       const vues = v.metrics?.vues30j ?? 0;
       const resCount = v.reservations.length;
+      totalReservationsFlotte += resCount;
 
-      // Règle 3 : Vues élevées mais aucune réservation (Diagnostic)
-      if (vues >= 40 && resCount === 0) {
-        insights.push({
-          id: `ins-high-views-no-booking-${v.id}`,
-          niveau: 'DIAGNOSTIQUE',
-          category: 'TARIFICATION',
-          titre: `Opportunité sur ${v.marque} ${v.modele}`,
-          message: `Votre véhicule enregistre ${vues} vues sur 30 jours sans réservation. Envisagez de réviser le tarif journalier (${Number(v.prixParJour).toLocaleString('fr-FR')} FCFA) ou d'ajuster les jours minimums (${v.joursMinimum} j).`,
-          vehiculeId: v.id,
-          vehiculeName: `${v.marque} ${v.modele}`,
-          actionCode: 'UPDATE_PRICE',
-        });
-      }
-
-      // Règle 4 : Photos insuffisantes
+      // Règle 3 : Photos insuffisantes (Priorité 85)
       if (v.photos.length < 3) {
         insights.push({
           id: `ins-low-photos-${v.id}`,
@@ -732,10 +722,55 @@ export class AnalyticsService {
           message: `Votre fiche ne contient que ${v.photos.length} photo(s). Les annonces avec au moins 4 photos haute qualité reçoivent 3x plus de clics.`,
           vehiculeId: v.id,
           vehiculeName: `${v.marque} ${v.modele}`,
+          scorePriorite: 85,
           actionCode: 'ADD_PHOTOS',
         });
       }
+
+      // Règle 4 : Vues élevées mais aucune réservation (Priorité 80)
+      if (vues >= 40 && resCount === 0) {
+        insights.push({
+          id: `ins-high-views-no-booking-${v.id}`,
+          niveau: 'DIAGNOSTIQUE',
+          category: 'TARIFICATION',
+          titre: `Opportunité sur ${v.marque} ${v.modele}`,
+          message: `Votre véhicule enregistre ${vues} vues sur 30 jours sans réservation. Envisagez de réviser le tarif journalier (${Number(v.prixParJour).toLocaleString('fr-FR')} FCFA) ou d'ajuster les jours minimums (${v.joursMinimum} j).`,
+          vehiculeId: v.id,
+          vehiculeName: `${v.marque} ${v.modele}`,
+          scorePriorite: 80,
+          actionCode: 'UPDATE_PRICE',
+        });
+      }
     }
+
+    // Règle 5 : Booster d'amorçage (Priorité 70)
+    if (vehicules.length > 0 && totalReservationsFlotte < 2) {
+      insights.push({
+        id: 'ins-boost-onboarding',
+        niveau: 'DESCRIPTIF',
+        category: 'PERFORMANCE',
+        titre: 'Booster vos premières réservations',
+        message: 'Partagez le lien direct de vos annonces sur WhatsApp et réseaux sociaux. Les annonces partagées trouvent un locataire 3x plus vite.',
+        scorePriorite: 70,
+        actionCode: 'SHARE_LISTING',
+      });
+    }
+
+    // Règle 6 : Conseils de calendrier et disponibilité (Priorité 60)
+    if (vehicules.length > 0) {
+      insights.push({
+        id: 'ins-calendar-availability',
+        niveau: 'DESCRIPTIF',
+        category: 'OPERATIONNEL',
+        titre: 'Mettez à jour vos disponibilités',
+        message: 'Un calendrier régulièrement mis à jour augmente de 25% la confiance des locataires et prévient les annulations.',
+        scorePriorite: 60,
+        actionCode: 'UPDATE_CALENDAR',
+      });
+    }
+
+    // Tri déterministe par score de priorité décroissant
+    insights.sort((a, b) => (b.scorePriorite ?? 0) - (a.scorePriorite ?? 0));
 
     return {
       generatedAt: new Date().toISOString(),

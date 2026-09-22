@@ -59,14 +59,14 @@ export const WalletHeroBanner: React.FC<WalletHeroBannerProps> = ({
             </div>
             <p className="text-xs sm:text-sm font-medium text-[#F1DFB6]/75">Solde Retirable Instantané</p>
             <div className="flex items-baseline gap-2.5 flex-wrap">
-              <h2 className="font-display text-3xl font-extrabold tracking-tight text-[#F1DFB6] sm:text-5xl lg:text-6xl tabular-nums">
+              <h2 className="font-fraunces text-4xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-[#F1DFB6] tabular-nums">
                 {formatCurrency(soldeRetirable)}
               </h2>
               <span className="text-base font-bold text-[#F1DFB6]/60 sm:text-lg">FCFA</span>
             </div>
             {soldeDisponible !== soldeRetirable && (
               <p className="text-[11px] sm:text-xs text-[#F1DFB6]/70 leading-relaxed">
-                Solde total brut : <span className="font-semibold text-[#F1DFB6]">{formatCurrency(soldeDisponible)} FCFA</span>
+                Solde total brut : <span className="font-fraunces font-semibold text-[#F1DFB6] tabular-nums">{formatCurrency(soldeDisponible)} FCFA</span>
                 {totalPenalites > 0 && (
                   <span className="block sm:inline sm:ml-1 text-amber-300">({formatCurrency(totalPenalites)} FCFA de pénalité déduite)</span>
                 )}
@@ -113,8 +113,8 @@ export const WalletHeroBanner: React.FC<WalletHeroBannerProps> = ({
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <p className="font-display text-sm sm:text-lg font-bold text-white tabular-nums">
-                  {formatCurrency(soldeWave)} <span className="text-[10px] sm:text-xs font-normal text-slate-300">FCFA</span>
+                <p className="font-fraunces text-base sm:text-xl font-normal text-white tabular-nums">
+                  {formatCurrency(soldeWave)} <span className="font-sans text-[10px] sm:text-xs font-normal text-slate-300">FCFA</span>
                 </p>
                 {soldeWave > 0 && (
                   <span className="text-[10px] sm:text-[11px] font-semibold text-[#00C3FF] group-hover:underline">
@@ -148,8 +148,8 @@ export const WalletHeroBanner: React.FC<WalletHeroBannerProps> = ({
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <p className="font-display text-sm sm:text-lg font-bold text-white tabular-nums">
-                  {formatCurrency(soldeOm)} <span className="text-[10px] sm:text-xs font-normal text-slate-300">FCFA</span>
+                <p className="font-fraunces text-base sm:text-xl font-normal text-white tabular-nums">
+                  {formatCurrency(soldeOm)} <span className="font-sans text-[10px] sm:text-xs font-normal text-slate-300">FCFA</span>
                 </p>
                 {soldeOm > 0 && (
                   <span className="text-[10px] sm:text-[11px] font-semibold text-[#FF6600] group-hover:underline">

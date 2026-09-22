@@ -125,7 +125,16 @@ export interface OwnerInsightItem {
   message: string;
   vehiculeId?: string;
   vehiculeName?: string;
-  actionCode?: 'UPDATE_PRICE' | 'REDUCE_MIN_DAYS' | 'ADD_PHOTOS' | 'CONFIRM_RESERVATION' | 'WITHDRAW_FUNDS';
+  scorePriorite?: number;
+  actionCode?:
+    | 'UPDATE_PRICE'
+    | 'REDUCE_MIN_DAYS'
+    | 'ADD_PHOTOS'
+    | 'CONFIRM_RESERVATION'
+    | 'WITHDRAW_FUNDS'
+    | 'SHARE_LISTING'
+    | 'UPDATE_CALENDAR'
+    | 'ENABLE_DELIVERY';
   metadata?: Record<string, unknown>;
 }
 

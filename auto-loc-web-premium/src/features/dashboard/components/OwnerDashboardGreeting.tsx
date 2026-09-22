@@ -159,7 +159,7 @@ export const OwnerDashboardGreeting: React.FC<OwnerDashboardGreetingProps> = ({
               </Link>
             )}
             {canWithdraw && (
-              <Link href={OWNER_ROUTES.wallet} className={`${PILL} ${PILL_PRIMARY}`}>
+              <Link href={OWNER_ROUTES.wallet} className={`${PILL} ${PILL_PRIMARY} md:hidden`}>
                 <Wallet className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
                 Retirer mes gains
                 <span className="rounded-full bg-[#F1DFB6] px-2 py-0.5 text-xs font-semibold tabular-nums text-[#041912]">

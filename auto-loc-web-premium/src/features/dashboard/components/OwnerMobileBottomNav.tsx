@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Car, CalendarCheck, Wallet } from 'lucide-react';
+import { LayoutDashboard, Car, CalendarCheck, Wallet, User } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface OwnerMobileBottomNavProps {
@@ -16,7 +16,7 @@ export const OwnerMobileBottomNav: React.FC<OwnerMobileBottomNavProps> = ({
 }) => {
   const pathname = usePathname() ?? '';
 
-  // Mêmes libellés et même ordre que la navbar desktop (OwnerNavbar)
+  // Libellés et navigation mobile
   const items = [
     { label: "Aujourd'hui", href: '/dashboard', icon: LayoutDashboard, badge: 0 },
     {
@@ -27,6 +27,7 @@ export const OwnerMobileBottomNav: React.FC<OwnerMobileBottomNavProps> = ({
     },
     { label: 'Véhicules', href: '/dashboard/vehicles', icon: Car, badge: 0 },
     { label: 'Revenus', href: '/dashboard/wallet', icon: Wallet, badge: 0 },
+    { label: 'Profil', href: '/dashboard/profile', icon: User, badge: 0 },
   ];
 
   return (
@@ -34,7 +35,7 @@ export const OwnerMobileBottomNav: React.FC<OwnerMobileBottomNavProps> = ({
       aria-label="Navigation propriétaire mobile"
       className="fixed inset-x-3 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 md:hidden"
     >
-      <div className="mx-auto flex max-w-[360px] items-center rounded-full border border-[#F1DFB6]/15 bg-[#0A3D2E] p-1.5 shadow-[0_14px_34px_-12px_rgba(10,61,46,0.55)]">
+      <div className="mx-auto flex max-w-[420px] items-center rounded-full border border-[#F1DFB6]/15 bg-[#0A3D2E] p-1.5 shadow-[0_14px_34px_-12px_rgba(10,61,46,0.55)]">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive =

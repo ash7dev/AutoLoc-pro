@@ -47,6 +47,8 @@ function resolveAction(code?: string): { label: string; href: string } | null {
   if (!code) return null;
   const key = code.toUpperCase();
 
+  if (/WITHDRAW|WALLET|SOLDE/.test(key)) return { label: 'Retirer mes gains', href: OWNER_ROUTES.wallet };
+  if (/SHARE|PARTAGE|LINK/.test(key)) return { label: 'Partager mes annonces', href: OWNER_ROUTES.fleet };
   if (/PRIX|PRICE|TARIF/.test(key)) return { label: 'Ajuster le prix', href: OWNER_ROUTES.fleet };
   if (/PHOTO|IMAGE/.test(key)) return { label: 'Ajouter des photos', href: OWNER_ROUTES.fleet };
   if (/CALEND|DISPO|AVAIL/.test(key)) return { label: 'Ouvrir le calendrier', href: OWNER_ROUTES.fleet };

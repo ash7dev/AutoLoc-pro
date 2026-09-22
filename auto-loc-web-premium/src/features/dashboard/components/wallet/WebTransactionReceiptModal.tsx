@@ -79,8 +79,8 @@ export const WebTransactionReceiptModal: React.FC<WebTransactionReceiptModalProp
               <p className="text-xs text-[#F1DFB6]/75 uppercase tracking-wider font-semibold">
                 {isCredit ? 'Gain de Location Encaissé' : 'Débit / Virement Effectué'}
               </p>
-              <h3 className="font-display text-3xl font-extrabold text-[#F1DFB6] tabular-nums mt-1">
-                {isCredit ? '+' : '-'}&nbsp;{formatCurrency(numericMontant)} <span className="text-sm font-sans text-[#F1DFB6]/60">FCFA</span>
+              <h3 className="font-fraunces text-3xl sm:text-4xl font-normal text-[#F1DFB6] tabular-nums mt-1">
+                {isCredit ? '+' : '-'}&nbsp;{formatCurrency(numericMontant)} <span className="text-sm font-sans text-[#F1DFB6]/60 font-normal">FCFA</span>
               </h3>
             </div>
           </div>

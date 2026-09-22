@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Calendar,
@@ -51,8 +52,15 @@ const menuItemClass =
 export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const logout = useUserStore((s) => s.logout);
   const switchRole = useUserStore((s) => s.switchRole);
+
+  const handleLogout = async () => {
+    setIsOpen(false);
+    await logout();
+    router.push('/');
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -190,10 +198,7 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }
 
             <button
               type="button"
-              onClick={() => {
-                setIsOpen(false);
-                logout();
-              }}
+              onClick={handleLogout}
               className={`${menuItemClass} text-rose-600 hover:bg-rose-50`}
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-50 text-rose-600 transition-colors group-hover:bg-rose-100">

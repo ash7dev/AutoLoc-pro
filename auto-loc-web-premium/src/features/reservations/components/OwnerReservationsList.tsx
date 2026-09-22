@@ -2,10 +2,14 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Car, ChevronDown, History } from 'lucide-react';
 import { OwnerReservationItem } from '../../../core/api/reservationsApi';
 import { OwnerReservationCard } from './OwnerReservationCard';
+import { useUserStore } from '@/src/core/store/useUserStore';
+import { useHostGate } from '@/src/features/owner/hooks/useHostGate';
+import { ReservationGateModal } from '@/src/features/reservations/components/ReservationGateModal';
 
 export interface OwnerReservationsListProps {
   reservations: OwnerReservationItem[];
@@ -33,6 +37,23 @@ export const OwnerReservationsList: React.FC<OwnerReservationsListProps> = ({
   selectedStatus = 'ALL',
   searchQuery = '',
 }) => {
+  const router = useRouter();
+  const isAuthenticated = useUserStore((s) => s.isAuthenticated);
+  const { canProceed, missingSteps, userAge } = useHostGate();
+  const [gateOpen, setGateOpen] = useState(false);
+
+  const handlePublishVehicleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+    if (!canProceed && missingSteps.length > 0) {
+      setGateOpen(true);
+      return;
+    }
+    router.push('/dashboard/vehicles/new');
+  };
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const filteredList = (reservations || []).filter((item) => {
@@ -96,6 +117,7 @@ export const OwnerReservationsList: React.FC<OwnerReservationsListProps> = ({
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <Link
               href="/dashboard/vehicles/new"
+              onClick={handlePublishVehicleClick}
               className="inline-flex items-center gap-2 rounded-2xl border border-[#4ADE80]/30 bg-[#041912] px-5 py-2.5 text-xs font-bold text-[#4ADE80] transition-colors hover:bg-[#0A3D2E] sm:text-sm"
             >
               <Car className="h-4 w-4" />
@@ -215,6 +237,18 @@ export const OwnerReservationsList: React.FC<OwnerReservationsListProps> = ({
           )}
         </AnimatePresence>
       </div>
+
+      <ReservationGateModal
+        visible={gateOpen}
+        mode="OWNER"
+        missingSteps={missingSteps}
+        userAge={userAge}
+        onClose={() => setGateOpen(false)}
+        onAllCompleted={() => {
+          setGateOpen(false);
+          router.push('/dashboard/vehicles/new');
+        }}
+      />
     </div>
   );
 };
