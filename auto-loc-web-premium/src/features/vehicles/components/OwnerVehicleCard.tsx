@@ -41,9 +41,10 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
 }) => {
   const defaultImg =
     'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80';
+  const firstPhoto = vehicle.photos && vehicle.photos[0];
   const photoUrl =
     vehicle.photoUrl ||
-    (vehicle.photos && vehicle.photos[0]?.url) ||
+    (typeof firstPhoto === 'string' ? firstPhoto : firstPhoto?.url) ||
     defaultImg;
 
   const isLocked = Boolean((vehicle as any).estVerrouille);

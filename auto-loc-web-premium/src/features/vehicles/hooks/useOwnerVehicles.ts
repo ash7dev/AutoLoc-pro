@@ -30,24 +30,19 @@ export function useOwnerVehicles(limit = 50, offset = 0): UseOwnerVehiclesReturn
   const { data, error, isLoading, mutate } = useSWR(
     shouldFetch ? ['owner-vehicles-list', limit, offset] : null,
     async () => {
-      try {
-        const res = await vehicleService.getMyVehicles(limit, offset);
-        if (res && Array.isArray(res.data)) {
-          return res;
-        }
-        if (Array.isArray(res)) {
-          return { data: res, total: (res as any[]).length, limit, offset };
-        }
-        return { data: [], total: 0, limit, offset };
-      } catch (err: any) {
-        console.warn('[useOwnerVehicles] Backend /vehicles/me exception capturée:', err);
-        return { data: [], total: 0, limit, offset, error: err };
+      const res = await vehicleService.getMyVehicles(limit, offset);
+      if (res && Array.isArray(res.data)) {
+        return res;
       }
+      if (Array.isArray(res)) {
+        return { data: res, total: (res as any[]).length, limit, offset };
+      }
+      return { data: [], total: 0, limit, offset };
     },
     {
       revalidateOnFocus: false,
       revalidateIfStale: true,
-      dedupingInterval: 15000,
+      dedupingInterval: 5000,
       errorRetryCount: 1,
     }
   );
@@ -56,16 +51,17 @@ export function useOwnerVehicles(limit = 50, offset = 0): UseOwnerVehiclesReturn
     error?.status === 403 ||
       error?.statusCode === 403 ||
       (typeof error?.message === 'string' &&
-        (error.message.includes('Rôle') || error.message.includes('403') || error.message.includes('Forbidden')))
+        (error.message.includes('Rôle') || error.message.includes('403') || error.message.includes('Forbidden') || error.message.includes('incomplet')))
   );
 
   return {
     vehicles: data?.data ?? [],
     total: data?.total ?? (data?.data?.length ?? 0),
     isLoading: shouldFetch ? isLoading : !isInitialized,
-    isError: !!error || Boolean((data as any)?.error),
+    isError: !!error,
     isForbidden,
-    error: error || (data as any)?.error,
+    error,
     mutate,
   };
 }
+

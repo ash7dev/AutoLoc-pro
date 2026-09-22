@@ -46,7 +46,7 @@ export const OwnerVehiclesView: React.FC = () => {
 
     vehicles.forEach((v) => {
       const s = (v.statut || '').toUpperCase();
-      if (s === 'VERIFIE') verifies++;
+      if (s === 'VERIFIE' || s === 'DISPONIBLE') verifies++;
       else if (s === 'EN_ATTENTE_VALIDATION') enAttente++;
       else if (s === 'BROUILLON') brouillons++;
       else if (s === 'ARCHIVE') archives++;
@@ -70,7 +70,7 @@ export const OwnerVehiclesView: React.FC = () => {
       // Status filter
       if (selectedStatus !== 'ALL') {
         const s = (v.statut || '').toUpperCase();
-        if (selectedStatus === 'VERIFIE' && s !== 'VERIFIE') return false;
+        if (selectedStatus === 'VERIFIE' && s !== 'VERIFIE' && s !== 'DISPONIBLE') return false;
         if (selectedStatus === 'EN_ATTENTE_VALIDATION' && s !== 'EN_ATTENTE_VALIDATION') return false;
         if (selectedStatus === 'BROUILLON' && s !== 'BROUILLON') return false;
         if (selectedStatus === 'ARCHIVE' && s !== 'ARCHIVE') return false;

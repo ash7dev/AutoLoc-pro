@@ -58,6 +58,7 @@ export interface Vehicle {
   annee: number;
   type: VehicleType;
   prixParJour: number;
+  immatriculation?: string;
   ville: string;
   adresse?: string;
   latitude?: number | null;

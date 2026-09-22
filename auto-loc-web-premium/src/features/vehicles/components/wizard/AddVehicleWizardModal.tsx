@@ -20,6 +20,7 @@ import { WizardStep7Review } from './WizardStep7Review';
 interface AddVehicleWizardModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
   onVehicleCreated?: () => void;
   onVehicleUpdated?: () => void;
   mode?: 'CREATE' | 'EDIT';
@@ -122,13 +123,13 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
 
           const mappedTiers = Array.isArray(v.tarifsProgressifs)
             ? v.tarifsProgressifs.map((t: any) => ({
-                joursMin: Number(t.joursMin),
-                joursMax: t.joursMax ? Number(t.joursMax) : undefined,
-                prix: Number(t.prix),
-              }))
+              joursMin: Number(t.joursMin),
+              joursMax: t.joursMax ? Number(t.joursMax) : undefined,
+              prix: Number(t.prix),
+            }))
             : Array.isArray(v.tiers)
-            ? v.tiers
-            : [];
+              ? v.tiers
+              : [];
 
           setStep5({
             prixParJour: Number(v.prixParJour || 25000),
@@ -263,16 +264,16 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
     currentStep === 1
       ? isStep1Valid
       : currentStep === 2
-      ? isStep2Valid
-      : currentStep === 3
-      ? isStep3Valid
-      : currentStep === 4
-      ? isStep4Valid
-      : currentStep === 5
-      ? isStep5Valid
-      : currentStep === 6
-      ? isStep6Valid
-      : true;
+        ? isStep2Valid
+        : currentStep === 3
+          ? isStep3Valid
+          : currentStep === 4
+            ? isStep4Valid
+            : currentStep === 5
+              ? isStep5Valid
+              : currentStep === 6
+                ? isStep6Valid
+                : true;
 
   const totalSteps = isEditMode ? 6 : 7;
   const stepNumbers = isEditMode ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6, 7];
@@ -388,10 +389,10 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
         tiers:
           step5.tiers && step5.tiers.length > 0
             ? step5.tiers.map((t) => ({
-                joursMin: Number(t.joursMin),
-                joursMax: t.joursMax ? Number(t.joursMax) : undefined,
-                prix: Number(t.prix),
-              }))
+              joursMin: Number(t.joursMin),
+              joursMax: t.joursMax ? Number(t.joursMax) : undefined,
+              prix: Number(t.prix),
+            }))
             : undefined,
         photos: photoPayload,
         carteGriseUrl: carteGriseRes.url,
@@ -433,6 +434,7 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
 
   const handleFinishModal = () => {
     setPublishModalVisible(false);
+    onSuccess?.();
     if (isEditMode) {
       onVehicleUpdated?.();
     } else {
@@ -517,13 +519,12 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
                     key={stepNum}
                     type="button"
                     onClick={() => setCurrentStep(stepNum)}
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all ${
-                      isActive
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all ${isActive
                         ? 'bg-[#059669] text-white font-bold border border-[#4ADE80]'
                         : isCompleted
-                        ? 'bg-[#10B981]/20 sm:bg-[#F0FDF4] text-[#4ADE80] sm:text-[#047857] border border-[#4ADE80]/30 sm:border-[#A7F3D0]'
-                        : 'bg-white/5 sm:bg-white text-slate-400 sm:text-slate-600 border border-white/10 sm:border-slate-200'
-                    }`}
+                          ? 'bg-[#10B981]/20 sm:bg-[#F0FDF4] text-[#4ADE80] sm:text-[#047857] border border-[#4ADE80]/30 sm:border-[#A7F3D0]'
+                          : 'bg-white/5 sm:bg-white text-slate-400 sm:text-slate-600 border border-white/10 sm:border-slate-200'
+                      }`}
                   >
                     {isCompleted && !isActive && <Check className="h-3 w-3 stroke-[3]" />}
                     {SHORT_STEP_NAMES[stepNum - 1]}
@@ -541,13 +542,12 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
               return (
                 <div
                   key={stepNum}
-                  className={`flex-1 transition-all duration-300 ${
-                    isCompleted
+                  className={`flex-1 transition-all duration-300 ${isCompleted
                       ? 'bg-[#4ADE80] sm:bg-[#059669] opacity-80'
                       : isActive
-                      ? 'bg-[#059669]'
-                      : 'bg-white/10 sm:bg-slate-200'
-                  }`}
+                        ? 'bg-[#059669]'
+                        : 'bg-white/10 sm:bg-slate-200'
+                    }`}
                 />
               );
             })}
@@ -609,11 +609,10 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
               type="button"
               onClick={handleNext}
               disabled={!canProceed || submitting}
-              className={`flex items-center justify-center gap-3 rounded-full px-6 py-3 text-sm font-bold text-white shadow-xl transition-all ${
-                !canProceed
+              className={`flex items-center justify-center gap-3 rounded-full px-6 py-3 text-sm font-bold text-white shadow-xl transition-all ${!canProceed
                   ? 'bg-white/15 sm:bg-slate-200 text-white/50 sm:text-slate-400 cursor-not-allowed'
                   : 'bg-[#041912] sm:bg-[#059669] border border-[#4ADE80]/40 sm:border-[#059669] hover:bg-[#047857] active:scale-[0.98]'
-              }`}
+                }`}
             >
               <span>
                 {currentStep === totalSteps

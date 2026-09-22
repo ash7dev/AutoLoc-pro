@@ -309,6 +309,14 @@ export class VehiclesService {
         indisponibilites: {
           where: { dateFin: { gte: new Date() } },
           orderBy: { dateDebut: 'asc' },
+          select: {
+            id: true,
+            vehiculeId: true,
+            dateDebut: true,
+            dateFin: true,
+            motif: true,
+            creeLe: true,
+          },
         },
         _count: { select: { reservations: true } },
       },
@@ -332,6 +340,7 @@ export class VehiclesService {
             statut: { in: ['EN_COURS', 'CONFIRMEE'] },
           },
           select: { vehiculeId: true },
+          orderBy: { vehiculeId: 'asc' },
           distinct: ['vehiculeId'],
         })
       : [];
@@ -2217,6 +2226,14 @@ export class VehiclesService {
         dateFin,
         motif: dto.motif ?? null,
       },
+      select: {
+        id: true,
+        vehiculeId: true,
+        dateDebut: true,
+        dateFin: true,
+        motif: true,
+        creeLe: true,
+      },
     });
 
     await this.invalidateSearchCache();
@@ -2227,6 +2244,14 @@ export class VehiclesService {
     const indisponibilites = await this.prisma.indisponibiliteVehicule.findMany({
       where: { vehiculeId },
       orderBy: { dateDebut: 'asc' },
+      select: {
+        id: true,
+        vehiculeId: true,
+        dateDebut: true,
+        dateFin: true,
+        motif: true,
+        creeLe: true,
+      },
     });
     return { data: indisponibilites, total: indisponibilites.length };
   }

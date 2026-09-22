@@ -4,6 +4,20 @@ export interface ApiRequestOptions extends RequestInit {
   params?: Record<string, unknown>;
 }
 
+export class ApiError extends Error {
+  status: number;
+  statusCode: number;
+  data: any;
+
+  constructor(message: string, status: number, data?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.statusCode = status;
+    this.data = data;
+  }
+}
+
 class ApiClient {
   private baseUrl: string;
 
@@ -43,7 +57,8 @@ class ApiClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Erreur API (${response.status})`);
+      const message = errorData.message || `Erreur API (${response.status})`;
+      throw new ApiError(Array.isArray(message) ? message.join(', ') : message, response.status, errorData);
     }
 
     return response.json();
@@ -67,7 +82,8 @@ class ApiClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Erreur API (${response.status})`);
+      const message = errorData.message || `Erreur API (${response.status})`;
+      throw new ApiError(Array.isArray(message) ? message.join(', ') : message, response.status, errorData);
     }
 
     return response.json();
@@ -91,7 +107,8 @@ class ApiClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Erreur API (${response.status})`);
+      const message = errorData.message || `Erreur API (${response.status})`;
+      throw new ApiError(Array.isArray(message) ? message.join(', ') : message, response.status, errorData);
     }
 
     return response.json();
@@ -115,7 +132,8 @@ class ApiClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Erreur API (${response.status})`);
+      const message = errorData.message || `Erreur API (${response.status})`;
+      throw new ApiError(Array.isArray(message) ? message.join(', ') : message, response.status, errorData);
     }
 
     return response.json();
@@ -138,7 +156,8 @@ class ApiClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Erreur API (${response.status})`);
+      const message = errorData.message || `Erreur API (${response.status})`;
+      throw new ApiError(Array.isArray(message) ? message.join(', ') : message, response.status, errorData);
     }
 
     return response.json();
@@ -146,4 +165,5 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient();
+
 
