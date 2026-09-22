@@ -59,7 +59,7 @@ const ACTIONS: QuickActionItem[] = [
     key: 'stats',
     title: 'Voir mes stats & activités',
     subtitle: "Taux d'occupation, revenus et performance",
-    href: '/dashboard#stats',
+    href: '/dashboard/stats',
     icon: BarChart3,
   },
   {

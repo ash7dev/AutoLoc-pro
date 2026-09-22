@@ -654,7 +654,9 @@ export class AnalyticsService {
           modele: true,
           prixParJour: true,
           joursMinimum: true,
+          misAJourLe: true,
           photos: { select: { id: true } },
+          indisponibilites: { select: { creeLe: true } },
           metrics: { select: { vues30j: true, clics30j: true } },
           reservations: {
             where: { statut: { in: [StatutReservation.PAYEE, StatutReservation.CONFIRMEE, StatutReservation.EN_COURS, StatutReservation.TERMINEE] } },
@@ -756,14 +758,21 @@ export class AnalyticsService {
       });
     }
 
-    // Règle 6 : Conseils de calendrier et disponibilité (Priorité 60)
-    if (vehicules.length > 0) {
+    // Règle 6 : Conseils de calendrier et disponibilité (Déclenché uniquement si aucune modification depuis > 14 jours)
+    const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+    const hasRecentCalendarActivity = vehicules.some((v) => {
+      const recentIndispo = v.indisponibilites?.some((i) => new Date(i.creeLe) >= fourteenDaysAgo);
+      const recentUpdate = v.misAJourLe && new Date(v.misAJourLe) >= fourteenDaysAgo;
+      return Boolean(recentIndispo || recentUpdate);
+    });
+
+    if (vehicules.length > 0 && !hasRecentCalendarActivity) {
       insights.push({
         id: 'ins-calendar-availability',
         niveau: 'DESCRIPTIF',
         category: 'OPERATIONNEL',
-        titre: 'Mettez à jour vos disponibilités',
-        message: 'Un calendrier régulièrement mis à jour augmente de 25% la confiance des locataires et prévient les annulations.',
+        titre: 'Vérifiez vos disponibilités à venir',
+        message: 'Vous n’avez pas mis à jour vos indisponibilités depuis plus de 2 semaines. Pensez à bloquer vos dates personnelles.',
         scorePriorite: 60,
         actionCode: 'UPDATE_CALENDAR',
       });

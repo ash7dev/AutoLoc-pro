@@ -43,6 +43,6 @@ export const OWNER_ROUTES = {
     wallet: '/dashboard/wallet',
     fleet: '/dashboard/vehicles',
     newListing: '/dashboard/vehicles/new',
-    stats: '/dashboard#stats',
-    profile: '/profile',
+    stats: '/dashboard/stats',
+    profile: '/dashboard/profile',
 } as const;

@@ -39,18 +39,16 @@ export function useOwnerDashboard(options?: UseOwnerDashboardOptions) {
     data: overview,
     error: errorOverview,
     isLoading: isLoadingOverview,
+    mutate: mutateOverview,
   } = useSWR<OwnerOverviewAnalytics>('analytics-overview', () =>
     ownerDashboardApi.analytics.getOverview()
   );
 
-  /**
-   * 2. GET /analytics/owner/revenue-breakdown
-   * Rôle : Récupère les séries temporelles de revenus selon la plage (7d, 30d, 6m, 1y) et le groupement (jour, semaine, mois).
-   */
   const {
     data: revenue,
     error: errorRevenue,
     isLoading: isLoadingRevenue,
+    mutate: mutateRevenue,
   } = useSWR<RevenueBreakdownResponse>(
     ['analytics-revenue', revenueGroupBy, revenueTimeRange],
     () => {
@@ -77,90 +75,71 @@ export function useOwnerDashboard(options?: UseOwnerDashboardOptions) {
     }
   );
 
-  /**
-   * 3. GET /analytics/owner/occupancy
-   * Rôle : Calcule et ventile le taux d'occupation commercial réel de la flotte sur 30 jours.
-   * Fournit : Répartition exacte des jours de calendrier entre jours loués, disponibles,
-   * bloqués à titre personnel et véhicules en maintenance (OccupancyDonutCard).
-   */
   const {
     data: occupancy,
     error: errorOccupancy,
     isLoading: isLoadingOccupancy,
+    mutate: mutateOccupancy,
   } = useSWR<OccupancyAnalyticsResponse>('analytics-occupancy', () =>
     ownerDashboardApi.analytics.getOccupancyStats()
   );
 
-  /**
-   * 4. GET /analytics/owner/fleet-performance
-   * Rôle : Analyse la rentabilité et l'attractivité individuelle de chaque véhicule.
-   * Fournit : Classement de la flotte avec CA net par véhicule, taux d'occupation,
-   * nombre de vues, clics 30 jours, taux de conversion et note moyenne (FleetPerformanceTable).
-   */
   const {
     data: fleet,
     error: errorFleet,
     isLoading: isLoadingFleet,
+    mutate: mutateFleet,
   } = useSWR<FleetPerformanceResponse>('analytics-fleet', () =>
     ownerDashboardApi.analytics.getFleetPerformance()
   );
 
-  /**
-   * 5. GET /analytics/owner/insights
-   * Rôle : Génère des recommandations et diagnostics automatisés par IA.
-   * Fournit : Conseils catégorisés (Performance, Tarification, Qualité d'annonce, Opérationnel)
-   * avec codes d'action directs pour maximiser le chiffre d'affaires (InsightsPanel).
-   */
   const {
     data: insights,
     error: errorInsights,
     isLoading: isLoadingInsights,
+    mutate: mutateInsights,
   } = useSWR<OwnerInsightsResponse>('analytics-insights', () =>
     ownerDashboardApi.analytics.getInsights()
   );
 
-  /**
-   * 6. GET /reservations/owner/notifications
-   * Rôle : Récupère les alertes et compteurs de demandes urgentes en temps réel.
-   * Fournit : Nombre de confirmations en attente de validation et litiges ouverts pour
-   * afficher des badges réactifs sur les boutons d'action rapide (QuickActionsBar).
-   */
   const {
     data: notifications,
     error: errorNotifications,
     isLoading: isLoadingNotifications,
+    mutate: mutateNotifications,
   } = useSWR<OwnerNotificationsCount>('owner-notifications', () =>
     ownerDashboardApi.reservations.getOwnerNotifications()
   );
 
-  /**
-   * 7. GET /wallet/me
-   * Rôle : Récupère les détails financiers du compte portefeuille du propriétaire.
-   * Fournit : Solde disponible, solde retirable (Wave / Orange Money) et l'historique
-   * des 5 dernières transactions de débit/crédit (RecentTransactionsCard).
-   */
   const {
     data: wallet,
     error: errorWallet,
     isLoading: isLoadingWallet,
+    mutate: mutateWallet,
   } = useSWR<WalletData>('wallet-me', () =>
     ownerDashboardApi.wallet.getWallet()
   );
 
-  /**
-   * 8. GET /reviews/user/:id
-   * Rôle : Récupère les évaluations et commentaires laissés par les locataires.
-   * Fournit : Liste des derniers avis reçus avec notes étoiles, commentaires et locataire auteur
-   * pour alimenter le carousel (LatestReviewsCarousel).
-   */
   const {
     data: reviews,
     error: errorReviews,
     isLoading: isLoadingReviews,
+    mutate: mutateReviews,
   } = useSWR<OwnerReviewsResponse>(
     user?.id ? ['reviews-user', user.id] : null,
     () => ownerDashboardApi.reviews.getUserReviews(user!.id)
   );
+
+  const mutateAll = () => {
+    mutateOverview();
+    mutateRevenue();
+    mutateOccupancy();
+    mutateFleet();
+    mutateInsights();
+    mutateNotifications();
+    mutateWallet();
+    mutateReviews();
+  };
 
   const hasError = Boolean(
     errorOverview ||
@@ -194,5 +173,6 @@ export function useOwnerDashboard(options?: UseOwnerDashboardOptions) {
     isLoadingReviews,
 
     hasError,
+    mutateAll,
   };
 }
