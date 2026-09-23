@@ -167,6 +167,7 @@ export interface AdminRiskQualityData {
 export interface AdminUserActivationFunnelData {
   totalAuthProfiles?: number;
   totalUsers: number;
+  activeRentersTotal: number;
   newUsers7Days: number;
   kycBreakdown: {
     nonVerifie: number;

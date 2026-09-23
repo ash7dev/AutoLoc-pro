@@ -706,13 +706,15 @@ export class AdminAnalyticsService {
       kycMap[item.statutKyc] = item._count.id;
     }
 
+    const effectiveTotalUsers = Math.max(totalAuthProfiles, totalUsers);
     const verifiedCount = kycMap[StatutKyc.VERIFIE] || 0;
-    const kycConversionRate = totalUsers > 0 ? Math.round((verifiedCount / totalUsers) * 1000) / 10 : 0;
+    const kycConversionRate = effectiveTotalUsers > 0 ? Math.round((verifiedCount / effectiveTotalUsers) * 1000) / 10 : 0;
     const activationRate = verifiedCount > 0 ? Math.round((activeRentersTotal / verifiedCount) * 1000) / 10 : 0;
 
     const result = {
       totalAuthProfiles,
-      totalUsers,
+      totalUsers: effectiveTotalUsers,
+      activeRentersTotal,
       newUsers7Days,
       kycBreakdown: {
         nonVerifie: kycMap[StatutKyc.NON_VERIFIE],

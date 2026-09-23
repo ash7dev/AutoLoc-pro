@@ -19,8 +19,8 @@ export const AdminUserActivationFunnel: React.FC<AdminUserActivationFunnelProps>
     );
   }
 
-  const { totalUsers, newUsers7Days, kycBreakdown, dropOffs, rates } = data;
-  const activeRentersCount = Math.round(kycBreakdown.verifie * (rates.activationRate / 100));
+  const { totalUsers, activeRentersTotal, newUsers7Days, kycBreakdown, dropOffs, rates } = data;
+  const activeRentersCount = activeRentersTotal ?? 0;
 
   // Drop-off percentage between stages
   const kycDropoffPercent = totalUsers > 0 ? Math.round(((totalUsers - kycBreakdown.verifie) / totalUsers) * 100) : 0;
@@ -29,10 +29,10 @@ export const AdminUserActivationFunnel: React.FC<AdminUserActivationFunnelProps>
   const steps = [
     {
       stage: 'Étape 1',
-      label: 'Membres Inscrits',
-      description: 'Tous les profils créés en base de données',
+      label: 'Utilisateurs Enregistrés',
+      description: 'Total des comptes créés sur AutoLoc (prêts pour relance)',
       count: totalUsers,
-      subtext: `+${newUsers7Days} nouveaux inscrits (7 derniers jours)`,
+      subtext: `+${newUsers7Days} nouveaux membres (7 derniers jours)`,
       badge: 'Bassin d\'inscrits total',
       color: 'bg-emerald-600',
     },
@@ -79,17 +79,9 @@ export const AdminUserActivationFunnel: React.FC<AdminUserActivationFunnelProps>
         </div>
 
         {/* Legend Pill */}
-        <div className="flex flex-wrap items-center gap-2">
-          {data.totalAuthProfiles !== undefined && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/50 text-[11px] text-blue-800 dark:text-blue-300">
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-              <span>Supabase Auth : <strong>{data.totalAuthProfiles}</strong> comptabilisés</span>
-            </div>
-          )}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/50 text-[11px] text-emerald-800 dark:text-emerald-300">
-            <Info className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span>Données réelles issues de la base PostgreSQL</span>
-          </div>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/50 text-[11px] text-emerald-800 dark:text-emerald-300">
+          <Info className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <span>Données réelles issues du serveur backend</span>
         </div>
       </div>
 
