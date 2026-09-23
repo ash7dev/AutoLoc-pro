@@ -16,7 +16,6 @@ import {
   Clock,
   Phone,
   Mail,
-  User,
   AlertTriangle,
 } from 'lucide-react';
 import type { AdminKycQueueItem } from '../../../../core/api/adminAnalyticsApi';
@@ -32,6 +31,10 @@ interface AdminKycInspectorModalProps {
 
 const fontStyle = { fontFamily: 'var(--font-fraunces), Georgia, serif' };
 const FOREST = '#0A3D2E';
+const FOREST_DARK = '#062a1f';
+const CHAMPAGNE = '#F1DFB6';
+const GOLD = '#b27c2d';
+const RUST = '#a13d3d';
 
 const PRESET_REJECTION_REASONS = [
   'Document flou ou illisible',
@@ -64,10 +67,17 @@ export const AdminKycInspectorModal: React.FC<AdminKycInspectorModalProps> = ({
     activeDoc === 'recto'
       ? docs.documentUrl
       : activeDoc === 'verso'
-      ? docs.documentBackUrl
-      : activeDoc === 'selfie'
-      ? docs.selfieUrl
-      : docs.permisUrl;
+        ? docs.documentBackUrl
+        : activeDoc === 'selfie'
+          ? docs.selfieUrl
+          : docs.permisUrl;
+
+  const docTabs: { id: typeof activeDoc; label: string; icon: React.ElementType }[] = [
+    { id: 'recto', label: 'CIN recto', icon: CreditCard },
+    { id: 'verso', label: 'CIN verso', icon: CreditCard },
+    { id: 'selfie', label: 'Selfie', icon: Camera },
+    { id: 'permis', label: 'Permis', icon: FileText },
+  ];
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.5, 3));
   const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.5, 1));
@@ -88,7 +98,7 @@ export const AdminKycInspectorModal: React.FC<AdminKycInspectorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden font-fraunces" style={fontStyle}>
+    <div className="fixed inset-0 z-50 overflow-hidden" style={fontStyle}>
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity animate-fade-in"
@@ -99,18 +109,22 @@ export const AdminKycInspectorModal: React.FC<AdminKycInspectorModalProps> = ({
       <div className="fixed inset-4 sm:inset-6 md:inset-10 z-10 flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
         {/* Modal Header */}
         <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-950/50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#F1DFB6] text-[#041912] font-normal flex items-center justify-center text-base shrink-0 border border-black/5">
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="w-10 h-10 rounded-full text-[#041912] font-normal flex items-center justify-center text-base shrink-0 border border-black/5"
+              style={{ backgroundColor: CHAMPAGNE }}
+            >
               {item.prenom?.[0] || 'U'}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-normal text-[#041912] dark:text-white">
-                  {item.fullName}
-                </h2>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base sm:text-lg font-normal text-[#041912] dark:text-white truncate">{item.fullName}</h2>
                 {item.waitHours !== undefined && (
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200">
-                    <Clock className="w-3 h-3 inline mr-1" /> {item.waitHours}h d'attente
+                  <span
+                    className="px-2.5 py-0.5 rounded-full text-[11px] font-medium flex items-center gap-1 shrink-0"
+                    style={{ backgroundColor: 'rgba(178, 124, 45, 0.1)', color: GOLD }}
+                  >
+                    <Clock className="w-3 h-3" /> {item.waitHours}h d'attente
                   </span>
                 )}
               </div>
@@ -144,51 +158,33 @@ export const AdminKycInspectorModal: React.FC<AdminKycInspectorModalProps> = ({
             {/* Toolbar Document Tabs */}
             <div className="p-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-1.5 overflow-x-auto">
-                <button
-                  onClick={() => { setActiveDoc('recto'); handleResetImage(); }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-normal flex items-center gap-1.5 transition-all ${
-                    activeDoc === 'recto' ? 'bg-[#0A3D2E] text-white shadow-xs' : 'text-slate-400 hover:bg-slate-800'
-                  }`}
-                >
-                  <CreditCard className="w-3.5 h-3.5" /> CIN Recto
-                </button>
-
-                <button
-                  onClick={() => { setActiveDoc('verso'); handleResetImage(); }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-normal flex items-center gap-1.5 transition-all ${
-                    activeDoc === 'verso' ? 'bg-[#0A3D2E] text-white shadow-xs' : 'text-slate-400 hover:bg-slate-800'
-                  }`}
-                >
-                  <CreditCard className="w-3.5 h-3.5" /> CIN Verso
-                </button>
-
-                <button
-                  onClick={() => { setActiveDoc('selfie'); handleResetImage(); }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-normal flex items-center gap-1.5 transition-all ${
-                    activeDoc === 'selfie' ? 'bg-[#0A3D2E] text-white shadow-xs' : 'text-slate-400 hover:bg-slate-800'
-                  }`}
-                >
-                  <Camera className="w-3.5 h-3.5" /> Selfie
-                </button>
-
-                <button
-                  onClick={() => { setActiveDoc('permis'); handleResetImage(); }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-normal flex items-center gap-1.5 transition-all ${
-                    activeDoc === 'permis' ? 'bg-[#0A3D2E] text-white shadow-xs' : 'text-slate-400 hover:bg-slate-800'
-                  }`}
-                >
-                  <FileText className="w-3.5 h-3.5" /> Permis
-                </button>
+                {docTabs.map((tab) => {
+                  const isActive = activeDoc === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => { setActiveDoc(tab.id); handleResetImage(); }}
+                      className="px-3 py-1.5 rounded-xl text-xs font-normal flex items-center gap-1.5 transition-all"
+                      style={
+                        isActive
+                          ? { background: `linear-gradient(135deg, ${FOREST}, ${FOREST_DARK})`, color: 'white' }
+                          : { color: '#94a3b8' }
+                      }
+                    >
+                      <tab.icon className="w-3.5 h-3.5" /> {tab.label}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Viewer Controls */}
               {currentImageUrl && (
                 <div className="flex items-center gap-1 text-slate-300">
-                  <button onClick={handleZoomOut} title="Zoom Arrière" className="p-1.5 hover:bg-slate-800 rounded-lg">
+                  <button onClick={handleZoomOut} title="Zoom arrière" className="p-1.5 hover:bg-slate-800 rounded-lg">
                     <ZoomOut className="w-4 h-4" />
                   </button>
                   <span className="text-[11px] font-mono w-8 text-center">{Math.round(zoom * 100)}%</span>
-                  <button onClick={handleZoomIn} title="Zoom Avant" className="p-1.5 hover:bg-slate-800 rounded-lg">
+                  <button onClick={handleZoomIn} title="Zoom avant" className="p-1.5 hover:bg-slate-800 rounded-lg">
                     <ZoomIn className="w-4 h-4" />
                   </button>
                   <button onClick={handleRotate} title="Pivoter 90°" className="p-1.5 hover:bg-slate-800 rounded-lg">
@@ -208,13 +204,11 @@ export const AdminKycInspectorModal: React.FC<AdminKycInspectorModalProps> = ({
                   src={currentImageUrl}
                   alt="Document KYC HD"
                   className="max-h-full max-w-full object-contain rounded-xl transition-transform duration-200 select-none shadow-2xl"
-                  style={{
-                    transform: `scale(${zoom}) rotate(${rotation}deg)`,
-                  }}
+                  style={{ transform: `scale(${zoom}) rotate(${rotation}deg)` }}
                 />
               ) : (
                 <div className="text-center text-slate-500 text-xs space-y-2">
-                  <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto" />
+                  <AlertTriangle className="w-8 h-8 mx-auto" style={{ color: GOLD }} />
                   <p>Aucun document fourni pour cette pièce.</p>
                 </div>
               )}
@@ -225,9 +219,12 @@ export const AdminKycInspectorModal: React.FC<AdminKycInspectorModalProps> = ({
           <div className="lg:col-span-4 flex flex-col justify-between p-6 space-y-6 overflow-y-auto text-xs">
             {/* Control Checklist */}
             <div className="space-y-4">
-              <div className="p-3.5 rounded-xl border border-amber-200/60 dark:border-amber-900/30 bg-amber-50/40 dark:bg-amber-950/20 text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
-                <ShieldCheck className="w-4.5 h-4.5 text-amber-600 shrink-0 mt-0.5" />
-                <div className="text-[11px] leading-relaxed">
+              <div
+                className="p-3.5 rounded-xl border flex items-start gap-2.5"
+                style={{ backgroundColor: 'rgba(178, 124, 45, 0.06)', borderColor: 'rgba(178, 124, 45, 0.2)' }}
+              >
+                <ShieldCheck className="w-4.5 h-4.5 shrink-0 mt-0.5" style={{ color: GOLD }} />
+                <div className="text-[11px] leading-relaxed" style={{ color: '#7a5219' }}>
                   <span className="font-medium block">Guide d'inspection visuelle :</span>
                   Vérifiez la concordance entre la photo du selfie et la CIN, la validité de la date d'expiration et la présence du permis.
                 </div>
@@ -240,15 +237,15 @@ export const AdminKycInspectorModal: React.FC<AdminKycInspectorModalProps> = ({
 
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-2">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" defaultChecked className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+                    <input type="checkbox" defaultChecked className="rounded border-slate-300 accent-[#0A3D2E]" />
                     <span className="text-slate-700 dark:text-slate-300">Pièces 100% lisibles et nettes</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" defaultChecked className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
-                    <span className="text-slate-700 dark:text-slate-300">Nom & Prénom conformes à l'état civil</span>
+                    <input type="checkbox" defaultChecked className="rounded border-slate-300 accent-[#0A3D2E]" />
+                    <span className="text-slate-700 dark:text-slate-300">Nom & prénom conformes à l'état civil</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" defaultChecked className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+                    <input type="checkbox" defaultChecked className="rounded border-slate-300 accent-[#0A3D2E]" />
                     <span className="text-slate-700 dark:text-slate-300">Document non expiré</span>
                   </label>
                 </div>
@@ -256,31 +253,39 @@ export const AdminKycInspectorModal: React.FC<AdminKycInspectorModalProps> = ({
 
               {/* Rejection Reasons Form */}
               {isRejecting && (
-                <div className="space-y-3 p-4 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/30 dark:bg-rose-950/20 animate-fade-in">
-                  <span className="font-medium text-rose-900 dark:text-rose-200 block">Motif du rejet :</span>
-                  
+                <div
+                  className="space-y-3 p-4 rounded-xl border animate-fade-in"
+                  style={{ backgroundColor: 'rgba(161, 61, 61, 0.05)', borderColor: 'rgba(161, 61, 61, 0.2)' }}
+                >
+                  <span className="font-medium block" style={{ color: RUST }}>Motif du rejet :</span>
+
                   <div className="space-y-1.5">
-                    {PRESET_REJECTION_REASONS.map((reason) => (
-                      <button
-                        key={reason}
-                        onClick={() => setSelectedPreset(reason)}
-                        className={`w-full text-left p-2 rounded-lg text-[11px] transition-all border ${
-                          selectedPreset === reason
-                            ? 'bg-rose-600 text-white border-rose-600'
-                            : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-rose-300'
-                        }`}
-                      >
-                        {reason}
-                      </button>
-                    ))}
+                    {PRESET_REJECTION_REASONS.map((reason) => {
+                      const isSelected = selectedPreset === reason;
+                      return (
+                        <button
+                          key={reason}
+                          onClick={() => setSelectedPreset(reason)}
+                          className="w-full text-left p-2 rounded-lg text-[11px] transition-all border"
+                          style={
+                            isSelected
+                              ? { backgroundColor: RUST, color: 'white', borderColor: RUST }
+                              : { backgroundColor: 'white', color: '#334155', borderColor: '#e2e8f0' }
+                          }
+                        >
+                          {reason}
+                        </button>
+                      );
+                    })}
 
                     <button
                       onClick={() => setSelectedPreset('AUTRE')}
-                      className={`w-full text-left p-2 rounded-lg text-[11px] transition-all border ${
+                      className="w-full text-left p-2 rounded-lg text-[11px] transition-all border"
+                      style={
                         selectedPreset === 'AUTRE'
-                          ? 'bg-rose-600 text-white border-rose-600'
-                          : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-rose-300'
-                      }`}
+                          ? { backgroundColor: RUST, color: 'white', borderColor: RUST }
+                          : { backgroundColor: 'white', color: '#334155', borderColor: '#e2e8f0' }
+                      }
                     >
                       Autre raison spécifique...
                     </button>
@@ -291,7 +296,8 @@ export const AdminKycInspectorModal: React.FC<AdminKycInspectorModalProps> = ({
                       value={customReason}
                       onChange={(e) => setCustomReason(e.target.value)}
                       placeholder="Précisez la raison détaillée du rejet..."
-                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs outline-none focus:ring-1 focus:ring-rose-500 h-20"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs outline-none h-20 focus:ring-2"
+                      style={{ ['--tw-ring-color' as any]: 'rgba(161, 61, 61, 0.4)' }}
                     />
                   )}
                 </div>
@@ -305,7 +311,8 @@ export const AdminKycInspectorModal: React.FC<AdminKycInspectorModalProps> = ({
                   <button
                     onClick={() => setIsRejecting(true)}
                     disabled={isMutating}
-                    className="flex-1 py-3 px-4 rounded-xl border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 font-medium hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 py-3 px-4 rounded-xl border font-medium transition-colors flex items-center justify-center gap-2"
+                    style={{ borderColor: 'rgba(161, 61, 61, 0.3)', color: RUST }}
                   >
                     <XCircle className="w-4 h-4" /> Rejeter
                   </button>
@@ -313,8 +320,8 @@ export const AdminKycInspectorModal: React.FC<AdminKycInspectorModalProps> = ({
                   <button
                     onClick={handleApproveAction}
                     disabled={isMutating}
-                    className="flex-1 py-3 px-4 rounded-xl font-normal text-white transition-opacity flex items-center justify-center gap-2 shadow-xs"
-                    style={{ backgroundColor: FOREST }}
+                    className="flex-1 py-3 px-4 rounded-xl font-normal text-white transition-opacity flex items-center justify-center gap-2 shadow-xs disabled:opacity-60"
+                    style={{ background: `linear-gradient(135deg, ${FOREST}, ${FOREST_DARK})` }}
                   >
                     <CheckCircle2 className="w-4 h-4" /> Approuver KYC
                   </button>
@@ -332,9 +339,10 @@ export const AdminKycInspectorModal: React.FC<AdminKycInspectorModalProps> = ({
                   <button
                     onClick={handleRejectAction}
                     disabled={isMutating || (!selectedPreset || (selectedPreset === 'AUTRE' && !customReason.trim()))}
-                    className="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-1 py-3 px-4 rounded-xl text-white font-medium transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
+                    style={{ backgroundColor: RUST }}
                   >
-                    Confirmer le Rejet
+                    Confirmer le rejet
                   </button>
                 </div>
               )}

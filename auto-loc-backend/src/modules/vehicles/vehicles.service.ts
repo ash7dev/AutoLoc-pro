@@ -20,6 +20,7 @@ import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { SearchVehiclesDto } from './dto/search-vehicles.dto';
 import { CreateIndisponibiliteDto } from './dto/create-indisponibilite.dto';
+import { GetVehicleModerationQueueDto } from './dto/get-admin-vehicles.dto';
 import { ReservationPricingService } from '../../domain/reservation/reservation-pricing.service';
 import { RevalidateService } from '../../infrastructure/revalidate/revalidate.service';
 import { QueueService } from '../../infrastructure/queue/queue.service';
@@ -1885,6 +1886,172 @@ export class VehiclesService {
   }
 
   // ── Admin ─────────────────────────────────────────────────────────────────────
+
+  /**
+   * GET /admin/vehicles/moderation-queue
+   * High performance vehicle moderation queue endpoint with search, SLA calculation, and single-pass counters.
+   */
+  async getVehicleModerationQueue(dto: GetVehicleModerationQueueDto) {
+    const { statut = 'EN_ATTENTE_VALIDATION', search, page = 1, limit = 20 } = dto;
+    const skip = (page - 1) * limit;
+
+    const searchCondition: Prisma.VehiculeWhereInput | undefined = search?.trim()
+      ? {
+          OR: [
+            { marque: { contains: search.trim(), mode: 'insensitive' } },
+            { modele: { contains: search.trim(), mode: 'insensitive' } },
+            { immatriculation: { contains: search.trim(), mode: 'insensitive' } },
+            { ville: { contains: search.trim(), mode: 'insensitive' } },
+            { proprietaire: { prenom: { contains: search.trim(), mode: 'insensitive' } } },
+            { proprietaire: { nom: { contains: search.trim(), mode: 'insensitive' } } },
+            { proprietaire: { email: { contains: search.trim(), mode: 'insensitive' } } },
+            { proprietaire: { telephone: { contains: search.trim(), mode: 'insensitive' } } },
+          ],
+        }
+      : undefined;
+
+    let statusCondition: Prisma.VehiculeWhereInput = {};
+    if (statut === 'PENDING') {
+      statusCondition = { statut: { in: [StatutVehicule.EN_ATTENTE_VALIDATION, StatutVehicule.BROUILLON] } };
+    } else if (statut && statut !== 'ALL') {
+      statusCondition = { statut: statut as StatutVehicule };
+    }
+
+    const where: Prisma.VehiculeWhereInput = {
+      ...statusCondition,
+      ...(searchCondition ? searchCondition : {}),
+    };
+
+    const now = new Date();
+
+    const [items, total, pendingCount, verifiedCount, suspendedCount, draftCount, totalCount] = await Promise.all([
+      this.prisma.vehicule.findMany({
+        where,
+        orderBy: statut === 'EN_ATTENTE_VALIDATION' ? { creeLe: 'asc' } : { creeLe: 'desc' },
+        take: limit,
+        skip,
+        select: {
+          id: true,
+          marque: true,
+          modele: true,
+          annee: true,
+          type: true,
+          transmission: true,
+          carburant: true,
+          nombrePlaces: true,
+          immatriculation: true,
+          prixParJour: true,
+          ville: true,
+          adresse: true,
+          joursMinimum: true,
+          ageMinimum: true,
+          zoneConduite: true,
+          assurance: true,
+          reglesSpecifiques: true,
+          statut: true,
+          carteGriseUrl: true,
+          fraisLivraison: true,
+          proposeLivraisonDakar: true,
+          fraisLivraisonDakar: true,
+          proposeLivraisonAibd: true,
+          fraisLivraisonAibd: true,
+          creeLe: true,
+          isFeatured: true,
+          featuredUntil: true,
+          photos: {
+            select: { id: true, url: true, estPrincipale: true, position: true },
+            orderBy: { position: 'asc' },
+          },
+          equipements: {
+            include: { equipement: true },
+          },
+          proprietaire: {
+            select: {
+              id: true,
+              prenom: true,
+              nom: true,
+              email: true,
+              telephone: true,
+              avatarUrl: true,
+              statutKyc: true,
+            },
+          },
+        },
+      }),
+      this.prisma.vehicule.count({ where }),
+      this.prisma.vehicule.count({ where: { statut: StatutVehicule.EN_ATTENTE_VALIDATION } }),
+      this.prisma.vehicule.count({ where: { statut: StatutVehicule.VERIFIE } }),
+      this.prisma.vehicule.count({ where: { statut: StatutVehicule.SUSPENDU } }),
+      this.prisma.vehicule.count({ where: { statut: StatutVehicule.BROUILLON } }),
+      this.prisma.vehicule.count(),
+    ]);
+
+    const formattedItems = items.map((v) => {
+      const createdDate = new Date(v.creeLe);
+      const slaWaitHours = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60));
+
+      return {
+        id: v.id,
+        marque: v.marque,
+        modele: v.modele,
+        annee: v.annee,
+        type: v.type,
+        transmission: v.transmission ?? null,
+        carburant: v.carburant ?? null,
+        nombrePlaces: v.nombrePlaces ?? null,
+        immatriculation: v.immatriculation,
+        prixParJour: Number(v.prixParJour),
+        ville: v.ville,
+        adresse: v.adresse,
+        statut: v.statut,
+        carteGriseUrl: v.carteGriseUrl ?? null,
+        assurance: v.assurance ?? null,
+        joursMinimum: v.joursMinimum,
+        ageMinimum: v.ageMinimum,
+        zoneConduite: v.zoneConduite ?? null,
+        reglesSpecifiques: v.reglesSpecifiques ?? null,
+        fraisLivraison: v.fraisLivraison ? Number(v.fraisLivraison) : null,
+        proposeLivraisonDakar: v.proposeLivraisonDakar ?? false,
+        fraisLivraisonDakar: v.fraisLivraisonDakar ? Number(v.fraisLivraisonDakar) : null,
+        proposeLivraisonAibd: v.proposeLivraisonAibd ?? false,
+        fraisLivraisonAibd: v.fraisLivraisonAibd ? Number(v.fraisLivraisonAibd) : null,
+        creeLe: v.creeLe.toISOString(),
+        isFeatured: v.isFeatured,
+        featuredUntil: v.featuredUntil ? v.featuredUntil.toISOString() : null,
+        slaWaitHours,
+        photos: v.photos,
+        equipements: v.equipements.map((ve) => ve.equipement.nom),
+        proprietaire: v.proprietaire
+          ? {
+              id: v.proprietaire.id,
+              prenom: v.proprietaire.prenom ?? null,
+              nom: v.proprietaire.nom ?? null,
+              email: v.proprietaire.email ?? null,
+              telephone: v.proprietaire.telephone ?? null,
+              avatarUrl: v.proprietaire.avatarUrl ?? null,
+              statutKyc: v.proprietaire.statutKyc,
+            }
+          : null,
+      };
+    });
+
+    return {
+      data: formattedItems,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+      counts: {
+        pending: pendingCount,
+        verified: verifiedCount,
+        suspended: suspendedCount,
+        draft: draftCount,
+        total: totalCount,
+      },
+    };
+  }
 
   /**
    * GET /admin/vehicles — Liste tous les véhicules, filtrable par statut.

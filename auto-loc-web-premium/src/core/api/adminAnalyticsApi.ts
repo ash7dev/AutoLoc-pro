@@ -354,4 +354,79 @@ export const adminAnalyticsApi = {
   rejectUserKyc: (userId: string, raison?: string): Promise<{ id: string; statutKyc: string; kycRejectionReason: string | null }> => {
     return apiClient.patch<{ id: string; statutKyc: string; kycRejectionReason: string | null }>(`/admin/users/${userId}/kyc/reject`, { raison });
   },
+
+  getVehicleModerationQueue: (params?: { statut?: string; search?: string; page?: number; limit?: number }): Promise<AdminVehicleQueueResponse> => {
+    return apiClient.get<AdminVehicleQueueResponse>('/admin/vehicles/moderation-queue', { params });
+  },
+
+  validateVehicle: (vehicleId: string): Promise<{ id: string; statut: string; marque: string; modele: string }> => {
+    return apiClient.patch<{ id: string; statut: string; marque: string; modele: string }>(`/admin/vehicles/${vehicleId}/validate`);
+  },
+
+  suspendVehicle: (vehicleId: string, raison: string): Promise<{ id: string; statut: string }> => {
+    return apiClient.patch<{ id: string; statut: string }>(`/admin/vehicles/${vehicleId}/suspend`, { raison });
+  },
+
+  featureVehicle: (vehicleId: string, active: boolean, featuredUntil?: string): Promise<{ id: string; isFeatured: boolean }> => {
+    return apiClient.patch<{ id: string; isFeatured: boolean }>(`/admin/vehicles/${vehicleId}/feature`, { active, featuredUntil });
+  },
 };
+
+export interface AdminVehicleQueueItem {
+  id: string;
+  marque: string;
+  modele: string;
+  annee: number;
+  type: string;
+  transmission: string | null;
+  carburant: string | null;
+  nombrePlaces: number | null;
+  immatriculation: string;
+  prixParJour: number;
+  ville: string;
+  adresse: string;
+  statut: 'EN_ATTENTE_VALIDATION' | 'VERIFIE' | 'SUSPENDU' | 'BROUILLON';
+  carteGriseUrl: string | null;
+  assurance: string | null;
+  joursMinimum: number;
+  ageMinimum: number;
+  zoneConduite: string | null;
+  reglesSpecifiques: string | null;
+  fraisLivraison: number | null;
+  proposeLivraisonDakar: boolean;
+  fraisLivraisonDakar: number | null;
+  proposeLivraisonAibd: boolean;
+  fraisLivraisonAibd: number | null;
+  creeLe: string;
+  isFeatured: boolean;
+  featuredUntil: string | null;
+  slaWaitHours: number;
+  photos: Array<{ id: string; url: string; estPrincipale: boolean; position: number }>;
+  equipements: string[];
+  proprietaire: {
+    id: string;
+    prenom: string | null;
+    nom: string | null;
+    email: string | null;
+    telephone: string | null;
+    avatarUrl: string | null;
+    statutKyc: string;
+  } | null;
+}
+
+export interface AdminVehicleQueueResponse {
+  data: AdminVehicleQueueItem[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+  counts: {
+    pending: number;
+    verified: number;
+    suspended: number;
+    draft: number;
+    total: number;
+  };
+}

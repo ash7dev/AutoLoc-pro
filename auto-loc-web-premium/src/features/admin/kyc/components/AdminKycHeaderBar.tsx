@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, UserCheck, Clock, ShieldAlert, RefreshCw, Filter } from 'lucide-react';
+import { Search, UserCheck, RefreshCw } from 'lucide-react';
 
 interface AdminKycHeaderBarProps {
   status: string;
@@ -20,7 +20,9 @@ interface AdminKycHeaderBarProps {
 
 const fontStyle = { fontFamily: 'var(--font-fraunces), Georgia, serif' };
 const FOREST = '#0A3D2E';
-const CHAMPAGNE = '#F1DFB6';
+const GOLD = '#b27c2d';
+const RUST = '#a13d3d';
+const SLATE = '#4a5f75';
 
 export const AdminKycHeaderBar: React.FC<AdminKycHeaderBarProps> = ({
   status,
@@ -32,43 +34,48 @@ export const AdminKycHeaderBar: React.FC<AdminKycHeaderBarProps> = ({
   onRefresh,
 }) => {
   const tabs = [
-    { id: 'EN_ATTENTE', label: 'En attente', count: counts?.EN_ATTENTE ?? 0, color: 'bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-300' },
-    { id: 'VERIFIE', label: 'Vérifiés', count: counts?.VERIFIE ?? 0, color: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-300' },
-    { id: 'REJETE', label: 'Rejetés', count: counts?.REJETE ?? 0, color: 'bg-rose-100 text-rose-900 dark:bg-rose-900/40 dark:text-rose-300' },
-    { id: 'ALL', label: 'Tous', count: (counts?.EN_ATTENTE ?? 0) + (counts?.VERIFIE ?? 0) + (counts?.REJETE ?? 0) + (counts?.NON_VERIFIE ?? 0), color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
+    { id: 'EN_ATTENTE', label: 'En attente', count: counts?.EN_ATTENTE ?? 0, tone: GOLD, bg: 'rgba(178, 124, 45, 0.1)' },
+    { id: 'VERIFIE', label: 'Vérifiés', count: counts?.VERIFIE ?? 0, tone: FOREST, bg: 'rgba(10, 61, 46, 0.08)' },
+    { id: 'REJETE', label: 'Rejetés', count: counts?.REJETE ?? 0, tone: RUST, bg: 'rgba(161, 61, 61, 0.1)' },
+    {
+      id: 'ALL',
+      label: 'Tous',
+      count: (counts?.EN_ATTENTE ?? 0) + (counts?.VERIFIE ?? 0) + (counts?.REJETE ?? 0) + (counts?.NON_VERIFIE ?? 0),
+      tone: SLATE,
+      bg: 'rgba(74, 95, 117, 0.1)',
+    },
   ];
 
   return (
-    <div className="space-y-4 font-fraunces" style={fontStyle}>
-      {/* Page Title & SLA Status */}
+    <div className="space-y-4" style={fontStyle}>
+      {/* Page Title & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(10, 61, 46, 0.08)' }}>
-              <UserCheck className="w-5 h-5" style={{ color: FOREST }} />
-            </div>
-            <div>
-              <h1 className="text-xl font-normal text-[#041912] dark:text-white">Modération & Vérification KYC</h1>
-              <p className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5">
-                Contrôle de conformité des cartes d'identité, permis de conduire et selfies.
-              </p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: `linear-gradient(135deg, ${FOREST}, #062a1f)` }}
+          >
+            <UserCheck className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-normal text-[#041912] dark:text-white">Modération & vérification KYC</h1>
+            <p className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5">
+              Contrôle de conformité des cartes d'identité, permis de conduire et selfies
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            className="p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-2 text-xs"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>Actualiser</span>
-          </button>
-        </div>
+        <button
+          onClick={onRefresh}
+          disabled={isRefreshing}
+          className="shrink-0 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:text-[#041912] dark:hover:text-white transition-colors flex items-center gap-2 text-xs font-medium"
+        >
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span>Actualiser</span>
+        </button>
       </div>
 
-      {/* Filter Tabs & Search Inputs */}
+      {/* Filter Tabs & Search */}
       <div className="p-2 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/70 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* Tabs */}
         <div className="flex items-center gap-1 overflow-x-auto p-1 scrollbar-none">
@@ -78,14 +85,22 @@ export const AdminKycHeaderBar: React.FC<AdminKycHeaderBarProps> = ({
               <button
                 key={tab.id}
                 onClick={() => onStatusChange(tab.id)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-normal transition-all shrink-0 ${
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-normal transition-all shrink-0"
+                style={
                   isActive
-                    ? 'bg-[#041912] text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
+                    ? { background: `linear-gradient(135deg, ${FOREST}, #062a1f)`, color: 'white' }
+                    : { color: '#475569' }
+                }
               >
                 <span>{tab.label}</span>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium tabular-nums ${tab.color}`}>
+                <span
+                  className="px-2 py-0.5 rounded-full text-[10px] font-medium tabular-nums"
+                  style={
+                    isActive
+                      ? { backgroundColor: 'rgba(255,255,255,0.18)', color: 'white' }
+                      : { backgroundColor: tab.bg, color: tab.tone }
+                  }
+                >
                   {tab.count}
                 </span>
               </button>
@@ -100,8 +115,9 @@ export const AdminKycHeaderBar: React.FC<AdminKycHeaderBarProps> = ({
             type="text"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Rechercher par Nom, Email, Téléphone..."
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all"
+            placeholder="Rechercher par nom, email, téléphone..."
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 outline-none transition-all focus:border-transparent focus:ring-2"
+            style={{ ['--tw-ring-color' as any]: 'rgba(10, 61, 46, 0.35)' }}
           />
         </div>
       </div>

@@ -13,7 +13,7 @@ import { RolesGuard } from '../../shared/guards/roles.guard';
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { RoleProfile } from '@prisma/client';
 import { VehiclesService } from './vehicles.service';
-import { GetAdminVehiclesDto } from './dto/get-admin-vehicles.dto';
+import { GetAdminVehiclesDto, GetVehicleModerationQueueDto } from './dto/get-admin-vehicles.dto';
 import { SuspendVehicleDto } from './dto/suspend-vehicle.dto';
 import { FeatureVehicleDto } from './dto/feature-vehicle.dto';
 
@@ -22,6 +22,15 @@ import { FeatureVehicleDto } from './dto/feature-vehicle.dto';
 @Roles(RoleProfile.ADMIN)
 export class AdminVehiclesController {
   constructor(private readonly vehiclesService: VehiclesService) {}
+
+  /**
+   * GET /admin/vehicles/moderation-queue
+   * Dedicated high-performance moderation queue endpoint with SLA calculation and search.
+   */
+  @Get('moderation-queue')
+  getModerationQueue(@Query() dto: GetVehicleModerationQueueDto) {
+    return this.vehiclesService.getVehicleModerationQueue(dto);
+  }
 
   /**
    * GET /admin/vehicles?statut=EN_ATTENTE_VALIDATION
