@@ -32,6 +32,8 @@ export type NotificationType =
   | 'vehicle.validated'
   | 'vehicle.suspended'
   | 'vehicle.featured'
+  | 'host.fleet_suspended'
+  | 'host.fleet_activated'
   | 'admin.withdrawal.requested'
   | 'admin.reservation.cancelled'
   | 'admin.refund.processed';
@@ -846,6 +848,37 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
         p(`Bonjour${data.prenom ? ` ${data.prenom}` : ''},`),
         p(`Félicitations ! Votre véhicule <strong>${data.vehicule}</strong> est maintenant mis en avant sur AutoLoc.`),
         p('Il apparaîtra en priorité dans les résultats de recherche.'),
+      ].join(''),
+    }),
+  },
+
+  'host.fleet_suspended': {
+    subject: '⚠️ Suspension temporaire de votre flotte — AutoLoc',
+    body: (data) => baseLayout({
+      title: 'Suspension de votre flotte',
+      subtitle: 'Vos véhicules ont été temporairement retirés de la recherche.',
+      badge: { text: 'Flotte suspendue', color: '#991b1b', bg: '#fef2f2' },
+      accentColor: '#ef4444',
+      content: [
+        p(`Bonjour${data.prenom ? ` ${data.prenom}` : ''},`),
+        p('Votre flotte de véhicules a été suspendue à la suite d\'un contrôle d\'administration.'),
+        data.raison ? alertBox(`Raison : ${data.raison}`, 'warning') : '',
+        p('Pour régulariser votre situation, contactez le support AutoLoc à <a href="mailto:support@autoloc.sn" style="color:#059669;font-weight:600;">support@autoloc.sn</a>.'),
+      ].join(''),
+    }),
+  },
+
+  'host.fleet_activated': {
+    subject: '✅ Réactivation de votre flotte de véhicules — AutoLoc',
+    body: (data) => baseLayout({
+      title: 'Flotte réactivée',
+      subtitle: 'Vos véhicules sont à nouveau en ligne et réservables.',
+      badge: { text: 'En ligne', color: '#059669', bg: '#ecfdf5' },
+      accentColor: '#10b981',
+      content: [
+        p(`Bonjour${data.prenom ? ` ${data.prenom}` : ''},`),
+        p('Bonne nouvelle ! Votre flotte de véhicules a été réactivée sur AutoLoc.'),
+        alertBox('Pensez à garder les calendriers de vos véhicules à jour.', 'info'),
       ].join(''),
     }),
   },

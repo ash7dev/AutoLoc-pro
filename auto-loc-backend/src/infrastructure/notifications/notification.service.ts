@@ -432,7 +432,7 @@ export class NotificationService {
     const isDeposit = data.modePaiement === 'ACOMPTE_SOLDE_CHECKIN' || (Number(data.montantSoldeCheckin ?? 0) > 0);
     const soldeStr = data.montantSoldeCheckin ? `${Number(data.montantSoldeCheckin).toLocaleString('fr-FR')} FCFA` : '';
 
-    const fallbackTextByType: Record<NotificationType, string> = {
+    const fallbackTextByType: Partial<Record<NotificationType, string>> = {
       'reservation.created': isDeposit
         ? `⏳ AutoLoc${prefix} : réservation #${resId} initiée pour ${vehicule} (Acompte 30%). Finalisez le paiement de l'acompte pour la valider.`
         : `⏳ AutoLoc${prefix} : votre réservation #${resId} est en attente de paiement pour ${vehicule}. Finalisez le paiement pour la confirmer.`,

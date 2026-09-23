@@ -4,6 +4,8 @@ import { NotificationService } from '../../infrastructure/notifications/notifica
 import { BanUserDto } from './dto/ban-user.dto';
 import { GetKycQueueDto } from './dto/get-kyc-queue.dto';
 import { GetUsersQueueDto, UserQueueStatusFilter } from './dto/get-users-queue.dto';
+import { GetHostsQueueDto, HostQueueStatusFilter } from './dto/get-hosts-queue.dto';
+import { FleetActionType } from './dto/fleet-action.dto';
 import { RoleProfile, StatutKyc, StatutReservation, StatutRetrait, StatutLitige, StatutVehicule } from '@prisma/client';
 
 
@@ -94,6 +96,395 @@ export class UsersService {
     }));
 
     return { data, total, page, limit: take };
+  }
+
+  // ── Dedicated Admin Hosts Queue (Role PROPRIETAIRE / Has Fleet) ───────────
+
+  async getHostsQueue(dto: GetHostsQueueDto) {
+    const page = dto.page ?? 1;
+    const limit = dto.limit ?? 20;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    const now = new Date();
+
+    // Hosts filter: profile role PROPRIETAIRE OR has vehicles
+    where.OR = [
+      { role: RoleProfile.PROPRIETAIRE },
+      { utilisateur: { vehicules: { some: {} } } },
+    ];
+
+    if (dto.search && dto.search.trim()) {
+      const q = dto.search.trim();
+      where.AND = [
+        {
+          OR: [
+            { email: { contains: q, mode: 'insensitive' } },
+            { phone: { contains: q, mode: 'insensitive' } },
+            {
+              utilisateur: {
+                OR: [
+                  { prenom: { contains: q, mode: 'insensitive' } },
+                  { nom: { contains: q, mode: 'insensitive' } },
+                  { email: { contains: q, mode: 'insensitive' } },
+                  { telephone: { contains: q, mode: 'insensitive' } },
+                  { vehicules: { some: { immatriculation: { contains: q, mode: 'insensitive' } } } },
+                  { vehicules: { some: { marque: { contains: q, mode: 'insensitive' } } } },
+                  { vehicules: { some: { modele: { contains: q, mode: 'insensitive' } } } },
+                ],
+              },
+            },
+          ],
+        },
+      ];
+    }
+
+    if (dto.status && dto.status !== HostQueueStatusFilter.ALL) {
+      if (dto.status === HostQueueStatusFilter.ACTIVE) {
+        where.utilisateur = {
+          ...where.utilisateur,
+          actif: true,
+          OR: [{ bloqueJusqua: null }, { bloqueJusqua: { lte: now } }],
+        };
+      } else if (dto.status === HostQueueStatusFilter.BANNED) {
+        where.utilisateur = {
+          ...where.utilisateur,
+          OR: [{ actif: false }, { bloqueJusqua: { gt: now } }],
+        };
+      } else if (dto.status === HostQueueStatusFilter.PENDING_KYC) {
+        where.utilisateur = {
+          ...where.utilisateur,
+          statutKyc: StatutKyc.EN_ATTENTE,
+        };
+      } else if (dto.status === HostQueueStatusFilter.STUCK_ONBOARDING) {
+        where.utilisateur = {
+          ...where.utilisateur,
+          profileCompleted: false,
+        };
+      }
+    }
+
+    const [profiles, total, countsRaw] = await Promise.all([
+      this.prisma.profile.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip,
+        include: {
+          utilisateur: {
+            include: {
+              vehicules: {
+                select: {
+                  id: true,
+                  marque: true,
+                  modele: true,
+                  statut: true,
+                  prixParJour: true,
+                  photos: { select: { url: true, estPrincipale: true }, take: 1 },
+                },
+              },
+              _count: {
+                select: {
+                  vehicules: true,
+                  reservationsProprietaire: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.profile.count({ where }),
+      Promise.all([
+        this.prisma.profile.count({ where: { OR: [{ role: RoleProfile.PROPRIETAIRE }, { utilisateur: { vehicules: { some: {} } } }] } }),
+        this.prisma.utilisateur.count({ where: { statutKyc: StatutKyc.EN_ATTENTE, vehicules: { some: {} } } }),
+        this.prisma.utilisateur.count({ where: { OR: [{ actif: false }, { bloqueJusqua: { gt: now } }], vehicules: { some: {} } } }),
+        this.prisma.utilisateur.count({ where: { actif: true, OR: [{ bloqueJusqua: null }, { bloqueJusqua: { lte: now } }], vehicules: { some: {} } } }),
+      ]),
+    ]);
+
+    const [totalHosts, pendingKycCount, bannedCount, activeCount] = countsRaw;
+
+    const data = profiles.map((p) => {
+      const u = p.utilisateur;
+      const isBanned = u ? (!u.actif || (!!u.bloqueJusqua && u.bloqueJusqua > now)) : false;
+      const vehicles = u?.vehicules ?? [];
+
+      const verifiedVehicles = vehicles.filter((v) => v.statut === StatutVehicule.VERIFIE).length;
+      const pendingVehicles = vehicles.filter((v) => v.statut === StatutVehicule.EN_ATTENTE_VALIDATION).length;
+      const suspendedVehicles = vehicles.filter((v) => v.statut === StatutVehicule.SUSPENDU).length;
+
+      return {
+        id: u?.id ?? p.id,
+        profileId: p.id,
+        userId: p.userId,
+        email: u?.email ?? p.email ?? '',
+        phone: u?.telephone ?? p.phone ?? '',
+        role: p.role,
+        createdAt: p.createdAt.toISOString(),
+        isBanned,
+        banUntil: u?.bloqueJusqua ? u.bloqueJusqua.toISOString() : null,
+        statutKyc: u?.statutKyc ?? StatutKyc.NON_VERIFIE,
+        kycRejectionReason: u?.kycRejectionReason ?? null,
+        profileCompleted: u?.profileCompleted ?? false,
+        utilisateur: u
+          ? {
+              prenom: u.prenom,
+              nom: u.nom,
+              fullName: `${u.prenom} ${u.nom}`.trim(),
+              avatarUrl: u.avatarUrl ?? null,
+              statutKyc: u.statutKyc,
+              noteProprietaire: Number(u.noteProprietaire),
+            }
+          : null,
+        fleetStats: {
+          total: vehicles.length,
+          verified: verifiedVehicles,
+          pending: pendingVehicles,
+          suspended: suspendedVehicles,
+        },
+        vehiclesSample: vehicles.slice(0, 3).map((v) => ({
+          id: v.id,
+          name: `${v.marque} ${v.modele}`,
+          statut: v.statut,
+          prixParJour: Number(v.prixParJour),
+          photoUrl: v.photos[0]?.url ?? null,
+        })),
+        totalBookings: u?._count?.reservationsProprietaire ?? 0,
+      };
+    });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        counts: {
+          total: totalHosts,
+          active: activeCount,
+          pendingKyc: pendingKycCount,
+          banned: bannedCount,
+        },
+      },
+    };
+  }
+
+  // ── Host 360° Health & Risk Matrix ───────────────────────────────────────
+
+  async getHostHealth360(hostId: string) {
+    const rawUser = await this.prisma.utilisateur.findFirst({
+      where: { OR: [{ id: hostId }, { userId: hostId }] },
+      include: {
+        profile: { select: { id: true, role: true, createdAt: true } },
+        vehicules: {
+          orderBy: { creeLe: 'desc' },
+          include: {
+            photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
+            tarifsProgressifs: { orderBy: { position: 'asc' } },
+            equipements: { include: { equipement: true } },
+            _count: { select: { reservations: true } },
+          },
+        },
+        reservationsProprietaire: {
+          orderBy: { creeLe: 'desc' },
+          take: 10,
+          include: {
+            vehicule: { select: { marque: true, modele: true } },
+            locataire: { select: { prenom: true, nom: true, telephone: true } },
+          },
+        },
+        wallet: {
+          include: {
+            retraits: {
+              orderBy: { demandeeLe: 'desc' },
+              take: 5,
+            },
+          },
+        },
+      },
+    });
+
+    if (!rawUser) {
+      throw new NotFoundException('Hôte introuvable');
+    }
+
+    const u: any = rawUser;
+    const now = new Date();
+
+    const categoryAvgMap: Record<string, number> = {
+      BERLINE: 35000,
+      SUV: 50000,
+      PICKUP: 45000,
+      LUXE: 120000,
+      CITADINE: 25000,
+    };
+
+    const vehiclesAudited = (u.vehicules ?? []).map((v: any) => {
+      const avgPrice = categoryAvgMap[v.type] ?? 40000;
+      const currentPrice = Number(v.prixParJour);
+      const priceDevPct = Math.round(((currentPrice - avgPrice) / avgPrice) * 100);
+
+      let priceWarning: string | null = null;
+      if (priceDevPct < -40) {
+        priceWarning = `Prix très bas (${priceDevPct}% sous le marché : risque sous-évaluation ou arnaque)`;
+      } else if (priceDevPct > 60) {
+        priceWarning = `Prix élevé (+${priceDevPct}% au-dessus du marché)`;
+      }
+
+      return {
+        id: v.id,
+        marque: v.marque,
+        modele: v.modele,
+        annee: v.annee,
+        type: v.type,
+        immatriculation: v.immatriculation,
+        prixParJour: currentPrice,
+        benchmarkPriceAvg: avgPrice,
+        priceDevPct,
+        priceWarning,
+        ville: v.ville,
+        adresse: v.adresse,
+        statut: v.statut,
+        carteGriseUrl: v.carteGriseUrl ?? null,
+        assuranceDocUrl: v.assuranceDocUrl ?? null,
+        hasCarteGrise: Boolean(v.carteGriseUrl),
+        hasAssuranceDoc: Boolean(v.assuranceDocUrl),
+        totalLocations: v.totalLocations,
+        photos: (v.photos ?? []).map((p: any) => ({ id: p.id, url: p.url, estPrincipale: p.estPrincipale })),
+        equipements: (v.equipements ?? []).map((ve: any) => ve.equipement?.nom),
+        creeLe: v.creeLe.toISOString(),
+      };
+    });
+
+    const reservations = u.reservationsProprietaire ?? [];
+    const totalReservations = reservations.length;
+    const completedReservations = reservations.filter((r: any) => r.statut === StatutReservation.TERMINEE).length;
+    const cancelledReservations = reservations.filter((r: any) => r.statut === StatutReservation.ANNULEE).length;
+    const ongoingReservations = reservations.filter((r: any) => r.statut === StatutReservation.EN_COURS || r.statut === StatutReservation.CONFIRMEE).length;
+
+    const hostCancelRate = totalReservations > 0 ? Math.round((cancelledReservations / totalReservations) * 100) : 0;
+
+    const grossEarnings = reservations
+      .filter((r: any) => r.statut === StatutReservation.TERMINEE || r.statut === StatutReservation.EN_COURS)
+      .reduce((sum: number, r: any) => sum + Number(r.netProprietaire ?? 0), 0);
+
+    const escrowBalance = reservations
+      .filter((r: any) => r.statut === StatutReservation.CONFIRMEE || r.statut === StatutReservation.EN_COURS)
+      .reduce((sum: number, r: any) => sum + Number(r.netProprietaire ?? 0), 0);
+
+    let riskScore = 10;
+    const riskWarnings: string[] = [];
+
+    if (u.statutKyc !== StatutKyc.VERIFIE) {
+      riskScore += 30;
+      riskWarnings.push('KYC non vérifié ou incomplet');
+    }
+    if (hostCancelRate > 15) {
+      riskScore += 25;
+      riskWarnings.push(`Taux d'annulation hôte élevé (${hostCancelRate}%)`);
+    }
+    const missingDocsCount = vehiclesAudited.filter((v: any) => !v.hasCarteGrise || !v.hasAssuranceDoc).length;
+    if (missingDocsCount > 0) {
+      riskScore += 20;
+      riskWarnings.push(`${missingDocsCount} véhicule(s) avec pièces carte grise / assurance manquantes`);
+    }
+
+    riskScore = Math.min(100, Math.max(0, riskScore));
+
+    return {
+      host: {
+        id: u.id,
+        userId: u.userId,
+        prenom: u.prenom,
+        nom: u.nom,
+        fullName: `${u.prenom} ${u.nom}`.trim(),
+        email: u.email,
+        phone: u.telephone,
+        avatarUrl: u.avatarUrl,
+        role: u.profile?.role ?? 'PROPRIETAIRE',
+        statutKyc: u.statutKyc,
+        kycRejectionReason: u.kycRejectionReason ?? null,
+        isBanned: !u.actif || (!!u.bloqueJusqua && u.bloqueJusqua > now),
+        registeredAt: u.creeLe.toISOString(),
+        documents: {
+          documentUrl: u.kycDocumentUrl ?? null,
+          documentBackUrl: u.kycDocumentBackUrl ?? null,
+          selfieUrl: u.kycSelfieUrl ?? null,
+          permisUrl: u.permisUrl ?? null,
+        },
+      },
+      healthMatrix: {
+        riskScore,
+        riskLevel: riskScore > 60 ? 'HIGH' : riskScore > 30 ? 'MEDIUM' : 'LOW',
+        riskWarnings,
+        noteProprietaire: Number(u.noteProprietaire),
+        hostCancelRate,
+        totalBookings: totalReservations,
+        completedBookings: completedReservations,
+        ongoingBookings: ongoingReservations,
+        grossEarnings,
+        escrowBalance,
+      },
+      fleet: vehiclesAudited,
+      recentWithdrawals: (u.wallet?.retraits ?? []).map((w: any) => ({
+        id: w.id,
+        montant: Number(w.montant),
+        statut: w.statut,
+        creeLe: (w.demandeeLe || w.creeLe || new Date()).toISOString(),
+      })),
+    };
+  }
+
+  async executeHostFleetAction(userId: string, action: FleetActionType, raison?: string) {
+    const u = await this.prisma.utilisateur.findFirst({
+      where: { OR: [{ id: userId }, { userId }] },
+      select: { id: true, email: true, telephone: true },
+    });
+    if (!u) throw new NotFoundException('Hôte introuvable');
+
+    let updatedCount = 0;
+    if (action === FleetActionType.SUSPEND_ALL) {
+      const res = await this.prisma.vehicule.updateMany({
+        where: {
+          proprietaireId: u.id,
+          statut: { not: StatutVehicule.ARCHIVE },
+        },
+        data: { statut: StatutVehicule.SUSPENDU },
+      });
+      updatedCount = res.count;
+
+      this.notification.send({
+        userId: u.id,
+        email: u.email ?? undefined,
+        phone: u.telephone ?? undefined,
+        type: 'host.fleet_suspended',
+        data: { raison: raison ?? 'Décision administrative' },
+      }).catch(() => {});
+    } else if (action === FleetActionType.ACTIVATE_ALL) {
+      const res = await this.prisma.vehicule.updateMany({
+        where: {
+          proprietaireId: u.id,
+          statut: StatutVehicule.SUSPENDU,
+        },
+        data: { statut: StatutVehicule.VERIFIE },
+      });
+      updatedCount = res.count;
+
+      this.notification.send({
+        userId: u.id,
+        email: u.email ?? undefined,
+        phone: u.telephone ?? undefined,
+        type: 'host.fleet_activated',
+        data: {},
+      }).catch(() => {});
+    }
+
+    return {
+      hostId: u.id,
+      action,
+      vehiclesUpdated: updatedCount,
+    };
   }
 
   // ── Unified Admin Users Queue (Profile + Utilisateur Join) ───────────────

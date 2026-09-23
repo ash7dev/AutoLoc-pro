@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -77,5 +78,29 @@ export class AdminVehiclesController {
     @Body() dto: FeatureVehicleDto,
   ) {
     return this.vehiclesService.featureVehicle(id, dto.active, dto.featuredUntil);
+  }
+
+  /**
+   * DELETE /admin/vehicles/:id/photos/:photoId
+   * Modération Admin : Supprime une photo non conforme d'un véhicule.
+   */
+  @Delete(':id/photos/:photoId')
+  deleteVehiclePhoto(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('photoId', ParseUUIDPipe) photoId: string,
+  ) {
+    return this.vehiclesService.deletePhoto(id, photoId);
+  }
+
+  /**
+   * PATCH /admin/vehicles/:id/photos/:photoId/main
+   * Modération Admin : Définit une photo comme photo principale de couverture.
+   */
+  @Patch(':id/photos/:photoId/main')
+  setMainVehiclePhoto(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('photoId', ParseUUIDPipe) photoId: string,
+  ) {
+    return this.vehiclesService.updatePhoto(id, photoId, { estPrincipale: true });
   }
 }

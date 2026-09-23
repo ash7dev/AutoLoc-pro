@@ -168,11 +168,13 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
   ];
 
   const isReservationDetailPage = /^\/dashboard\/reservations\/[^/]+/.test(pathname);
-  const isVehicleDetailPage = /^\/dashboard\/vehicles\/[^/]+/.test(pathname);
-  const isReservationsPage = pathname.startsWith('/dashboard/reservations');
-  const isVehiclesPage = pathname.startsWith('/dashboard/vehicles');
-  const hideHeaderOnMobile = isReservationsPage || isVehiclesPage;
-  const hideBottomNavOnMobile = isReservationDetailPage || isVehicleDetailPage;
+  const isVehicleDetailPage =
+    /^\/dashboard\/vehicles\/[^/]+/.test(pathname) &&
+    !pathname.startsWith('/dashboard/vehicles/new');
+
+  if (isReservationDetailPage || isVehicleDetailPage) {
+    return null;
+  }
 
   return (
     <>
@@ -384,8 +386,8 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
         />
       </header>
 
-      {/* Navigation Basse Mobile (Dock flottant vert forêt pour mobile, masqué sur la fiche détail réservation/véhicule) */}
-      {!hideBottomNavOnMobile && <OwnerMobileBottomNav />}
+      {/* Navigation Basse Mobile (Dock flottant vert forêt pour mobile) */}
+      <OwnerMobileBottomNav />
     </>
   );
 };

@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Param, Patch, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { BanUserDto } from './dto/ban-user.dto';
 import { GetAdminUsersDto } from './dto/get-admin-users.dto';
 import { GetKycQueueDto } from './dto/get-kyc-queue.dto';
 import { GetUsersQueueDto } from './dto/get-users-queue.dto';
+import { GetHostsQueueDto } from './dto/get-hosts-queue.dto';
+import { HostFleetActionDto } from './dto/fleet-action.dto';
 import { SetUserRoleDto } from './dto/set-user-role.dto';
 import { RejectKycDto } from './dto/reject-kyc.dto';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
@@ -16,6 +18,36 @@ import { RoleProfile } from '@prisma/client';
 @Roles(RoleProfile.ADMIN)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  /**
+   * GET /admin/users/hosts-queue
+   * File dédiée à la modération et l'administration des hôtes & propriétaires
+   */
+  @Get('hosts-queue')
+  async getHostsQueue(@Query() dto: GetHostsQueueDto) {
+    return this.usersService.getHostsQueue(dto);
+  }
+
+  /**
+   * GET /admin/users/hosts/:id/health-360
+   * Vue 360° de décision et santé de l'hôte (score de risque, flotte, séquestre)
+   */
+  @Get('hosts/:id/health-360')
+  async getHostHealth360(@Param('id') id: string) {
+    return this.usersService.getHostHealth360(id);
+  }
+
+  /**
+   * POST /admin/users/hosts/:id/fleet-action
+   * Action administrative en 1 clic sur l'ensemble de la flotte de l'hôte (suspendre, activer)
+   */
+  @Post('hosts/:id/fleet-action')
+  async executeHostFleetAction(
+    @Param('id') id: string,
+    @Body() dto: HostFleetActionDto,
+  ) {
+    return this.usersService.executeHostFleetAction(id, dto.action, dto.raison);
+  }
 
   /**
    * GET /admin/users/users-queue
