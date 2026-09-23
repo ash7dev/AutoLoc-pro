@@ -6,14 +6,17 @@ import { ArrowUpRight, CheckCircle2, Clock, Smartphone, UserCheck, Car, AlertTri
 import type { AdminOpsCommandCenterData } from '../../../core/api/adminAnalyticsApi';
 import { formatXOF } from './AdminExecutiveMetrics';
 
+import { OpsDrawerData } from './AdminOpsDrawer';
+
 interface AdminOpsCommandCenterProps {
   data?: AdminOpsCommandCenterData;
   isLoading?: boolean;
+  onSelectItem?: (item: OpsDrawerData) => void;
 }
 
 const fontStyle = { fontFamily: 'var(--font-fraunces), Georgia, serif' };
 
-export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ data, isLoading }) => {
+export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ data, isLoading, onSelectItem }) => {
   if (isLoading || !data) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">

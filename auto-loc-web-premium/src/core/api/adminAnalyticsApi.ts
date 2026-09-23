@@ -211,7 +211,47 @@ export interface AdminSupplyPipelineData {
   }>;
 }
 
+export interface AdminUnmetDemandData {
+  totalFailedSearches: number;
+  topFailedCities: Array<{ ville: string; count: number }>;
+  topFailedTypes: Array<{ type: string; count: number }>;
+}
+
+export interface AdminCohortsData {
+  totalUniqueRenters: number;
+  repeatRentersCount: number;
+  repeatRate: number;
+}
+
+export interface AdminFinancialEscrowData {
+  activeEscrowBookingsCount: number;
+  totalEscrowVolume: number;
+  totalOnlinePaidInEscrow: number;
+  securedCommissionInEscrow: number;
+  pendingHostPayoutInEscrow: number;
+}
+
+export interface AdminDashboardSummaryData {
+  period: string;
+  overview: AdminOverviewData;
+  trends: AdminRevenueTrendsData;
+  payments: AdminPaymentBreakdownData;
+  fleetStats: AdminFleetStatsData;
+  conversionFunnel: AdminFunnelData;
+  opsCenter: AdminOpsCommandCenterData;
+  usersFunnel: AdminUserActivationFunnelData;
+  supplyPipeline: AdminSupplyPipelineData;
+  riskQuality: AdminRiskQualityData;
+  unmetDemand: AdminUnmetDemandData;
+  cohorts: AdminCohortsData;
+  escrow: AdminFinancialEscrowData;
+}
+
 export const adminAnalyticsApi = {
+  getDashboardSummary: (period: string = '30d', ville?: string): Promise<AdminDashboardSummaryData> => {
+    return apiClient.get<AdminDashboardSummaryData>('/admin/analytics/dashboard-summary', { params: { period, ...(ville ? { ville } : {}) } });
+  },
+
   getOverview: (period: string = '30d'): Promise<AdminOverviewData> => {
     return apiClient.get<AdminOverviewData>('/admin/analytics/overview', { params: { period } });
   },
@@ -246,5 +286,17 @@ export const adminAnalyticsApi = {
 
   getSupplyPipeline: (): Promise<AdminSupplyPipelineData> => {
     return apiClient.get<AdminSupplyPipelineData>('/admin/analytics/supply-pipeline');
+  },
+
+  getUnmetDemand: (): Promise<AdminUnmetDemandData> => {
+    return apiClient.get<AdminUnmetDemandData>('/admin/analytics/unmet-demand');
+  },
+
+  getCohorts: (): Promise<AdminCohortsData> => {
+    return apiClient.get<AdminCohortsData>('/admin/analytics/cohorts');
+  },
+
+  getFinancialEscrow: (): Promise<AdminFinancialEscrowData> => {
+    return apiClient.get<AdminFinancialEscrowData>('/admin/analytics/financial-escrow');
   },
 };

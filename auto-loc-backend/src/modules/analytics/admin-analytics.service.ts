@@ -118,10 +118,11 @@ export class AdminAnalyticsService {
     const bookingsDelta = this.calculateDelta(bookingsCount, prevBookingsCount);
 
     // Fleet Utilization Rate
-    // Calculate total booked days in current period
+    // Calculate total booked days in current period based on actual rental dates
     const bookedDaysRes = await this.prisma.reservation.findMany({
       where: {
-        creeLe: { gte: currentStart, lte: endDate },
+        dateDebut: { lte: endDate },
+        dateFin: { gte: currentStart },
         statut: { in: [StatutReservation.CONFIRMEE, StatutReservation.EN_COURS, StatutReservation.TERMINEE] },
         ...(query.ville ? { vehicule: { ville: query.ville } } : {}),
       },
@@ -132,8 +133,10 @@ export class AdminAnalyticsService {
     for (const r of bookedDaysRes) {
       const start = new Date(Math.max(r.dateDebut.getTime(), currentStart.getTime()));
       const end = new Date(Math.min(r.dateFin.getTime(), endDate.getTime()));
-      const diffDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)));
-      totalBookedDays += diffDays;
+      if (end >= start) {
+        const diffDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)));
+        totalBookedDays += diffDays;
+      }
     }
 
     const maxCapacityDays = (activeVehiclesCount || 1) * daysCount;
@@ -878,8 +881,164 @@ export class AdminAnalyticsService {
     return result;
   }
 
+  // ── 11. GROWTH ENGINE: UNMET DEMAND (Searches with 0 Results) ─────────────
 
-  // ── HELPER: Date Resolution ───────────────────────────────────────────────
+  async getUnmetDemand() {
+    const cacheKey = 'unmet_demand';
+    const cached = this.getFromCache(cacheKey);
+    if (cached) return cached;
+
+    const [totalFailedSearches, topFailedCitiesRaw, topFailedTypesRaw] = await Promise.all([
+      this.prisma.searchHistory.count({
+        where: { resultCount: 0 },
+      }),
+      this.prisma.searchHistory.groupBy({
+        by: ['ville'],
+        where: { resultCount: 0, ville: { not: null } },
+        _count: { id: true },
+        orderBy: { _count: { id: 'desc' } },
+        take: 5,
+      }),
+      this.prisma.searchHistory.groupBy({
+        by: ['type'],
+        where: { resultCount: 0, type: { not: null } },
+        _count: { id: true },
+        orderBy: { _count: { id: 'desc' } },
+        take: 5,
+      }),
+    ]);
+
+    const result = {
+      totalFailedSearches,
+      topFailedCities: topFailedCitiesRaw.map((c) => ({ ville: c.ville || 'Inconnue', count: c._count.id })),
+      topFailedTypes: topFailedTypesRaw.map((t) => ({ type: t.type || 'Non spécifié', count: t._count.id })),
+    };
+
+    this.setCache(cacheKey, result);
+    return result;
+  }
+
+  // ── 12. GROWTH ENGINE: COHORTS & RETENTION (Repeat Booking Rate) ──────────
+
+  async getCohortsAndRetention() {
+    const cacheKey = 'cohorts_retention';
+    const cached = this.getFromCache(cacheKey);
+    if (cached) return cached;
+
+    const [totalRenters, repeatRentersRaw] = await Promise.all([
+      this.prisma.reservation.groupBy({
+        by: ['locataireId'],
+        where: { statut: { in: [StatutReservation.CONFIRMEE, StatutReservation.EN_COURS, StatutReservation.TERMINEE] } },
+      }),
+      this.prisma.reservation.groupBy({
+        by: ['locataireId'],
+        where: { statut: { in: [StatutReservation.CONFIRMEE, StatutReservation.EN_COURS, StatutReservation.TERMINEE] } },
+        _count: { id: true },
+        having: { id: { _count: { gt: 1 } } },
+      }),
+    ]);
+
+    const totalUniqueRenters = totalRenters.length;
+    const repeatRentersCount = repeatRentersRaw.length;
+    const repeatRate = totalUniqueRenters > 0 ? Math.round((repeatRentersCount / totalUniqueRenters) * 1000) / 10 : 0;
+
+    const result = {
+      totalUniqueRenters,
+      repeatRentersCount,
+      repeatRate,
+    };
+
+    this.setCache(cacheKey, result);
+    return result;
+  }
+
+  // ── 13. GROWTH ENGINE: FINANCIAL ESCROW & CASH FLOAT ──────────────────────
+
+  async getFinancialEscrow() {
+    const cacheKey = 'financial_escrow';
+    const cached = this.getFromCache(cacheKey);
+    if (cached) return cached;
+
+    const escrowRes = await this.prisma.reservation.aggregate({
+      _sum: {
+        totalLocataire: true,
+        montantPayeEnLigne: true,
+        montantCommission: true,
+        netProprietaire: true,
+      },
+      _count: { id: true },
+      where: {
+        statut: { in: [StatutReservation.CONFIRMEE, StatutReservation.EN_COURS] },
+        walletCredite: false,
+      },
+    });
+
+    const result = {
+      activeEscrowBookingsCount: escrowRes._count.id,
+      totalEscrowVolume: Math.round(Number(escrowRes._sum.totalLocataire ?? 0)),
+      totalOnlinePaidInEscrow: Math.round(Number(escrowRes._sum.montantPayeEnLigne ?? 0)),
+      securedCommissionInEscrow: Math.round(Number(escrowRes._sum.montantCommission ?? 0)),
+      pendingHostPayoutInEscrow: Math.round(Number(escrowRes._sum.netProprietaire ?? 0)),
+    };
+
+    this.setCache(cacheKey, result);
+    return result;
+  }
+
+  // ── 14. AGGREGATED DASHBOARD SUMMARY (Single-Flight Load) ───────────────
+
+  async getDashboardSummary(query: AdminAnalyticsQueryDto) {
+    const cacheKey = `summary_${query.period || '30d'}_${query.ville || 'all'}`;
+    const cached = this.getFromCache(cacheKey);
+    if (cached) return cached;
+
+    const [
+      overview,
+      trends,
+      payments,
+      fleetStats,
+      conversionFunnel,
+      opsCenter,
+      usersFunnel,
+      supplyPipeline,
+      riskQuality,
+      unmetDemand,
+      cohorts,
+      escrow,
+    ] = await Promise.all([
+      this.getOverview(query),
+      this.getRevenueTrends(query),
+      this.getPaymentBreakdown(query),
+      this.getFleetStats(query),
+      this.getConversionFunnel(query),
+      this.getOpsCommandCenter(),
+      this.getUserActivationFunnel(),
+      this.getSupplyPipeline(),
+      this.getRiskQuality(),
+      this.getUnmetDemand(),
+      this.getCohortsAndRetention(),
+      this.getFinancialEscrow(),
+    ]);
+
+    const result = {
+      period: query.period || '30d',
+      overview,
+      trends,
+      payments,
+      fleetStats,
+      conversionFunnel,
+      opsCenter,
+      usersFunnel,
+      supplyPipeline,
+      riskQuality,
+      unmetDemand,
+      cohorts,
+      escrow,
+    };
+
+    this.setCache(cacheKey, result);
+    return result;
+  }
 
   private resolveDateRange(period?: AdminPeriod) {
     const endDate = new Date();

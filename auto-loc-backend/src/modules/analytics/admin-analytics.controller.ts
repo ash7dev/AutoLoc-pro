@@ -13,6 +13,16 @@ export class AdminAnalyticsController {
   constructor(private readonly adminAnalyticsService: AdminAnalyticsService) {}
 
   /**
+   * GET /admin/analytics/dashboard-summary
+   * Synthèse complète unifiée du tableau de bord exécutif & opérationnel en 1 seul appel HTTP.
+   */
+  @Get('dashboard-summary')
+  @HttpCode(HttpStatus.OK)
+  getDashboardSummary(@Query() query: AdminAnalyticsQueryDto) {
+    return this.adminAnalyticsService.getDashboardSummary(query);
+  }
+
+  /**
    * GET /admin/analytics/overview
    * Vue d'ensemble stratégique exécutive (GMV, Commissions, Take Rate, Flotte, Deltas MoM/WoW).
    */
@@ -110,5 +120,35 @@ export class AdminAnalyticsController {
   @HttpCode(HttpStatus.OK)
   getReservationsBreakdown(@Query() query: AdminAnalyticsQueryDto) {
     return this.adminAnalyticsService.getReservationsBreakdown(query);
+  }
+
+  /**
+   * GET /admin/analytics/unmet-demand
+   * Demande non satisfaite (Recherches à 0 résultat).
+   */
+  @Get('unmet-demand')
+  @HttpCode(HttpStatus.OK)
+  getUnmetDemand() {
+    return this.adminAnalyticsService.getUnmetDemand();
+  }
+
+  /**
+   * GET /admin/analytics/cohorts
+   * Rétention des locataires et taux de réservation récurrente.
+   */
+  @Get('cohorts')
+  @HttpCode(HttpStatus.OK)
+  getCohorts() {
+    return this.adminAnalyticsService.getCohortsAndRetention();
+  }
+
+  /**
+   * GET /admin/analytics/financial-escrow
+   * Fonds sous séquestre dans les comptes Marchands Wave & Orange Money.
+   */
+  @Get('financial-escrow')
+  @HttpCode(HttpStatus.OK)
+  getFinancialEscrow() {
+    return this.adminAnalyticsService.getFinancialEscrow();
   }
 }
