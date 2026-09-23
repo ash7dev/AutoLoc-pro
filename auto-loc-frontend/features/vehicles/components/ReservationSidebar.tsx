@@ -130,6 +130,13 @@ export function ReservationSidebar({ vehicleId, prixParJour, joursMinimum, ageMi
     return () => clearTimeout(debounceRef.current);
   }, [nbJours, horsDakar, fetchPricingData]);
 
+  // Auto-disable delivery if address is cleared to unblock reservation
+  useEffect(() => {
+    if (wantsDelivery && !deliveryAddress.trim()) {
+      setWantsDelivery(false);
+    }
+  }, [deliveryAddress]);
+
   const canReserve = datesValid && contractAccepted && pricing && !loadingPricing
     && (!wantsDelivery || deliveryAddress.trim().length > 0);
 

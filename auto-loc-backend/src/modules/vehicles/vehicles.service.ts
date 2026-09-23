@@ -71,6 +71,14 @@ const FEED_SECTION_SIZE = 10;
 export class VehiclesService {
   private readonly logger = new Logger(VehiclesService.name);
 
+  /** Format a Date to YYYY-MM-DD using local timezone (avoid UTC offset issues) */
+  private formatDateToLocal(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   /** Colonnes véhicule + photo de couverture, partagées entre search() et getHomeFeed(). */
   private static readonly VEHICLE_SELECT_FRAGMENT = Prisma.sql`
     v.id,
@@ -2348,13 +2356,13 @@ export class VehiclesService {
 
     const blockedRanges = [
       ...reservations.map((r) => ({
-        from: r.dateDebut.toISOString().split('T')[0],
-        to: r.dateFin.toISOString().split('T')[0],
+        from: this.formatDateToLocal(r.dateDebut),
+        to: this.formatDateToLocal(r.dateFin),
         type: 'reservation' as const,
       })),
       ...indisponibilites.map((i) => ({
-        from: i.dateDebut.toISOString().split('T')[0],
-        to: i.dateFin.toISOString().split('T')[0],
+        from: this.formatDateToLocal(i.dateDebut),
+        to: this.formatDateToLocal(i.dateFin),
         type: 'indisponibilite' as const,
       })),
     ];

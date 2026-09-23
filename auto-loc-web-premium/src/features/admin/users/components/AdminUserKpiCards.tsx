@@ -6,7 +6,6 @@ import {
   ShieldCheck,
   UserCheck,
   UserX,
-  AlertTriangle,
   UserPlus,
 } from 'lucide-react';
 
@@ -48,8 +47,8 @@ export function AdminUserKpiCards({
       value: total,
       subtext: `${locataires} Locataires • ${proprietaires} Hôtes`,
       icon: Users,
-      color: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/30 text-emerald-400',
-      iconBg: 'bg-emerald-500/20 text-emerald-300',
+      iconBg: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
+      badge: null,
       isActive: activeStatusFilter === 'ALL' && activeRoleFilter === 'ALL',
       onClick: () => {
         onSelectStatusFilter('ALL');
@@ -62,8 +61,8 @@ export function AdminUserKpiCards({
       value: proprietaires,
       subtext: 'Partenaires avec véhicules',
       icon: UserCheck,
-      color: 'from-amber-500/20 to-yellow-500/10 border-amber-500/30 text-amber-400',
-      iconBg: 'bg-amber-500/20 text-amber-300',
+      iconBg: 'bg-amber-50 text-amber-700 border border-amber-200/60',
+      badge: null,
       isActive: activeRoleFilter === 'PROPRIETAIRE',
       onClick: () => {
         onSelectRoleFilter('PROPRIETAIRE');
@@ -75,10 +74,7 @@ export function AdminUserKpiCards({
       value: pendingKyc,
       subtext: 'Identités en attente de revue',
       icon: ShieldCheck,
-      color: pendingKyc > 0
-        ? 'from-sky-500/20 to-blue-500/10 border-sky-500/30 text-sky-400 animate-pulse'
-        : 'from-sky-500/20 to-blue-500/10 border-sky-500/30 text-sky-400',
-      iconBg: 'bg-sky-500/20 text-sky-300',
+      iconBg: 'bg-sky-50 text-sky-700 border border-sky-200/60',
       badge: pendingKyc > 0 ? `${pendingKyc} urgent` : undefined,
       isActive: activeStatusFilter === 'PENDING_KYC',
       onClick: () => {
@@ -91,8 +87,8 @@ export function AdminUserKpiCards({
       value: stuckOnboarding,
       subtext: 'Comptes en cours d\'onboarding',
       icon: UserPlus,
-      color: 'from-violet-500/20 to-purple-500/10 border-violet-500/30 text-violet-400',
-      iconBg: 'bg-violet-500/20 text-violet-300',
+      iconBg: 'bg-violet-50 text-violet-700 border border-violet-200/60',
+      badge: null,
       isActive: activeStatusFilter === 'STUCK_ONBOARDING',
       onClick: () => {
         onSelectStatusFilter('STUCK_ONBOARDING');
@@ -104,8 +100,8 @@ export function AdminUserKpiCards({
       value: banned,
       subtext: 'Accès restreint par l\'admin',
       icon: UserX,
-      color: 'from-rose-500/20 to-red-500/10 border-rose-500/30 text-rose-400',
-      iconBg: 'bg-rose-500/20 text-rose-300',
+      iconBg: 'bg-rose-50 text-rose-700 border border-rose-200/60',
+      badge: null,
       isActive: activeStatusFilter === 'BANNED',
       onClick: () => {
         onSelectStatusFilter('BANNED');
@@ -121,10 +117,10 @@ export function AdminUserKpiCards({
           <button
             key={card.id}
             onClick={card.onClick}
-            className={`relative group text-left p-4 rounded-2xl border transition-all duration-300 bg-slate-900/60 backdrop-blur-md hover:scale-[1.02] hover:shadow-xl ${
+            className={`relative group text-left p-4.5 rounded-2xl border transition-all duration-200 bg-white shadow-sm hover:shadow-md ${
               card.isActive
-                ? 'ring-2 ring-emerald-500/80 shadow-lg shadow-emerald-500/10 bg-slate-800/80 border-emerald-500/50'
-                : `border-slate-800 hover:border-slate-700`
+                ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50/10 shadow-emerald-500/5'
+                : 'border-slate-200 hover:border-slate-300'
             }`}
           >
             {/* Top Row: Icon & Badge */}
@@ -133,28 +129,28 @@ export function AdminUserKpiCards({
                 <IconComponent className="w-5 h-5" />
               </div>
               {card.badge && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 uppercase tracking-wider">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 uppercase tracking-wider">
                   {card.badge}
                 </span>
               )}
             </div>
 
             {/* Value */}
-            <div className="text-2xl font-black text-white tracking-tight mb-1 font-mono">
+            <div className="text-2xl font-black text-slate-900 tracking-tight mb-1 font-mono">
               {card.value.toLocaleString()}
             </div>
 
             {/* Title & Subtext */}
-            <div className="text-xs font-semibold text-slate-200 mb-0.5">
+            <div className="text-xs font-bold text-slate-800 mb-0.5">
               {card.title}
             </div>
-            <div className="text-[11px] text-slate-400 truncate">
+            <div className="text-[11px] text-slate-500 truncate">
               {card.subtext}
             </div>
 
             {/* Active Indicator Bar */}
             {card.isActive && (
-              <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-emerald-500 rounded-full" />
+              <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-emerald-600 rounded-full" />
             )}
           </button>
         );

@@ -19,6 +19,14 @@ export class AnalyticsService {
 
   constructor(private readonly prisma: PrismaService) { }
 
+  /** Format a Date to YYYY-MM-DD using local timezone (avoid UTC offset issues) */
+  private formatDateToLocal(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   /**
    * Helper pour obtenir l'ID utilisateur Prisma
    */
@@ -469,8 +477,8 @@ export class AnalyticsService {
 
         // 1. RENTED ?
         const isRented = v.reservations.some((r) => {
-          const rStart = r.dateDebut.toISOString().split('T')[0];
-          const rEnd = r.dateFin.toISOString().split('T')[0];
+          const rStart = this.formatDateToLocal(r.dateDebut);
+          const rEnd = this.formatDateToLocal(r.dateFin);
           return dateStr >= rStart && dateStr <= rEnd;
         });
 
@@ -482,8 +490,8 @@ export class AnalyticsService {
 
         // 2. MANUALLY BLOCKED ?
         const isBlocked = v.indisponibilites.some((i) => {
-          const iStart = i.dateDebut.toISOString().split('T')[0];
-          const iEnd = i.dateFin.toISOString().split('T')[0];
+          const iStart = this.formatDateToLocal(i.dateDebut);
+          const iEnd = this.formatDateToLocal(i.dateFin);
           return dateStr >= iStart && dateStr <= iEnd;
         });
 

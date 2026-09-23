@@ -11,11 +11,9 @@ import {
   Calendar,
   Phone,
   Mail,
-  MoreVertical,
   Award,
   AlertCircle,
   Clock,
-  UserPlus,
 } from 'lucide-react';
 import type { AdminUserQueueItem } from '../../../../core/api/adminAnalyticsApi';
 
@@ -62,33 +60,33 @@ export function AdminUserTable({
 
   if (isLoading && items.length === 0) {
     return (
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-12 text-center">
-        <div className="inline-flex p-4 rounded-full bg-emerald-500/10 text-emerald-400 mb-4 animate-pulse">
+      <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm">
+        <div className="inline-flex p-4 rounded-full bg-emerald-50 text-emerald-600 mb-4 animate-pulse">
           <Clock className="w-8 h-8 animate-spin" />
         </div>
-        <p className="text-sm font-semibold text-slate-300">Chargement de l'annuaire des utilisateurs...</p>
+        <p className="text-sm font-semibold text-slate-700">Chargement de l'annuaire des utilisateurs...</p>
       </div>
     );
   }
 
   if (!isLoading && items.length === 0) {
     return (
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-12 text-center">
-        <div className="inline-flex p-4 rounded-full bg-slate-800 text-slate-400 mb-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm">
+        <div className="inline-flex p-4 rounded-full bg-slate-100 text-slate-400 mb-4">
           <UserX className="w-8 h-8" />
         </div>
-        <h3 className="text-lg font-bold text-white mb-1">Aucun utilisateur trouvé</h3>
-        <p className="text-xs text-slate-400">Essayez de modifier vos filtres ou le terme de recherche.</p>
+        <h3 className="text-lg font-bold text-slate-900 mb-1">Aucun utilisateur trouvé</h3>
+        <p className="text-xs text-slate-500">Essayez de modifier vos filtres ou le terme de recherche.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-slate-800 bg-slate-950/60 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
               <th className="py-3.5 px-4">Utilisateur & Contact</th>
               <th className="py-3.5 px-4">Rôle</th>
               <th className="py-3.5 px-4">Statut KYC</th>
@@ -98,7 +96,7 @@ export function AdminUserTable({
               <th className="py-3.5 px-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60 text-xs">
+          <tbody className="divide-y divide-slate-100 text-xs">
             {items.map((item) => {
               const u = item.utilisateur;
               const isStuck = item.isStuckOnboarding;
@@ -116,7 +114,7 @@ export function AdminUserTable({
               return (
                 <tr
                   key={item.id}
-                  className="hover:bg-slate-800/40 transition-colors duration-150 group"
+                  className="hover:bg-slate-50/80 transition-colors duration-150 group"
                 >
                   {/* User Profile & Contact Info */}
                   <td className="py-4 px-4">
@@ -126,10 +124,10 @@ export function AdminUserTable({
                           <img
                             src={avatarUrl}
                             alt={fullName}
-                            className="w-10 h-10 rounded-full object-cover border border-slate-700"
+                            className="w-10 h-10 rounded-full object-cover border border-slate-200"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-xs">
+                          <div className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold text-xs">
                             {initials || 'U'}
                           </div>
                         )}
@@ -143,24 +141,24 @@ export function AdminUserTable({
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-white text-sm truncate max-w-[200px]">
+                          <span className="font-bold text-slate-900 text-sm truncate max-w-[200px]">
                             {fullName}
                           </span>
                           {isStuck && (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-violet-500/20 text-violet-300 border border-violet-500/40">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-200">
                               Inscription incomplète
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-3 text-[11px] text-slate-400 mt-0.5">
+                        <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-0.5">
                           <span className="flex items-center gap-1 truncate max-w-[160px]" title={item.email}>
-                            <Mail className="w-3 h-3 text-slate-500 flex-shrink-0" />
+                            <Mail className="w-3 h-3 text-slate-400 flex-shrink-0" />
                             {item.email || 'Pas d\'email'}
                           </span>
                           {item.phone && (
                             <span className="flex items-center gap-1 truncate">
-                              <Phone className="w-3 h-3 text-slate-500 flex-shrink-0" />
+                              <Phone className="w-3 h-3 text-slate-400 flex-shrink-0" />
                               {item.phone}
                             </span>
                           )}
@@ -182,11 +180,11 @@ export function AdminUserTable({
                   {/* Stats & Vehicles */}
                   <td className="py-4 px-4">
                     <div className="flex flex-col gap-1 text-[11px]">
-                      <span className="flex items-center gap-1.5 text-slate-300 font-medium">
-                        <Car className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="flex items-center gap-1.5 text-slate-800 font-semibold">
+                        <Car className="w-3.5 h-3.5 text-emerald-600" />
                         {item.stats.vehiclesCount} véhicule{item.stats.vehiclesCount > 1 ? 's' : ''}
                       </span>
-                      <span className="text-slate-400">
+                      <span className="text-slate-500">
                         {item.stats.bookingsCount} réservation{item.stats.bookingsCount > 1 ? 's' : ''}
                       </span>
                     </div>
@@ -195,22 +193,22 @@ export function AdminUserTable({
                   {/* Account Status Badge */}
                   <td className="py-4 px-4">
                     {isBanned ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/30">
-                        <ShieldAlert className="w-3 h-3" />
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                        <ShieldAlert className="w-3 h-3 text-rose-600" />
                         Suspendu
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                        <ShieldCheck className="w-3 h-3" />
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <ShieldCheck className="w-3 h-3 text-emerald-600" />
                         Actif
                       </span>
                     )}
                   </td>
 
                   {/* Registration Date */}
-                  <td className="py-4 px-4 text-slate-400 text-[11px]">
+                  <td className="py-4 px-4 text-slate-500 text-[11px]">
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
                       {new Date(item.createdAt).toLocaleDateString('fr-FR', {
                         day: '2-digit',
                         month: 'short',
@@ -224,19 +222,19 @@ export function AdminUserTable({
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => onSelectUser(item.id)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-semibold transition-all duration-200"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-all duration-150"
                         title="Inspecter le compte 360°"
                       >
-                        <Eye className="w-3.5 h-3.5" />
+                        <Eye className="w-3.5 h-3.5 text-emerald-600" />
                         Inspecter
                       </button>
 
                       <button
                         onClick={() => onBanClick(item)}
-                        className={`p-1.5 rounded-lg border transition-all duration-200 ${
+                        className={`p-1.5 rounded-lg border transition-all duration-150 ${
                           isBanned
-                            ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                            : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
+                            ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                            : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
                         }`}
                         title={isBanned ? 'Réactiver le compte' : 'Suspendre le compte'}
                       >
@@ -252,15 +250,15 @@ export function AdminUserTable({
       </div>
 
       {/* Sentinel Element for Infinite Scroll */}
-      <div ref={observerTarget} className="p-4 text-center border-t border-slate-800/60">
+      <div ref={observerTarget} className="p-4 text-center border-t border-slate-100">
         {isLoadingMore && (
-          <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
-            <Clock className="w-4 h-4 animate-spin text-emerald-400" />
+          <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
+            <Clock className="w-4 h-4 animate-spin text-emerald-600" />
             <span>Chargement des comptes suivants...</span>
           </div>
         )}
         {!hasMore && items.length > 0 && (
-          <p className="text-[11px] text-slate-500">Fin des résultats — {items.length} utilisateurs affichés</p>
+          <p className="text-[11px] text-slate-400">Fin des résultats — {items.length} utilisateurs affichés</p>
         )}
       </div>
     </div>
@@ -271,25 +269,25 @@ function RoleBadge({ role }: { role: string }) {
   switch (role) {
     case 'PROPRIETAIRE':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-          <Award className="w-3 h-3 text-amber-400" /> Hôte (Propriétaire)
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+          <Award className="w-3 h-3 text-amber-600" /> Hôte (Propriétaire)
         </span>
       );
     case 'ADMIN':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-50 text-purple-800 border border-purple-200">
           👑 Admin
         </span>
       );
     case 'SUPPORT':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-50 text-sky-800 border border-sky-200">
           🎧 Support
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
           Locataire
         </span>
       );
@@ -299,7 +297,7 @@ function RoleBadge({ role }: { role: string }) {
 function KycBadge({ status, isStuck }: { status: string; isStuck: boolean }) {
   if (isStuck) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
         Non démarré
       </span>
     );
@@ -308,25 +306,25 @@ function KycBadge({ status, isStuck }: { status: string; isStuck: boolean }) {
   switch (status) {
     case 'VERIFIE':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-          <ShieldCheck className="w-3 h-3 text-emerald-400" /> Vérifié
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+          <ShieldCheck className="w-3 h-3 text-emerald-600" /> Vérifié
         </span>
       );
     case 'EN_ATTENTE':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 animate-pulse">
-          <Clock className="w-3 h-3 text-sky-400" /> À examiner
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-800 border border-sky-200 animate-pulse">
+          <Clock className="w-3 h-3 text-sky-600" /> À examiner
         </span>
       );
     case 'REJETE':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
-          <AlertCircle className="w-3 h-3 text-rose-400" /> Rejeté
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
+          <AlertCircle className="w-3 h-3 text-rose-600" /> Rejeté
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
           Non vérifié
         </span>
       );

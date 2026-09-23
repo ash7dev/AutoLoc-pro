@@ -7,7 +7,6 @@ import { AdminUserHeaderBar } from '@/src/features/admin/users/components/AdminU
 import { AdminUserTable } from '@/src/features/admin/users/components/AdminUserTable';
 import { AdminUserInspectorModal } from '@/src/features/admin/users/components/AdminUserInspectorModal';
 
-
 export default function AdminUsersPage() {
   const {
     role,
@@ -41,16 +40,7 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-8 space-y-6">
-      {/* KPI Stats Header Bar */}
-      <AdminUserKpiCards
-        counts={counts}
-        activeStatusFilter={status}
-        activeRoleFilter={role}
-        onSelectStatusFilter={setStatus}
-        onSelectRoleFilter={setRole}
-      />
-
+    <div className="min-h-screen bg-slate-50 text-slate-900 p-6 md:p-8 space-y-6">
       {/* Header & Controls Bar */}
       <AdminUserHeaderBar
         role={role}
@@ -63,6 +53,16 @@ export default function AdminUsersPage() {
         isRefreshing={isRefreshing}
         onRefresh={refresh}
       />
+
+      {/* KPI Stats Header Bar */}
+      <AdminUserKpiCards
+        counts={counts}
+        activeStatusFilter={status}
+        activeRoleFilter={role}
+        onSelectStatusFilter={setStatus}
+        onSelectRoleFilter={setRole}
+      />
+
 
       {/* High-Density User Table with Infinite Scroll */}
       <AdminUserTable
@@ -80,7 +80,6 @@ export default function AdminUsersPage() {
         <AdminUserInspectorModal
           user={userDetail ?? null}
           isLoading={isLoadingDetail}
-
           onClose={() => setSelectedUserId(null)}
           onBanUser={setUserStatus}
           onSetRole={setUserRole}

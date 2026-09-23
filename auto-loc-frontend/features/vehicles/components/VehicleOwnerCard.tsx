@@ -296,12 +296,14 @@ function SheetReservationForm({
     return () => clearTimeout(debounceRef.current);
   }, [nbJours, horsDakar, fetchPricingData]);
 
-  // Auto-disable delivery if address is cleared
+  // Auto-disable delivery if address is cleared to unblock reservation
   useEffect(() => {
     if (wantsDelivery && !deliveryAddress.trim()) {
       setWantsDelivery(false);
     }
   }, [deliveryAddress]);
+
+
 
   function buildParams() {
     const params = new URLSearchParams({ dateDebut, dateFin, nbJours: String(nbJours) });
