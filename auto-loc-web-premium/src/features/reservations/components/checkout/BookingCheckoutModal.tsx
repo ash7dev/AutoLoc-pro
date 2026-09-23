@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { BookingCheckoutHeader } from './BookingCheckoutHeader';
 import { BookingCheckoutStep1 } from './BookingCheckoutStep1';
 import { BookingCheckoutStep2 } from './BookingCheckoutStep2';
@@ -8,7 +9,7 @@ import { PaymentMode } from './BookingPaymentModeSelector';
 import { PaymentGateway } from './BookingPaymentGatewaySelector';
 import { fetchApi } from '@/lib/config';
 import { useUserStore } from '@/src/core/store/useUserStore';
-import { CheckCircle2, Sparkles, X, ExternalLink } from 'lucide-react';
+import { CheckCircle2, Sparkles, X, ExternalLink, ArrowRight } from 'lucide-react';
 
 export interface BookingCheckoutModalProps {
   isOpen: boolean;
@@ -58,6 +59,7 @@ export function BookingCheckoutModal({
   initialAdresseLivraison,
   onBookingSuccess,
 }: BookingCheckoutModalProps) {
+  const router = useRouter();
   const user = useUserStore((state) => state.user);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -261,13 +263,19 @@ export function BookingCheckoutModal({
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="py-3 px-8 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-sm hover:bg-[#0F4F3B] cursor-pointer transition-all"
-            >
-              Fermer la fenêtre
-            </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  router.push(`/reservations/${successData.reservationId}`);
+                }}
+                className="w-full sm:w-auto py-3.5 px-8 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs sm:text-sm hover:bg-[#0F4F3B] cursor-pointer transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <span>Consulter ma réservation</span>
+                <ArrowRight className="w-4 h-4 text-[#F1DFB6]" />
+              </button>
+            </div>
           </div>
         ) : (
           /* Corps de la modale scrollable */

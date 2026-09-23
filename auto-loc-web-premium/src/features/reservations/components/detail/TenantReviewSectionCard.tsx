@@ -38,7 +38,13 @@ export const TenantReviewSectionCard: React.FC<TenantReviewSectionCardProps> = (
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const isCompleted = bookingStatus === 'TERMINEE';
-  const isLocked = !isCompleted && !submitted;
+  const hasReview = Boolean(existingReview) || submitted;
+  const isLocked = !isCompleted && !hasReview;
+
+  // Masquer totalement la carte d'avis tant que la réservation n'est pas terminée (sauf si un avis existe déjà)
+  if (!isCompleted && !hasReview) {
+    return null;
+  }
 
   const toggleTag = (tag: string) => {
     if (submitted || isLocked) return;

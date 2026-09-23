@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Share2, Star, MapPin, CheckCircle2 } from 'lucide-react';
 import { VehicleGallery } from './VehicleGallery';
 import { VehicleMainSpecsCard } from './VehicleMainSpecsCard';
@@ -26,6 +27,7 @@ interface TenantVehicleDetailPageProps {
 }
 
 export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPageProps) {
+  const router = useRouter();
   const { vehicle, isLoading, isError } = useVehicleDetails(vehicleId);
 
   // Authentification et revalidation silencieuse SWR
@@ -407,7 +409,7 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
                 initialHorsDakar={pendingBookingParams?.horsDakar}
                 initialIncludeDelivery={pendingBookingParams?.includeDelivery}
                 onBookingSuccess={(resId) => {
-                  console.log('Réservation initiée avec succès:', resId);
+                  router.push(`/reservations/${resId}`);
                 }}
               />
             )}
