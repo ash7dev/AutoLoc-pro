@@ -4,7 +4,7 @@ import { VehiclesPageShell } from "@/src/features/vehicles/components/VehiclesPa
 import { VehiclesGridSkeleton } from "@/src/features/vehicles/components/VehiclesGridSkeleton";
 
 export const metadata: Metadata = {
-  title: "Tous les Véhicules — AutoLoc Premium Sénégal",
+  title: "Tous les Véhicules — AutoLoc Sénégal",
   description:
     "Découvrez notre catalogue de véhicules de location vérifiés au Sénégal (Dakar, Thiès, Saly). Réservation en ligne sécurisée avec assurance et livraison.",
   keywords: [
@@ -12,10 +12,10 @@ export const metadata: Metadata = {
     "location suv senegal",
     "rent a car dakar",
     "location berline dakar",
-    "autoloc premium",
+    "autoloc senegal",
   ],
   openGraph: {
-    title: "Tous les Véhicules — AutoLoc Premium",
+    title: "Tous les Véhicules — AutoLoc",
     description: "Trouvez le véhicule parfait pour vos déplacements au Sénégal.",
     type: "website",
   },

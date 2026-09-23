@@ -1,7 +1,16 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { AdminGuard } from '@/src/core/auth/AdminGuard';
 import { AdminSidebar } from '@/src/features/admin/components/AdminSidebar';
 import { AdminHeader } from '@/src/features/admin/components/AdminHeader';
+
+export const metadata: Metadata = {
+  title: "Administration",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function AdminLayout({
   children,

@@ -55,8 +55,66 @@ const syne = Syne({
 });
 
 export const metadata: Metadata = {
-  title: "AutoLoc Web Premium — Location de Véhicules de Prestige",
-  description: "Plateforme web haut de gamme de location de véhicules inspirée de la suite AutoLoc",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://autoloc.sn"),
+  title: {
+    default: "AutoLoc — Location de Voitures & Véhicules au Sénégal",
+    template: "%s | AutoLoc",
+  },
+  description:
+    "AutoLoc est la plateforme de référence pour la location de véhicules (berlines, SUV 4x4, voitures de luxe) à Dakar et au Sénégal. Réservation simple, rapide et sécurisée avec assurance.",
+  keywords: [
+    "AutoLoc",
+    "location voiture dakar",
+    "location SUV senegal",
+    "location voiture de luxe dakar",
+    "louer voiture dakar",
+    "location vehicule senegal",
+    "rent a car dakar",
+  ],
+  authors: [{ name: "AutoLoc" }],
+  creator: "AutoLoc",
+  publisher: "AutoLoc",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "AutoLoc — Location de Voitures & Véhicules au Sénégal",
+    description:
+      "Réservez des véhicules de qualité, SUV tout-terrain et voitures de prestige au Sénégal.",
+    url: "https://autoloc.sn",
+    siteName: "AutoLoc",
+    locale: "fr_SN",
+    type: "website",
+    images: [
+      {
+        url: "/banner-premium.png",
+        width: 1200,
+        height: 630,
+        alt: "AutoLoc Banner",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AutoLoc — Location de Voitures & Véhicules au Sénégal",
+    description:
+      "Louez votre véhicule en toute sérénité à Dakar et dans tout le Sénégal.",
+    images: ["/banner-premium.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 import { Navbar } from "../src/core/components/Navbar";

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Calendar, Zap, ChevronRight } from 'lucide-react';
+import { Calendar, Zap, ShieldCheck, ArrowRight } from 'lucide-react';
 import { formatCurrency, getTenantPricePerDay } from '@/lib/utils';
 import { TarifProgressif } from '../types/vehicle.types';
 
@@ -65,7 +65,7 @@ export function VehicleMobileStickyBar({
 
   const hasSelectedDates = Boolean(startDate && endDate);
 
-  const handleAction = () => {
+  const handleCtaClick = () => {
     if (hasSelectedDates) {
       onBookNow({
         startDate,
@@ -79,46 +79,63 @@ export function VehicleMobileStickyBar({
   };
 
   return (
-    <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#04150F] border-t border-emerald-500/30 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-10px_25px_-5px_rgba(4,21,15,0.5)] flex items-center justify-between gap-3 animate-in slide-in-from-bottom duration-300">
-      {/* Côté Gauche: Prix & Subtitle */}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-1">
-          <span className="text-xl font-extrabold text-white font-display tracking-tight">
-            {formatCurrency(tenantPricePerDay)}
-          </span>
-          <span className="text-[11px] font-medium text-emerald-200/70">FCFA / j</span>
-        </div>
-
-        {hasSelectedDates ? (
-          <div className="flex items-center gap-1 text-xs font-bold text-white mt-0.5 truncate">
-            <span>{formatShortDate(startDate!)} – {formatShortDate(endDate!)}</span>
-            <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-950/80 px-1.5 py-0.2 rounded border border-emerald-500/30">
-              ({daysCount}j)
+    <div className="lg:hidden fixed bottom-3 inset-x-3 z-40 max-w-lg mx-auto">
+      {/* Barre de Dock flottante Glassmorphism Blanche assortie au Header Mobile */}
+      <div className="flex h-16 items-center justify-between rounded-full border border-slate-900/10 bg-white/95 px-4 shadow-[0_10px_30px_-8px_rgba(15,23,42,0.22)] backdrop-blur-xl animate-in slide-in-from-bottom duration-300 gap-3">
+        
+        {/* Côté Gauche: Tarification & Dates */}
+        <div className="min-w-0 flex-1 flex flex-col justify-center">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xl sm:text-2xl font-normal text-[#041912] font-display tracking-tight leading-none">
+              {formatCurrency(tenantPricePerDay)}
+            </span>
+            <span className="text-[10px] font-bold text-[#0A3D2E] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 uppercase tracking-wider">
+              FCFA / j
             </span>
           </div>
-        ) : (
-          <p className="text-[11px] font-medium text-emerald-200/60 truncate mt-0.5">
-            Frais & assurances TTC inclus
-          </p>
-        )}
-      </div>
 
-      {/* Côté Droit: Bouton principal CTA 'Réserver' */}
-      <button
-        type="button"
-        onClick={() =>
-          onBookNow({
-            startDate,
-            endDate,
-            totalAmount,
-            daysCount,
-          })
-        }
-        className="shrink-0 py-3.5 px-6 rounded-full bg-[#059669] hover:bg-emerald-600 active:scale-[0.98] text-white font-bold text-xs tracking-wide shadow-lg border border-emerald-400/40 flex items-center gap-2 cursor-pointer transition-all"
-      >
-        <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-        <span>Réserver</span>
-      </button>
+          {hasSelectedDates ? (
+            <button
+              type="button"
+              onClick={onOpenDatesModal}
+              className="flex items-center gap-1 text-[11px] font-semibold text-slate-700 mt-0.5 hover:text-[#0A3D2E] transition-colors cursor-pointer text-left truncate group"
+            >
+              <Calendar className="w-3 h-3 text-[#0A3D2E] shrink-0" />
+              <span className="truncate">
+                {formatShortDate(startDate!)} – {formatShortDate(endDate!)}
+              </span>
+              <span className="text-[10px] font-bold text-[#0A3D2E] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 shrink-0">
+                {daysCount}j
+              </span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-1 text-[11px] font-medium text-slate-500 mt-0.5 truncate">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span className="truncate">Assurance & frais TTC inclus</span>
+            </div>
+          )}
+        </div>
+
+        {/* Côté Droit: Bouton principal CTA assorti (#0A3D2E & #F1DFB6) */}
+        <button
+          type="button"
+          onClick={handleCtaClick}
+          className="shrink-0 py-3 px-5 sm:px-6 rounded-full bg-[#0A3D2E] hover:bg-[#0F4F3B] active:scale-[0.96] text-[#F1DFB6] font-bold text-xs tracking-wider shadow-md shadow-[#0A3D2E]/20 flex items-center gap-2 cursor-pointer transition-all duration-200 group"
+        >
+          {hasSelectedDates ? (
+            <>
+              <Zap className="w-3.5 h-3.5 text-[#F1DFB6] fill-[#F1DFB6]" />
+              <span>Réserver</span>
+              <ArrowRight className="w-3.5 h-3.5 text-[#F1DFB6]/80 group-hover:translate-x-0.5 transition-transform" />
+            </>
+          ) : (
+            <>
+              <Calendar className="w-3.5 h-3.5 text-[#F1DFB6]" />
+              <span>Réserver</span>
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 }

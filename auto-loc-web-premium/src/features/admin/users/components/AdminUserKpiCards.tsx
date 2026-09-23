@@ -31,6 +31,7 @@ const FOREST = '#0A3D2E';
 const GOLD = '#b27c2d';
 const RUST = '#a13d3d';
 const VIOLET = '#6d28d9';
+const SKY = '#0284c7';
 
 export function AdminUserKpiCards({
   counts,
@@ -82,7 +83,7 @@ export function AdminUserKpiCards({
       value: pendingKyc,
       subtext: 'Identités en attente de revue',
       icon: ShieldCheck,
-      color: '#0284c7', // Sky blue
+      color: SKY,
       bgLight: 'rgba(2, 132, 199, 0.1)',
       badge: pendingKyc > 0 ? `${pendingKyc} urgent` : undefined,
       isActive: activeStatusFilter === 'PENDING_KYC',
@@ -121,17 +122,17 @@ export function AdminUserKpiCards({
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6" style={fontStyle}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       {cards.map((card) => {
         const IconComponent = card.icon;
         return (
           <button
             key={card.id}
             onClick={card.onClick}
-            className={`relative group text-left p-4.5 rounded-3xl border transition-all duration-200 bg-white dark:bg-slate-900 shadow-[0_10px_30px_-20px_rgba(10,61,46,0.15)] hover:shadow-lg ${
+            className={`relative group text-left p-5 rounded-3xl border flex flex-col justify-between min-h-[145px] transition-all duration-200 bg-white dark:bg-slate-900 shadow-[0_10px_30px_-20px_rgba(10,61,46,0.15)] hover:shadow-md cursor-pointer ${
               card.isActive
                 ? 'ring-2 border-transparent shadow-md'
-                : 'border-slate-200/70 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                : 'border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
             }`}
             style={{
               borderColor: card.isActive ? card.color : undefined,
@@ -139,16 +140,16 @@ export function AdminUserKpiCards({
             }}
           >
             {/* Top Row: Icon & Badge */}
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between w-full mb-2">
               <div
-                className="w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105"
+                className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
                 style={{ backgroundColor: card.bgLight, color: card.color }}
               >
                 <IconComponent className="w-5 h-5" />
               </div>
               {card.badge && (
                 <span
-                  className="text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider font-sans"
+                  className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-wider font-sans"
                   style={{ backgroundColor: card.bgLight, color: card.color, borderColor: `${card.color}33` }}
                 >
                   {card.badge}
@@ -156,23 +157,28 @@ export function AdminUserKpiCards({
               )}
             </div>
 
-            {/* Value */}
-            <div className="text-2xl font-normal text-slate-900 dark:text-white tracking-tight mb-1 font-mono">
-              {card.value.toLocaleString()}
+            {/* Bottom Content: Number, Title, Subtext */}
+            <div className="min-w-0 w-full space-y-1">
+              <div
+                className="text-3xl font-normal text-slate-900 dark:text-white tracking-tight leading-none font-mono"
+                style={fontStyle}
+              >
+                {card.value.toLocaleString()}
+              </div>
+
+              <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate font-sans pt-1">
+                {card.title}
+              </div>
+
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight truncate font-sans">
+                {card.subtext}
+              </div>
             </div>
 
-            {/* Title & Subtext */}
-            <div className="text-xs font-normal text-slate-900 dark:text-slate-200 mb-0.5">
-              {card.title}
-            </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-sans">
-              {card.subtext}
-            </div>
-
-            {/* Active Indicator Bar */}
+            {/* Top Accent Bar for Active State */}
             {card.isActive && (
               <div
-                className="absolute bottom-0 left-5 right-5 h-1 rounded-t-full transition-all"
+                className="absolute top-0 left-6 right-6 h-1 rounded-b-full transition-all"
                 style={{ backgroundColor: card.color }}
               />
             )}

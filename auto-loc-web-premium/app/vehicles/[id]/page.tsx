@@ -10,8 +10,8 @@ interface VehicleDetailPageProps {
 
 export async function generateMetadata({ params }: VehicleDetailPageProps): Promise<Metadata> {
   return {
-    title: `Détail du Véhicule #${params.id} — AutoLoc Premium`,
-    description: `Consultez les caractéristiques et réservez le véhicule #${params.id} sur AutoLoc Premium.`,
+    title: `Détail du Véhicule #${params.id} — AutoLoc`,
+    description: `Consultez les caractéristiques et réservez le véhicule #${params.id} sur AutoLoc.`,
   };
 }
 

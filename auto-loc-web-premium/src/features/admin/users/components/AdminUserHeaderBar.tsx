@@ -49,9 +49,10 @@ export function AdminUserHeaderBar({
 
   return (
     <div
-      className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-3xl p-5 mb-6 space-y-4 shadow-[0_10px_40px_-26px_rgba(10,61,46,0.4)]"
+      className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-3xl p-5 space-y-4 shadow-[0_10px_40px_-26px_rgba(10,61,46,0.4)]"
       style={fontStyle}
     >
+
       {/* Title & Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-3.5">

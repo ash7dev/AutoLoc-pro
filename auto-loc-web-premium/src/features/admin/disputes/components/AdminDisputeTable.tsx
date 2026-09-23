@@ -192,11 +192,10 @@ export const AdminDisputeTable: React.FC<AdminDisputeTableProps> = ({
                   <td className="py-3.5 px-4">
                     {isPending ? (
                       <div
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium tabular-nums border ${
-                          isUrgent
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium tabular-nums border ${isUrgent
                             ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border-red-200 dark:border-red-800'
                             : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border-amber-200 dark:border-amber-800'
-                        }`}
+                          }`}
                       >
                         {isUrgent && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
                         <Clock className="w-3 h-3" />

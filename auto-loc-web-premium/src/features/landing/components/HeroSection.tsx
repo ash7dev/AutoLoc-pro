@@ -23,12 +23,12 @@ export const HeroSection: React.FC = () => {
   }, []);
 
   return (
-    <section className="relative min-h-0 lg:min-h-[85vh] bg-[#F8FAF4] text-slate-900 pt-16 sm:pt-28 pb-3 sm:pb-12 overflow-hidden">
+    <section className="relative min-h-0 lg:min-h-[85vh] bg-[#F8FAF4] text-slate-900 pt-24 sm:pt-28 pb-3 sm:pb-12 overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Badge & Title */}
         <div className="text-center max-w-3xl mx-auto mb-4 sm:mb-10">
           {/* Top Guarantee Pill (Mobile) */}
-          <div className="inline-flex sm:hidden items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-900 text-[11px] font-bold mb-3 shadow-xs">
+          <div className="inline-flex sm:hidden items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/90 text-emerald-900 text-[11px] font-bold mb-3 shadow-xs mt-1">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
             <span>Votre réservation est 100% sécurisée & assurée</span>
           </div>
