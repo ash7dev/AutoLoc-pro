@@ -652,6 +652,7 @@ export class AdminAnalyticsService {
     days7Ago.setDate(now.getDate() - 7);
 
     const [
+      totalAuthProfiles,
       totalUsers,
       byKycStatusRaw,
       unverifiedStuckCount,
@@ -659,7 +660,9 @@ export class AdminAnalyticsService {
       activeRentersTotal,
       newUsers7Days,
     ] = await Promise.all([
-      // Total users in database (all registered accounts)
+      // Total Auth profiles in Supabase/PostgreSQL (profiles table)
+      this.prisma.profile.count(),
+      // Total users in database (Utilisateur table)
       this.prisma.utilisateur.count(),
       // KYC breakdown
       this.prisma.utilisateur.groupBy({
@@ -708,6 +711,7 @@ export class AdminAnalyticsService {
     const activationRate = verifiedCount > 0 ? Math.round((activeRentersTotal / verifiedCount) * 1000) / 10 : 0;
 
     const result = {
+      totalAuthProfiles,
       totalUsers,
       newUsers7Days,
       kycBreakdown: {
