@@ -16,6 +16,11 @@ interface AdminOpsCommandCenterProps {
 
 const fontStyle = { fontFamily: 'var(--font-fraunces), Georgia, serif' };
 
+const FOREST = '#0A3D2E';
+const GOLD = '#b27c2d';
+const SLATE = '#4a5f75';
+const RUST = '#a13d3d';
+
 export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ data, isLoading, onSelectItem }) => {
   if (isLoading || !data) {
     return (
@@ -29,80 +34,67 @@ export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ da
 
   const { kyc, vehicles, withdrawals, disputes } = data;
 
+  const EmptyState = ({ label }: { label: string }) => (
+    <div className="py-6 text-center text-xs text-slate-500 flex flex-col items-center gap-1.5">
+      <CheckCircle2 className="w-5 h-5" style={{ color: FOREST }} />
+      <span className="font-normal text-slate-500">{label}</span>
+    </div>
+  );
+
   return (
-    <div className="space-y-4 font-fraunces" style={fontStyle}>
-      <div className="flex items-center justify-between">
-        <div>
-          <h2
-            className="text-xl font-fraunces font-normal text-[#041912] dark:text-white flex items-center gap-2"
-            style={fontStyle}
-          >
-            <Clock className="w-5 h-5 text-emerald-600" />
-            Centre de Commande & SLA Opérationnel
-          </h2>
-          <p
-            className="text-xs font-fraunces font-normal text-slate-600 dark:text-slate-400 mt-0.5"
-            style={fontStyle}
-          >
-            Files d'attente urgentes nécessitant l'intervention de l'équipe modération et finance.
-          </p>
-        </div>
+    <div className="space-y-4" style={fontStyle}>
+      <div>
+        <h2 className="text-lg font-normal text-[#041912] dark:text-white flex items-center gap-2">
+          <Clock className="w-4.5 h-4.5" style={{ color: FOREST }} />
+          Centre de commande & SLA opérationnel
+        </h2>
+        <p className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5">
+          Files d'attente urgentes nécessitant l'intervention de l'équipe modération et finance
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* 1. KYC Pending */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/70 dark:border-slate-800 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                  <UserCheck className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(178, 124, 45, 0.1)' }}>
+                  <UserCheck className="w-4 h-4" style={{ color: GOLD }} />
                 </div>
-                <span
-                  className="text-xs font-fraunces font-normal text-[#041912] dark:text-slate-200"
-                  style={fontStyle}
-                >
-                  Vérification KYC
-                </span>
+                <span className="text-xs font-normal text-[#041912] dark:text-slate-200">Vérification KYC</span>
               </div>
-              <span
-                className="px-2.5 py-0.5 rounded-full text-xs font-fraunces font-normal bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-300/60"
-                style={fontStyle}
-              >
-                {kyc.pendingCount} en attente
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium tabular-nums" style={{ backgroundColor: 'rgba(178, 124, 45, 0.12)', color: GOLD }}>
+                {kyc.pendingCount}
               </span>
             </div>
 
             <div className="mt-3 space-y-2">
               {kyc.items.length === 0 ? (
-                <div
-                  className="py-6 text-center text-xs font-fraunces font-normal text-slate-500 flex flex-col items-center gap-1"
-                  style={fontStyle}
-                >
-                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                  <span className="font-fraunces font-normal text-slate-600" style={fontStyle}>
-                    Aucun KYC en attente !
-                  </span>
-                </div>
+                <EmptyState label="Aucun KYC en attente" />
               ) : (
                 kyc.items.slice(0, 3).map((item) => (
-                  <div key={item.id} className="p-2.5 rounded-xl bg-emerald-50/50 dark:bg-slate-800/50 flex items-center justify-between text-xs border border-emerald-900/5">
+                  <div
+                    key={item.id}
+                    onClick={() =>
+                      onSelectItem?.({
+                        type: 'kyc',
+                        id: item.id,
+                        title: item.name,
+                        email: item.email,
+                        phone: item.phone,
+                        submittedAt: item.submittedAt,
+                        waitHours: item.waitHours,
+                      })
+                    }
+                    className="p-2.5 rounded-xl bg-slate-50/60 dark:bg-slate-800/50 flex items-center justify-between text-xs border border-slate-200/60 dark:border-slate-800 hover:border-[#b27c2d]/50 cursor-pointer transition-colors"
+                  >
                     <div className="truncate pr-2">
-                      <div
-                        className="font-fraunces font-normal text-[#041912] dark:text-white truncate"
-                        style={fontStyle}
-                      >
-                        {item.name}
-                      </div>
-                      <div className="text-[11px] font-fraunces font-normal text-slate-500 truncate" style={fontStyle}>
-                        {item.phone || item.email}
-                      </div>
+                      <div className="font-normal text-[#041912] dark:text-white truncate">{item.name}</div>
+                      <div className="text-[11px] font-normal text-slate-500 truncate">{item.phone || item.email}</div>
                     </div>
-                    <span
-                      className="text-[10px] font-fraunces font-normal text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md shrink-0 border border-amber-200"
-                      style={fontStyle}
-                    >
-                      {item.waitHours}h attente
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0" style={{ backgroundColor: 'rgba(178, 124, 45, 0.1)', color: GOLD }}>
+                      {item.waitHours}h
                     </span>
                   </div>
                 ))
@@ -112,68 +104,55 @@ export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ da
 
           <Link
             href="/admin/users?kyc=EN_ATTENTE"
-            className="mt-4 flex items-center justify-center gap-1 text-xs font-fraunces font-normal text-amber-800 dark:text-amber-300 hover:underline pt-2 border-t border-slate-100 dark:border-slate-800/80"
-            style={fontStyle}
+            className="mt-4 flex items-center justify-center gap-1 text-xs font-normal hover:underline pt-2 border-t border-slate-100 dark:border-slate-800/80"
+            style={{ color: GOLD }}
           >
-            <span className="font-fraunces font-normal" style={fontStyle}>
-              Traiter les KYC ({kyc.pendingCount})
-            </span>
+            Traiter les KYC ({kyc.pendingCount})
             <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
         {/* 2. Vehicles Pending Validation */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/70 dark:border-slate-800 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  <Car className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(10, 61, 46, 0.08)' }}>
+                  <Car className="w-4 h-4" style={{ color: FOREST }} />
                 </div>
-                <span
-                  className="text-xs font-fraunces font-normal text-[#041912] dark:text-slate-200"
-                  style={fontStyle}
-                >
-                  Modération Annonces
-                </span>
+                <span className="text-xs font-normal text-[#041912] dark:text-slate-200">Modération annonces</span>
               </div>
-              <span
-                className="px-2.5 py-0.5 rounded-full text-xs font-fraunces font-normal bg-emerald-100 text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-300/60"
-                style={fontStyle}
-              >
-                {vehicles.pendingCount} à valider
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium tabular-nums" style={{ backgroundColor: 'rgba(10, 61, 46, 0.08)', color: FOREST }}>
+                {vehicles.pendingCount}
               </span>
             </div>
 
             <div className="mt-3 space-y-2">
               {vehicles.items.length === 0 ? (
-                <div
-                  className="py-6 text-center text-xs font-fraunces font-normal text-slate-500 flex flex-col items-center gap-1"
-                  style={fontStyle}
-                >
-                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                  <span className="font-fraunces font-normal text-slate-600" style={fontStyle}>
-                    Toutes les annonces sont validées !
-                  </span>
-                </div>
+                <EmptyState label="Toutes les annonces sont validées" />
               ) : (
                 vehicles.items.slice(0, 3).map((v) => (
-                  <div key={v.id} className="p-2.5 rounded-xl bg-emerald-50/50 dark:bg-slate-800/50 flex items-center justify-between text-xs border border-emerald-900/5">
+                  <div
+                    key={v.id}
+                    onClick={() =>
+                      onSelectItem?.({
+                        type: 'vehicle',
+                        id: v.id,
+                        title: v.title,
+                        city: v.city,
+                        pricePerDay: v.pricePerDay,
+                        ownerName: v.ownerName,
+                        submittedAt: v.submittedAt,
+                        waitHours: v.waitHours,
+                      })
+                    }
+                    className="p-2.5 rounded-xl bg-slate-50/60 dark:bg-slate-800/50 flex items-center justify-between text-xs border border-slate-200/60 dark:border-slate-800 hover:border-[#0A3D2E]/40 cursor-pointer transition-colors"
+                  >
                     <div className="truncate pr-2">
-                      <div
-                        className="font-fraunces font-normal text-[#041912] dark:text-white truncate"
-                        style={fontStyle}
-                      >
-                        {v.title}
-                      </div>
-                      <div className="text-[11px] font-fraunces font-normal text-slate-500" style={fontStyle}>
-                        {v.city} • Hôte : {v.ownerName}
-                      </div>
+                      <div className="font-normal text-[#041912] dark:text-white truncate">{v.title}</div>
+                      <div className="text-[11px] font-normal text-slate-500">{v.city} • Hôte : {v.ownerName}</div>
                     </div>
-                    <span
-                      className="text-[10px] font-fraunces font-normal text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-md shrink-0 border border-emerald-200"
-                      style={fontStyle}
-                    >
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0" style={{ backgroundColor: 'rgba(10, 61, 46, 0.08)', color: FOREST }}>
                       {formatXOF(v.pricePerDay)}/j
                     </span>
                   </div>
@@ -184,68 +163,55 @@ export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ da
 
           <Link
             href="/admin/vehicles?statut=EN_ATTENTE_VALIDATION"
-            className="mt-4 flex items-center justify-center gap-1 text-xs font-fraunces font-normal text-emerald-700 dark:text-emerald-300 hover:underline pt-2 border-t border-slate-100 dark:border-slate-800/80"
-            style={fontStyle}
+            className="mt-4 flex items-center justify-center gap-1 text-xs font-normal hover:underline pt-2 border-t border-slate-100 dark:border-slate-800/80"
+            style={{ color: FOREST }}
           >
-            <span className="font-fraunces font-normal" style={fontStyle}>
-              Inspecter la Flotte ({vehicles.pendingCount})
-            </span>
+            Inspecter la flotte ({vehicles.pendingCount})
             <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
         {/* 3. Withdrawals (Wave / Orange Money) */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/70 dark:border-slate-800 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
-                  <Smartphone className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(74, 95, 117, 0.1)' }}>
+                  <Smartphone className="w-4 h-4" style={{ color: SLATE }} />
                 </div>
-                <span
-                  className="text-xs font-fraunces font-normal text-[#041912] dark:text-slate-200"
-                  style={fontStyle}
-                >
-                  Payouts Wave / OM
-                </span>
+                <span className="text-xs font-normal text-[#041912] dark:text-slate-200">Payouts Wave / OM</span>
               </div>
-              <span
-                className="px-2.5 py-0.5 rounded-full text-xs font-fraunces font-normal bg-purple-100 text-purple-900 dark:bg-purple-500/20 dark:text-purple-300 border border-purple-300/60"
-                style={fontStyle}
-              >
-                {withdrawals.pendingCount} demandes
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium tabular-nums" style={{ backgroundColor: 'rgba(74, 95, 117, 0.12)', color: SLATE }}>
+                {withdrawals.pendingCount}
               </span>
             </div>
 
             <div className="mt-3 space-y-2">
               {withdrawals.items.length === 0 ? (
-                <div
-                  className="py-6 text-center text-xs font-fraunces font-normal text-slate-500 flex flex-col items-center gap-1"
-                  style={fontStyle}
-                >
-                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                  <span className="font-fraunces font-normal text-slate-600" style={fontStyle}>
-                    Aucun retrait en attente !
-                  </span>
-                </div>
+                <EmptyState label="Aucun retrait en attente" />
               ) : (
                 withdrawals.items.slice(0, 3).map((w) => (
-                  <div key={w.id} className="p-2.5 rounded-xl bg-purple-50/50 dark:bg-slate-800/50 flex items-center justify-between text-xs border border-purple-900/5">
+                  <div
+                    key={w.id}
+                    onClick={() =>
+                      onSelectItem?.({
+                        type: 'withdrawal',
+                        id: w.id,
+                        title: `Demande de ${w.userName}`,
+                        amount: w.amount,
+                        method: w.method,
+                        recipient: w.recipient,
+                        submittedAt: w.requestedAt,
+                        waitHours: w.waitHours,
+                      })
+                    }
+                    className="p-2.5 rounded-xl bg-slate-50/60 dark:bg-slate-800/50 flex items-center justify-between text-xs border border-slate-200/60 dark:border-slate-800 hover:border-[#4a5f75]/50 cursor-pointer transition-colors"
+                  >
                     <div className="truncate pr-2">
-                      <div
-                        className="font-fraunces font-normal text-[#041912] dark:text-white truncate"
-                        style={fontStyle}
-                      >
-                        {w.userName}
-                      </div>
-                      <div className="text-[11px] font-fraunces font-normal text-slate-500" style={fontStyle}>
-                        {w.method} • {w.recipient}
-                      </div>
+                      <div className="font-normal text-[#041912] dark:text-white truncate">{w.userName}</div>
+                      <div className="text-[11px] font-normal text-slate-500">{w.method} • {w.recipient}</div>
                     </div>
-                    <span
-                      className="text-[10px] font-fraunces font-normal text-purple-900 bg-purple-100 px-2 py-0.5 rounded-md shrink-0 border border-purple-200"
-                      style={fontStyle}
-                    >
+                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0" style={{ backgroundColor: 'rgba(74, 95, 117, 0.1)', color: SLATE }}>
                       {formatXOF(w.amount)}
                     </span>
                   </div>
@@ -256,69 +222,57 @@ export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ da
 
           <Link
             href="/admin/withdrawals"
-            className="mt-4 flex items-center justify-center gap-1 text-xs font-fraunces font-normal text-purple-700 dark:text-purple-300 hover:underline pt-2 border-t border-slate-100 dark:border-slate-800/80"
-            style={fontStyle}
+            className="mt-4 flex items-center justify-center gap-1 text-xs font-normal hover:underline pt-2 border-t border-slate-100 dark:border-slate-800/80"
+            style={{ color: SLATE }}
           >
-            <span className="font-fraunces font-normal" style={fontStyle}>
-              Payer les Hôtes ({formatXOF(withdrawals.totalPendingAmount)})
-            </span>
+            Payer les hôtes ({formatXOF(withdrawals.totalPendingAmount)})
             <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
         {/* 4. Disputes & Claims */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/70 dark:border-slate-800 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                  <AlertTriangle className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(161, 61, 61, 0.1)' }}>
+                  <AlertTriangle className="w-4 h-4" style={{ color: RUST }} />
                 </div>
-                <span
-                  className="text-xs font-fraunces font-normal text-[#041912] dark:text-slate-200"
-                  style={fontStyle}
-                >
-                  Litiges & Sinistres
-                </span>
+                <span className="text-xs font-normal text-[#041912] dark:text-slate-200">Litiges & sinistres</span>
               </div>
-              <span
-                className="px-2.5 py-0.5 rounded-full text-xs font-fraunces font-normal bg-rose-100 text-rose-900 dark:bg-rose-500/20 dark:text-rose-300 border border-rose-300/60"
-                style={fontStyle}
-              >
-                {disputes.pendingCount} ouvert(s)
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium tabular-nums" style={{ backgroundColor: 'rgba(161, 61, 61, 0.12)', color: RUST }}>
+                {disputes.pendingCount}
               </span>
             </div>
 
             <div className="mt-3 space-y-2">
               {disputes.items.length === 0 ? (
-                <div
-                  className="py-6 text-center text-xs font-fraunces font-normal text-slate-500 flex flex-col items-center gap-1"
-                  style={fontStyle}
-                >
-                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                  <span className="font-fraunces font-normal text-slate-600" style={fontStyle}>
-                    Aucun litige en cours !
-                  </span>
-                </div>
+                <EmptyState label="Aucun litige en cours" />
               ) : (
                 disputes.items.slice(0, 3).map((d) => (
-                  <div key={d.id} className="p-2.5 rounded-xl bg-rose-50/50 dark:bg-slate-800/50 flex items-center justify-between text-xs border border-rose-900/5">
+                  <div
+                    key={d.id}
+                    onClick={() =>
+                      onSelectItem?.({
+                        type: 'dispute',
+                        id: d.id,
+                        title: d.motif,
+                        motif: d.motif,
+                        vehicle: d.vehicle,
+                        renterName: d.renterName,
+                        ownerName: d.ownerName,
+                        estimatedCost: d.estimatedCost,
+                        submittedAt: d.createdAt,
+                      })
+                    }
+                    className="p-2.5 rounded-xl bg-slate-50/60 dark:bg-slate-800/50 flex items-center justify-between text-xs border border-slate-200/60 dark:border-slate-800 hover:border-[#a13d3d]/50 cursor-pointer transition-colors"
+                  >
                     <div className="truncate pr-2">
-                      <div
-                        className="font-fraunces font-normal text-rose-800 dark:text-rose-300 truncate"
-                        style={fontStyle}
-                      >
-                        {d.motif}
-                      </div>
-                      <div className="text-[11px] font-fraunces font-normal text-slate-500 truncate" style={fontStyle}>
-                        {d.vehicle}
-                      </div>
+                      <div className="font-normal truncate" style={{ color: RUST }}>{d.motif}</div>
+                      <div className="text-[11px] font-normal text-slate-500 truncate">{d.vehicle}</div>
                     </div>
                     {d.estimatedCost && (
-                      <span
-                        className="text-[10px] font-fraunces font-normal text-rose-900 bg-rose-100 px-2 py-0.5 rounded-md shrink-0 border border-rose-200"
-                        style={fontStyle}
-                      >
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0" style={{ backgroundColor: 'rgba(161, 61, 61, 0.1)', color: RUST }}>
                         {formatXOF(d.estimatedCost)}
                       </span>
                     )}
@@ -330,12 +284,10 @@ export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ da
 
           <Link
             href="/admin/disputes"
-            className="mt-4 flex items-center justify-center gap-1 text-xs font-fraunces font-normal text-rose-700 dark:text-rose-300 hover:underline pt-2 border-t border-slate-100 dark:border-slate-800/80"
-            style={fontStyle}
+            className="mt-4 flex items-center justify-center gap-1 text-xs font-normal hover:underline pt-2 border-t border-slate-100 dark:border-slate-800/80"
+            style={{ color: RUST }}
           >
-            <span className="font-fraunces font-normal" style={fontStyle}>
-              Arbitrer les Litiges ({disputes.pendingCount})
-            </span>
+            Arbitrer les litiges ({disputes.pendingCount})
             <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         </div>

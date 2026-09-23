@@ -247,6 +247,49 @@ export interface AdminDashboardSummaryData {
   escrow: AdminFinancialEscrowData;
 }
 
+export interface AdminKycQueueItem {
+  id: string;
+  userId: string;
+  prenom: string;
+  nom: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  avatarUrl: string | null;
+  statutKyc: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
+  kycRejectionReason: string | null;
+  documents: {
+    documentUrl: string | null;
+    documentBackUrl: string | null;
+    selfieUrl: string | null;
+    permisUrl: string | null;
+    hasAllFour: boolean;
+  };
+  submittedAt: string;
+  registeredAt: string;
+  waitHours: number;
+  stats: {
+    vehiclesCount: number;
+    bookingsCount: number;
+  };
+}
+
+export interface AdminKycQueueResponse {
+  data: AdminKycQueueItem[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    counts: {
+      EN_ATTENTE: number;
+      VERIFIE: number;
+      REJETE: number;
+      NON_VERIFIE: number;
+    };
+  };
+}
+
 export const adminAnalyticsApi = {
   getDashboardSummary: (period: string = '30d', ville?: string): Promise<AdminDashboardSummaryData> => {
     return apiClient.get<AdminDashboardSummaryData>('/admin/analytics/dashboard-summary', { params: { period, ...(ville ? { ville } : {}) } });
@@ -298,5 +341,17 @@ export const adminAnalyticsApi = {
 
   getFinancialEscrow: (): Promise<AdminFinancialEscrowData> => {
     return apiClient.get<AdminFinancialEscrowData>('/admin/analytics/financial-escrow');
+  },
+
+  getKycQueue: (params?: { status?: string; search?: string; page?: number; limit?: number }): Promise<AdminKycQueueResponse> => {
+    return apiClient.get<AdminKycQueueResponse>('/admin/users/kyc-queue', { params });
+  },
+
+  approveUserKyc: (userId: string): Promise<{ utilisateurId: string; statutKyc: string; vehiclesPromoted: number }> => {
+    return apiClient.patch<{ utilisateurId: string; statutKyc: string; vehiclesPromoted: number }>(`/admin/users/${userId}/kyc/approve`);
+  },
+
+  rejectUserKyc: (userId: string, raison?: string): Promise<{ id: string; statutKyc: string; kycRejectionReason: string | null }> => {
+    return apiClient.patch<{ id: string; statutKyc: string; kycRejectionReason: string | null }>(`/admin/users/${userId}/kyc/reject`, { raison });
   },
 };

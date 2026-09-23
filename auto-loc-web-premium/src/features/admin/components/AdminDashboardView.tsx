@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAdminDashboard } from '../hooks/useAdminDashboard';
 import { AdminHeaderBar } from './AdminHeaderBar';
 import { AdminExecutiveMetrics } from './AdminExecutiveMetrics';
@@ -9,7 +9,8 @@ import { AdminOpsCommandCenter } from './AdminOpsCommandCenter';
 import { AdminUserActivationFunnel } from './AdminUserActivationFunnel';
 import { AdminSupplyPipeline } from './AdminSupplyPipeline';
 import { AdminPaymentDistribution } from './AdminPaymentDistribution';
-import { AlertCircle } from 'lucide-react';
+import { AdminGrowthInsights } from './AdminGrowthInsights';
+import { AdminOpsDrawer, OpsDrawerData } from './AdminOpsDrawer';
 
 export const AdminDashboardView: React.FC = () => {
   const {
@@ -18,17 +19,19 @@ export const AdminDashboardView: React.FC = () => {
     overview,
     trends,
     payments,
-    fleetStats,
-    conversionFunnel,
     opsCenter,
     usersFunnel,
     supplyPipeline,
-    riskQuality,
+    unmetDemand,
+    cohorts,
+    escrow,
     isLoadingInitial,
     isRefreshing,
     lastRefreshedAt,
     mutateAll,
   } = useAdminDashboard();
+
+  const [selectedDrawerItem, setSelectedDrawerItem] = useState<OpsDrawerData | null>(null);
 
   return (
     <div className="space-y-6 w-full">
@@ -45,9 +48,21 @@ export const AdminDashboardView: React.FC = () => {
       <AdminExecutiveMetrics data={overview} isLoading={isLoadingInitial} />
 
       {/* Tier 2: Real-time SLA Operational Command Center */}
-      <AdminOpsCommandCenter data={opsCenter} isLoading={isLoadingInitial} />
+      <AdminOpsCommandCenter
+        data={opsCenter}
+        isLoading={isLoadingInitial}
+        onSelectItem={(item) => setSelectedDrawerItem(item)}
+      />
 
-      {/* Tier 3: Revenue Trends Chart & Mobile Money Payment Distribution */}
+      {/* Tier 3: Growth Engine & Operational Insights (Unmet Demand, Cohorts, Escrow) */}
+      <AdminGrowthInsights
+        unmetDemand={unmetDemand}
+        cohorts={cohorts}
+        escrow={escrow}
+        isLoading={isLoadingInitial}
+      />
+
+      {/* Tier 4: Revenue Trends Chart & Mobile Money Payment Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <AdminRevenueChart data={trends} isLoading={isLoadingInitial} />
@@ -57,11 +72,19 @@ export const AdminDashboardView: React.FC = () => {
         </div>
       </div>
 
-      {/* Tier 4: User Activation Funnel & Supply Pipeline */}
+      {/* Tier 5: User Activation Funnel & Supply Pipeline */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <AdminUserActivationFunnel data={usersFunnel} isLoading={isLoadingInitial} />
         <AdminSupplyPipeline data={supplyPipeline} isLoading={isLoadingInitial} />
       </div>
+
+      {/* Interactive Ops Action Drawer */}
+      <AdminOpsDrawer
+        isOpen={Boolean(selectedDrawerItem)}
+        onClose={() => setSelectedDrawerItem(null)}
+        data={selectedDrawerItem}
+        onActionComplete={mutateAll}
+      />
     </div>
   );
 };

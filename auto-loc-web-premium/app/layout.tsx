@@ -6,7 +6,6 @@ import {
   Playfair_Display,
   Cormorant_Garamond,
   Cinzel,
-  Bodoni_Moda,
   Syne,
 } from "next/font/google";
 import "./globals.css";
@@ -49,12 +48,6 @@ const cinzel = Cinzel({
   display: "swap",
 });
 
-const bodoni = Bodoni_Moda({
-  subsets: ["latin"],
-  variable: "--font-bodoni",
-  display: "swap",
-});
-
 const syne = Syne({
   subsets: ["latin"],
   variable: "--font-syne",
@@ -79,7 +72,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${fraunces.variable} ${gloock.variable} ${jakarta.variable} ${playfair.variable} ${cormorant.variable} ${cinzel.variable} ${bodoni.variable} ${syne.variable}`}
+      className={`${fraunces.variable} ${gloock.variable} ${jakarta.variable} ${playfair.variable} ${cormorant.variable} ${cinzel.variable} ${syne.variable}`}
     >
       <body className="font-body bg-background text-foreground antialiased selection:bg-emerald-500/30 selection:text-emerald-300 min-h-screen flex flex-col">
         <SWRProvider>

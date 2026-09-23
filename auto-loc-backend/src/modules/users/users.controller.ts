@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Patch, Query, UseGuards, HttpCode, HttpSt
 import { UsersService } from './users.service';
 import { BanUserDto } from './dto/ban-user.dto';
 import { GetAdminUsersDto } from './dto/get-admin-users.dto';
+import { GetKycQueueDto } from './dto/get-kyc-queue.dto';
 import { RejectKycDto } from './dto/reject-kyc.dto';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/guards/roles.guard';
@@ -13,6 +14,15 @@ import { RoleProfile } from '@prisma/client';
 @Roles(RoleProfile.ADMIN)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  /**
+   * GET /admin/users/kyc-queue
+   * File de modération KYC optimisée avec recherche, filtrage et statistiques.
+   */
+  @Get('kyc-queue')
+  async getKycQueue(@Query() dto: GetKycQueueDto) {
+    return this.usersService.getKycQueue(dto);
+  }
 
   /**
    * GET /admin/users?kycStatus=EN_ATTENTE

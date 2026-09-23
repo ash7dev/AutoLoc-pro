@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationService } from '../../infrastructure/notifications/notification.service';
 import { BanUserDto } from './dto/ban-user.dto';
+import { GetKycQueueDto } from './dto/get-kyc-queue.dto';
 import { StatutKyc, StatutReservation, StatutRetrait, StatutLitige, StatutVehicule } from '@prisma/client';
 
 @Injectable()
@@ -91,6 +92,118 @@ export class UsersService {
     }));
 
     return { data, total, page, limit: take };
+  }
+
+  // ── Optimized KYC Queue ───────────────────────────────────────────────────
+
+  async getKycQueue(dto: GetKycQueueDto) {
+    const page = dto.page ?? 1;
+    const limit = dto.limit ?? 20;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (dto.status) {
+      where.statutKyc = dto.status;
+    }
+
+    if (dto.search && dto.search.trim()) {
+      const q = dto.search.trim();
+      where.OR = [
+        { prenom: { contains: q, mode: 'insensitive' } },
+        { nom: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+        { telephone: { contains: q, mode: 'insensitive' } },
+      ];
+    }
+
+    const [users, total, countsRaw] = await Promise.all([
+      this.prisma.utilisateur.findMany({
+        where,
+        orderBy: { misAJourLe: 'asc' }, // Priorité SLA (plus anciens en premier)
+        take: limit,
+        skip,
+        select: {
+          id: true,
+          userId: true,
+          prenom: true,
+          nom: true,
+          email: true,
+          telephone: true,
+          avatarUrl: true,
+          statutKyc: true,
+          kycDocumentUrl: true,
+          kycDocumentBackUrl: true,
+          kycSelfieUrl: true,
+          permisUrl: true,
+          kycRejectionReason: true,
+          misAJourLe: true,
+          creeLe: true,
+          _count: {
+            select: {
+              vehicules: true,
+              reservationsLocataire: true,
+            },
+          },
+        },
+      }),
+      this.prisma.utilisateur.count({ where }),
+      this.prisma.utilisateur.groupBy({
+        by: ['statutKyc'],
+        _count: { id: true },
+      }),
+    ]);
+
+    const counts: Record<string, number> = {
+      EN_ATTENTE: 0,
+      VERIFIE: 0,
+      REJETE: 0,
+      NON_VERIFIE: 0,
+    };
+    for (const c of countsRaw) {
+      counts[c.statutKyc] = c._count.id;
+    }
+
+    const now = new Date();
+    const data = users.map((u) => {
+      const waitHours = Math.round((now.getTime() - u.misAJourLe.getTime()) / (1000 * 3600));
+      return {
+        id: u.id,
+        userId: u.userId,
+        prenom: u.prenom,
+        nom: u.nom,
+        fullName: `${u.prenom} ${u.nom}`.trim(),
+        email: u.email,
+        phone: u.telephone,
+        avatarUrl: u.avatarUrl,
+        statutKyc: u.statutKyc,
+        kycRejectionReason: u.kycRejectionReason,
+        documents: {
+          documentUrl: u.kycDocumentUrl ?? null,
+          documentBackUrl: u.kycDocumentBackUrl ?? null,
+          selfieUrl: u.kycSelfieUrl ?? null,
+          permisUrl: u.permisUrl ?? null,
+          hasAllFour: Boolean(u.kycDocumentUrl && u.kycDocumentBackUrl && u.kycSelfieUrl && u.permisUrl),
+        },
+        submittedAt: u.misAJourLe.toISOString(),
+        registeredAt: u.creeLe.toISOString(),
+        waitHours,
+        stats: {
+          vehiclesCount: u._count.vehicules,
+          bookingsCount: u._count.reservationsLocataire,
+        },
+      };
+    });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        counts,
+      },
+    };
   }
 
   async getAdminUserDetail(userId: string) {
