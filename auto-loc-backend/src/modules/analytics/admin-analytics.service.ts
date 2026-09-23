@@ -238,10 +238,14 @@ export class AdminAnalyticsService {
 
     const { currentStart, endDate } = this.resolveDateRange(query.period);
 
-    // 1. Provider Breakdown (Paiement table)
+    // 1. Provider Breakdown (Uniquement les paiements CONFIRME)
     const payments = await this.prisma.paiement.findMany({
       where: {
         creeLe: { gte: currentStart, lte: endDate },
+        statut: 'CONFIRME',
+        reservation: {
+          statut: { notIn: [StatutReservation.ANNULEE] },
+        },
       },
       select: {
         fournisseur: true,
@@ -266,15 +270,31 @@ export class AdminAnalyticsService {
       if (p.fournisseur === FournisseurPaiement.WAVE) {
         waveVolume += amount;
         waveCount++;
-        if (p.statut === 'CONFIRME') waveSuccess++;
+        waveSuccess++;
       } else if (p.fournisseur === FournisseurPaiement.ORANGE_MONEY) {
         omVolume += amount;
         omCount++;
-        if (p.statut === 'CONFIRME') omSuccess++;
+        omSuccess++;
       } else if (p.fournisseur === FournisseurPaiement.STRIPE) {
         stripeVolume += amount;
         stripeCount++;
       }
+    }
+
+    // Compter aussi le total des paiements (tous statuts) pour le taux de succès réel
+    const allPaymentCounts = await this.prisma.paiement.groupBy({
+      by: ['fournisseur', 'statut'],
+      where: {
+        creeLe: { gte: currentStart, lte: endDate },
+      },
+      _count: { id: true },
+    });
+
+    let totalWaveAttempts = 0;
+    let totalOmAttempts = 0;
+    for (const c of allPaymentCounts) {
+      if (c.fournisseur === FournisseurPaiement.WAVE) totalWaveAttempts += c._count.id;
+      if (c.fournisseur === FournisseurPaiement.ORANGE_MONEY) totalOmAttempts += c._count.id;
     }
 
     const totalVolume = waveVolume + omVolume + stripeVolume;
@@ -305,7 +325,7 @@ export class AdminAnalyticsService {
           volume: Math.round(waveVolume),
           sharePercent: totalVolume > 0 ? Math.round((waveVolume / totalVolume) * 1000) / 10 : 0,
           transactionCount: waveCount,
-          successRate: waveCount > 0 ? Math.round((waveSuccess / waveCount) * 1000) / 10 : 0,
+          successRate: totalWaveAttempts > 0 ? Math.round((waveSuccess / totalWaveAttempts) * 1000) / 10 : 100,
         },
         orangeMoney: {
           provider: 'ORANGE_MONEY',
@@ -313,7 +333,7 @@ export class AdminAnalyticsService {
           volume: Math.round(omVolume),
           sharePercent: totalVolume > 0 ? Math.round((omVolume / totalVolume) * 1000) / 10 : 0,
           transactionCount: omCount,
-          successRate: omCount > 0 ? Math.round((omSuccess / omCount) * 1000) / 10 : 0,
+          successRate: totalOmAttempts > 0 ? Math.round((omSuccess / totalOmAttempts) * 1000) / 10 : 100,
         },
         stripe: {
           provider: 'STRIPE',

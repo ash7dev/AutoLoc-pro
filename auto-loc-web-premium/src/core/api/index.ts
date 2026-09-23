@@ -1,5 +1,6 @@
 export * from './apiClient';
 export * from './analyticsApi';
+export * from './adminAnalyticsApi';
 export * from './reservationsApi';
 export * from './vehiclesApi';
 export * from './walletApi';
