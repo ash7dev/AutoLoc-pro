@@ -1087,6 +1087,147 @@ export class ReservationsService {
 
   // ── ADMIN ──────────────────────────────────────────────────────────────────
 
+  async adminGetQueue(params: { statut?: string; search?: string; page?: number; limit?: number }) {
+    const { statut, search, page = 1, limit = 20 } = params;
+    const skip = (page - 1) * limit;
+
+    const where: Record<string, unknown> = {};
+
+    if (statut && statut !== 'ALL') {
+      if (statut === 'EN_ATTENTE') {
+        where.statut = { in: [StatutReservation.EN_ATTENTE_PAIEMENT, StatutReservation.PAYEE, StatutReservation.INITIEE] };
+      } else {
+        where.statut = statut as StatutReservation;
+      }
+    }
+
+    if (search && search.trim()) {
+      const query = search.trim();
+      where.OR = [
+        { id: { contains: query, mode: 'insensitive' } },
+        { locataire: { nom: { contains: query, mode: 'insensitive' } } },
+        { locataire: { prenom: { contains: query, mode: 'insensitive' } } },
+        { locataire: { email: { contains: query, mode: 'insensitive' } } },
+        { locataire: { telephone: { contains: query, mode: 'insensitive' } } },
+        { proprietaire: { nom: { contains: query, mode: 'insensitive' } } },
+        { proprietaire: { prenom: { contains: query, mode: 'insensitive' } } },
+        { proprietaire: { email: { contains: query, mode: 'insensitive' } } },
+        { proprietaire: { telephone: { contains: query, mode: 'insensitive' } } },
+        { vehicule: { immatriculation: { contains: query, mode: 'insensitive' } } },
+        { vehicule: { marque: { contains: query, mode: 'insensitive' } } },
+        { vehicule: { modele: { contains: query, mode: 'insensitive' } } },
+      ];
+    }
+
+    const [items, total, pendingCount, confirmedCount, inProgressCount, completedCount, cancelledCount, disputeCount, totalCount] = await Promise.all([
+      this.prisma.reservation.findMany({
+        where,
+        orderBy: { creeLe: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          vehicule: {
+            select: {
+              id: true,
+              marque: true,
+              modele: true,
+              annee: true,
+              type: true,
+              immatriculation: true,
+              ville: true,
+              photos: {
+                orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }],
+                take: 1,
+              },
+            },
+          },
+          locataire: {
+            select: {
+              id: true,
+              prenom: true,
+              nom: true,
+              email: true,
+              telephone: true,
+              statutKyc: true,
+            },
+          },
+          proprietaire: {
+            select: {
+              id: true,
+              prenom: true,
+              nom: true,
+              email: true,
+              telephone: true,
+              statutKyc: true,
+            },
+          },
+          paiement: {
+            select: {
+              id: true,
+              statut: true,
+              montant: true,
+              fournisseur: true,
+              idTransactionFournisseur: true,
+            },
+          },
+          photosEtatLieu: {
+            select: {
+              id: true,
+              type: true,
+            },
+          },
+          litige: {
+            select: {
+              id: true,
+              statut: true,
+            },
+          },
+        },
+      }),
+      this.prisma.reservation.count({ where }),
+      this.prisma.reservation.count({ where: { statut: { in: [StatutReservation.EN_ATTENTE_PAIEMENT, StatutReservation.PAYEE, StatutReservation.INITIEE] } } }),
+      this.prisma.reservation.count({ where: { statut: StatutReservation.CONFIRMEE } }),
+      this.prisma.reservation.count({ where: { statut: StatutReservation.EN_COURS } }),
+      this.prisma.reservation.count({ where: { statut: StatutReservation.TERMINEE } }),
+      this.prisma.reservation.count({ where: { statut: StatutReservation.ANNULEE } }),
+      this.prisma.reservation.count({ where: { statut: StatutReservation.LITIGE } }),
+      this.prisma.reservation.count(),
+    ]);
+
+    const formattedItems = items.map((r) => {
+      const checkinPhotosCount = r.photosEtatLieu.filter((p) => p.type === 'CHECKIN').length;
+      const checkoutPhotosCount = r.photosEtatLieu.filter((p) => p.type === 'CHECKOUT').length;
+      const now = Date.now();
+      const waitHours = Math.max(0, Math.floor((now - new Date(r.creeLe).getTime()) / (1000 * 60 * 60)));
+
+      return {
+        ...serializeReservation(r as unknown as Parameters<typeof serializeReservation>[0]),
+        checkinPhotosCount,
+        checkoutPhotosCount,
+        slaWaitHours: waitHours,
+      };
+    });
+
+    return {
+      data: formattedItems,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+      counts: {
+        pending: pendingCount,
+        confirmed: confirmedCount,
+        inProgress: inProgressCount,
+        completed: completedCount,
+        cancelled: cancelledCount,
+        dispute: disputeCount,
+        total: totalCount,
+      },
+    };
+  }
+
   async adminList(statut?: string, page = 1) {
     const take = 20;
     const skip = (page - 1) * take;
@@ -1226,7 +1367,7 @@ export class ReservationsService {
     };
   }
 
-  async adminForceCancel(id: string) {
+  async adminForceCancel(id: string, raison?: string) {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id },
       include: { paiement: true },
@@ -1242,13 +1383,15 @@ export class ReservationsService {
       reservation.paiement &&
       reservation.paiement.statut === 'CONFIRME';
 
+    const finalRaison = raison?.trim() || "Annulation forcée par l'administrateur. Remboursement 100%.";
+
     await this.prisma.$transaction(async (tx) => {
       // Annulation
       await tx.reservation.update({
         where: { id },
         data: {
           statut: StatutReservation.ANNULEE,
-          raisonAnnulation: 'Annulation forcée par l\'administrateur. Remboursement 100%.',
+          raisonAnnulation: finalRaison,
           annuleLe: new Date(),
         },
       });
@@ -1303,6 +1446,39 @@ export class ReservationsService {
           reservationId: id,
           ancienStatut: reservation.statut,
           nouveauStatut: StatutReservation.TERMINEE,
+          modifiePar: 'ADMIN',
+        },
+      });
+    });
+
+    return { success: true };
+  }
+
+  async adminForceConfirm(id: string) {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id },
+    });
+
+    if (!reservation) throw new NotFoundException('Réservation introuvable');
+
+    if (reservation.statut === StatutReservation.CONFIRMEE || reservation.statut === StatutReservation.EN_COURS) {
+      throw new BadRequestException('Réservation déjà confirmée ou en cours');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.reservation.update({
+        where: { id },
+        data: {
+          statut: StatutReservation.CONFIRMEE,
+          confirmeeLe: new Date(),
+        },
+      });
+
+      await tx.reservationHistorique.create({
+        data: {
+          reservationId: id,
+          ancienStatut: reservation.statut,
+          nouveauStatut: StatutReservation.CONFIRMEE,
           modifiePar: 'ADMIN',
         },
       });

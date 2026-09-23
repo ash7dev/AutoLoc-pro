@@ -422,6 +422,22 @@ export const adminAnalyticsApi = {
   rejectTenantPermis: (userId: string, raison?: string) => {
     return apiClient.patch(`/admin/users/tenants/${userId}/permis/reject`, { raison });
   },
+
+  getReservationsQueue: (params?: { statut?: string; search?: string; page?: number; limit?: number }): Promise<AdminReservationQueueResponse> => {
+    return apiClient.get<AdminReservationQueueResponse>('/admin/reservations/queue', { params });
+  },
+
+  forceCancelReservation: (id: string, raison?: string) => {
+    return apiClient.patch(`/admin/reservations/${id}/force-cancel`, { raison });
+  },
+
+  forceCompleteReservation: (id: string) => {
+    return apiClient.patch(`/admin/reservations/${id}/force-complete`);
+  },
+
+  forceConfirmReservation: (id: string) => {
+    return apiClient.patch(`/admin/reservations/${id}/force-confirm`);
+  },
 };
 
 export interface AdminUserQueueItem {
@@ -710,5 +726,88 @@ export interface AdminDisputeDetail {
       fournisseur: string;
       transactionId: string | null;
     } | null;
+  };
+}
+
+export interface AdminReservationQueueItem {
+  id: string;
+  statut: 'INITIEE' | 'EN_ATTENTE_PAIEMENT' | 'PAYEE' | 'CONFIRMEE' | 'EN_COURS' | 'TERMINEE' | 'ANNULEE' | 'LITIGE';
+  dateDebut: string;
+  dateFin: string;
+  nbJours: number;
+  prixParJour: string;
+  prixTotal: string;
+  commission: string;
+  montantProprietaire: string;
+  modePaiement: string;
+  montantPayeEnLigne: string;
+  montantSoldeCheckin: string;
+  soldeConfirmeLe?: string;
+  creeLe: string;
+  confirmeeLe?: string;
+  checkInLe?: string;
+  checkOutLe?: string;
+  annuleeLe?: string;
+  raisonAnnulation?: string;
+  contratUrl?: string;
+  paymentUrl?: string;
+  slaWaitHours: number;
+  checkinPhotosCount: number;
+  checkoutPhotosCount: number;
+  locataire?: {
+    id: string;
+    prenom: string;
+    nom: string;
+    email?: string;
+    telephone?: string;
+    statutKyc?: string;
+  };
+  proprietaire?: {
+    id: string;
+    prenom: string;
+    nom: string;
+    email?: string;
+    telephone?: string;
+    statutKyc?: string;
+  };
+  vehicule?: {
+    id: string;
+    marque: string;
+    modele: string;
+    annee?: number;
+    type?: string;
+    immatriculation: string;
+    ville?: string;
+    photos?: Array<{ id?: string; url: string; estPrincipale?: boolean }>;
+  };
+  paiement?: {
+    id?: string;
+    statut: string;
+    montant: number;
+    fournisseur?: string;
+    idTransactionFournisseur?: string;
+  };
+  litige?: {
+    id: string;
+    statut: string;
+  } | null;
+}
+
+export interface AdminReservationQueueResponse {
+  data: AdminReservationQueueItem[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+  counts: {
+    pending: number;
+    confirmed: number;
+    inProgress: number;
+    completed: number;
+    cancelled: number;
+    dispute: number;
+    total: number;
   };
 }
