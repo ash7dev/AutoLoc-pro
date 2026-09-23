@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { MapPin, Receipt, ShieldCheck, Truck } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, getTenantPricePerDay } from '@/lib/utils';
 import { TenantReservationDetailData } from '../../hooks/useTenantReservationDetail';
 
 interface TenantFinancialDetailsCardProps {
@@ -31,7 +31,8 @@ const Line: React.FC<{
 
 export const TenantFinancialDetailsCard: React.FC<TenantFinancialDetailsCardProps> = ({ booking }) => {
   const nbJours = Math.max(1, Number(booking.nbJours || 1));
-  const prixParJour = Number(booking.prixParJour || 0);
+  const basePrixParJour = Number(booking.prixParJour || 0);
+  const tenantPrixParJour = getTenantPricePerDay(basePrixParJour);
   const totalLoc = Number(booking.prixTotal || 0);
 
   const isDepositMode = booking.modePaiement === 'ACOMPTE_SOLDE_CHECKIN';
@@ -58,8 +59,8 @@ export const TenantFinancialDetailsCard: React.FC<TenantFinancialDetailsCardProp
         ? 'Livraison à Dakar'
         : null;
 
-  // Prix de base de la location hors frais annexes
-  const totalBaseRental = prixParJour * nbJours;
+  // Prix de base de la location hors frais annexes pour le locataire
+  const totalBaseRental = tenantPrixParJour * nbJours;
 
   // Information paiement (Wave, Orange Money, etc.)
   const paymentProvider = booking.paiement?.fournisseur?.toUpperCase();
@@ -101,7 +102,7 @@ export const TenantFinancialDetailsCard: React.FC<TenantFinancialDetailsCardProp
             <>
               Location{' '}
               <span className="text-slate-400">
-                {nbJours} jour{nbJours > 1 ? 's' : ''} × {formatCurrency(prixParJour)}
+                {nbJours} jour{nbJours > 1 ? 's' : ''} × {formatCurrency(tenantPrixParJour)}
               </span>
             </>
           }

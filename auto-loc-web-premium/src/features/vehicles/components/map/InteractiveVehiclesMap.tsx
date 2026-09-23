@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Vehicle } from "../../types/vehicle.types";
 import { MapPin, Star, X, Compass, ExternalLink } from "lucide-react";
+import { getTenantPricePerDay } from "@/lib/utils";
 
 interface InteractiveVehiclesMapProps {
   vehicles: Vehicle[];
@@ -34,6 +35,7 @@ export const InteractiveVehiclesMap: React.FC<InteractiveVehiclesMapProps> = ({ 
       <div className="absolute inset-0 p-8 flex flex-wrap items-center justify-around overflow-hidden">
         {vehicles.slice(0, 12).map((v, idx) => {
           const isSelected = selectedVehicle?.id === v.id;
+          const tenantPrice = getTenantPricePerDay(v.prixParJour);
           return (
             <button
               key={v.id}
@@ -52,7 +54,7 @@ export const InteractiveVehiclesMap: React.FC<InteractiveVehiclesMapProps> = ({ 
               }}
             >
               <MapPin className="w-3.5 h-3.5 fill-current" />
-              <span>{formatPrice(v.prixParJour)} F</span>
+              <span>{formatPrice(tenantPrice)} F</span>
             </button>
           );
         })}
@@ -87,7 +89,7 @@ export const InteractiveVehiclesMap: React.FC<InteractiveVehiclesMapProps> = ({ 
               </h4>
               <p className="text-[11px] text-slate-500">{selectedVehicle.ville || "Dakar"}</p>
               <div className="text-xs font-extrabold text-[#0A3D2E] mt-1">
-                {formatPrice(selectedVehicle.prixParJour)} FCFA / jour
+                {formatPrice(getTenantPricePerDay(selectedVehicle.prixParJour))} FCFA / jour
               </div>
             </div>
           </div>

@@ -37,7 +37,9 @@ export const MobileDetailHeader: React.FC = () => {
   };
 
   const handleBack = () => {
-    if (typeof window !== 'undefined' && window.history.length > 1) {
+    if (isVehicleDetail) {
+      router.push('/vehicles');
+    } else if (typeof window !== 'undefined' && window.history.length > 1) {
       router.back();
     } else {
       router.push(backHref);

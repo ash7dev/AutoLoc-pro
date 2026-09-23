@@ -4,6 +4,7 @@ import React, { useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Vehicle } from "../../types/vehicle.types";
+import { getTenantPricePerDay } from "@/lib/utils";
 import {
   ArrowUpRight,
   ChevronLeft,
@@ -195,6 +196,8 @@ export const MobileVehicleCard: React.FC<MobileVehicleCardProps> = ({
   const fuel = String(vehicle.carburant || "Essence").toLowerCase();
   const seats = vehicle.nombrePlaces || 5;
 
+  const tenantPrice = getTenantPricePerDay(vehicle.prixParJour);
+
   const shell = `group relative w-full bg-white shadow-[0_1px_2px_rgba(10,61,46,0.06),0_12px_28px_-16px_rgba(10,61,46,0.28)] ring-1 ${vehicle.isFeatured ? "ring-[#E4CB8E]" : "ring-slate-900/[0.06]"
     }`;
 
@@ -267,7 +270,7 @@ export const MobileVehicleCard: React.FC<MobileVehicleCardProps> = ({
           <div className="mt-2.5 flex items-center justify-between border-t border-slate-100 pt-2">
             <p className="flex items-baseline gap-1">
               <span className="font-serif text-lg font-normal tabular-nums text-[#0A3D2E]">
-                {formatPrice(vehicle.prixParJour)}
+                {formatPrice(tenantPrice)}
               </span>
               <span className="text-[10px] text-slate-500">FCFA/jour</span>
             </p>
@@ -363,7 +366,7 @@ export const MobileVehicleCard: React.FC<MobileVehicleCardProps> = ({
         <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3.5">
           <p className="flex items-baseline gap-1.5">
             <span className="font-serif text-2xl font-normal tabular-nums text-[#0A3D2E]">
-              {formatPrice(vehicle.prixParJour)}
+              {formatPrice(tenantPrice)}
             </span>
             <span className="text-xs text-slate-500">FCFA / jour</span>
           </p>

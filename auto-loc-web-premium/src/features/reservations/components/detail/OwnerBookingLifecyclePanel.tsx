@@ -493,14 +493,14 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
       {/* ── 3.1 Récapitulatif des Options & Conditions avant confirmation (Statut PAYEE) ── */}
       {isPaid && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 sm:p-5 space-y-3 shadow-2xs">
-          <div className="flex items-center justify-between gap-2 border-b border-amber-200/80 pb-2.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/80 pb-2.5">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4.5 w-4.5 text-amber-700" />
+              <Sparkles className="h-4.5 w-4.5 text-amber-700 shrink-0" />
               <h3 className="font-fraunces text-base font-normal text-amber-950">
                 Synthèse des options souscrites par le locataire
               </h3>
             </div>
-            <span className="text-[10.5px] font-bold text-amber-800 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300">
+            <span className="self-start sm:self-auto text-[10.5px] font-bold text-amber-800 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300 whitespace-nowrap shrink-0">
               Avant confirmation
             </span>
           </div>

@@ -174,16 +174,16 @@ function DateBlock({
 
   return (
     <div className={align === 'right' ? 'text-right' : ''}>
-      <p className="text-xs text-[#F1DFB6]/60">{label}</p>
+      <p className="text-[10px] sm:text-xs text-[#F1DFB6]/60 font-medium uppercase tracking-wider">{label}</p>
       {date ? (
-        <time dateTime={value} className="mt-1 block">
-          <span className="block text-base font-semibold leading-tight text-[#F1DFB6] sm:text-lg">
+        <time dateTime={value} className="mt-0.5 block">
+          <span className="block text-sm sm:text-lg font-bold leading-tight text-[#F1DFB6]">
             {dayMonth.format(date)}
           </span>
-          <span className="block text-xs text-[#F1DFB6]/60">{yearOnly.format(date)}</span>
+          <span className="hidden sm:block text-xs text-[#F1DFB6]/60">{yearOnly.format(date)}</span>
         </time>
       ) : (
-        <p className="mt-1 text-base font-semibold text-[#F1DFB6]/60">—</p>
+        <p className="mt-0.5 text-sm sm:text-lg font-bold text-[#F1DFB6]/60">—</p>
       )}
     </div>
   );
@@ -223,43 +223,92 @@ export function TenantReservationHeroHeader({
   const days = nbJours || 1;
 
   const chipClass =
-    'inline-flex items-center gap-1.5 rounded-full border border-[#F1DFB6]/20 bg-white/[0.06] px-3 py-1.5 text-xs font-medium text-[#F1DFB6]';
+    'inline-flex items-center gap-1 sm:gap-1.5 rounded-full border border-[#F1DFB6]/20 bg-white/[0.06] px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-medium text-[#F1DFB6]';
 
   return (
     <section
       aria-labelledby={titleId}
-      className="overflow-hidden rounded-3xl border border-[#F1DFB6]/10 bg-[#041912] p-5 text-[#F1DFB6] shadow-xl shadow-[#041912]/20 sm:p-8 lg:p-10"
+      className="overflow-hidden rounded-2xl sm:rounded-3xl border border-[#F1DFB6]/10 bg-[#041912] p-3.5 sm:p-8 lg:p-10 text-[#F1DFB6] shadow-xl shadow-[#041912]/20"
     >
       {/* Statut, référence, date de création */}
       <div className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${status.className}`}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold ${status.className}`}
             >
               {status.live ? (
                 <span
                   aria-hidden="true"
-                  className="h-2 w-2 rounded-full bg-[#041912] motion-safe:animate-pulse"
+                  className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-[#041912] motion-safe:animate-pulse"
                 />
               ) : (
-                StatusIcon && <StatusIcon className="h-4 w-4" aria-hidden="true" />
+                StatusIcon && <StatusIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
               )}
               {status.label}
             </span>
-            <span className="text-xs tabular-nums text-[#F1DFB6]/60">Réf. {refShort}</span>
+            <span className="text-[11px] sm:text-xs font-mono tabular-nums text-[#F1DFB6]/70 bg-white/5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-white/10">
+              Réf. {refShort}
+            </span>
           </div>
 
           {created && (
-            <span className="text-xs text-[#F1DFB6]/60">Réservé le {fullDate.format(created)}</span>
+            <span className="text-[11px] sm:text-xs text-[#F1DFB6]/60">Réservé le {fullDate.format(created)}</span>
           )}
         </div>
 
-        {status.desc && <p className="text-sm text-[#F1DFB6]/80">{status.desc}</p>}
+        {status.desc && (
+          <p className="hidden sm:block text-sm text-[#F1DFB6]/80 pt-1 border-t border-white/5">
+            {status.desc}
+          </p>
+        )}
       </div>
 
-      {/* Véhicule */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-center lg:gap-10">
+      {/* ── VUE MOBILE SOMBRE COMPACTE (< 640px) ──────────────────────────── */}
+      <div className="mt-3 flex items-start gap-3 sm:hidden">
+        {/* Photo miniature */}
+        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-white/5 ring-1 ring-[#F1DFB6]/20">
+          <img
+            src={photo}
+            alt={vehicleName}
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (!img.src.endsWith(PLACEHOLDER_CAR)) img.src = PLACEHOLDER_CAR;
+            }}
+          />
+          {vehicule?.type && (
+            <span className="absolute bottom-1 left-1 right-1 rounded bg-[#041912]/90 px-1 py-0.5 font-sans text-[9px] font-bold text-center text-[#F1DFB6] truncate">
+              {vehicule.type}
+            </span>
+          )}
+        </div>
+
+        {/* Info véhicule + livraison */}
+        <div className="min-w-0 flex-1 space-y-1 pt-0.5">
+          <h1 id={titleId} className="font-fraunces text-lg font-normal leading-snug text-[#F1DFB6] truncate">
+            {vehicleName}
+            {vehicule?.annee ? (
+              <span className="ml-1.5 text-xs font-sans text-[#F1DFB6]/50">
+                {vehicule.annee}
+              </span>
+            ) : null}
+          </h1>
+
+          <div className="flex items-center gap-1.5 text-xs text-[#F1DFB6]/80 truncate">
+            <DeliveryIcon className="h-3.5 w-3.5 shrink-0 text-[#F1DFB6]" />
+            <span className="truncate font-medium">{DELIVERY_CHIP[deliveryMode].label}</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-[11px] text-[#F1DFB6]/70 truncate pt-0.5">
+            <MapPin className="h-3 w-3 shrink-0 text-[#F1DFB6]/80" />
+            <span className="truncate">{locationText}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── VUE DESKTOP GRANDE TAILLE (>= 640px) ─────────────────────────── */}
+      <div className="hidden sm:grid sm:mt-6 gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-center lg:gap-10">
         <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-white/5 ring-1 ring-[#F1DFB6]/15 sm:aspect-[16/9] lg:col-start-2 lg:row-start-1 lg:aspect-[4/3]">
           <img
             src={photo}
@@ -279,8 +328,7 @@ export function TenantReservationHeroHeader({
         </div>
 
         <div className="min-w-0 space-y-5 lg:col-start-1 lg:row-start-1">
-          <h1
-            id={titleId}
+          <h2
             className="font-display text-4xl leading-[1.05] text-[#F1DFB6] sm:text-5xl"
           >
             {vehicleName}
@@ -289,7 +337,7 @@ export function TenantReservationHeroHeader({
                 {vehicule.annee}
               </span>
             ) : null}
-          </h1>
+          </h2>
 
           <ul className="flex flex-wrap gap-2">
             <li className={chipClass}>
@@ -312,13 +360,13 @@ export function TenantReservationHeroHeader({
       </div>
 
       {/* Période */}
-      <div className="mt-8 rounded-2xl border border-[#F1DFB6]/15 bg-white/[0.04] p-4 sm:p-5">
-        <div className="flex items-center gap-3 sm:gap-5">
+      <div className="mt-3 sm:mt-8 rounded-xl sm:rounded-2xl border border-[#F1DFB6]/15 bg-white/[0.04] p-3 sm:p-5">
+        <div className="flex items-center gap-2 sm:gap-5">
           <DateBlock label="Prise en charge" value={dateDebut} />
 
-          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3">
             <span aria-hidden="true" className="h-px flex-1 bg-[#F1DFB6]/25" />
-            <span className="whitespace-nowrap rounded-full border border-[#F1DFB6]/25 px-3 py-1 text-xs font-semibold">
+            <span className="whitespace-nowrap rounded-full border border-[#F1DFB6]/25 px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold text-[#F1DFB6]">
               {plural(days, 'jour')}
             </span>
             <span aria-hidden="true" className="h-px flex-1 bg-[#F1DFB6]/25" />
