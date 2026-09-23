@@ -370,6 +370,18 @@ export const adminAnalyticsApi = {
   featureVehicle: (vehicleId: string, active: boolean, featuredUntil?: string): Promise<{ id: string; isFeatured: boolean }> => {
     return apiClient.patch<{ id: string; isFeatured: boolean }>(`/admin/vehicles/${vehicleId}/feature`, { active, featuredUntil });
   },
+
+  getDisputesQueue: (params?: { statut?: string; search?: string; page?: number; limit?: number }): Promise<AdminDisputeQueueResponse> => {
+    return apiClient.get<AdminDisputeQueueResponse>('/admin/disputes/queue', { params });
+  },
+
+  getDisputeDetail: (id: string): Promise<AdminDisputeDetail> => {
+    return apiClient.get<AdminDisputeDetail>(`/admin/disputes/${id}`);
+  },
+
+  resolveDispute: (id: string, decision: 'FONDE' | 'NON_FONDE', montantCompensation?: number): Promise<{ success: boolean; decision: string; montantCompensation?: number }> => {
+    return apiClient.patch<{ success: boolean; decision: string; montantCompensation?: number }>(`/admin/disputes/${id}/resolve`, { decision, montantCompensation });
+  },
 };
 
 export interface AdminVehicleQueueItem {
@@ -428,5 +440,127 @@ export interface AdminVehicleQueueResponse {
     suspended: number;
     draft: number;
     total: number;
+  };
+}
+
+export interface AdminDisputeQueueItem {
+  id: string;
+  reservationId: string;
+  motif: string;
+  description: string;
+  coutEstime: number | null;
+  montantCompensation: number | null;
+  statut: 'EN_ATTENTE' | 'FONDE' | 'NON_FONDE';
+  openedAt: string;
+  resoluLe: string | null;
+  resoluParAdminId: string | null;
+  slaWaitHours: number;
+  renter: {
+    id: string | null;
+    fullName: string;
+    email: string | null;
+    phone: string | null;
+    avatarUrl: string | null;
+    statutKyc: string;
+  };
+  owner: {
+    id: string | null;
+    fullName: string;
+    email: string | null;
+    phone: string | null;
+    avatarUrl: string | null;
+    statutKyc: string;
+  };
+  vehicle: {
+    id: string | null;
+    name: string;
+    immatriculation: string | null;
+    ville: string | null;
+    photoUrl: string | null;
+  };
+  booking: {
+    totalLocataire: number;
+    netProprietaire: number;
+    statut: string;
+    dateDebut: string;
+    dateFin: string;
+  };
+}
+
+export interface AdminDisputeQueueResponse {
+  data: AdminDisputeQueueItem[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+  counts: {
+    pending: number;
+    fonde: number;
+    nonFonde: number;
+    total: number;
+  };
+}
+
+export interface AdminDisputeDetail {
+  id: string;
+  motif: string;
+  description: string;
+  coutEstime: number | null;
+  montantCompensation: number | null;
+  statut: 'EN_ATTENTE' | 'FONDE' | 'NON_FONDE';
+  openedAt: string;
+  resoluLe: string | null;
+  resoluParAdminId: string | null;
+  slaWaitHours: number;
+  reservation: {
+    id: string;
+    statut: string;
+    totalLocataire: number;
+    netProprietaire: number;
+    montantPayeEnLigne: number;
+    montantSoldeCheckin: number;
+    dateDebut: string;
+    dateFin: string;
+    contratUrl: string | null;
+    locataire: {
+      id: string | null;
+      fullName: string;
+      email: string | null;
+      phone: string | null;
+      avatarUrl: string | null;
+      statutKyc: string;
+    };
+    proprietaire: {
+      id: string | null;
+      fullName: string;
+      email: string | null;
+      phone: string | null;
+      avatarUrl: string | null;
+      statutKyc: string;
+    };
+    vehicule: {
+      id: string;
+      marque: string;
+      modele: string;
+      immatriculation: string;
+      annee: number;
+      type: string;
+      carburant: string | null;
+      transmission: string | null;
+      nombrePlaces: number | null;
+      ville: string;
+      photos: Array<{ id: string; url: string; estPrincipale: boolean }>;
+    } | null;
+    photosCheckin: Array<{ id: string; url: string; creeLe: string; categorie: string | null }>;
+    photosCheckout: Array<{ id: string; url: string; creeLe: string; categorie: string | null }>;
+    paiement: {
+      id: string;
+      montant: number;
+      statut: string;
+      fournisseur: string;
+      transactionId: string | null;
+    } | null;
   };
 }

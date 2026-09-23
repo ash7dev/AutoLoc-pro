@@ -12,11 +12,12 @@ export default function AdminVehiclesPage() {
     setStatut,
     search,
     setSearch,
-    page,
-    setPage,
     items,
-    meta,
     counts,
+    totalItems,
+    hasMore,
+    isLoadingMore,
+    loadMore,
     selectedVehicle,
     setSelectedVehicle,
     isLoading,
@@ -41,14 +42,15 @@ export default function AdminVehiclesPage() {
         onRefresh={refresh}
       />
 
-      {/* Main Vehicle Moderation Table */}
+      {/* Main Vehicle Moderation Table with Instagram Infinite Scroll */}
       <AdminVehicleTable
         items={items}
         isLoading={isLoading}
         onSelectVehicle={(vehicle) => setSelectedVehicle(vehicle)}
-        page={page}
-        totalPages={meta?.totalPages}
-        onPageChange={setPage}
+        hasMore={hasMore}
+        isLoadingMore={isLoadingMore}
+        totalItems={totalItems}
+        onLoadMore={loadMore}
       />
 
       {/* Complete HD Inspector Modal */}
