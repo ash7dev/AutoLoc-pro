@@ -659,8 +659,8 @@ export class AdminAnalyticsService {
       activeRentersTotal,
       newUsers7Days,
     ] = await Promise.all([
-      // Total users
-      this.prisma.utilisateur.count({ where: { actif: true } }),
+      // Total users in database (all registered accounts)
+      this.prisma.utilisateur.count(),
       // KYC breakdown
       this.prisma.utilisateur.groupBy({
         by: ['statutKyc'],
