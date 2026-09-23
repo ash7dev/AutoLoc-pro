@@ -31,7 +31,7 @@ export default function NotFound() {
             <span>Page en Maintenance</span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#041912] font-display tracking-tight pt-1">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-normal text-[#041912] font-display tracking-tight pt-1">
             Page temporairement indisponible
           </h1>
 
@@ -64,10 +64,10 @@ export default function NotFound() {
           <PhoneCall className="w-3.5 h-3.5 text-emerald-600" />
           <span>Une question ? Contactez notre support 7j/7 au</span>
           <a
-            href="tel:+221770000000"
+            href="tel:+221786637705"
             className="font-bold text-[#0A3D2E] hover:underline"
           >
-            +221 77 000 00 00
+            +221 78 663 77 05
           </a>
         </div>
 

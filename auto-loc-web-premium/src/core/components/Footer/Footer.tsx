@@ -68,7 +68,9 @@ export const Footer: React.FC = () => {
                 <p className="font-bold text-[#0A3D2E] uppercase tracking-wider text-[10px]">Support &amp; Assistance Client</p>
                 <div className="flex items-center gap-2 text-slate-600">
                   <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>+221 77 000 00 00 • 7j/7 (8h - 22h)</span>
+                  <a href="tel:+221786637705" className="hover:underline font-medium">
+                    +221 78 663 77 05 • 7j/7 (8h - 22h)
+                  </a>
                 </div>
                 <div className="flex items-center gap-2 text-slate-600">
                   <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
