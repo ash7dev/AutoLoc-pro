@@ -11,6 +11,7 @@ import { KycStatusCard } from './KycStatusCard';
 import { SecuritySettingsCard } from './SecuritySettingsCard';
 import { WebEditProfileModal } from './WebEditProfileModal';
 import { WebDeleteAccountModal } from './WebDeleteAccountModal';
+import { OwnerProfileSkeleton } from './OwnerProfileSkeleton';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
 export const OwnerProfileView: React.FC = () => {
@@ -21,6 +22,8 @@ export const OwnerProfileView: React.FC = () => {
   const {
     profile,
     isLoadingProfile,
+    isRefreshing,
+    lastRefreshedAt,
     errorProfile,
     isUploadingAvatar,
     mutateProfile,
@@ -50,17 +53,8 @@ export const OwnerProfileView: React.FC = () => {
     }
   };
 
-  if (isLoadingProfile) {
-    return (
-      <div className="space-y-6 max-w-7xl mx-auto pb-16">
-        <div className="h-10 w-48 bg-slate-200 animate-pulse rounded-2xl" />
-        <div className="h-64 w-full bg-slate-200 animate-pulse rounded-3xl" />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-80 bg-slate-200 animate-pulse rounded-3xl" />
-          <div className="h-80 bg-slate-200 animate-pulse rounded-3xl" />
-        </div>
-      </div>
-    );
+  if (isLoadingProfile && !profile) {
+    return <OwnerProfileSkeleton />;
   }
 
   if (errorProfile || !profile) {
@@ -94,6 +88,8 @@ export const OwnerProfileView: React.FC = () => {
       {/* 1. Top Header */}
       <ProfileHeader
         isLoading={isLoadingProfile}
+        isRefreshing={isRefreshing}
+        lastRefreshedAt={lastRefreshedAt}
         onRefresh={() => mutateProfile()}
       />
 

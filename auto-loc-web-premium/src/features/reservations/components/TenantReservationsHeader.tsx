@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CalendarCheck, ShieldCheck, Clock, Headphones, Sparkles } from 'lucide-react';
+import { CalendarCheck, ShieldCheck, Clock, Headphones } from 'lucide-react';
 
 interface TenantReservationsHeaderProps {
   totalCount?: number;
@@ -14,35 +14,30 @@ export function TenantReservationsHeader({
 }: TenantReservationsHeaderProps) {
   return (
     <header className="relative space-y-6">
-      {/* Badge Espace Locataire */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100/80 border border-emerald-300 text-emerald-900 text-xs font-bold tracking-wide uppercase shadow-xs">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-          <span>Espace Locataire • AutoLoc Premium</span>
-        </div>
-
-        {activeCount > 0 && (
+      {/* Badge Locations en cours (si présent) */}
+      {activeCount > 0 && (
+        <div className="flex flex-wrap items-center gap-3">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0A3D2E] text-[#F1DFB6] text-xs font-bold shadow-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             {activeCount} location{activeCount > 1 ? 's' : ''} en cours
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Titre Principal avec Typographie Cormorant Garamond (Luxe Aristocratique / Haute Horlogerie) */}
-      <div className="space-y-3">
+      {/* Titre Principal avec Typographie Cormorant Garamond */}
+      <div className="space-y-2">
         <h1
-          className="text-4xl sm:text-6xl lg:text-7xl font-light tracking-[0.01em] text-[#041912] leading-[1.05]"
+          className="text-3xl sm:text-5xl lg:text-6xl font-light tracking-[0.01em] text-[#041912] leading-[1.1]"
           style={{ fontFamily: 'var(--font-cormorant), var(--font-playfair), Georgia, serif' }}
         >
-          Vos Réservations &{' '}
+          Mes{' '}
           <span className="font-normal italic bg-gradient-to-r from-emerald-800 via-emerald-600 to-teal-700 bg-clip-text text-transparent">
-            Locations.
+            Réservations.
           </span>
         </h1>
 
-        <p className="text-sm sm:text-base lg:text-lg text-slate-600 font-medium max-w-2xl leading-relaxed">
-          Gérez vos réservations en toute sérénité, consultez vos codes de remise de clés et suivez l’état de vos véhicules en temps réel.
+        <p className="text-xs sm:text-sm lg:text-base text-slate-600 font-medium max-w-xl leading-relaxed">
+          Suivez et gérez vos réservations en temps réel.
         </p>
       </div>
 

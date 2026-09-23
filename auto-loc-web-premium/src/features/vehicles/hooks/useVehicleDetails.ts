@@ -4,15 +4,18 @@ import useSWR from 'swr';
 import { Vehicle } from '../types/vehicle.types';
 import { vehicleService } from '../services/vehicleService';
 
+const VEHICLE_DETAIL_SWR_OPTIONS = {
+  dedupingInterval: 5 * 60 * 1000, // 5 minutes TTL
+  revalidateIfStale: false,
+  revalidateOnFocus: false,
+  keepPreviousData: true,
+};
+
 export function useVehicleDetails(vehicleId: string) {
   const { data: vehicle, error, isLoading, mutate } = useSWR<Vehicle>(
     vehicleId ? `owner-vehicle-detail-${vehicleId}` : null,
     () => vehicleService.getVehicleById(vehicleId),
-    {
-      revalidateOnFocus: false,
-      revalidateIfStale: true,
-      dedupingInterval: 15000,
-    }
+    VEHICLE_DETAIL_SWR_OPTIONS
   );
 
   // Hook for indisponibilites
@@ -23,9 +26,7 @@ export function useVehicleDetails(vehicleId: string) {
   } = useSWR(
     vehicleId ? `owner-vehicle-indispos-${vehicleId}` : null,
     () => vehicleService.getIndisponibilites(vehicleId).catch(() => []),
-    {
-      revalidateOnFocus: false,
-    }
+    VEHICLE_DETAIL_SWR_OPTIONS
   );
 
   // Hook for vehicle reservations
@@ -36,9 +37,7 @@ export function useVehicleDetails(vehicleId: string) {
   } = useSWR(
     vehicleId ? `owner-vehicle-reservations-${vehicleId}` : null,
     () => vehicleService.getVehicleReservations(vehicleId).catch(() => []),
-    {
-      revalidateOnFocus: false,
-    }
+    VEHICLE_DETAIL_SWR_OPTIONS
   );
 
   const indisponibilites = Array.isArray(indisposRaw)

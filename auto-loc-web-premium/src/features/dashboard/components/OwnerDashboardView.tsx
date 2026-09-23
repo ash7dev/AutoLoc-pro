@@ -38,6 +38,9 @@ export const OwnerDashboardView: React.FC = () => {
     isLoadingInsights,
     isLoadingWallet,
     isLoadingReviews,
+    isRefreshing,
+    lastRefreshedAt,
+    mutateAll,
   } = useOwnerDashboard({ revenueGroupBy, revenueTimeRange });
 
   const financials = overview?.financials;
@@ -48,13 +51,16 @@ export const OwnerDashboardView: React.FC = () => {
 
   return (
     <div className="space-y-10">
-      {/* 1. Salutation / Greeting Header (Gère sa propre vue mobile épurée) */}
+      {/* 1. Salutation / Greeting Header (Gère sa propre vue mobile épurée & synchro manuelle SWR) */}
       <OwnerDashboardGreeting
         prenom={user?.prenom}
         checkinsCount={operational?.checkinsAujourdhuiCount}
         checkoutsCount={operational?.checkoutsAujourdhuiCount}
         demandesCount={operational?.demandesEnAttenteCount}
         soldeRetirableWallet={financials?.soldeRetirableWallet || parseFloat(wallet?.balance?.soldeRetirable || '0')}
+        onRefresh={mutateAll}
+        isRefreshing={isRefreshing}
+        lastRefreshedAt={lastRefreshedAt}
       />
 
       {/* 2. Actions Rapides Desktop */}

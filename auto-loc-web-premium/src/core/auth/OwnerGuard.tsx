@@ -2,13 +2,53 @@
 
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { ShieldAlert, Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
+import { ShieldAlert, Sparkles, ArrowLeft } from 'lucide-react';
 import { useUserStore } from '../store/useUserStore';
 
 interface OwnerGuardProps {
   children: React.ReactNode;
   autoSwitchOnAccess?: boolean;
 }
+
+/**
+ * Skeleton Premium d'attente pour le Dashboard Owner (remplace les spinners)
+ */
+
+export const OwnerDashboardSkeleton: React.FC = () => {
+  return (
+    <div aria-hidden="true" className="mx-auto w-full max-w-7xl space-y-10 p-4 sm:p-6 lg:p-8 animate-pulse">
+      {/* 1. En-tête Salutation Skeleton */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-3">
+          <div className="h-9 w-64 rounded-2xl bg-[#0A3D2E]/[0.08]" />
+          <div className="h-4 w-40 rounded-xl bg-[#0A3D2E]/[0.05]" />
+        </div>
+        <div className="hidden md:flex gap-3">
+          <div className="h-16 w-32 rounded-2xl bg-[#0A3D2E]/[0.06]" />
+          <div className="h-16 w-32 rounded-2xl bg-[#0A3D2E]/[0.06]" />
+          <div className="h-16 w-32 rounded-2xl bg-[#0A3D2E]/[0.06]" />
+        </div>
+      </div>
+
+      {/* 2. Hero Card Financier Skeleton */}
+      <div className="h-64 w-full rounded-3xl bg-[#0A3D2E]/[0.08]" />
+
+      {/* 3. KPI Tiles Grid Skeleton */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="h-32 rounded-3xl bg-[#0A3D2E]/[0.06]" />
+        <div className="h-32 rounded-3xl bg-[#0A3D2E]/[0.06]" />
+        <div className="h-32 rounded-3xl bg-[#0A3D2E]/[0.06]" />
+        <div className="h-32 rounded-3xl bg-[#0A3D2E]/[0.06]" />
+      </div>
+
+      {/* 4. Graphiques & Performance Flotte Skeleton */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="h-72 rounded-3xl bg-[#0A3D2E]/[0.06] lg:col-span-2" />
+        <div className="h-72 rounded-3xl bg-[#0A3D2E]/[0.06] lg:col-span-1" />
+      </div>
+    </div>
+  );
+};
 
 export const OwnerGuard: React.FC<OwnerGuardProps> = ({
   children,
@@ -23,18 +63,24 @@ export const OwnerGuard: React.FC<OwnerGuardProps> = ({
   const switchRole = useUserStore((s) => s.switchRole);
 
   const [isSwitching, setIsSwitching] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Redirection automatique vers /login si l'utilisateur n'est pas connecté
   useEffect(() => {
-    if (isInitialized && !isAuthenticated) {
+    if (isMounted && isInitialized && !isAuthenticated) {
       router.push(`/login?redirectUrl=${encodeURIComponent(pathname || '/dashboard')}`);
     }
-  }, [isInitialized, isAuthenticated, pathname, router]);
+  }, [isMounted, isInitialized, isAuthenticated, pathname, router]);
 
   // Si l'option autoSwitchOnAccess est activée et que le locataire accède au portail,
   // déclencher silencieusement la bascule vers le rôle PROPRIETAIRE
   useEffect(() => {
     if (
+      isMounted &&
       isInitialized &&
       isAuthenticated &&
       user &&
@@ -47,30 +93,19 @@ export const OwnerGuard: React.FC<OwnerGuardProps> = ({
         setIsSwitching(false);
       });
     }
-  }, [isInitialized, isAuthenticated, user, capabilities.isOwner, autoSwitchOnAccess, isSwitching, switchRole]);
+  }, [isMounted, isInitialized, isAuthenticated, user, capabilities.isOwner, autoSwitchOnAccess, isSwitching, switchRole]);
 
-  // 1. Écran de chargement pendant l'initialisation de la session
-  if (!isInitialized || isSwitching) {
-    return (
-      <div className="flex min-h-[70vh] flex-col items-center justify-center p-6 text-center">
-        <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0A3D2E]/[0.08] text-[#0A3D2E]">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-        <p className="mt-4 text-sm font-semibold text-slate-700">
-          Chargement de l&apos;Espace Hôte AutoLoc...
-        </p>
-      </div>
-    );
+  // 1. Écran Skeleton pendant l'initialisation ou la bascule
+  if (!isMounted || !isInitialized || isSwitching) {
+    return <OwnerDashboardSkeleton />;
   }
 
-  // 2. Non authentifié : écran d'attente pendant la redirection vers la page de connexion
+  // 2. Non authentifié : écran d'attente Skeleton pendant la redirection
   if (!isAuthenticated) {
     return (
-      <div className="flex min-h-[70vh] flex-col items-center justify-center p-6 text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#0A3D2E]" />
-        <p className="mt-4 text-sm font-semibold text-slate-700">
-          Redirection vers la connexion...
-        </p>
+      <div className="flex min-h-[70vh] flex-col items-center justify-center p-6 text-center animate-pulse">
+        <div className="h-12 w-12 rounded-2xl bg-[#0A3D2E]/[0.08]" />
+        <div className="mt-4 h-4 w-48 rounded-xl bg-[#0A3D2E]/[0.05]" />
       </div>
     );
   }

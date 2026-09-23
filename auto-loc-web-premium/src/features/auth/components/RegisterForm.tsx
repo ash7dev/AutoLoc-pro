@@ -19,6 +19,7 @@ import { IntentEngine } from '../../../core/auth/intentEngine';
 import { AuthService } from '../services/authService';
 import { PhoneField } from './PhoneField';
 import { OtpStep } from './OtpStep';
+import { setAuthCookies, getPostAuthRedirectUrl } from '../../../core/auth/roleUtils';
 
 interface RegisterFormProps {
   onSuccess?: () => void;
@@ -83,6 +84,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
   const { setUser } = useUserStore();
 
+  // Pré-compilation / Prefetching optimiste des routes cibles pendant l'inscription
+  React.useEffect(() => {
+    router.prefetch('/admin');
+    router.prefetch('/dashboard');
+  }, [router]);
+
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -142,17 +149,17 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         email: email || res.profile.email,
       });
 
+      if (res.accessToken) {
+        setAuthCookies(res.accessToken, userProfile.role);
+      }
+
       setUser(userProfile);
 
-      // Consommer et rejouer l'intention interceptée par le Gatekeeper
+      // Consommer et calculer la redirection dynamique par rôle
       const pending = IntentEngine.consumePendingIntent();
-      if (pending?.redirectToUrl) {
-        router.push(pending.redirectToUrl);
-      } else if (onSuccess) {
-        onSuccess();
-      } else {
-        router.push('/');
-      }
+      const redirectUrl = getPostAuthRedirectUrl(userProfile, pending);
+      router.push(redirectUrl);
+      if (onSuccess) onSuccess();
     } catch (err: any) {
       setError(err.message || 'Le code de vérification est incorrect ou expiré.');
     } finally {
@@ -165,7 +172,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      setUser({
+      const mockUser = {
         id: 'user_google_' + Date.now(),
         prenom: 'Alexandre',
         nom: 'Diallo',
@@ -173,17 +180,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
         telephone: '+221770000000',
         phoneVerified: true,
-        role: 'LOCATAIRE',
-        statutKyc: 'VERIFIE',
-      });
+        role: 'LOCATAIRE' as const,
+        statutKyc: 'VERIFIE' as const,
+      };
+      setAuthCookies('mock_google_token', mockUser.role);
+      setUser(mockUser);
       const pending = IntentEngine.consumePendingIntent();
-      if (pending?.redirectToUrl) {
-        router.push(pending.redirectToUrl);
-      } else if (onSuccess) {
-        onSuccess();
-      } else {
-        router.push('/');
-      }
+      const redirectUrl = getPostAuthRedirectUrl(mockUser, pending);
+      router.push(redirectUrl);
+      if (onSuccess) onSuccess();
     }, 1000);
   };
 

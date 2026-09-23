@@ -42,8 +42,8 @@ export const Navbar: React.FC = () => {
     };
   }, [setUser, logout]);
 
-  // Si on est sur les routes /login, /register ou tout l'espace owner /dashboard, masquer la Navbar et la modale d'invité
-  if (pathname === '/login' || pathname === '/register' || pathname?.startsWith('/dashboard')) {
+  // Si on est sur les routes /login, /register ou tout l'espace owner /dashboard /admin, masquer la Navbar et la modale d'invité
+  if (pathname === '/login' || pathname === '/register' || pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin')) {
     return null;
   }
 
@@ -67,6 +67,8 @@ export const Navbar: React.FC = () => {
     (pathname?.startsWith('/vehicles/') && pathname !== '/vehicles') ||
     (pathname?.startsWith('/reservations/') && pathname !== '/reservations');
 
+  const isReservationsMainPage = pathname === '/reservations';
+
   return (
     <>
       {/* 1. Header Desktop (>= 1024px) */}
@@ -77,7 +79,7 @@ export const Navbar: React.FC = () => {
       {/* 2. Header Mobile (< 1024px) */}
       {isDetailPage ? (
         <MobileDetailHeader />
-      ) : (
+      ) : isReservationsMainPage ? null : (
         <header className="pointer-events-none fixed inset-x-0 top-3 z-40 w-full px-4 lg:hidden">
           <div className="pointer-events-auto flex h-14 items-center justify-between rounded-full border border-slate-900/10 bg-white/90 pl-5 pr-2 shadow-[0_10px_30px_-12px_rgba(15,23,42,0.25)] backdrop-blur-xl">
             {/* Logo */}

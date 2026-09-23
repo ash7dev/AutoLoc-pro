@@ -17,6 +17,7 @@ export const VehiclesPageShell: React.FC = () => {
     vehicles,
     total,
     isLoading,
+    isValidating,
     isLoadingMore,
     hasMore,
     loadMore,
@@ -66,7 +67,7 @@ export const VehiclesPageShell: React.FC = () => {
         activeFiltersCount={activeFiltersCount}
       />
 
-      {/* État de chargement initial */}
+      {/* État de chargement initial (Uniquement tout premier render sans cache) */}
       {isLoading && <VehiclesGridSkeleton count={6} />}
 
       {/* État vide */}
@@ -79,7 +80,7 @@ export const VehiclesPageShell: React.FC = () => {
 
       {/* Contenu principal (si véhicules disponibles) */}
       {!isLoading && vehicles.length > 0 && (
-        <>
+        <div className={`transition-opacity duration-200 ${isValidating ? "opacity-60" : "opacity-100"}`}>
           {viewMode === "map" ? (
             <InteractiveVehiclesMap vehicles={vehicles} />
           ) : (
@@ -108,7 +109,7 @@ export const VehiclesPageShell: React.FC = () => {
               </div>
             </>
           )}
-        </>
+        </div>
       )}
 
       {/* Mobile Bottom Sheet Filter Drawer */}

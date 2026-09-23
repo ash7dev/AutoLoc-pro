@@ -69,6 +69,7 @@ export const metadata: Metadata = {
 import { Navbar } from "../src/core/components/Navbar";
 import { Footer } from "../src/core/components/Footer";
 import { AuthProvider } from "../src/core/providers/AuthProvider";
+import { SWRProvider } from "../src/core/providers/SWRProvider";
 
 export default function RootLayout({
   children,
@@ -81,11 +82,13 @@ export default function RootLayout({
       className={`${fraunces.variable} ${gloock.variable} ${jakarta.variable} ${playfair.variable} ${cormorant.variable} ${cinzel.variable} ${bodoni.variable} ${syne.variable}`}
     >
       <body className="font-body bg-background text-foreground antialiased selection:bg-emerald-500/30 selection:text-emerald-300 min-h-screen flex flex-col">
-        <AuthProvider>
-          <Navbar />
-          <main className="flex-1 pb-20 lg:pb-0">{children}</main>
-          <Footer />
-        </AuthProvider>
+        <SWRProvider>
+          <AuthProvider>
+            <Navbar />
+            <main className="flex-1 pb-20 lg:pb-0">{children}</main>
+            <Footer />
+          </AuthProvider>
+        </SWRProvider>
       </body>
     </html>
   );

@@ -7,6 +7,7 @@ import { WalletHeroBanner } from './WalletHeroBanner';
 import { WalletTransactionLedger } from './WalletTransactionLedger';
 import { WebWithdrawalModal } from './WebWithdrawalModal';
 import { WebTransactionReceiptModal } from './WebTransactionReceiptModal';
+import { OwnerWalletSkeleton } from './OwnerWalletSkeleton';
 import type { WalletTransactionItem } from '../../../../core/api/walletApi';
 
 export const OwnerWalletView: React.FC = () => {
@@ -16,6 +17,8 @@ export const OwnerWalletView: React.FC = () => {
     transactionsData,
     isLoadingWallet,
     isLoadingTransactions,
+    isRefreshing,
+    lastRefreshedAt,
     filters,
     setFilters,
     refreshAll,
@@ -30,10 +33,19 @@ export const OwnerWalletView: React.FC = () => {
     setIsWithdrawalOpen(true);
   };
 
+  if (isLoadingWallet && !wallet) {
+    return <OwnerWalletSkeleton />;
+  }
+
   return (
     <div className="space-y-8 pb-16">
       {/* Header */}
-      <OwnerWalletHeader onRefresh={refreshAll} isLoading={isLoadingWallet} />
+      <OwnerWalletHeader
+        onRefresh={refreshAll}
+        isLoading={isLoadingWallet}
+        isRefreshing={isRefreshing}
+        lastRefreshedAt={lastRefreshedAt}
+      />
 
       {/* Hero Banner */}
       <WalletHeroBanner

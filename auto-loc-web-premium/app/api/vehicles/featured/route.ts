@@ -3,6 +3,10 @@ import { API_URL } from '@/lib/config';
 
 export const dynamic = 'force-dynamic';
 
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+};
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const limit = searchParams.get('limit') || '4';
@@ -15,13 +19,13 @@ export async function GET(request: Request) {
       headers: {
         'Content-Type': 'application/json',
       },
-      cache: 'no-store',
+      next: { revalidate: 60 },
     });
 
     if (res.ok) {
       const data = await res.json();
       if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
-        return NextResponse.json(data.data.slice(0, Number(limit)));
+        return NextResponse.json(data.data.slice(0, Number(limit)), { headers: CACHE_HEADERS });
       }
     }
 
@@ -30,18 +34,18 @@ export async function GET(request: Request) {
       headers: {
         'Content-Type': 'application/json',
       },
-      cache: 'no-store',
+      next: { revalidate: 60 },
     });
 
     if (res.ok) {
       const feedData = await res.json();
       const list = feedData?.premium || feedData?.data?.premium;
       if (Array.isArray(list) && list.length > 0) {
-        return NextResponse.json(list.slice(0, Number(limit)));
+        return NextResponse.json(list.slice(0, Number(limit)), { headers: CACHE_HEADERS });
       }
     }
 
-    return NextResponse.json([]);
+    return NextResponse.json([], { headers: CACHE_HEADERS });
   } catch (error: any) {
     console.error('[API Route /api/vehicles/featured] Error:', error);
     return NextResponse.json([], { status: 500 });

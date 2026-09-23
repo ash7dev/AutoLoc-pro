@@ -10,6 +10,7 @@ import { OwnerReservationCard } from './OwnerReservationCard';
 import { useUserStore } from '@/src/core/store/useUserStore';
 import { useHostGate } from '@/src/features/owner/hooks/useHostGate';
 import { ReservationGateModal } from '@/src/features/reservations/components/ReservationGateModal';
+import { OwnerReservationCardSkeleton } from './OwnerReservationCardSkeleton';
 
 export interface OwnerReservationsListProps {
   reservations: OwnerReservationItem[];
@@ -58,34 +59,46 @@ export const OwnerReservationsList: React.FC<OwnerReservationsListProps> = ({
 
   const filteredList = (reservations || []).filter((item) => {
     if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    const locataireName = `${item.locataire?.prenom || ''} ${item.locataire?.nom || ''}`.toLowerCase();
-    const vehiculeName = `${item.vehicule?.marque || ''} ${item.vehicule?.modele || ''}`.toLowerCase();
-    const ref = item.id.toLowerCase();
-    return locataireName.includes(q) || vehiculeName.includes(q) || ref.includes(q);
+
+    const normalizedQuery = searchQuery
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+    const words = normalizedQuery.split(/\s+/).filter(Boolean);
+
+    const searchableText = [
+      item.id,
+      item.id?.substring(0, 8),
+      item.locataire?.prenom,
+      item.locataire?.nom,
+      `${item.locataire?.prenom || ''} ${item.locataire?.nom || ''}`,
+      item.locataire?.email,
+      item.locataire?.telephone,
+      item.vehicule?.marque,
+      item.vehicule?.modele,
+      `${item.vehicule?.marque || ''} ${item.vehicule?.modele || ''}`,
+      item.vehicule?.immatriculation,
+      item.vehicule?.ville,
+      item.statut,
+      STATUS_LABELS[item.statut || ''],
+      item.prixTotal?.toString(),
+      (item as any).montantTotal?.toString(),
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+    return words.every((word) => searchableText.includes(word));
   });
 
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3, 4, 5, 6].map((idx) => (
-          <div
-            key={idx}
-            className="h-64 animate-pulse space-y-4 rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs"
-          >
-            <div className="flex justify-between">
-              <div className="h-6 w-24 rounded-full bg-slate-100" />
-              <div className="h-4 w-16 rounded-md bg-slate-100" />
-            </div>
-            <div className="flex gap-4">
-              <div className="h-14 w-14 shrink-0 rounded-2xl bg-slate-100" />
-              <div className="flex-1 space-y-2">
-                <div className="h-5 w-3/4 rounded-md bg-slate-100" />
-                <div className="h-4 w-1/2 rounded-md bg-slate-100" />
-              </div>
-            </div>
-            <div className="h-12 w-full rounded-2xl bg-slate-100" />
-          </div>
+          <OwnerReservationCardSkeleton key={idx} />
         ))}
       </div>
     );

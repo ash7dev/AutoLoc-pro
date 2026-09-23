@@ -31,8 +31,14 @@ export const OwnerStatsHeader: React.FC<OwnerStatsHeaderProps> = ({
             disabled={isLoading}
             className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50 cursor-pointer shadow-2xs"
           >
-            <RefreshCw className={`h-4 w-4 text-[#059669] ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className="h-4 w-4 text-[#059669]" />
             <span>Actualiser</span>
+            {isLoading && (
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+            )}
           </button>
         </div>
       )}

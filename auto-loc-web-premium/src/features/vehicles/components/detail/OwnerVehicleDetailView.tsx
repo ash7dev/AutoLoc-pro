@@ -23,6 +23,7 @@ import {
   Plane,
   Home,
 } from 'lucide-react';
+import { useCacheInvalidator } from '@/src/core/hooks/useCacheInvalidator';
 import { useVehicleDetails } from '../../hooks/useVehicleDetails';
 import { VehicleMobileHeader } from '../mobile/VehicleMobileHeader';
 import { OwnerVehicleHeroGallery } from './OwnerVehicleHeroGallery';
@@ -45,6 +46,7 @@ const TABS = [
 
 export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ vehicleId }) => {
   const router = useRouter();
+  const { invalidateVehicles } = useCacheInvalidator();
   const [activeTab, setActiveTab] = useState<'overview' | 'availability' | 'pricing' | 'reservations'>('overview');
   const [isArchiving, setIsArchiving] = useState(false);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
@@ -65,6 +67,7 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
     try {
       setIsArchiving(true);
       await vehicleService.archiveVehicle(vehicleId);
+      await invalidateVehicles();
       setShowArchiveConfirm(false);
       router.push('/dashboard/vehicles');
     } catch (err) {
@@ -83,6 +86,7 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
         // Fallback archive si la purge stricte (e.g. réservations en cours) échoue
         await vehicleService.archiveVehicle(vehicleId);
       }
+      await invalidateVehicles();
       setShowDeleteConfirm(false);
       router.push('/dashboard/vehicles');
     } catch (err) {

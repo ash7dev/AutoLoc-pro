@@ -57,6 +57,8 @@ model Utilisateur {
   penalites                PenaliteProprietaire[]
 
   @@index([userId])
+  @@index([statutKyc])
+  @@index([creeLe(sort: Desc)])
 }
 
 model Vehicule {
@@ -240,6 +242,8 @@ model Reservation {
   @@index([proprietaireId, statut, creeLe(sort: Desc)])
   @@index([proprietaireId, statut, dateDebut, dateFin])
   @@index([statut])
+  @@index([creeLe(sort: Desc)])
+  @@index([statut, creeLe(sort: Desc)])
   @@index([delaiSignature, statut])
   @@index([statut, tacitCheckinDeadlineLe])
 }

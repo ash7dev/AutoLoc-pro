@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useUserStore } from '../store/useUserStore';
+import { setAuthCookies, normalizeRole } from '../auth/roleUtils';
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -20,7 +21,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (token && cachedUserRaw) {
       try {
         const cachedUser = JSON.parse(cachedUserRaw);
-        useUserStore.getState().initializeFromSession(cachedUser);
+        const normalizedUser = {
+          ...cachedUser,
+          role: normalizeRole(cachedUser.role),
+        };
+        setAuthCookies(token, normalizedUser.role);
+        useUserStore.getState().initializeFromSession(normalizedUser);
       } catch {
         // Ignorer si JSON invalide
       }

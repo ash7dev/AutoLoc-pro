@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { fetchApi } from '@/lib/config';
+import { useCacheInvalidator } from '@/src/core/hooks/useCacheInvalidator';
 
 export interface PhotoEtatLieu {
   id: string;
@@ -96,6 +97,8 @@ export function useTenantReservationDetail(reservationId: string) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
+  const { invalidateReservations } = useCacheInvalidator();
+
   const fetchDetail = useCallback(async () => {
     if (!reservationId) return;
 
@@ -129,6 +132,7 @@ export function useTenantReservationDetail(reservationId: string) {
         body: JSON.stringify({ soldeRecu: true }),
       });
       await fetchDetail();
+      await invalidateReservations();
       return true;
     } catch (err: any) {
       alert(err?.message || 'Erreur lors de la confirmation du check-in');
@@ -147,6 +151,7 @@ export function useTenantReservationDetail(reservationId: string) {
         body: JSON.stringify({ motif, commentaire: commentaire || '' }),
       });
       await fetchDetail();
+      await invalidateReservations();
       return true;
     } catch (err: any) {
       alert(err?.message || 'Erreur lors de la déclaration du refus');
@@ -165,6 +170,7 @@ export function useTenantReservationDetail(reservationId: string) {
         body: JSON.stringify({ raison }),
       });
       await fetchDetail();
+      await invalidateReservations();
       return true;
     } catch (err: any) {
       alert(err?.message || 'Erreur lors de l’annulation de la réservation');
@@ -186,3 +192,4 @@ export function useTenantReservationDetail(reservationId: string) {
     cancelReservation,
   };
 }
+

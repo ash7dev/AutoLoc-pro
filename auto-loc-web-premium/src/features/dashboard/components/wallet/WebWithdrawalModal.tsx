@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, ShieldCheck, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { walletApi, type WalletData, type SavedAccountsResponse } from '../../../../core/api/walletApi';
+import { useCacheInvalidator } from '@/src/core/hooks/useCacheInvalidator';
 
 interface WebWithdrawalModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { invalidateWallet, invalidateAnalytics } = useCacheInvalidator();
   const [step, setStep] = useState<1 | 2>(1);
   const [provider, setProvider] = useState<'WAVE' | 'ORANGE_MONEY'>(initialProvider);
   const [amount, setAmount] = useState<string>('');
@@ -146,6 +148,8 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
       });
 
       if (res.ok || res.success) {
+        await invalidateWallet();
+        await invalidateAnalytics();
         setSuccessMessage(
           `Virement de ${formatCurrency(numericAmount)} FCFA envoyé vers ${provider === 'WAVE' ? 'Wave' : 'Orange Money'
           } (${formattedPhone}) avec succès.`

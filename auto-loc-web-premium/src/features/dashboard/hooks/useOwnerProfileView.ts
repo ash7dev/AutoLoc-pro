@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import useSWR from 'swr';
 import { userApi, type UserProfileData, type UpdateProfileDto } from '../../../core/api/userApi';
 import { useUserStore } from '../../../core/store/useUserStore';
@@ -8,14 +8,30 @@ import { useUserStore } from '../../../core/store/useUserStore';
 export function useOwnerProfileView() {
   const { user: storeUser, setUser } = useUserStore();
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setLastRefreshedAt(new Date());
+  }, []);
 
   // 1. GET /users/me/profile
   const {
     data: fetchedProfile,
     error: errorProfile,
     isLoading: isLoadingProfile,
-    mutate: mutateProfile,
-  } = useSWR<UserProfileData>('user-profile', () => userApi.getProfile());
+    isValidating: isValidatingProfile,
+    mutate: rawMutateProfile,
+  } = useSWR<UserProfileData>('user-profile', () => userApi.getProfile(), {
+    dedupingInterval: 5 * 60 * 1000,
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+    keepPreviousData: true,
+  });
+
+  const mutateProfile = useCallback(async () => {
+    setLastRefreshedAt(new Date());
+    return rawMutateProfile();
+  }, [rawMutateProfile]);
 
   // 2. Synchroniser les données API réelles avec le Zustand Store global
   useEffect(() => {
@@ -110,6 +126,8 @@ export function useOwnerProfileView() {
   return {
     profile,
     isLoadingProfile: isLoadingProfile && !profile,
+    isRefreshing: isValidatingProfile,
+    lastRefreshedAt,
     errorProfile,
     isUploadingAvatar,
     mutateProfile,

@@ -5,10 +5,13 @@ import { useRouter, useParams } from 'next/navigation';
 import { AddVehicleWizardModal } from '@/src/features/vehicles/components/wizard/AddVehicleWizardModal';
 import { vehicleService } from '@/src/features/vehicles/services/vehicleService';
 
+import { useCacheInvalidator } from '@/src/core/hooks/useCacheInvalidator';
+
 export default function EditVehiclePage() {
   const router = useRouter();
   const params = useParams();
   const vehicleId = params?.id as string;
+  const { invalidateVehicles } = useCacheInvalidator();
   const [vehicleToEdit, setVehicleToEdit] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,11 +35,9 @@ export default function EditVehiclePage() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="flex items-center gap-3 rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#059669] border-t-transparent" />
-          <span className="text-sm font-semibold text-slate-700 font-fraunces">Chargement des données du véhicule...</span>
-        </div>
+      <div className="max-w-4xl mx-auto space-y-6 animate-pulse p-4 sm:p-6">
+        <div className="h-10 w-64 rounded-2xl bg-slate-200" />
+        <div className="h-96 w-full rounded-3xl bg-slate-200" />
       </div>
     );
   }
@@ -47,7 +48,10 @@ export default function EditVehiclePage() {
       mode="EDIT"
       vehicleToEdit={vehicleToEdit || { id: vehicleId }}
       onClose={() => router.push('/dashboard/vehicles')}
-      onVehicleUpdated={() => router.push('/dashboard/vehicles')}
+      onVehicleUpdated={async () => {
+        await invalidateVehicles();
+        router.push('/dashboard/vehicles');
+      }}
     />
   );
 }

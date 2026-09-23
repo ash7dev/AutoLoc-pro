@@ -7,6 +7,7 @@ import {
   ProfileResponse,
 } from '../types/auth.types';
 import { UserProfile } from '../../../types/user';
+import { normalizeRole } from '../../../core/auth/roleUtils';
 
 export class AuthService {
   /**
@@ -116,7 +117,7 @@ export class AuthService {
       dateNaissance: profile.dateNaissance,
       avatarUrl: profile.avatarUrl,
       permisUrl: profile.permisUrl || (profile.hasPermis ? 'HAS_PERMIS' : null),
-      role: profile.role || 'LOCATAIRE',
+      role: normalizeRole(profile.role),
       statutKyc: profile.statutKyc || profile.kycStatus || 'NON_VERIFIE',
       kycRejectionReason: profile.kycRejectionReason,
       createdAt: profile.createdAt,

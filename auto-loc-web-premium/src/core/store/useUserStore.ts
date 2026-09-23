@@ -3,6 +3,7 @@ import { UserProfile, UserCapabilities, PendingIntent } from '../../types/user';
 import { computeUserCapabilities } from '../auth/capabilities';
 import { broadcastAuthEvent } from '../auth/crossTabSync';
 import { AuthService } from '../../features/auth/services/authService';
+import { setAuthCookies, clearAuthCookies, normalizeRole } from '../auth/roleUtils';
 
 interface UserState {
   // État d'initialisation et session
@@ -28,16 +29,51 @@ interface UserState {
   closeGuestModal: () => void;
   
   // Revalidation & Logout
-  refreshProfileSilently: () => Promise<UserProfile | null>;
+  lastProfileFetchTime: number;
+  refreshProfileSilently: (force?: boolean) => Promise<UserProfile | null>;
   logout: () => Promise<void>;
 }
 
+const getInitialStoreState = () => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('autoloc_token');
+    const cachedUserRaw = localStorage.getItem('autoloc_user');
+    if (token && cachedUserRaw) {
+      try {
+        const cachedUser = JSON.parse(cachedUserRaw);
+        const normalizedUser = {
+          ...cachedUser,
+          role: normalizeRole(cachedUser.role),
+        };
+        // Re-synchroniser les cookies dès le démarrage optimiste
+        setAuthCookies(token, normalizedUser.role);
+        return {
+          isInitialized: true,
+          isAuthenticated: true,
+          isGuestMode: false,
+          user: normalizedUser,
+          capabilities: computeUserCapabilities(normalizedUser),
+          lastProfileFetchTime: 0,
+        };
+      } catch {
+        // Ignorer si JSON invalide
+      }
+    }
+  }
+  return {
+    isInitialized: false,
+    isAuthenticated: false,
+    isGuestMode: true,
+    user: null,
+    capabilities: computeUserCapabilities(null),
+    lastProfileFetchTime: 0,
+  };
+};
+
+const initialState = getInitialStoreState();
+
 export const useUserStore = create<UserState>((set, get) => ({
-  isInitialized: false,
-  isAuthenticated: false,
-  isGuestMode: true,
-  user: null,
-  capabilities: computeUserCapabilities(null),
+  ...initialState,
 
   pendingIntent: null,
   guestAuthModalVisible: false,
@@ -60,12 +96,18 @@ export const useUserStore = create<UserState>((set, get) => ({
       isGuestMode: !userProfile,
       user: userProfile,
       capabilities: computeUserCapabilities(userProfile),
+      lastProfileFetchTime: userProfile ? Date.now() : 0,
     });
     if (typeof window !== 'undefined') {
       if (userProfile) {
         localStorage.setItem('autoloc_user', JSON.stringify(userProfile));
+        const token = localStorage.getItem('autoloc_token');
+        if (token) {
+          setAuthCookies(token, userProfile.role);
+        }
       } else {
         localStorage.removeItem('autoloc_user');
+        clearAuthCookies();
       }
     }
     if (userProfile) {
@@ -88,6 +130,10 @@ export const useUserStore = create<UserState>((set, get) => ({
     });
     if (typeof window !== 'undefined') {
       localStorage.setItem('autoloc_user', JSON.stringify(updated));
+      const token = localStorage.getItem('autoloc_token');
+      if (token) {
+        setAuthCookies(token, updated.role);
+      }
     }
     broadcastAuthEvent({
       type: 'USER_UPDATED',
@@ -105,9 +151,14 @@ export const useUserStore = create<UserState>((set, get) => ({
         }
       }
       const updatedUser = AuthService.mapProfileResponseToUserProfile(res.profile);
+      const token = res.accessToken || (typeof window !== 'undefined' ? localStorage.getItem('autoloc_token') : null);
+      if (token) {
+        setAuthCookies(token, updatedUser.role);
+      }
       set({
         user: updatedUser,
         capabilities: computeUserCapabilities(updatedUser),
+        lastProfileFetchTime: Date.now(),
       });
       if (typeof window !== 'undefined') {
         localStorage.setItem('autoloc_user', JSON.stringify(updatedUser));
@@ -147,16 +198,31 @@ export const useUserStore = create<UserState>((set, get) => ({
     });
   },
 
-  refreshProfileSilently: async () => {
+  refreshProfileSilently: async (force = false) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('autoloc_token') : null;
     if (!token && !get().isAuthenticated) {
       set({ isInitialized: true, isAuthenticated: false, isGuestMode: true, user: null, capabilities: computeUserCapabilities(null) });
+      clearAuthCookies();
       return null;
+    }
+
+    const now = Date.now();
+    const lastFetch = get().lastProfileFetchTime || 0;
+    // Si la revalidation a eu lieu il y a moins de 5 minutes (300 000 ms) et que l'utilisateur est déjà présent, ignorer l'appel
+    if (!force && get().user && (now - lastFetch < 300_000)) {
+      if (token && get().user) {
+        setAuthCookies(token, get().user!.role);
+      }
+      return get().user;
     }
 
     try {
       const profile = await AuthService.getMe();
       const updatedUser = AuthService.mapProfileResponseToUserProfile(profile);
+
+      if (token) {
+        setAuthCookies(token, updatedUser.role);
+      }
 
       set({
         isInitialized: true,
@@ -164,6 +230,7 @@ export const useUserStore = create<UserState>((set, get) => ({
         isGuestMode: false,
         user: updatedUser,
         capabilities: computeUserCapabilities(updatedUser),
+        lastProfileFetchTime: now,
       });
 
       if (typeof window !== 'undefined') {
@@ -186,6 +253,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     if (typeof window !== 'undefined') {
       localStorage.removeItem('autoloc_token');
       localStorage.removeItem('autoloc_user');
+      clearAuthCookies();
     }
     set({
       isInitialized: true,

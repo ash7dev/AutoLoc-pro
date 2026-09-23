@@ -2,22 +2,38 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Calendar as CalendarIcon, Car, Search, Check, Sparkles, Zap, ChevronRight, RotateCcw } from "lucide-react";
+import {
+  MapPin,
+  Route,
+  Plane,
+  Calendar as CalendarIcon,
+  Car,
+  Gem,
+  Briefcase,
+  Truck,
+  Zap,
+  LayoutGrid,
+  Search,
+  Check,
+  Sparkles,
+  ChevronRight,
+  RotateCcw,
+} from "lucide-react";
 import { AutoCalendar } from "@/src/shared/components/AutoCalendar";
 
 const ZONES = [
-  { value: "", label: "Tout Dakar", subtitle: "Tous les véhicules disponibles", icon: "📍" },
-  { value: "HorsDakar", label: "Autorisé Hors Dakar", subtitle: "Voyages en régions & Saly", icon: "🛣️" },
-  { value: "AIBD", label: "Aéroport AIBD (Diass)", subtitle: "Livraison terminal aéroport", icon: "✈️" },
+  { value: "", label: "Tout Dakar", subtitle: "Tous les véhicules disponibles", icon: MapPin },
+  { value: "HorsDakar", label: "Autorisé hors Dakar", subtitle: "Voyages en régions & Saly", icon: Route },
+  { value: "AIBD", label: "Aéroport AIBD (Diass)", subtitle: "Livraison terminal aéroport", icon: Plane },
 ];
 
 const TYPES = [
-  { value: "", label: "Tous les types", badge: "TOUT", subtitle: "Catalogue complet", icon: "🚗" },
-  { value: "SUV", label: "SUV & 4×4", badge: "POPULAIRE", subtitle: "Polyvalent & confort", icon: "🚘" },
-  { value: "LUXE", label: "Luxe & Prestige", badge: "EXCLUSIF", subtitle: "Véhicules haut de gamme", icon: "✨" },
-  { value: "BERLINE", label: "Berlines Premium", badge: "BUSINESS", subtitle: "Élégance & longs trajets", icon: "🏎️" },
-  { value: "PICKUP", label: "Pick-up Tout-Terrain", badge: "ROBUSTE", subtitle: "Capacité & 4WD", icon: "🛻" },
-  { value: "CITADINE", label: "Citadines Éco", badge: "URBAIN", subtitle: "Agile & économique", icon: "🚕" },
+  { value: "", label: "Tous les types", subtitle: "Catalogue complet", icon: LayoutGrid },
+  { value: "SUV", label: "SUV & 4×4", subtitle: "Polyvalent & confort", icon: Car },
+  { value: "LUXE", label: "Luxe & prestige", subtitle: "Véhicules haut de gamme", icon: Gem },
+  { value: "BERLINE", label: "Berlines premium", subtitle: "Élégance & longs trajets", icon: Briefcase },
+  { value: "PICKUP", label: "Pick-up tout-terrain", subtitle: "Capacité & 4WD", icon: Truck },
+  { value: "CITADINE", label: "Citadines éco", subtitle: "Agile & économique", icon: Zap },
 ];
 
 type StepType = "zone" | "dates" | "type";
@@ -102,6 +118,16 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
     router.push(`/vehicles?${params.toString()}`);
   };
 
+  const handleMouseEnterSearch = () => {
+    const params = new URLSearchParams();
+    if (zone) params.set("zone", zone);
+    if (type) params.set("type", type);
+    if (dateDebut) params.set("dateDebut", dateDebut);
+    if (dateFin) params.set("dateFin", dateFin);
+
+    router.prefetch(`/vehicles?${params.toString()}`);
+  };
+
   const formatDateDisplay = (isoStr?: string) => {
     if (!isoStr) return "";
     const d = new Date(`${isoStr}T00:00:00`);
@@ -117,61 +143,57 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
       : "Ajouter des dates";
 
   return (
-    <div className="w-full bg-white rounded-3xl border border-emerald-900/10 shadow-2xl shadow-emerald-950/10 overflow-hidden transition-all">
+    <div className="w-full overflow-hidden rounded-3xl border border-[#041912]/8 bg-white shadow-[0_20px_48px_-16px_rgba(4,25,18,0.18)]">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-emerald-950/10 bg-gradient-to-r from-emerald-950/5 via-white to-white flex items-center justify-between">
+      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-semibold tracking-wider text-emerald-800 uppercase">
-            <Sparkles className="w-3 h-3 text-emerald-600" />
-            RECHERCHE RAPIDE · DAKAR
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#0A3D2E]/8 px-2.5 py-1 text-[10.5px] font-semibold text-[#0A3D2E]">
+            <Sparkles className="h-3 w-3" />
+            Recherche rapide · Dakar
           </div>
-          <h2 className="text-xl font-fraunces font-normal text-[#041912] mt-1 tracking-tight" style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}>
+          <h2 className="mt-1.5 font-fraunces text-xl leading-tight text-[#041912]">
             Où & quand louer ?
           </h2>
-
         </div>
         {durationDays !== null && (
-          <div className="px-3 py-1 bg-emerald-100/70 border border-emerald-300 rounded-full text-xs font-bold text-emerald-900 flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-emerald-600" />
+          <div className="flex items-center gap-1 rounded-full bg-[#0A3D2E]/8 px-3 py-1 text-[12px] font-semibold text-[#0A3D2E]">
             {durationDays} jrs
           </div>
         )}
       </div>
 
-      {/* Accordion Content */}
-      <div className="p-4 sm:p-5 flex flex-col gap-3">
-        {/* STEP 1: ZONE */}
+      {/* Étapes */}
+      <div className="flex flex-col gap-3 p-4 sm:p-5">
+        {/* STEP 1 : ZONE */}
         <div
-          className={`rounded-2xl border transition-all overflow-hidden ${
-            activeStep === "zone"
-              ? "bg-white border-[#041912] shadow-md shadow-emerald-950/10"
-              : "bg-emerald-950/[0.02] border-emerald-950/10 hover:border-emerald-300"
-          }`}
+          className={`overflow-hidden rounded-2xl border transition-all ${activeStep === "zone"
+              ? "border-[#041912] bg-white"
+              : "border-slate-100 bg-slate-50/40 hover:border-slate-200"
+            }`}
         >
           {activeStep !== "zone" ? (
             <button
               onClick={() => setActiveStep("zone")}
-              className="w-full px-4 py-3.5 flex items-center justify-between text-left transition-colors"
+              className="flex w-full items-center justify-between px-4 py-3.5 text-left"
             >
               <div>
-                <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase block">
-                  Périmètre
-                </span>
-                <span className="text-sm font-bold text-[#041912]">
-                  {selectedZoneObj.icon} {selectedZoneObj.label}
+                <span className="block text-[10.5px] font-medium text-slate-400">Périmètre</span>
+                <span className="flex items-center gap-1.5 text-[13.5px] font-semibold text-[#041912]">
+                  <selectedZoneObj.icon className="h-3.5 w-3.5 text-[#059669]" />
+                  {selectedZoneObj.label}
                 </span>
               </div>
-              <span className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <span className="rounded-lg border border-slate-200 px-2.5 py-1 text-[11.5px] font-semibold text-slate-600">
                 Modifier
               </span>
             </button>
           ) : (
-            <div className="p-4 flex flex-col gap-3">
+            <div className="flex flex-col gap-3 p-4">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center">
-                  <MapPin className="w-3.5 h-3.5 text-emerald-700" />
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0A3D2E]/8 text-[#0A3D2E]">
+                  <MapPin className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-xs font-bold text-[#041912] tracking-wider uppercase">
+                <span className="text-[12px] font-semibold text-[#041912]">
                   Où voulez-vous rouler ?
                 </span>
               </div>
@@ -179,6 +201,7 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
               <div className="flex flex-col gap-2">
                 {ZONES.map((z) => {
                   const isSelected = zone === z.value;
+                  const ZoneIcon = z.icon;
                   return (
                     <button
                       key={z.value}
@@ -186,39 +209,27 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
                         setZone(z.value);
                         setActiveStep("dates");
                       }}
-                      className={`w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
-                        isSelected
-                          ? "bg-[#041912] border-[#041912] text-white"
-                          : "bg-white border-slate-200 hover:border-emerald-400 text-slate-900"
-                      }`}
+                      className={`flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all ${isSelected
+                          ? "border-[#041912] bg-[#041912] text-white"
+                          : "border-slate-200 bg-white text-slate-900 hover:border-slate-300"
+                        }`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-lg">{z.icon}</span>
+                        <ZoneIcon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-[#4ADE80]' : 'text-[#059669]'}`} />
                         <div>
-                          <p
-                            className={`text-sm font-bold ${
-                              isSelected ? "text-white" : "text-[#041912]"
-                            }`}
-                          >
+                          <p className={`text-[13px] font-semibold ${isSelected ? "text-white" : "text-[#041912]"}`}>
                             {z.label}
                           </p>
-                          <p
-                            className={`text-xs ${
-                              isSelected ? "text-emerald-200" : "text-slate-500"
-                            }`}
-                          >
+                          <p className={`text-[11.5px] ${isSelected ? "text-[#F1DFB6]/70" : "text-slate-500"}`}>
                             {z.subtitle}
                           </p>
                         </div>
                       </div>
                       <div
-                        className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                          isSelected
-                            ? "bg-emerald-500 border-emerald-500 text-white"
-                            : "border-slate-300"
-                        }`}
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${isSelected ? "border-[#4ADE80] bg-[#4ADE80] text-[#041912]" : "border-slate-300"
+                          }`}
                       >
-                        {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                        {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
                       </div>
                     </button>
                   );
@@ -228,74 +239,66 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
           )}
         </div>
 
-        {/* STEP 2: DATES */}
+        {/* STEP 2 : DATES */}
         <div
-          className={`rounded-2xl border transition-all overflow-hidden ${
-            activeStep === "dates"
-              ? "bg-white border-[#041912] shadow-md shadow-emerald-950/10"
-              : "bg-emerald-950/[0.02] border-emerald-950/10 hover:border-emerald-300"
-          }`}
+          className={`overflow-hidden rounded-2xl border transition-all ${activeStep === "dates"
+              ? "border-[#041912] bg-white"
+              : "border-slate-100 bg-slate-50/40 hover:border-slate-200"
+            }`}
         >
           {activeStep !== "dates" ? (
             <button
               onClick={() => setActiveStep("dates")}
-              className="w-full px-4 py-3.5 flex items-center justify-between text-left transition-colors"
+              className="flex w-full items-center justify-between px-4 py-3.5 text-left"
             >
               <div>
-                <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase block">
-                  Dates de location
-                </span>
-                <span className="text-sm font-bold text-[#041912]">
-                  📅 {datesSummaryText}
+                <span className="block text-[10.5px] font-medium text-slate-400">Dates de location</span>
+                <span className="flex items-center gap-1.5 text-[13.5px] font-semibold text-[#041912]">
+                  <CalendarIcon className="h-3.5 w-3.5 text-[#059669]" />
+                  {datesSummaryText}
                 </span>
               </div>
-              <span className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <span className="rounded-lg border border-slate-200 px-2.5 py-1 text-[11.5px] font-semibold text-slate-600">
                 Modifier
               </span>
             </button>
           ) : (
-            <div className="p-4 flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center">
-                    <CalendarIcon className="w-3.5 h-3.5 text-emerald-700" />
-                  </div>
-                  <span className="text-xs font-bold text-[#041912] tracking-wider uppercase">
-                    Quand souhaitez-vous louer ?
-                  </span>
+            <div className="flex flex-col gap-3 p-4">
+              <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0A3D2E]/8 text-[#0A3D2E]">
+                  <CalendarIcon className="h-3.5 w-3.5" />
                 </div>
+                <span className="text-[12px] font-semibold text-[#041912]">
+                  Quand souhaitez-vous louer ?
+                </span>
               </div>
 
-              {/* Presets */}
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={handlePresetWeekEnd}
-                  className="px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1.5 hover:bg-emerald-100 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#0A3D2E]/8 px-3 py-1.5 text-[12px] font-semibold text-[#0A3D2E] transition-colors hover:bg-[#0A3D2E]/12"
                 >
-                  <Zap className="w-3 h-3 text-emerald-600" />
+                  <Zap className="h-3 w-3" />
                   Ce week-end
                 </button>
                 <button
                   type="button"
                   onClick={handlePreset7Days}
-                  className="px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1.5 hover:bg-emerald-100 transition-colors"
+                  className="rounded-full bg-[#0A3D2E]/8 px-3 py-1.5 text-[12px] font-semibold text-[#0A3D2E] transition-colors hover:bg-[#0A3D2E]/12"
                 >
-                  <span>🗓️</span>
                   7 jours
                 </button>
                 <button
                   type="button"
                   onClick={handlePreset14Days}
-                  className="px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1.5 hover:bg-emerald-100 transition-colors"
+                  className="rounded-full bg-[#0A3D2E]/8 px-3 py-1.5 text-[12px] font-semibold text-[#0A3D2E] transition-colors hover:bg-[#0A3D2E]/12"
                 >
-                  <span>🌟</span>
                   14 jours
                 </button>
               </div>
 
-              {/* Calendar Component */}
-              <div className="border border-slate-100 rounded-xl p-1 bg-slate-50/50">
+              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-1">
                 <AutoCalendar
                   startDate={dateDebut}
                   endDate={dateFin}
@@ -306,86 +309,76 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveStep("type")}
-                className="w-full py-2.5 px-4 bg-emerald-50 border border-emerald-200 text-[#041912] font-bold text-xs rounded-xl flex items-center justify-center gap-1 hover:bg-emerald-100 transition-colors"
+                className="flex w-full items-center justify-center gap-1 rounded-xl bg-[#0A3D2E]/8 px-4 py-2.5 text-[12.5px] font-semibold text-[#0A3D2E] transition-colors hover:bg-[#0A3D2E]/12"
               >
-                <span>Valider les dates</span>
-                <ChevronRight className="w-4 h-4" />
+                Valider les dates
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           )}
         </div>
 
-        {/* STEP 3: TYPE */}
+        {/* STEP 3 : TYPE */}
         <div
-          className={`rounded-2xl border transition-all overflow-hidden ${
-            activeStep === "type"
-              ? "bg-white border-[#041912] shadow-md shadow-emerald-950/10"
-              : "bg-emerald-950/[0.02] border-emerald-950/10 hover:border-emerald-300"
-          }`}
+          className={`overflow-hidden rounded-2xl border transition-all ${activeStep === "type"
+              ? "border-[#041912] bg-white"
+              : "border-slate-100 bg-slate-50/40 hover:border-slate-200"
+            }`}
         >
           {activeStep !== "type" ? (
             <button
               onClick={() => setActiveStep("type")}
-              className="w-full px-4 py-3.5 flex items-center justify-between text-left transition-colors"
+              className="flex w-full items-center justify-between px-4 py-3.5 text-left"
             >
               <div>
-                <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase block">
-                  Catégorie de véhicule
-                </span>
-                <span className="text-sm font-bold text-[#041912]">
-                  {selectedTypeObj.icon} {selectedTypeObj.label}
+                <span className="block text-[10.5px] font-medium text-slate-400">Catégorie de véhicule</span>
+                <span className="flex items-center gap-1.5 text-[13.5px] font-semibold text-[#041912]">
+                  <selectedTypeObj.icon className="h-3.5 w-3.5 text-[#059669]" />
+                  {selectedTypeObj.label}
                 </span>
               </div>
-              <span className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <span className="rounded-lg border border-slate-200 px-2.5 py-1 text-[11.5px] font-semibold text-slate-600">
                 Modifier
               </span>
             </button>
           ) : (
-            <div className="p-4 flex flex-col gap-3">
+            <div className="flex flex-col gap-3 p-4">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center">
-                  <Car className="w-3.5 h-3.5 text-emerald-700" />
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0A3D2E]/8 text-[#0A3D2E]">
+                  <Car className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-xs font-bold text-[#041912] tracking-wider uppercase">
+                <span className="text-[12px] font-semibold text-[#041912]">
                   Quel type de véhicule ?
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {TYPES.map((t) => {
                   const isSelected = type === t.value;
+                  const TypeIcon = t.icon;
                   return (
                     <button
                       key={t.value}
                       onClick={() => setType(t.value)}
-                      className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
-                        isSelected
-                          ? "bg-[#041912] border-[#041912] text-white"
-                          : "bg-white border-slate-200 hover:border-emerald-400 text-slate-900"
-                      }`}
+                      className={`flex items-center justify-between rounded-xl border p-3 text-left transition-all ${isSelected
+                          ? "border-[#041912] bg-[#041912] text-white"
+                          : "border-slate-200 bg-white text-slate-900 hover:border-slate-300"
+                        }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <span className="text-lg">{t.icon}</span>
+                        <TypeIcon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-[#4ADE80]' : 'text-[#059669]'}`} />
                         <div>
-                          <p
-                            className={`text-xs font-bold ${
-                              isSelected ? "text-white" : "text-[#041912]"
-                            }`}
-                          >
+                          <p className={`text-[12.5px] font-semibold ${isSelected ? "text-white" : "text-[#041912]"}`}>
                             {t.label}
                           </p>
-                          <p
-                            className={`text-[10px] ${
-                              isSelected ? "text-emerald-200" : "text-slate-500"
-                            }`}
-                          >
+                          <p className={`text-[10.5px] ${isSelected ? "text-[#F1DFB6]/70" : "text-slate-500"}`}>
                             {t.subtitle}
                           </p>
                         </div>
                       </div>
                       {isSelected && (
-                        <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-white">
-                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#4ADE80] text-[#041912]">
+                          <Check className="h-2.5 w-2.5 stroke-[3]" />
                         </div>
                       )}
                     </button>
@@ -397,25 +390,23 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
         </div>
       </div>
 
-      {/* Footer Controls */}
-      <div className="p-4 border-t border-slate-100 bg-slate-50/80 flex items-center justify-between gap-3">
+      {/* Pied de recherche */}
+      <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/60 p-4">
         <button
           onClick={handleReset}
-          className="text-xs font-semibold text-slate-500 underline underline-offset-2 hover:text-slate-800 transition-colors flex items-center gap-1"
+          className="inline-flex items-center gap-1 text-[12px] font-semibold text-slate-500 transition-colors hover:text-slate-700"
         >
-          <RotateCcw className="w-3 h-3" />
+          <RotateCcw className="h-3 w-3" />
           Effacer
         </button>
 
         <button
           onClick={handleSearch}
-          className="flex-1 py-3 px-6 rounded-2xl bg-[#041912] hover:bg-emerald-900 text-white font-bold text-sm shadow-xl shadow-emerald-950/20 flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+          onMouseEnter={handleMouseEnterSearch}
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#041912] px-6 py-3 text-[13.5px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E]"
         >
-          <Search className="w-4 h-4 text-emerald-400" />
-          <span>Rechercher</span>
-          <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center ml-1">
-            <Sparkles className="w-3 h-3 text-emerald-400" />
-          </div>
+          <Search className="h-4 w-4 text-[#4ADE80]" />
+          Rechercher
         </button>
       </div>
     </div>

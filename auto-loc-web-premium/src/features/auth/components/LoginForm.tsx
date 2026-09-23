@@ -18,6 +18,7 @@ import { IntentEngine } from '../../../core/auth/intentEngine';
 import { AuthService } from '../services/authService';
 import { PhoneField } from './PhoneField';
 import { OtpStep } from './OtpStep';
+import { setAuthCookies, getPostAuthRedirectUrl } from '../../../core/auth/roleUtils';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -45,6 +46,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const { setUser, clearPendingIntent, closeGuestModal } = useUserStore();
+
+  // Pré-compilation / Prefetching optimiste des routes cibles pendant que l'utilisateur remplit le formulaire
+  React.useEffect(() => {
+    router.prefetch('/admin');
+    router.prefetch('/dashboard');
+  }, [router]);
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,18 +84,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       }
       const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
 
+      if (res.accessToken) {
+        setAuthCookies(res.accessToken, userProfile.role);
+      }
+
       setUser(userProfile);
       closeGuestModal();
 
-      // Consommer et rejouer l'intention interceptée par le Gatekeeper
+      // Consommer l'intention et calculer l'URL de redirection basée sur le rôle
       const pending = IntentEngine.consumePendingIntent();
-      if (pending?.redirectToUrl) {
-        router.push(pending.redirectToUrl);
-      } else if (onSuccess) {
-        onSuccess();
-      } else {
-        router.push('/');
-      }
+      const redirectUrl = getPostAuthRedirectUrl(userProfile, pending);
+      router.push(redirectUrl);
+      if (onSuccess) onSuccess();
     } catch (err: any) {
       setError(err.message || 'Le code d’accès est incorrect ou expiré.');
     } finally {
@@ -113,17 +120,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       }
       const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
 
+      if (res.accessToken) {
+        setAuthCookies(res.accessToken, userProfile.role);
+      }
+
       setUser(userProfile);
       closeGuestModal();
 
       const pending = IntentEngine.consumePendingIntent();
-      if (pending?.redirectToUrl) {
-        router.push(pending.redirectToUrl);
-      } else if (onSuccess) {
-        onSuccess();
-      } else {
-        router.push('/');
-      }
+      const redirectUrl = getPostAuthRedirectUrl(userProfile, pending);
+      router.push(redirectUrl);
+      if (onSuccess) onSuccess();
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la connexion. Vérifiez vos identifiants.');
     } finally {
@@ -136,7 +143,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      setUser({
+      const mockUser = {
         id: 'user_google_' + Date.now(),
         prenom: 'Alexandre',
         nom: 'Diallo',
@@ -144,18 +151,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
         telephone: '+221770000000',
         phoneVerified: true,
-        role: 'LOCATAIRE',
-        statutKyc: 'VERIFIE',
-      });
+        role: 'LOCATAIRE' as const,
+        statutKyc: 'VERIFIE' as const,
+      };
+      setAuthCookies('mock_google_token', mockUser.role);
+      setUser(mockUser);
       closeGuestModal();
       const pending = IntentEngine.consumePendingIntent();
-      if (pending?.redirectToUrl) {
-        router.push(pending.redirectToUrl);
-      } else if (onSuccess) {
-        onSuccess();
-      } else {
-        router.push('/');
-      }
+      const redirectUrl = getPostAuthRedirectUrl(mockUser, pending);
+      router.push(redirectUrl);
+      if (onSuccess) onSuccess();
     }, 1000);
   };
 

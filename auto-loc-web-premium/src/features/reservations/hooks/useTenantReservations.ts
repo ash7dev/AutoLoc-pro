@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import useSWR from 'swr';
 import { fetchApi } from '@/lib/config';
 import { TenantReservation } from '../components/TenantReservationCard';
 import { ReservationStatusFilter } from '../components/TenantReservationStatusPills';
@@ -12,46 +12,41 @@ interface TenantReservationsResponse {
   limit: number;
 }
 
+const TENANT_RESERVATIONS_SWR_OPTIONS = {
+  dedupingInterval: 3 * 60 * 1000, // 3 minutes de rétention cache (empêche les re-fetchs lors de la navigation inter-onglets)
+  revalidateIfStale: false, // Ne pas re-fetcher automatiquement au remontage du composant si la donnée est fraîche
+  revalidateOnFocus: true, // Capturer les mises à jour si l'utilisateur revient sur l'onglet
+  focusThrottleInterval: 30 * 1000, // Throttlé à 30 secondes max au focus
+  keepPreviousData: true, // Évite tout clignotement lors du changement de filtre de statut
+};
+
 export function useTenantReservations(statusFilter: ReservationStatusFilter = 'ALL') {
-  const [reservations, setReservations] = useState<TenantReservation[]>([]);
-  const [total, setTotal] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isError, setIsError] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const queryParam = statusFilter !== 'ALL' ? `?statut=${encodeURIComponent(statusFilter)}` : '';
+  const key = `tenant-reservations-${statusFilter}`;
 
-  const loadReservations = useCallback(async () => {
-    setIsLoading(true);
-    setIsError(false);
-    setErrorMessage(null);
+  const {
+    data,
+    error,
+    isLoading,
+    isValidating,
+    mutate,
+  } = useSWR<TenantReservationsResponse>(
+    key,
+    () => fetchApi<TenantReservationsResponse>(`/reservations/tenant${queryParam}`),
+    TENANT_RESERVATIONS_SWR_OPTIONS
+  );
 
-    try {
-      // Construction du paramètre de requête statut
-      const queryParam = statusFilter !== 'ALL' ? `?statut=${encodeURIComponent(statusFilter)}` : '';
-      const response = await fetchApi<TenantReservationsResponse>(`/reservations/tenant${queryParam}`);
-
-      setReservations(response.data || []);
-      setTotal(response.total || 0);
-    } catch (err: any) {
-      console.warn('Erreur chargement réservations tenant:', err);
-      setIsError(true);
-      setErrorMessage(err?.message || 'Impossible de charger vos réservations.');
-      setReservations([]);
-      setTotal(0);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [statusFilter]);
-
-  useEffect(() => {
-    loadReservations();
-  }, [loadReservations]);
+  const reservations = data?.data || [];
+  const total = data?.total ?? reservations.length;
 
   return {
     reservations,
     total,
-    isLoading,
-    isError,
-    errorMessage,
-    refetch: loadReservations,
+    isLoading: isLoading && reservations.length === 0,
+    isValidating,
+    isError: !!error,
+    errorMessage: error?.message || (error ? 'Impossible de charger vos réservations.' : null),
+    refetch: mutate,
   };
 }
+

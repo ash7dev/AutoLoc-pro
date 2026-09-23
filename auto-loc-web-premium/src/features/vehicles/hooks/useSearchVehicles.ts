@@ -1,5 +1,6 @@
 "use client";
 
+import useSWR from 'swr';
 import { useState, useEffect, useCallback, useTransition } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Vehicle, VehicleType, TransmissionType, FuelType, VehicleSortOption } from '../types/vehicle.types';
@@ -68,13 +69,9 @@ export function useSearchVehicles() {
   }, [searchParams]);
 
   const [filters, setFiltersState] = useState<VehicleFilterState>(getFiltersFromURL);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [total, setTotal] = useState<number>(0);
+  const [extraVehicles, setExtraVehicles] = useState<Vehicle[]>([]);
   const [page, setPage] = useState<number>(1);
-  const [hasMore, setHasMore] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
 
   const LIMIT = 9;
 
@@ -82,6 +79,8 @@ export function useSearchVehicles() {
   useEffect(() => {
     const urlFilters = getFiltersFromURL();
     setFiltersState(urlFilters);
+    setExtraVehicles([]);
+    setPage(1);
   }, [searchParams, getFiltersFromURL]);
 
   // Mettre à jour l'URL avec les filtres actifs
@@ -130,7 +129,6 @@ export function useSearchVehicles() {
     if (currentFilters.placesMin != null) apiParams.placesMin = currentFilters.placesMin;
     if (currentFilters.noteMin != null) apiParams.noteMin = currentFilters.noteMin;
 
-    // Mapper le tri vers les enums acceptés par le backend
     if (currentFilters.sortBy === 'price-asc') {
       apiParams.sortBy = 'prixParJour';
       apiParams.sortOrder = 'asc';
@@ -150,37 +148,28 @@ export function useSearchVehicles() {
     return apiParams;
   }, []);
 
-  // Fetching des données (page 1 ou reset)
-  const fetchInitialVehicles = useCallback(async (currentFilters: VehicleFilterState) => {
-    setIsLoading(true);
-    setError(null);
-    setPage(1);
+  const swrKey = ['search-vehicles', buildApiParams(filters, 1)];
 
-    try {
-      const apiParams = buildApiParams(currentFilters, 1);
-      const res = await vehicleService.searchVehicles(apiParams);
-
-      const list: Vehicle[] = Array.isArray(res) ? res : (res?.data || []);
-      const totalCount: number = Array.isArray(res) ? res.length : (res?.total ?? list.length);
-
-      setVehicles(list);
-      setTotal(totalCount);
-      setHasMore(list.length < totalCount);
-    } catch (err: any) {
-      console.error('[useSearchVehicles] Error fetching vehicles:', err);
-      setError(err.message || 'Impossible de charger les véhicules');
-      setVehicles([]);
-      setTotal(0);
-      setHasMore(false);
-    } finally {
-      setIsLoading(false);
+  const { data: rawResponse, error, isLoading, isValidating, mutate } = useSWR(
+    swrKey,
+    () => vehicleService.searchVehicles(buildApiParams(filters, 1)),
+    {
+      keepPreviousData: true,
+      revalidateOnFocus: false,
+      revalidateIfStale: false,
+      dedupingInterval: 60_000,
     }
-  }, [buildApiParams]);
+  );
 
-  // Déclencher le premier chargement à chaque changement de filtres
-  useEffect(() => {
-    fetchInitialVehicles(filters);
-  }, [filters, fetchInitialVehicles]);
+  const initialList: Vehicle[] = Array.isArray(rawResponse)
+    ? rawResponse
+    : (rawResponse?.data || []);
+  const totalCount: number = Array.isArray(rawResponse)
+    ? rawResponse.length
+    : (rawResponse?.total ?? initialList.length);
+
+  const vehicles = page === 1 ? initialList : [...initialList, ...extraVehicles];
+  const hasMore = vehicles.length < totalCount;
 
   // Load More pour la pagination infinie
   const loadMore = useCallback(async () => {
@@ -195,13 +184,10 @@ export function useSearchVehicles() {
 
       const newItems: Vehicle[] = Array.isArray(res) ? res : (res?.data || []);
       
-      setVehicles(prev => {
-        const existingIds = new Set(prev.map(v => v.id));
+      setExtraVehicles(prev => {
+        const existingIds = new Set([...initialList, ...prev].map(v => v.id));
         const filteredNewItems = newItems.filter(v => !existingIds.has(v.id));
-        const combined = [...prev, ...filteredNewItems];
-        const totalCount = Array.isArray(res) ? res.length : (res?.total ?? combined.length);
-        setHasMore(combined.length < totalCount);
-        return combined;
+        return [...prev, ...filteredNewItems];
       });
 
       setPage(nextPage);
@@ -210,7 +196,7 @@ export function useSearchVehicles() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [buildApiParams, filters, hasMore, isLoading, isLoadingMore, page]);
+  }, [buildApiParams, filters, hasMore, initialList, isLoading, isLoadingMore, page]);
 
   // Helpers pour modifier un ou plusieurs filtres
   const setFilter = useCallback(<K extends keyof VehicleFilterState>(key: K, value: VehicleFilterState[K]) => {
@@ -219,6 +205,8 @@ export function useSearchVehicles() {
       syncURLWithFilters(next);
       return next;
     });
+    setExtraVehicles([]);
+    setPage(1);
   }, [syncURLWithFilters]);
 
   const updateFilters = useCallback((partial: Partial<VehicleFilterState>) => {
@@ -227,11 +215,15 @@ export function useSearchVehicles() {
       syncURLWithFilters(next);
       return next;
     });
+    setExtraVehicles([]);
+    setPage(1);
   }, [syncURLWithFilters]);
 
   const resetFilters = useCallback(() => {
     setFiltersState(DEFAULT_FILTERS);
     syncURLWithFilters(DEFAULT_FILTERS);
+    setExtraVehicles([]);
+    setPage(1);
   }, [syncURLWithFilters]);
 
   const activeFiltersCount = Object.entries(filters).filter(([key, val]) => {
@@ -242,11 +234,12 @@ export function useSearchVehicles() {
 
   return {
     vehicles,
-    total,
-    isLoading,
+    total: totalCount,
+    isLoading: isLoading && !rawResponse, // Ne passe à true que lors du TOUT PREMIER chargement sans cache
+    isValidating,
     isLoadingMore,
     isPending,
-    error,
+    error: error ? (error.message || 'Impossible de charger les véhicules') : null,
     hasMore,
     loadMore,
     filters,
@@ -254,6 +247,7 @@ export function useSearchVehicles() {
     updateFilters,
     resetFilters,
     activeFiltersCount,
-    refetch: () => fetchInitialVehicles(filters),
+    refetch: () => mutate(),
   };
 }
+

@@ -15,7 +15,7 @@ import {
 
 export const Footer: React.FC = () => {
   const pathname = usePathname();
-  if (pathname?.startsWith('/dashboard')) {
+  if (pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin')) {
     return null;
   }
   return (

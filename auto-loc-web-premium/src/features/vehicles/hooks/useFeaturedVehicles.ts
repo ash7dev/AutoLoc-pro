@@ -23,14 +23,23 @@ export function useFeaturedVehicles(limit = 4) {
     fetcher,
     {
       revalidateOnFocus: false,
-      revalidateIfStale: true,
-      dedupingInterval: 30000,
+      revalidateIfStale: false,
+      keepPreviousData: true,
+      dedupingInterval: 300_000,
       errorRetryCount: 3,
     }
   );
 
+  const rawVehicles: Vehicle[] = Array.isArray(data)
+    ? data
+    : data && typeof data === 'object' && Array.isArray((data as any).data)
+    ? (data as any).data
+    : data && typeof data === 'object' && Array.isArray((data as any).vehicles)
+    ? (data as any).vehicles
+    : [];
+
   return {
-    vehicles: Array.isArray(data) ? data : [],
+    vehicles: rawVehicles,
     isLoading,
     isError: !!error,
     error,
