@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import useSWR from 'swr';
+import useSWRInfinite from 'swr/infinite';
 import { apiClient } from '@/src/core/api/apiClient';
 
 export interface TenantItem {
@@ -105,7 +106,6 @@ export function useAdminTenants() {
   const [status, setStatus] = useState<string>('ALL');
   const [search, setSearch] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
-  const [page, setPage] = useState<number>(1);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const [isMutating, setIsMutating] = useState<boolean>(false);
 
@@ -113,33 +113,59 @@ export function useAdminTenants() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
-      setPage(1);
     }, 300);
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Query string for tenants queue
-  const queryParams = new URLSearchParams();
-  if (status !== 'ALL') queryParams.set('status', status);
-  if (debouncedSearch.trim()) queryParams.set('search', debouncedSearch.trim());
-  queryParams.set('page', String(page));
-  queryParams.set('limit', '20');
+  // SWRInfinite getKey callback
+  const getKey = (pageIndex: number, previousPageData: any) => {
+    if (previousPageData && (!previousPageData.data || previousPageData.data.length === 0)) {
+      return null;
+    }
+    const queryParams = new URLSearchParams();
+    if (status !== 'ALL') queryParams.set('status', status);
+    if (debouncedSearch.trim()) queryParams.set('search', debouncedSearch.trim());
+    queryParams.set('page', String(pageIndex + 1));
+    queryParams.set('limit', '20');
 
-  const swrKey = `/admin/users/tenants-queue?${queryParams.toString()}`;
+    return `/admin/users/tenants-queue?${queryParams.toString()}`;
+  };
 
-  const { data, error, mutate, isValidating } = useSWR(swrKey, async (url: string) => {
-    return await apiClient.get<any>(url);
-  }, {
-    revalidateOnFocus: true,
-    refreshInterval: 30000,
-  });
+  const { data, error, size, setSize, mutate, isValidating } = useSWRInfinite(
+    getKey,
+    async (url: string) => apiClient.get<any>(url),
+    {
+      revalidateOnFocus: true,
+      refreshInterval: 30000,
+    }
+  );
+
+  // Flatten items across all loaded pages
+  const itemsList: TenantItem[] = data ? data.flatMap((pageData) => pageData.data || []) : [];
+
+  const firstPageMeta = data?.[0]?.meta;
+  const totalItems = firstPageMeta?.total ?? 0;
+  const totalPages = firstPageMeta?.totalPages ?? 1;
+
+  const isLoadingInitialData = !data && !error;
+  const isLoadingMore =
+    isLoadingInitialData || (size > 0 && data && typeof data[size - 1] === 'undefined');
+  const isReachingEnd =
+    !data ||
+    data[data.length - 1]?.data?.length === 0 ||
+    data[data.length - 1]?.data?.length < 20 ||
+    size >= totalPages;
+
+  const loadMore = useCallback(() => {
+    if (!isReachingEnd && !isLoadingMore && !isValidating) {
+      setSize((prev) => prev + 1);
+    }
+  }, [isReachingEnd, isLoadingMore, isValidating, setSize]);
 
   // Query for Tenant 360 Health if selected
   const { data: healthData, isLoading: isHealth360Loading, mutate: mutateHealth } = useSWR(
     selectedTenantId ? `/admin/users/tenants/${selectedTenantId}/health-360` : null,
-    async (url: string) => {
-      return await apiClient.get<TenantHealth360>(url);
-    }
+    async (url: string) => apiClient.get<TenantHealth360>(url)
   );
 
   const refresh = useCallback(() => {
@@ -200,7 +226,6 @@ export function useAdminTenants() {
     }
   };
 
-  const itemsList = (data?.data ?? []) as TenantItem[];
   const selectedTenantItem = itemsList.find((t) => t.id === selectedTenantId) || null;
 
   return {
@@ -208,19 +233,25 @@ export function useAdminTenants() {
     setStatus,
     search,
     setSearch,
-    page,
-    setPage,
     items: itemsList,
-    meta: data?.meta,
-    counts: (data?.counts ?? data?.meta?.counts ?? { total: 0, verified: 0, pendingPermis: 0, riskWarning: 0, banned: 0 }) as TenantQueueCounts,
+    totalItems,
+    counts: (data?.[0]?.counts ?? data?.[0]?.meta?.counts ?? {
+      total: 0,
+      verified: 0,
+      pendingPermis: 0,
+      riskWarning: 0,
+      banned: 0,
+    }) as TenantQueueCounts,
     selectedTenantId,
     setSelectedTenantId,
     selectedTenantItem,
     health360: healthData,
-    isLoading: !data && !error,
-    isHealth360Loading,
+    isLoading: isLoadingInitialData,
+    isLoadingMore,
+    isReachingEnd,
     isRefreshing: isValidating,
     isMutating,
+    loadMore,
     refresh,
     approvePermis,
     rejectPermis,

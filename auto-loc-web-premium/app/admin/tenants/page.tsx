@@ -13,13 +13,16 @@ export default function AdminTenantsPage() {
     search,
     setSearch,
     items,
+    totalItems,
     counts,
     selectedTenantId,
     setSelectedTenantId,
     selectedTenantItem,
     health360,
     isLoading,
-    isHealth360Loading,
+    isLoadingMore,
+    isReachingEnd,
+    loadMore,
     isRefreshing,
     isMutating,
     refresh,
@@ -42,10 +45,14 @@ export default function AdminTenantsPage() {
         onRefresh={refresh}
       />
 
-      {/* Main Table of Tenants Queue */}
+      {/* Main Table of Tenants Queue with Infinite Scroll */}
       <AdminTenantTable
         items={items}
         isLoading={isLoading}
+        isLoadingMore={isLoadingMore}
+        isReachingEnd={isReachingEnd}
+        totalItems={totalItems}
+        onLoadMore={loadMore}
         onSelectTenant={(tenant) => setSelectedTenantId(tenant.id)}
       />
 

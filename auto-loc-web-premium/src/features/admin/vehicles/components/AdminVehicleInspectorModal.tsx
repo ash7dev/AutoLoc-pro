@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Info,
   ZoomIn,
+  Trash2,
 } from 'lucide-react';
 import type { AdminVehicleQueueItem } from '../../../../core/api/adminAnalyticsApi';
 
@@ -32,6 +33,8 @@ interface AdminVehicleInspectorModalProps {
   onValidate: (vehicleId: string) => Promise<void>;
   onSuspend: (vehicleId: string, raison: string) => Promise<void>;
   onFeature?: (vehicleId: string, active: boolean) => Promise<void>;
+  onDeletePhoto?: (vehicleId: string, photoId: string) => Promise<void>;
+  onSetMainPhoto?: (vehicleId: string, photoId: string) => Promise<void>;
   isMutating?: boolean;
 }
 
@@ -57,6 +60,8 @@ export const AdminVehicleInspectorModal: React.FC<AdminVehicleInspectorModalProp
   onValidate,
   onSuspend,
   onFeature,
+  onDeletePhoto,
+  onSetMainPhoto,
   isMutating,
 }) => {
   const [activeTab, setActiveTab] = useState<'PHOTOS' | 'DOCUMENTS' | 'SPECS'>('PHOTOS');
@@ -68,11 +73,12 @@ export const AdminVehicleInspectorModal: React.FC<AdminVehicleInspectorModalProp
   const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
   const [lightboxIndex, setLightboxIndex] = useState<number>(0);
 
-  // Verification Checklist
+  // 5-Point Verification Checklist
   const [checkedPlaque, setCheckedPlaque] = useState<boolean>(false);
   const [checkedCarteGrise, setCheckedCarteGrise] = useState<boolean>(false);
   const [checkedAssurance, setCheckedAssurance] = useState<boolean>(false);
   const [checkedPhotos, setCheckedPhotos] = useState<boolean>(false);
+  const [checkedTarif, setCheckedTarif] = useState<boolean>(false);
 
   // Rejection Workflow
   const [showRejectForm, setShowRejectForm] = useState<boolean>(false);
@@ -90,6 +96,7 @@ export const AdminVehicleInspectorModal: React.FC<AdminVehicleInspectorModalProp
       setCheckedCarteGrise(false);
       setCheckedAssurance(false);
       setCheckedPhotos(false);
+      setCheckedTarif(false);
       setLightboxOpen(false);
     }
   }, [vehicle]);
@@ -121,8 +128,8 @@ export const AdminVehicleInspectorModal: React.FC<AdminVehicleInspectorModalProp
   if (!isOpen || !vehicle) return null;
 
   const currentPhoto = photos[selectedPhotoIndex] || photos[0];
-  const checklistDone = [checkedPlaque, checkedCarteGrise, checkedAssurance, checkedPhotos].filter(Boolean).length;
-  const allChecked = checklistDone === 4;
+  const checklistDone = [checkedPlaque, checkedCarteGrise, checkedAssurance, checkedPhotos, checkedTarif].filter(Boolean).length;
+  const allChecked = checklistDone === 5;
 
   const handleRotate = () => {
     setDocRotation((prev) => (prev + 90) % 360);
@@ -335,6 +342,47 @@ export const AdminVehicleInspectorModal: React.FC<AdminVehicleInspectorModalProp
                     </>
                   )}
                 </div>
+
+                {/* Photo Moderation Admin Action Bar */}
+                {currentPhoto && (onDeletePhoto || onSetMainPhoto) && (
+                  <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      {onSetMainPhoto && !currentPhoto.estPrincipale && (
+                        <button
+                          type="button"
+                          disabled={isMutating}
+                          onClick={() => onSetMainPhoto(vehicle.id, currentPhoto.id)}
+                          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#0A3D2E] text-[#F1DFB6] hover:brightness-125 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        >
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                          <span>Définir comme photo principale</span>
+                        </button>
+                      )}
+                      {currentPhoto.estPrincipale && (
+                        <span className="px-3 py-1.5 rounded-xl text-xs font-medium text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Photo de couverture principale</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {onDeletePhoto && (
+                      <button
+                        type="button"
+                        disabled={isMutating}
+                        onClick={() => {
+                          if (confirm('Êtes-vous sûr de vouloir supprimer cette photo non conforme ?')) {
+                            onDeletePhoto(vehicle.id, currentPhoto.id);
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-xl text-xs font-semibold text-red-700 bg-red-50 dark:bg-red-950/60 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-900 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                        <span>Supprimer photo non conforme</span>
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {/* Thumbnail Strip */}
                 {photos.length > 0 && (
@@ -571,20 +619,20 @@ export const AdminVehicleInspectorModal: React.FC<AdminVehicleInspectorModalProp
               )}
             </div>
 
-            {/* 4-Point Verification Checklist */}
+            {/* 5-Point Senior Verification Checklist */}
             <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
                   Checklist de Modération
                 </h4>
                 <span
-                  className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full tabular-nums"
                   style={{
                     color: allChecked ? '#0a7d4f' : GOLD,
                     background: allChecked ? 'rgba(16,185,129,0.12)' : 'rgba(178,124,45,0.12)',
                   }}
                 >
-                  {checklistDone}/4
+                  {checklistDone}/5
                 </span>
               </div>
 
@@ -596,7 +644,7 @@ export const AdminVehicleInspectorModal: React.FC<AdminVehicleInspectorModalProp
                     onChange={(e) => setCheckedPlaque(e.target.checked)}
                     className="mt-0.5 rounded accent-[#0A3D2E] focus:ring-[#0A3D2E]"
                   />
-                  <span className="text-slate-700 dark:text-slate-300">Plaque d'immatriculation nette & valide ({vehicle.immatriculation})</span>
+                  <span className="text-slate-700 dark:text-slate-300">Plaque d'immatriculation nette & valide ({vehicle.immatriculation || 'Plaque N/A'})</span>
                 </label>
 
                 <label className="flex items-start gap-2.5 cursor-pointer p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
@@ -626,7 +674,19 @@ export const AdminVehicleInspectorModal: React.FC<AdminVehicleInspectorModalProp
                     onChange={(e) => setCheckedPhotos(e.target.checked)}
                     className="mt-0.5 rounded accent-[#0A3D2E] focus:ring-[#0A3D2E]"
                   />
-                  <span className="text-slate-700 dark:text-slate-300">Photos HD de qualité (sans filigrane / pub)</span>
+                  <span className="text-slate-700 dark:text-slate-300">Photos HD de qualité (sans filigrane / pub / numéro)</span>
+                </label>
+
+                <label className="flex items-start gap-2.5 cursor-pointer p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={checkedTarif}
+                    onChange={(e) => setCheckedTarif(e.target.checked)}
+                    className="mt-0.5 rounded accent-[#0A3D2E] focus:ring-[#0A3D2E]"
+                  />
+                  <span className="text-slate-700 dark:text-slate-300">
+                    Cohérence du tarif journalier ({vehicle.prixParJour?.toLocaleString('fr-FR')} FCFA/j • {vehicle.type || 'Standard'})
+                  </span>
                 </label>
               </div>
             </div>

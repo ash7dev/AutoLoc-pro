@@ -371,6 +371,14 @@ export const adminAnalyticsApi = {
     return apiClient.patch<{ id: string; isFeatured: boolean }>(`/admin/vehicles/${vehicleId}/feature`, { active, featuredUntil });
   },
 
+  deleteVehiclePhoto: (vehicleId: string, photoId: string): Promise<{ message: string }> => {
+    return apiClient.delete<{ message: string }>(`/admin/vehicles/${vehicleId}/photos/${photoId}`);
+  },
+
+  setMainVehiclePhoto: (vehicleId: string, photoId: string): Promise<{ id: string; estPrincipale: boolean }> => {
+    return apiClient.patch<{ id: string; estPrincipale: boolean }>(`/admin/vehicles/${vehicleId}/photos/${photoId}/main`);
+  },
+
   getDisputesQueue: (params?: { statut?: string; search?: string; page?: number; limit?: number }): Promise<AdminDisputeQueueResponse> => {
     return apiClient.get<AdminDisputeQueueResponse>('/admin/disputes/queue', { params });
   },

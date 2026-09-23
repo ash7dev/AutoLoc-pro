@@ -27,6 +27,8 @@ export default function AdminVehiclesPage() {
     validateVehicle,
     suspendVehicle,
     featureVehicle,
+    deletePhoto,
+    setMainPhoto,
   } = useAdminVehicleModeration();
 
   return (
@@ -61,6 +63,8 @@ export default function AdminVehiclesPage() {
         onValidate={validateVehicle}
         onSuspend={suspendVehicle}
         onFeature={featureVehicle}
+        onDeletePhoto={deletePhoto}
+        onSetMainPhoto={setMainPhoto}
         isMutating={isMutating}
       />
     </div>

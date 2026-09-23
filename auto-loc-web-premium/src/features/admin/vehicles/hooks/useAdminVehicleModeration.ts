@@ -99,6 +99,50 @@ export function useAdminVehicleModeration() {
     [mutate]
   );
 
+  const deletePhoto = useCallback(
+    async (vehicleId: string, photoId: string) => {
+      setIsMutating(true);
+      try {
+        await adminAnalyticsApi.deleteVehiclePhoto(vehicleId, photoId);
+        await mutate();
+        if (selectedVehicle && selectedVehicle.id === vehicleId) {
+          setSelectedVehicle((prev) =>
+            prev ? { ...prev, photos: prev.photos.filter((p) => p.id !== photoId) } : null
+          );
+        }
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [mutate, selectedVehicle]
+  );
+
+  const setMainPhoto = useCallback(
+    async (vehicleId: string, photoId: string) => {
+      setIsMutating(true);
+      try {
+        await adminAnalyticsApi.setMainVehiclePhoto(vehicleId, photoId);
+        await mutate();
+        if (selectedVehicle && selectedVehicle.id === vehicleId) {
+          setSelectedVehicle((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  photos: prev.photos.map((p) => ({
+                    ...p,
+                    estPrincipale: p.id === photoId,
+                  })),
+                }
+              : null
+          );
+        }
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [mutate, selectedVehicle]
+  );
+
   return {
     statut,
     setStatut: (newStatut: string) => {
@@ -130,5 +174,7 @@ export function useAdminVehicleModeration() {
     validateVehicle,
     suspendVehicle,
     featureVehicle,
+    deletePhoto,
+    setMainPhoto,
   };
 }
