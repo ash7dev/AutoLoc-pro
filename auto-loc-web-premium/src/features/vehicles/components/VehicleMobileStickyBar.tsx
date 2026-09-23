@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Calendar, Zap, ShieldCheck, ArrowRight } from 'lucide-react';
 import { formatCurrency, getTenantPricePerDay } from '@/lib/utils';
 import { TarifProgressif } from '../types/vehicle.types';
@@ -39,6 +39,11 @@ export function VehicleMobileStickyBar({
   onOpenDatesModal,
   onBookNow,
 }: VehicleMobileStickyBarProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   // Calcul du nombre de jours
   const daysCount = useMemo(() => {
     if (!startDate || !endDate) return 1;
@@ -66,17 +71,15 @@ export function VehicleMobileStickyBar({
   const hasSelectedDates = Boolean(startDate && endDate);
 
   const handleCtaClick = () => {
-    if (hasSelectedDates) {
-      onBookNow({
-        startDate,
-        endDate,
-        totalAmount,
-        daysCount,
-      });
-    } else {
-      onOpenDatesModal();
-    }
+    onBookNow({
+      startDate,
+      endDate,
+      totalAmount,
+      daysCount,
+    });
   };
+
+  if (!isMounted) return null;
 
   return (
     <div className="lg:hidden fixed bottom-3 inset-x-3 z-40 max-w-lg mx-auto">
@@ -122,18 +125,9 @@ export function VehicleMobileStickyBar({
           onClick={handleCtaClick}
           className="shrink-0 py-3 px-5 sm:px-6 rounded-full bg-[#0A3D2E] hover:bg-[#0F4F3B] active:scale-[0.96] text-[#F1DFB6] font-bold text-xs tracking-wider shadow-md shadow-[#0A3D2E]/20 flex items-center gap-2 cursor-pointer transition-all duration-200 group"
         >
-          {hasSelectedDates ? (
-            <>
-              <Zap className="w-3.5 h-3.5 text-[#F1DFB6] fill-[#F1DFB6]" />
-              <span>Réserver</span>
-              <ArrowRight className="w-3.5 h-3.5 text-[#F1DFB6]/80 group-hover:translate-x-0.5 transition-transform" />
-            </>
-          ) : (
-            <>
-              <Calendar className="w-3.5 h-3.5 text-[#F1DFB6]" />
-              <span>Réserver</span>
-            </>
-          )}
+          <Zap className="w-3.5 h-3.5 text-[#F1DFB6] fill-[#F1DFB6]" />
+          <span>Réserver</span>
+          <ArrowRight className="w-3.5 h-3.5 text-[#F1DFB6]/80 group-hover:translate-x-0.5 transition-transform" />
         </button>
       </div>
     </div>

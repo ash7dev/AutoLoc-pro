@@ -217,7 +217,7 @@ export const Footer: React.FC = () => {
 
           {/* Bottom Divider & Copyright */}
           <div className="border-t border-slate-200/80 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 font-medium text-center sm:text-left">
-            <p>© {new Date().getFullYear()} AutoLoc. Tous droits réservés.</p>
+            <p suppressHydrationWarning>© {new Date().getFullYear()} AutoLoc. Tous droits réservés.</p>
             <p className="flex items-center gap-1">
               <span>Conçu pour la mobilité de prestige au Sénégal</span>
               <span className="text-emerald-600">🇸🇳</span>
