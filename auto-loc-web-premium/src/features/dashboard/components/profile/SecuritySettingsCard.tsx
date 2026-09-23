@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { KeyRound, ShieldAlert, Trash2, Check, AlertCircle, Loader2, LogOut } from 'lucide-react';
+import { KeyRound, ShieldAlert, Trash2, Check, AlertCircle, Loader2, LogOut, Mail } from 'lucide-react';
 import { userApi } from '../../../../core/api/userApi';
 import type { UserProfileData } from '../../../../core/api/userApi';
 import { useUserStore } from '../../../../core/store/useUserStore';
@@ -28,6 +28,10 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
 
+  const [newEmail, setNewEmail] = useState(profile.email || '');
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
+
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
@@ -37,6 +41,38 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
       setErrorMsg(err?.message || 'Erreur lors de la déconnexion.');
     } finally {
       setIsLoggingOut(false);
+    }
+  };
+
+  const handleChangeEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    const emailTrimmed = newEmail.trim().toLowerCase();
+    if (!emailTrimmed) {
+      setErrorMsg('Veuillez saisir une adresse e-mail valide.');
+      return;
+    }
+
+    if (emailTrimmed === (profile.email || '').toLowerCase()) {
+      setErrorMsg("L'adresse e-mail saisie est identique à l'adresse actuelle.");
+      return;
+    }
+
+    try {
+      setIsSubmittingEmail(true);
+      await userApi.updateSecurity({
+        email: emailTrimmed,
+      });
+      setSuccessMsg('Votre adresse e-mail a été mise à jour avec succès.');
+      setShowEmailForm(false);
+    } catch (err: any) {
+      setErrorMsg(
+        err?.response?.data?.message || err?.message || "Erreur lors de la mise à jour de l'adresse e-mail."
+      );
+    } finally {
+      setIsSubmittingEmail(false);
     }
   };
 
@@ -53,6 +89,10 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
       setErrorMsg('Le nouveau mot de passe doit contenir au moins 8 caractères.');
       return;
     }
+    if (!/^(?=.*[A-Z])(?=.*\d).+$/.test(newPassword)) {
+      setErrorMsg('Le nouveau mot de passe doit contenir au moins une majuscule et un chiffre.');
+      return;
+    }
     if (newPassword !== confirmPassword) {
       setErrorMsg('Les mots de passe ne correspondent pas.');
       return;
@@ -61,8 +101,7 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
     try {
       setIsSubmitting(true);
       await userApi.updateSecurity({
-        currentPassword,
-        newPassword,
+        password: newPassword,
       });
       setSuccessMsg('Votre mot de passe a été mis à jour avec succès.');
       setCurrentPassword('');
@@ -83,7 +122,7 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
       <div>
         <h3 className="font-fraunces text-xl leading-tight text-[#041912]">Sécurité du compte</h3>
         <p className="mt-1 text-[13px] text-slate-500">
-          Mot de passe, session et paramètres de confidentialité
+          Identifiants de connexion, mot de passe et sécurité
         </p>
       </div>
 
@@ -100,6 +139,69 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
           {errorMsg}
         </div>
       )}
+
+      {/* Adresse e-mail */}
+      <div className="mt-6 border-t border-slate-100 pt-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500">
+              <Mail className="h-4 w-4" />
+            </div>
+            <div>
+              <h4 className="text-[14px] font-semibold text-[#041912]">Adresse e-mail de connexion</h4>
+              <p className="text-[12px] text-slate-500">{profile.email || 'Non renseignée'}</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowEmailForm(!showEmailForm);
+              setShowPasswordForm(false);
+              setNewEmail(profile.email || '');
+            }}
+            className="shrink-0 rounded-xl border border-slate-200 px-4 py-2 text-[12.5px] font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 sm:w-auto"
+          >
+            {showEmailForm ? 'Masquer le formulaire' : "Modifier l'e-mail"}
+          </button>
+        </div>
+
+        {showEmailForm && (
+          <form onSubmit={handleChangeEmail} className="mt-4 space-y-4 border-t border-slate-100 pt-4">
+            <div className="max-w-md">
+              <label className="mb-1 block text-[11.5px] font-medium text-slate-500">
+                Nouvelle adresse e-mail
+              </label>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="exemple@domaine.com"
+                required
+                className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowEmailForm(false)}
+                className="rounded-xl px-4 py-2 text-[12.5px] font-medium text-slate-500 hover:text-slate-700"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmittingEmail}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#041912] px-5 py-2 text-[12.5px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E] disabled:opacity-50"
+              >
+                {isSubmittingEmail && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                Enregistrer l'e-mail
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
 
       {/* Mot de passe */}
       <div className="mt-6 border-t border-slate-100 pt-5">
@@ -147,7 +249,7 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Min. 8 caractères"
+                  placeholder="Min. 8 car. (1 Maj, 1 Chiffre)"
                   className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10"
                 />
               </div>

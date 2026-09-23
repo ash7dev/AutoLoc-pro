@@ -82,7 +82,7 @@ export const userApi = {
   /**
    * PATCH /users/me/security — Met à jour le mot de passe / e-mail
    */
-  updateSecurity: (body: { email?: string; currentPassword?: string; newPassword?: string }): Promise<{ message: string }> => {
+  updateSecurity: (body: { email?: string; password?: string }): Promise<{ message: string }> => {
     return apiClient.patch<{ message: string }>('/users/me/security', body);
   },
 

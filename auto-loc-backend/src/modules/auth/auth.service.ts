@@ -864,12 +864,25 @@ export class AuthService {
           password: dto.password,
         });
 
-        if (!error && data?.session?.access_token) {
+        if (!error && data?.session?.access_token && data?.user) {
+          // Vérification de sécurité : s'assurer que l'email de connexion correspond bien à l'email courant du compte métier
+          const currentUtilisateur = await this.prisma.utilisateur.findFirst({
+            where: { userId: data.user.id },
+            select: { email: true },
+          });
+
+          if (currentUtilisateur && currentUtilisateur.email.toLowerCase() !== normalizedEmail) {
+            throw new UnauthorizedException(
+              "Cette adresse e-mail n'est plus associée à ce compte. Veuillez utiliser votre nouvelle adresse e-mail."
+            );
+          }
+
           console.log(`[Auth] Supabase email/password auth success for ${normalizedEmail}`);
           return this.loginWithSupabase(data.session.access_token);
         }
       }
     } catch (err) {
+      if (err instanceof UnauthorizedException) throw err;
       console.warn('[loginWithEmailPassword] Supabase login error:', err);
     }
 

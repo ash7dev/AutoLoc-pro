@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Car, CalendarCheck, Wallet, User } from 'lucide-react';
+import { LayoutDashboard, Car, CalendarCheck, Wallet } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface OwnerMobileBottomNavProps {
@@ -27,7 +27,6 @@ export const OwnerMobileBottomNav: React.FC<OwnerMobileBottomNavProps> = ({
     },
     { label: 'Véhicules', href: '/dashboard/vehicles', icon: Car, badge: 0 },
     { label: 'Revenus', href: '/dashboard/wallet', icon: Wallet, badge: 0 },
-    { label: 'Profil', href: '/dashboard/profile', icon: User, badge: 0 },
   ];
 
   return (

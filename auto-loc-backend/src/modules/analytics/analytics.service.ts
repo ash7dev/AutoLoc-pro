@@ -759,6 +759,7 @@ export class AnalyticsService {
     }
 
     // Règle 6 : Conseils de calendrier et disponibilité (Déclenché uniquement si aucune modification depuis > 14 jours)
+    const now = new Date();
     const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
     const hasRecentCalendarActivity = vehicules.some((v) => {
       const recentIndispo = v.indisponibilites?.some((i) => new Date(i.creeLe) >= fourteenDaysAgo);

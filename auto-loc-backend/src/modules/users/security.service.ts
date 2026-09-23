@@ -32,7 +32,7 @@ export class SecurityService {
     // Supabase Auth est la source de vérité des identifiants : aucune écriture
     // locale n'est faite si cette opération échoue.
     const { error } = await this.supabase.auth.admin.updateUserById(userId, {
-      ...(email && email !== user.email.toLowerCase() ? { email, email_confirm: true } : {}),
+      ...(email && email !== user.email.toLowerCase() ? { email, email_confirm: true, user_metadata: { email } } : {}),
       ...(dto.password ? { password: dto.password } : {}),
     });
     if (error) throw new BadRequestException(`Impossible de mettre à jour vos identifiants : ${error.message}`);

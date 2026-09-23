@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { X, AlertTriangle, UserCheck, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, AlertTriangle, Loader2, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { UserProfileData, UpdateProfileDto } from '../../../../core/api/userApi';
 
 export interface WebEditProfileModalProps {
@@ -11,6 +11,178 @@ export interface WebEditProfileModalProps {
   onSubmit: (dto: UpdateProfileDto) => Promise<any>;
 }
 
+const MOIS_FR = [
+  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+];
+const JOURS_FR = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+
+// -------------------------------------------------------------------------
+// Calendrier custom pour la date de naissance (navigation rapide mois/année)
+// -------------------------------------------------------------------------
+interface BirthDatePickerProps {
+  value: string; // 'YYYY-MM-DD'
+  onChange: (value: string) => void;
+}
+
+const BirthDatePicker: React.FC<BirthDatePickerProps> = ({ value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const selectedDate = value ? new Date(`${value}T00:00:00`) : null;
+  const today = new Date();
+
+  const [viewYear, setViewYear] = useState(selectedDate?.getFullYear() || today.getFullYear() - 25);
+  const [viewMonth, setViewMonth] = useState(selectedDate?.getMonth() ?? today.getMonth());
+
+  useEffect(() => {
+    if (isOpen) {
+      setViewYear(selectedDate?.getFullYear() || today.getFullYear() - 25);
+      setViewMonth(selectedDate?.getMonth() ?? today.getMonth());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const yearOptions: number[] = [];
+  for (let y = today.getFullYear() - 16; y >= today.getFullYear() - 100; y--) {
+    yearOptions.push(y);
+  }
+
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  // Décalage lundi = 0
+  const firstWeekday = (new Date(viewYear, viewMonth, 1).getDay() + 6) % 7;
+
+  const cells: (number | null)[] = [
+    ...Array(firstWeekday).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+
+  const handleSelectDay = (day: number) => {
+    const mm = String(viewMonth + 1).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    onChange(`${viewYear}-${mm}-${dd}`);
+    setIsOpen(false);
+  };
+
+  const shiftMonth = (delta: number) => {
+    let m = viewMonth + delta;
+    let y = viewYear;
+    if (m < 0) { m = 11; y -= 1; }
+    if (m > 11) { m = 0; y += 1; }
+    setViewMonth(m);
+    setViewYear(y);
+  };
+
+  const displayLabel = selectedDate
+    ? selectedDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : 'Sélectionner une date';
+
+  const isSelected = (day: number) =>
+    selectedDate &&
+    selectedDate.getFullYear() === viewYear &&
+    selectedDate.getMonth() === viewMonth &&
+    selectedDate.getDate() === day;
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((v) => !v)}
+        className="flex w-full items-center gap-2.5 rounded-xl border border-slate-200 px-4 py-3 text-left text-[13px] transition-colors hover:border-slate-300 focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10"
+      >
+        <Calendar className="h-4 w-4 shrink-0 text-slate-400" />
+        <span className={selectedDate ? 'font-medium text-[#041912]' : 'text-slate-400'}>
+          {displayLabel}
+        </span>
+      </button>
+
+      {isOpen && (
+        <div className="absolute bottom-full mb-2 left-0 z-50 w-full min-w-[280px] rounded-2xl border border-slate-200 bg-white p-3.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+          {/* Navigation mois / année */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => shiftMonth(-1)}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-[#041912]"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            <select
+              value={viewMonth}
+              onChange={(e) => setViewMonth(Number(e.target.value))}
+              className="flex-1 rounded-lg border-none bg-slate-50 px-2 py-1.5 text-center text-[12.5px] font-semibold text-[#041912] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/20"
+            >
+              {MOIS_FR.map((m, idx) => (
+                <option key={m} value={idx}>{m}</option>
+              ))}
+            </select>
+
+            <select
+              value={viewYear}
+              onChange={(e) => setViewYear(Number(e.target.value))}
+              className="w-[84px] rounded-lg border-none bg-slate-50 px-2 py-1.5 text-center text-[12.5px] font-semibold text-[#041912] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/20"
+            >
+              {yearOptions.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={() => shiftMonth(1)}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-[#041912]"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Jours de la semaine */}
+          <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[10.5px] font-semibold text-slate-400">
+            {JOURS_FR.map((j, i) => (
+              <span key={`${j}-${i}`}>{j}</span>
+            ))}
+          </div>
+
+          {/* Grille des jours */}
+          <div className="mt-1.5 grid grid-cols-7 gap-1">
+            {cells.map((day, idx) =>
+              day === null ? (
+                <span key={`empty-${idx}`} />
+              ) : (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => handleSelectDay(day)}
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg text-[12.5px] font-medium transition-colors ${isSelected(day)
+                      ? 'bg-[#041912] text-[#F1DFB6]'
+                      : 'text-slate-700 hover:bg-slate-100'
+                    }`}
+                >
+                  {day}
+                </button>
+              )
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// -------------------------------------------------------------------------
+// Modal principal
+// -------------------------------------------------------------------------
 export const WebEditProfileModal: React.FC<WebEditProfileModalProps> = ({
   isOpen,
   onClose,
@@ -35,6 +207,8 @@ export const WebEditProfileModal: React.FC<WebEditProfileModalProps> = ({
   }, [isOpen, profile]);
 
   if (!isOpen) return null;
+
+  const isKycVerified = profile.statutKyc === 'VALIDE' || profile.statutKyc === 'VERIFIE';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,117 +237,102 @@ export const WebEditProfileModal: React.FC<WebEditProfileModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl border border-slate-100 p-6 sm:p-8 space-y-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#041912]/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg rounded-3xl bg-white shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-emerald-50 text-[#059669]">
-              <UserCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-fraunces text-xl font-normal text-[#041912]">
-                Modifier le profil
-              </h3>
-              <p className="text-xs text-slate-500 font-medium">
-                Mettez à jour vos identifiants personnels
-              </p>
-            </div>
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 pb-4 pt-5 sm:px-8 rounded-t-3xl bg-white">
+          <div>
+            <h3 className="font-fraunces text-xl leading-tight text-[#041912]">Modifier le profil</h3>
+            <p className="mt-0.5 text-[12.5px] text-slate-500">Mettez à jour vos identifiants personnels</p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
           >
-            <X className="w-5 h-5" />
+            <X className="h-4.5 w-4.5" />
           </button>
         </div>
 
-        {/* KYC Warning callout */}
-        {(profile.statutKyc === 'VALIDE' || profile.statutKyc === 'VERIFIE') && (
-          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs leading-relaxed space-y-1">
-            <div className="flex items-center gap-2 font-bold text-amber-800">
-              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>Avertissement de sécurité KYC</span>
+        <div className="space-y-5 px-6 py-5 sm:px-8">
+          {/* Avertissement KYC */}
+          {isKycVerified && (
+            <div className="flex items-start gap-2.5 rounded-xl bg-amber-50/70 p-3.5 text-amber-800">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+              <p className="text-[12px] leading-relaxed">
+                <strong className="font-semibold">Avertissement de sécurité KYC :</strong> toute modification de votre nom, prénom ou date de naissance réinitialisera votre statut de vérification. Vous devrez re-soumettre un document officiel valide.
+              </p>
             </div>
-            <p>
-              Toute modification apportée à votre nom, prénom ou date de naissance réinitialisera votre statut de vérification KYC au statut <strong>NON_VERIFIE</strong>. Vous devrez re-soumettre un document officiel valide.
-            </p>
-          </div>
-        )}
+          )}
 
-        {/* Error message */}
-        {errorMsg && (
-          <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
-            {errorMsg}
-          </div>
-        )}
+          {/* Erreur */}
+          {errorMsg && (
+            <div className="rounded-xl border border-rose-100 bg-rose-50 p-3.5 text-[12.5px] font-medium text-rose-700">
+              {errorMsg}
+            </div>
+          )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Prénom <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={prenom}
-              onChange={(e) => setPrenom(e.target.value)}
-              placeholder="Ex: Ousmane"
-              required
-              className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
-            />
-          </div>
+          {/* Formulaire */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="mb-1 block text-[12px] font-medium text-slate-500">
+                Prénom <span className="text-rose-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={prenom}
+                onChange={(e) => setPrenom(e.target.value)}
+                placeholder="Ex : Ousmane"
+                required
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-[#041912] placeholder:text-slate-300 focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10"
+              />
+            </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Nom <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={nom}
-              onChange={(e) => setNom(e.target.value)}
-              placeholder="Ex: Diallo"
-              required
-              className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
-            />
-          </div>
+            <div>
+              <label className="mb-1 block text-[12px] font-medium text-slate-500">
+                Nom <span className="text-rose-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={nom}
+                onChange={(e) => setNom(e.target.value)}
+                placeholder="Ex : Diallo"
+                required
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-[#041912] placeholder:text-slate-300 focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10"
+              />
+            </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Date de Naissance
-            </label>
-            <input
-              type="date"
-              value={dateNaissance}
-              onChange={(e) => setDateNaissance(e.target.value)}
-              className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/50 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium"
-            />
-            <p className="mt-1 text-[11px] text-slate-400">
-              Format: JJ/MM/AAAA. Doit correspondre à votre pièce d'identité.
-            </p>
-          </div>
+            <div>
+              <label className="mb-1 block text-[12px] font-medium text-slate-500">
+                Date de naissance
+              </label>
+              <BirthDatePicker value={dateNaissance} onChange={setDateNaissance} />
+              <p className="mt-1.5 text-[11px] text-slate-400">
+                Doit correspondre exactement à votre pièce d'identité.
+              </p>
+            </div>
 
-          {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 rounded-2xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-[#059669] hover:bg-emerald-700 text-white text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-md"
-            >
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>Enregistrer les modifications</span>
-            </button>
-          </div>
-        </form>
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-2.5 border-t border-slate-100 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-xl px-4 py-2.5 text-[12.5px] font-semibold text-slate-500 hover:text-slate-700"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#041912] px-5 py-2.5 text-[12.5px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E] disabled:opacity-50"
+              >
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin text-[#4ADE80]" />}
+                Enregistrer les modifications
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
