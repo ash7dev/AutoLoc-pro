@@ -3,7 +3,9 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationService } from '../../infrastructure/notifications/notification.service';
 import { BanUserDto } from './dto/ban-user.dto';
 import { GetKycQueueDto } from './dto/get-kyc-queue.dto';
-import { StatutKyc, StatutReservation, StatutRetrait, StatutLitige, StatutVehicule } from '@prisma/client';
+import { GetUsersQueueDto, UserQueueStatusFilter } from './dto/get-users-queue.dto';
+import { RoleProfile, StatutKyc, StatutReservation, StatutRetrait, StatutLitige, StatutVehicule } from '@prisma/client';
+
 
 @Injectable()
 export class UsersService {
@@ -92,6 +94,190 @@ export class UsersService {
     }));
 
     return { data, total, page, limit: take };
+  }
+
+  // ── Unified Admin Users Queue (Profile + Utilisateur Join) ───────────────
+
+  async getUsersQueue(dto: GetUsersQueueDto) {
+    const page = dto.page ?? 1;
+    const limit = dto.limit ?? 20;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    // 1. Filter by role
+    if (dto.role && dto.role !== 'ALL') {
+      where.role = dto.role as RoleProfile;
+    }
+
+    // 2. Filter by search
+    if (dto.search && dto.search.trim()) {
+      const q = dto.search.trim();
+      where.OR = [
+        { email: { contains: q, mode: 'insensitive' } },
+        { phone: { contains: q, mode: 'insensitive' } },
+        { userId: { contains: q, mode: 'insensitive' } },
+        {
+          utilisateur: {
+            OR: [
+              { prenom: { contains: q, mode: 'insensitive' } },
+              { nom: { contains: q, mode: 'insensitive' } },
+              { email: { contains: q, mode: 'insensitive' } },
+              { telephone: { contains: q, mode: 'insensitive' } },
+            ],
+          },
+        },
+      ];
+    }
+
+    const now = new Date();
+
+    // 3. Filter by status
+    if (dto.status && dto.status !== UserQueueStatusFilter.ALL) {
+      if (dto.status === UserQueueStatusFilter.ACTIVE) {
+        where.utilisateur = {
+          actif: true,
+          OR: [{ bloqueJusqua: null }, { bloqueJusqua: { lte: now } }],
+        };
+      } else if (dto.status === UserQueueStatusFilter.BANNED) {
+        where.utilisateur = {
+          OR: [{ actif: false }, { bloqueJusqua: { gt: now } }],
+        };
+      } else if (dto.status === UserQueueStatusFilter.PENDING_KYC) {
+        where.utilisateur = { statutKyc: StatutKyc.EN_ATTENTE };
+      } else if (dto.status === UserQueueStatusFilter.STUCK_ONBOARDING) {
+        where.OR = [
+          { utilisateur: null },
+          { utilisateur: { profileCompleted: false } },
+        ];
+      }
+    }
+
+    // Fetch profiles with utilisateur relation & counts
+    const [profiles, total, countsRaw] = await Promise.all([
+      this.prisma.profile.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip,
+        include: {
+          utilisateur: {
+            include: {
+              _count: {
+                select: {
+                  vehicules: true,
+                  reservationsLocataire: true,
+                  reservationsProprietaire: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.profile.count({ where }),
+      Promise.all([
+        this.prisma.profile.count(), // total
+        this.prisma.profile.count({ where: { role: RoleProfile.LOCATAIRE } }),
+        this.prisma.profile.count({ where: { role: RoleProfile.PROPRIETAIRE } }),
+        this.prisma.profile.count({ where: { role: RoleProfile.ADMIN } }),
+        this.prisma.profile.count({ where: { role: RoleProfile.SUPPORT } }),
+        this.prisma.utilisateur.count({ where: { statutKyc: StatutKyc.EN_ATTENTE } }),
+        this.prisma.utilisateur.count({
+          where: { OR: [{ actif: false }, { bloqueJusqua: { gt: now } }] },
+        }),
+        this.prisma.profile.count({
+          where: { OR: [{ utilisateur: null }, { utilisateur: { profileCompleted: false } }] },
+        }),
+      ]),
+    ]);
+
+    const [
+      totalCount,
+      locatairesCount,
+      proprietairesCount,
+      adminsCount,
+      supportCount,
+      pendingKycCount,
+      bannedCount,
+      stuckOnboardingCount,
+    ] = countsRaw;
+
+    const data = profiles.map((p) => {
+      const u = p.utilisateur;
+      const isBanned = u ? (!u.actif || (!!u.bloqueJusqua && u.bloqueJusqua > now)) : false;
+      const isStuckOnboarding = !u || !u.profileCompleted;
+
+      return {
+        id: u?.id ?? p.id,
+        profileId: p.id,
+        userId: p.userId,
+        email: u?.email ?? p.email ?? '',
+        phone: u?.telephone ?? p.phone ?? '',
+        role: p.role,
+        createdAt: p.createdAt.toISOString(),
+        isBanned,
+        banUntil: u?.bloqueJusqua ? u.bloqueJusqua.toISOString() : null,
+        statutKyc: u?.statutKyc ?? StatutKyc.NON_VERIFIE,
+        profileCompleted: u?.profileCompleted ?? false,
+        isStuckOnboarding,
+        utilisateur: u
+          ? {
+              prenom: u.prenom,
+              nom: u.nom,
+              fullName: `${u.prenom} ${u.nom}`.trim(),
+              avatarUrl: u.avatarUrl ?? null,
+              statutKyc: u.statutKyc,
+              noteLocataire: Number(u.noteLocataire),
+              noteProprietaire: Number(u.noteProprietaire),
+            }
+          : null,
+        stats: {
+          vehiclesCount: u?._count?.vehicules ?? 0,
+          bookingsCount: (u?._count?.reservationsLocataire ?? 0) + (u?._count?.reservationsProprietaire ?? 0),
+        },
+      };
+    });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        counts: {
+          total: totalCount,
+          locataires: locatairesCount,
+          proprietaires: proprietairesCount,
+          admins: adminsCount,
+          support: supportCount,
+          pendingKyc: pendingKycCount,
+          banned: bannedCount,
+          stuckOnboarding: stuckOnboardingCount,
+        },
+      },
+    };
+  }
+
+  async setUserRole(userId: string, role: RoleProfile) {
+    let profile = await this.prisma.profile.findFirst({
+      where: {
+        OR: [
+          { userId },
+          { id: userId },
+          { utilisateur: { id: userId } },
+        ],
+      },
+    });
+
+    if (!profile) throw new NotFoundException('Profil utilisateur introuvable');
+
+    const updated = await this.prisma.profile.update({
+      where: { id: profile.id },
+      data: { role },
+    });
+
+    return updated;
   }
 
   // ── Optimized KYC Queue ───────────────────────────────────────────────────
@@ -207,10 +393,10 @@ export class UsersService {
   }
 
   async getAdminUserDetail(userId: string) {
-    const u = await this.prisma.utilisateur.findUnique({
-      where: { id: userId },
+    let u = await this.prisma.utilisateur.findFirst({
+      where: { OR: [{ id: userId }, { userId }] },
       include: {
-        profile: { select: { role: true, createdAt: true } },
+        profile: { select: { id: true, role: true, createdAt: true, email: true, phone: true } },
         vehicules: {
           orderBy: { creeLe: 'desc' },
           include: {
@@ -228,14 +414,39 @@ export class UsersService {
           take: 5,
           include: {
             vehicule: { select: { marque: true, modele: true } },
-            locataire: { select: { prenom: true, nom: true } }
+            locataire: { select: { prenom: true, nom: true } },
           },
         },
         _count: { select: { vehicules: true, reservationsLocataire: true, reservationsProprietaire: true } },
       },
     });
 
-    if (!u) throw new NotFoundException('Utilisateur introuvable');
+    if (!u) {
+      const prof = await this.prisma.profile.findFirst({
+        where: { OR: [{ id: userId }, { userId }] },
+        include: { utilisateur: true },
+      });
+      if (!prof) throw new NotFoundException('Utilisateur introuvable');
+
+      return {
+        id: prof.id,
+        userId: prof.userId,
+        email: prof.email ?? '',
+        phone: prof.phone ?? '',
+        role: prof.role,
+        createdAt: prof.createdAt.toISOString(),
+        isBanned: false,
+        banRaison: null,
+        kycStatus: StatutKyc.NON_VERIFIE,
+        isStuckOnboarding: true,
+        utilisateur: null,
+        vehicles: [],
+        reservationsLocataire: [],
+        reservationsProprietaire: [],
+        _count: { vehicles: 0, reservationsLocataire: 0, reservationsProprietaire: 0 },
+      };
+    }
+
 
     const now = new Date();
     return {

@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { AdminAnalyticsQueryDto, AdminPeriod, GroupByPeriod } from './dto/admin-analytics-query.dto';
+import { AdminAnalyticsQueryDto, AdminPeriod } from './dto/admin-analytics-query.dto';
 import { StatutKyc, StatutLitige, StatutReservation, StatutRetrait, StatutVehicule, FournisseurPaiement } from '@prisma/client';
+
 
 interface CacheEntry<T> {
   timestamp: number;
@@ -10,9 +11,9 @@ interface CacheEntry<T> {
 
 @Injectable()
 export class AdminAnalyticsService {
-  private readonly logger = new Logger(AdminAnalyticsService.name);
   private cache = new Map<string, CacheEntry<any>>();
   private readonly CACHE_TTL_MS = 60 * 1000; // 60 secondes cache
+
 
   constructor(private readonly prisma: PrismaService) {}
 

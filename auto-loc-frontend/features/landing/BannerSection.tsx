@@ -122,7 +122,8 @@ function DatePickerField({ value, onChange, minDate, placeholder = 'Sélectionne
           selected={selected}
           onSelect={(date) => {
             if (date) {
-              const iso = date.toISOString().split('T')[0];
+              // Use local date format to avoid timezone offset issues
+              const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
               onChange(iso);
               setOpen(false);
             }

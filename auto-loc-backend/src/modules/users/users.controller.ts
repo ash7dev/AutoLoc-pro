@@ -3,6 +3,8 @@ import { UsersService } from './users.service';
 import { BanUserDto } from './dto/ban-user.dto';
 import { GetAdminUsersDto } from './dto/get-admin-users.dto';
 import { GetKycQueueDto } from './dto/get-kyc-queue.dto';
+import { GetUsersQueueDto } from './dto/get-users-queue.dto';
+import { SetUserRoleDto } from './dto/set-user-role.dto';
 import { RejectKycDto } from './dto/reject-kyc.dto';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/guards/roles.guard';
@@ -16,6 +18,15 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   /**
+   * GET /admin/users/users-queue
+   * File unifiée de modération & gestion de tous les utilisateurs (Profile + Utilisateur)
+   */
+  @Get('users-queue')
+  async getUsersQueue(@Query() dto: GetUsersQueueDto) {
+    return this.usersService.getUsersQueue(dto);
+  }
+
+  /**
    * GET /admin/users/kyc-queue
    * File de modération KYC optimisée avec recherche, filtrage et statistiques.
    */
@@ -26,7 +37,7 @@ export class UsersController {
 
   /**
    * GET /admin/users?kycStatus=EN_ATTENTE
-   * Liste des utilisateurs (filtrable par statut KYC).
+   * Liste des utilisateurs.
    */
   @Get()
   async listUsers(@Query() dto: GetAdminUsersDto) {
@@ -41,6 +52,11 @@ export class UsersController {
   @Patch(':id/status')
   async setUserStatus(@Param('id') id: string, @Body() dto: BanUserDto) {
     return this.usersService.setUserStatus(id, dto);
+  }
+
+  @Patch(':id/role')
+  async setUserRole(@Param('id') id: string, @Body() dto: SetUserRoleDto) {
+    return this.usersService.setUserRole(id, dto.role);
   }
 
   /**
@@ -65,3 +81,4 @@ export class UsersController {
     return this.usersService.rejectKyc(id, body.raison);
   }
 }
+

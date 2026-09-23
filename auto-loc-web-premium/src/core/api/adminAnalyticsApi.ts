@@ -382,7 +382,131 @@ export const adminAnalyticsApi = {
   resolveDispute: (id: string, decision: 'FONDE' | 'NON_FONDE', montantCompensation?: number): Promise<{ success: boolean; decision: string; montantCompensation?: number }> => {
     return apiClient.patch<{ success: boolean; decision: string; montantCompensation?: number }>(`/admin/disputes/${id}/resolve`, { decision, montantCompensation });
   },
+
+  getUsersQueue: (params?: { role?: string; status?: string; search?: string; page?: number; limit?: number }): Promise<AdminUserQueueResponse> => {
+    return apiClient.get<AdminUserQueueResponse>('/admin/users/users-queue', { params });
+  },
+
+  getAdminUserDetail: (id: string): Promise<AdminUserDetailResponse> => {
+    return apiClient.get<AdminUserDetailResponse>(`/admin/users/${id}`);
+  },
+
+  setUserStatus: (id: string, body: { actif: boolean; bloqueJusqua?: string | null; raison?: string }) => {
+    return apiClient.patch(`/admin/users/${id}/status`, body);
+  },
+
+  setUserRole: (id: string, role: string) => {
+    return apiClient.patch(`/admin/users/${id}/role`, { role });
+  },
 };
+
+export interface AdminUserQueueItem {
+  id: string;
+  profileId: string;
+  userId: string;
+  email: string;
+  phone: string;
+  role: 'LOCATAIRE' | 'PROPRIETAIRE' | 'ADMIN' | 'SUPPORT';
+  createdAt: string;
+  isBanned: boolean;
+  banUntil: string | null;
+  statutKyc: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
+  profileCompleted: boolean;
+  isStuckOnboarding: boolean;
+  utilisateur: {
+    prenom: string;
+    nom: string;
+    fullName: string;
+    avatarUrl: string | null;
+    statutKyc: string;
+    noteLocataire: number;
+    noteProprietaire: number;
+  } | null;
+  stats: {
+    vehiclesCount: number;
+    bookingsCount: number;
+  };
+}
+
+export interface AdminUserQueueResponse {
+  data: AdminUserQueueItem[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    counts: {
+      total: number;
+      locataires: number;
+      proprietaires: number;
+      admins: number;
+      support: number;
+      pendingKyc: number;
+      banned: number;
+      stuckOnboarding: number;
+    };
+  };
+}
+
+export interface AdminUserDetailResponse {
+  id: string;
+  userId: string;
+  email: string;
+  phone: string;
+  role: 'LOCATAIRE' | 'PROPRIETAIRE' | 'ADMIN' | 'SUPPORT';
+  createdAt: string;
+  isBanned: boolean;
+  banRaison: string | null;
+  kycStatus: string;
+  isStuckOnboarding: boolean;
+  kycRejectionReason?: string | null;
+  kyc?: {
+    documentUrl: string | null;
+    documentBackUrl: string | null;
+    selfieUrl: string | null;
+    permisUrl: string | null;
+    soumisLe: string;
+  };
+  utilisateur?: {
+    prenom: string;
+    nom: string;
+    fullName: string;
+    telephone: string;
+    avatarUrl: string | null;
+  } | null;
+  vehicles: Array<{
+    id: string;
+    marque: string;
+    modele: string;
+    annee: number;
+    type: string;
+    prixParJour: number;
+    ville: string;
+    statut: string;
+    photos: Array<{ url: string; estPrincipale: boolean }>;
+  }>;
+  reservationsLocataire: Array<{
+    id: string;
+    statut: string;
+    vehicule: string;
+    totalLocataire: number;
+    creeLe: string;
+  }>;
+  reservationsProprietaire: Array<{
+    id: string;
+    statut: string;
+    locataire: string;
+    vehicule: string;
+    netProprietaire: number;
+    creeLe: string;
+  }>;
+  _count: {
+    vehicles: number;
+    reservationsLocataire: number;
+    reservationsProprietaire: number;
+  };
+}
+
 
 export interface AdminVehicleQueueItem {
   id: string;
