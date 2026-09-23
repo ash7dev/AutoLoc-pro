@@ -269,7 +269,7 @@ export function useAdminHosts() {
     setPage,
     items: itemsList,
     meta: data?.meta,
-    counts: data?.counts ?? { total: 0, verified: 0, pending: 0, suspended: 0 },
+    counts: data?.counts ?? data?.meta?.counts ?? { total: 0, active: 0, pendingKyc: 0, banned: 0 },
     selectedHostId,
     setSelectedHostId,
     selectedHostItem,

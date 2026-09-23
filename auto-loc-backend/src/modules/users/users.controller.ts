@@ -5,6 +5,7 @@ import { GetAdminUsersDto } from './dto/get-admin-users.dto';
 import { GetKycQueueDto } from './dto/get-kyc-queue.dto';
 import { GetUsersQueueDto } from './dto/get-users-queue.dto';
 import { GetHostsQueueDto } from './dto/get-hosts-queue.dto';
+import { GetTenantsQueueDto } from './dto/get-tenants-queue.dto';
 import { HostFleetActionDto } from './dto/fleet-action.dto';
 import { SetUserRoleDto } from './dto/set-user-role.dto';
 import { RejectKycDto } from './dto/reject-kyc.dto';
@@ -35,6 +36,42 @@ export class UsersController {
   @Get('hosts/:id/health-360')
   async getHostHealth360(@Param('id') id: string) {
     return this.usersService.getHostHealth360(id);
+  }
+
+  /**
+   * GET /admin/users/tenants-queue
+   * File dédiée à la supervision et l'administration des locataires & voyageurs
+   */
+  @Get('tenants-queue')
+  async getTenantsQueue(@Query() dto: GetTenantsQueueDto) {
+    return this.usersService.getTenantsQueue(dto);
+  }
+
+  /**
+   * GET /admin/users/tenants/:id/health-360
+   * Vue 360° de décision et santé du locataire (permis, score de risque, historique réservations & cautions)
+   */
+  @Get('tenants/:id/health-360')
+  async getTenantHealth360(@Param('id') id: string) {
+    return this.usersService.getTenantHealth360(id);
+  }
+
+  /**
+   * PATCH /admin/users/tenants/:id/permis/approve
+   * Valide le permis de conduire du locataire
+   */
+  @Patch('tenants/:id/permis/approve')
+  async approveTenantPermis(@Param('id') id: string) {
+    return this.usersService.approveTenantPermis(id);
+  }
+
+  /**
+   * PATCH /admin/users/tenants/:id/permis/reject
+   * Rejette le permis de conduire du locataire avec motif
+   */
+  @Patch('tenants/:id/permis/reject')
+  async rejectTenantPermis(@Param('id') id: string, @Body() dto: RejectKycDto) {
+    return this.usersService.rejectTenantPermis(id, dto.raison);
   }
 
   /**

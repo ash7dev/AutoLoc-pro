@@ -1,19 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-  ShieldCheck,
-  ShieldAlert,
-  ShieldX,
-  Car,
-  Star,
-  Eye,
-  CheckCircle2,
-  Clock,
-  Ban,
-  User,
-  Calendar,
-} from 'lucide-react';
+import { ShieldCheck, ShieldAlert, ShieldX, ShieldOff, Eye, SearchX } from 'lucide-react';
 import { HostItem } from '../hooks/useAdminHosts';
 
 interface AdminHostTableProps {
@@ -22,18 +10,48 @@ interface AdminHostTableProps {
   onSelectHost: (host: HostItem) => void;
 }
 
-export const AdminHostTable: React.FC<AdminHostTableProps> = ({
-  items,
-  isLoading,
-  onSelectHost,
-}) => {
+const FOREST = '#0A3D2E';
+const CHAMPAGNE = '#F1DFB6';
+const GOLD = '#b27c2d';
+const RUST = '#a13d3d';
+
+const FOCUS =
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E] dark:focus-visible:outline-[#F1DFB6]';
+
+const CARD =
+  'rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs';
+
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n > 1 ? many : one}`;
+
+const KYC_BADGES: Record<
+  string,
+  { label: string; tone: string; bg: string; Icon: React.ElementType }
+> = {
+  VERIFIE: { label: 'Vérifié', tone: FOREST, bg: 'rgba(10, 61, 46, 0.09)', Icon: ShieldCheck },
+  EN_ATTENTE: { label: 'En attente', tone: GOLD, bg: 'rgba(178, 124, 45, 0.13)', Icon: ShieldAlert },
+  REJETE: { label: 'Rejeté', tone: RUST, bg: 'rgba(161, 61, 61, 0.11)', Icon: ShieldX },
+};
+const KYC_DEFAULT = { label: 'Non vérifié', tone: '#64748b', bg: 'rgba(100, 116, 139, 0.12)', Icon: ShieldOff };
+
+const HEAD = 'py-3 px-4 text-[12px] font-semibold text-slate-500 dark:text-slate-400';
+
+export const AdminHostTable: React.FC<AdminHostTableProps> = ({ items, isLoading, onSelectHost }) => {
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 space-y-4 shadow-xs">
-        <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded-md w-1/4 animate-pulse" />
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-slate-100 dark:bg-slate-800/50 rounded-xl animate-pulse" />
+      <div className={`${CARD} overflow-hidden`} aria-busy="true" aria-live="polite">
+        <div className="h-11 bg-slate-50/70 dark:bg-slate-950/50 border-b border-slate-100 dark:border-slate-800" />
+        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="flex items-center gap-4 px-4 py-4 animate-pulse motion-reduce:animate-none">
+              <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 w-40 rounded bg-slate-200 dark:bg-slate-800" />
+                <div className="h-2.5 w-56 rounded bg-slate-100 dark:bg-slate-800/60" />
+              </div>
+              <div className="hidden md:block h-6 w-24 rounded-full bg-slate-100 dark:bg-slate-800/60" />
+              <div className="hidden md:block h-6 w-32 rounded bg-slate-100 dark:bg-slate-800/60" />
+              <div className="h-9 w-24 rounded-full bg-slate-100 dark:bg-slate-800/60" />
+            </div>
           ))}
         </div>
       </div>
@@ -42,154 +60,190 @@ export const AdminHostTable: React.FC<AdminHostTableProps> = ({
 
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-12 text-center shadow-xs space-y-3">
-        <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto">
-          <User className="w-6 h-6" />
+      <div className={`${CARD} px-6 py-14 text-center font-sans`}>
+        <div
+          className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
+          style={{ backgroundColor: 'rgba(10, 61, 46, 0.08)' }}
+        >
+          <SearchX className="w-5 h-5" style={{ color: FOREST }} strokeWidth={1.75} />
         </div>
-        <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-          Aucun hôte trouvé
-        </h3>
-        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-          Aucun propriétaire ne correspond à vos critères de recherche actuels.
+        <h3 className="text-base font-semibold text-slate-900 dark:text-white">Aucun hôte trouvé</h3>
+        <p className="text-[13px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1.5 leading-relaxed">
+          Aucun propriétaire ne correspond à cette recherche. Essayez un autre nom ou changez de statut.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+    <div className={`${CARD} overflow-hidden font-sans`}>
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full min-w-[920px] text-left border-collapse">
           <thead>
-            <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-              <th className="py-3.5 px-4">Hôte / Propriétaire</th>
-              <th className="py-3.5 px-4">Statut KYC</th>
-              <th className="py-3.5 px-4">Flotte de Véhicules</th>
-              <th className="py-3.5 px-4">Performance Hôte</th>
-              <th className="py-3.5 px-4">Compte</th>
-              <th className="py-3.5 px-4 text-right">Actions</th>
+            <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50">
+              <th scope="col" className={HEAD}>Hôte</th>
+              <th scope="col" className={HEAD}>Vérification KYC</th>
+              <th scope="col" className={HEAD}>Flotte</th>
+              <th scope="col" className={HEAD}>Activité</th>
+              <th scope="col" className={HEAD}>Compte</th>
+              <th scope="col" className={`${HEAD} text-right`}>
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[13px]">
             {items.map((item) => {
               const u = item.utilisateur;
-              const name = u?.fullName || `${item.email.split('@')[0]}`;
+              const name = u?.fullName || item.email.split('@')[0];
               const initials = ((u?.prenom?.[0] || '') + (u?.nom?.[0] || '')).toUpperCase() || 'H';
-              const rating = u?.noteProprietaire ? Number(u.noteProprietaire).toFixed(1) : '5.0';
+
+              const kyc = KYC_BADGES[item.statutKyc] ?? KYC_DEFAULT;
+              const KycIcon = kyc.Icon;
+
+              const { total, verified, pending } = item.fleetStats;
+              const otherVehicles = Math.max(total - verified - pending, 0);
+
+              // Liseré gauche : signale les hôtes qui demandent une action
+              const accent = item.isBanned || item.statutKyc === 'REJETE'
+                ? RUST
+                : item.statutKyc === 'EN_ATTENTE'
+                  ? GOLD
+                  : undefined;
 
               return (
                 <tr
                   key={item.id}
-                  className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                  onClick={() => onSelectHost(item)}
+                  className="group cursor-pointer hover:bg-[#0A3D2E]/[0.03] dark:hover:bg-slate-800/40 transition-colors"
                 >
-                  {/* Host Identity & Avatar */}
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
+                  {/* Identité */}
+                  <td
+                    className="py-3.5 px-4"
+                    style={accent ? { boxShadow: `inset 3px 0 0 0 ${accent}` } : undefined}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden text-[13px] font-semibold ring-1 ring-inset ring-[#F1DFB6]/25"
+                        style={{ backgroundColor: FOREST, color: CHAMPAGNE }}
+                      >
                         {u?.avatarUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={u.avatarUrl}
-                            alt={name}
-                            className="w-full h-full object-cover"
-                          />
+                          <img src={u.avatarUrl} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <span>{initials}</span>
+                          <span aria-hidden="true">{initials}</span>
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-slate-900 dark:text-white truncate">
-                          {name}
-                        </p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                          {item.email} {item.phone ? `• ${item.phone}` : ''}
-                        </p>
+                        <p className="font-semibold text-slate-900 dark:text-white truncate max-w-[240px]">{name}</p>
+                        <div className="flex items-center gap-2 text-[12px] text-slate-500 dark:text-slate-400 min-w-0">
+                          <span className="truncate max-w-[200px]">{item.email}</span>
+                          {item.phone && (
+                            <>
+                              <span aria-hidden="true" className="w-px h-3 bg-slate-200 dark:bg-slate-700 shrink-0" />
+                              <span className="tabular-nums whitespace-nowrap">{item.phone}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </td>
 
-                  {/* KYC Status Badge */}
+                  {/* KYC */}
                   <td className="py-3.5 px-4">
-                    {item.statutKyc === 'VERIFIE' ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold">
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Vérifié</span>
-                      </span>
-                    ) : item.statutKyc === 'EN_ATTENTE' ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-[11px] font-bold">
-                        <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
-                        <span>En attente KYC</span>
-                      </span>
-                    ) : item.statutKyc === 'REJETE' ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-[11px] font-bold">
-                        <ShieldX className="w-3.5 h-3.5 text-rose-600" />
-                        <span>Rejeté</span>
-                      </span>
+                    <span
+                      className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-[12px] font-semibold whitespace-nowrap"
+                      style={{ backgroundColor: kyc.bg, color: kyc.tone }}
+                    >
+                      <KycIcon className="w-3.5 h-3.5" strokeWidth={2} />
+                      {kyc.label}
+                    </span>
+                  </td>
+
+                  {/* Flotte */}
+                  <td className="py-3.5 px-4">
+                    {total === 0 ? (
+                      <span className="text-slate-400 dark:text-slate-500">Aucun véhicule</span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-[11px] font-bold">
-                        <span>Non vérifié</span>
-                      </span>
+                      <div className="space-y-1.5 w-44">
+                        <p className="font-semibold text-slate-900 dark:text-white tabular-nums">
+                          {plural(total, 'véhicule')}
+                        </p>
+                        <div
+                          role="img"
+                          aria-label={`${verified} actifs, ${pending} en attente, ${otherVehicles} autres`}
+                          className="flex h-1.5 w-full rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800"
+                        >
+                          {verified > 0 && (
+                            <div style={{ width: `${(verified / total) * 100}%`, backgroundColor: FOREST }} />
+                          )}
+                          {pending > 0 && (
+                            <div style={{ width: `${(pending / total) * 100}%`, backgroundColor: GOLD }} />
+                          )}
+                          {otherVehicles > 0 && (
+                            <div style={{ width: `${(otherVehicles / total) * 100}%`, backgroundColor: '#cbd5e1' }} />
+                          )}
+                        </div>
+                        <p className="text-[12px] text-slate-500 dark:text-slate-400 tabular-nums">
+                          {verified > 0 && (
+                            <span style={{ color: FOREST }} className="font-medium dark:!text-[#F1DFB6]">
+                              {plural(verified, 'actif')}
+                            </span>
+                          )}
+                          {verified > 0 && pending > 0 && ', '}
+                          {pending > 0 && (
+                            <span style={{ color: GOLD }} className="font-medium">
+                              {pending} en attente
+                            </span>
+                          )}
+                          {verified === 0 && pending === 0 && 'Aucun actif'}
+                        </p>
+                      </div>
                     )}
                   </td>
 
-                  {/* Fleet Summary Stats */}
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs">
-                        <Car className="w-3.5 h-3.5 text-[#0A3D2E]" />
-                        <span>{item.fleetStats.total} véhicule{item.fleetStats.total > 1 ? 's' : ''}</span>
-                      </div>
-                      {item.fleetStats.verified > 0 && (
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 text-[10.5px] font-bold border border-emerald-200/60">
-                          {item.fleetStats.verified} actifs
-                        </span>
-                      )}
-                      {item.fleetStats.pending > 0 && (
-                        <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 text-[10.5px] font-bold border border-amber-200/60">
-                          {item.fleetStats.pending} en attente
-                        </span>
-                      )}
-                    </div>
-                  </td>
-
-                  {/* Host Performance (Rating & Bookings) */}
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1 text-amber-500 font-bold">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        <span>{rating}</span>
-                      </div>
-                      <span className="text-slate-400">•</span>
-                      <span className="text-slate-600 dark:text-slate-400 font-medium">
-                        {item.totalBookings} location{item.totalBookings > 1 ? 's' : ''}
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Account Status */}
-                  <td className="py-3.5 px-4">
-                    {item.isBanned ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-bold text-[10.5px]">
-                        <Ban className="w-3 h-3" />
-                        <span>Banni</span>
+                  {/* Activité */}
+                  <td className="py-3.5 px-4 tabular-nums">
+                    {item.totalBookings > 0 ? (
+                      <span className="font-medium text-slate-700 dark:text-slate-200">
+                        {plural(item.totalBookings, 'location')}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold text-[10.5px]">
-                        <CheckCircle2 className="w-3 h-3" />
-                        <span>Actif</span>
-                      </span>
+                      <span className="text-slate-400 dark:text-slate-500">Aucune location</span>
                     )}
                   </td>
 
-                  {/* Action Button */}
+                  {/* Compte */}
+                  <td className="py-3.5 px-4">
+                    <span
+                      className="inline-flex items-center gap-2 font-medium"
+                      style={{ color: item.isBanned ? RUST : undefined }}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: item.isBanned ? RUST : FOREST }}
+                      />
+                      <span className={item.isBanned ? '' : 'text-slate-700 dark:text-slate-200'}>
+                        {item.isBanned ? 'Banni' : 'Actif'}
+                      </span>
+                    </span>
+                  </td>
+
+                  {/* Action */}
                   <td className="py-3.5 px-4 text-right">
                     <button
                       type="button"
-                      onClick={() => onSelectHost(item)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0A3D2E] text-[#F1DFB6] hover:bg-[#062a1f] transition-all text-xs font-bold shadow-2xs cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectHost(item);
+                      }}
+                      aria-label={`Inspecter ${name}`}
+                      className={`inline-flex items-center gap-2 h-9 px-4 rounded-full text-[13px] font-semibold cursor-pointer transition-colors hover:brightness-125 ${FOCUS}`}
+                      style={{ backgroundColor: FOREST, color: CHAMPAGNE }}
                     >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>Inspecter 360°</span>
+                      <Eye className="w-4 h-4" strokeWidth={1.75} />
+                      Inspecter
                     </button>
                   </td>
                 </tr>
@@ -197,6 +251,10 @@ export const AdminHostTable: React.FC<AdminHostTableProps> = ({
             })}
           </tbody>
         </table>
+      </div>
+
+      <div className="px-4 py-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-[12px] text-slate-500 dark:text-slate-400 tabular-nums">
+        {plural(items.length, 'hôte')} affiché{items.length > 1 ? 's' : ''}
       </div>
     </div>
   );

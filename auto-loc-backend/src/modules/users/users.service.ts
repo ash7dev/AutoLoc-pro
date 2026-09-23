@@ -5,6 +5,7 @@ import { BanUserDto } from './dto/ban-user.dto';
 import { GetKycQueueDto } from './dto/get-kyc-queue.dto';
 import { GetUsersQueueDto, UserQueueStatusFilter } from './dto/get-users-queue.dto';
 import { GetHostsQueueDto, HostQueueStatusFilter } from './dto/get-hosts-queue.dto';
+import { GetTenantsQueueDto, TenantQueueStatusFilter } from './dto/get-tenants-queue.dto';
 import { FleetActionType } from './dto/fleet-action.dto';
 import { RoleProfile, StatutKyc, StatutReservation, StatutRetrait, StatutLitige, StatutVehicule } from '@prisma/client';
 
@@ -105,64 +106,77 @@ export class UsersService {
     const limit = dto.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
     const now = new Date();
+    const hostBaseCondition = {
+      OR: [
+        { role: RoleProfile.PROPRIETAIRE },
+        { utilisateur: { vehicules: { some: {} } } },
+        { utilisateur: { reservationsProprietaire: { some: {} } } },
+      ],
+    };
 
-    // Hosts filter: profile role PROPRIETAIRE OR has vehicles
-    where.OR = [
-      { role: RoleProfile.PROPRIETAIRE },
-      { utilisateur: { vehicules: { some: {} } } },
-    ];
+    const andConditions: any[] = [hostBaseCondition];
 
     if (dto.search && dto.search.trim()) {
       const q = dto.search.trim();
-      where.AND = [
-        {
-          OR: [
-            { email: { contains: q, mode: 'insensitive' } },
-            { phone: { contains: q, mode: 'insensitive' } },
-            {
-              utilisateur: {
-                OR: [
-                  { prenom: { contains: q, mode: 'insensitive' } },
-                  { nom: { contains: q, mode: 'insensitive' } },
-                  { email: { contains: q, mode: 'insensitive' } },
-                  { telephone: { contains: q, mode: 'insensitive' } },
-                  { vehicules: { some: { immatriculation: { contains: q, mode: 'insensitive' } } } },
-                  { vehicules: { some: { marque: { contains: q, mode: 'insensitive' } } } },
-                  { vehicules: { some: { modele: { contains: q, mode: 'insensitive' } } } },
-                ],
-              },
+      andConditions.push({
+        OR: [
+          { email: { contains: q, mode: 'insensitive' } },
+          { phone: { contains: q, mode: 'insensitive' } },
+          { userId: { contains: q, mode: 'insensitive' } },
+          {
+            utilisateur: {
+              OR: [
+                { prenom: { contains: q, mode: 'insensitive' } },
+                { nom: { contains: q, mode: 'insensitive' } },
+                { email: { contains: q, mode: 'insensitive' } },
+                { telephone: { contains: q, mode: 'insensitive' } },
+                { vehicules: { some: { immatriculation: { contains: q, mode: 'insensitive' } } } },
+                { vehicules: { some: { marque: { contains: q, mode: 'insensitive' } } } },
+                { vehicules: { some: { modele: { contains: q, mode: 'insensitive' } } } },
+              ],
             },
-          ],
-        },
-      ];
+          },
+        ],
+      });
     }
 
     if (dto.status && dto.status !== HostQueueStatusFilter.ALL) {
       if (dto.status === HostQueueStatusFilter.ACTIVE) {
-        where.utilisateur = {
-          ...where.utilisateur,
-          actif: true,
-          OR: [{ bloqueJusqua: null }, { bloqueJusqua: { lte: now } }],
-        };
+        andConditions.push({
+          OR: [
+            { utilisateur: null },
+            {
+              utilisateur: {
+                actif: true,
+                OR: [{ bloqueJusqua: null }, { bloqueJusqua: { lte: now } }],
+              },
+            },
+          ],
+        });
       } else if (dto.status === HostQueueStatusFilter.BANNED) {
-        where.utilisateur = {
-          ...where.utilisateur,
-          OR: [{ actif: false }, { bloqueJusqua: { gt: now } }],
-        };
+        andConditions.push({
+          utilisateur: {
+            OR: [{ actif: false }, { bloqueJusqua: { gt: now } }],
+          },
+        });
       } else if (dto.status === HostQueueStatusFilter.PENDING_KYC) {
-        where.utilisateur = {
-          ...where.utilisateur,
-          statutKyc: StatutKyc.EN_ATTENTE,
-        };
+        andConditions.push({
+          utilisateur: {
+            statutKyc: StatutKyc.EN_ATTENTE,
+          },
+        });
       } else if (dto.status === HostQueueStatusFilter.STUCK_ONBOARDING) {
-        where.utilisateur = {
-          ...where.utilisateur,
-          profileCompleted: false,
-        };
+        andConditions.push({
+          OR: [
+            { utilisateur: null },
+            { utilisateur: { profileCompleted: false } },
+          ],
+        });
       }
     }
+
+    const where = { AND: andConditions };
 
     const [profiles, total, countsRaw] = await Promise.all([
       this.prisma.profile.findMany({
@@ -195,14 +209,47 @@ export class UsersService {
       }),
       this.prisma.profile.count({ where }),
       Promise.all([
-        this.prisma.profile.count({ where: { OR: [{ role: RoleProfile.PROPRIETAIRE }, { utilisateur: { vehicules: { some: {} } } }] } }),
-        this.prisma.utilisateur.count({ where: { statutKyc: StatutKyc.EN_ATTENTE, vehicules: { some: {} } } }),
-        this.prisma.utilisateur.count({ where: { OR: [{ actif: false }, { bloqueJusqua: { gt: now } }], vehicules: { some: {} } } }),
-        this.prisma.utilisateur.count({ where: { actif: true, OR: [{ bloqueJusqua: null }, { bloqueJusqua: { lte: now } }], vehicules: { some: {} } } }),
+        this.prisma.profile.count({ where: hostBaseCondition }),
+        this.prisma.profile.count({
+          where: {
+            AND: [
+              hostBaseCondition,
+              { utilisateur: { statutKyc: StatutKyc.EN_ATTENTE } },
+            ],
+          },
+        }),
+        this.prisma.profile.count({
+          where: {
+            AND: [
+              hostBaseCondition,
+              { utilisateur: { OR: [{ actif: false }, { bloqueJusqua: { gt: now } }] } },
+            ],
+          },
+        }),
+        this.prisma.profile.count({
+          where: {
+            AND: [
+              hostBaseCondition,
+              {
+                OR: [
+                  { utilisateur: null },
+                  { utilisateur: { actif: true, OR: [{ bloqueJusqua: null }, { bloqueJusqua: { lte: now } }] } },
+                ],
+              },
+            ],
+          },
+        }),
       ]),
     ]);
 
     const [totalHosts, pendingKycCount, bannedCount, activeCount] = countsRaw;
+
+    const countsObj = {
+      total: totalHosts,
+      active: activeCount,
+      pendingKyc: pendingKycCount,
+      banned: bannedCount,
+    };
 
     const data = profiles.map((p) => {
       const u = p.utilisateur;
@@ -260,13 +307,9 @@ export class UsersService {
         page,
         limit,
         totalPages: Math.ceil(total / limit),
-        counts: {
-          total: totalHosts,
-          active: activeCount,
-          pendingKyc: pendingKycCount,
-          banned: bannedCount,
-        },
+        counts: countsObj,
       },
+      counts: countsObj,
     };
   }
 
@@ -274,7 +317,13 @@ export class UsersService {
 
   async getHostHealth360(hostId: string) {
     const rawUser = await this.prisma.utilisateur.findFirst({
-      where: { OR: [{ id: hostId }, { userId: hostId }] },
+      where: {
+        OR: [
+          { id: hostId },
+          { userId: hostId },
+          { profile: { id: hostId } },
+        ],
+      },
       include: {
         profile: { select: { id: true, role: true, createdAt: true } },
         vehicules: {
@@ -485,6 +534,388 @@ export class UsersService {
       action,
       vehiclesUpdated: updatedCount,
     };
+  }
+
+  // ── Dedicated Admin Tenants Queue & Health 360 ─────────────────────────────
+
+  async getTenantsQueue(dto: GetTenantsQueueDto) {
+    const page = dto.page ?? 1;
+    const limit = dto.limit ?? 20;
+    const skip = (page - 1) * limit;
+
+    const now = new Date();
+    const tenantBaseCondition = {
+      OR: [
+        { role: RoleProfile.LOCATAIRE },
+        { utilisateur: { reservationsLocataire: { some: {} } } },
+        { utilisateur: { permisUrl: { not: null } } },
+      ],
+    };
+
+    const andConditions: any[] = [tenantBaseCondition];
+
+    if (dto.search && dto.search.trim()) {
+      const q = dto.search.trim();
+      andConditions.push({
+        OR: [
+          { email: { contains: q, mode: 'insensitive' } },
+          { phone: { contains: q, mode: 'insensitive' } },
+          { userId: { contains: q, mode: 'insensitive' } },
+          {
+            utilisateur: {
+              OR: [
+                { prenom: { contains: q, mode: 'insensitive' } },
+                { nom: { contains: q, mode: 'insensitive' } },
+                { email: { contains: q, mode: 'insensitive' } },
+                { telephone: { contains: q, mode: 'insensitive' } },
+              ],
+            },
+          },
+        ],
+      });
+    }
+
+    if (dto.status && dto.status !== TenantQueueStatusFilter.ALL) {
+      if (dto.status === TenantQueueStatusFilter.VERIFIED) {
+        andConditions.push({
+          utilisateur: {
+            statutKyc: StatutKyc.VERIFIE,
+            permisUrl: { not: null },
+          },
+        });
+      } else if (dto.status === TenantQueueStatusFilter.PENDING_PERMIS) {
+        andConditions.push({
+          utilisateur: {
+            permisUrl: { not: null },
+            statutKyc: StatutKyc.EN_ATTENTE,
+          },
+        });
+      } else if (dto.status === TenantQueueStatusFilter.RISK_WARNING) {
+        andConditions.push({
+          utilisateur: {
+            OR: [
+              { noteLocataire: { lte: 3.5 } },
+              { reservationsLocataire: { some: { statut: StatutReservation.ANNULEE } } },
+            ],
+          },
+        });
+      } else if (dto.status === TenantQueueStatusFilter.BANNED) {
+        andConditions.push({
+          utilisateur: {
+            OR: [{ actif: false }, { bloqueJusqua: { gt: now } }],
+          },
+        });
+      }
+    }
+
+    const where = { AND: andConditions };
+
+    const [profiles, total, countsRaw] = await Promise.all([
+      this.prisma.profile.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip,
+        include: {
+          utilisateur: {
+            include: {
+              reservationsLocataire: {
+                select: {
+                  id: true,
+                  statut: true,
+                  totalLocataire: true,
+                },
+              },
+              _count: {
+                select: {
+                  reservationsLocataire: true,
+                  avisEnvoyes: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.profile.count({ where }),
+      Promise.all([
+        this.prisma.profile.count({ where: tenantBaseCondition }),
+        this.prisma.profile.count({
+          where: {
+            AND: [
+              tenantBaseCondition,
+              { utilisateur: { statutKyc: StatutKyc.VERIFIE, permisUrl: { not: null } } },
+            ],
+          },
+        }),
+        this.prisma.profile.count({
+          where: {
+            AND: [
+              tenantBaseCondition,
+              { utilisateur: { permisUrl: { not: null }, statutKyc: StatutKyc.EN_ATTENTE } },
+            ],
+          },
+        }),
+        this.prisma.profile.count({
+          where: {
+            AND: [
+              tenantBaseCondition,
+              { utilisateur: { OR: [{ noteLocataire: { lte: 3.5 } }, { reservationsLocataire: { some: { statut: StatutReservation.ANNULEE } } }] } },
+            ],
+          },
+        }),
+        this.prisma.profile.count({
+          where: {
+            AND: [
+              tenantBaseCondition,
+              { utilisateur: { OR: [{ actif: false }, { bloqueJusqua: { gt: now } }] } },
+            ],
+          },
+        }),
+      ]),
+    ]);
+
+    const [totalTenants, verifiedCount, pendingPermisCount, riskCount, bannedCount] = countsRaw;
+
+    const countsObj = {
+      total: totalTenants,
+      verified: verifiedCount,
+      pendingPermis: pendingPermisCount,
+      riskWarning: riskCount,
+      banned: bannedCount,
+    };
+
+    const data = profiles.map((p) => {
+      const u = p.utilisateur;
+      const isBanned = u ? (!u.actif || (!!u.bloqueJusqua && u.bloqueJusqua > now)) : false;
+      const reservations = u?.reservationsLocataire ?? [];
+      const totalBookings = u?._count?.reservationsLocataire ?? 0;
+      const completedBookings = reservations.filter((r) => r.statut === StatutReservation.TERMINEE).length;
+      const ongoingBookings = reservations.filter((r) => r.statut === StatutReservation.EN_COURS || r.statut === StatutReservation.CONFIRMEE).length;
+      const totalSpent = reservations.reduce((sum, r) => sum + Number(r.totalLocataire ?? 0), 0);
+
+      return {
+        id: u?.id ?? p.id,
+        profileId: p.id,
+        userId: p.userId,
+        email: u?.email ?? p.email ?? '',
+        phone: u?.telephone ?? p.phone ?? '',
+        role: p.role,
+        createdAt: p.createdAt.toISOString(),
+        isBanned,
+        banUntil: u?.bloqueJusqua ? u.bloqueJusqua.toISOString() : null,
+        statutKyc: u?.statutKyc ?? StatutKyc.NON_VERIFIE,
+        kycRejectionReason: u?.kycRejectionReason ?? null,
+        permisUrl: u?.permisUrl ?? null,
+        hasPermis: Boolean(u?.permisUrl),
+        noteLocataire: u ? Number(u.noteLocataire) : 0,
+        profileCompleted: u?.profileCompleted ?? false,
+        utilisateur: u
+          ? {
+              prenom: u.prenom,
+              nom: u.nom,
+              fullName: `${u.prenom} ${u.nom}`.trim(),
+              avatarUrl: u.avatarUrl ?? null,
+              statutKyc: u.statutKyc,
+              noteLocataire: Number(u.noteLocataire),
+            }
+          : null,
+        tenantStats: {
+          totalBookings,
+          completedBookings,
+          ongoingBookings,
+          totalSpent,
+        },
+      };
+    });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        counts: countsObj,
+      },
+      counts: countsObj,
+    };
+  }
+
+  async getTenantHealth360(tenantId: string) {
+    const rawUser = await this.prisma.utilisateur.findFirst({
+      where: {
+        OR: [
+          { id: tenantId },
+          { userId: tenantId },
+          { profile: { id: tenantId } },
+        ],
+      },
+      include: {
+        profile: { select: { id: true, role: true, createdAt: true } },
+        reservationsLocataire: {
+          orderBy: { creeLe: 'desc' },
+          take: 20,
+          include: {
+            vehicule: {
+              select: {
+                id: true,
+                marque: true,
+                modele: true,
+                immatriculation: true,
+                photos: { select: { url: true }, take: 1 },
+              },
+            },
+            proprietaire: {
+              select: { id: true, prenom: true, nom: true, telephone: true, email: true },
+            },
+            paiement: { select: { id: true, montant: true, statut: true, fournisseur: true } },
+          },
+        },
+        avisRecus: { take: 5, orderBy: { creeLe: 'desc' } },
+      },
+    });
+
+    if (!rawUser) {
+      throw new NotFoundException('Locataire introuvable');
+    }
+
+    const u: any = rawUser;
+
+    const reservations = u.reservationsLocataire ?? [];
+    const totalBookings = reservations.length;
+    const completedBookings = reservations.filter((r: any) => r.statut === StatutReservation.TERMINEE).length;
+    const ongoingBookings = reservations.filter((r: any) => r.statut === StatutReservation.EN_COURS || r.statut === StatutReservation.CONFIRMEE).length;
+    const cancelledBookings = reservations.filter((r: any) => r.statut === StatutReservation.ANNULEE).length;
+    const totalSpent = reservations.reduce((sum: number, r: any) => sum + Number(r.totalLocataire ?? 0), 0);
+
+    const noteLocataire = Number(u.noteLocataire ?? 0);
+    const riskWarnings: string[] = [];
+    let riskScore = 10;
+
+    if (!u.permisUrl) {
+      riskScore += 25;
+      riskWarnings.push('Permis de conduire non fourni');
+    }
+    if (u.statutKyc !== StatutKyc.VERIFIE) {
+      riskScore += 15;
+      riskWarnings.push('Identité KYC non encore vérifiée');
+    }
+    if (noteLocataire > 0 && noteLocataire < 4.0) {
+      riskScore += 20;
+      riskWarnings.push(`Note locataire faible : ${noteLocataire.toFixed(1)}/5`);
+    }
+    if (cancelledBookings > 1) {
+      riskScore += 15;
+      riskWarnings.push(`${cancelledBookings} réservation(s) annulée(s) par le locataire`);
+    }
+
+    const riskLevel = riskScore > 60 ? 'HIGH' : riskScore > 30 ? 'MEDIUM' : 'LOW';
+
+    return {
+      tenant: {
+        id: u.id,
+        userId: u.userId,
+        prenom: u.prenom,
+        nom: u.nom,
+        fullName: `${u.prenom} ${u.nom}`.trim(),
+        email: u.email,
+        phone: u.telephone,
+        avatarUrl: u.avatarUrl ?? null,
+        role: u.profile?.role ?? 'LOCATAIRE',
+        statutKyc: u.statutKyc,
+        kycRejectionReason: u.kycRejectionReason ?? null,
+        isBanned: !u.actif || (!!u.bloqueJusqua && u.bloqueJusqua > new Date()),
+        registeredAt: u.creeLe ? u.creeLe.toISOString() : u.profile?.createdAt?.toISOString(),
+        documents: {
+          documentUrl: u.kycDocumentUrl ?? null,
+          documentBackUrl: u.kycDocumentBackUrl ?? null,
+          selfieUrl: u.kycSelfieUrl ?? null,
+          permisUrl: u.permisUrl ?? null,
+        },
+      },
+      healthMatrix: {
+        riskScore: Math.min(riskScore, 100),
+        riskLevel,
+        riskWarnings,
+        noteLocataire,
+        totalBookings,
+        completedBookings,
+        ongoingBookings,
+        cancelledBookings,
+        totalSpent,
+      },
+      bookings: reservations.map((r: any) => ({
+        id: r.id,
+        statut: r.statut,
+        dateDebut: r.dateDebut ? new Date(r.dateDebut).toISOString() : '',
+        dateFin: r.dateFin ? new Date(r.dateFin).toISOString() : '',
+        totalLocataire: Number(r.totalLocataire ?? 0),
+        cautionMontant: Number(r.montantCaution ?? 0),
+        cautionStatut: r.statutCaution ?? 'LIBEREE',
+        vehicule: r.vehicule ? {
+          id: r.vehicule.id,
+          marque: r.vehicule.marque,
+          modele: r.vehicule.modele,
+          immatriculation: r.vehicule.immatriculation,
+          photoUrl: r.vehicule.photos?.[0]?.url ?? null,
+        } : null,
+        proprietaire: r.proprietaire ? {
+          id: r.proprietaire.id,
+          fullName: `${r.proprietaire.prenom} ${r.proprietaire.nom}`.trim(),
+          phone: r.proprietaire.telephone,
+          email: r.proprietaire.email,
+        } : null,
+      })),
+    };
+  }
+
+  async approveTenantPermis(userId: string) {
+    const u = await this.prisma.utilisateur.findFirst({
+      where: { OR: [{ id: userId }, { userId }, { profile: { id: userId } }] },
+    });
+    if (!u) throw new NotFoundException('Locataire introuvable');
+
+    await this.prisma.utilisateur.update({
+      where: { id: u.id },
+      data: { statutKyc: StatutKyc.VERIFIE },
+    });
+
+    this.notification.send({
+      userId: u.id,
+      email: u.email ?? undefined,
+      phone: u.telephone ?? undefined,
+      type: 'kyc.verified',
+      data: {},
+    }).catch(() => {});
+
+    return { id: u.id, statutKyc: StatutKyc.VERIFIE };
+  }
+
+  async rejectTenantPermis(userId: string, raison?: string) {
+    const u = await this.prisma.utilisateur.findFirst({
+      where: { OR: [{ id: userId }, { userId }, { profile: { id: userId } }] },
+    });
+    if (!u) throw new NotFoundException('Locataire introuvable');
+
+    const rejectionReason = raison ?? 'Permis de conduire non valide ou illisible';
+
+    await this.prisma.utilisateur.update({
+      where: { id: u.id },
+      data: {
+        statutKyc: StatutKyc.REJETE,
+        kycRejectionReason: rejectionReason,
+      },
+    });
+
+    this.notification.send({
+      userId: u.id,
+      email: u.email ?? undefined,
+      phone: u.telephone ?? undefined,
+      type: 'kyc.rejected',
+      data: { raison: rejectionReason },
+    }).catch(() => {});
+
+    return { id: u.id, statutKyc: StatutKyc.REJETE, kycRejectionReason: rejectionReason };
   }
 
   // ── Unified Admin Users Queue (Profile + Utilisateur Join) ───────────────

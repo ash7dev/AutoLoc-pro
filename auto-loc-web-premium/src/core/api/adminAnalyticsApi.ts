@@ -398,6 +398,22 @@ export const adminAnalyticsApi = {
   setUserRole: (id: string, role: string) => {
     return apiClient.patch(`/admin/users/${id}/role`, { role });
   },
+
+  getTenantsQueue: (params?: { status?: string; search?: string; page?: number; limit?: number }) => {
+    return apiClient.get<any>('/admin/users/tenants-queue', { params });
+  },
+
+  getTenantHealth360: (tenantId: string) => {
+    return apiClient.get<any>(`/admin/users/tenants/${tenantId}/health-360`);
+  },
+
+  approveTenantPermis: (userId: string) => {
+    return apiClient.patch(`/admin/users/tenants/${userId}/permis/approve`);
+  },
+
+  rejectTenantPermis: (userId: string, raison?: string) => {
+    return apiClient.patch(`/admin/users/tenants/${userId}/permis/reject`, { raison });
+  },
 };
 
 export interface AdminUserQueueItem {

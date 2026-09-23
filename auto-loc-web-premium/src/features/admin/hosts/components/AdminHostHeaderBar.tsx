@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Search, Building2, RefreshCw, X } from 'lucide-react';
 
 interface AdminHostHeaderBarProps {
@@ -19,10 +19,18 @@ interface AdminHostHeaderBarProps {
 }
 
 const fontStyle = { fontFamily: 'var(--font-fraunces), Georgia, serif' };
+
 const FOREST = '#0A3D2E';
+const CHAMPAGNE = '#F1DFB6';
 const GOLD = '#b27c2d';
 const RUST = '#a13d3d';
 const SLATE = '#4a5f75';
+
+const FOCUS =
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E] dark:focus-visible:outline-[#F1DFB6]';
+
+// "–" tant que les compteurs ne sont pas chargés (évite d'afficher un faux 0)
+const fmt = (n?: number) => (n === undefined ? '–' : n.toLocaleString('fr-FR'));
 
 export const AdminHostHeaderBar: React.FC<AdminHostHeaderBarProps> = ({
   status,
@@ -33,54 +41,57 @@ export const AdminHostHeaderBar: React.FC<AdminHostHeaderBarProps> = ({
   isRefreshing,
   onRefresh,
 }) => {
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Raccourci "/" pour focaliser la recherche
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = document.activeElement as HTMLElement | null;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
+      e.preventDefault();
+      searchRef.current?.focus();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   const tabs = [
-    {
-      id: 'ALL',
-      label: 'Tous les hôtes',
-      count: counts?.total ?? 0,
-      tone: SLATE,
-      bg: 'rgba(74, 95, 117, 0.1)',
-    },
-    {
-      id: 'ACTIVE',
-      label: 'Hôtes Actifs',
-      count: counts?.active ?? 0,
-      tone: FOREST,
-      bg: 'rgba(10, 61, 46, 0.08)',
-    },
-    {
-      id: 'PENDING_KYC',
-      label: 'KYC En Attente',
-      count: counts?.pendingKyc ?? 0,
-      tone: GOLD,
-      bg: 'rgba(178, 124, 45, 0.1)',
-    },
-    {
-      id: 'BANNED',
-      label: 'Suspendus / Bannis',
-      count: counts?.banned ?? 0,
-      tone: RUST,
-      bg: 'rgba(161, 61, 61, 0.1)',
-    },
+    { id: 'ALL', label: 'Tous', count: counts?.total, tone: SLATE, bg: 'rgba(74, 95, 117, 0.12)' },
+    { id: 'ACTIVE', label: 'Actifs', count: counts?.active, tone: FOREST, bg: 'rgba(10, 61, 46, 0.10)' },
+    { id: 'PENDING_KYC', label: 'KYC en attente', count: counts?.pendingKyc, tone: GOLD, bg: 'rgba(178, 124, 45, 0.14)' },
+    { id: 'BANNED', label: 'Suspendus / bannis', count: counts?.banned, tone: RUST, bg: 'rgba(161, 61, 61, 0.12)' },
   ];
 
+  // Répartition de la base d'hôtes (barre fine en bas de la carte de filtres)
+  const total = counts?.total ?? 0;
+  const other = counts ? Math.max(total - counts.active - counts.pendingKyc - counts.banned, 0) : 0;
+  const segments = counts
+    ? [
+      { key: 'active', value: counts.active, color: FOREST },
+      { key: 'kyc', value: counts.pendingKyc, color: GOLD },
+      { key: 'banned', value: counts.banned, color: RUST },
+      { key: 'other', value: other, color: '#cbd5e1' },
+    ].filter((s) => s.value > 0)
+    : [];
+
   return (
-    <div className="space-y-4" style={fontStyle}>
-      {/* Title & Refresh Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+    <div className="space-y-5" style={fontStyle}>
+      {/* Titre + actualisation */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3.5 min-w-0">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
-            style={{ background: `linear-gradient(135deg, ${FOREST}, #062a1f)` }}
+            className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-inset ring-[#F1DFB6]/25"
+            style={{ backgroundColor: FOREST }}
           >
-            <Building2 className="w-5 h-5 text-[#F1DFB6]" />
+            <Building2 className="w-5 h-5" style={{ color: CHAMPAGNE }} strokeWidth={1.75} />
           </div>
-          <div>
-            <h1 className="text-xl font-normal text-[#041912] dark:text-white">
-              Administration des Hôtes & Flottes
+          <div className="min-w-0">
+            <h1 className="text-[22px] sm:text-2xl leading-tight tracking-tight font-normal text-[#041912] dark:text-white">
+              Hôtes et flottes
             </h1>
-            <p className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5 font-sans">
-              Gouvernance des propriétaires, audit de risque 360°, conformité KYC et modération de flotte
+            <p className="text-[13px] leading-snug text-slate-500 dark:text-slate-400 mt-1 font-sans">
+              Propriétaires, conformité KYC et modération des annonces
             </p>
           </div>
         </div>
@@ -89,67 +100,111 @@ export const AdminHostHeaderBar: React.FC<AdminHostHeaderBarProps> = ({
           type="button"
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="shrink-0 px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-[#0A3D2E]/30 transition-all flex items-center gap-2 text-xs font-semibold shadow-2xs cursor-pointer font-sans"
+          aria-label="Actualiser la liste"
+          className={`shrink-0 h-10 px-3 sm:px-4 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-[#0A3D2E]/40 hover:bg-[#0A3D2E]/[0.03] disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-[13px] font-semibold cursor-pointer font-sans ${FOCUS}`}
         >
-          <RefreshCw className={`w-4 h-4 text-[#0A3D2E] ${isRefreshing ? 'animate-spin' : ''}`} />
-          <span>Actualiser</span>
+          <RefreshCw
+            className={`w-4 h-4 text-[#0A3D2E] dark:text-[#F1DFB6] ${isRefreshing ? 'animate-spin motion-reduce:animate-none' : ''}`}
+          />
+          <span className="hidden sm:inline">{isRefreshing ? 'Actualisation…' : 'Actualiser'}</span>
         </button>
       </div>
 
-      {/* Filter Tabs & Search Bar */}
-      <div className="p-2 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/70 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 font-sans">
-        {/* Status Filter Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto p-1 scrollbar-none">
-          {tabs.map((tab) => {
-            const isActive = status === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => onStatusChange(tab.id)}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer"
-                style={
-                  isActive
-                    ? { background: `linear-gradient(135deg, ${FOREST}, #062a1f)`, color: '#F1DFB6' }
-                    : { color: '#475569' }
-                }
-              >
-                <span>{tab.label}</span>
-                <span
-                  className="px-2 py-0.5 rounded-full text-[10px] font-bold tabular-nums"
-                  style={
-                    isActive
-                      ? { backgroundColor: 'rgba(241, 223, 182, 0.2)', color: '#F1DFB6' }
-                      : { backgroundColor: tab.bg, color: tab.tone }
-                  }
+      {/* Filtres + recherche */}
+      <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 shadow-xs font-sans">
+        <div className="p-2 flex flex-col lg:flex-row lg:items-center justify-between gap-2">
+          {/* Onglets de statut */}
+          <div
+            role="tablist"
+            aria-label="Filtrer les hôtes par statut"
+            className="flex items-center gap-1 overflow-x-auto scrollbar-none p-0.5"
+          >
+            {tabs.map((tab) => {
+              const isActive = status === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => onStatusChange(tab.id)}
+                  className={`flex items-center gap-2 h-10 pl-3.5 pr-2.5 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${FOCUS} ${isActive
+                      ? 'text-[#F1DFB6] dark:ring-1 dark:ring-[#F1DFB6]/30'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  style={isActive ? { backgroundColor: FOREST } : undefined}
                 >
-                  {tab.count}
-                </span>
+                  <span>{tab.label}</span>
+                  <span
+                    className="min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-[11px] font-bold tabular-nums text-center"
+                    style={
+                      isActive
+                        ? { backgroundColor: 'rgba(241, 223, 182, 0.18)', color: CHAMPAGNE }
+                        : { backgroundColor: tab.bg, color: tab.tone }
+                    }
+                  >
+                    {fmt(tab.count)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Recherche */}
+          <div role="search" className="relative w-full lg:max-w-sm">
+            <Search
+              className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+              aria-hidden="true"
+            />
+            <input
+              ref={searchRef}
+              type="text"
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Nom, email, téléphone, immatriculation"
+              aria-label="Rechercher un hôte"
+              autoComplete="off"
+              className="w-full h-10 pl-10 pr-10 text-base sm:text-[13px] rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-colors focus:border-[#0A3D2E] focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-[#0A3D2E]/10"
+            />
+            {search ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onSearchChange('');
+                  searchRef.current?.focus();
+                }}
+                aria-label="Effacer la recherche"
+                className={`absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 dark:hover:text-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors ${FOCUS}`}
+              >
+                <X className="w-3.5 h-3.5" />
               </button>
-            );
-          })}
+            ) : (
+              <kbd
+                aria-hidden="true"
+                className="hidden lg:flex absolute right-3 top-1/2 -translate-y-1/2 h-5 min-w-5 px-1.5 items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-slate-400"
+              >
+                /
+              </kbd>
+            )}
+          </div>
         </div>
 
-        {/* Search Bar Input */}
-        <div className="relative flex-1 max-w-sm">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Nom, email, tél, immatriculation..."
-            className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 outline-none transition-all focus:border-[#0A3D2E] focus:ring-2 focus:ring-[#0A3D2E]/20"
-          />
-          {search && (
-            <button
-              type="button"
-              onClick={() => onSearchChange('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
+        {/* Répartition de la base d'hôtes */}
+        {counts && total > 0 && (
+          <div
+            role="img"
+            aria-label={`Répartition : ${counts.active} actifs, ${counts.pendingKyc} KYC en attente, ${counts.banned} suspendus ou bannis, sur ${total} hôtes`}
+            className="flex h-1 w-full bg-slate-100 dark:bg-slate-800"
+          >
+            {segments.map((s) => (
+              <div
+                key={s.key}
+                className="h-full transition-[width] duration-500 ease-out motion-reduce:transition-none"
+                style={{ width: `${(s.value / total) * 100}%`, backgroundColor: s.color }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
