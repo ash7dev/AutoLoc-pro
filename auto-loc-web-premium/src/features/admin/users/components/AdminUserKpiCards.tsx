@@ -26,6 +26,12 @@ interface AdminUserKpiCardsProps {
   onSelectRoleFilter: (role: string) => void;
 }
 
+const fontStyle = { fontFamily: 'var(--font-fraunces), Georgia, serif' };
+const FOREST = '#0A3D2E';
+const GOLD = '#b27c2d';
+const RUST = '#a13d3d';
+const VIOLET = '#6d28d9';
+
 export function AdminUserKpiCards({
   counts,
   activeStatusFilter,
@@ -47,7 +53,8 @@ export function AdminUserKpiCards({
       value: total,
       subtext: `${locataires} Locataires • ${proprietaires} Hôtes`,
       icon: Users,
-      iconBg: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
+      color: FOREST,
+      bgLight: 'rgba(10, 61, 46, 0.08)',
       badge: null,
       isActive: activeStatusFilter === 'ALL' && activeRoleFilter === 'ALL',
       onClick: () => {
@@ -61,7 +68,8 @@ export function AdminUserKpiCards({
       value: proprietaires,
       subtext: 'Partenaires avec véhicules',
       icon: UserCheck,
-      iconBg: 'bg-amber-50 text-amber-700 border border-amber-200/60',
+      color: GOLD,
+      bgLight: 'rgba(178, 124, 45, 0.1)',
       badge: null,
       isActive: activeRoleFilter === 'PROPRIETAIRE',
       onClick: () => {
@@ -74,7 +82,8 @@ export function AdminUserKpiCards({
       value: pendingKyc,
       subtext: 'Identités en attente de revue',
       icon: ShieldCheck,
-      iconBg: 'bg-sky-50 text-sky-700 border border-sky-200/60',
+      color: '#0284c7', // Sky blue
+      bgLight: 'rgba(2, 132, 199, 0.1)',
       badge: pendingKyc > 0 ? `${pendingKyc} urgent` : undefined,
       isActive: activeStatusFilter === 'PENDING_KYC',
       onClick: () => {
@@ -87,7 +96,8 @@ export function AdminUserKpiCards({
       value: stuckOnboarding,
       subtext: 'Comptes en cours d\'onboarding',
       icon: UserPlus,
-      iconBg: 'bg-violet-50 text-violet-700 border border-violet-200/60',
+      color: VIOLET,
+      bgLight: 'rgba(109, 40, 217, 0.1)',
       badge: null,
       isActive: activeStatusFilter === 'STUCK_ONBOARDING',
       onClick: () => {
@@ -100,7 +110,8 @@ export function AdminUserKpiCards({
       value: banned,
       subtext: 'Accès restreint par l\'admin',
       icon: UserX,
-      iconBg: 'bg-rose-50 text-rose-700 border border-rose-200/60',
+      color: RUST,
+      bgLight: 'rgba(161, 61, 61, 0.1)',
       badge: null,
       isActive: activeStatusFilter === 'BANNED',
       onClick: () => {
@@ -110,47 +121,60 @@ export function AdminUserKpiCards({
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6" style={fontStyle}>
       {cards.map((card) => {
         const IconComponent = card.icon;
         return (
           <button
             key={card.id}
             onClick={card.onClick}
-            className={`relative group text-left p-4.5 rounded-2xl border transition-all duration-200 bg-white shadow-sm hover:shadow-md ${
+            className={`relative group text-left p-4.5 rounded-3xl border transition-all duration-200 bg-white dark:bg-slate-900 shadow-[0_10px_30px_-20px_rgba(10,61,46,0.15)] hover:shadow-lg ${
               card.isActive
-                ? 'ring-2 ring-emerald-500 border-emerald-500 bg-emerald-50/10 shadow-emerald-500/5'
-                : 'border-slate-200 hover:border-slate-300'
+                ? 'ring-2 border-transparent shadow-md'
+                : 'border-slate-200/70 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
             }`}
+            style={{
+              borderColor: card.isActive ? card.color : undefined,
+              ['--tw-ring-color' as string]: card.isActive ? card.color : undefined,
+            }}
           >
             {/* Top Row: Icon & Badge */}
             <div className="flex items-center justify-between mb-3">
-              <div className={`p-2.5 rounded-xl ${card.iconBg}`}>
+              <div
+                className="w-10 h-10 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105"
+                style={{ backgroundColor: card.bgLight, color: card.color }}
+              >
                 <IconComponent className="w-5 h-5" />
               </div>
               {card.badge && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 uppercase tracking-wider">
+                <span
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider font-sans"
+                  style={{ backgroundColor: card.bgLight, color: card.color, borderColor: `${card.color}33` }}
+                >
                   {card.badge}
                 </span>
               )}
             </div>
 
             {/* Value */}
-            <div className="text-2xl font-black text-slate-900 tracking-tight mb-1 font-mono">
+            <div className="text-2xl font-normal text-slate-900 dark:text-white tracking-tight mb-1 font-mono">
               {card.value.toLocaleString()}
             </div>
 
             {/* Title & Subtext */}
-            <div className="text-xs font-bold text-slate-800 mb-0.5">
+            <div className="text-xs font-normal text-slate-900 dark:text-slate-200 mb-0.5">
               {card.title}
             </div>
-            <div className="text-[11px] text-slate-500 truncate">
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-sans">
               {card.subtext}
             </div>
 
             {/* Active Indicator Bar */}
             {card.isActive && (
-              <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-emerald-600 rounded-full" />
+              <div
+                className="absolute bottom-0 left-5 right-5 h-1 rounded-t-full transition-all"
+                style={{ backgroundColor: card.color }}
+              />
             )}
           </button>
         );

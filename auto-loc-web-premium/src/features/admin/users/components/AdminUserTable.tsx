@@ -27,6 +27,9 @@ interface AdminUserTableProps {
   onBanClick: (user: AdminUserQueueItem) => void;
 }
 
+const fontStyle = { fontFamily: 'var(--font-fraunces), Georgia, serif' };
+const FOREST = '#0A3D2E';
+
 export function AdminUserTable({
   items,
   isLoading,
@@ -60,43 +63,43 @@ export function AdminUserTable({
 
   if (isLoading && items.length === 0) {
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm">
-        <div className="inline-flex p-4 rounded-full bg-emerald-50 text-emerald-600 mb-4 animate-pulse">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-3xl p-12 text-center shadow-sm" style={fontStyle}>
+        <div className="inline-flex p-4 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 mb-4 animate-pulse">
           <Clock className="w-8 h-8 animate-spin" />
         </div>
-        <p className="text-sm font-semibold text-slate-700">Chargement de l'annuaire des utilisateurs...</p>
+        <p className="text-sm font-normal text-slate-700 dark:text-slate-300">Chargement de l'annuaire des utilisateurs...</p>
       </div>
     );
   }
 
   if (!isLoading && items.length === 0) {
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm">
-        <div className="inline-flex p-4 rounded-full bg-slate-100 text-slate-400 mb-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-3xl p-12 text-center shadow-sm" style={fontStyle}>
+        <div className="inline-flex p-4 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mb-4">
           <UserX className="w-8 h-8" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900 mb-1">Aucun utilisateur trouvé</h3>
-        <p className="text-xs text-slate-500">Essayez de modifier vos filtres ou le terme de recherche.</p>
+        <h3 className="text-lg font-normal text-slate-900 dark:text-white mb-1">Aucun utilisateur trouvé</h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400 font-sans">Essayez de modifier vos filtres ou le terme de recherche.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-3xl overflow-hidden shadow-[0_10px_40px_-26px_rgba(10,61,46,0.3)]" style={fontStyle}>
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-              <th className="py-3.5 px-4">Utilisateur & Contact</th>
-              <th className="py-3.5 px-4">Rôle</th>
-              <th className="py-3.5 px-4">Statut KYC</th>
-              <th className="py-3.5 px-4">Activité / Flotte</th>
-              <th className="py-3.5 px-4">Statut Compte</th>
-              <th className="py-3.5 px-4">Inscription</th>
-              <th className="py-3.5 px-4 text-right">Actions</th>
+            <tr className="border-b border-slate-200/70 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 text-[11px] font-normal text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <th className="py-4 px-5">Utilisateur & Contact</th>
+              <th className="py-4 px-5">Rôle</th>
+              <th className="py-4 px-5">Statut KYC</th>
+              <th className="py-4 px-5">Activité / Flotte</th>
+              <th className="py-4 px-5">Statut Compte</th>
+              <th className="py-4 px-5">Inscription</th>
+              <th className="py-4 px-5 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-xs">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs font-sans">
             {items.map((item) => {
               const u = item.utilisateur;
               const isStuck = item.isStuckOnboarding;
@@ -114,20 +117,23 @@ export function AdminUserTable({
               return (
                 <tr
                   key={item.id}
-                  className="hover:bg-slate-50/80 transition-colors duration-150 group"
+                  className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors duration-150 group"
                 >
                   {/* User Profile & Contact Info */}
-                  <td className="py-4 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="relative flex-shrink-0">
+                  <td className="py-4 px-5">
+                    <div className="flex items-center gap-3.5">
+                      <div className="relative shrink-0">
                         {avatarUrl ? (
                           <img
                             src={avatarUrl}
                             alt={fullName}
-                            className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                            className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                          <div
+                            className="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-xs"
+                            style={{ backgroundColor: 'rgba(10,61,46,0.08)', color: FOREST, borderColor: 'rgba(10,61,46,0.2)' }}
+                          >
                             {initials || 'U'}
                           </div>
                         )}
@@ -141,24 +147,24 @@ export function AdminUserTable({
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-900 text-sm truncate max-w-[200px]">
+                          <span className="font-semibold text-slate-900 dark:text-white text-sm truncate max-w-[200px]" style={fontStyle}>
                             {fullName}
                           </span>
                           {isStuck && (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-200">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
                               Inscription incomplète
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-0.5">
+                        <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                           <span className="flex items-center gap-1 truncate max-w-[160px]" title={item.email}>
-                            <Mail className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                            <Mail className="w-3 h-3 text-slate-400 shrink-0" />
                             {item.email || 'Pas d\'email'}
                           </span>
                           {item.phone && (
                             <span className="flex items-center gap-1 truncate">
-                              <Phone className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                              <Phone className="w-3 h-3 text-slate-400 shrink-0" />
                               {item.phone}
                             </span>
                           )}
@@ -168,37 +174,37 @@ export function AdminUserTable({
                   </td>
 
                   {/* Role Badge */}
-                  <td className="py-4 px-4">
+                  <td className="py-4 px-5">
                     <RoleBadge role={item.role} />
                   </td>
 
                   {/* KYC Badge */}
-                  <td className="py-4 px-4">
+                  <td className="py-4 px-5">
                     <KycBadge status={item.statutKyc} isStuck={isStuck} />
                   </td>
 
                   {/* Stats & Vehicles */}
-                  <td className="py-4 px-4">
+                  <td className="py-4 px-5">
                     <div className="flex flex-col gap-1 text-[11px]">
-                      <span className="flex items-center gap-1.5 text-slate-800 font-semibold">
-                        <Car className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200 font-medium">
+                        <Car className="w-3.5 h-3.5" style={{ color: FOREST }} />
                         {item.stats.vehiclesCount} véhicule{item.stats.vehiclesCount > 1 ? 's' : ''}
                       </span>
-                      <span className="text-slate-500">
+                      <span className="text-slate-500 dark:text-slate-400">
                         {item.stats.bookingsCount} réservation{item.stats.bookingsCount > 1 ? 's' : ''}
                       </span>
                     </div>
                   </td>
 
                   {/* Account Status Badge */}
-                  <td className="py-4 px-4">
+                  <td className="py-4 px-5">
                     {isBanned ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
                         <ShieldAlert className="w-3 h-3 text-rose-600" />
                         Suspendu
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                         <ShieldCheck className="w-3 h-3 text-emerald-600" />
                         Actif
                       </span>
@@ -206,8 +212,8 @@ export function AdminUserTable({
                   </td>
 
                   {/* Registration Date */}
-                  <td className="py-4 px-4 text-slate-500 text-[11px]">
-                    <div className="flex items-center gap-1.5">
+                  <td className="py-4 px-5 text-slate-500 dark:text-slate-400 text-[11px]">
+                    <div className="flex items-center gap-1.5 font-mono">
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
                       {new Date(item.createdAt).toLocaleDateString('fr-FR', {
                         day: '2-digit',
@@ -218,23 +224,24 @@ export function AdminUserTable({
                   </td>
 
                   {/* Actions Button */}
-                  <td className="py-4 px-4 text-right">
+                  <td className="py-4 px-5 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => onSelectUser(item.id)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-all duration-150"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 text-white shadow-xs"
+                        style={{ background: `linear-gradient(135deg, ${FOREST}, #062a1f)` }}
                         title="Inspecter le compte 360°"
                       >
-                        <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                        <Eye className="w-3.5 h-3.5 text-white/90" />
                         Inspecter
                       </button>
 
                       <button
                         onClick={() => onBanClick(item)}
-                        className={`p-1.5 rounded-lg border transition-all duration-150 ${
+                        className={`p-2 rounded-xl border transition-all duration-150 ${
                           isBanned
-                            ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
-                            : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                            : 'bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800'
                         }`}
                         title={isBanned ? 'Réactiver le compte' : 'Suspendre le compte'}
                       >
@@ -250,15 +257,15 @@ export function AdminUserTable({
       </div>
 
       {/* Sentinel Element for Infinite Scroll */}
-      <div ref={observerTarget} className="p-4 text-center border-t border-slate-100">
+      <div ref={observerTarget} className="p-4 text-center border-t border-slate-100 dark:border-slate-800">
         {isLoadingMore && (
           <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
-            <Clock className="w-4 h-4 animate-spin text-emerald-600" />
+            <Clock className="w-4 h-4 animate-spin" style={{ color: FOREST }} />
             <span>Chargement des comptes suivants...</span>
           </div>
         )}
         {!hasMore && items.length > 0 && (
-          <p className="text-[11px] text-slate-400">Fin des résultats — {items.length} utilisateurs affichés</p>
+          <p className="text-[11px] text-slate-400 font-sans">Fin des résultats — {items.length} utilisateurs affichés</p>
         )}
       </div>
     </div>
@@ -269,25 +276,25 @@ function RoleBadge({ role }: { role: string }) {
   switch (role) {
     case 'PROPRIETAIRE':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
           <Award className="w-3 h-3 text-amber-600" /> Hôte (Propriétaire)
         </span>
       );
     case 'ADMIN':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-50 text-purple-800 border border-purple-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
           👑 Admin
         </span>
       );
     case 'SUPPORT':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-50 text-sky-800 border border-sky-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
           🎧 Support
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
           Locataire
         </span>
       );
@@ -297,7 +304,7 @@ function RoleBadge({ role }: { role: string }) {
 function KycBadge({ status, isStuck }: { status: string; isStuck: boolean }) {
   if (isStuck) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
         Non démarré
       </span>
     );
@@ -306,25 +313,25 @@ function KycBadge({ status, isStuck }: { status: string; isStuck: boolean }) {
   switch (status) {
     case 'VERIFIE':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
           <ShieldCheck className="w-3 h-3 text-emerald-600" /> Vérifié
         </span>
       );
     case 'EN_ATTENTE':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-800 border border-sky-200 animate-pulse">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800 animate-pulse">
           <Clock className="w-3 h-3 text-sky-600" /> À examiner
         </span>
       );
     case 'REJETE':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
           <AlertCircle className="w-3 h-3 text-rose-600" /> Rejeté
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
           Non vérifié
         </span>
       );

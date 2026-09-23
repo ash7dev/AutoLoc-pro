@@ -33,7 +33,12 @@ interface AdminUserInspectorModalProps {
   isMutating: boolean;
 }
 
+const fontStyle = { fontFamily: 'var(--font-fraunces), Georgia, serif' };
+const FOREST = '#0A3D2E';
+const FOREST_DARK = '#062a1f';
+
 export function AdminUserInspectorModal({
+
   user,
   isLoading,
   onClose,
@@ -80,7 +85,8 @@ export function AdminUserInspectorModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-5xl max-h-[90vh] bg-white border border-slate-200 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-900">
+      <div className="relative w-full max-w-5xl max-h-[90vh] bg-white border border-slate-200 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-900" style={fontStyle}>
+
         {/* Header Bar */}
         <div className="px-6 py-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
           <div className="flex items-center gap-4">

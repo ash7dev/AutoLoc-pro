@@ -278,7 +278,7 @@ export function ReservationCalendar({
             {/* ── Popover calendar ─────────────────────────────────── */}
             <PopoverContent
                 className={cn(
-                    'w-auto p-0 z-50',
+                    'w-auto p-0 z-[100]',
                     'border border-slate-100 bg-white',
                     'shadow-2xl shadow-slate-200/60 rounded-2xl overflow-hidden',
                     'animate-in fade-in slide-in-from-top-2 duration-200',
