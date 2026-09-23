@@ -63,6 +63,9 @@ export interface AdminPaymentBreakdownData {
     mode: string;
     count: number;
     volume: number;
+    volumeOnline?: number;
+    volumeCheckin?: number;
+    totalContractVolume?: number;
   }>;
 }
 

@@ -162,19 +162,36 @@ export const AdminPaymentDistribution: React.FC<AdminPaymentDistributionProps> =
             className="text-xs font-fraunces font-normal text-slate-500 uppercase tracking-wider block mb-3"
             style={fontStyle}
           >
-            Mode d'Encaissement des Contrats
+            Mode d'Encaissement des Contrats Confirmés
           </span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {modeBreakdown.map((m) => (
-              <div key={m.mode} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-fraunces">
-                <span className="font-normal text-[#041912] dark:text-slate-300 font-fraunces" style={fontStyle}>
-                  {m.mode === 'TOTAL_EN_LIGNE' ? 'Paiement 100% en Ligne' : 'Acompte + Solde Check-in'}
-                </span>
-                <span className="font-normal text-emerald-900 dark:text-white font-fraunces" style={fontStyle}>
-                  {formatXOF(m.volume)} ({m.count} résas)
-                </span>
-              </div>
-            ))}
+            {modeBreakdown.map((m) => {
+              const onlineAmt = m.volumeOnline ?? m.volume;
+              const checkinAmt = m.volumeCheckin ?? 0;
+              return (
+                <div key={m.mode} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex flex-col gap-1 text-xs font-fraunces">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-[#041912] dark:text-slate-200 font-fraunces" style={fontStyle}>
+                      {m.mode === 'TOTAL_EN_LIGNE' ? '100% en Ligne' : 'Acompte + Solde Check-in'}
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-fraunces" style={fontStyle}>
+                      {m.count} contrat{m.count > 1 ? 's' : ''} confirmé{m.count > 1 ? 's' : ''}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-200/50 dark:border-slate-700/50">
+                    <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                      Encaissé en Ligne : {formatXOF(onlineAmt)}
+                    </span>
+                    {checkinAmt > 0 && (
+                      <span className="text-amber-700 dark:text-amber-400 font-medium">
+                        Solde Check-in : {formatXOF(checkinAmt)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

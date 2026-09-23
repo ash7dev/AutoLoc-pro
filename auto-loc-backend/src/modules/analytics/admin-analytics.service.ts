@@ -238,13 +238,13 @@ export class AdminAnalyticsService {
 
     const { currentStart, endDate } = this.resolveDateRange(query.period);
 
-    // 1. Provider Breakdown (Uniquement les paiements CONFIRME)
+    // 1. Provider Breakdown (Uniquement les paiements CONFIRME pour réservations confirmées/effectives)
     const payments = await this.prisma.paiement.findMany({
       where: {
         creeLe: { gte: currentStart, lte: endDate },
         statut: 'CONFIRME',
         reservation: {
-          statut: { notIn: [StatutReservation.ANNULEE] },
+          statut: { in: [StatutReservation.CONFIRMEE, StatutReservation.EN_COURS, StatutReservation.TERMINEE] },
         },
       },
       select: {
@@ -299,21 +299,28 @@ export class AdminAnalyticsService {
 
     const totalVolume = waveVolume + omVolume + stripeVolume;
 
-    // 2. Reservation Mode Breakdown (Total en Ligne vs Solde Checkin)
+    // 2. Reservation Mode Breakdown (Réservations confirmées/effectives uniquement)
     const modes = await this.prisma.reservation.groupBy({
       by: ['modePaiement'],
       where: {
         creeLe: { gte: currentStart, lte: endDate },
-        statut: { notIn: [StatutReservation.ANNULEE] },
+        statut: { in: [StatutReservation.CONFIRMEE, StatutReservation.EN_COURS, StatutReservation.TERMINEE] },
       },
       _count: { id: true },
-      _sum: { totalLocataire: true },
+      _sum: {
+        totalLocataire: true,
+        montantPayeEnLigne: true,
+        montantSoldeCheckin: true,
+      },
     });
 
     const modeBreakdown = modes.map((m) => ({
       mode: m.modePaiement,
       count: m._count.id,
-      volume: Number(m._sum.totalLocataire ?? 0),
+      volumeOnline: Math.round(Number(m._sum.montantPayeEnLigne ?? 0)),
+      volumeCheckin: Math.round(Number(m._sum.montantSoldeCheckin ?? 0)),
+      totalContractVolume: Math.round(Number(m._sum.totalLocataire ?? 0)),
+      volume: Math.round(Number(m._sum.montantPayeEnLigne ?? 0)),
     }));
 
     const result = {
