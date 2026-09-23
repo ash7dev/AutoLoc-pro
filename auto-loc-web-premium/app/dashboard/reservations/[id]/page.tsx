@@ -169,7 +169,7 @@ export default function OwnerReservationDetailPage() {
             <div className="flex items-center justify-center gap-3 pt-2">
               <button
                 type="button"
-                onClick={refetch}
+                onClick={() => refetch()}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs hover:bg-[#0F4F3B] transition-all cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5" />

@@ -10,23 +10,29 @@ export function useOwnerReservationDetail(reservationId: string) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  const fetchDetail = useCallback(async () => {
+  const fetchDetail = useCallback(async (isSilent: boolean = false) => {
     if (!reservationId) return;
 
-    setIsLoading(true);
-    setIsError(false);
-    setErrorMessage(null);
+    if (!isSilent) {
+      setIsLoading(true);
+      setIsError(false);
+      setErrorMessage(null);
+    }
 
     try {
       const data = await reservationsApi.getReservationDetail(reservationId);
       setReservation(data);
     } catch (err: any) {
       console.error('Erreur chargement réservation hôte:', err);
-      setIsError(true);
-      setErrorMessage(err?.message || 'Impossible de récupérer la réservation.');
-      setReservation(null);
+      if (!isSilent) {
+        setIsError(true);
+        setErrorMessage(err?.message || 'Impossible de récupérer la réservation.');
+        setReservation(null);
+      }
     } finally {
-      setIsLoading(false);
+      if (!isSilent) {
+        setIsLoading(false);
+      }
     }
   }, [reservationId]);
 

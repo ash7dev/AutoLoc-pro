@@ -204,6 +204,176 @@ export class WalletService {
     }));
   }
 
+  async adminGetWithdrawalStats() {
+    const [counts, statsWave, statsOm, refundsPendingCount] = await Promise.all([
+      this.prisma.retrait.groupBy({
+        by: ['statut'],
+        _count: { id: true },
+        _sum: { montant: true },
+      }),
+      this.prisma.retrait.aggregate({
+        where: { methode: 'WAVE', statut: StatutRetrait.EN_ATTENTE },
+        _count: { id: true },
+        _sum: { montant: true },
+      }),
+      this.prisma.retrait.aggregate({
+        where: { methode: 'ORANGE_MONEY', statut: StatutRetrait.EN_ATTENTE },
+        _count: { id: true },
+        _sum: { montant: true },
+      }),
+      this.prisma.paiement.count({
+        where: { statut: 'EN_ATTENTE_REMBOURSEMENT' },
+      }),
+    ]);
+
+    let totalPendingAmount = 0;
+    let pendingCount = 0;
+    let totalApprovedAmount = 0;
+    let approvedCount = 0;
+    let totalRejectedAmount = 0;
+    let rejectedCount = 0;
+
+    for (const group of counts) {
+      const sum = Number(group._sum.montant || 0);
+      const cnt = group._count.id;
+      if (group.statut === StatutRetrait.EN_ATTENTE) {
+        totalPendingAmount = sum;
+        pendingCount = cnt;
+      } else if (group.statut === StatutRetrait.EFFECTUE) {
+        totalApprovedAmount = sum;
+        approvedCount = cnt;
+      } else if (group.statut === StatutRetrait.REJETE) {
+        totalRejectedAmount = sum;
+        rejectedCount = cnt;
+      }
+    }
+
+    return {
+      totalPendingAmount,
+      pendingCount,
+      totalApprovedAmount,
+      approvedCount,
+      totalRejectedAmount,
+      rejectedCount,
+      wavePendingAmount: Number(statsWave._sum.montant || 0),
+      wavePendingCount: statsWave._count.id,
+      omPendingAmount: Number(statsOm._sum.montant || 0),
+      omPendingCount: statsOm._count.id,
+      refundsPendingCount,
+    };
+  }
+
+  async adminGetWithdrawalsQueue(params: {
+    statut?: string;
+    methode?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const page = Math.max(1, Number(params.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(params.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.RetraitWhereInput = {};
+
+    if (params.statut && params.statut !== 'ALL') {
+      where.statut = params.statut as StatutRetrait;
+    }
+
+    if (params.methode && params.methode !== 'ALL') {
+      where.methode = params.methode as any;
+    }
+
+    if (params.search && params.search.trim()) {
+      const q = params.search.trim();
+      where.OR = [
+        { id: { contains: q, mode: 'insensitive' } },
+        { destinataire: { contains: q, mode: 'insensitive' } },
+        { idTransactionFournisseur: { contains: q, mode: 'insensitive' } },
+        {
+          wallet: {
+            utilisateur: {
+              OR: [
+                { prenom: { contains: q, mode: 'insensitive' } },
+                { nom: { contains: q, mode: 'insensitive' } },
+                { email: { contains: q, mode: 'insensitive' } },
+                { telephone: { contains: q, mode: 'insensitive' } },
+              ],
+            },
+          },
+        },
+      ];
+    }
+
+    const [total, retraits, stats] = await Promise.all([
+      this.prisma.retrait.count({ where }),
+      this.prisma.retrait.findMany({
+        where,
+        orderBy: { demandeeLe: 'desc' },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          montant: true,
+          methode: true,
+          destinataire: true,
+          statut: true,
+          raisonRejet: true,
+          idTransactionFournisseur: true,
+          demandeeLe: true,
+          traiteLe: true,
+          wallet: {
+            select: {
+              soldeDisponible: true,
+              utilisateur: {
+                select: {
+                  id: true,
+                  prenom: true,
+                  nom: true,
+                  email: true,
+                  telephone: true,
+                  statutKyc: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      this.adminGetWithdrawalStats(),
+    ]);
+
+    const data = retraits.map((r) => {
+      const user = r.wallet.utilisateur;
+      const ownerName = [user?.prenom, user?.nom].filter(Boolean).join(' ') || 'Propriétaire Anonyme';
+      return {
+        id: r.id,
+        ownerId: user?.id || '',
+        ownerName,
+        ownerEmail: user?.email || '',
+        ownerPhone: user?.telephone || '',
+        ownerKycStatus: user?.statutKyc || 'NON_VERIFIE',
+        walletBalance: Number(r.wallet.soldeDisponible || 0),
+        amount: Number(r.montant),
+        method: r.methode,
+        numeroDestinataire: r.destinataire,
+        statut: r.statut,
+        raisonRejet: r.raisonRejet ?? null,
+        idTransactionFournisseur: r.idTransactionFournisseur ?? null,
+        demandeeLe: r.demandeeLe.toISOString(),
+        traiteLe: r.traiteLe?.toISOString() || null,
+      };
+    });
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      stats,
+    };
+  }
+
   /**
    * GET /wallet/penalites
    * Retourne les pénalités en attente pour le propriétaire.

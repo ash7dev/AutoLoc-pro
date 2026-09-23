@@ -20,7 +20,7 @@ interface OwnerCheckoutModalProps {
   isSubmitting: boolean;
   onClose: () => void;
   onConfirm: () => Promise<void>;
-  onRefetch: () => Promise<void>;
+  onRefetch: (isSilent?: boolean) => Promise<void>;
 }
 
 export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
@@ -69,7 +69,7 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
       }
 
       setUploadProgress(100);
-      await onRefetch();
+      await onRefetch(true);
     } catch (err: any) {
       alert(err?.message || 'Erreur lors du téléversement de la photo de retour');
     } finally {

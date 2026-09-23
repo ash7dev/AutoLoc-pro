@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Query, UseGuards } from '@nestjs/common';
 import { RoleProfile } from '@prisma/client';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
 import { RolesGuard } from '../../shared/guards/roles.guard';
@@ -10,6 +10,36 @@ import { WalletService } from './wallet.service';
 @Roles(RoleProfile.ADMIN)
 export class AdminWalletController {
   constructor(private readonly walletService: WalletService) {}
+
+  /**
+   * GET /admin/withdrawals/stats
+   * Statistiques globales des retraits & reversements (Wave, Orange Money, Remboursements)
+   */
+  @Get('stats')
+  getStats() {
+    return this.walletService.adminGetWithdrawalStats();
+  }
+
+  /**
+   * GET /admin/withdrawals/queue
+   * Queue de retraits avec filtres par statut, méthode, recherche et pagination
+   */
+  @Get('queue')
+  getQueue(
+    @Query('statut') statut?: string,
+    @Query('methode') methode?: string,
+    @Query('search') search?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.walletService.adminGetWithdrawalsQueue({
+      statut,
+      methode,
+      search,
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
+  }
 
   /**
    * GET /admin/withdrawals

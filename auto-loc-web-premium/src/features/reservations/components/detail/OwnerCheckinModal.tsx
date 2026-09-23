@@ -23,7 +23,7 @@ interface OwnerCheckinModalProps {
   isSubmitting: boolean;
   onClose: () => void;
   onConfirm: (soldeRecu: boolean) => Promise<void>;
-  onRefetch: () => Promise<void>;
+  onRefetch: (isSilent?: boolean) => Promise<void>;
 }
 
 export const OwnerCheckinModal: React.FC<OwnerCheckinModalProps> = ({
@@ -77,7 +77,7 @@ export const OwnerCheckinModal: React.FC<OwnerCheckinModalProps> = ({
       }
 
       setUploadProgress(100);
-      await onRefetch();
+      await onRefetch(true);
     } catch (err: any) {
       alert(err?.message || 'Erreur lors du téléversement de la photo');
     } finally {
