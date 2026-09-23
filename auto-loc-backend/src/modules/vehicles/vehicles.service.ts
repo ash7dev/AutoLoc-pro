@@ -336,14 +336,14 @@ export class VehiclesService {
     const vehicleIds = vehicles.map((v) => v.id);
     const activeResa = vehicleIds.length > 0
       ? await this.prisma.reservation.findMany({
-          where: {
-            vehiculeId: { in: vehicleIds },
-            statut: { in: ['EN_COURS', 'CONFIRMEE'] },
-          },
-          select: { vehiculeId: true },
-          orderBy: { vehiculeId: 'asc' },
-          distinct: ['vehiculeId'],
-        })
+        where: {
+          vehiculeId: { in: vehicleIds },
+          statut: { in: ['EN_COURS', 'CONFIRMEE'] },
+        },
+        select: { vehiculeId: true },
+        orderBy: { vehiculeId: 'asc' },
+        distinct: ['vehiculeId'],
+      })
       : [];
     const lockedIds = new Set(activeResa.map((r) => r.vehiculeId));
 
@@ -380,7 +380,7 @@ export class VehiclesService {
    */
   async findOne(user: RequestUser | null, id: string) {
     // Tracking de la vue en arrière-plan (non bloquant)
-    this.feedScoring.trackView({ vehiculeId: id, userId: user?.sub }).catch(() => {});
+    this.feedScoring.trackView({ vehiculeId: id, userId: user?.sub }).catch(() => { });
 
     // ── Chemin public : cache Redis (user non authentifié) ──────────────
     // On ne cache que les requêtes sans token pour garantir qu'un propriétaire
@@ -483,7 +483,7 @@ export class VehiclesService {
    * Enregistre un clic ou une interaction sur un véhicule.
    */
   async trackClick(id: string, user: RequestUser | null, actionType: string = 'CLICK_DETAIL') {
-    this.feedScoring.trackClick({ vehiculeId: id, userId: user?.sub, actionType }).catch(() => {});
+    this.feedScoring.trackClick({ vehiculeId: id, userId: user?.sub, actionType }).catch(() => { });
     return { success: true };
   }
 
@@ -1892,22 +1892,22 @@ export class VehiclesService {
    * High performance vehicle moderation queue endpoint with search, SLA calculation, and single-pass counters.
    */
   async getVehicleModerationQueue(dto: GetVehicleModerationQueueDto) {
-    const { statut = 'EN_ATTENTE_VALIDATION', search, page = 1, limit = 20 } = dto;
+    const { statut, search, page = 1, limit = 50 } = dto;
     const skip = (page - 1) * limit;
 
     const searchCondition: Prisma.VehiculeWhereInput | undefined = search?.trim()
       ? {
-          OR: [
-            { marque: { contains: search.trim(), mode: 'insensitive' } },
-            { modele: { contains: search.trim(), mode: 'insensitive' } },
-            { immatriculation: { contains: search.trim(), mode: 'insensitive' } },
-            { ville: { contains: search.trim(), mode: 'insensitive' } },
-            { proprietaire: { prenom: { contains: search.trim(), mode: 'insensitive' } } },
-            { proprietaire: { nom: { contains: search.trim(), mode: 'insensitive' } } },
-            { proprietaire: { email: { contains: search.trim(), mode: 'insensitive' } } },
-            { proprietaire: { telephone: { contains: search.trim(), mode: 'insensitive' } } },
-          ],
-        }
+        OR: [
+          { marque: { contains: search.trim(), mode: 'insensitive' } },
+          { modele: { contains: search.trim(), mode: 'insensitive' } },
+          { immatriculation: { contains: search.trim(), mode: 'insensitive' } },
+          { ville: { contains: search.trim(), mode: 'insensitive' } },
+          { proprietaire: { prenom: { contains: search.trim(), mode: 'insensitive' } } },
+          { proprietaire: { nom: { contains: search.trim(), mode: 'insensitive' } } },
+          { proprietaire: { email: { contains: search.trim(), mode: 'insensitive' } } },
+          { proprietaire: { telephone: { contains: search.trim(), mode: 'insensitive' } } },
+        ],
+      }
       : undefined;
 
     let statusCondition: Prisma.VehiculeWhereInput = {};
@@ -2023,14 +2023,14 @@ export class VehiclesService {
         equipements: v.equipements.map((ve) => ve.equipement.nom),
         proprietaire: v.proprietaire
           ? {
-              id: v.proprietaire.id,
-              prenom: v.proprietaire.prenom ?? null,
-              nom: v.proprietaire.nom ?? null,
-              email: v.proprietaire.email ?? null,
-              telephone: v.proprietaire.telephone ?? null,
-              avatarUrl: v.proprietaire.avatarUrl ?? null,
-              statutKyc: v.proprietaire.statutKyc,
-            }
+            id: v.proprietaire.id,
+            prenom: v.proprietaire.prenom ?? null,
+            nom: v.proprietaire.nom ?? null,
+            email: v.proprietaire.email ?? null,
+            telephone: v.proprietaire.telephone ?? null,
+            avatarUrl: v.proprietaire.avatarUrl ?? null,
+            statutKyc: v.proprietaire.statutKyc,
+          }
           : null,
       };
     });

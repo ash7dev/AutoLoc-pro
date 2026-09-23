@@ -1,0 +1,66 @@
+'use client';
+
+import React from 'react';
+import { useAdminVehicleModeration } from '@/src/features/admin/vehicles/hooks/useAdminVehicleModeration';
+import { AdminVehicleHeaderBar } from '@/src/features/admin/vehicles/components/AdminVehicleHeaderBar';
+import { AdminVehicleTable } from '@/src/features/admin/vehicles/components/AdminVehicleTable';
+import { AdminVehicleInspectorModal } from '@/src/features/admin/vehicles/components/AdminVehicleInspectorModal';
+
+export default function AdminVehiclesPage() {
+  const {
+    statut,
+    setStatut,
+    search,
+    setSearch,
+    page,
+    setPage,
+    items,
+    meta,
+    counts,
+    selectedVehicle,
+    setSelectedVehicle,
+    isLoading,
+    isRefreshing,
+    isMutating,
+    refresh,
+    validateVehicle,
+    suspendVehicle,
+    featureVehicle,
+  } = useAdminVehicleModeration();
+
+  return (
+    <div className="space-y-6 w-full pb-10">
+      {/* Header Bar with Status Filter Tabs & Search */}
+      <AdminVehicleHeaderBar
+        statut={statut}
+        onStatutChange={setStatut}
+        search={search}
+        onSearchChange={setSearch}
+        counts={counts}
+        isRefreshing={isRefreshing}
+        onRefresh={refresh}
+      />
+
+      {/* Main Vehicle Moderation Table */}
+      <AdminVehicleTable
+        items={items}
+        isLoading={isLoading}
+        onSelectVehicle={(vehicle) => setSelectedVehicle(vehicle)}
+        page={page}
+        totalPages={meta?.totalPages}
+        onPageChange={setPage}
+      />
+
+      {/* Complete HD Inspector Modal */}
+      <AdminVehicleInspectorModal
+        vehicle={selectedVehicle}
+        isOpen={Boolean(selectedVehicle)}
+        onClose={() => setSelectedVehicle(null)}
+        onValidate={validateVehicle}
+        onSuspend={suspendVehicle}
+        onFeature={featureVehicle}
+        isMutating={isMutating}
+      />
+    </div>
+  );
+}
