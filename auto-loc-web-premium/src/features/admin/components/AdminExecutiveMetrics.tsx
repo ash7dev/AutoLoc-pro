@@ -177,14 +177,14 @@ export const AdminExecutiveMetrics: React.FC<AdminExecutiveMetricsProps> = ({ da
             className="mt-2 text-2xl font-fraunces font-normal text-[#041912] dark:text-white"
             style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
           >
-            {community.activeRentersCount + community.activeOwnersCount} membres
+            {community.uniqueActiveMembersCount ?? (community.activeRentersCount + community.activeOwnersCount)} membre{(community.uniqueActiveMembersCount ?? (community.activeRentersCount + community.activeOwnersCount)) > 1 ? 's' : ''}
           </div>
           <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
             <span
               className="text-xs font-fraunces text-slate-500 dark:text-slate-400"
               style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
             >
-              {community.activeRentersCount} locataires · {community.activeOwnersCount} hôtes
+              {community.activeRentersCount} locataire{community.activeRentersCount > 1 ? 's' : ''} · {community.activeOwnersCount} hôte{community.activeOwnersCount > 1 ? 's' : ''} sur la période
             </span>
           </div>
         </div>

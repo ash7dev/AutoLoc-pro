@@ -76,25 +76,29 @@ export class AdminAnalyticsService {
       }),
       // Total vehicles
       this.prisma.vehicule.count({ where: whereVille }),
-      // Unique active renters in period
+      // Unique active renters in period (confirmed/active/completed reservations)
       this.prisma.reservation.groupBy({
         by: ['locataireId'],
         where: {
           creeLe: { gte: currentStart, lte: endDate },
-          statut: { notIn: [StatutReservation.ANNULEE] },
+          statut: { in: [StatutReservation.CONFIRMEE, StatutReservation.EN_COURS, StatutReservation.TERMINEE] },
         },
       }),
-      // Unique active owners in period
+      // Unique active owners in period (confirmed/active/completed reservations)
       this.prisma.reservation.groupBy({
         by: ['proprietaireId'],
         where: {
           creeLe: { gte: currentStart, lte: endDate },
-          statut: { notIn: [StatutReservation.ANNULEE] },
+          statut: { in: [StatutReservation.CONFIRMEE, StatutReservation.EN_COURS, StatutReservation.TERMINEE] },
         },
       }),
-      // Total active platform users
-      this.prisma.utilisateur.count({ where: { actif: true } }),
+      // Total platform users in database
+      this.prisma.utilisateur.count(),
     ]);
+
+    const activeRenterIds = activeRentersCount.map((r) => r.locataireId);
+    const activeOwnerIds = activeOwnersCount.map((o) => o.proprietaireId);
+    const uniqueActiveMembersCount = new Set([...activeRenterIds, ...activeOwnerIds]).size;
 
     // Current Financials
     const gmv = Number(currReservations._sum.totalLocataire ?? 0);
@@ -153,8 +157,9 @@ export class AdminAnalyticsService {
         fleetUtilizationRate, // %
       },
       community: {
-        activeRentersCount: activeRentersCount.length,
-        activeOwnersCount: activeOwnersCount.length,
+        activeRentersCount: activeRenterIds.length,
+        activeOwnersCount: activeOwnerIds.length,
+        uniqueActiveMembersCount,
         totalUsersCount,
       },
     };

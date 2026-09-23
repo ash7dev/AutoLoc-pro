@@ -20,6 +20,7 @@ export interface AdminOverviewData {
   community: {
     activeRentersCount: number;
     activeOwnersCount: number;
+    uniqueActiveMembersCount?: number;
     totalUsersCount: number;
   };
 }
