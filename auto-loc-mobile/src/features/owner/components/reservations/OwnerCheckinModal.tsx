@@ -211,6 +211,28 @@ export const OwnerCheckinModal: React.FC<OwnerCheckinModalProps> = ({
       }
     }
 
+    // Sécurité Senior : Alerte préventive si 0 photo d'état des lieux ajoutée
+    if (checkinPhotos.length === 0) {
+      return Alert.alert(
+        '📸 Aucune photo d’état des lieux',
+        'Vous n’avez ajouté aucune photo du véhicule au départ. Les photos sont fortement recommandées pour vous protéger en cas de litige.\n\nSouhaitez-vous valider le check-in sans photo ?',
+        [
+          { text: '📷 Ajouter des photos', style: 'cancel' },
+          {
+            text: 'Valider sans photo',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await onConfirm(parsedSolde);
+              } catch (err: any) {
+                Alert.alert('Erreur validation', err?.message || 'La validation du check-in a échoué.');
+              }
+            },
+          },
+        ]
+      );
+    }
+
     try {
       await onConfirm(parsedSolde);
     } catch (err: any) {

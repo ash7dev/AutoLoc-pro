@@ -14,6 +14,8 @@ import { OwnerContractCard } from '@/src/features/reservations/components/detail
 import { TenantInspectionPhotosCard } from '@/src/features/reservations/components/detail/TenantInspectionPhotosCard';
 import { OwnerBookingTimelineCard } from '@/src/features/reservations/components/detail/OwnerBookingTimelineCard';
 import { OwnerConfirmReservationModal } from '@/src/features/reservations/components/detail/OwnerConfirmReservationModal';
+import { OwnerCheckinModal } from '@/src/features/reservations/components/detail/OwnerCheckinModal';
+import { OwnerCheckoutModal } from '@/src/features/reservations/components/detail/OwnerCheckoutModal';
 import { OwnerSignalNoshowModal } from '@/src/features/reservations/components/detail/OwnerSignalNoshowModal';
 import { OwnerCancellationPreviewModal } from '@/src/features/reservations/components/detail/OwnerCancellationPreviewModal';
 import { OwnerCreateDisputeModal } from '@/src/features/reservations/components/detail/OwnerCreateDisputeModal';
@@ -26,6 +28,8 @@ export default function OwnerReservationDetailPage() {
   const id = (params?.id as string) || '';
   const [copiedLink, setCopiedLink] = React.useState(false);
   const [showConfirmModal, setShowConfirmModal] = React.useState(false);
+  const [showCheckinModal, setShowCheckinModal] = React.useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = React.useState(false);
   const [showNoshowModal, setShowNoshowModal] = React.useState(false);
   const [showCancelModal, setShowCancelModal] = React.useState(false);
   const [showDisputeModal, setShowDisputeModal] = React.useState(false);
@@ -61,6 +65,20 @@ export default function OwnerReservationDetailPage() {
     }
   };
 
+  const handleCheckinModalSubmit = async (soldeRecu: boolean) => {
+    const success = await checkinReservation(soldeRecu);
+    if (success) {
+      setShowCheckinModal(false);
+    }
+  };
+
+  const handleCheckoutModalSubmit = async () => {
+    const success = await checkoutReservation();
+    if (success) {
+      setShowCheckoutModal(false);
+    }
+  };
+
   const handleNoshowModalSubmit = async (commentaire?: string) => {
     const success = await signalNoshow(commentaire);
     if (success) {
@@ -84,18 +102,6 @@ export default function OwnerReservationDetailPage() {
       return true;
     }
     return false;
-  };
-
-  const handleCheckin = async () => {
-    if (window.confirm('Valider le départ du véhicule et le solde reçu ?')) {
-      await checkinReservation(true);
-    }
-  };
-
-  const handleCheckout = async () => {
-    if (window.confirm('Clôturer la location et valider le retour du véhicule ?')) {
-      await checkoutReservation();
-    }
   };
 
   const vehicleTitle = reservation?.vehicule
@@ -194,8 +200,8 @@ export default function OwnerReservationDetailPage() {
               reservation={reservation}
               isSubmitting={isSubmitting}
               onConfirmReservationClick={() => setShowConfirmModal(true)}
-              onCheckinClick={handleCheckin}
-              onCheckoutClick={handleCheckout}
+              onCheckinClick={() => setShowCheckinModal(true)}
+              onCheckoutClick={() => setShowCheckoutModal(true)}
               onCancelClick={() => setShowCancelModal(true)}
               onSignalNoshowClick={() => setShowNoshowModal(true)}
               onOpenDisputeClick={() => setShowDisputeModal(true)}
@@ -243,6 +249,26 @@ export default function OwnerReservationDetailPage() {
               isSubmitting={isSubmitting}
               onClose={() => setShowConfirmModal(false)}
               onConfirm={handleConfirmModalSubmit}
+            />
+
+            {/* ── Modale de Check-in (Remise des Clés & Upload Photos) ───────── */}
+            <OwnerCheckinModal
+              reservation={reservation}
+              isOpen={showCheckinModal}
+              isSubmitting={isSubmitting}
+              onClose={() => setShowCheckinModal(false)}
+              onConfirm={handleCheckinModalSubmit}
+              onRefetch={refetch}
+            />
+
+            {/* ── Modale de Check-out (Restitution & Upload Photos) ──────────── */}
+            <OwnerCheckoutModal
+              reservation={reservation}
+              isOpen={showCheckoutModal}
+              isSubmitting={isSubmitting}
+              onClose={() => setShowCheckoutModal(false)}
+              onConfirm={handleCheckoutModalSubmit}
+              onRefetch={refetch}
             />
 
             {/* ── Modale de Signalement No-Show ──────────────────────────────── */}
