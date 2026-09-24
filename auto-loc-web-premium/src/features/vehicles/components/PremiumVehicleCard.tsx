@@ -67,14 +67,6 @@ export const PremiumVehicleCard: React.FC<PremiumVehicleCardProps> = ({
             <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.75} />
             Vérifié
           </span>
-
-          {Number(vehicle.note || 0) > 0 && Number(vehicle.totalAvis || 0) > 0 && (
-            <span className="flex items-center gap-1 rounded-full border border-[#F1DFB6]/30 bg-[#0A3D2E]/70 px-2.5 py-1 text-[11px] font-medium text-[#F1DFB6] backdrop-blur-md">
-              <Star className="h-3 w-3 fill-[#F1DFB6] text-[#F1DFB6]" />
-              {Number(vehicle.note).toFixed(1)}
-              <span className="text-[#F1DFB6]/60">({vehicle.totalAvis})</span>
-            </span>
-          )}
         </div>
 
         {/* Localisation et type */}

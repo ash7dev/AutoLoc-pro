@@ -251,11 +251,6 @@ export const MobileVehicleCard: React.FC<MobileVehicleCardProps> = ({
                 <span className="h-3 w-px shrink-0 bg-slate-200" aria-hidden />
                 <span className="shrink-0">{vehicle.annee}</span>
               </span>
-              {hasRating && (
-                <span className="ml-auto">
-                  <Rating note={note} total={totalAvis} />
-                </span>
-              )}
             </div>
 
             <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-600">
@@ -343,7 +338,6 @@ export const MobileVehicleCard: React.FC<MobileVehicleCardProps> = ({
           <h3 className="line-clamp-1 font-serif text-xl font-normal leading-tight text-slate-900">
             {title}
           </h3>
-          {hasRating && <Rating note={note} total={totalAvis} />}
         </div>
 
         <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">

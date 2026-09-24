@@ -161,13 +161,13 @@ export const RealLeafletMap: React.FC<RealLeafletMapProps> = ({
             </div>
 
             <div className="flex-1 min-w-0 pr-4">
-              <div className="flex items-center gap-1.5 text-xs text-amber-500 font-bold mb-0.5">
-                <Star className="w-3.5 h-3.5 fill-amber-400" />
-                <span>{selectedVehicle.note > 0 ? selectedVehicle.note : "Nouveau"}</span>
-                {selectedVehicle.totalAvis > 0 && (
+              {selectedVehicle.note > 0 && selectedVehicle.totalAvis > 0 && (
+                <div className="flex items-center gap-1.5 text-xs text-amber-500 font-bold mb-0.5">
+                  <Star className="w-3.5 h-3.5 fill-amber-400" />
+                  <span>{selectedVehicle.note.toFixed(1)}</span>
                   <span className="text-slate-400 text-[10px]">({selectedVehicle.totalAvis})</span>
-                )}
-              </div>
+                </div>
+              )}
               <h4 className="text-sm font-bold text-slate-900 truncate">
                 {selectedVehicle.marque} {selectedVehicle.modele}
               </h4>
