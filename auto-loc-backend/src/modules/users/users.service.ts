@@ -1714,13 +1714,16 @@ export class UsersService {
     const totalAvis = utilisateur.totalAvis;
     const isSuperhost = noteProprietaire >= 4.8 && totalAvis >= 3;
 
+    const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(utilisateur.prenom + ' ' + (utilisateur.nom || ''))}&background=0A3D2E&color=F1DFB6&bold=true&size=256`;
+    const avatarUrl = utilisateur.avatarUrl && utilisateur.avatarUrl.trim() !== '' ? utilisateur.avatarUrl : defaultAvatar;
+
     return {
       host: {
         id: utilisateur.id,
         userId: utilisateur.userId,
         prenom: utilisateur.prenom,
         nomCompletAffiche: nomAffiche,
-        avatarUrl: utilisateur.avatarUrl ?? null,
+        avatarUrl,
         statutKyc: utilisateur.statutKyc,
         noteProprietaire,
         totalAvis,

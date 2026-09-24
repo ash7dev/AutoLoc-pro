@@ -89,6 +89,7 @@ export interface Vehicle {
   photos?: (PhotoVehicule | string)[];
   description?: string;
   tarifsProgressifs?: TarifProgressif[];
+  proprietaireId?: string;
   proprietaire?: Proprietaire;
   equipements?: VehiculeEquipement[];
   _count?: {

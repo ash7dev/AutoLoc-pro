@@ -39,7 +39,11 @@ export const Footer: React.FC = () => {
     }
   };
 
-  if (pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin')) {
+  if (
+    pathname?.startsWith('/dashboard') ||
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/hosts')
+  ) {
     return null;
   }
   return (

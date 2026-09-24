@@ -42,8 +42,14 @@ export const Navbar: React.FC = () => {
     };
   }, [setUser, logout]);
 
-  // Si on est sur les routes /login, /register ou tout l'espace owner /dashboard /admin, masquer la Navbar et la modale d'invité
-  if (pathname === '/login' || pathname === '/register' || pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin')) {
+  // Si on est sur les routes /login, /register, tout l'espace owner /dashboard, /admin ou /hosts, masquer la Navbar et la modale d'invité
+  if (
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname?.startsWith('/dashboard') ||
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/hosts')
+  ) {
     return null;
   }
 

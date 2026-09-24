@@ -28,6 +28,7 @@ import { theme } from '../../../core/theme';
 import { useNavigation } from '../../../core/navigation/RootNavigator';
 import { fetchHostPublicProfile, PublicHostProfile } from '../api/tenantProfileApi';
 import { AirbnbVehicleCard } from '../components/AirbnbVehicleCard';
+import { HostProfileSkeleton } from '../components/HostProfileSkeleton';
 import { VehicleFeedItem } from '../types';
 
 interface HostProfileScreenProps {
@@ -82,13 +83,7 @@ export const HostProfileScreen: React.FC<HostProfileScreenProps> = ({ hostId, on
   };
 
   if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <StatusBar style="light" />
-        <ActivityIndicator size="large" color="#10B981" />
-        <Text style={styles.loadingText}>Chargement du profil hôte...</Text>
-      </View>
-    );
+    return <HostProfileSkeleton />;
   }
 
   if (error || !profileData) {
@@ -141,13 +136,15 @@ export const HostProfileScreen: React.FC<HostProfileScreenProps> = ({ hostId, on
         <View style={styles.heroCard}>
           <View style={styles.avatarRow}>
             <View style={styles.avatarWrapper}>
-              {host.avatarUrl ? (
-                <Image source={{ uri: host.avatarUrl }} style={styles.avatarImage} />
-              ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <Text style={styles.avatarInitial}>{(host.prenom[0] || 'H').toUpperCase()}</Text>
-                </View>
-              )}
+              <Image
+                source={{
+                  uri:
+                    host.avatarUrl && host.avatarUrl.trim() !== ''
+                      ? host.avatarUrl
+                      : `https://ui-avatars.com/api/?name=${encodeURIComponent(host.prenom)}&background=041912&color=4ADE80&bold=true&size=256`,
+                }}
+                style={styles.avatarImage}
+              />
               {isSuperhost && (
                 <View style={styles.superhostBadge}>
                   <Award size={14} color="#FFFFFF" />

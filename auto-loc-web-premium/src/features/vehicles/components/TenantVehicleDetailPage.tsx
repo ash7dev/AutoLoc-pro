@@ -293,7 +293,11 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
                 {/* 2.6 Carte de l'Hôte Partenaire */}
                 <VehicleOwnerCard
                   proprietaire={vehicle.proprietaire}
-                  profileHref={vehicle.proprietaire?.id ? `/hosts/${vehicle.proprietaire.id}` : undefined}
+                  profileHref={
+                    vehicle.proprietaire?.id || vehicle.proprietaireId
+                      ? `/hosts/${vehicle.proprietaire?.id || vehicle.proprietaireId}`
+                      : undefined
+                  }
                 />
 
                 {/* 2.7 Conditions & Garanties de Location */}
