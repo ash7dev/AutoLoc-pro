@@ -114,13 +114,10 @@ export const FeaturedVehicleCard: React.FC<FeaturedVehicleCardProps> = ({ vehicl
         <div className="mt-5 flex items-end justify-between">
           <span className="text-xs text-[#F1DFB6]/60">Tarif par jour</span>
           <p className="flex items-baseline gap-1.5 text-[#F1DFB6]">
-            <span
-              className="text-[28px] font-normal leading-none tracking-tight"
-              style={{ fontFamily: SERIF }}
-            >
+            <span className="font-serif text-2xl font-normal tabular-nums text-[#F1DFB6]">
               {formattedPrice}
             </span>
-            <span className="text-xs font-medium text-[#F1DFB6]/80">FCFA</span>
+            <span className="text-xs text-[#F1DFB6]/70">FCFA / jour</span>
           </p>
         </div>
       </div>
