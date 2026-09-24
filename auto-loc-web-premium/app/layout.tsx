@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import {
   Fraunces,
   Gloock,
@@ -54,6 +53,17 @@ const syne = Syne({
   display: "swap",
 });
 
+import type { Metadata, Viewport } from "next";
+
+export const viewport: Viewport = {
+  themeColor: "#0A3D2E",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://autoloc.sn"),
   title: {
@@ -74,6 +84,12 @@ export const metadata: Metadata = {
   authors: [{ name: "AutoLoc" }],
   creator: "AutoLoc",
   publisher: "AutoLoc",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "AutoLoc",
+  },
   alternates: {
     canonical: "/",
   },
@@ -113,7 +129,14 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
@@ -121,6 +144,7 @@ import { Navbar } from "../src/core/components/Navbar";
 import { Footer } from "../src/core/components/Footer";
 import { AuthProvider } from "../src/core/providers/AuthProvider";
 import { SWRProvider } from "../src/core/providers/SWRProvider";
+import { PwaManager } from "../src/core/components/Pwa/PwaManager";
 
 export default function RootLayout({
   children,
@@ -136,6 +160,7 @@ export default function RootLayout({
       <body suppressHydrationWarning className="font-body bg-background text-foreground antialiased selection:bg-emerald-500/30 selection:text-emerald-300 min-h-screen flex flex-col">
         <SWRProvider>
           <AuthProvider>
+            <PwaManager />
             <Navbar />
             <main className="flex-1 pb-20 lg:pb-0">{children}</main>
             <Footer />
