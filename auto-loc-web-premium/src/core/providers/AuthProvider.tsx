@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useUserStore } from '../store/useUserStore';
-import { setAuthCookies, normalizeRole } from '../auth/roleUtils';
+import { setAuthCookies, clearAuthCookies, normalizeRole } from '../auth/roleUtils';
 
 interface AuthProviderProps {
   children: React.ReactNode;
