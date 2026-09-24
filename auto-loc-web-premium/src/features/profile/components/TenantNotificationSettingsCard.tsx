@@ -41,16 +41,16 @@ export const TenantNotificationSettingsCard: React.FC = () => {
           const reg = await navigator.serviceWorker.getRegistration();
           if (reg && reg.active) {
             reg.showNotification('AutoLoc Sénégal 🚗', {
-              body: 'Ceci est une notification de test instantanée AutoLoc !',
+              body: `Notification de test AutoLoc (${new Date().toLocaleTimeString('fr-FR')})`,
               icon: '/icon-192.png',
               badge: '/icon-192.png',
-              tag: 'autoloc-test-notification',
+              tag: `autoloc-test-${Date.now()}`,
             });
           } else {
             new Notification('AutoLoc Sénégal 🚗', {
-              body: 'Ceci est une notification de test instantanée AutoLoc !',
+              body: `Notification de test AutoLoc (${new Date().toLocaleTimeString('fr-FR')})`,
               icon: '/icon-192.png',
-              tag: 'autoloc-test-notification',
+              tag: `autoloc-test-${Date.now()}`,
             });
           }
         } catch (e) {
