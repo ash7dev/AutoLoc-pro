@@ -47,7 +47,7 @@ export const MobileDetailHeader: React.FC = () => {
   };
 
   return (
-    <header className="pointer-events-none fixed inset-x-0 top-3 z-50 w-full px-4 lg:hidden">
+    <header className="pointer-events-none fixed inset-x-0 top-[calc(0.75rem+env(safe-area-inset-top))] z-50 w-full px-4 lg:hidden">
       <div className="pointer-events-auto flex h-14 items-center justify-between rounded-full border border-slate-900/10 bg-white/90 px-2.5 shadow-[0_10px_30px_-12px_rgba(15,23,42,0.20)] backdrop-blur-xl">
         {/* Bouton Retour Glassmorphic */}
         <button

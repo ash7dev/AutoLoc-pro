@@ -53,7 +53,7 @@ export const Navbar: React.FC = () => {
         {/* Desktop skeleton : même hauteur que l'espaceur */}
         <div className="hidden h-[88px] lg:block" />
         {/* Mobile skeleton : même capsule que le header final */}
-        <div className="sticky top-0 z-40 w-full px-4 pt-3 lg:hidden">
+        <div className="sticky top-0 z-40 w-full px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] lg:hidden">
           <div className="flex h-14 items-center justify-between rounded-full border border-slate-900/10 bg-white/70 pl-5 pr-2">
             <div className="h-8 w-28 animate-pulse rounded-full bg-slate-100" />
             <div className="h-9 w-28 animate-pulse rounded-full bg-slate-100" />
@@ -81,7 +81,7 @@ export const Navbar: React.FC = () => {
       {isDetailPage ? (
         <MobileDetailHeader />
       ) : isReservationsMainPage || isProfileMainPage ? null : (
-        <header className="pointer-events-none fixed inset-x-0 top-3 z-40 w-full px-4 lg:hidden">
+        <header className="pointer-events-none fixed inset-x-0 top-[calc(0.75rem+env(safe-area-inset-top))] z-40 w-full px-4 lg:hidden">
           <div className="pointer-events-auto flex h-14 items-center justify-between rounded-full border border-slate-900/10 bg-white/90 pl-5 pr-2 shadow-[0_10px_30px_-12px_rgba(15,23,42,0.25)] backdrop-blur-xl">
             {/* Logo */}
             <Link
