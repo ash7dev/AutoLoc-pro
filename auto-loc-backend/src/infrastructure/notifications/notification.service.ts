@@ -224,28 +224,43 @@ export class NotificationService {
 
   private getPushPayload(type: NotificationType, data: Record<string, unknown>): { title: string; body: string; url?: string } | null {
     const resId = String(data.reservationId || '').slice(0, 8).toUpperCase();
-    const vehicule = String(data.vehicule || 'véhicule');
-    const resUrl = data.reservationId ? `/dashboard/reservations/${data.reservationId}` : undefined;
+    const vehicule = String(data.vehicule || data.vehicle || 'véhicule');
+    const resUrl = data.reservationId ? `/reservations` : undefined;
 
     const payloads: Partial<Record<NotificationType, { title: string; body: string; url?: string }>> = {
-      'reservation.paid': { title: 'Paiement validé', body: `Paiement pour ${vehicule} (#${resId}) reçu. En attente de confirmation.`, url: resUrl },
-      'reservation.paid.owner': { title: 'Nouvelle réservation 💰', body: `${vehicule} — réservation payée (#${resId}). Confirmez-la !`, url: resUrl },
+      'reservation.created': { title: 'Demande de réservation ⏳', body: `Réservation #${resId} pour ${vehicule} enregistrée.`, url: resUrl },
+      'reservation.paid': { title: 'Paiement validé 💳', body: `Paiement pour ${vehicule} (#${resId}) reçu. En attente de confirmation.`, url: resUrl },
+      'reservation.paid.owner': { title: 'Nouvelle réservation 💰', body: `${vehicule} — réservation payée (#${resId}). Confirmez-la !`, url: '/dashboard/reservations' },
       'reservation.confirmed': { title: 'Réservation confirmée 🎉', body: `${vehicule} (#${resId}) est confirmé. C'est parti !`, url: resUrl },
-      'reservation.cancelled': { title: 'Réservation annulée', body: `La réservation #${resId} pour ${vehicule} a été annulée.`, url: resUrl },
+      'reservation.cancelled': { title: 'Réservation annulée ❌', body: `La réservation #${resId} pour ${vehicule} a été annulée.`, url: resUrl },
       'reservation.checkin.reminder_veille': { title: 'Rappel check-in demain 📅', body: `${vehicule} (#${resId}) — le check-in est demain.`, url: resUrl },
       'reservation.checkin.reminder_jour': { title: 'Check-in aujourd\'hui 🚗', body: `${vehicule} (#${resId}) — le check-in est aujourd\'hui.`, url: resUrl },
+      'reservation.checkin.reminder_urgent': { title: 'Check-in urgent ⏰', body: `Effectuez le check-in pour ${vehicule} (#${resId}) avant minuit.`, url: resUrl },
       'reservation.checkin': { title: 'Location démarrée 🚗', body: `La location de ${vehicule} (#${resId}) est en cours.`, url: resUrl },
       'reservation.checkout': { title: 'Location terminée 🏁', body: `La location de ${vehicule} (#${resId}) est terminée.`, url: resUrl },
-      'reservation.checkout.reminder': { title: 'Fin de location imminente', body: `La location de ${vehicule} (#${resId}) se termine bientôt.`, url: resUrl },
-      'kyc.verified': { title: 'Identité vérifiée ✅', body: 'Votre identité a été vérifiée. Vous pouvez louer !', url: '/dashboard/profile' },
-      'kyc.rejected': { title: 'Vérification refusée ⚠️', body: 'Votre vérification d\'identité a été refusée. Réessayez.', url: '/dashboard/profile' },
-      'wallet.credited': { title: 'Wallet crédité 💰', body: `Votre wallet a été crédité de ${data.montant} FCFA.`, url: '/dashboard/wallet' },
+      'reservation.checkout.reminder': { title: 'Fin de location imminente ⏳', body: `La location de ${vehicule} (#${resId}) se termine bientôt.`, url: resUrl },
+      'kyc.verified': { title: 'Identité vérifiée ✅', body: 'Votre identité a été vérifiée avec succès !', url: '/profile' },
+      'kyc.rejected': { title: 'Vérification refusée ⚠️', body: 'Votre vérification d\'identité a été refusée. Veuillez soumettre à nouveau.', url: '/profile' },
+      'wallet.credited': { title: 'Wallet crédité 💰', body: `Votre solde wallet a été crédité de ${data.montant || 0} FCFA.`, url: '/dashboard/wallet' },
       'litige.ouvert': { title: 'Litige ouvert 🚨', body: `Un litige a été ouvert sur la réservation #${resId}.`, url: resUrl },
-      'avis.request': { title: 'Laissez un avis ⭐', body: `Comment s'est passée la location de ${vehicule} ?`, url: resUrl },
-      'user.welcome': { title: 'Bienvenue sur AutoLoc 👋', body: 'Votre profil est prêt. Commencez à louer !', url: '/dashboard' },
+      'litige.resolu': { title: 'Litige résolu ✅', body: `Le litige sur la réservation #${resId} a été résolu.`, url: resUrl },
+      'avis.request': { title: 'Laissez votre avis ⭐', body: `Comment s'est passée votre expérience avec ${vehicule} ?`, url: resUrl },
+      'user.welcome': { title: 'Bienvenue sur AutoLoc 👋', body: 'Votre compte est prêt. Explorez nos véhicules d\'exception !', url: '/vehicles' },
+      'vehicle.validated': { title: 'Véhicule approuvé 🎉', body: `Votre véhicule ${vehicule} a été validé et est désormais en ligne.`, url: '/dashboard/vehicles' },
+      'vehicle.suspended': { title: 'Véhicule suspendu ⚠️', body: `Votre véhicule ${vehicule} a été suspendu par l'administration.`, url: '/dashboard/vehicles' },
+      'vehicle.featured': { title: 'Véhicule à la une 🌟', body: `Félicitations ! Votre véhicule ${vehicule} est mis en avant.`, url: '/dashboard/vehicles' },
+      'admin.refund.processed': { title: 'Remboursement effectué 💰', body: `Remboursement de ${data.montant || 0} FCFA traité avec succès.`, url: resUrl },
     };
 
-    return payloads[type] ?? null;
+    if (payloads[type]) {
+      return payloads[type]!;
+    }
+
+    return {
+      title: 'AutoLoc Sénégal 🚗',
+      body: `Mise à jour disponible concernant vos activités.`,
+      url: resUrl || '/profile',
+    };
   }
 
   /**
