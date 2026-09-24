@@ -225,7 +225,14 @@ export class NotificationService {
   private getPushPayload(type: NotificationType, data: Record<string, unknown>): { title: string; body: string; url?: string } | null {
     const resId = String(data.reservationId || '').slice(0, 8).toUpperCase();
     const vehicule = String(data.vehicule || data.vehicle || 'véhicule');
-    const resUrl = data.reservationId ? `/reservations` : undefined;
+
+    // Résolution haute précision de l'URL Deep Link (Spécifique Hôte vs Locataire + ID exact)
+    const resIdFull = data.reservationId ? String(data.reservationId) : '';
+    const isOwnerNotif = type.includes('.owner') || type === 'reservation.paid.owner' || data.isOwner === true;
+
+    const resUrl = resIdFull
+      ? (isOwnerNotif ? `/dashboard/reservations/${resIdFull}` : `/reservations/${resIdFull}`)
+      : (isOwnerNotif ? '/dashboard/reservations' : '/reservations');
 
     const payloads: Partial<Record<NotificationType, { title: string; body: string; url?: string }>> = {
       'reservation.created': { title: 'Demande de réservation ⏳', body: `Réservation #${resId} pour ${vehicule} enregistrée.`, url: resUrl },
