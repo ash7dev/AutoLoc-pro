@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useUserStore } from "../../store/useUserStore";
 import { IntentEngine } from "../../auth/intentEngine";
-import type { PendingIntentAction } from "../../types/user";
+import type { PendingIntentAction } from "@/src/types/user";
 
 export const Footer: React.FC = () => {
   const router = useRouter();
