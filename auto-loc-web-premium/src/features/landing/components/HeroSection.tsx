@@ -23,7 +23,7 @@ export const HeroSection: React.FC = () => {
   }, []);
 
   return (
-    <section className="relative min-h-0 lg:min-h-[85vh] bg-[#F8FAF4] text-slate-900 pt-[calc(7.5rem+env(safe-area-inset-top))] sm:pt-28 pb-3 sm:pb-12 overflow-hidden">
+    <section className="relative min-h-0 lg:min-h-[85vh] bg-[#F8FAF4] text-slate-900 pt-[calc(6.5rem+env(safe-area-inset-top))] sm:pt-28 pb-3 sm:pb-12 overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Badge & Title */}
         <div className="text-center max-w-3xl mx-auto mb-4 sm:mb-10">
