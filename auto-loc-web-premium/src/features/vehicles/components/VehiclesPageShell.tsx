@@ -32,7 +32,7 @@ export const VehiclesPageShell: React.FC = () => {
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
   return (
-    <div className="w-full min-h-screen bg-[#F8FAF4] pt-16 md:pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-x-hidden">
+    <div className="w-full min-h-screen bg-[#F8FAF4] pt-[calc(5.5rem+env(safe-area-inset-top))] md:pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-x-hidden">
       {/* Hero Title Section (Desktop Only) */}
       <div className="hidden md:block mb-6 text-left">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100/80 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2">
