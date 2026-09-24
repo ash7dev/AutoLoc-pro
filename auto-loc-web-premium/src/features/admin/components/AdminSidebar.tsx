@@ -221,7 +221,7 @@ export const AdminSidebar: React.FC = () => {
       </div>
 
       {/* Sidebar desktop */}
-      <aside className="sticky top-0 hidden h-screen w-72 shrink-0 lg:block">{sidebarContent}</aside>
+      <aside className="sticky top-0 self-start hidden h-screen w-72 shrink-0 lg:block">{sidebarContent}</aside>
 
       {/* Drawer mobile */}
       {isMobileOpen && (
