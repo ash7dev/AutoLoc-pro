@@ -76,7 +76,7 @@ export const DesktopNav: React.FC = () => {
 
   return (
     <>
-      <header className="pointer-events-none fixed inset-x-0 top-[calc(0.75rem+env(safe-area-inset-top))] sm:top-3 z-50 flex justify-center px-3 sm:px-6">
+      <header className="pointer-events-none fixed inset-x-0 top-[calc(3.5rem+env(safe-area-inset-top))] sm:top-3 z-50 flex justify-center px-3 sm:px-6">
 
         <div
           className={`
