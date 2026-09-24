@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Download, X, Share, PlusSquare, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Download, X, Share, PlusSquare, Sparkles, CheckCircle2, ShieldCheck, ArrowUpRight } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -42,8 +42,7 @@ export function PwaInstallPrompt() {
     setIsIos(isIosDevice);
 
     if (isIosDevice) {
-      // Délaisser l'apparition pour ne pas perturber l'expérience initiale
-      const timer = setTimeout(() => setShowPrompt(true), 4000);
+      const timer = setTimeout(() => setShowPrompt(true), 3500);
       return () => clearTimeout(timer);
     }
 
@@ -51,7 +50,7 @@ export function PwaInstallPrompt() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setTimeout(() => setShowPrompt(true), 3000);
+      setTimeout(() => setShowPrompt(true), 2500);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -63,7 +62,7 @@ export function PwaInstallPrompt() {
 
   const handleInstallClick = async () => {
     if (isIos) {
-      setShowIosGuide(true);
+      setShowIosGuide((prev) => !prev);
       return;
     }
 
@@ -74,117 +73,129 @@ export function PwaInstallPrompt() {
       const choiceResult = await deferredPrompt.userChoice;
 
       if (choiceResult.outcome === 'accepted') {
-        console.log('[PWA] Utilisateur a installé le PWA AutoLoc');
+        console.log('[PWA] Application AutoLoc installée');
         setShowPrompt(false);
       }
       setDeferredPrompt(null);
     } catch (err) {
-      console.error('[PWA] Erreur lors de l\'installation:', err);
+      console.error('[PWA] Erreur installation PWA:', err);
     }
   };
 
   const handleDismiss = () => {
     setShowPrompt(false);
     setShowIosGuide(false);
+    localStorage.getItem('autoloc_pwa_dismissed_at');
     localStorage.setItem('autoloc_pwa_dismissed_at', Date.now().toString());
   };
 
   if (isStandalone || !showPrompt) return null;
 
   return (
-    <>
-      {/* Modale d'installation PWA Flottante Luxe Glassmorphism */}
-      <div className="fixed bottom-4 inset-x-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 max-w-md w-full animate-in slide-in-from-bottom-6 duration-500">
-        <div className="relative overflow-hidden rounded-3xl border border-[#F1DFB6]/30 bg-[#0A3D2E]/95 text-[#FBF6E9] p-5 shadow-[0_20px_50px_rgba(4,25,18,0.5)] backdrop-blur-xl">
-          {/* Accent Flou d'Arrière-plan */}
-          <div className="absolute -top-12 -right-12 w-32 h-32 bg-[#F1DFB6]/20 rounded-full blur-2xl pointer-events-none" />
+    <aside
+      aria-label="Installation de l'application AutoLoc"
+      className="fixed bottom-4 inset-x-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 max-w-md w-full animate-in slide-in-from-bottom-6 duration-500"
+    >
+      {/* Carte PWA Flottante — Palette & Styles directement inspirés du Hero Section */}
+      <div className="relative overflow-hidden rounded-[28px] border border-[#F1DFB6]/30 bg-[#0A3D2E]/95 text-[#FBF6E9] p-5 sm:p-6 shadow-[0_24px_50px_rgba(4,25,18,0.55)] backdrop-blur-xl">
+        
+        {/* Halo Lumineux (Hero Glow) */}
+        <div className="absolute -top-16 -right-16 w-36 h-36 bg-[#F1DFB6]/20 rounded-full blur-2xl pointer-events-none" />
 
-          {/* Bouton Fermer */}
+        {/* Bouton Fermer */}
+        <button
+          type="button"
+          onClick={handleDismiss}
+          aria-label="Fermer"
+          className="absolute top-4 right-4 p-1.5 rounded-full text-[#F1DFB6]/60 hover:text-[#F1DFB6] hover:bg-white/10 transition-colors cursor-pointer"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {/* Top Badge (comme dans le Hero Section) */}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/90 border border-emerald-300 text-emerald-900 text-[10.5px] font-bold tracking-wide uppercase mb-3 shadow-xs">
+          <Sparkles className="w-3 h-3 text-emerald-700 shrink-0" />
+          <span>APPLICATION MOBILE & DESKTOP</span>
+        </div>
+
+        {/* En-tête : Logo HD & Titre Fraunces */}
+        <div className="flex items-start gap-4">
+          {/* Logo officiel HD dans un conteneur épuré */}
+          <div className="relative w-16 h-16 shrink-0 rounded-2xl overflow-hidden border-2 border-[#F1DFB6]/40 shadow-md bg-white p-1 flex items-center justify-center">
+            <Image
+              src="/icon.png"
+              alt="AutoLoc Logo"
+              width={64}
+              height={64}
+              className="object-contain w-full h-full rounded-xl"
+              priority
+            />
+          </div>
+
+          <div className="min-w-0 pr-6">
+            <h3
+              className="text-xl sm:text-2xl font-fraunces font-normal leading-tight text-[#FBF6E9] tracking-tight"
+              style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+            >
+              Installer l'application{' '}
+              <span className="italic text-[#F1DFB6]">AutoLoc.</span>
+            </h3>
+
+            <p className="mt-1 text-xs text-[#F1DFB6]/80 font-medium leading-relaxed">
+              Accédez directement à vos réservations avec notifications instantanées & mode hors-ligne.
+            </p>
+          </div>
+        </div>
+
+        {/* Value Props Chips (Assorties au Hero Section) */}
+        <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-[#F1DFB6]/15 text-[11px] font-bold text-[#FBF6E9]">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-[#F1DFB6]/20 shadow-2xs">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#F1DFB6]" />
+            <span>Sans téléchargement Store</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-[#F1DFB6]/20 shadow-2xs">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#F1DFB6]" />
+            <span>Accès 100% sécurisé</span>
+          </div>
+        </div>
+
+        {/* Guide d'installation iOS Safari si actif */}
+        {showIosGuide && (
+          <div className="mt-4 p-3.5 rounded-2xl bg-[#062A20] border border-[#F1DFB6]/30 text-xs space-y-2 animate-in fade-in duration-300">
+            <p className="font-semibold text-[#F1DFB6] flex items-center gap-1.5">
+              <Share className="w-4 h-4 text-emerald-400" />
+              <span>Guide d'installation iOS (Safari) :</span>
+            </p>
+            <ol className="list-decimal list-inside space-y-1 text-[#FBF6E9]/85 text-[11.5px]">
+              <li>Appuyez sur l'icône <strong>Partager</strong> <Share className="inline w-3.5 h-3.5 text-emerald-400" /> dans la barre Safari</li>
+              <li>Faites défiler puis touchez <strong>« Sur l'écran d'accueil »</strong> <PlusSquare className="inline w-3.5 h-3.5 text-[#F1DFB6]" /></li>
+              <li>Confirmez en cliquant sur <strong>Ajouter</strong></li>
+            </ol>
+          </div>
+        )}
+
+        {/* Actions : Bouton Principal Arrondi (comme dans le Hero Section) */}
+        <div className="mt-4 flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleInstallClick}
+            className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[#F1DFB6] text-[#0A3D2E] font-bold text-xs shadow-lg hover:bg-[#F7E9C9] active:scale-[0.98] transition-all cursor-pointer"
+          >
+            <Download className="w-4 h-4" />
+            <span>{isIos ? 'Instructions iOS' : "Installer l'application"}</span>
+            <ArrowUpRight className="w-3.5 h-3.5 opacity-70" />
+          </button>
+
           <button
             type="button"
             onClick={handleDismiss}
-            aria-label="Fermer la suggestion d'installation"
-            className="absolute top-3.5 right-3.5 p-1.5 rounded-full text-[#F1DFB6]/60 hover:text-[#F1DFB6] hover:bg-white/10 transition-colors cursor-pointer"
+            className="px-4 py-3 rounded-full border border-[#F1DFB6]/30 text-xs font-semibold text-[#F1DFB6]/80 hover:bg-white/10 transition-colors cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            Plus tard
           </button>
-
-          {/* En-tête avec Icône Officielle */}
-          <div className="flex items-start gap-4 pr-6">
-            <div className="relative w-16 h-16 shrink-0 rounded-2xl overflow-hidden border-2 border-[#F1DFB6]/40 shadow-md bg-white p-1 flex items-center justify-center">
-              <Image
-                src="/icon.png"
-                alt="AutoLoc App"
-                width={64}
-                height={64}
-                className="object-contain w-full h-full rounded-xl"
-              />
-            </div>
-
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h4 className="font-serif text-lg font-normal leading-tight text-[#FBF6E9]">
-                  Installer l'app AutoLoc
-                </h4>
-                <span className="flex items-center gap-0.5 rounded-full bg-[#F1DFB6] px-2 py-0.5 text-[10px] font-bold text-[#0A3D2E]">
-                  <Sparkles className="w-2.5 h-2.5 fill-[#0A3D2E]" />
-                  Nouveau
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-[#F1DFB6]/75 leading-relaxed">
-                Profitez d'une expérience fluide, des notifications instantanées et du mode hors-ligne.
-              </p>
-            </div>
-          </div>
-
-          {/* Avantages PWA */}
-          <div className="mt-4 grid grid-cols-2 gap-2 border-t border-[#F1DFB6]/15 pt-3.5 text-[11px] text-[#FBF6E9]/90">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#F1DFB6] shrink-0" />
-              <span>Accès rapide sans store</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#F1DFB6] shrink-0" />
-              <span>Alertes réservations</span>
-            </span>
-          </div>
-
-          {/* Guide d'installation iOS Safari si actif */}
-          {showIosGuide && (
-            <div className="mt-4 p-3.5 rounded-2xl bg-[#062A20] border border-[#F1DFB6]/30 text-xs space-y-2 animate-in fade-in duration-300">
-              <p className="font-semibold text-[#F1DFB6] flex items-center gap-1.5">
-                <Share className="w-4 h-4 text-emerald-400" />
-                <span>Comment installer sur iPhone / iPad :</span>
-              </p>
-              <ol className="list-decimal list-inside space-y-1 text-[#FBF6E9]/85 text-[11.5px]">
-                <li>Appuyez sur le bouton <strong>Partager</strong> <Share className="inline w-3.5 h-3.5 text-emerald-400" /> au bas de Safari</li>
-                <li>Faites défiler et sélectionnez <strong>« Sur l'écran d'accueil »</strong> <PlusSquare className="inline w-3.5 h-3.5 text-[#F1DFB6]" /></li>
-                <li>Validez en appuyant sur <strong>Ajouter</strong></li>
-              </ol>
-            </div>
-          )}
-
-          {/* Bouton d'action CTA */}
-          <div className="mt-4 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleInstallClick}
-              className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#F1DFB6] text-[#0A3D2E] font-bold text-xs shadow-lg hover:bg-[#F7E9C9] active:scale-[0.98] transition-all cursor-pointer"
-            >
-              <Download className="w-4 h-4" />
-              <span>{isIos ? 'Voir les instructions iOS' : "Installer l'application"}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleDismiss}
-              className="px-4 py-3 rounded-xl border border-[#F1DFB6]/25 text-xs font-semibold text-[#F1DFB6]/80 hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              Plus tard
-            </button>
-          </div>
         </div>
       </div>
-    </>
+    </aside>
   );
 }
