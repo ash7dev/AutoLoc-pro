@@ -19,10 +19,10 @@ export const Footer: React.FC = () => {
     return null;
   }
   return (
-    <footer className="bg-[#041912] border-t border-[#F1DFB6]/15 pt-8 pb-24 lg:pt-12 lg:pb-16 px-3 sm:px-6 lg:px-8 font-sans text-slate-200">
+    <footer className="bg-transparent pt-6 pb-24 lg:pt-8 lg:pb-16 px-3 sm:px-6 lg:px-8 font-sans text-slate-200">
       <div className="max-w-7xl mx-auto">
-        {/* Main Footer Container (Vert Forêt Deep Luxury) */}
-        <div className="rounded-2xl sm:rounded-[36px] bg-[#0A3D2E]/90 border border-[#F1DFB6]/15 p-4 sm:p-8 lg:p-12 shadow-2xl shadow-black/40 text-slate-200 backdrop-blur-md">
+        {/* Main Floating Footer Container (Vert Forêt Luxury) */}
+        <div className="rounded-2xl sm:rounded-[36px] bg-[#0A3D2E] border border-[#F1DFB6]/20 p-4 sm:p-8 lg:p-12 shadow-2xl shadow-[#0A3D2E]/40 text-slate-200 backdrop-blur-md">
           
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10 lg:gap-12 mb-6 sm:mb-10">
