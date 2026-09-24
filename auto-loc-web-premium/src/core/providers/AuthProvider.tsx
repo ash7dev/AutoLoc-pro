@@ -18,6 +18,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const token = localStorage.getItem('autoloc_token');
     const cachedUserRaw = localStorage.getItem('autoloc_user');
 
+    if (token === 'mock_google_token' || cachedUserRaw?.includes('alexandre.diallo@gmail.com')) {
+      localStorage.removeItem('autoloc_token');
+      localStorage.removeItem('autoloc_user');
+      clearAuthCookies();
+      useUserStore.getState().logout();
+      return;
+    }
+
     if (token && cachedUserRaw) {
       try {
         const cachedUser = JSON.parse(cachedUserRaw);
