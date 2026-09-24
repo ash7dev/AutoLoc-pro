@@ -17,7 +17,7 @@ export function BookingCheckoutHeader({
   onClose,
 }: BookingCheckoutHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-slate-200/90 px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-30 bg-white border-b border-slate-200/90 px-4 sm:px-6 pt-[calc(1rem+env(safe-area-inset-top))] pb-4 flex items-center justify-between gap-4">
       {/* Bouton Retour */}
       <button
         type="button"

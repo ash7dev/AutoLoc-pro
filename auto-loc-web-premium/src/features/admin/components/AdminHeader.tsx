@@ -47,7 +47,7 @@ export const AdminHeader: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-white/90 backdrop-blur-xl border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 py-3.5 transition-all">
+    <header className="sticky top-0 z-30 w-full bg-white/90 backdrop-blur-xl border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 pt-[calc(0.875rem+env(safe-area-inset-top))] pb-3.5 transition-all">
       <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
         
         {/* 1. Fil d'Ariane & Titre de la page active en Typographie Fraunces */}

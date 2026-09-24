@@ -204,7 +204,7 @@ export const AdminSidebar: React.FC = () => {
   return (
     <>
       {/* Topbar mobile */}
-      <div className="sticky top-0 z-40 flex items-center justify-between bg-[#041912] px-4 py-3 text-white lg:hidden">
+      <div className="sticky top-0 z-40 flex items-center justify-between bg-[#041912] px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] text-white lg:hidden">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileOpen(true)}
