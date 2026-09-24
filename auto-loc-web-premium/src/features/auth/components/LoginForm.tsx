@@ -78,8 +78,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           const userProfile = setSessionFromAuthResponse(res);
           closeGuestModal();
 
+          const nextParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
           const pending = IntentEngine.consumePendingIntent();
-          const redirectUrl = getPostAuthRedirectUrl(userProfile, pending);
+          const redirectUrl = getPostAuthRedirectUrl(userProfile, pending, nextParam);
           router.push(redirectUrl);
           if (onSuccess) onSuccess();
         })
@@ -121,9 +122,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       const userProfile = setSessionFromAuthResponse(res);
       closeGuestModal();
 
-      // Consommer l'intention et calculer l'URL de redirection basée sur le rôle
+      // Consommer l'intention et calculer l'URL de redirection basée sur le rôle ou le paramètre next
+      const nextParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
       const pending = IntentEngine.consumePendingIntent();
-      const redirectUrl = getPostAuthRedirectUrl(userProfile, pending);
+      const redirectUrl = getPostAuthRedirectUrl(userProfile, pending, nextParam);
       router.push(redirectUrl);
       if (onSuccess) onSuccess();
     } catch (err: any) {
@@ -148,8 +150,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       const userProfile = setSessionFromAuthResponse(res);
       closeGuestModal();
 
+      const nextParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
       const pending = IntentEngine.consumePendingIntent();
-      const redirectUrl = getPostAuthRedirectUrl(userProfile, pending);
+      const redirectUrl = getPostAuthRedirectUrl(userProfile, pending, nextParam);
       router.push(redirectUrl);
       if (onSuccess) onSuccess();
     } catch (err: any) {

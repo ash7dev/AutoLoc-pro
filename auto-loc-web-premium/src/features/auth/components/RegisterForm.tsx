@@ -114,8 +114,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         .then((res) => {
           const userProfile = setSessionFromAuthResponse(res);
 
+          const nextParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
           const pending = IntentEngine.consumePendingIntent();
-          const redirectUrl = getPostAuthRedirectUrl(userProfile, pending);
+          const redirectUrl = getPostAuthRedirectUrl(userProfile, pending, nextParam);
           router.push(redirectUrl);
           if (onSuccess) onSuccess();
         })
@@ -179,9 +180,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
       const userProfile = setSessionFromAuthResponse(res);
 
-      // Consommer et calculer la redirection dynamique par rôle
+      // Consommer et calculer la redirection dynamique par rôle ou paramètre next
+      const nextParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
       const pending = IntentEngine.consumePendingIntent();
-      const redirectUrl = getPostAuthRedirectUrl(userProfile, pending);
+      const redirectUrl = getPostAuthRedirectUrl(userProfile, pending, nextParam);
       router.push(redirectUrl);
       if (onSuccess) onSuccess();
     } catch (err: any) {

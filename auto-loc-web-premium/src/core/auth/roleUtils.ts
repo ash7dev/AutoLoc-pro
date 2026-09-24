@@ -32,9 +32,15 @@ export function normalizeRole(rawRole?: string | null): UserRole {
  */
 export function getPostAuthRedirectUrl(
   user?: UserProfile | null,
-  pendingIntent?: PendingIntent | null
+  pendingIntent?: PendingIntent | null,
+  nextUrlParam?: string | null
 ): string {
-  // 1. Si une intention explicite de redirection est stockée dans le gatekeeper
+  // 1. Si un paramètre d'URL `next` est présent (ex: /login?next=/dashboard/wallet)
+  if (nextUrlParam && nextUrlParam.startsWith('/')) {
+    return nextUrlParam;
+  }
+
+  // 2. Si une intention explicite de redirection est stockée dans le gatekeeper
   if (pendingIntent?.redirectToUrl) {
     return pendingIntent.redirectToUrl;
   }

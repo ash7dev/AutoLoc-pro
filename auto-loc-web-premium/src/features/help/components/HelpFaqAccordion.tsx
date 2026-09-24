@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, type LucideIcon } from 'lucide-react';
+import React, { useId, useMemo, useState } from 'react';
+import { ChevronDown, Search, SearchX, X, type LucideIcon } from 'lucide-react';
 
 /* ══ Types ══ */
 interface FaqItem {
@@ -20,77 +20,224 @@ interface HelpFaqAccordionProps {
   categories: FaqCategory[];
 }
 
-/* ══ Single item ══ */
-function FaqAccordionItem({ item, isOpen, onToggle }: { item: FaqItem; isOpen: boolean; onToggle: () => void }) {
+const DISPLAY_FONT = { fontFamily: 'var(--font-gloock, Georgia, "Times New Roman", serif)' };
+
+/** Minuscules sans accents, pour une recherche tolérante */
+const normalize = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+/* ══ Question unique ══ */
+function FaqAccordionItem({
+  item,
+  isOpen,
+  onToggle,
+  buttonId,
+  panelId,
+}: {
+  item: FaqItem;
+  isOpen: boolean;
+  onToggle: () => void;
+  buttonId: string;
+  panelId: string;
+}) {
   return (
-    <div className="border-b border-slate-100 last:border-b-0">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex w-full items-center justify-between gap-4 py-4.5 text-left cursor-pointer group px-6"
-      >
-        <h4 className="text-[14px] font-semibold text-[#041912] group-hover:text-[#0A3D2E] transition-colors leading-snug">
-          {item.question}
-        </h4>
-        <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors ${isOpen ? 'bg-[#0A3D2E] text-[#F1DFB6]' : 'bg-slate-100 text-slate-500'}`}>
-          {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </div>
-      </button>
+    <div className="relative">
       {isOpen && (
-        <div className="pb-5 px-6 -mt-1">
-          <p className="text-[13px] leading-relaxed text-slate-500 pr-10">
+        <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-[#0A3D2E]" />
+      )}
+
+      <h4>
+        <button
+          id={buttonId}
+          type="button"
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+          className={`group flex w-full cursor-pointer items-center justify-between gap-4 px-6 py-5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0A3D2E] ${isOpen ? 'bg-[#0A3D2E]/[0.03]' : 'hover:bg-[#0A3D2E]/[0.02]'
+            }`}
+        >
+          <span className="text-[15px] font-semibold leading-snug text-[#041912]">
+            {item.question}
+          </span>
+          <span
+            aria-hidden
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition duration-300 motion-reduce:transition-none ${isOpen
+                ? 'rotate-180 bg-[#0A3D2E] text-[#F1DFB6]'
+                : 'bg-slate-100 text-slate-500 group-hover:bg-[#0A3D2E]/10 group-hover:text-[#0A3D2E]'
+              }`}
+          >
+            <ChevronDown className="h-4 w-4" />
+          </span>
+        </button>
+      </h4>
+
+      <div
+        id={panelId}
+        role="region"
+        aria-labelledby={buttonId}
+        className={`grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+          }`}
+      >
+        <div
+          className={`overflow-hidden transition-[visibility] duration-0 ${isOpen ? 'visible' : 'invisible delay-300'
+            }`}
+        >
+          <p className="max-w-prose px-6 pb-6 pr-16 text-[14px] leading-relaxed text-slate-600">
             {item.answer}
           </p>
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-/* ══ Category block ══ */
+/* ══ Accordéon complet ══ */
 export const HelpFaqAccordion: React.FC<HelpFaqAccordionProps> = ({ categories }) => {
-  const [openMap, setOpenMap] = useState<Record<string, number | null>>({});
+  const uid = useId();
+  const [query, setQuery] = useState('');
+  // Question ouverte par catégorie (clé : texte de la question, stable même quand la recherche filtre la liste)
+  const [openMap, setOpenMap] = useState<Record<string, string | null>>({});
 
-  const toggle = (categoryId: string, index: number) => {
+  const toggle = (categoryId: string, question: string) => {
     setOpenMap((prev) => ({
       ...prev,
-      [categoryId]: prev[categoryId] === index ? null : index,
+      [categoryId]: prev[categoryId] === question ? null : question,
     }));
   };
 
-  return (
-    <div className="space-y-6">
-      {categories.map((cat) => {
-        const Icon = cat.icon;
-        return (
-          <section key={cat.id} id={cat.id} className="scroll-mt-32">
-            {/* Category header */}
-            <div className="flex items-center gap-2.5 mb-3 px-1">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#0A3D2E]/8 text-[#0A3D2E]">
-                <Icon className="h-4 w-4" strokeWidth={2} />
-              </div>
-              <h3
-                className="font-fraunces text-lg text-[#041912] font-normal"
-                style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
-              >
-                {cat.title}
-              </h3>
-            </div>
+  const filtered = useMemo(() => {
+    const tokens = normalize(query).split(/\s+/).filter(Boolean);
+    return categories
+      .map((cat) => ({
+        ...cat,
+        items: cat.items
+          .map((item, idx) => ({ item, idx }))
+          .filter(({ item }) => {
+            if (tokens.length === 0) return true;
+            const haystack = normalize(`${item.question} ${item.answer}`);
+            return tokens.every((t) => haystack.includes(t));
+          }),
+      }))
+      .filter((cat) => cat.items.length > 0);
+  }, [categories, query]);
 
-            {/* Items card */}
-            <div className="rounded-3xl border border-[#041912]/8 bg-white shadow-xs overflow-hidden">
-              {cat.items.map((item, idx) => (
-                <FaqAccordionItem
-                  key={idx}
-                  item={item}
-                  isOpen={openMap[cat.id] === idx}
-                  onToggle={() => toggle(cat.id, idx)}
-                />
-              ))}
-            </div>
-          </section>
-        );
-      })}
+  const totalMatches = filtered.reduce((sum, cat) => sum + cat.items.length, 0);
+  const isSearching = query.trim().length > 0;
+
+  return (
+    <div>
+      {/* Titre et recherche */}
+      <div className="mb-8">
+        <h2
+          style={DISPLAY_FONT}
+          className="text-2xl font-normal text-[#041912] sm:text-3xl"
+        >
+          Questions fréquentes
+        </h2>
+
+        <div className="relative mt-4">
+          <label htmlFor={`${uid}-search`} className="sr-only">
+            Rechercher dans les questions fréquentes
+          </label>
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            id={`${uid}-search`}
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher une question"
+            className="w-full rounded-full border border-[#041912]/10 bg-white py-3 pl-11 pr-11 text-sm text-[#041912] placeholder:text-slate-400 transition focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/20 [&::-webkit-search-cancel-button]:hidden"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              aria-label="Effacer la recherche"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E]"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        <p className="mt-2 min-h-[1.25rem] px-1 text-xs text-slate-500" aria-live="polite">
+          {isSearching
+            ? totalMatches > 0
+              ? `${totalMatches} question${totalMatches > 1 ? 's' : ''} trouvée${totalMatches > 1 ? 's' : ''}`
+              : 'Aucun résultat'
+            : ''}
+        </p>
+      </div>
+
+      {/* Catégories */}
+      {filtered.length > 0 ? (
+        <div className="space-y-8">
+          {filtered.map((cat) => {
+            const Icon = cat.icon;
+            return (
+              <section
+                key={cat.id}
+                id={cat.id}
+                aria-labelledby={`${uid}-${cat.id}-title`}
+                className="scroll-mt-32"
+              >
+                <div className="mb-3 flex items-center justify-between gap-3 px-1">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0A3D2E] text-[#F1DFB6]">
+                      <Icon className="h-4 w-4" strokeWidth={1.75} />
+                    </span>
+                    <h3
+                      id={`${uid}-${cat.id}-title`}
+                      style={DISPLAY_FONT}
+                      className="text-xl font-normal text-[#041912]"
+                    >
+                      {cat.title}
+                    </h3>
+                  </div>
+                  <span className="text-xs tabular-nums text-slate-400">
+                    {cat.items.length} question{cat.items.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                <div className="divide-y divide-slate-100 overflow-hidden rounded-[28px] border border-[#041912]/[0.08] bg-white shadow-[0_20px_50px_-36px_rgba(10,61,46,0.35)]">
+                  {cat.items.map(({ item, idx }) => (
+                    <FaqAccordionItem
+                      key={item.question}
+                      item={item}
+                      isOpen={openMap[cat.id] === item.question}
+                      onToggle={() => toggle(cat.id, item.question)}
+                      buttonId={`${uid}-${cat.id}-${idx}-button`}
+                      panelId={`${uid}-${cat.id}-${idx}-panel`}
+                    />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center rounded-[28px] border border-[#041912]/[0.08] bg-white px-6 py-14 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0A3D2E] text-[#F1DFB6]">
+            <SearchX className="h-6 w-6" />
+          </span>
+          <p style={DISPLAY_FONT} className="mt-5 text-xl text-[#0A3D2E]">
+            Aucun résultat
+          </p>
+          <p className="mt-1 max-w-xs text-sm text-slate-500">
+            Essayez d’autres mots-clés, ou contactez notre équipe : nous répondons volontiers.
+          </p>
+          <button
+            type="button"
+            onClick={() => setQuery('')}
+            className="mt-5 rounded-full border border-[#0A3D2E]/25 px-4 py-2 text-sm font-medium text-[#0A3D2E] transition hover:bg-[#0A3D2E] hover:text-[#F1DFB6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
+          >
+            Effacer la recherche
+          </button>
+        </div>
+      )}
     </div>
   );
 };
