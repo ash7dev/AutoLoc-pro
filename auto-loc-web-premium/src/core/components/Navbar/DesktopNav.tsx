@@ -53,7 +53,7 @@ export const DesktopNav: React.FC = () => {
 
     if (!isAuthenticated) {
       const isAllowed = IntentEngine.guardAction('ADD_VEHICLE', {
-        redirectToUrl: '/dashboard/owner/vehicles/new',
+        redirectToUrl: '/dashboard/vehicles/new',
         reasonMessage: 'Veuillez vous connecter pour créer une annonce sur AutoLoc.',
       });
       if (!isAllowed) {
@@ -65,13 +65,13 @@ export const DesktopNav: React.FC = () => {
     if (missingSteps.length > 0 && !canProceed) {
       setOwnerGateOpen(true);
     } else {
-      router.push('/dashboard/owner/vehicles/new');
+      router.push('/dashboard/vehicles/new');
     }
   };
 
   const handleOwnerGateAllCompleted = () => {
     setOwnerGateOpen(false);
-    router.push('/dashboard/owner/vehicles/new');
+    router.push('/dashboard/vehicles/new');
   };
 
   return (
@@ -114,7 +114,7 @@ export const DesktopNav: React.FC = () => {
           {/* Actions */}
           <div className="flex shrink-0 items-center gap-3">
             <Link
-              href="/dashboard/owner/vehicles/new"
+              href="/dashboard/vehicles/new"
               onClick={handleCreateListingClick}
               className="rounded-full bg-[#0A3D2E] px-5 py-2.5 text-sm font-semibold text-[#F1DFB6] transition-all hover:bg-[#0F4F3B] hover:shadow-lg hover:shadow-[#0A3D2E]/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]"
             >
