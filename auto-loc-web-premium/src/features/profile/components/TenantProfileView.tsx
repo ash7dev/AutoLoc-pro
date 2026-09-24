@@ -8,6 +8,7 @@ import { TenantProfileHeader } from './TenantProfileHeader';
 import { TenantProfileHeroCard } from './TenantProfileHeroCard';
 import { TenantPersonalInfoCard } from './TenantPersonalInfoCard';
 import { TenantKycStatusCard } from './TenantKycStatusCard';
+import { TenantNotificationSettingsCard } from './TenantNotificationSettingsCard';
 import { TenantSecuritySettingsCard } from './TenantSecuritySettingsCard';
 import { TenantEditProfileModal } from './TenantEditProfileModal';
 import { TenantDeleteAccountModal } from './TenantDeleteAccountModal';
@@ -116,7 +117,10 @@ export const TenantProfileView: React.FC = () => {
         <TenantKycStatusCard profile={profile} />
       </div>
 
-      {/* 4. Security Settings & Danger Zone at the bottom */}
+      {/* 4. Web Push Notification Settings */}
+      <TenantNotificationSettingsCard />
+
+      {/* 5. Security Settings & Danger Zone at the bottom */}
       <TenantSecuritySettingsCard
         profile={profile}
         onOpenDeleteAccountModal={() => setIsDeleteModalOpen(true)}

@@ -8,6 +8,7 @@ import { ProfileHeader } from './ProfileHeader';
 import { ProfileHeroCard } from './ProfileHeroCard';
 import { PersonalInfoCard } from './PersonalInfoCard';
 import { KycStatusCard } from './KycStatusCard';
+import { TenantNotificationSettingsCard } from '../../../profile/components/TenantNotificationSettingsCard';
 import { SecuritySettingsCard } from './SecuritySettingsCard';
 import { WebEditProfileModal } from './WebEditProfileModal';
 import { WebDeleteAccountModal } from './WebDeleteAccountModal';
@@ -116,7 +117,10 @@ export const OwnerProfileView: React.FC = () => {
         <KycStatusCard profile={profile} />
       </div>
 
-      {/* 4. Security Settings & Danger Zone at the very bottom */}
+      {/* 4. Web Push Notification Settings */}
+      <TenantNotificationSettingsCard />
+
+      {/* 5. Security Settings & Danger Zone at the very bottom */}
       <SecuritySettingsCard
         profile={profile}
         onOpenDeleteAccountModal={() => setIsDeleteModalOpen(true)}

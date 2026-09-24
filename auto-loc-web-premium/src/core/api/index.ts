@@ -8,6 +8,7 @@ export * from './reviewsApi';
 export * from './userApi';
 export * from './adminPayoutsApi';
 export * from './adminBroadcastApi';
+export * from './pushNotificationApi';
 
 import { analyticsApi } from './analyticsApi';
 import { reservationsApi } from './reservationsApi';
