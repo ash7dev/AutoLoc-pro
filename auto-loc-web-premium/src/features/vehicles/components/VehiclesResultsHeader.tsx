@@ -27,6 +27,22 @@ export const VehiclesResultsHeader: React.FC<VehiclesResultsHeaderProps> = ({
   onOpenMobileFilters,
   activeFiltersCount = 0,
 }) => {
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const visibleSortOptions = React.useMemo(() => {
+    if (isMobile) {
+      return SORT_OPTIONS.filter((opt) => opt.value !== "popular");
+    }
+    return SORT_OPTIONS;
+  }, [isMobile]);
+
   return (
     <div className="flex items-center justify-between gap-4 py-3 mb-4 border-b border-slate-200/60">
       {/* Total Count */}
@@ -62,11 +78,11 @@ export const VehiclesResultsHeader: React.FC<VehiclesResultsHeaderProps> = ({
           <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 mr-2 shrink-0" />
           <span className="text-slate-400 mr-1.5 hidden sm:inline">Trier par :</span>
           <select
-            value={sortBy}
+            value={isMobile && sortBy === "popular" ? "rating" : sortBy}
             onChange={(e) => onSortChange(e.target.value as VehicleSortOption)}
             className="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer pr-2"
           >
-            {SORT_OPTIONS.map((opt) => (
+            {visibleSortOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
