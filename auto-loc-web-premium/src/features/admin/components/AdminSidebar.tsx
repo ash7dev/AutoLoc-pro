@@ -17,12 +17,12 @@ import {
   CalendarRange,
   Wallet,
   Radio,
-  Boxes,
-  Settings,
   ShieldCheck,
   LogOut,
   Menu,
   X,
+
+
   ArrowUpRight,
 } from 'lucide-react';
 import { useUserStore } from '@/src/core/store/useUserStore';
@@ -70,11 +70,11 @@ const ADMIN_NAVIGATION: NavSection[] = [
     title: 'Système & diffusion',
     items: [
       { id: 'broadcast', label: 'Notifications broadcast', href: '/admin/broadcast', icon: Radio },
-      { id: 'equipment', label: 'Catalogue équipements', href: '/admin/equipment', icon: Boxes },
-      { id: 'settings', label: 'Paramètres admin', href: '/admin/settings', icon: Settings },
     ],
   },
 ];
+
+
 
 export const AdminSidebar: React.FC = () => {
   const pathname = usePathname();

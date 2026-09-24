@@ -171,14 +171,18 @@ export const ProfileHeroCard: React.FC<ProfileHeroCardProps> = ({
                 type="button"
                 onClick={onSwitchRole}
                 disabled={isSwitchingRole}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-4 py-2.5 text-[12.5px] font-semibold text-white/85 transition-colors hover:bg-white/10 disabled:opacity-50 sm:w-auto"
+                className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[12.5px] font-semibold transition-all duration-200 disabled:opacity-50 sm:w-auto ${
+                  profile.role === 'PROPRIETAIRE'
+                    ? 'border border-white/15 bg-white/5 text-white/85 hover:bg-white/10'
+                    : 'border border-[#4ADE80]/40 bg-[#4ADE80]/15 text-[#4ADE80] hover:bg-[#4ADE80]/25 shadow-sm font-bold'
+                }`}
               >
                 {isSwitchingRole ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
                   <ArrowLeftRight className="h-3.5 w-3.5" />
                 )}
-                {profile.role === 'PROPRIETAIRE' ? 'Basculer en mode locataire' : 'Basculer en mode propriétaire'}
+                {profile.role === 'PROPRIETAIRE' ? 'Passer en mode Locataire' : 'Devenir Hôte (Mode Propriétaire)'}
               </button>
             )}
 

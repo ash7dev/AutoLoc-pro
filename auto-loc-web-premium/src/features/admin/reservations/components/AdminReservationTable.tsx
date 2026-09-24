@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { Eye, ShieldCheck, Camera, CreditCard, Sparkles, Loader2, ArrowUpRight, SearchX, Clock } from 'lucide-react';
+import { Eye, Camera, Clock, Loader2, SearchX, ChevronDown, Car, Check } from 'lucide-react';
 import type { AdminReservationQueueItem } from '../../../../core/api/adminAnalyticsApi';
 import { formatCurrency } from '@/lib/utils';
 
@@ -16,24 +16,243 @@ interface AdminReservationTableProps {
   onSelectReservation: (reservation: AdminReservationQueueItem) => void;
 }
 
-const fontStyle = { fontFamily: 'var(--font-fraunces), Georgia, serif' };
-const FOREST = '#0A3D2E';
-const FOREST_DARK = '#062a1f';
+const DISPLAY_FONT = { fontFamily: 'var(--font-gloock, Georgia, "Times New Roman", serif)' };
 const GOLD = '#b27c2d';
-const CHAMPAGNE = '#F1DFB6';
 const RUST = '#a13d3d';
 
-const STATUT_BADGES: Record<string, { label: string; bg: string; text: string; border: string }> = {
-  INITIEE: { label: 'Initiée', bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200' },
-  EN_ATTENTE_PAIEMENT: { label: 'En attente paiement', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-  PAYEE: { label: 'Payée (à valider)', bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-300' },
-  CONFIRMEE: { label: 'Confirmée', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-  EN_COURS: { label: 'Location en cours', bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200' },
-  TERMINEE: { label: 'Terminée', bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-300' },
-  ANNULEE: { label: 'Annulée', bg: 'bg-slate-100', text: 'text-slate-500', border: 'border-slate-200' },
-  LITIGE: { label: 'Litige ouvert', bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
+const TEXT = 'text-slate-900 dark:text-white';
+const MUTED = 'text-slate-500 dark:text-slate-400';
+
+const NEUTRAL_BADGE = {
+  badge: 'bg-slate-100 text-slate-600 ring-slate-500/20',
+  dot: 'bg-slate-400',
 };
 
+const STATUS: Record<string, { label: string; badge: string; dot: string }> = {
+  INITIEE: { label: 'Initiée', ...NEUTRAL_BADGE },
+  EN_ATTENTE_PAIEMENT: {
+    label: 'En attente de paiement',
+    badge: 'bg-amber-50 text-amber-800 ring-amber-600/20',
+    dot: 'bg-amber-500',
+  },
+  PAYEE: {
+    label: 'Payée, à valider',
+    badge: 'bg-amber-100 text-amber-900 ring-amber-600/30',
+    dot: 'bg-amber-600',
+  },
+  CONFIRMEE: {
+    label: 'Confirmée',
+    badge: 'bg-emerald-50 text-emerald-800 ring-emerald-600/20',
+    dot: 'bg-emerald-500',
+  },
+  EN_COURS: {
+    label: 'En cours',
+    badge: 'bg-sky-50 text-sky-800 ring-sky-600/20',
+    dot: 'bg-sky-500',
+  },
+  TERMINEE: {
+    label: 'Terminée',
+    badge: 'bg-[#0A3D2E]/[0.08] text-[#0A3D2E] ring-[#0A3D2E]/20',
+    dot: 'bg-[#0A3D2E]',
+  },
+  ANNULEE: {
+    label: 'Annulée',
+    badge: 'bg-slate-100 text-slate-500 ring-slate-400/20',
+    dot: 'bg-slate-400',
+  },
+  LITIGE: {
+    label: 'Litige ouvert',
+    badge: 'bg-rose-50 text-rose-800 ring-rose-600/20',
+    dot: 'bg-rose-500',
+  },
+};
+
+/* ------------------------------------------------------------------ */
+/* Helpers                                                             */
+/* ------------------------------------------------------------------ */
+const humanize = (v?: string | null) => {
+  if (!v) return 'Inconnu';
+  const s = v.replace(/_/g, ' ').toLowerCase();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
+const fmtPeriod = (start: string | number | Date, end: string | number | Date) => {
+  const s = new Date(start);
+  const e = new Date(end);
+  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return '–';
+  const sameYear = s.getFullYear() === e.getFullYear();
+  const startPart = s.toLocaleDateString(
+    'fr-FR',
+    sameYear
+      ? { day: 'numeric', month: 'short' }
+      : { day: 'numeric', month: 'short', year: 'numeric' }
+  );
+  const endPart = e.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+  return `${startPart} → ${endPart}`;
+};
+
+const refOf = (r: AdminReservationQueueItem) => `#RES-${r.id.slice(0, 8).toUpperCase()}`;
+
+const accentOf = (statut: string) =>
+  statut === 'LITIGE' ? RUST : statut === 'PAYEE' ? GOLD : undefined;
+
+const tintOf = (statut: string) =>
+  statut === 'LITIGE'
+    ? 'bg-rose-50/40 dark:bg-rose-950/10'
+    : statut === 'PAYEE'
+      ? 'bg-amber-50/40 dark:bg-amber-950/10'
+      : '';
+
+/* ------------------------------------------------------------------ */
+/* Sous-composants                                                     */
+/* ------------------------------------------------------------------ */
+function StatusBadge({ statut }: { statut: string }) {
+  const s = STATUS[statut] ?? { label: humanize(statut), ...NEUTRAL_BADGE };
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${s.badge}`}
+    >
+      <span
+        className={`h-1.5 w-1.5 rounded-full ${s.dot} ${statut === 'LITIGE' ? 'animate-pulse motion-reduce:animate-none' : ''
+          }`}
+      />
+      {s.label}
+    </span>
+  );
+}
+
+function Avatar({ prenom, nom }: { prenom?: string | null; nom?: string | null }) {
+  const initials = `${prenom?.[0] ?? ''}${nom?.[0] ?? ''}`.toUpperCase() || '?';
+  return (
+    <span
+      style={DISPLAY_FONT}
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0A3D2E] text-sm text-[#F1DFB6]"
+    >
+      {initials}
+    </span>
+  );
+}
+
+function RenterCell({ r }: { r: AdminReservationQueueItem }) {
+  if (!r.locataire) return <span className={`text-sm italic ${MUTED}`}>Non renseigné</span>;
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      <Avatar prenom={r.locataire.prenom} nom={r.locataire.nom} />
+      <div className="min-w-0">
+        <p className={`truncate text-sm font-semibold ${TEXT}`}>
+          {r.locataire.prenom} {r.locataire.nom}
+        </p>
+        <p className={`truncate text-xs ${MUTED}`}>
+          {r.locataire.telephone || r.locataire.email || 'Contact non renseigné'}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function VehicleCell({ r }: { r: AdminReservationQueueItem }) {
+  const cover = r.vehicule?.photos?.[0]?.url;
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      <div className="relative h-10 w-14 shrink-0 overflow-hidden rounded-lg bg-[#0A3D2E]/10 ring-1 ring-slate-200 dark:ring-slate-700">
+        {cover ? (
+          <Image src={cover} alt="" fill className="object-cover" unoptimized />
+        ) : (
+          <div className="flex h-full items-center justify-center text-[#0A3D2E]/40">
+            <Car className="h-4 w-4" />
+          </div>
+        )}
+      </div>
+      <div className="min-w-0">
+        <p className={`truncate text-sm font-medium ${TEXT}`}>
+          {r.vehicule ? `${r.vehicule.marque} ${r.vehicule.modele}` : 'Véhicule'}
+        </p>
+        <p className={`truncate text-xs ${MUTED}`}>
+          <span className="font-mono">{r.vehicule?.immatriculation || 'Plaque inconnue'}</span>
+          {r.proprietaire?.prenom ? `, hôte ${r.proprietaire.prenom}` : ''}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function PaymentCell({ r }: { r: AdminReservationQueueItem }) {
+  const total = Number(r.prixTotal || 0);
+  const paid = Number(r.montantPayeEnLigne || 0);
+  const share = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
+  return (
+    <div className="min-w-[140px]">
+      <div className={`text-sm font-semibold tabular-nums ${TEXT}`}>{formatCurrency(total)}</div>
+      <div className={`mt-0.5 text-xs tabular-nums ${MUTED}`}>
+        {paid > 0 ? `${formatCurrency(paid)} payés en ligne` : 'Aucun paiement en ligne'}
+      </div>
+      {total > 0 && (
+        <div
+          aria-hidden
+          className="mt-1.5 h-1 w-24 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+        >
+          <div className="h-full rounded-full bg-[#0A3D2E]" style={{ width: `${share}%` }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PhotoChip({ label, count }: { label: string; count: number }) {
+  const has = count > 0;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${has
+          ? 'bg-[#0A3D2E]/[0.07] text-[#0A3D2E] ring-[#0A3D2E]/15 dark:text-[#F1DFB6]'
+          : 'text-slate-400 ring-slate-200 dark:ring-slate-700'
+        }`}
+    >
+      <Camera className="h-3 w-3" />
+      {label}
+      <span className="tabular-nums">{count}</span>
+    </span>
+  );
+}
+
+function PhotoChips({ r }: { r: AdminReservationQueueItem }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <PhotoChip label="Check-in" count={r.checkinPhotosCount ?? 0} />
+      <PhotoChip label="Check-out" count={r.checkoutPhotosCount ?? 0} />
+    </div>
+  );
+}
+
+function StatusCell({ r }: { r: AdminReservationQueueItem }) {
+  return (
+    <div className="space-y-1.5">
+      <StatusBadge statut={r.statut} />
+      {r.slaWaitHours > 0 && r.statut === 'PAYEE' && (
+        <p className="flex items-center gap-1 text-xs font-medium text-amber-700">
+          <Clock className="h-3 w-3" />
+          {r.slaWaitHours} h d'attente
+        </p>
+      )}
+    </div>
+  );
+}
+
+function Skel({ className = '' }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={`block animate-pulse rounded-md bg-slate-100 motion-reduce:animate-none dark:bg-slate-800 ${className}`}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Composant principal                                                 */
+/* ------------------------------------------------------------------ */
 export const AdminReservationTable: React.FC<AdminReservationTableProps> = ({
   items,
   isLoading,
@@ -45,264 +264,233 @@ export const AdminReservationTable: React.FC<AdminReservationTableProps> = ({
 }) => {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  // Infinite Scroll via Intersection Observer
+  // Scroll infini via Intersection Observer
   useEffect(() => {
     if (!hasMore || isLoadingMore || !onLoadMore) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
-          onLoadMore();
-        }
+        if (entries[0].isIntersecting) onLoadMore();
       },
       { threshold: 0.1, rootMargin: '200px' }
     );
 
     const currentRef = loadMoreRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
+    if (currentRef) observer.observe(currentRef);
 
     return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
+      if (currentRef) observer.unobserve(currentRef);
     };
   }, [hasMore, isLoadingMore, onLoadMore]);
 
-  if (isLoading) {
-    return (
-      <div
-        className="p-14 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 shadow-sm"
-        style={fontStyle}
-      >
-        <div
-          className="w-9 h-9 mx-auto border-[3px] border-t-transparent rounded-full animate-spin mb-3"
-          style={{ borderColor: `${FOREST} transparent ${FOREST} ${FOREST}` }}
-        />
-        <p className="text-xs text-slate-500 font-medium">Chargement du registre des réservations...</p>
-      </div>
-    );
-  }
+  const shell =
+    'overflow-hidden rounded-[28px] border border-[#0A3D2E]/10 bg-white shadow-[0_20px_50px_-30px_rgba(10,61,46,0.35)] dark:border-slate-800 dark:bg-slate-900';
 
-  if (items.length === 0) {
+  /* État vide */
+  if (!isLoading && items.length === 0) {
     return (
-      <div
-        className="p-16 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 shadow-sm space-y-3 font-sans"
-        style={fontStyle}
-      >
-        <div
-          className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center border"
-          style={{ background: 'rgba(10,61,46,0.06)', borderColor: 'rgba(10,61,46,0.12)', color: FOREST }}
-        >
-          <SearchX className="w-6 h-6" />
-        </div>
-        <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Aucune réservation trouvée</p>
-        <p className="text-xs text-slate-400 max-w-sm mx-auto">
-          Aucune réservation ne correspond à vos filtres ou à ce terme de recherche.
+      <div className={`${shell} flex flex-col items-center px-6 py-16 text-center`}>
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0A3D2E] text-[#F1DFB6]">
+          <SearchX className="h-6 w-6" />
+        </span>
+        <p style={DISPLAY_FONT} className="mt-5 text-xl text-[#0A3D2E] dark:text-[#F1DFB6]">
+          Aucune réservation trouvée
+        </p>
+        <p className={`mt-1 max-w-sm text-sm ${MUTED}`}>
+          Aucune réservation ne correspond à vos filtres ou à cette recherche.
         </p>
       </div>
     );
   }
 
+  const total = Math.max(totalItems, items.length);
+  const remaining = Math.max(0, total - items.length);
+  const loadedShare = total > 0 ? Math.round((items.length / total) * 100) : 100;
+
+  const thCls = `px-4 py-3.5 text-xs font-medium ${MUTED}`;
+
   return (
-    <div
-      className="overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 shadow-[0_10px_40px_-24px_rgba(10,61,46,0.35)] font-sans"
-      style={fontStyle}
-    >
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+    <div className={shell}>
+      {/* Tableau (tablette et bureau) */}
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full border-collapse text-left">
+          <caption className="sr-only">Registre des réservations</caption>
           <thead>
-            <tr className="border-b border-slate-200/70 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-950/50 text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              <th className="py-4 px-4">Réf & Période</th>
-              <th className="py-4 px-4">Locataire</th>
-              <th className="py-4 px-4">Véhicule & Hôte</th>
-              <th className="py-4 px-4">Finances & Mode</th>
-              <th className="py-4 px-4">États des lieux</th>
-              <th className="py-4 px-4">Statut & SLA</th>
-              <th className="py-4 px-4 text-right">Action</th>
+            <tr className="border-b border-slate-200/80 dark:border-slate-800">
+              <th scope="col" className={thCls}>Réservation</th>
+              <th scope="col" className={thCls}>Locataire</th>
+              <th scope="col" className={thCls}>Véhicule</th>
+              <th scope="col" className={thCls}>Paiement</th>
+              <th scope="col" className={thCls}>États des lieux</th>
+              <th scope="col" className={thCls}>Statut</th>
+              <th scope="col" className={`${thCls} text-right`}>
+                <span className="sr-only">Action</span>
+              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
-            {items.map((r) => {
-              const refId = `#RES-${r.id.slice(0, 8).toUpperCase()}`;
-              const badge = STATUT_BADGES[r.statut] || STATUT_BADGES.INITIEE;
-              const isUrgent = r.statut === 'PAYEE' || r.statut === 'LITIGE';
-
-              const accent = r.statut === 'LITIGE' ? RUST : r.statut === 'PAYEE' ? GOLD : undefined;
-
-              const vehicleCover = r.vehicule?.photos?.[0]?.url;
-
-              return (
-                <tr
-                  key={r.id}
-                  className="hover:bg-[#0A3D2E]/[0.03] dark:hover:bg-[#F1DFB6]/[0.04] transition-colors group cursor-pointer"
-                  onClick={() => onSelectReservation(r)}
-                >
-                  {/* Réf & Période */}
-                  <td className="py-3.5 px-4" style={accent ? { boxShadow: `inset 3px 0 0 0 ${accent}` } : undefined}>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-bold text-slate-900 dark:text-white text-xs">{refId}</span>
-                        {r.nbJours && (
-                          <span className="px-1.5 py-0.2 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+          <tbody>
+            {isLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                <tr key={i} className="border-b border-slate-100 dark:border-slate-800/60">
+                  <td className="px-4 py-4"><Skel className="h-4 w-28" /><Skel className="mt-2 h-3 w-36" /></td>
+                  <td className="px-4 py-4"><Skel className="h-9 w-40" /></td>
+                  <td className="px-4 py-4"><Skel className="h-10 w-44" /></td>
+                  <td className="px-4 py-4"><Skel className="h-4 w-24" /><Skel className="mt-2 h-3 w-32" /></td>
+                  <td className="px-4 py-4"><Skel className="h-6 w-32" /></td>
+                  <td className="px-4 py-4"><Skel className="h-6 w-24" /></td>
+                  <td className="px-4 py-4"><Skel className="ml-auto h-8 w-24" /></td>
+                </tr>
+              ))
+              : items.map((r) => {
+                const ref = refOf(r);
+                const accent = accentOf(r.statut);
+                return (
+                  <tr
+                    key={r.id}
+                    onClick={() => onSelectReservation(r)}
+                    className={`cursor-pointer border-b border-slate-100 transition-colors last:border-0 hover:bg-[#0A3D2E]/[0.04] dark:border-slate-800/60 dark:hover:bg-[#F1DFB6]/[0.05] ${tintOf(
+                      r.statut
+                    )}`}
+                  >
+                    <td
+                      className="px-4 py-4"
+                      style={accent ? { boxShadow: `inset 3px 0 0 0 ${accent}` } : undefined}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`font-mono text-sm font-semibold ${TEXT}`}>{ref}</span>
+                        {r.nbJours ? (
+                          <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                             {r.nbJours} j
                           </span>
-                        )}
+                        ) : null}
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
-                        {new Date(r.dateDebut).toLocaleDateString('fr-FR')} → {new Date(r.dateFin).toLocaleDateString('fr-FR')}
+                      <p className={`mt-1 whitespace-nowrap text-xs tabular-nums ${MUTED}`}>
+                        {fmtPeriod(r.dateDebut, r.dateFin)}
                       </p>
-                    </div>
-                  </td>
-
-                  {/* Locataire */}
-                  <td className="py-3.5 px-4">
-                    {r.locataire ? (
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-semibold text-[11px] text-white"
-                          style={{ background: `linear-gradient(135deg, ${FOREST}, ${FOREST_DARK})` }}
-                        >
-                          {r.locataire.prenom?.[0]}{r.locataire.nom?.[0]}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-semibold text-slate-900 dark:text-white truncate">
-                            {r.locataire.prenom} {r.locataire.nom}
-                          </p>
-                          <p className="text-[11px] text-slate-400 truncate">{r.locataire.telephone || r.locataire.email || 'N/A'}</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-slate-400 italic">N/A</span>
-                    )}
-                  </td>
-
-                  {/* Véhicule & Hôte */}
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="relative w-12 h-9 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-200 dark:border-slate-700">
-                        {vehicleCover ? (
-                          <Image src={vehicleCover} alt="" fill className="object-cover" unoptimized />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[9px] text-slate-400">Auto</div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-slate-900 dark:text-white truncate">
-                          {r.vehicule ? `${r.vehicule.marque} ${r.vehicule.modele}` : 'Véhicule'}
-                        </p>
-                        <p className="text-[11px] text-slate-400 truncate">
-                          Plaque: <span className="font-mono">{r.vehicule?.immatriculation || 'N/A'}</span> • Hôte: {r.proprietaire?.prenom || 'N/A'}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* Finances & Mode */}
-                  <td className="py-3.5 px-4 tabular-nums">
-                    <div className="font-bold text-slate-900 dark:text-white text-xs">
-                      {formatCurrency(Number(r.prixTotal || 0))}
-                    </div>
-                    <div className="flex items-center gap-1 mt-0.5 text-[10px] text-slate-500">
-                      <CreditCard className="w-3 h-3 text-emerald-600" />
-                      <span>En ligne: {formatCurrency(Number(r.montantPayeEnLigne || 0))}</span>
-                    </div>
-                  </td>
-
-                  {/* États des lieux Photos */}
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-1.5 text-[11px]">
-                      <span className={`px-2 py-0.5 rounded-full border flex items-center gap-1 ${r.checkinPhotosCount > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`}>
-                        <Camera className="w-3 h-3" />
-                        <span>In ({r.checkinPhotosCount})</span>
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full border flex items-center gap-1 ${r.checkoutPhotosCount > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-400 border-slate-200'}`}>
-                        <Camera className="w-3 h-3" />
-                        <span>Out ({r.checkoutPhotosCount})</span>
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Statut & SLA */}
-                  <td className="py-3.5 px-4">
-                    <div className="space-y-1">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${badge.bg} ${badge.text} ${badge.border}`}>
-                        {r.statut === 'LITIGE' && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
-                        {badge.label}
-                      </span>
-                      {r.slaWaitHours > 0 && r.statut === 'PAYEE' && (
-                        <p className="text-[10px] text-amber-600 font-medium flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          <span>{r.slaWaitHours}h d'attente</span>
-                        </p>
-                      )}
-                    </div>
-                  </td>
-
-                  {/* Action */}
-                  <td className="py-3.5 px-4 text-right">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSelectReservation(r);
-                      }}
-                      aria-label={`Inspecter réservation ${refId}`}
-                      className="px-3 py-1.5 rounded-xl border font-medium transition-all flex items-center gap-1.5 ml-auto shadow-sm bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:text-white hover:border-transparent cursor-pointer"
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = `linear-gradient(135deg, ${FOREST}, ${FOREST_DARK})`;
-                        e.currentTarget.style.color = CHAMPAGNE;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '';
-                        e.currentTarget.style.color = '';
-                      }}
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>Inspecter 360°</span>
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+                    </td>
+                    <td className="max-w-[220px] px-4 py-4"><RenterCell r={r} /></td>
+                    <td className="max-w-[240px] px-4 py-4"><VehicleCell r={r} /></td>
+                    <td className="px-4 py-4"><PaymentCell r={r} /></td>
+                    <td className="px-4 py-4"><PhotoChips r={r} /></td>
+                    <td className="px-4 py-4"><StatusCell r={r} /></td>
+                    <td className="px-4 py-4 text-right">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectReservation(r);
+                        }}
+                        aria-label={`Inspecter la réservation ${ref}`}
+                        className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-[#0A3D2E]/25 px-3.5 py-1.5 text-sm font-medium text-[#0A3D2E] transition hover:border-[#0A3D2E] hover:bg-[#0A3D2E] hover:text-[#F1DFB6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 dark:border-[#F1DFB6]/30 dark:text-[#F1DFB6] dark:hover:bg-[#F1DFB6] dark:hover:text-[#0A3D2E]"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        Inspecter
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
 
-      {/* Footer Sentinel Infinite Scroll */}
-      <div ref={loadMoreRef} className="border-t border-slate-200/70 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 p-4">
+      {/* Cartes (mobile) */}
+      <ul className="divide-y divide-slate-100 md:hidden dark:divide-slate-800/60">
+        {isLoading
+          ? Array.from({ length: 3 }).map((_, i) => (
+            <li key={i} className="space-y-3 p-4">
+              <Skel className="h-5 w-40" />
+              <Skel className="h-9 w-48" />
+              <Skel className="h-10 w-56" />
+            </li>
+          ))
+          : items.map((r) => {
+            const ref = refOf(r);
+            const accent = accentOf(r.statut);
+            return (
+              <li key={r.id} className={tintOf(r.statut)}>
+                <button
+                  type="button"
+                  onClick={() => onSelectReservation(r)}
+                  aria-label={`Inspecter la réservation ${ref}`}
+                  className="block w-full space-y-4 p-4 text-left transition-colors hover:bg-[#0A3D2E]/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0A3D2E]"
+                  style={accent ? { boxShadow: `inset 3px 0 0 0 ${accent}` } : undefined}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={`font-mono text-sm font-semibold ${TEXT}`}>{ref}</span>
+                        {r.nbJours ? (
+                          <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                            {r.nbJours} j
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className={`mt-1 text-xs tabular-nums ${MUTED}`}>
+                        {fmtPeriod(r.dateDebut, r.dateFin)}
+                      </p>
+                    </div>
+                    <StatusCell r={r} />
+                  </div>
+
+                  <RenterCell r={r} />
+                  <VehicleCell r={r} />
+
+                  <div className="flex flex-wrap items-end justify-between gap-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+                    <PaymentCell r={r} />
+                    <PhotoChips r={r} />
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+      </ul>
+
+      {/* Pied : scroll infini */}
+      <div
+        ref={loadMoreRef}
+        aria-live="polite"
+        className="border-t border-slate-200/80 bg-[#F6F7F5] px-5 py-4 dark:border-slate-800 dark:bg-slate-950/40"
+      >
         {isLoadingMore ? (
-          <div className="flex flex-col items-center justify-center py-4 gap-2">
-            <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm text-xs text-slate-700 dark:text-slate-200">
-              <Loader2 className="w-4 h-4 animate-spin shrink-0" style={{ color: FOREST }} />
-              <span className="font-medium">Chargement des réservations suivantes...</span>
-            </div>
+          <div className={`flex items-center justify-center gap-2.5 py-1 text-sm ${MUTED}`}>
+            <Loader2 className="h-4 w-4 animate-spin text-[#0A3D2E] motion-reduce:animate-none dark:text-[#F1DFB6]" />
+            Chargement des réservations suivantes…
           </div>
         ) : hasMore ? (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2 py-1 text-xs">
-            <div className="text-slate-500 font-medium tabular-nums">
-              Affichage de <span className="font-semibold text-slate-900 dark:text-white">{items.length}</span> sur{' '}
-              <span className="font-semibold text-slate-900 dark:text-white">{totalItems}</span> réservations
+          <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
+            <div>
+              <p className={`text-sm tabular-nums ${MUTED}`}>
+                <span className={`font-semibold ${TEXT}`}>{items.length}</span> sur{' '}
+                <span className={`font-semibold ${TEXT}`}>{total}</span> réservations
+              </p>
+              <div
+                aria-hidden
+                className="mt-2 h-1 w-40 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
+              >
+                <div className="h-full rounded-full bg-[#0A3D2E]" style={{ width: `${loadedShare}%` }} />
+              </div>
             </div>
             <button
+              type="button"
               onClick={onLoadMore}
-              className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:shadow-sm transition-all font-medium flex items-center gap-2 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-5 py-2.5 text-sm font-semibold text-[#F1DFB6] shadow-md shadow-[#0A3D2E]/20 transition hover:bg-[#0D4B39] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
             >
-              <span>Charger la suite</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-500">
-                +{Math.max(0, totalItems - items.length)}
-              </span>
+              Charger la suite
+              <ChevronDown className="h-4 w-4" />
+              {remaining > 0 && (
+                <span className="rounded-full bg-[#F1DFB6]/20 px-2 text-xs tabular-nums">
+                  +{remaining}
+                </span>
+              )}
             </button>
           </div>
-        ) : items.length > 0 ? (
-          <div className="flex items-center justify-center py-2 text-xs text-slate-500">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 text-[11px] font-medium text-slate-600 dark:text-slate-400">
-              <Sparkles className="w-3.5 h-3.5" style={{ color: GOLD }} />
-              <span>Toutes les réservations ont été chargées ({items.length} au total)</span>
-            </div>
-          </div>
-        ) : null}
+        ) : (
+          <p className={`flex items-center justify-center gap-2 py-1 text-sm ${MUTED}`}>
+            <Check className="h-4 w-4 text-[#0A3D2E] dark:text-[#F1DFB6]" />
+            Toutes les réservations sont chargées ({items.length})
+          </p>
+        )}
       </div>
     </div>
   );

@@ -43,7 +43,7 @@ export const MobileBottomNav: React.FC = () => {
   const handleProfileClick = (e: React.MouseEvent) => {
     if (!isAuthenticated) {
       const allowed = IntentEngine.guardAction('VIEW_PROFILE', {
-        redirectToUrl: '/dashboard',
+        redirectToUrl: '/profile',
         reasonMessage: 'Veuillez vous connecter pour accéder à votre espace profil.',
       });
       if (!allowed) {
@@ -64,7 +64,7 @@ export const MobileBottomNav: React.FC = () => {
     },
     {
       label: 'Profil',
-      href: '/dashboard',
+      href: '/profile',
       icon: CircleUserRound,
       onClick: handleProfileClick,
     },

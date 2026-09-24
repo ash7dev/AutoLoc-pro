@@ -42,7 +42,7 @@ export const OwnerProfileView: React.FC = () => {
       const targetRole = profile.role === 'PROPRIETAIRE' ? 'LOCATAIRE' : 'PROPRIETAIRE';
       await switchRole(targetRole);
       if (targetRole === 'LOCATAIRE') {
-        router.push('/');
+        router.push('/profile');
       } else {
         router.push('/dashboard');
       }

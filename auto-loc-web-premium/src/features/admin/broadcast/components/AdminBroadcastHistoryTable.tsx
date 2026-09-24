@@ -1,17 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-  History,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  Smartphone,
-  Globe,
-  Mail,
-  MessageSquare,
-  Users,
-} from 'lucide-react';
+import { History, Smartphone, Globe, Mail, MessageSquare } from 'lucide-react';
 import type { BroadcastHistoryItem, BroadcastChannel } from '../../../../core/api/adminBroadcastApi';
 
 interface AdminBroadcastHistoryTableProps {
@@ -19,192 +9,297 @@ interface AdminBroadcastHistoryTableProps {
   isLoading?: boolean;
 }
 
+const DISPLAY_FONT = { fontFamily: 'var(--font-gloock, Georgia, "Times New Roman", serif)' };
+
+const fmt = (n: number) => n.toLocaleString('fr-FR');
+
+const CHANNEL_META: Partial<
+  Record<BroadcastChannel, { label: string; icon: React.ComponentType<{ className?: string }> }>
+> = {
+  PUSH_MOBILE: { label: 'Push mobile', icon: Smartphone },
+  WEB_PUSH: { label: 'Push web', icon: Globe },
+  EMAIL: { label: 'Email', icon: Mail },
+  WHATSAPP: { label: 'WhatsApp / SMS', icon: MessageSquare },
+};
+
+const AUDIENCE_LABELS: Record<string, string> = {
+  TOUS: 'Tous les membres',
+  HOTES: 'Hôtes',
+  LOCATAIRES: 'Locataires',
+  KYC_VALIDE: 'KYC vérifiés',
+};
+
+type StatusKey = 'DELIVERED' | 'PARTIAL' | 'FAILED';
+
+const STATUS_STYLES: Record<
+  StatusKey,
+  { label: string; badge: string; dot: string; bar: string }
+> = {
+  DELIVERED: {
+    label: 'Livré',
+    badge: 'bg-emerald-50 text-emerald-800 ring-emerald-600/20',
+    dot: 'bg-emerald-500',
+    bar: 'bg-[#0A3D2E]',
+  },
+  PARTIAL: {
+    label: 'Partiel',
+    badge: 'bg-amber-50 text-amber-800 ring-amber-600/20',
+    dot: 'bg-amber-500',
+    bar: 'bg-amber-500',
+  },
+  FAILED: {
+    label: 'Échec',
+    badge: 'bg-rose-50 text-rose-800 ring-rose-600/20',
+    dot: 'bg-rose-500',
+    bar: 'bg-rose-500',
+  },
+};
+
+const statusOf = (status: string): StatusKey =>
+  status === 'DELIVERED' ? 'DELIVERED' : status === 'PARTIAL' ? 'PARTIAL' : 'FAILED';
+
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  return {
+    date: d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
+    time: d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Éléments partagés desktop / mobile                                  */
+/* ------------------------------------------------------------------ */
+function ChannelIcons({ channels }: { channels: BroadcastChannel[] }) {
+  return (
+    <ul className="flex items-center gap-1.5">
+      {channels.map((ch) => {
+        const meta = CHANNEL_META[ch];
+        if (!meta) return null;
+        const Icon = meta.icon;
+        return (
+          <li
+            key={ch}
+            title={meta.label}
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0A3D2E]/[0.06] text-[#0A3D2E]"
+          >
+            <Icon className="h-3.5 w-3.5" />
+            <span className="sr-only">{meta.label}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const s = STATUS_STYLES[statusOf(status)];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${s.badge}`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+      {s.label}
+    </span>
+  );
+}
+
+function DeliveryCell({ item }: { item: BroadcastHistoryItem }) {
+  if (item.totalRecipients <= 0) {
+    return <span className="text-sm text-gray-400">–</span>;
+  }
+  const rate = Math.round((item.deliveredCount / item.totalRecipients) * 100);
+  const bar = STATUS_STYLES[statusOf(item.status)].bar;
+  return (
+    <div className="flex items-center gap-3">
+      <div aria-hidden className="h-1.5 w-20 shrink-0 overflow-hidden rounded-full bg-gray-100">
+        <div className={`h-full rounded-full ${bar}`} style={{ width: `${rate}%` }} />
+      </div>
+      <div className="leading-tight">
+        <div className="text-sm font-medium tabular-nums text-gray-900">{rate} %</div>
+        <div className="text-xs tabular-nums text-gray-400">
+          {fmt(item.deliveredCount)} / {fmt(item.totalRecipients)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonBlock({ className = '' }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={`block animate-pulse rounded-md bg-gray-100 motion-reduce:animate-none ${className}`}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Composant principal                                                 */
+/* ------------------------------------------------------------------ */
 export function AdminBroadcastHistoryTable({
   history,
   isLoading = false,
 }: AdminBroadcastHistoryTableProps) {
-  const getChannelIcon = (ch: BroadcastChannel) => {
-    switch (ch) {
-      case 'PUSH_MOBILE':
-        return (
-          <span key={ch} title="Push Mobile (Expo)">
-            <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
-          </span>
-        );
-      case 'WEB_PUSH':
-        return (
-          <span key={ch} title="Web Push (VAPID)">
-            <Globe className="w-3.5 h-3.5 text-blue-600" />
-          </span>
-        );
-      case 'EMAIL':
-        return (
-          <span key={ch} title="Email HTML">
-            <Mail className="w-3.5 h-3.5 text-purple-600" />
-          </span>
-        );
-      case 'WHATSAPP':
-        return (
-          <span key={ch} title="WhatsApp / SMS">
-            <MessageSquare className="w-3.5 h-3.5 text-green-600" />
-          </span>
-        );
-    }
-  };
-
-  const getAudienceLabel = (aud: string) => {
-    switch (aud) {
-      case 'TOUS':
-        return 'Tous les membres';
-      case 'HOTES':
-        return 'Propriétaires (Hôtes)';
-      case 'LOCATAIRES':
-        return 'Locataires';
-      case 'KYC_VALIDE':
-        return 'KYC Vérifiés';
-      default:
-        return aud;
-    }
-  };
+  const totalSent = history.reduce((sum, h) => sum + h.totalRecipients, 0);
+  const totalDelivered = history.reduce((sum, h) => sum + h.deliveredCount, 0);
+  const globalRate = totalSent > 0 ? Math.round((totalDelivered / totalSent) * 100) : null;
 
   return (
-    <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-gray-100 mt-8">
-      {/* Table Title */}
-      <div className="flex items-center justify-between pb-6 border-b border-gray-100 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-gray-100 text-gray-800">
-            <History className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">
-              Historique des Diffusions Broadcast
-            </h2>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Journal d’envoi multi-canal, taux de délivrabilité et suivi des campagnes
-            </p>
-          </div>
+    <section
+      aria-label="Historique des diffusions"
+      className="mt-8 rounded-[28px] border border-[#0A3D2E]/10 bg-white p-6 shadow-[0_20px_50px_-30px_rgba(10,61,46,0.35)] sm:p-8"
+    >
+      {/* En-tête */}
+      <div className="flex items-start justify-between gap-4 border-b border-gray-100 pb-6">
+        <div>
+          <h2 style={DISPLAY_FONT} className="text-2xl leading-tight text-[#0A3D2E] sm:text-3xl">
+            Historique des diffusions
+          </h2>
+          <p className="mt-1 max-w-md text-sm text-gray-500">
+            Chaque envoi, ses canaux et son taux de remise.
+          </p>
         </div>
-        <span className="text-xs font-mono bg-gray-100 px-3 py-1.5 rounded-full text-gray-600 font-semibold">
-          {history.length} campagne(s) enregistrée(s)
-        </span>
+
+        {!isLoading && history.length > 0 && (
+          <div className="shrink-0 text-right">
+            <div
+              style={DISPLAY_FONT}
+              className="text-3xl leading-none tabular-nums text-[#0A3D2E] sm:text-4xl"
+            >
+              {fmt(history.length)}
+            </div>
+            <div className="mt-1 text-xs text-gray-500">
+              {history.length > 1 ? 'diffusions' : 'diffusion'}
+              {globalRate !== null && <> · {globalRate} % livrés</>}
+            </div>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
-        <div className="p-12 text-center text-gray-400">
-          <div className="w-8 h-8 border-2 border-[#0A3D2E] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-xs font-medium">Chargement de l'historique...</p>
+        /* Squelettes */
+        <div className="mt-2 divide-y divide-gray-100" aria-busy="true">
+          <span className="sr-only">Chargement de l'historique</span>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-6 py-5">
+              <div className="flex-1 space-y-2">
+                <SkeletonBlock className="h-4 w-2/5" />
+                <SkeletonBlock className="h-3 w-3/5" />
+              </div>
+              <SkeletonBlock className="hidden h-6 w-24 md:block" />
+              <SkeletonBlock className="hidden h-7 w-20 md:block" />
+              <SkeletonBlock className="h-6 w-16" />
+            </div>
+          ))}
         </div>
       ) : history.length === 0 ? (
-        <div className="p-12 text-center bg-gray-50/50 rounded-2xl border border-gray-100">
-          <History className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-          <p className="text-sm font-bold text-gray-700">Aucun broadcast envoyé pour le moment</p>
-          <p className="text-xs text-gray-400 mt-1">
-            Utilisez le Studio Composer ci-dessus pour planifier votre première diffusion.
+        /* État vide */
+        <div className="flex flex-col items-center px-6 py-14 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0A3D2E] text-[#F1DFB6]">
+            <History className="h-6 w-6" />
+          </span>
+          <p style={DISPLAY_FONT} className="mt-5 text-xl text-[#0A3D2E]">
+            Aucune diffusion pour le moment
+          </p>
+          <p className="mt-1 max-w-sm text-sm text-gray-500">
+            Rédigez votre première diffusion dans le formulaire ci-dessus. Elle apparaîtra ici avec
+            son taux de remise.
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                <th className="py-3 px-4">Campagne & Message</th>
-                <th className="py-3 px-4">Audience Cible</th>
-                <th className="py-3 px-4">Canaux Utilisés</th>
-                <th className="py-3 px-4 text-center">Destinataires</th>
-                <th className="py-3 px-4 text-center">Taux de Remise</th>
-                <th className="py-3 px-4">Envoyé Le</th>
-                <th className="py-3 px-4 text-right">Statut</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 text-xs">
-              {history.map((item) => {
-                const deliveryRate =
-                  item.totalRecipients > 0
-                    ? Math.round((item.deliveredCount / item.totalRecipients) * 100)
-                    : 100;
-
-                return (
-                  <tr key={item.id} className="hover:bg-gray-50/80 transition-colors">
-                    {/* Title & Message */}
-                    <td className="py-4 px-4 max-w-xs">
-                      <div className="font-bold text-gray-900 truncate">{item.title}</div>
-                      <p className="text-gray-500 text-[11px] line-clamp-1 mt-0.5">
-                        {item.message}
-                      </p>
-                    </td>
-
-                    {/* Audience Target */}
-                    <td className="py-4 px-4">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-800">
-                        <Users className="w-3 h-3 text-gray-500" />
-                        {getAudienceLabel(item.targetAudience)}
-                      </span>
-                    </td>
-
-                    {/* Channels */}
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-2 bg-gray-50 px-2.5 py-1 rounded-xl border border-gray-200/60 w-fit">
-                        {item.channels.map((ch) => getChannelIcon(ch))}
-                      </div>
-                    </td>
-
-                    {/* Recipients Count */}
-                    <td className="py-4 px-4 text-center font-bold text-gray-900 font-mono">
-                      {item.totalRecipients.toLocaleString('fr-FR')}
-                    </td>
-
-                    {/* Delivery Rate Bar */}
-                    <td className="py-4 px-4">
-                      <div className="flex flex-col items-center">
-                        <span className="text-[11px] font-bold text-emerald-800 font-mono">
-                          {deliveryRate}% ({item.deliveredCount}/{item.totalRecipients})
-                        </span>
-                        <div className="w-24 h-1.5 bg-gray-200 rounded-full mt-1 overflow-hidden">
-                          <div
-                            className="h-full bg-emerald-600 rounded-full transition-all"
-                            style={{ width: `${deliveryRate}%` }}
-                          />
+        <>
+          {/* Tableau (tablette et bureau) */}
+          <div className="mt-2 hidden overflow-x-auto md:block">
+            <table className="w-full border-collapse text-left">
+              <caption className="sr-only">Historique des diffusions</caption>
+              <thead>
+                <tr className="border-b border-gray-200 text-xs font-medium text-gray-500">
+                  <th scope="col" className="px-4 py-3">Diffusion</th>
+                  <th scope="col" className="px-4 py-3">Audience</th>
+                  <th scope="col" className="px-4 py-3">Canaux</th>
+                  <th scope="col" className="px-4 py-3 text-right">Destinataires</th>
+                  <th scope="col" className="px-4 py-3">Remise</th>
+                  <th scope="col" className="px-4 py-3">Envoyée le</th>
+                  <th scope="col" className="px-4 py-3 text-right">Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((item) => {
+                  const { date, time } = formatDate(item.sentAt);
+                  return (
+                    <tr
+                      key={item.id}
+                      className="border-b border-gray-100 transition-colors last:border-0 hover:bg-[#0A3D2E]/[0.03]"
+                    >
+                      <td className="max-w-[280px] px-4 py-4">
+                        <div className="truncate text-sm font-semibold text-gray-900" title={item.title}>
+                          {item.title}
                         </div>
-                      </div>
-                    </td>
+                        <p className="mt-0.5 line-clamp-1 text-xs text-gray-500" title={item.message}>
+                          {item.message}
+                        </p>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-700">
+                        {AUDIENCE_LABELS[item.targetAudience] ?? item.targetAudience}
+                      </td>
+                      <td className="px-4 py-4">
+                        <ChannelIcons channels={item.channels} />
+                      </td>
+                      <td className="px-4 py-4 text-right text-sm font-medium tabular-nums text-gray-900">
+                        {fmt(item.totalRecipients)}
+                      </td>
+                      <td className="px-4 py-4">
+                        <DeliveryCell item={item} />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4 leading-tight">
+                        <div className="text-sm text-gray-700">{date}</div>
+                        <div className="text-xs tabular-nums text-gray-400">{time}</div>
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <StatusBadge status={item.status} />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
-                    {/* Sent Date */}
-                    <td className="py-4 px-4 text-gray-500 text-[11px]">
-                      <div>{new Date(item.sentAt).toLocaleDateString('fr-FR')}</div>
-                      <div className="text-[10px] text-gray-400 font-mono">
-                        {new Date(item.sentAt).toLocaleTimeString('fr-FR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </div>
-                    </td>
+          {/* Cartes (mobile) */}
+          <ul className="mt-4 space-y-3 md:hidden">
+            {history.map((item) => {
+              const { date, time } = formatDate(item.sentAt);
+              return (
+                <li key={item.id} className="rounded-2xl border border-gray-200 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-gray-900">{item.title}</div>
+                      <p className="mt-0.5 line-clamp-2 text-xs text-gray-500">{item.message}</p>
+                    </div>
+                    <StatusBadge status={item.status} />
+                  </div>
 
-                    {/* Status Badge */}
-                    <td className="py-4 px-4 text-right">
-                      {item.status === 'DELIVERED' ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                          Livré
-                        </span>
-                      ) : item.status === 'PARTIAL' ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
-                          <AlertTriangle className="w-3 h-3 text-amber-600" />
-                          Partiel
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">
-                          <XCircle className="w-3 h-3 text-rose-600" />
-                          Échec
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <ChannelIcons channels={item.channels} />
+                    <span className="text-xs text-gray-500">
+                      {AUDIENCE_LABELS[item.targetAudience] ?? item.targetAudience},{' '}
+                      <span className="tabular-nums">{fmt(item.totalRecipients)}</span>
+                    </span>
+                  </div>
+
+                  <div className="mt-4 flex items-end justify-between gap-3 border-t border-gray-100 pt-3">
+                    <DeliveryCell item={item} />
+                    <div className="text-right text-xs leading-tight text-gray-500">
+                      <div>{date}</div>
+                      <div className="tabular-nums text-gray-400">{time}</div>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </>
       )}
-    </div>
+    </section>
   );
 }

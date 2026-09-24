@@ -157,8 +157,15 @@ export function AdminBroadcastComposerCard({
     LOCATAIRES: stats?.totalLocataires,
     KYC_VALIDE: stats?.totalKycVerifies,
   };
-  const estimatedRecipients = counts[targetAudience] ?? 0;
-  const recipientsLabel = `${fmt(estimatedRecipients)} ${estimatedRecipients > 1 ? 'personnes' : 'personne'}`;
+  const countVal = counts[targetAudience];
+  const audienceObj = AUDIENCES.find((a) => a.id === targetAudience);
+  const targetLabelName = audienceObj?.label ? audienceObj.label.toLowerCase() : 'membres';
+
+  const recipientsLabel =
+    countVal !== undefined
+      ? `${fmt(countVal)} ${countVal > 1 ? 'personnes' : 'personne'}`
+      : `les ${targetLabelName}`;
+  const estimatedRecipients = countVal ?? 0;
 
   const channelSummary = joinList(
     CHANNELS.filter((c) => channels.includes(c.id)).map((c) => c.short)
@@ -411,8 +418,7 @@ export function AdminBroadcastComposerCard({
               className="rounded-2xl border border-[#F1DFB6] bg-[#F1DFB6]/30 p-4 sm:flex sm:items-center sm:justify-between sm:gap-6"
             >
               <p className="text-sm text-[#0A3D2E]">
-                Vous allez envoyer ce message à{' '}
-                <strong className="font-semibold">{recipientsLabel}</strong> par {channelSummary}.
+                Vous allez envoyer ce message {countVal !== undefined ? <>à <strong className="font-semibold">{recipientsLabel}</strong></> : <>aux <strong className="font-semibold">{targetLabelName}</strong></>} par {channelSummary}.
                 L'envoi est immédiat et ne peut pas être annulé.
               </p>
               <div className="mt-4 flex shrink-0 gap-2 sm:mt-0">
@@ -450,7 +456,7 @@ export function AdminBroadcastComposerCard({
                   helper
                 ) : (
                   <>
-                    Envoi à <span className="font-medium text-gray-900">{recipientsLabel}</span> par{' '}
+                    Envoi {countVal !== undefined ? <>à <span className="font-medium text-gray-900">{recipientsLabel}</span></> : <>aux <span className="font-medium text-gray-900">{targetLabelName}</span></>} par{' '}
                     {channelSummary}.
                   </>
                 )}

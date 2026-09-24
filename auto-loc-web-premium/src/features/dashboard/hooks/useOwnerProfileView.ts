@@ -6,13 +6,16 @@ import { userApi, type UserProfileData, type UpdateProfileDto } from '../../../c
 import { useUserStore } from '../../../core/store/useUserStore';
 
 export function useOwnerProfileView() {
-  const { user: storeUser, setUser } = useUserStore();
+  const { user: storeUser, setUser, isAuthenticated, logout } = useUserStore();
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
 
   useEffect(() => {
     setLastRefreshedAt(new Date());
   }, []);
+
+  const hasToken = typeof window !== 'undefined' ? Boolean(localStorage.getItem('autoloc_token')) : false;
+  const shouldFetch = isAuthenticated && hasToken;
 
   // 1. GET /users/me/profile
   const {
@@ -21,12 +24,19 @@ export function useOwnerProfileView() {
     isLoading: isLoadingProfile,
     isValidating: isValidatingProfile,
     mutate: rawMutateProfile,
-  } = useSWR<UserProfileData>('user-profile', () => userApi.getProfile(), {
+  } = useSWR<UserProfileData>(shouldFetch ? 'user-profile' : null, () => userApi.getProfile(), {
     dedupingInterval: 5 * 60 * 1000,
     revalidateIfStale: false,
     revalidateOnFocus: false,
     keepPreviousData: true,
   });
+
+  // En cas d'erreur 401 (Non autorisé / Token expiré), réinitialiser la session
+  useEffect(() => {
+    if (errorProfile?.status === 401 || errorProfile?.statusCode === 401) {
+      logout();
+    }
+  }, [errorProfile, logout]);
 
   const mutateProfile = useCallback(async () => {
     setLastRefreshedAt(new Date());

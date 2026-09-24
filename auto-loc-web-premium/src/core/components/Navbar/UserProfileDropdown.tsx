@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Calendar,
+  User,
   LogOut,
   ChevronDown,
   ShieldCheck,
@@ -192,6 +193,17 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }
                 <Calendar className="h-4 w-4" />
               </span>
               <span>Mes réservations</span>
+            </Link>
+
+            <Link
+              href="/profile"
+              onClick={() => setIsOpen(false)}
+              className={`${menuItemClass} text-slate-700 hover:bg-slate-900/[0.04] hover:text-slate-900`}
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0A3D2E]/[0.07] text-[#0A3D2E]">
+                <User className="h-4 w-4" />
+              </span>
+              <span>Mon Profil</span>
             </Link>
 
             <div className="mx-2 my-1.5 border-t border-slate-100" />
