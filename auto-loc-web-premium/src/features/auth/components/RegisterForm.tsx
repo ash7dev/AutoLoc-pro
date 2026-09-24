@@ -90,6 +90,49 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     router.prefetch('/dashboard');
   }, [router]);
 
+  // Capture et traitement automatique du retour OAuth Supabase / Google dans l'URL (#access_token=...)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const hash = window.location.hash;
+    const search = window.location.search;
+    let accessToken: string | null = null;
+
+    if (hash && hash.includes('access_token=')) {
+      const params = new URLSearchParams(hash.replace(/^#/, ''));
+      accessToken = params.get('access_token');
+    } else if (search && search.includes('access_token=')) {
+      const params = new URLSearchParams(search);
+      accessToken = params.get('access_token');
+    }
+
+    if (accessToken) {
+      window.history.replaceState(null, '', window.location.pathname);
+      setIsLoading(true);
+
+      AuthService.loginWithGoogle(accessToken)
+        .then((res) => {
+          if (res.accessToken && typeof window !== 'undefined') {
+            localStorage.setItem('autoloc_token', res.accessToken);
+            setAuthCookies(res.accessToken, res.profile.role);
+          }
+          const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
+          setUser(userProfile);
+
+          const pending = IntentEngine.consumePendingIntent();
+          const redirectUrl = getPostAuthRedirectUrl(userProfile, pending);
+          router.push(redirectUrl);
+          if (onSuccess) onSuccess();
+        })
+        .catch((err: any) => {
+          setError(err.message || 'L’inscription via Google a échoué.');
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [onSuccess, router, setUser]);
+
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -167,37 +210,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     }
   };
 
-  const handleGoogleAuth = async () => {
+  const handleGoogleAuth = () => {
     setError(null);
     setIsLoading(true);
-    try {
-      const googleToken = (typeof window !== 'undefined' && (window as any)?.googleAuthToken) || null;
-      if (!googleToken) {
-        throw new Error(
-          'L’inscription par Google OAuth requiert un ID Client Google configuré. Veuillez créer votre compte via SMS / WhatsApp ou par Email.'
-        );
-      }
-      const res = await AuthService.loginWithGoogle(googleToken);
-      if (res.accessToken && typeof window !== 'undefined') {
-        localStorage.setItem('autoloc_token', res.accessToken);
-      }
-      const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
-
-      if (res.accessToken) {
-        setAuthCookies(res.accessToken, userProfile.role);
-      }
-
-      setUser(userProfile);
-
-      const pending = IntentEngine.consumePendingIntent();
-      const redirectUrl = getPostAuthRedirectUrl(userProfile, pending);
-      router.push(redirectUrl);
-      if (onSuccess) onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'L’inscription par Google a échoué.');
-    } finally {
-      setIsLoading(false);
-    }
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://tcnlndjrvfddsjblamsj.supabase.co';
+    const redirectUri = typeof window !== 'undefined' ? `${window.location.origin}/register` : 'https://autoloc.sn/register';
+    const authUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUri)}`;
+    window.location.href = authUrl;
   };
 
   const clearPendingIntent = useUserStore((s) => s.clearPendingIntent);
