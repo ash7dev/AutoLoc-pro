@@ -89,7 +89,7 @@ export function VehicleMobileStickyBar({
         {/* Côté Gauche: Tarification & Dates */}
         <div className="min-w-0 flex-1 flex flex-col justify-center">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xl sm:text-2xl font-normal text-[#041912] font-display tracking-tight leading-none">
+            <span className="font-serif text-xl sm:text-2xl font-normal text-[#041912] tabular-nums tracking-tight leading-none">
               {formatCurrency(tenantPricePerDay)}
             </span>
             <span className="text-[10px] font-bold text-[#0A3D2E] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 uppercase tracking-wider">

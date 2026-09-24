@@ -53,7 +53,7 @@ function TierRow({
 
       {/* Prix par jour */}
       <div className="order-2 sm:order-none text-right">
-        <p className="text-lg leading-tight text-[#0A3D2E] font-display">
+        <p className="font-serif text-lg font-normal leading-tight tabular-nums text-[#0A3D2E]">
           {formatCurrency(price)}
         </p>
         <p className="mt-0.5 text-sm text-slate-500">FCFA / jour</p>

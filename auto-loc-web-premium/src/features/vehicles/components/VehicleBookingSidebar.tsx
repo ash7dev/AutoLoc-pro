@@ -292,7 +292,7 @@ export function VehicleBookingSidebar({
             </p>
           )}
           <p className="flex items-baseline gap-2">
-            <span className="font-display text-4xl leading-none tabular-nums text-[#041912]">
+            <span className="font-serif text-3xl sm:text-4xl font-normal leading-none tabular-nums text-[#041912]">
               {formatCurrency(tenantPricePerDay)}
             </span>
             <span className="text-sm text-slate-500">FCFA / jour</span>
@@ -471,7 +471,7 @@ export function VehicleBookingSidebar({
         >
           <span className="text-sm text-[#F1DFB6]/75">Total estimé</span>
           {hasDates ? (
-            <span className="font-display text-3xl leading-none tabular-nums text-[#F1DFB6]">
+            <span className="font-serif text-3xl font-normal leading-none tabular-nums text-[#F1DFB6]">
               {formatCurrency(totalAmount)}
               <span className="ml-1.5 font-sans text-sm text-[#F1DFB6]/60">FCFA</span>
             </span>
