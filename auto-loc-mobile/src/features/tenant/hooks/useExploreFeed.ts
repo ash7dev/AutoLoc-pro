@@ -52,10 +52,12 @@ async function fetchExplorePageApi(
   let canLoadNext = true;
   let totalResult: number | null = null;
 
+  const PAGE_SIZE = 15;
+
   if (isSearchActive) {
     const params: Record<string, any> = {
       page: targetPage,
-      limit: 10,
+      limit: PAGE_SIZE,
     };
 
     if (filters.bbox) {
@@ -149,50 +151,28 @@ async function fetchExplorePageApi(
 
     if (Array.isArray(searchData)) {
       newItems = searchData;
-      canLoadNext = searchData.length >= 10;
+      canLoadNext = searchData.length >= PAGE_SIZE;
       totalResult = searchData.length;
     } else if (searchData?.data && Array.isArray(searchData.data)) {
       newItems = searchData.data;
       totalResult = typeof searchData.total === 'number' ? searchData.total : null;
-      canLoadNext = totalResult !== null ? targetPage * 10 < totalResult : newItems.length >= 10;
+      canLoadNext = totalResult !== null ? targetPage * PAGE_SIZE < totalResult : newItems.length >= PAGE_SIZE;
     }
   } else {
-    // Mode exploration continu sans filtres
-    if (targetPage === 1) {
-      const res = await apiClient.get<MobileFeedResponse>('/vehicles/feed/mobile');
-      const feedData = res.data;
+    // Mode exploration continu sans filtres : interrogation de /vehicles/search pour avoir la totalité du catalogue
+    const res = await apiClient.get('/vehicles/search', {
+      params: { page: targetPage, limit: PAGE_SIZE },
+    });
+    const searchData = res.data;
 
-      if (feedData) {
-        const combined: VehicleFeedItem[] = [
-          ...(feedData.premium || []),
-          ...(feedData.topNotes || []),
-          ...(feedData.nouveautes || []),
-          ...(feedData.economiques || []),
-          ...(feedData.luxe || []),
-          ...(feedData.dakar || []),
-          ...(feedData.suvMoment || []),
-          ...(feedData.berlinesPopulaires || []),
-          ...(feedData.recommended?.items || []),
-        ];
-
-        const seen = new Set<string>();
-        newItems = combined.filter((item) => {
-          if (seen.has(item.id)) return false;
-          seen.add(item.id);
-          return true;
-        });
-      }
-      canLoadNext = true;
-      totalResult = newItems.length;
-    } else {
-      const res = await apiClient.get('/vehicles/search', {
-        params: { page: targetPage, limit: 10 },
-      });
-      const searchData = res.data;
-      const fetched = Array.isArray(searchData) ? searchData : searchData?.data || [];
-      newItems = fetched;
-      canLoadNext = fetched.length >= 10;
-      totalResult = fetched.length;
+    if (Array.isArray(searchData)) {
+      newItems = searchData;
+      canLoadNext = searchData.length >= PAGE_SIZE;
+      totalResult = searchData.length;
+    } else if (searchData?.data && Array.isArray(searchData.data)) {
+      newItems = searchData.data;
+      totalResult = typeof searchData.total === 'number' ? searchData.total : null;
+      canLoadNext = totalResult !== null ? targetPage * PAGE_SIZE < totalResult : newItems.length >= PAGE_SIZE;
     }
   }
 

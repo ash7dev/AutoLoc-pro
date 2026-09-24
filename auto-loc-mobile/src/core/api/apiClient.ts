@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { secureStorage } from '../storage/secureStore';
+import { useAppStore } from '../store/useAppStore';
 
 // Nettoyer l'URL de base pour s'assurer qu'aucun préfixe '/api' superflu ne vienne casser les routes NestJS
 const rawUrl = process.env.EXPO_PUBLIC_API_URL || 'https://api.autoloc.sn';
@@ -74,6 +75,8 @@ apiClient.interceptors.response.use(
         if (!refreshToken) {
           isRefreshing = false;
           delete apiClient.defaults.headers.common.Authorization;
+          await secureStorage.clearSession();
+          useAppStore.getState().logout().catch(() => {});
           return Promise.reject(error);
         }
 
@@ -106,6 +109,7 @@ apiClient.interceptors.response.use(
 
         delete apiClient.defaults.headers.common.Authorization;
         await secureStorage.clearSession();
+        useAppStore.getState().logout().catch(() => {});
       }
     }
 

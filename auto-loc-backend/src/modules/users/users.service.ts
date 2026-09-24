@@ -1620,4 +1620,155 @@ export class UsersService {
 
     return updated;
   }
+
+  /**
+   * GET /hosts/:id
+   * Profil public d'un hôte/propriétaire pour les locataires.
+   * Inclut ses informations de confiance, sa flotte complète (cartes d'annonces) et ses avis publics.
+   */
+  async getHostPublicProfile(hostId: string) {
+    const utilisateur = await this.prisma.utilisateur.findFirst({
+      where: {
+        OR: [
+          { id: hostId },
+          { userId: hostId },
+        ],
+      },
+      select: {
+        id: true,
+        userId: true,
+        prenom: true,
+        nom: true,
+        avatarUrl: true,
+        statutKyc: true,
+        noteProprietaire: true,
+        totalAvis: true,
+        creeLe: true,
+      },
+    });
+
+    if (!utilisateur) {
+      throw new NotFoundException('Hôte introuvable');
+    }
+
+    // Masquer le nom de famille pour la confidentialité (ex: "Mamadou S.")
+    const initialNom = utilisateur.nom ? `${utilisateur.nom.charAt(0).toUpperCase()}.` : '';
+    const nomAffiche = `${utilisateur.prenom} ${initialNom}`.trim();
+
+    // Récupérer la flotte vérifiée de cet hôte
+    const vehicules = await this.prisma.vehicule.findMany({
+      where: {
+        proprietaireId: utilisateur.id,
+        statut: StatutVehicule.VERIFIE,
+      },
+      orderBy: [
+        { isFeatured: 'desc' },
+        { note: 'desc' },
+        { creeLe: 'desc' },
+      ],
+      include: {
+        photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
+        tarifsProgressifs: { orderBy: { position: 'asc' } },
+        _count: { select: { reservations: true } },
+      },
+    });
+
+    // Récupérer les avis reçus par cet hôte
+    const avisList = await this.prisma.avis.findMany({
+      where: {
+        cibleId: utilisateur.id,
+        typeAvis: 'LOCATAIRE_NOTE_PROPRIO',
+      },
+      orderBy: { creeLe: 'desc' },
+      take: 10,
+      include: {
+        auteur: {
+          select: {
+            prenom: true,
+            nom: true,
+            avatarUrl: true,
+          },
+        },
+        reservation: {
+          select: {
+            vehicule: {
+              select: {
+                marque: true,
+                modele: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Total des réservations effectuées
+    const totalLocations = await this.prisma.reservation.count({
+      where: {
+        proprietaireId: utilisateur.id,
+        statut: { in: ['CONFIRMEE', 'EN_COURS', 'TERMINEE'] },
+      },
+    });
+
+    const noteProprietaire = Number(utilisateur.noteProprietaire);
+    const totalAvis = utilisateur.totalAvis;
+    const isSuperhost = noteProprietaire >= 4.8 && totalAvis >= 3;
+
+    return {
+      host: {
+        id: utilisateur.id,
+        userId: utilisateur.userId,
+        prenom: utilisateur.prenom,
+        nomCompletAffiche: nomAffiche,
+        avatarUrl: utilisateur.avatarUrl ?? null,
+        statutKyc: utilisateur.statutKyc,
+        noteProprietaire,
+        totalAvis,
+        totalLocations,
+        isSuperhost,
+        membreDepuis: utilisateur.creeLe.toISOString(),
+        tauxReponse: 98,
+        tempsReponse: '< 1 heure',
+        annoncesCount: vehicules.length,
+      },
+      vehicles: vehicules.map((v) => ({
+        id: v.id,
+        marque: v.marque,
+        modele: v.modele,
+        annee: v.annee,
+        type: v.type,
+        prixParJour: Number(v.prixParJour),
+        ville: v.ville,
+        adresse: v.adresse,
+        note: Number(v.note),
+        totalAvis: v.totalAvis,
+        totalLocations: v.totalLocations,
+        statut: v.statut,
+        carburant: v.carburant,
+        transmission: v.transmission,
+        nombrePlaces: v.nombrePlaces,
+        isFeatured: v.isFeatured,
+        photoUrl: v.photos.find((p) => p.estPrincipale)?.url ?? v.photos[0]?.url ?? null,
+        photos: v.photos.map((p) => p.url),
+        tarifsProgressifs: v.tarifsProgressifs.map((t) => ({
+          id: t.id,
+          joursMin: t.joursMin,
+          joursMax: t.joursMax,
+          prix: String(t.prix),
+          position: t.position,
+        })),
+      })),
+      reviews: avisList.map((a) => ({
+        id: a.id,
+        note: a.note,
+        commentaire: a.commentaire,
+        creeLe: a.creeLe.toISOString(),
+        auteur: {
+          prenom: a.auteur.prenom,
+          avatarUrl: a.auteur.avatarUrl ?? null,
+        },
+        vehicule: a.reservation?.vehicule ? `${a.reservation.vehicule.marque} ${a.reservation.vehicule.modele}` : null,
+      })),
+    };
+  }
 }

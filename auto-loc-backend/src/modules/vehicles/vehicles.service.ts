@@ -1013,8 +1013,11 @@ export class VehiclesService {
       prixParJour: 'v."prixParJour"',
       annee: 'v.annee',
     };
-    const orderField = effectiveSortBy && orderFieldMap[effectiveSortBy] ? orderFieldMap[effectiveSortBy] : 'v.note';
     const orderDir = dto.sortOrder === 'asc' ? 'ASC' : 'DESC';
+    const todaySeed = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    const orderClause = effectiveSortBy && orderFieldMap[effectiveSortBy]
+      ? Prisma.sql`ORDER BY v."isFeatured" DESC, ${Prisma.raw(orderFieldMap[effectiveSortBy])} ${Prisma.raw(orderDir)}, v.id ASC`
+      : Prisma.sql`ORDER BY v."isFeatured" DESC, md5(v.id || ${todaySeed}) ASC, v.id ASC`;
 
     // Separate queries for total count and paginated data
     const totalQuery = await this.prisma.$queryRaw<{ count: bigint }[]>`
@@ -1054,7 +1057,7 @@ export class VehiclesService {
         ${equipementCondition}
         ${excludeCondition}
         ${searchCondition}
-      ORDER BY v."isFeatured" DESC, ${Prisma.raw(orderField)} ${Prisma.raw(orderDir)}
+      ${orderClause}
       LIMIT ${Prisma.raw(String(pageSize))} OFFSET ${Prisma.raw(String(offset))}
     `;
 
@@ -1354,23 +1357,25 @@ export class VehiclesService {
   }
 
   /**
-   * 📱 Feed mobile avec sections strictement filtrées côté serveur
+   * 📱 Feed mobile avec sections strictement filtrées & dédoublonnées en cascade côté serveur.
+   * Garantit qu'aucun véhicule n'apparaît dans plus d'une section sur la même page d'accueil.
    */
   private async buildMobileFeed() {
-    const SECTION_SIZE = 8; // 8 véhicules par section mobile
+    const SECTION_SIZE = 8;
+    const POOL_LIMIT = 24; // Sur-échantillonnage pour alimenter la sélection dédoublonnée
 
-    // ── 1. Exécuter toutes les requêtes primaires en parallèle ──
+    // ── 1. Exécution ultra-rapide en parallèle des pools de candidats ──
     const [
-      premiumRaw,
-      nouveautesRaw,
-      topNotesRaw,
-      economiquesRaw,
-      luxeRaw,
-      dakarRawPrimary,
-      suvRawPrimary,
-      berlinesRawPrimary,
+      premiumCandidates,
+      nouveautesCandidates,
+      topNotesCandidates,
+      economiquesCandidates,
+      luxeCandidates,
+      dakarCandidates,
+      suvCandidates,
+      berlinesCandidates,
     ] = await Promise.all([
-      // PREMIUM (Proposition: isFeatured DESC, note DESC, scoreGlobal DESC)
+      // PREMIUM
       this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
         SELECT
           ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
@@ -1383,9 +1388,9 @@ export class VehiclesService {
           v.note DESC,
           COALESCE(m."scoreGlobal", 0) DESC,
           v."totalLocations" DESC
-        LIMIT ${Prisma.raw(String(SECTION_SIZE * 2))}
+        LIMIT ${Prisma.raw(String(POOL_LIMIT))}
       `,
-      // NOUVEAUTÉS (Trié par date de création récente)
+      // NOUVEAUTÉS
       this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
         SELECT
           ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
@@ -1394,9 +1399,9 @@ export class VehiclesService {
         LEFT JOIN "vehicule_metrics" m ON m."vehiculeId" = v.id
         WHERE v.statut::text = 'VERIFIE'
         ORDER BY v."creeLe" DESC, v.note DESC
-        LIMIT ${Prisma.raw(String(SECTION_SIZE * 2))}
+        LIMIT ${Prisma.raw(String(POOL_LIMIT))}
       `,
-      // TOP NOTÉS
+      // TOP NOTÉS (Note >= 4.0 pour inclure les nouveaux véhicules bien notés)
       this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
         SELECT
           ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
@@ -1404,11 +1409,11 @@ export class VehiclesService {
         FROM "Vehicule" v
         LEFT JOIN "vehicule_metrics" m ON m."vehiculeId" = v.id
         WHERE v.statut::text = 'VERIFIE'
-          AND v.note >= 4.5
-        ORDER BY v.note DESC, v."totalAvis" DESC
-        LIMIT ${Prisma.raw(String(SECTION_SIZE * 2))}
+          AND (v.note >= 4.0 OR v."totalAvis" = 0)
+        ORDER BY v.note DESC, v."totalAvis" DESC, COALESCE(m."scoreGlobal", 0) DESC
+        LIMIT ${Prisma.raw(String(POOL_LIMIT))}
       `,
-      // ÉCONOMIQUES (Contiennent obligatoirement des paliers dégressifs TarifTier)
+      // ÉCONOMIQUES
       this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
         SELECT
           ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
@@ -1416,13 +1421,10 @@ export class VehiclesService {
         FROM "Vehicule" v
         LEFT JOIN "vehicule_metrics" m ON m."vehiculeId" = v.id
         WHERE v.statut::text = 'VERIFIE'
-          AND EXISTS (
-            SELECT 1 FROM "TarifTier" tt WHERE tt."vehiculeId" = v.id
-          )
         ORDER BY v."prixParJour" ASC, COALESCE(m."scoreGlobal", 0) DESC
-        LIMIT ${Prisma.raw(String(SECTION_SIZE * 2))}
+        LIMIT ${Prisma.raw(String(POOL_LIMIT))}
       `,
-      // 4X4 / LUXE (Contiennent des 4x4 / Tout Terrain)
+      // LUXE / 4x4
       this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
         SELECT
           ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
@@ -1430,9 +1432,9 @@ export class VehiclesService {
         FROM "Vehicule" v
         LEFT JOIN "vehicule_metrics" m ON m."vehiculeId" = v.id
         WHERE v.statut::text = 'VERIFIE'
-          AND v.type::text IN ('FOUR_X_FOUR', 'PICKUP')
+          AND v.type::text IN ('LUXE', 'FOUR_X_FOUR', 'PICKUP')
         ORDER BY COALESCE(m."scoreGlobal", 0) DESC, v."prixParJour" DESC
-        LIMIT ${Prisma.raw(String(SECTION_SIZE * 2))}
+        LIMIT ${Prisma.raw(String(POOL_LIMIT))}
       `,
       // POPULAIRES DAKAR
       this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
@@ -1442,11 +1444,11 @@ export class VehiclesService {
         FROM "Vehicule" v
         LEFT JOIN "vehicule_metrics" m ON m."vehiculeId" = v.id
         WHERE v.statut::text = 'VERIFIE'
-          AND LOWER(v.ville) = 'dakar'
+          AND LOWER(v.ville) LIKE '%dakar%'
         ORDER BY COALESCE(m."scoreGlobal", 0) DESC, v."totalLocations" DESC
-        LIMIT ${Prisma.raw(String(SECTION_SIZE))}
+        LIMIT ${Prisma.raw(String(POOL_LIMIT))}
       `,
-      // SUV DU MOMENT (Contiennent EXCLUSIVEMENT des SUV)
+      // SUV DU MOMENT
       this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
         SELECT
           ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
@@ -1456,9 +1458,9 @@ export class VehiclesService {
         WHERE v.statut::text = 'VERIFIE'
           AND v.type::text = 'SUV'
         ORDER BY COALESCE(m."scoreGlobal", 0) DESC, v."totalLocations" DESC
-        LIMIT ${Prisma.raw(String(SECTION_SIZE * 2))}
+        LIMIT ${Prisma.raw(String(POOL_LIMIT))}
       `,
-      // BERLINES POPULAIRES (Contiennent EXCLUSIVEMENT des BERLINES)
+      // BERLINES POPULAIRES
       this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
         SELECT
           ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
@@ -1468,204 +1470,33 @@ export class VehiclesService {
         WHERE v.statut::text = 'VERIFIE'
           AND v.type::text = 'BERLINE'
         ORDER BY COALESCE(m."scoreGlobal", 0) DESC, v."totalLocations" DESC
-        LIMIT ${Prisma.raw(String(SECTION_SIZE * 2))}
+        LIMIT ${Prisma.raw(String(POOL_LIMIT))}
       `,
     ]);
 
-    // ── 2. Exécuter les requêtes de backfill strictes (sans pollution de types) ──
-    const backfillPromises: Promise<any>[] = [];
-    let topNotesPromiseIndex = -1;
-    let dakarPromiseIndex = -1;
-    let suvPromiseIndex = -1;
-    let berlinesPromiseIndex = -1;
-    let economiquesPromiseIndex = -1;
-    let luxePromiseIndex = -1;
+    // ── 2. Moteur de Déduction & Dédoublonnage en Cascade (Zero-Duplicate Algorithm) ──
+    const globalUsedIds = new Set<string>();
 
-    if (topNotesRaw.length < SECTION_SIZE) {
-      const already = topNotesRaw.map((r) => r.id);
-      const backfillCondition = already.length
-        ? Prisma.sql`AND v.id NOT IN (${Prisma.join(already)})`
-        : Prisma.empty;
-      topNotesPromiseIndex = backfillPromises.length;
-      backfillPromises.push(
-        this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
-          SELECT
-            ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
-            COALESCE(m."scoreGlobal", 0) as "scoreGlobal"
-          FROM "Vehicule" v
-          LEFT JOIN "vehicule_metrics" m ON m."vehiculeId" = v.id
-          WHERE v.statut::text = 'VERIFIE'
-            ${backfillCondition}
-            AND v.note >= 4.0
-          ORDER BY v.note DESC, v."totalAvis" DESC
-          LIMIT ${Prisma.raw(String(SECTION_SIZE - topNotesRaw.length))}
-        `
-      );
-    }
+    const pickSectionItems = (candidates: (VehicleSearchRow & { scoreGlobal: number })[]): (VehicleSearchRow & { scoreGlobal: number })[] => {
+      const filtered = candidates.filter((item) => !globalUsedIds.has(item.id));
+      const diversified = this.feedOptimizer.diversifyByGeography(filtered, SECTION_SIZE);
+      diversified.forEach((item) => globalUsedIds.add(item.id));
+      return diversified;
+    };
 
-    if (dakarRawPrimary.length < SECTION_SIZE) {
-      const already = dakarRawPrimary.map((r) => r.id);
-      const backfillCondition = already.length
-        ? Prisma.sql`AND v.id NOT IN (${Prisma.join(already)})`
-        : Prisma.empty;
-      dakarPromiseIndex = backfillPromises.length;
-      backfillPromises.push(
-        this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
-          SELECT
-            ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
-            COALESCE(m."scoreGlobal", 0) as "scoreGlobal"
-          FROM "Vehicule" v
-          LEFT JOIN "vehicule_metrics" m ON m."vehiculeId" = v.id
-          WHERE v.statut::text = 'VERIFIE'
-            AND LOWER(v.ville) = 'dakar'
-            ${backfillCondition}
-          ORDER BY COALESCE(m."scoreGlobal", 0) DESC, v."totalLocations" DESC
-          LIMIT ${Prisma.raw(String(SECTION_SIZE - dakarRawPrimary.length))}
-        `
-      );
-    }
+    const premium = pickSectionItems(premiumCandidates);
+    const nouveautes = pickSectionItems(nouveautesCandidates);
+    const topNotes = pickSectionItems(topNotesCandidates);
+    const suvMoment = pickSectionItems(suvCandidates);
+    const luxe = pickSectionItems(luxeCandidates);
+    const economiques = pickSectionItems(economiquesCandidates);
+    const dakar = pickSectionItems(dakarCandidates);
+    const berlinesPopulaires = pickSectionItems(berlinesCandidates);
 
-    if (suvRawPrimary.length < SECTION_SIZE) {
-      const already = suvRawPrimary.map((r) => r.id);
-      const backfillCondition = already.length
-        ? Prisma.sql`AND v.id NOT IN (${Prisma.join(already)})`
-        : Prisma.empty;
-      suvPromiseIndex = backfillPromises.length;
-      backfillPromises.push(
-        this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
-          SELECT
-            ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
-            COALESCE(m."scoreGlobal", 0) as "scoreGlobal"
-          FROM "Vehicule" v
-          LEFT JOIN "vehicule_metrics" m ON m."vehiculeId" = v.id
-          WHERE v.statut::text = 'VERIFIE'
-            AND v.type::text = 'SUV'
-            ${backfillCondition}
-          ORDER BY COALESCE(m."scoreGlobal", 0) DESC, v."totalLocations" DESC
-          LIMIT ${Prisma.raw(String(SECTION_SIZE - suvRawPrimary.length))}
-        `
-      );
-    }
-
-    if (berlinesRawPrimary.length < SECTION_SIZE) {
-      const already = berlinesRawPrimary.map((r) => r.id);
-      const backfillCondition = already.length
-        ? Prisma.sql`AND v.id NOT IN (${Prisma.join(already)})`
-        : Prisma.empty;
-      berlinesPromiseIndex = backfillPromises.length;
-      backfillPromises.push(
-        this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
-          SELECT
-            ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
-            COALESCE(m."scoreGlobal", 0) as "scoreGlobal"
-          FROM "Vehicule" v
-          LEFT JOIN "vehicule_metrics" m ON m."vehiculeId" = v.id
-          WHERE v.statut::text = 'VERIFIE'
-            AND v.type::text = 'BERLINE'
-            ${backfillCondition}
-          ORDER BY COALESCE(m."scoreGlobal", 0) DESC, v."totalLocations" DESC
-          LIMIT ${Prisma.raw(String(SECTION_SIZE - berlinesRawPrimary.length))}
-        `
-      );
-    }
-
-    if (economiquesRaw.length < SECTION_SIZE) {
-      const already = economiquesRaw.map((r) => r.id);
-      const backfillCondition = already.length
-        ? Prisma.sql`AND v.id NOT IN (${Prisma.join(already)})`
-        : Prisma.empty;
-      economiquesPromiseIndex = backfillPromises.length;
-      backfillPromises.push(
-        this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
-          SELECT
-            ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
-            COALESCE(m."scoreGlobal", 0) as "scoreGlobal"
-          FROM "Vehicule" v
-          LEFT JOIN "vehicule_metrics" m ON m."vehiculeId" = v.id
-          WHERE v.statut::text = 'VERIFIE'
-            AND EXISTS (
-              SELECT 1 FROM "TarifTier" tt WHERE tt."vehiculeId" = v.id
-            )
-            ${backfillCondition}
-          ORDER BY v."prixParJour" ASC
-          LIMIT ${Prisma.raw(String(SECTION_SIZE - economiquesRaw.length))}
-        `
-      );
-    }
-
-    if (luxeRaw.length < SECTION_SIZE) {
-      const already = luxeRaw.map((r) => r.id);
-      const backfillCondition = already.length
-        ? Prisma.sql`AND v.id NOT IN (${Prisma.join(already)})`
-        : Prisma.empty;
-      luxePromiseIndex = backfillPromises.length;
-      backfillPromises.push(
-        this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
-          SELECT
-            ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
-            COALESCE(m."scoreGlobal", 0) as "scoreGlobal"
-          FROM "Vehicule" v
-          LEFT JOIN "vehicule_metrics" m ON m."vehiculeId" = v.id
-          WHERE v.statut::text = 'VERIFIE'
-            AND v.type::text IN ('FOUR_X_FOUR', 'PICKUP')
-            ${backfillCondition}
-          ORDER BY COALESCE(m."scoreGlobal", 0) DESC, v."prixParJour" DESC
-          LIMIT ${Prisma.raw(String(SECTION_SIZE - luxeRaw.length))}
-        `
-      );
-    }
-
-    const backfillResults = await Promise.all(backfillPromises);
-
-    const topNotesFinal = (topNotesPromiseIndex !== -1
-      ? [...topNotesRaw, ...backfillResults[topNotesPromiseIndex]]
-      : topNotesRaw) as (VehicleSearchRow & { scoreGlobal: number })[];
-
-    const dakarFinal = (dakarPromiseIndex !== -1
-      ? [...dakarRawPrimary, ...backfillResults[dakarPromiseIndex]]
-      : dakarRawPrimary) as (VehicleSearchRow & { scoreGlobal: number })[];
-
-    const suvFinal = (suvPromiseIndex !== -1
-      ? [...suvRawPrimary, ...backfillResults[suvPromiseIndex]]
-      : suvRawPrimary) as (VehicleSearchRow & { scoreGlobal: number })[];
-
-    const berlinesFinal = (berlinesPromiseIndex !== -1
-      ? [...berlinesRawPrimary, ...backfillResults[berlinesPromiseIndex]]
-      : berlinesRawPrimary) as (VehicleSearchRow & { scoreGlobal: number })[];
-
-    const economiquesFinal = (economiquesPromiseIndex !== -1
-      ? [...economiquesRaw, ...backfillResults[economiquesPromiseIndex]]
-      : economiquesRaw) as (VehicleSearchRow & { scoreGlobal: number })[];
-
-    const luxeFinal = (luxePromiseIndex !== -1
-      ? [...luxeRaw, ...backfillResults[luxePromiseIndex]]
-      : luxeRaw) as (VehicleSearchRow & { scoreGlobal: number })[];
-
-    // ── 3. Appliquer la diversification géographique par section ──
-    const premium = this.feedOptimizer.diversifyByGeography(premiumRaw, SECTION_SIZE);
-    const nouveautes = this.feedOptimizer.diversifyByGeography(nouveautesRaw, SECTION_SIZE);
-    const topNotes = this.feedOptimizer.diversifyByGeography(topNotesFinal, SECTION_SIZE);
-    const economiques = this.feedOptimizer.diversifyByGeography(economiquesFinal, SECTION_SIZE);
-    const luxe = this.feedOptimizer.diversifyByGeography(luxeFinal, SECTION_SIZE);
-    const dakar = dakarFinal;
-    const suvMoment = this.feedOptimizer.diversifyByGeography(suvFinal, SECTION_SIZE);
-    const berlinesPopulaires = this.feedOptimizer.diversifyByGeography(berlinesFinal, SECTION_SIZE);
-
-    // ── 4. Recommandés (Sélection aléatoire sans doublons avec le reste de la page) ──
-    const usedIds = [
-      ...premium.map((r) => r.id),
-      ...nouveautes.map((r) => r.id),
-      ...topNotes.map((r) => r.id),
-      ...economiques.map((r) => r.id),
-      ...luxe.map((r) => r.id),
-      ...dakar.map((r) => r.id),
-      ...suvMoment.map((r) => r.id),
-      ...berlinesPopulaires.map((r) => r.id),
-    ];
-    const uniqueUsedIds = [...new Set(usedIds)];
-
-    const excludeCondition = uniqueUsedIds.length
-      ? Prisma.sql`AND v.id NOT IN (${Prisma.join(uniqueUsedIds)})`
+    // ── 3. Recommandés (Sélection dédoublonnée stricte de ce qui n'a pas encore été vu) ──
+    const excludeList = Array.from(globalUsedIds);
+    const excludeCondition = excludeList.length
+      ? Prisma.sql`AND v.id NOT IN (${Prisma.join(excludeList)})`
       : Prisma.empty;
 
     let recommendedRaw = await this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
@@ -1680,8 +1511,9 @@ export class VehiclesService {
       LIMIT ${Prisma.raw(String(SECTION_SIZE * 2))}
     `;
 
-    if (recommendedRaw.length < SECTION_SIZE) {
-      const backfill = await this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
+    // Fallback gracieux si tout le catalogue a déjà été réparti
+    if (recommendedRaw.length === 0) {
+      recommendedRaw = await this.prisma.$queryRaw<(VehicleSearchRow & { scoreGlobal: number })[]>`
         SELECT
           ${VehiclesService.VEHICLE_SELECT_FRAGMENT},
           COALESCE(m."scoreGlobal", 0) as "scoreGlobal"
@@ -1691,17 +1523,14 @@ export class VehiclesService {
         ORDER BY RANDOM()
         LIMIT ${Prisma.raw(String(SECTION_SIZE))}
       `;
-      recommendedRaw = backfill.length > 0 ? backfill : recommendedRaw;
     }
 
     const recommended = this.feedOptimizer.diversifyByGeography(recommendedRaw, SECTION_SIZE);
+    recommended.forEach((item) => globalUsedIds.add(item.id));
 
-    // ── 5. Hydratation finale des tarifs progressifs ──
-    const allIds = [
-      ...uniqueUsedIds,
-      ...recommended.map((r) => r.id),
-    ];
-    const tiersByVehicle = await this.hydrateTarifs(allIds);
+    // ── 4. Hydratation finale optimisée des tarifs dégressifs ──
+    const allUniqueIds = Array.from(globalUsedIds);
+    const tiersByVehicle = await this.hydrateTarifs(allUniqueIds);
 
     const mobileFeedData = {
       premium: premium.map((r) => this.mapSearchRow(r, tiersByVehicle)),
@@ -1714,7 +1543,7 @@ export class VehiclesService {
       berlinesPopulaires: berlinesPopulaires.map((r) => this.mapSearchRow(r, tiersByVehicle)),
       recommended: {
         items: recommended.map((r) => this.mapSearchRow(r, tiersByVehicle)),
-        excludedIds: uniqueUsedIds,
+        excludedIds: allUniqueIds,
       },
     };
 

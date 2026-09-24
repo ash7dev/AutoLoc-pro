@@ -77,6 +77,7 @@ export const TenantProfileScreen: React.FC = () => {
         <View style={styles.loading}>
           <Text style={styles.loadingText}>Impossible de charger le profil.</Text>
           <AutoButton title="Réessayer" onPress={() => refetch()} />
+          <AutoButton title="Se déconnecter" variant="ghost" onPress={logout} />
         </View>
       </SafeAreaView>
     );
