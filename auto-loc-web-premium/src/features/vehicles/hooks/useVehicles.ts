@@ -47,8 +47,14 @@ export function useVehicles(options: UseVehiclesOptions = {}) {
     ? (data as any).vehicles
     : [];
 
+  const totalCount: number =
+    data && typeof data === 'object' && typeof (data as any).total === 'number'
+      ? (data as any).total
+      : rawVehicles.length;
+
   return {
     vehicles: rawVehicles,
+    total: totalCount,
     isLoading,
     isError: !!error,
     error,

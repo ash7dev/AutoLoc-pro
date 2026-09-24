@@ -40,19 +40,6 @@ class ApiClient {
     return url.toString();
   }
 
-  private async handleResponse<T>(response: Response): Promise<T> {
-    if (!response.ok) {
-      if (response.status === 401 && typeof window !== 'undefined') {
-        localStorage.removeItem('autoloc_token');
-        localStorage.removeItem('autoloc_user');
-      }
-      const errorData = await response.json().catch(() => ({}));
-      const message = errorData.message || `Erreur API (${response.status})`;
-      throw new ApiError(Array.isArray(message) ? message.join(', ') : message, response.status, errorData);
-    }
-    return response.json();
-  }
-
   async get<T>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
     const { params, headers, ...rest } = options;
     const url = this.buildUrl(endpoint, params);
@@ -68,7 +55,13 @@ class ApiClient {
       ...rest,
     });
 
-    return this.handleResponse<T>(response);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const message = errorData.message || `Erreur API (${response.status})`;
+      throw new ApiError(Array.isArray(message) ? message.join(', ') : message, response.status, errorData);
+    }
+
+    return response.json();
   }
 
   async post<T>(endpoint: string, body?: unknown, options: ApiRequestOptions = {}): Promise<T> {
@@ -87,7 +80,13 @@ class ApiClient {
       ...rest,
     });
 
-    return this.handleResponse<T>(response);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const message = errorData.message || `Erreur API (${response.status})`;
+      throw new ApiError(Array.isArray(message) ? message.join(', ') : message, response.status, errorData);
+    }
+
+    return response.json();
   }
 
   async patch<T>(endpoint: string, body?: unknown, options: ApiRequestOptions = {}): Promise<T> {
@@ -106,7 +105,13 @@ class ApiClient {
       ...rest,
     });
 
-    return this.handleResponse<T>(response);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const message = errorData.message || `Erreur API (${response.status})`;
+      throw new ApiError(Array.isArray(message) ? message.join(', ') : message, response.status, errorData);
+    }
+
+    return response.json();
   }
 
   async put<T>(endpoint: string, body?: unknown, options: ApiRequestOptions = {}): Promise<T> {
@@ -125,7 +130,13 @@ class ApiClient {
       ...rest,
     });
 
-    return this.handleResponse<T>(response);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const message = errorData.message || `Erreur API (${response.status})`;
+      throw new ApiError(Array.isArray(message) ? message.join(', ') : message, response.status, errorData);
+    }
+
+    return response.json();
   }
 
   async delete<T>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
@@ -143,7 +154,13 @@ class ApiClient {
       ...rest,
     });
 
-    return this.handleResponse<T>(response);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const message = errorData.message || `Erreur API (${response.status})`;
+      throw new ApiError(Array.isArray(message) ? message.join(', ') : message, response.status, errorData);
+    }
+
+    return response.json();
   }
 }
 

@@ -176,7 +176,7 @@ export const Footer: React.FC = () => {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/terms" className="hover:text-[#0A3D2E] transition-colors">
+                    <Link href="/cgu" className="hover:text-[#0A3D2E] transition-colors">
                       Conditions Générales (CGU)
                     </Link>
                   </li>

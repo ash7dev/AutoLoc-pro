@@ -18,6 +18,8 @@ export const MobileBottomNav: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const isAuthenticated = useUserStore((s) => s.isAuthenticated);
+  const user = useUserStore((s) => s.user);
+  const profileHref = user?.role === 'PROPRIETAIRE' ? '/dashboard' : '/profile';
 
   // Masquer la navigation basse sur les pages détails (ex: /vehicles/[id] et /reservations/[id])
   const isDetailPage =
@@ -43,7 +45,7 @@ export const MobileBottomNav: React.FC = () => {
   const handleProfileClick = (e: React.MouseEvent) => {
     if (!isAuthenticated) {
       const allowed = IntentEngine.guardAction('VIEW_PROFILE', {
-        redirectToUrl: '/profile',
+        redirectToUrl: profileHref,
         reasonMessage: 'Veuillez vous connecter pour accéder à votre espace profil.',
       });
       if (!allowed) {
@@ -64,7 +66,7 @@ export const MobileBottomNav: React.FC = () => {
     },
     {
       label: 'Profil',
-      href: '/profile',
+      href: profileHref,
       icon: CircleUserRound,
       onClick: handleProfileClick,
     },
@@ -79,7 +81,9 @@ export const MobileBottomNav: React.FC = () => {
         {items.map((item) => {
           const Icon = item.icon;
           const isActive =
-            pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+            item.label === 'Profil'
+              ? pathname === '/profile' || pathname.startsWith('/dashboard')
+              : pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
 
           return (
             <Link

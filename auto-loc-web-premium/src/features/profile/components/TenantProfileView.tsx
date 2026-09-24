@@ -2,19 +2,19 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUserStore } from '../../../../core/store/useUserStore';
-import { useOwnerProfileView } from '../../hooks/useOwnerProfileView';
-import { ProfileHeader } from './ProfileHeader';
-import { ProfileHeroCard } from './ProfileHeroCard';
-import { PersonalInfoCard } from './PersonalInfoCard';
-import { KycStatusCard } from './KycStatusCard';
-import { SecuritySettingsCard } from './SecuritySettingsCard';
-import { WebEditProfileModal } from './WebEditProfileModal';
-import { WebDeleteAccountModal } from './WebDeleteAccountModal';
-import { OwnerProfileSkeleton } from './OwnerProfileSkeleton';
+import { useUserStore } from '../../../core/store/useUserStore';
+import { useTenantProfileView } from '../hooks/useTenantProfileView';
+import { TenantProfileHeader } from './TenantProfileHeader';
+import { TenantProfileHeroCard } from './TenantProfileHeroCard';
+import { TenantPersonalInfoCard } from './TenantPersonalInfoCard';
+import { TenantKycStatusCard } from './TenantKycStatusCard';
+import { TenantSecuritySettingsCard } from './TenantSecuritySettingsCard';
+import { TenantEditProfileModal } from './TenantEditProfileModal';
+import { TenantDeleteAccountModal } from './TenantDeleteAccountModal';
+import { TenantProfileSkeleton } from './TenantProfileSkeleton';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
-export const OwnerProfileView: React.FC = () => {
+export const TenantProfileView: React.FC = () => {
   const router = useRouter();
   const switchRole = useUserStore((s) => s.switchRole);
   const [isSwitchingRole, setIsSwitchingRole] = useState(false);
@@ -30,7 +30,7 @@ export const OwnerProfileView: React.FC = () => {
     handleUploadAvatar,
     handleDeleteAvatar,
     handleUpdateProfile,
-  } = useOwnerProfileView();
+  } = useTenantProfileView();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -41,10 +41,10 @@ export const OwnerProfileView: React.FC = () => {
       setIsSwitchingRole(true);
       const targetRole = profile.role === 'PROPRIETAIRE' ? 'LOCATAIRE' : 'PROPRIETAIRE';
       await switchRole(targetRole);
-      if (targetRole === 'LOCATAIRE') {
-        router.push('/');
-      } else {
+      if (targetRole === 'PROPRIETAIRE') {
         router.push('/dashboard');
+      } else {
+        router.push('/profile');
       }
     } catch (err) {
       console.error('Switch role failed:', err);
@@ -54,7 +54,7 @@ export const OwnerProfileView: React.FC = () => {
   };
 
   if (isLoadingProfile && !profile) {
-    return <OwnerProfileSkeleton />;
+    return <TenantProfileSkeleton />;
   }
 
   if (errorProfile || !profile) {
@@ -86,7 +86,7 @@ export const OwnerProfileView: React.FC = () => {
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-28 sm:pb-16">
       {/* 1. Top Header */}
-      <ProfileHeader
+      <TenantProfileHeader
         isLoading={isLoadingProfile}
         isRefreshing={isRefreshing}
         lastRefreshedAt={lastRefreshedAt}
@@ -94,7 +94,7 @@ export const OwnerProfileView: React.FC = () => {
       />
 
       {/* 2. Hero Profile Banner */}
-      <ProfileHeroCard
+      <TenantProfileHeroCard
         profile={profile}
         isUploadingAvatar={isUploadingAvatar}
         onUploadAvatar={handleUploadAvatar}
@@ -107,30 +107,30 @@ export const OwnerProfileView: React.FC = () => {
       {/* 3. Main Content Cards Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* Personal Information */}
-        <PersonalInfoCard
+        <TenantPersonalInfoCard
           profile={profile}
           onEditClick={() => setIsEditModalOpen(true)}
         />
 
         {/* KYC Status */}
-        <KycStatusCard profile={profile} />
+        <TenantKycStatusCard profile={profile} />
       </div>
 
-      {/* 4. Security Settings & Danger Zone at the very bottom */}
-      <SecuritySettingsCard
+      {/* 4. Security Settings & Danger Zone at the bottom */}
+      <TenantSecuritySettingsCard
         profile={profile}
         onOpenDeleteAccountModal={() => setIsDeleteModalOpen(true)}
       />
 
-      {/* 4. Modals */}
-      <WebEditProfileModal
+      {/* 5. Modals */}
+      <TenantEditProfileModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         profile={profile}
         onSubmit={handleUpdateProfile}
       />
 
-      <WebDeleteAccountModal
+      <TenantDeleteAccountModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
       />

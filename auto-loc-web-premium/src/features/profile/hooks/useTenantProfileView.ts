@@ -5,7 +5,7 @@ import useSWR from 'swr';
 import { userApi, type UserProfileData, type UpdateProfileDto } from '../../../core/api/userApi';
 import { useUserStore } from '../../../core/store/useUserStore';
 
-export function useOwnerProfileView() {
+export function useTenantProfileView() {
   const { user: storeUser, setUser } = useUserStore();
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
@@ -21,7 +21,7 @@ export function useOwnerProfileView() {
     isLoading: isLoadingProfile,
     isValidating: isValidatingProfile,
     mutate: rawMutateProfile,
-  } = useSWR<UserProfileData>('user-profile', () => userApi.getProfile(), {
+  } = useSWR<UserProfileData>('user-profile-tenant', () => userApi.getProfile(), {
     dedupingInterval: 5 * 60 * 1000,
     revalidateIfStale: false,
     revalidateOnFocus: false,
@@ -74,8 +74,8 @@ export function useOwnerProfileView() {
     kycDocumentUrl: null,
     kycDocumentBackUrl: null,
     kycSelfieUrl: null,
-    annoncesCount: storeUser.vehiculesCount || 0,
-    listingsCount: storeUser.vehiculesCount || 0,
+    annoncesCount: 0,
+    listingsCount: 0,
   } : undefined);
 
   // 3. Upload Avatar
