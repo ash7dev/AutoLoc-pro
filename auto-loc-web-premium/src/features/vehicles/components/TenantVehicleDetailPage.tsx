@@ -238,7 +238,7 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
                 ) : null}
               </div>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-slate-900 tracking-tight">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-fraunces font-normal text-[#041912] tracking-tight">
                 {title}{' '}
                 <span className="text-slate-400 font-normal text-2xl sm:text-3xl lg:text-4xl">
                   ({vehicle.annee})

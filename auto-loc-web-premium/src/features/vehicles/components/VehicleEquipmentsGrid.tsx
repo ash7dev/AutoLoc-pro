@@ -77,7 +77,7 @@ export function VehicleEquipmentsGrid({ equipements }: VehicleEquipmentsGridProp
       className="bg-white border border-slate-200/80 rounded-[28px] overflow-hidden shadow-sm"
     >
       <div className="flex items-baseline justify-between gap-4 px-5 sm:px-6 pt-5 sm:pt-6 pb-4">
-        <h3 className="text-lg text-slate-900 font-display">Équipements et confort</h3>
+        <h3 className="text-lg text-[#041912] font-fraunces font-normal">Équipements et confort</h3>
         <span className="text-sm text-slate-500 shrink-0">
           {total} équipement{total > 1 ? 's' : ''}
         </span>

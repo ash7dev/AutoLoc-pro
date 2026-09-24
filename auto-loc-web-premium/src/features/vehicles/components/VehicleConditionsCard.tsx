@@ -50,7 +50,7 @@ export function VehicleConditionsCard({
       aria-label="Conditions et garanties"
       className="bg-white border border-slate-200/80 rounded-[28px] overflow-hidden shadow-sm"
     >
-      <h3 className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 text-lg text-slate-900 font-display">
+      <h3 className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 text-lg text-[#041912] font-fraunces font-normal">
         Conditions et garanties
       </h3>
 

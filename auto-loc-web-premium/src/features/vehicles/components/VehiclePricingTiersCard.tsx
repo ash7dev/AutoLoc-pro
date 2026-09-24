@@ -94,7 +94,7 @@ export function VehiclePricingTiersCard({
       className="bg-white border border-slate-200/80 rounded-[28px] overflow-hidden shadow-sm"
     >
       <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4">
-        <h3 className="text-lg text-slate-900 font-display">Tarifs dégressifs</h3>
+        <h3 className="text-lg text-[#041912] font-fraunces font-normal">Tarifs dégressifs</h3>
         <p className="mt-1 text-sm text-slate-500">
           Le prix par jour baisse automatiquement quand vous louez plus longtemps.
         </p>

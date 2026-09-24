@@ -26,7 +26,7 @@ export function VehicleAvailabilityCalendar({
     >
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 px-5 sm:px-6 pt-5 sm:pt-6 pb-4">
         <div>
-          <h3 className="text-lg text-slate-900 font-display">Disponibilités</h3>
+          <h3 className="text-lg text-[#041912] font-fraunces font-normal">Disponibilités</h3>
           <p className="mt-1 text-sm text-slate-500">
             Consultez les dates déjà réservées pour ce véhicule à {ville}.
           </p>
