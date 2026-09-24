@@ -178,7 +178,7 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-2 sm:top-3 z-40 w-full px-2.5 sm:px-6 lg:px-8 pointer-events-none">
+      <header className="sticky top-[calc(0.5rem+env(safe-area-inset-top))] sm:top-3 z-40 w-full px-2.5 sm:px-6 lg:px-8 pointer-events-none">
         <div className="pointer-events-auto mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between rounded-full border border-slate-900/10 bg-white px-3 sm:px-4 shadow-lg shadow-slate-950/5 lg:px-8">
           {/* Logo à gauche */}
           <Link

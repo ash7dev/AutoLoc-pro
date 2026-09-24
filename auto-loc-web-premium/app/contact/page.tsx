@@ -18,7 +18,7 @@ export default function ContactPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-6 sm:pt-8 lg:pt-36 pb-32 lg:pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-[calc(1.5rem+env(safe-area-inset-top))] sm:pt-8 lg:pt-36 pb-32 lg:pb-24 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-10">
         {/* 1. Hero */}
         <ContactHeroSection />

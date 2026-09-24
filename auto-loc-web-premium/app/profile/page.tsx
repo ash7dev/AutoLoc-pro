@@ -22,7 +22,7 @@ export default function ProfilePage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-6 sm:pt-8 lg:pt-36 pb-32 lg:pb-24 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-[calc(1.5rem+env(safe-area-inset-top))] sm:pt-8 lg:pt-36 pb-32 lg:pb-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="h-12 w-64 bg-slate-200/80 animate-pulse rounded-2xl" />
           <div className="h-64 bg-white border border-slate-200/80 rounded-3xl animate-pulse p-6" />
@@ -32,7 +32,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-6 sm:pt-8 lg:pt-36 pb-32 lg:pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-[calc(1.5rem+env(safe-area-inset-top))] sm:pt-8 lg:pt-36 pb-32 lg:pb-24 px-4 sm:px-6 lg:px-8">
       {!isAuthenticated ? (
         <div className="max-w-xl mx-auto my-12 p-8 rounded-3xl border border-slate-200 bg-white text-center space-y-5 shadow-sm">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-50 text-[#059669]">

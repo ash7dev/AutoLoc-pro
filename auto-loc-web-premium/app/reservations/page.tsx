@@ -34,7 +34,7 @@ export default function ReservationsPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-6 sm:pt-8 lg:pt-36 pb-32 lg:pb-24 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-[calc(1.5rem+env(safe-area-inset-top))] sm:pt-8 lg:pt-36 pb-32 lg:pb-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="h-12 w-64 bg-slate-200/80 animate-pulse rounded-2xl" />
           <div className="h-48 bg-white border border-slate-200/80 rounded-3xl animate-pulse p-6" />
@@ -44,7 +44,7 @@ export default function ReservationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-6 sm:pt-8 lg:pt-36 pb-32 lg:pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-[calc(1.5rem+env(safe-area-inset-top))] sm:pt-8 lg:pt-36 pb-32 lg:pb-24 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* 1. Header Premium sans aucun chevauchement avec la Navbar */}
         <TenantReservationsHeader totalCount={total} activeCount={activeCount} />
