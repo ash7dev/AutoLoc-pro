@@ -10,6 +10,28 @@ const DEFAULT_VAPID_PUBLIC_KEY =
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
   'BJ_nECrIcUYc0DFHmvijRk6OJ-TyqT9iIKGm69bFc5t3-Y927-imSzmarwvx9obLDeW5m8n1qG8gX3G7A9ppSjQ';
 
+// Helper sécurisé pour récupérer l'enregistrement Service Worker sans blocage infini
+async function getSWRegistration(): Promise<ServiceWorkerRegistration | null> {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+    return null;
+  }
+
+  try {
+    let reg = await navigator.serviceWorker.getRegistration();
+    if (reg) return reg;
+
+    reg = await navigator.serviceWorker.register('/sw.js');
+    if (reg) return reg;
+  } catch (err) {
+    console.warn('[WebPush] Direct SW registration attempt failed:', err);
+  }
+
+  const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
+  const readyPromise = navigator.serviceWorker.ready.catch(() => null);
+
+  return Promise.race([readyPromise, timeoutPromise]);
+}
+
 export function useWebPush() {
   const isAuthenticated = useUserStore((s) => s.isAuthenticated);
   const [isSupported, setIsSupported] = useState(false);
@@ -35,7 +57,11 @@ export function useWebPush() {
     setPermission(Notification.permission);
 
     try {
-      const registration = await navigator.serviceWorker.ready;
+      const registration = await getSWRegistration();
+      if (!registration) {
+        setIsSubscribed(false);
+        return;
+      }
       const subscription = await registration.pushManager.getSubscription();
 
       if (subscription) {
@@ -76,7 +102,10 @@ export function useWebPush() {
       }
 
       // Attendre la préparation du Service Worker
-      const registration = await navigator.serviceWorker.ready;
+      const registration = await getSWRegistration();
+      if (!registration) {
+        throw new Error('Service Worker non disponible. Veuillez rafraîchir la page.');
+      }
 
       // Convertir la clé VAPID publique
       const convertedVapidKey = urlBase64ToUint8Array(DEFAULT_VAPID_PUBLIC_KEY);
@@ -131,15 +160,17 @@ export function useWebPush() {
     setError(null);
 
     try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
+      const registration = await getSWRegistration();
+      if (registration) {
+        const subscription = await registration.pushManager.getSubscription();
 
-      if (subscription) {
-        const endpoint = subscription.endpoint;
-        await subscription.unsubscribe();
+        if (subscription) {
+          const endpoint = subscription.endpoint;
+          await subscription.unsubscribe();
 
-        if (isAuthenticated) {
-          await pushNotificationApi.unsubscribe(endpoint);
+          if (isAuthenticated) {
+            await pushNotificationApi.unsubscribe(endpoint);
+          }
         }
       }
 

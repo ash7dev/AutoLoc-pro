@@ -18,8 +18,7 @@ export const MobileBottomNav: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const isAuthenticated = useUserStore((s) => s.isAuthenticated);
-  const user = useUserStore((s) => s.user);
-  const profileHref = user?.role === 'PROPRIETAIRE' ? '/dashboard' : '/profile';
+  const profileHref = '/profile';
 
   // Masquer la navigation basse sur les pages détails (ex: /vehicles/[id] et /reservations/[id])
   const isDetailPage =
@@ -82,7 +81,7 @@ export const MobileBottomNav: React.FC = () => {
           const Icon = item.icon;
           const isActive =
             item.label === 'Profil'
-              ? pathname === '/profile' || pathname.startsWith('/dashboard')
+              ? pathname === '/profile'
               : pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
 
           return (

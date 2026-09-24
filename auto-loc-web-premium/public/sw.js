@@ -11,28 +11,31 @@ const OFFLINE_URL = '/offline';
 const PRECACHE_ASSETS = [
   '/',
   '/offline',
-  '/manifest.json',
+  '/manifest.webmanifest',
   '/icon-192.png',
   '/icon-512.png',
   '/apple-touch-icon.png',
-  '/logo.png',
   '/favicon.ico',
 ];
 
-// 1. INSTALLATION — Pré-mise en cache de la page Offline & ressources critiques
+// 1. INSTALLATION — Pré-mise en cache résiliente & activation immédiate
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches
       .open(CACHE_NAME)
       .then((cache) => {
         console.log('[PWA SW] Pre-caching offline assets & fallback page');
-        return cache.addAll(PRECACHE_ASSETS);
+        return Promise.allSettled(
+          PRECACHE_ASSETS.map((asset) =>
+            cache.add(asset).catch((err) => console.warn('[PWA SW] Failed to cache asset:', asset, err))
+          )
+        );
       })
-      .then(() => self.skipWaiting())
   );
 });
 
-// 2. ACTIVATION — Nettoyage des anciens caches
+// 2. ACTIVATION — Prise de contrôle immédiate des clients & nettoyage des anciens caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches

@@ -7,7 +7,7 @@ export function PwaManager() {
   useEffect(() => {
     // 1. Enregistrement du Service Worker en environnement navigateur
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
+      const registerSW = () => {
         navigator.serviceWorker
           .register('/sw.js')
           .then((registration) => {
@@ -32,7 +32,14 @@ export function PwaManager() {
           .catch((error) => {
             console.error('[PWA] Échec de l\'enregistrement du Service Worker :', error);
           });
-      });
+      };
+
+      if (document.readyState === 'complete') {
+        registerSW();
+      } else {
+        window.addEventListener('load', registerSW);
+        return () => window.removeEventListener('load', registerSW);
+      }
     }
   }, []);
 
