@@ -34,20 +34,17 @@ export class NotificationsService {
 
     const user = await this.prisma.utilisateur.findFirst({
       where: { OR: [{ userId }, { id: userId }] },
-      select: { userId: true },
+      select: { userId: true, id: true },
     });
 
-    if (!user) {
-      this.logger.warn(`Abonnement push ignoré : aucun compte Utilisateur trouvé pour ${userId}`);
-      return null;
-    }
+    const targetUserId = user?.userId || user?.id || userId;
 
     return this.prisma.pushSubscription.upsert({
       where: { endpoint: dto.endpoint },
       update: {
         p256dh: dto.keys.p256dh,
         auth: dto.keys.auth,
-        userId: user.userId,
+        userId: targetUserId,
         userAgent: dto.userAgent,
         deviceType: dto.deviceType,
       },
@@ -55,7 +52,7 @@ export class NotificationsService {
         endpoint: dto.endpoint,
         p256dh: dto.keys.p256dh,
         auth: dto.keys.auth,
-        userId: user.userId,
+        userId: targetUserId,
         userAgent: dto.userAgent,
         deviceType: dto.deviceType,
       },
@@ -70,27 +67,24 @@ export class NotificationsService {
 
     const user = await this.prisma.utilisateur.findFirst({
       where: { OR: [{ userId }, { id: userId }] },
-      select: { userId: true },
+      select: { userId: true, id: true },
     });
 
-    if (!user) {
-      this.logger.warn(`Token Expo ignoré : aucun Utilisateur trouvé pour ${userId}`);
-      return null;
-    }
+    const targetUserId = user?.userId || user?.id || userId;
 
     return this.prisma.pushSubscription.upsert({
       where: { endpoint: dto.expoPushToken },
       update: {
         p256dh: 'expo',
         auth: 'expo',
-        userId: user.userId,
+        userId: targetUserId,
         deviceType: dto.deviceType || 'mobile',
       },
       create: {
         endpoint: dto.expoPushToken,
         p256dh: 'expo',
         auth: 'expo',
-        userId: user.userId,
+        userId: targetUserId,
         deviceType: dto.deviceType || 'mobile',
       },
     });
@@ -113,8 +107,17 @@ export class NotificationsService {
    * Envoie une notification à tous les appareils d'un utilisateur (Mobile Expo & Web Push)
    */
   async sendToUser(userId: string, payload: { title: string; body: string; url?: string; data?: Record<string, any> }) {
+    const user = await this.prisma.utilisateur.findFirst({
+      where: { OR: [{ userId }, { id: userId }] },
+      select: { userId: true, id: true },
+    });
+
+    const possibleUserIds = Array.from(
+      new Set([userId, user?.userId, user?.id].filter(Boolean) as string[])
+    );
+
     const subscriptions = await this.prisma.pushSubscription.findMany({
-      where: { userId },
+      where: { userId: { in: possibleUserIds } },
     });
 
     if (subscriptions.length === 0) {

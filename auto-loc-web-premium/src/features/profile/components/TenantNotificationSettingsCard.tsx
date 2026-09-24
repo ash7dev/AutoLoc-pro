@@ -34,6 +34,29 @@ export const TenantNotificationSettingsCard: React.FC = () => {
     if (ok) {
       setTestSent(true);
       setTimeout(() => setTestSent(false), 4000);
+
+      // Déclencheur instantané local pour garantie d'affichage visuel
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        try {
+          const reg = await navigator.serviceWorker.getRegistration();
+          if (reg && reg.active) {
+            reg.showNotification('AutoLoc Sénégal 🚗', {
+              body: 'Ceci est une notification de test instantanée AutoLoc !',
+              icon: '/icon-192.png',
+              badge: '/icon-192.png',
+              tag: 'autoloc-test-notification',
+            });
+          } else {
+            new Notification('AutoLoc Sénégal 🚗', {
+              body: 'Ceci est une notification de test instantanée AutoLoc !',
+              icon: '/icon-192.png',
+              tag: 'autoloc-test-notification',
+            });
+          }
+        } catch (e) {
+          console.warn('[WebPush] Affichage notification locale :', e);
+        }
+      }
     }
   };
 
