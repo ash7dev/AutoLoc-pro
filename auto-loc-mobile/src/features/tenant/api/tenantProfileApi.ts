@@ -83,3 +83,44 @@ export async function updateLoginSecurity(input: { email?: string; password?: st
   }>('/users/me/security', input);
   return response.data;
 }
+
+export interface PublicHostProfile {
+  host: {
+    id: string;
+    userId: string;
+    prenom: string;
+    nomCompletAffiche: string;
+    avatarUrl: string | null;
+    statutKyc: string;
+    noteProprietaire: number;
+    totalAvis: number;
+    totalLocations: number;
+    isSuperhost: boolean;
+    membreDepuis: string;
+    tauxReponse: number;
+    tempsReponse: string;
+    annoncesCount: number;
+  };
+  vehicles: Array<import('../types').VehicleFeedItem & {
+    photos?: Array<{ url: string }> | string[];
+    prixBarre?: number;
+    allowsOutsideDakar?: boolean;
+    horsDakar?: boolean;
+    isSuperhost?: boolean;
+  }>;
+  reviews: Array<{
+    id: string;
+    note: number;
+    commentaire: string;
+    creeLe: string;
+    auteurNom: string;
+    auteurAvatar: string | null;
+    vehiculeConcerne: string;
+  }>;
+}
+
+export async function fetchHostPublicProfile(hostId: string): Promise<PublicHostProfile> {
+  const response = await apiClient.get<PublicHostProfile>(`/hosts/${hostId}`);
+  return response.data;
+}
+

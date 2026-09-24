@@ -411,7 +411,7 @@ export class VehiclesService {
         include: {
           photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
           tarifsProgressifs: { orderBy: { position: 'asc' } },
-          proprietaire: { select: { prenom: true, nom: true, avatarUrl: true, noteProprietaire: true, totalAvis: true } },
+          proprietaire: { select: { id: true, prenom: true, nom: true, avatarUrl: true, noteProprietaire: true, totalAvis: true } },
           equipements: { include: { equipement: true } },
           _count: { select: { reservations: true } },
         },
@@ -434,7 +434,7 @@ export class VehiclesService {
       include: {
         photos: { orderBy: [{ estPrincipale: 'desc' }, { position: 'asc' }] },
         tarifsProgressifs: { orderBy: { position: 'asc' } },
-        proprietaire: { select: { prenom: true, nom: true, avatarUrl: true, noteProprietaire: true, totalAvis: true } },
+        proprietaire: { select: { id: true, prenom: true, nom: true, avatarUrl: true, noteProprietaire: true, totalAvis: true } },
         equipements: { include: { equipement: true } },
         _count: { select: { reservations: true } },
       },

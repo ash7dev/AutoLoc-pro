@@ -23,6 +23,7 @@ import { BookingCheckoutModal } from '../components/checkout/BookingCheckoutModa
 import { VehicleFeedItem } from '../types';
 import { useVehicleDetail } from '../hooks/useVehicleDetail';
 import { useAppStore } from '../../../core/store/useAppStore';
+import { useNavigation } from '../../../core/navigation/RootNavigator';
 import { useBookingGate } from '../hooks/useBookingGate';
 import { getTenantPricePerDay } from '../../../core/utils/currency';
 
@@ -112,11 +113,21 @@ export const VehicleDetailScreen: React.FC<VehicleDetailScreenProps> = ({
     }
   };
 
+  const { navigateToHostProfile } = useNavigation();
+
   const handleViewProfile = () => {
-    triggerGuestAuthGuard(
+    const hostId = detail?.proprietaire?.id || detail?.proprietaireId;
+    if (!hostId) {
+      Alert.alert('Information', 'Le profil de cet hôte n’est pas disponible actuellement.');
+      return;
+    }
+    const allowed = triggerGuestAuthGuard(
       'Connectez-vous pour consulter le profil complet de cet hôte.',
       { action: 'VIEW_PROFILE', vehicleId: targetId }
     );
+    if (allowed) {
+      navigateToHostProfile(hostId);
+    }
   };
 
   return (

@@ -31,6 +31,7 @@ export interface EquipementDetail {
 }
 
 export interface ProprietaireDetail {
+  id?: string;
   prenom: string;
   nom: string;
   avatarUrl: string | null;

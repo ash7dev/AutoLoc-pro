@@ -20,6 +20,7 @@ import { SplashScreen } from '../../features/splash/SplashScreen';
 import { OnboardingScreen } from '../../features/onboarding/OnboardingScreen';
 import { TenantMainLayout } from '../../features/tenant/screens/TenantMainLayout';
 import { VehicleDetailScreen } from '../../features/tenant/screens/VehicleDetailScreen';
+import { HostProfileScreen } from '../../features/tenant/screens/HostProfileScreen';
 import { TenantBookingDetailScreen } from '../../features/tenant/screens/TenantBookingDetailScreen';
 import { VehicleFeedItem } from '../../features/tenant/types';
 import { TenantTabType } from '../../shared/components/TenantTabBar';
@@ -44,6 +45,7 @@ export type AppScreenRoute =
   | { name: 'REGISTER' }
   | { name: 'OTP'; phone: string; channel?: 'whatsapp' | 'sms' | 'email' | 'auto'; email?: string }
   | { name: 'VEHICLE_DETAIL'; vehicleId: string; vehicle?: VehicleFeedItem }
+  | { name: 'HOST_PROFILE'; hostId: string }
   | { name: 'BOOKING_DETAIL'; reservationId: string }
   | { name: 'OWNER_BOOKING_DETAIL'; reservationId: string };
 
@@ -58,6 +60,7 @@ interface NavigationContextType {
   switchToTenantSpace: () => void;
   navigateToOtp: (phone: string, channel?: 'whatsapp' | 'sms' | 'email' | 'auto', email?: string) => void;
   navigateToVehicleDetail: (vehicleId: string, vehicle?: VehicleFeedItem) => void;
+  navigateToHostProfile: (hostId: string) => void;
   navigateToBookingDetail: (reservationId: string) => void;
   navigateToOwnerBookingDetail: (reservationId: string) => void;
   goBack: () => void;
@@ -162,6 +165,10 @@ export const RootNavigator: React.FC = () => {
 
   const navigateToVehicleDetail = (vehicleId: string, vehicle?: VehicleFeedItem) => {
     navigateTo({ name: 'VEHICLE_DETAIL', vehicleId, vehicle });
+  };
+
+  const navigateToHostProfile = (hostId: string) => {
+    navigateTo({ name: 'HOST_PROFILE', hostId });
   };
 
   const navigateToBookingDetail = (reservationId: string) => {
@@ -300,6 +307,7 @@ export const RootNavigator: React.FC = () => {
     switchToTenantSpace,
     navigateToOtp,
     navigateToVehicleDetail,
+    navigateToHostProfile,
     navigateToBookingDetail,
     navigateToOwnerBookingDetail,
     goBack,
@@ -359,6 +367,14 @@ export const RootNavigator: React.FC = () => {
                   vehicleId={currentRoute.vehicleId}
                   vehicle={currentRoute.vehicle}
                   onBack={handleVehicleDetailBack}
+                />
+              );
+
+            case 'HOST_PROFILE':
+              return (
+                <HostProfileScreen
+                  hostId={currentRoute.hostId}
+                  onBack={goBack}
                 />
               );
 
