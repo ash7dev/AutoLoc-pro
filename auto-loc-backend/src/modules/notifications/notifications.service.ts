@@ -265,10 +265,11 @@ export class NotificationsService {
 
   /**
    * Retourne les statistiques de l'audience globale et des abonnements push/email/phone
+   * en combinant les tables Profile (Auth/Roles) et Utilisateur (Métier/KYC/Flotte)
    */
   async adminGetAudienceStats() {
     const [
-      totalUsers,
+      totalProfiles,
       totalHotes,
       totalLocataires,
       totalKycVerifies,
@@ -276,26 +277,56 @@ export class NotificationsService {
       expoPushSubsCount,
       webPushSubsCount,
     ] = await Promise.all([
-      this.prisma.utilisateur.count({ where: { actif: true } }),
-      this.prisma.utilisateur.count({
+      // 1. Total des profils enregistrés (avec compte utilisateur actif ou profil auth)
+      this.prisma.profile.count({
         where: {
-          actif: true,
           OR: [
-            { vehicules: { some: {} } },
-            { profile: { role: 'PROPRIETAIRE' } },
+            { utilisateur: { is: null } },
+            { utilisateur: { actif: true } },
           ],
         },
       }),
-      this.prisma.utilisateur.count({
+
+      // 2. Hôtes : Rôle PROPRIETAIRE dans Profile OU présence de véhicules dans Utilisateur
+      this.prisma.profile.count({
         where: {
-          actif: true,
           OR: [
-            { reservationsLocataire: { some: {} } },
-            { profile: { role: 'LOCATAIRE' } },
+            { role: 'PROPRIETAIRE' },
+            { utilisateur: { vehicules: { some: {} } } },
+          ],
+          AND: [
+            {
+              OR: [
+                { utilisateur: { is: null } },
+                { utilisateur: { actif: true } },
+              ],
+            },
           ],
         },
       }),
+
+      // 3. Locataires : Rôle LOCATAIRE dans Profile OU présence de réservations dans Utilisateur
+      this.prisma.profile.count({
+        where: {
+          OR: [
+            { role: 'LOCATAIRE' },
+            { utilisateur: { reservationsLocataire: { some: {} } } },
+          ],
+          AND: [
+            {
+              OR: [
+                { utilisateur: { is: null } },
+                { utilisateur: { actif: true } },
+              ],
+            },
+          ],
+        },
+      }),
+
+      // 4. KYC Vérifiés dans la table Utilisateur
       this.prisma.utilisateur.count({ where: { actif: true, statutKyc: 'VERIFIE' } }),
+
+      // 5. Statistiques abonnements push
       this.prisma.pushSubscription.count(),
       this.prisma.pushSubscription.count({
         where: { OR: [{ endpoint: { startsWith: 'ExponentPushToken' } }, { p256dh: 'expo' }] },
@@ -306,7 +337,7 @@ export class NotificationsService {
     ]);
 
     return {
-      totalUsers,
+      totalUsers: totalProfiles,
       totalHotes,
       totalLocataires,
       totalKycVerifies,
@@ -314,8 +345,8 @@ export class NotificationsService {
         pushMobileExpo: expoPushSubsCount,
         webPushVapid: webPushSubsCount,
         totalPushSubscriptions: totalPushSubs,
-        emailDeliverable: totalUsers, // Tous les utilisateurs ont un email
-        smsWhatsappDeliverable: totalUsers, // Tous les utilisateurs ont un numéro de téléphone
+        emailDeliverable: totalProfiles,
+        smsWhatsappDeliverable: totalProfiles,
       },
       channelHealth: {
         pushStatus: expoPushSubsCount > 0 || webPushSubsCount > 0 ? 'ACTIVE' : 'READY',
@@ -334,6 +365,7 @@ export class NotificationsService {
 
   /**
    * Envoie une notification multi-canale aux utilisateurs ciblés
+   * en combinant les tables Profile et Utilisateur pour une couverture intégrale.
    */
   async adminSendBroadcast(dto: {
     title: string;
@@ -347,34 +379,68 @@ export class NotificationsService {
       `📢 Lancement Broadcast Admin: "${dto.title}" | Audience: ${dto.targetAudience} | Canaux: ${dto.channels.join(', ')}`,
     );
 
-    // 1. Filtrer les destinataires selon l'audience choisie
-    let whereClause: any = { actif: true };
+    // 1. Filtrer les destinataires en combinant Profile et Utilisateur
+    const profileWhereClause: any = {
+      OR: [
+        { utilisateur: { is: null } },
+        { utilisateur: { actif: true } },
+      ],
+    };
+
     if (dto.targetAudience === 'HOTES') {
-      whereClause.OR = [{ vehicules: { some: {} } }, { profile: { role: 'PROPRIETAIRE' } }];
+      profileWhereClause.AND = [
+        {
+          OR: [
+            { role: 'PROPRIETAIRE' },
+            { utilisateur: { vehicules: { some: {} } } },
+          ],
+        },
+      ];
     } else if (dto.targetAudience === 'LOCATAIRES') {
-      whereClause.OR = [{ reservationsLocataire: { some: {} } }, { profile: { role: 'LOCATAIRE' } }];
+      profileWhereClause.AND = [
+        {
+          OR: [
+            { role: 'LOCATAIRE' },
+            { utilisateur: { reservationsLocataire: { some: {} } } },
+          ],
+        },
+      ];
     } else if (dto.targetAudience === 'KYC_VALIDE') {
-      whereClause.statutKyc = 'VERIFIE';
+      profileWhereClause.AND = [
+        { utilisateur: { statutKyc: 'VERIFIE' } },
+      ];
     }
 
-    const targetUsers = await this.prisma.utilisateur.findMany({
-      where: whereClause,
-      select: {
-        id: true,
-        userId: true,
-        email: true,
-        telephone: true,
-        prenom: true,
-        nom: true,
-        pushSubscriptions: {
-          select: {
-            endpoint: true,
-            p256dh: true,
-            auth: true,
-            deviceType: true,
+    const targetProfiles = await this.prisma.profile.findMany({
+      where: profileWhereClause,
+      include: {
+        utilisateur: {
+          include: {
+            pushSubscriptions: {
+              select: {
+                endpoint: true,
+                p256dh: true,
+                auth: true,
+                deviceType: true,
+              },
+            },
           },
         },
       },
+    });
+
+    // Uniformiser la structure destinataire (combinaison Profile + Utilisateur)
+    const targetUsers = targetProfiles.map((p) => {
+      const u = p.utilisateur;
+      return {
+        id: u?.id || p.id,
+        userId: p.userId,
+        email: u?.email || p.email || '',
+        telephone: u?.telephone || p.phone || '',
+        prenom: u?.prenom || '',
+        nom: u?.nom || '',
+        pushSubscriptions: u?.pushSubscriptions || [],
+      };
     });
 
     const totalRecipients = targetUsers.length;
