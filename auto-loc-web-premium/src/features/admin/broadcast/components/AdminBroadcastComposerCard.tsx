@@ -1,17 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import {
   Send,
-  Users,
   Smartphone,
   Mail,
   MessageSquare,
   Globe,
   Image as ImageIcon,
-  Sparkles,
-  CheckCircle2,
-  AlertCircle,
+  Link2,
+  Check,
+  Tag,
+  Camera,
+  ShieldCheck,
+  Loader2,
 } from 'lucide-react';
 import type {
   TargetAudience,
@@ -20,18 +22,97 @@ import type {
   AdminAudienceStats,
 } from '../../../../core/api/adminBroadcastApi';
 
+interface Payload {
+  title: string;
+  message: string;
+  targetAudience: TargetAudience;
+  channels: BroadcastChannel[];
+  url: string;
+  imageUrl: string;
+}
+
 interface AdminBroadcastComposerCardProps {
   stats?: AdminAudienceStats;
   isSending?: boolean;
   onSend: (dto: SendBroadcastDto) => Promise<boolean>;
-  onPayloadChange?: (payload: {
-    title: string;
-    message: string;
-    targetAudience: TargetAudience;
-    channels: BroadcastChannel[];
-    url: string;
-    imageUrl: string;
-  }) => void;
+  onPayloadChange?: (payload: Payload) => void;
+}
+
+const DISPLAY_FONT = { fontFamily: 'var(--font-gloock, Georgia, "Times New Roman", serif)' };
+
+const TITLE_MAX = 60;
+const MESSAGE_MAX = 160;
+
+const fmt = (n: number) => n.toLocaleString('fr-FR');
+
+const inputCls =
+  'w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 transition focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/25';
+
+const AUDIENCES: { id: TargetAudience; label: string }[] = [
+  { id: 'TOUS', label: 'Tous les membres' },
+  { id: 'HOTES', label: 'Hôtes' },
+  { id: 'LOCATAIRES', label: 'Locataires' },
+  { id: 'KYC_VALIDE', label: 'KYC vérifiés' },
+];
+
+const CHANNELS: {
+  id: BroadcastChannel;
+  label: string;
+  desc: string;
+  short: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[] = [
+    { id: 'PUSH_MOBILE', label: 'Push mobile', desc: 'iOS et Android', short: 'push mobile', icon: Smartphone },
+    { id: 'WEB_PUSH', label: 'Push web', desc: 'Navigateurs', short: 'push web', icon: Globe },
+    { id: 'EMAIL', label: 'Email', desc: 'Message HTML', short: 'email', icon: Mail },
+    { id: 'WHATSAPP', label: 'WhatsApp / SMS', desc: 'Message direct', short: 'WhatsApp / SMS', icon: MessageSquare },
+  ];
+
+const TEMPLATES: {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  message: string;
+  audience: TargetAudience;
+}[] = [
+    {
+      label: 'Promo week-end 15 %',
+      icon: Tag,
+      title: '🌟 Offre Spéciale Week-end AutoLoc',
+      message:
+        'Profitez de 15% de réduction sur la réservation de SUV et Berlines ce week-end avec le code DAKAR15 !',
+      audience: 'LOCATAIRES',
+    },
+    {
+      label: 'Rappel photos check-in',
+      icon: Camera,
+      title: '🚨 Rappel Importation Photos Check-in',
+      message:
+        'Avis aux propriétaires : n’oubliez pas de charger les 4 photos obligatoires du véhicule avant de remettre les clés.',
+      audience: 'HOTES',
+    },
+    {
+      label: 'Relance permis',
+      icon: ShieldCheck,
+      title: '🔐 Validez votre Permis de Conduire',
+      message:
+        'Débloquez la réservation instantanée et la garantie assurance tous risques en complétant la vérification de votre permis.',
+      audience: 'TOUS',
+    },
+  ];
+
+function joinList(items: string[]) {
+  if (items.length <= 1) return items.join('');
+  return `${items.slice(0, -1).join(', ')} et ${items[items.length - 1]}`;
+}
+
+function Counter({ value, max }: { value: number; max: number }) {
+  const over = value > max;
+  return (
+    <span className={`text-xs tabular-nums ${over ? 'text-amber-700' : 'text-gray-400'}`}>
+      {value}/{max}
+    </span>
+  );
 }
 
 export function AdminBroadcastComposerCard({
@@ -40,70 +121,53 @@ export function AdminBroadcastComposerCard({
   onSend,
   onPayloadChange,
 }: AdminBroadcastComposerCardProps) {
-  const [targetAudience, setTargetAudience] = useState<TargetAudience>('TOUS');
-  const [channels, setChannels] = useState<BroadcastChannel[]>([
-    'PUSH_MOBILE',
-    'EMAIL',
-  ]);
-  const [title, setTitle] = useState<string>('🌟 Offre Spéciale AutoLoc Dakar');
-  const [message, setMessage] = useState<string>(
-    'Profitez de 15% de réduction sur la réservation de SUV et Berlines d’exception ce week-end à Dakar !'
-  );
-  const [url, setUrl] = useState<string>('/dashboard');
-  const [imageUrl, setImageUrl] = useState<string>('');
+  const uid = useId();
+  const [payload, setPayload] = useState<Payload>({
+    targetAudience: 'TOUS',
+    channels: ['PUSH_MOBILE', 'EMAIL'],
+    title: '🌟 Offre Spéciale AutoLoc Dakar',
+    message:
+      'Profitez de 15% de réduction sur la réservation de SUV et Berlines d’exception ce week-end à Dakar !',
+    url: '/dashboard',
+    imageUrl: '',
+  });
+  const [confirming, setConfirming] = useState(false);
 
-  // Notify live preview parent whenever inputs change
-  const handleUpdate = (updates: {
-    title?: string;
-    message?: string;
-    targetAudience?: TargetAudience;
-    channels?: BroadcastChannel[];
-    url?: string;
-    imageUrl?: string;
-  }) => {
-    const nextTitle = updates.title !== undefined ? updates.title : title;
-    const nextMessage = updates.message !== undefined ? updates.message : message;
-    const nextAudience = updates.targetAudience !== undefined ? updates.targetAudience : targetAudience;
-    const nextChannels = updates.channels !== undefined ? updates.channels : channels;
-    const nextUrl = updates.url !== undefined ? updates.url : url;
-    const nextImageUrl = updates.imageUrl !== undefined ? updates.imageUrl : imageUrl;
+  const { title, message, targetAudience, channels, url, imageUrl } = payload;
 
-    if (updates.title !== undefined) setTitle(updates.title);
-    if (updates.message !== undefined) setMessage(updates.message);
-    if (updates.targetAudience !== undefined) setTargetAudience(updates.targetAudience);
-    if (updates.channels !== undefined) setChannels(updates.channels);
-    if (updates.url !== undefined) setUrl(updates.url);
-    if (updates.imageUrl !== undefined) setImageUrl(updates.imageUrl);
-
-    if (onPayloadChange) {
-      onPayloadChange({
-        title: nextTitle,
-        message: nextMessage,
-        targetAudience: nextAudience,
-        channels: nextChannels,
-        url: nextUrl,
-        imageUrl: nextImageUrl,
-      });
-    }
+  // Toute modification annule une confirmation en attente et prévient l'aperçu live
+  const update = (partial: Partial<Payload>) => {
+    const next = { ...payload, ...partial };
+    setPayload(next);
+    setConfirming(false);
+    onPayloadChange?.(next);
   };
 
   const toggleChannel = (channel: BroadcastChannel) => {
-    const next = channels.includes(channel)
-      ? channels.filter((c) => c !== channel)
-      : [...channels, channel];
-    handleUpdate({ channels: next });
-  };
-
-  const applyTemplate = (tmplTitle: string, tmplMsg: string, tmplAud: TargetAudience) => {
-    handleUpdate({
-      title: tmplTitle,
-      message: tmplMsg,
-      targetAudience: tmplAud,
+    update({
+      channels: channels.includes(channel)
+        ? channels.filter((c) => c !== channel)
+        : [...channels, channel],
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const counts: Partial<Record<TargetAudience, number>> = {
+    TOUS: stats?.totalUsers,
+    HOTES: stats?.totalHotes,
+    LOCATAIRES: stats?.totalLocataires,
+    KYC_VALIDE: stats?.totalKycVerifies,
+  };
+  const estimatedRecipients = counts[targetAudience] ?? 0;
+  const recipientsLabel = `${fmt(estimatedRecipients)} ${estimatedRecipients > 1 ? 'personnes' : 'personne'}`;
+
+  const channelSummary = joinList(
+    CHANNELS.filter((c) => channels.includes(c.id)).map((c) => c.short)
+  );
+
+  const isComplete = title.trim().length > 0 && message.trim().length > 0;
+  const canSend = !isSending && channels.length > 0 && isComplete;
+
+  const send = async () => {
     await onSend({
       title,
       message,
@@ -112,271 +176,297 @@ export function AdminBroadcastComposerCard({
       url: url.trim() || undefined,
       imageUrl: imageUrl.trim() || undefined,
     });
+    setConfirming(false);
   };
 
-  // Recipient estimation logic
-  let estimatedRecipients = stats?.totalUsers ?? 0;
-  if (targetAudience === 'HOTES') estimatedRecipients = stats?.totalHotes ?? 0;
-  if (targetAudience === 'LOCATAIRES') estimatedRecipients = stats?.totalLocataires ?? 0;
-  if (targetAudience === 'KYC_VALIDE') estimatedRecipients = stats?.totalKycVerifies ?? 0;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSend) return;
+    if (!confirming) {
+      setConfirming(true);
+      return;
+    }
+    await send();
+  };
+
+  let helper = '';
+  if (channels.length === 0) helper = 'Choisissez au moins un canal.';
+  else if (!isComplete) helper = 'Renseignez un titre et un message.';
 
   return (
-    <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-gray-100 flex flex-col justify-between">
-      <div>
-        {/* Studio Title */}
-        <div className="flex items-center justify-between pb-6 mb-6 border-b border-gray-100">
-          <div>
-            <span className="text-xs font-bold text-[#0A3D2E] tracking-wider uppercase bg-[#0A3D2E]/10 px-3 py-1 rounded-full">
-              Studio Composer
-            </span>
-            <h2 className="text-xl font-bold text-gray-900 mt-2">
-              Créer une nouvelle diffusion broadcast
-            </h2>
+    <section
+      aria-label="Composer une diffusion"
+      className="rounded-[28px] border border-[#0A3D2E]/10 bg-white p-6 shadow-[0_20px_50px_-30px_rgba(10,61,46,0.35)] sm:p-8"
+    >
+      {/* En-tête */}
+      <div className="flex items-start justify-between gap-4 border-b border-gray-100 pb-6">
+        <div>
+          <h2 style={DISPLAY_FONT} className="text-2xl leading-tight text-[#0A3D2E] sm:text-3xl">
+            Nouvelle diffusion
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Rédigez le message, choisissez qui le reçoit et par quels canaux.
+          </p>
+        </div>
+        <div className="shrink-0 text-right" aria-live="polite">
+          <div
+            style={DISPLAY_FONT}
+            className="text-3xl leading-none text-[#0A3D2E] tabular-nums sm:text-4xl"
+          >
+            {stats ? fmt(estimatedRecipients) : '–'}
           </div>
-          <div className="hidden sm:flex items-center gap-2 bg-emerald-50 text-emerald-800 text-xs font-medium px-3 py-1.5 rounded-full border border-emerald-200">
-            <Users className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Destinataires estimés : </span>
-            <span className="font-bold text-[#0A3D2E]">
-              {estimatedRecipients.toLocaleString('fr-FR')}
-            </span>
+          <div className="mt-1 text-xs text-gray-500">
+            {estimatedRecipients > 1 ? 'destinataires' : 'destinataire'}
           </div>
         </div>
+      </div>
 
-        {/* Templates Quick Bar */}
-        <div className="mb-6">
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-            Modèles de message rapides :
-          </label>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                applyTemplate(
-                  '🌟 Offre Spéciale Week-end AutoLoc',
-                  'Profitez de 15% de réduction sur la réservation de SUV et Berlines ce week-end avec le code DAKAR15 !',
-                  'LOCATAIRES'
-                )
-              }
-              className="text-xs px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-emerald-50 hover:text-[#0A3D2E] hover:border-emerald-300 border border-gray-200 font-medium transition-all"
-            >
-              🎉 Promo 15% Week-end
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                applyTemplate(
-                  '🚨 Rappel Importation Photos Check-in',
-                  'Avis aux propriétaires : n’oubliez pas de charger les 4 photos obligatoires du véhicule avant de remettre les clés.',
-                  'HOTES'
-                )
-              }
-              className="text-xs px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-emerald-50 hover:text-[#0A3D2E] hover:border-emerald-300 border border-gray-200 font-medium transition-all"
-            >
-              📸 Rappel Check-in Hôtes
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                applyTemplate(
-                  '🔐 Validez votre Permis de Conduire',
-                  'Débloquez la réservation instantanée et la garantie assurance tous risques en complétant la vérification de votre permis.',
-                  'TOUS'
-                )
-              }
-              className="text-xs px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-emerald-50 hover:text-[#0A3D2E] hover:border-emerald-300 border border-gray-200 font-medium transition-all"
-            >
-              🪪 Relance KYC Permis
-            </button>
-          </div>
-        </div>
+      {/* Modèles */}
+      <div className="mt-6 flex flex-wrap items-center gap-2">
+        <span className="mr-1 text-sm text-gray-500">Partir d'un modèle</span>
+        {TEMPLATES.map(({ label, icon: Icon, title: t, message: m, audience }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => update({ title: t, message: m, targetAudience: audience })}
+            className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-sm text-gray-700 transition hover:border-[#0A3D2E]/40 hover:bg-[#0A3D2E]/[0.04] hover:text-[#0A3D2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E]"
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {label}
+          </button>
+        ))}
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Target Audience Selector */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-              1. Sélectionner l'Audience Cible
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { id: 'TOUS', label: 'Tous les membres', count: stats?.totalUsers },
-                { id: 'HOTES', label: 'Propriétaires (Hôtes)', count: stats?.totalHotes },
-                { id: 'LOCATAIRES', label: 'Locataires', count: stats?.totalLocataires },
-                { id: 'KYC_VALIDE', label: 'KYC Vérifiés', count: stats?.totalKycVerifies },
-              ].map((item) => {
-                const isSelected = targetAudience === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => handleUpdate({ targetAudience: item.id as TargetAudience })}
-                    className={`p-3 rounded-2xl border text-left transition-all relative ${
-                      isSelected
-                        ? 'border-[#0A3D2E] bg-[#0A3D2E]/5 ring-2 ring-[#0A3D2E]'
-                        : 'border-gray-200 hover:border-gray-300 bg-gray-50/50'
-                    }`}
-                  >
-                    <div className="text-xs font-bold text-gray-900">{item.label}</div>
-                    <div className="text-[11px] text-gray-500 mt-1 font-mono">
-                      {item.count !== undefined ? `${item.count} pers.` : '...'}
-                    </div>
-                    {isSelected && (
-                      <CheckCircle2 className="w-4 h-4 text-[#0A3D2E] absolute top-3 right-3" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Broadcast Channels Multi-select */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-              2. Canaux de Diffusion (Multi-Canal)
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                {
-                  id: 'PUSH_MOBILE',
-                  label: 'Push Mobile (Expo)',
-                  desc: 'iOS & Android',
-                  icon: Smartphone,
-                },
-                {
-                  id: 'WEB_PUSH',
-                  label: 'Web Push (VAPID)',
-                  desc: 'Navigateurs Web',
-                  icon: Globe,
-                },
-                {
-                  id: 'EMAIL',
-                  label: 'Email HTML Luxe',
-                  desc: 'Resend API',
-                  icon: Mail,
-                },
-                {
-                  id: 'WHATSAPP',
-                  label: 'WhatsApp / SMS',
-                  desc: 'Twilio Direct',
-                  icon: MessageSquare,
-                },
-              ].map((ch) => {
-                const isChecked = channels.includes(ch.id as BroadcastChannel);
-                const Icon = ch.icon;
-                return (
-                  <button
-                    key={ch.id}
-                    type="button"
-                    onClick={() => toggleChannel(ch.id as BroadcastChannel)}
-                    className={`p-3 rounded-2xl border text-left flex items-start gap-3 transition-all ${
-                      isChecked
-                        ? 'border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-600'
-                        : 'border-gray-200 bg-white hover:border-gray-300 opacity-60'
-                    }`}
-                  >
-                    <div
-                      className={`p-2 rounded-xl ${
-                        isChecked ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-500'
+      <form onSubmit={handleSubmit} className="mt-8 space-y-8">
+        {/* Destinataires */}
+        <fieldset>
+          <legend className="text-sm font-semibold text-gray-900">Destinataires</legend>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {AUDIENCES.map((a) => {
+              const selected = targetAudience === a.id;
+              const count = counts[a.id];
+              return (
+                <label key={a.id} className="relative block cursor-pointer">
+                  <input
+                    type="radio"
+                    name={`${uid}-audience`}
+                    checked={selected}
+                    onChange={() => update({ targetAudience: a.id })}
+                    className="peer sr-only"
+                  />
+                  <div
+                    className={`rounded-2xl border px-4 py-3 transition peer-focus-visible:ring-2 peer-focus-visible:ring-[#0A3D2E] peer-focus-visible:ring-offset-2 ${selected
+                        ? 'border-[#0A3D2E] bg-[#0A3D2E] text-[#F1DFB6]'
+                        : 'border-gray-200 bg-white text-gray-900 hover:border-[#0A3D2E]/40'
                       }`}
-                    >
-                      <Icon className="w-4 h-4" />
+                  >
+                    <div className="text-sm font-medium">{a.label}</div>
+                    <div className="mt-0.5 text-xs tabular-nums opacity-70">
+                      {count !== undefined ? fmt(count) : '–'}
                     </div>
-                    <div>
-                      <div className="text-xs font-bold text-gray-900">{ch.label}</div>
-                      <div className="text-[10px] text-gray-500">{ch.desc}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                  </div>
+                </label>
+              );
+            })}
           </div>
+        </fieldset>
 
-          {/* Message Title Input */}
+        {/* Canaux */}
+        <fieldset>
+          <legend className="text-sm font-semibold text-gray-900">Canaux</legend>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {CHANNELS.map((ch) => {
+              const checked = channels.includes(ch.id);
+              const Icon = ch.icon;
+              return (
+                <label key={ch.id} className="relative block cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleChannel(ch.id)}
+                    className="peer sr-only"
+                  />
+                  <div
+                    className={`flex items-center gap-3 rounded-2xl border p-3 transition peer-focus-visible:ring-2 peer-focus-visible:ring-[#0A3D2E] peer-focus-visible:ring-offset-2 ${checked
+                        ? 'border-[#0A3D2E] bg-[#0A3D2E]/[0.05]'
+                        : 'border-gray-200 bg-white hover:border-[#0A3D2E]/40'
+                      }`}
+                  >
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition ${checked ? 'bg-[#0A3D2E] text-[#F1DFB6]' : 'bg-gray-100 text-gray-500'
+                        }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-gray-900">
+                        {ch.label}
+                      </span>
+                      <span className="block truncate text-xs text-gray-500">{ch.desc}</span>
+                    </span>
+                    <span
+                      aria-hidden
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${checked
+                          ? 'border-[#0A3D2E] bg-[#0A3D2E] text-[#F1DFB6]'
+                          : 'border-gray-300 text-transparent'
+                        }`}
+                    >
+                      <Check className="h-3 w-3" />
+                    </span>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+
+        {/* Contenu */}
+        <div className="space-y-5">
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-              3. Titre de la Notification
-            </label>
+            <div className="mb-2 flex items-baseline justify-between">
+              <label htmlFor={`${uid}-title`} className="text-sm font-semibold text-gray-900">
+                Titre
+              </label>
+              <Counter value={title.length} max={TITLE_MAX} />
+            </div>
             <input
+              id={`${uid}-title`}
               type="text"
               value={title}
-              onChange={(e) => handleUpdate({ title: e.target.value })}
-              placeholder="Ex: 🌟 Offre Spéciale Week-end AutoLoc"
+              onChange={(e) => update({ title: e.target.value })}
+              placeholder="Ex : Offre spéciale ce week-end"
               required
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0A3D2E] text-sm font-semibold text-gray-900"
+              className={`${inputCls} font-medium`}
             />
           </div>
 
-          {/* Notification Message Textarea */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-              4. Contenu du Message
-            </label>
+            <div className="mb-2 flex items-baseline justify-between">
+              <label htmlFor={`${uid}-message`} className="text-sm font-semibold text-gray-900">
+                Message
+              </label>
+              <Counter value={message.length} max={MESSAGE_MAX} />
+            </div>
             <textarea
+              id={`${uid}-message`}
               rows={4}
               value={message}
-              onChange={(e) => handleUpdate({ message: e.target.value })}
-              placeholder="Saisissez le texte clair du message envoyé sur les canaux sélectionnés..."
+              onChange={(e) => update({ message: e.target.value })}
+              placeholder="Le texte reçu par vos utilisateurs sur chaque canal"
               required
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0A3D2E] text-sm text-gray-800 leading-relaxed"
+              className={`${inputCls} leading-relaxed`}
             />
+            {(title.length > TITLE_MAX || message.length > MESSAGE_MAX) && (
+              <p className="mt-2 text-xs text-amber-700">
+                Au-delà de ces longueurs, certains appareils coupent le texte des notifications.
+              </p>
+            )}
           </div>
 
-          {/* Optional Action URL & Image */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5 text-gray-400" />
-                Lien de Redirection (URL Cible)
+              <label
+                htmlFor={`${uid}-url`}
+                className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-900"
+              >
+                <Link2 className="h-4 w-4 text-gray-400" />
+                Lien à l'ouverture
               </label>
               <input
+                id={`${uid}-url`}
                 type="text"
                 value={url}
-                onChange={(e) => handleUpdate({ url: e.target.value })}
+                onChange={(e) => update({ url: e.target.value })}
                 placeholder="/dashboard/reservations"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0A3D2E] text-xs font-mono text-gray-700"
+                className={`${inputCls} font-mono text-xs`}
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <ImageIcon className="w-3.5 h-3.5 text-gray-400" />
-                Image Header (URL Optionnelle)
+              <label
+                htmlFor={`${uid}-image`}
+                className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-900"
+              >
+                <ImageIcon className="h-4 w-4 text-gray-400" />
+                Image d'en-tête
+                <span className="font-normal text-gray-400">(optionnelle)</span>
               </label>
               <input
+                id={`${uid}-image`}
                 type="url"
                 value={imageUrl}
-                onChange={(e) => handleUpdate({ imageUrl: e.target.value })}
-                placeholder="https://images.unsplash.com/photo-..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0A3D2E] text-xs font-mono text-gray-700"
+                onChange={(e) => update({ imageUrl: e.target.value })}
+                placeholder="https://…"
+                className={`${inputCls} font-mono text-xs`}
               />
             </div>
           </div>
+        </div>
 
-          {/* Submit Action Button */}
-          <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <Sparkles className="w-4 h-4 text-[#F1DFB6]" />
-              <span>Envoi instantané sécurisé à {estimatedRecipients} utilisateurs</span>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSending || channels.length === 0}
-              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#0A3D2E] hover:bg-[#0D4B39] text-white font-bold text-sm shadow-xl hover:shadow-emerald-900/20 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        {/* Envoi */}
+        <div className="border-t border-gray-100 pt-6">
+          {confirming ? (
+            <div
+              role="alertdialog"
+              aria-label="Confirmer l'envoi"
+              className="rounded-2xl border border-[#F1DFB6] bg-[#F1DFB6]/30 p-4 sm:flex sm:items-center sm:justify-between sm:gap-6"
             >
-              {isSending ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Envoi en cours...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  <span>Lancer le Broadcast Now</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+              <p className="text-sm text-[#0A3D2E]">
+                Vous allez envoyer ce message à{' '}
+                <strong className="font-semibold">{recipientsLabel}</strong> par {channelSummary}.
+                L'envoi est immédiat et ne peut pas être annulé.
+              </p>
+              <div className="mt-4 flex shrink-0 gap-2 sm:mt-0">
+                <button
+                  type="button"
+                  onClick={() => setConfirming(false)}
+                  disabled={isSending}
+                  className="rounded-xl px-4 py-2.5 text-sm font-medium text-[#0A3D2E] transition hover:bg-[#0A3D2E]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] disabled:opacity-50"
+                >
+                  Modifier
+                </button>
+                <button
+                  type="submit"
+                  disabled={!canSend}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#0A3D2E] px-5 py-2.5 text-sm font-semibold text-[#F1DFB6] transition hover:bg-[#0D4B39] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" />
+                      Envoi en cours…
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Confirmer l'envoi
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-gray-500">
+                {helper ? (
+                  helper
+                ) : (
+                  <>
+                    Envoi à <span className="font-medium text-gray-900">{recipientsLabel}</span> par{' '}
+                    {channelSummary}.
+                  </>
+                )}
+              </p>
+              <button
+                type="submit"
+                disabled={!canSend}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0A3D2E] px-7 py-3.5 text-sm font-semibold text-[#F1DFB6] shadow-lg shadow-[#0A3D2E]/20 transition hover:bg-[#0D4B39] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none sm:w-auto"
+              >
+                <Send className="h-4 w-4" />
+                Envoyer la diffusion
+              </button>
+            </div>
+          )}
+        </div>
+      </form>
+    </section>
   );
 }

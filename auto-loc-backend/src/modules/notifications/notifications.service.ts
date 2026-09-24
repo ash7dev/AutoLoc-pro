@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { SubscribeDto } from './dto/subscribe.dto';
 import { RegisterExpoTokenDto } from './dto/register-expo.dto';
 import * as webpush from 'web-push';
+import { buildBroadcastEmailHtml } from '../../infrastructure/notifications/email-templates';
 
 @Injectable()
 export class NotificationsService {
@@ -411,6 +412,41 @@ export class NotificationsService {
 
       // B. Email HTML Broadcast
       if (dto.channels.includes('EMAIL') && user.email) {
+        const resendApiKey = this.configService.get<string>('RESEND_API_KEY', '');
+        const fromEmail = this.configService.get<string>(
+          'RESEND_FROM_EMAIL',
+          'AutoLoc <noreply@autoloc.sn>',
+        );
+        const emailHtml = buildBroadcastEmailHtml({
+          title: dto.title,
+          message: dto.message,
+          url: dto.url,
+          imageUrl: dto.imageUrl,
+        });
+
+        if (resendApiKey) {
+          try {
+            await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${resendApiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                from: fromEmail,
+                to: [user.email],
+                reply_to: 'support@autoloc.sn',
+                subject: dto.title,
+                html: emailHtml,
+              }),
+            });
+            this.logger.log(`📧 Broadcast email envoyé à ${user.email}`);
+          } catch (err) {
+            this.logger.error(`❌ Échec envoi email broadcast à ${user.email}: ${err}`);
+          }
+        } else {
+          this.logger.log(`📧 [EMAIL:stub] Broadcast "${dto.title}" pour ${user.email}`);
+        }
         channelBreakdown.EMAIL += 1;
         userSuccess = true;
       }

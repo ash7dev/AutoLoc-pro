@@ -983,3 +983,33 @@ export const EMAIL_TEMPLATES: Record<NotificationType, TemplateConfig> = {
     }),
   },
 };
+
+/**
+ * Génère le template HTML d'un email de broadcast rédigé par un administrateur.
+ */
+export function buildBroadcastEmailHtml(opts: {
+  title: string;
+  message: string;
+  url?: string;
+  imageUrl?: string;
+}): string {
+  const content = [
+    opts.imageUrl
+      ? `<div style="margin-bottom:24px;border-radius:12px;overflow:hidden;border:1px solid ${BORDER};"><img src="${opts.imageUrl}" alt="Header" style="width:100%;max-height:240px;object-fit:cover;display:block;"></div>`
+      : '',
+    `<div style="font-size:15px;line-height:1.8;color:#374151;white-space:pre-line;">${opts.message}</div>`,
+  ].join('');
+
+  return baseLayout({
+    title: opts.title,
+    badge: { text: 'Information AutoLoc', color: EMERALD, bg: EMERALD_BG },
+    cta: opts.url
+      ? {
+          label: 'Accéder à la plateforme',
+          href: opts.url.startsWith('http') ? opts.url : `${FRONTEND_URL}${opts.url}`,
+        }
+      : undefined,
+    content,
+  });
+}
+
