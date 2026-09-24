@@ -144,11 +144,11 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-28 sm:pt-32 lg:pt-36 pb-32 lg:pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-[calc(5.25rem+env(safe-area-inset-top))] sm:pt-32 lg:pt-36 pb-32 lg:pb-24 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
         
-        {/* Navigation & Actions */}
-        <div className="flex items-center justify-between gap-4">
+        {/* Navigation & Actions (Masqué sur mobile < 640px car géré par le MobileDetailHeader) */}
+        <div className="hidden sm:flex items-center justify-between gap-4">
           <Link
             href="/vehicles"
             className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-xs"

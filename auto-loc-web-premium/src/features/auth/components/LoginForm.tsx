@@ -138,30 +138,38 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     }
   };
 
-  const handleGoogleAuth = () => {
+  const handleGoogleAuth = async () => {
     setError(null);
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      const mockUser = {
-        id: 'user_google_' + Date.now(),
-        prenom: 'Alexandre',
-        nom: 'Diallo',
-        email: 'alexandre.diallo@gmail.com',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-        telephone: '+221770000000',
-        phoneVerified: true,
-        role: 'LOCATAIRE' as const,
-        statutKyc: 'VERIFIE' as const,
-      };
-      setAuthCookies('mock_google_token', mockUser.role);
-      setUser(mockUser);
+    try {
+      const googleToken = (typeof window !== 'undefined' && (window as any)?.googleAuthToken) || null;
+      if (!googleToken) {
+        throw new Error(
+          'La connexion Google OAuth requiert un ID Client Google configuré. Veuillez utiliser la connexion par SMS / WhatsApp ou par Email pour vous connecter au serveur.'
+        );
+      }
+      const res = await AuthService.loginWithGoogle(googleToken);
+      if (res.accessToken && typeof window !== 'undefined') {
+        localStorage.setItem('autoloc_token', res.accessToken);
+      }
+      const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
+
+      if (res.accessToken) {
+        setAuthCookies(res.accessToken, userProfile.role);
+      }
+
+      setUser(userProfile);
       closeGuestModal();
+
       const pending = IntentEngine.consumePendingIntent();
-      const redirectUrl = getPostAuthRedirectUrl(mockUser, pending);
+      const redirectUrl = getPostAuthRedirectUrl(userProfile, pending);
       router.push(redirectUrl);
       if (onSuccess) onSuccess();
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'La connexion Google a échoué.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLogoClick = (e: React.MouseEvent) => {

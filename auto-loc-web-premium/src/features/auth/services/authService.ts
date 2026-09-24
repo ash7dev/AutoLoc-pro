@@ -39,6 +39,18 @@ export class AuthService {
   }
 
   /**
+   * Connexion via OAuth (Google / Supabase) auprès du backend NestJS
+   */
+  public static async loginWithGoogle(
+    accessToken: string
+  ): Promise<AuthSuccessResponse> {
+    return await fetchApi<AuthSuccessResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ accessToken }),
+    });
+  }
+
+  /**
    * Vérifie le code OTP réel transmis au backend et retourne la session JWT & profil
    */
   public static async verifyPhoneLoginOtp(

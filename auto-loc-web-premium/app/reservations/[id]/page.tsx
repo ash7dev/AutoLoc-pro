@@ -23,7 +23,7 @@ export default function ReservationDetailPage() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-16 sm:pt-20 lg:pt-32 pb-24 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-[calc(5.25rem+env(safe-area-inset-top))] sm:pt-20 lg:pt-32 pb-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="h-10 w-48 bg-slate-200/80 animate-pulse rounded-xl" />
           <div className="h-64 bg-white border border-slate-200/80 rounded-3xl animate-pulse p-6 space-y-4">
@@ -37,7 +37,7 @@ export default function ReservationDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-16 sm:pt-20 lg:pt-32 pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-[calc(5.25rem+env(safe-area-inset-top))] sm:pt-20 lg:pt-32 pb-24 px-4 sm:px-6 lg:px-8">
       {!isAuthenticated ? (
         <div className="max-w-xl mx-auto pt-6">
           <TenantUnauthenticatedState />

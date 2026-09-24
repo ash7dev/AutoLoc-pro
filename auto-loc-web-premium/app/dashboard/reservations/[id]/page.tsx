@@ -118,7 +118,7 @@ export default function OwnerReservationDetailPage() {
         tenantPhone={reservation?.locataire?.telephone}
       />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-8 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-[calc(5.25rem+env(safe-area-inset-top))] sm:pt-8 space-y-6">
         {/* Navigation Top Bar Desktop (Masqué sur mobile < 640px) */}
         <div className="hidden sm:flex items-center justify-between gap-4 flex-wrap">
           <Link
