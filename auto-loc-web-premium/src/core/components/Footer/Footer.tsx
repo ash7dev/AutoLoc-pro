@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   ShieldCheck,
   Phone,
@@ -12,9 +12,33 @@ import {
   Lock,
   CheckCircle2,
 } from "lucide-react";
+import { useUserStore } from "../../store/useUserStore";
+import { IntentEngine } from "../../auth/intentEngine";
+import type { PendingIntentAction } from "../../types/user";
 
 export const Footer: React.FC = () => {
+  const router = useRouter();
   const pathname = usePathname();
+  const isAuthenticated = useUserStore((s) => s.isAuthenticated);
+
+  const handleGuardedLink = (
+    e: React.MouseEvent,
+    action: PendingIntentAction,
+    href: string,
+    reasonMessage: string
+  ) => {
+    if (!isAuthenticated) {
+      e.preventDefault();
+      const allowed = IntentEngine.guardAction(action, {
+        redirectToUrl: href,
+        reasonMessage,
+      });
+      if (!allowed) {
+        router.push('/login');
+      }
+    }
+  };
+
   if (pathname?.startsWith('/dashboard') || pathname?.startsWith('/admin')) {
     return null;
   }
@@ -114,7 +138,18 @@ export const Footer: React.FC = () => {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/reservations" className="hover:text-[#F1DFB6] transition-colors">
+                    <Link
+                      href="/reservations"
+                      onClick={(e) =>
+                        handleGuardedLink(
+                          e,
+                          'VIEW_BOOKINGS',
+                          '/reservations',
+                          'Veuillez vous connecter pour accéder à vos réservations.'
+                        )
+                      }
+                      className="hover:text-[#F1DFB6] transition-colors"
+                    >
                       Mes Réservations
                     </Link>
                   </li>
@@ -128,22 +163,66 @@ export const Footer: React.FC = () => {
                 </h4>
                 <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-slate-300/90 font-medium">
                   <li>
-                    <Link href="/dashboard" className="hover:text-[#F1DFB6] transition-colors text-[#F1DFB6] font-semibold">
+                    <Link
+                      href="/dashboard"
+                      onClick={(e) =>
+                        handleGuardedLink(
+                          e,
+                          'ADD_VEHICLE',
+                          '/dashboard',
+                          'Veuillez vous connecter en tant que propriétaire pour accéder à votre espace hôte.'
+                        )
+                      }
+                      className="hover:text-[#F1DFB6] transition-colors text-[#F1DFB6] font-semibold"
+                    >
                       Mon Espace Hôte
                     </Link>
                   </li>
                   <li>
-                    <Link href="/dashboard/vehicles/new" className="hover:text-[#F1DFB6] transition-colors">
+                    <Link
+                      href="/dashboard/vehicles/new"
+                      onClick={(e) =>
+                        handleGuardedLink(
+                          e,
+                          'ADD_VEHICLE',
+                          '/dashboard/vehicles/new',
+                          'Veuillez vous connecter en tant que propriétaire pour publier une annonce.'
+                        )
+                      }
+                      className="hover:text-[#F1DFB6] transition-colors"
+                    >
                       Publier une annonce
                     </Link>
                   </li>
                   <li>
-                    <Link href="/dashboard/vehicles" className="hover:text-[#F1DFB6] transition-colors">
+                    <Link
+                      href="/dashboard/vehicles"
+                      onClick={(e) =>
+                        handleGuardedLink(
+                          e,
+                          'ADD_VEHICLE',
+                          '/dashboard/vehicles',
+                          'Veuillez vous connecter en tant que propriétaire pour gérer votre flotte.'
+                        )
+                      }
+                      className="hover:text-[#F1DFB6] transition-colors"
+                    >
                       Gérer ma flotte
                     </Link>
                   </li>
                   <li>
-                    <Link href="/dashboard/wallet" className="hover:text-[#F1DFB6] transition-colors">
+                    <Link
+                      href="/dashboard/wallet"
+                      onClick={(e) =>
+                        handleGuardedLink(
+                          e,
+                          'ADD_VEHICLE',
+                          '/dashboard/wallet',
+                          'Veuillez vous connecter en tant que propriétaire pour consulter vos revenus.'
+                        )
+                      }
+                      className="hover:text-[#F1DFB6] transition-colors"
+                    >
                       Revenus &amp; Portefeuille
                     </Link>
                   </li>
