@@ -2,7 +2,20 @@
 
 import React, { useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { Eye, Clock, ShieldCheck, FileText, AlertTriangle, Star, CheckCircle, Sparkles, Loader2, ArrowUpRight } from 'lucide-react';
+import {
+  Eye,
+  Clock,
+  ShieldCheck,
+  FileText,
+  AlertTriangle,
+  Star,
+  CheckCircle,
+  Loader2,
+  ChevronDown,
+  Check,
+  Camera,
+  Car,
+} from 'lucide-react';
 import type { AdminVehicleQueueItem } from '../../../../core/api/adminAnalyticsApi';
 
 interface AdminVehicleTableProps {
@@ -15,12 +28,252 @@ interface AdminVehicleTableProps {
   onLoadMore?: () => void;
 }
 
-const fontStyle = { fontFamily: 'var(--font-fraunces), Georgia, serif' };
-const FOREST = '#0A3D2E';
-const FOREST_DARK = '#062a1f';
+const DISPLAY_FONT = { fontFamily: 'var(--font-gloock, Georgia, "Times New Roman", serif)' };
 const GOLD = '#b27c2d';
-const CHAMPAGNE = '#F1DFB6';
+const RUST = '#a13d3d';
 
+const TEXT = 'text-slate-900 dark:text-white';
+const MUTED = 'text-slate-500 dark:text-slate-400';
+
+const fmt = (n: number) => n.toLocaleString('fr-FR');
+
+const NEUTRAL_BADGE = 'bg-slate-100 text-slate-600 ring-slate-500/20';
+
+const STATUS: Record<string, { label: string; badge: string; dot: string }> = {
+  EN_ATTENTE_VALIDATION: {
+    label: 'En attente',
+    badge: 'bg-amber-50 text-amber-800 ring-amber-600/20',
+    dot: 'bg-amber-500',
+  },
+  VERIFIE: {
+    label: 'Vérifié',
+    badge: 'bg-[#0A3D2E]/[0.08] text-[#0A3D2E] ring-[#0A3D2E]/20',
+    dot: 'bg-[#0A3D2E]',
+  },
+  SUSPENDU: {
+    label: 'Suspendu',
+    badge: 'bg-rose-50 text-rose-800 ring-rose-600/20',
+    dot: 'bg-rose-500',
+  },
+  BROUILLON: {
+    label: 'Brouillon',
+    badge: NEUTRAL_BADGE,
+    dot: 'bg-slate-400',
+  },
+};
+
+/* ------------------------------------------------------------------ */
+/* Helpers                                                             */
+/* ------------------------------------------------------------------ */
+const humanize = (v?: string | null) => {
+  if (!v) return 'Inconnu';
+  const t = v.replace(/_/g, ' ').toLowerCase();
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
+
+const fmtDate = (v: string | number | Date) => {
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return '–';
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+const mainPhotoOf = (item: AdminVehicleQueueItem) => {
+  const photos = item.photos ?? [];
+  return photos.find((p) => p.estPrincipale) || photos[0];
+};
+
+const isPendingItem = (item: AdminVehicleQueueItem) => item.statut === 'EN_ATTENTE_VALIDATION';
+const isUrgentItem = (item: AdminVehicleQueueItem) =>
+  isPendingItem(item) && item.slaWaitHours >= 24;
+
+const accentOf = (item: AdminVehicleQueueItem) =>
+  isUrgentItem(item) ? RUST : isPendingItem(item) ? GOLD : undefined;
+
+const tintOf = (item: AdminVehicleQueueItem) =>
+  isUrgentItem(item) ? 'bg-rose-50/40 dark:bg-rose-950/10' : '';
+
+/* ------------------------------------------------------------------ */
+/* Sous-composants                                                     */
+/* ------------------------------------------------------------------ */
+function StatusBadge({ statut }: { statut: string }) {
+  const st = STATUS[statut] ?? { label: humanize(statut), badge: NEUTRAL_BADGE, dot: 'bg-slate-400' };
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${st.badge}`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
+      {st.label}
+    </span>
+  );
+}
+
+function VehicleCell({ item }: { item: AdminVehicleQueueItem }) {
+  const photo = mainPhotoOf(item);
+  const photoCount = item.photos?.length ?? 0;
+  const meta = [item.ville, item.transmission].filter(Boolean).join(', ');
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-xl bg-[#0A3D2E]/10 ring-1 ring-slate-200 dark:ring-slate-700">
+        {photo ? (
+          <Image
+            src={photo.url}
+            alt={`${item.marque} ${item.modele}`}
+            fill
+            className="object-cover transition duration-300 group-hover:scale-105 motion-reduce:transition-none"
+            unoptimized
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-[#0A3D2E]/40">
+            <Car className="h-5 w-5" />
+          </div>
+        )}
+        {photoCount > 0 && (
+          <span className="absolute bottom-1 right-1 inline-flex items-center gap-0.5 rounded bg-black/60 px-1 text-[10px] font-medium tabular-nums text-white backdrop-blur">
+            <Camera className="h-2.5 w-2.5" />
+            {photoCount}
+          </span>
+        )}
+      </div>
+
+      <div className="min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className={`truncate text-sm font-semibold ${TEXT}`}>
+            {item.marque} {item.modele}
+          </span>
+          {item.annee ? <span className={`text-xs ${MUTED}`}>{item.annee}</span> : null}
+          {item.isFeatured && (
+            <span title="Mis en avant sur l'accueil" className="shrink-0">
+              <Star className="h-3.5 w-3.5" style={{ color: GOLD, fill: GOLD }} />
+              <span className="sr-only">Mis en avant sur l'accueil</span>
+            </span>
+          )}
+        </div>
+        <div className="mt-1 flex items-center gap-2">
+          <span className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            {item.immatriculation || 'Plaque inconnue'}
+          </span>
+          {meta && <span className={`truncate text-xs ${MUTED}`}>{meta}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OwnerCell({ item }: { item: AdminVehicleQueueItem }) {
+  if (!item.proprietaire) {
+    return <span className={`text-sm italic ${MUTED}`}>Anonyme</span>;
+  }
+  const verified = item.proprietaire.statutKyc === 'VERIFIE';
+  return (
+    <div className="min-w-0">
+      <div className="flex items-center gap-1.5">
+        <span className={`truncate text-sm font-medium ${TEXT}`}>
+          {item.proprietaire.prenom} {item.proprietaire.nom}
+        </span>
+        {verified ? (
+          <span title="KYC vérifié" className="shrink-0">
+            <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+            <span className="sr-only">KYC vérifié</span>
+          </span>
+        ) : (
+          <span title="KYC non vérifié" className="shrink-0">
+            <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+            <span className="sr-only">KYC non vérifié</span>
+          </span>
+        )}
+      </div>
+      <p className={`truncate text-xs ${MUTED}`}>
+        {item.proprietaire.telephone || item.proprietaire.email || 'Contact non renseigné'}
+      </p>
+    </div>
+  );
+}
+
+function PriceCell({ item }: { item: AdminVehicleQueueItem }) {
+  const delivery = [item.proposeLivraisonDakar && 'Dakar', item.proposeLivraisonAibd && 'AIBD']
+    .filter(Boolean)
+    .join(', ');
+  return (
+    <div className="whitespace-nowrap">
+      <div className="flex items-baseline gap-1.5">
+        <span style={DISPLAY_FONT} className="text-lg tabular-nums text-[#0A3D2E] dark:text-[#F1DFB6]">
+          {fmt(item.prixParJour)}
+        </span>
+        <span className={`text-xs ${MUTED}`}>FCFA / jour</span>
+      </div>
+      <p className={`mt-0.5 text-xs ${MUTED}`}>{delivery ? `Livraison ${delivery}` : 'Sur place'}</p>
+    </div>
+  );
+}
+
+function DocChip({
+  label,
+  state,
+  icon: Icon,
+}: {
+  label: string;
+  state: 'ok' | 'missing' | 'option';
+  icon: React.ComponentType<{ className?: string }>;
+}) {
+  const styles = {
+    ok: 'bg-emerald-50 text-emerald-800 ring-emerald-600/20',
+    missing: 'bg-rose-50 text-rose-800 ring-rose-600/20',
+    option: 'text-slate-500 ring-slate-200 dark:ring-slate-700',
+  }[state];
+  const suffix = { ok: 'OK', missing: 'manquante', option: 'optionnelle' }[state];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${styles}`}
+    >
+      <Icon className="h-3 w-3" />
+      {label}
+      <span className="font-normal opacity-80">{suffix}</span>
+    </span>
+  );
+}
+
+function DocChips({ item }: { item: AdminVehicleQueueItem }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <DocChip label="Carte grise" state={item.carteGriseUrl ? 'ok' : 'missing'} icon={FileText} />
+      <DocChip label="Assurance" state={item.assurance ? 'ok' : 'option'} icon={ShieldCheck} />
+    </div>
+  );
+}
+
+function WaitCell({ item }: { item: AdminVehicleQueueItem }) {
+  if (!isPendingItem(item)) {
+    return <span className={`whitespace-nowrap text-xs ${MUTED}`}>Créé le {fmtDate(item.creeLe)}</span>;
+  }
+  const urgent = isUrgentItem(item);
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium tabular-nums ring-1 ring-inset ${urgent
+          ? 'bg-rose-50 text-rose-800 ring-rose-600/25'
+          : 'bg-amber-50 text-amber-800 ring-amber-600/20'
+        }`}
+    >
+      {urgent && (
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500 motion-reduce:animate-none" />
+      )}
+      <Clock className="h-3 w-3" />
+      {item.slaWaitHours} h d'attente
+    </span>
+  );
+}
+
+function Skel({ className = '' }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={`block animate-pulse rounded-md bg-slate-100 motion-reduce:animate-none dark:bg-slate-800 ${className}`}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Composant principal                                                 */
+/* ------------------------------------------------------------------ */
 export const AdminVehicleTable: React.FC<AdminVehicleTableProps> = ({
   items,
   isLoading,
@@ -32,322 +285,209 @@ export const AdminVehicleTable: React.FC<AdminVehicleTableProps> = ({
 }) => {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  // Instagram-style Infinite Scroll via Intersection Observer
+  // Scroll infini via Intersection Observer
   useEffect(() => {
     if (!hasMore || isLoadingMore || !onLoadMore) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
-          onLoadMore();
-        }
+        if (entries[0].isIntersecting) onLoadMore();
       },
       { threshold: 0.1, rootMargin: '200px' }
     );
 
     const currentRef = loadMoreRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
+    if (currentRef) observer.observe(currentRef);
 
     return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
+      if (currentRef) observer.unobserve(currentRef);
     };
   }, [hasMore, isLoadingMore, onLoadMore]);
 
-  if (isLoading) {
-    return (
-      <div
-        className="p-14 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 shadow-sm"
-        style={fontStyle}
-      >
-        <div
-          className="w-9 h-9 mx-auto border-[3px] border-t-transparent rounded-full animate-spin mb-3"
-          style={{ borderColor: `${FOREST} transparent ${FOREST} ${FOREST}` }}
-        />
-        <p className="text-xs text-slate-500 font-medium">Chargement des véhicules en modération...</p>
-      </div>
-    );
-  }
+  const shell =
+    'overflow-hidden rounded-[28px] border border-[#0A3D2E]/10 bg-white shadow-[0_20px_50px_-30px_rgba(10,61,46,0.35)] dark:border-slate-800 dark:bg-slate-900';
 
-  if (items.length === 0) {
+  /* État vide */
+  if (!isLoading && items.length === 0) {
     return (
-      <div
-        className="p-16 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 shadow-sm space-y-3"
-        style={fontStyle}
-      >
-        <div
-          className="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center border"
-          style={{ background: 'rgba(10,61,46,0.06)', borderColor: 'rgba(10,61,46,0.12)', color: FOREST }}
-        >
-          <ShieldCheck className="w-6 h-6" />
-        </div>
-        <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Aucun véhicule trouvé</p>
-        <p className="text-xs text-slate-400 max-w-sm mx-auto">
-          Aucun véhicule ne correspond aux critères de recherche ou à ce statut de modération.
+      <div className={`${shell} flex flex-col items-center px-6 py-16 text-center`}>
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0A3D2E] text-[#F1DFB6]">
+          <ShieldCheck className="h-6 w-6" />
+        </span>
+        <p style={DISPLAY_FONT} className="mt-5 text-xl text-[#0A3D2E] dark:text-[#F1DFB6]">
+          Aucun véhicule trouvé
+        </p>
+        <p className={`mt-1 max-w-sm text-sm ${MUTED}`}>
+          Aucun véhicule ne correspond à cette recherche ou à ce statut de modération.
         </p>
       </div>
     );
   }
 
+  const total = Math.max(totalItems, items.length);
+  const remaining = Math.max(0, total - items.length);
+  const loadedShare = total > 0 ? Math.round((items.length / total) * 100) : 100;
+  const thCls = `px-4 py-3.5 text-xs font-medium ${MUTED}`;
+
   return (
-    <div
-      className="overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 shadow-[0_10px_40px_-24px_rgba(10,61,46,0.35)]"
-      style={fontStyle}
-    >
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+    <div className={shell}>
+      {/* Tableau (tablette et bureau) */}
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full border-collapse text-left">
+          <caption className="sr-only">Véhicules en modération</caption>
           <thead>
-            <tr className="border-b border-slate-200/70 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-950/50 text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              <th className="py-4 px-4">Véhicule & Immatriculation</th>
-              <th className="py-4 px-4">Propriétaire (Hôte)</th>
-              <th className="py-4 px-4">Tarif & Livraison</th>
-              <th className="py-4 px-4">Documents</th>
-              <th className="py-4 px-4">SLA File</th>
-              <th className="py-4 px-4">Statut</th>
-              <th className="py-4 px-4 text-right">Action</th>
+            <tr className="border-b border-slate-200/80 dark:border-slate-800">
+              <th scope="col" className={thCls}>Véhicule</th>
+              <th scope="col" className={thCls}>Propriétaire</th>
+              <th scope="col" className={thCls}>Tarif</th>
+              <th scope="col" className={thCls}>Documents</th>
+              <th scope="col" className={thCls}>Attente</th>
+              <th scope="col" className={thCls}>Statut</th>
+              <th scope="col" className={`${thCls} text-right`}>
+                <span className="sr-only">Action</span>
+              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
-            {items.map((item) => {
-              const mainPhoto = item.photos.find((p) => p.estPrincipale) || item.photos[0];
-              const isPending = item.statut === 'EN_ATTENTE_VALIDATION';
-              const isUrgent = isPending && item.slaWaitHours >= 24;
-
-              return (
-                <tr
-                  key={item.id}
-                  className="hover:bg-[#0A3D2E]/[0.03] dark:hover:bg-[#F1DFB6]/[0.04] transition-colors group cursor-pointer"
-                  onClick={() => onSelectVehicle(item)}
-                >
-                  {/* Vehicle & Immatriculation */}
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-3">
-                      {/* Photo Thumbnail */}
-                      <div className="relative w-14 h-11 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-200/70 dark:border-slate-700 shadow-sm">
-                        {mainPhoto ? (
-                          <Image
-                            src={mainPhoto.url}
-                            alt={`${item.marque} ${item.modele}`}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                            unoptimized
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-400 text-[10px]">
-                            Sans photo
-                          </div>
-                        )}
-                        {item.photos.length > 0 && (
-                          <span className="absolute bottom-0.5 right-0.5 px-1 py-0.2 rounded text-[9px] font-semibold bg-black/60 text-white backdrop-blur-sm">
-                            📷 {item.photos.length}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Info */}
-                      <div>
-                        <div className="flex items-center gap-1.5 font-medium text-slate-900 dark:text-white">
-                          <span>{item.marque} {item.modele}</span>
-                          <span className="text-slate-400 text-[11px]">({item.annee})</span>
-                          {item.isFeatured && (
-                            <span className="text-amber-500" title="Mis en avant sur l'accueil">
-                              <Star className="w-3.5 h-3.5 fill-amber-400" />
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                            {item.immatriculation || 'Plaque N/A'}
-                          </span>
-                          <span className="text-slate-400 text-[10px]">
-                            {item.ville} • {item.transmission || 'Auto'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* Owner */}
-                  <td className="py-3.5 px-4">
-                    {item.proprietaire ? (
-                      <div className="space-y-0.5">
-                        <div className="font-medium text-slate-900 dark:text-white flex items-center gap-1.5">
-                          <span>{item.proprietaire.prenom} {item.proprietaire.nom}</span>
-                          {item.proprietaire.statutKyc === 'VERIFIE' ? (
-                            <span className="inline-flex items-center text-emerald-600 dark:text-emerald-400 text-[10px]" title="Hôte KYC Vérifié">
-                              <CheckCircle className="w-3 h-3" />
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center text-amber-600 text-[10px]" title="KYC non vérifié">
-                              <AlertTriangle className="w-3 h-3" />
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">{item.proprietaire.telephone || item.proprietaire.email || 'N/A'}</p>
-                      </div>
-                    ) : (
-                      <span className="text-slate-400 italic">Anonyme</span>
-                    )}
-                  </td>
-
-                  {/* Pricing & Delivery */}
-                  <td className="py-3.5 px-4">
-                    <div className="font-semibold text-slate-900 dark:text-white tabular-nums">
-                      {item.prixParJour.toLocaleString('fr-FR')} FCFA <span className="text-[10px] font-normal text-slate-400">/jour</span>
-                    </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">
-                      {item.proposeLivraisonDakar && '📍 Dakar'} {item.proposeLivraisonAibd && '✈️ AIBD'}
-                      {!item.proposeLivraisonDakar && !item.proposeLivraisonAibd && 'Sur place'}
-                    </div>
-                  </td>
-
-                  {/* Documents Badge */}
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-medium flex items-center gap-1 border ${item.carteGriseUrl
-                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                          : 'bg-red-50 text-red-600 dark:bg-red-950/60 dark:text-red-400 border-red-200 dark:border-red-900'
-                          }`}
-                      >
-                        <FileText className="w-3 h-3" />
-                        <span>CG {item.carteGriseUrl ? 'OK' : 'Manquant'}</span>
-                      </span>
-
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-medium flex items-center gap-1 border ${item.assurance
-                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                          : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border-amber-200 dark:border-amber-800'
-                          }`}
-                      >
-                        <ShieldCheck className="w-3 h-3" />
-                        <span>Assurance {item.assurance ? 'OK' : 'Option'}</span>
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* SLA Wait */}
-                  <td className="py-3.5 px-4">
-                    {isPending ? (
-                      <div
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium tabular-nums border ${isUrgent
-                          ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border-red-200 dark:border-red-800'
-                          : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border-amber-200 dark:border-amber-800'
-                          }`}
-                      >
-                        {isUrgent && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
-                        <Clock className="w-3 h-3" />
-                        <span>{item.slaWaitHours}h d'attente</span>
-                      </div>
-                    ) : (
-                      <span className="text-slate-400 text-[11px]">
-                        {new Date(item.creeLe).toLocaleDateString('fr-FR')}
-                      </span>
-                    )}
-                  </td>
-
-                  {/* Status */}
-                  <td className="py-3.5 px-4">
-                    {item.statut === 'EN_ATTENTE_VALIDATION' && (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800">
-                        En attente
-                      </span>
-                    )}
-                    {item.statut === 'VERIFIE' && (
-                      <span
-                        className="px-2.5 py-1 rounded-full text-[10px] font-semibold border"
-                        style={{ background: 'rgba(10,61,46,0.08)', color: FOREST, borderColor: 'rgba(10,61,46,0.18)' }}
-                      >
-                        Vérifié
-                      </span>
-                    )}
-                    {item.statut === 'SUSPENDU' && (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-400 border border-red-200/80 dark:border-red-800">
-                        Suspendu
-                      </span>
-                    )}
-                    {item.statut === 'BROUILLON' && (
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                        Brouillon
-                      </span>
-                    )}
-                  </td>
-
-                  {/* Action */}
-                  <td className="py-3.5 px-4 text-right">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSelectVehicle(item);
-                      }}
-                      className="px-3 py-1.5 rounded-xl border font-medium transition-all flex items-center gap-1.5 ml-auto shadow-sm bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 group-hover:text-white group-hover:border-transparent"
-                      style={{
-                        transitionProperty: 'background, color, border-color',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = `linear-gradient(135deg, ${FOREST}, ${FOREST_DARK})`;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '';
-                      }}
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>Inspecter</span>
-                    </button>
-                  </td>
+          <tbody>
+            {isLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                <tr key={i} className="border-b border-slate-100 dark:border-slate-800/60">
+                  <td className="px-4 py-4"><Skel className="h-12 w-56" /></td>
+                  <td className="px-4 py-4"><Skel className="h-4 w-32" /><Skel className="mt-2 h-3 w-24" /></td>
+                  <td className="px-4 py-4"><Skel className="h-5 w-28" /><Skel className="mt-2 h-3 w-20" /></td>
+                  <td className="px-4 py-4"><Skel className="h-6 w-44" /></td>
+                  <td className="px-4 py-4"><Skel className="h-6 w-24" /></td>
+                  <td className="px-4 py-4"><Skel className="h-6 w-20" /></td>
+                  <td className="px-4 py-4"><Skel className="ml-auto h-8 w-24" /></td>
                 </tr>
-              );
-            })}
+              ))
+              : items.map((item) => {
+                const accent = accentOf(item);
+                return (
+                  <tr
+                    key={item.id}
+                    onClick={() => onSelectVehicle(item)}
+                    className={`group cursor-pointer border-b border-slate-100 transition-colors last:border-0 hover:bg-[#0A3D2E]/[0.04] dark:border-slate-800/60 dark:hover:bg-[#F1DFB6]/[0.05] ${tintOf(
+                      item
+                    )}`}
+                  >
+                    <td
+                      className="max-w-[300px] px-4 py-4"
+                      style={accent ? { boxShadow: `inset 3px 0 0 0 ${accent}` } : undefined}
+                    >
+                      <VehicleCell item={item} />
+                    </td>
+                    <td className="max-w-[220px] px-4 py-4"><OwnerCell item={item} /></td>
+                    <td className="px-4 py-4"><PriceCell item={item} /></td>
+                    <td className="px-4 py-4"><DocChips item={item} /></td>
+                    <td className="px-4 py-4"><WaitCell item={item} /></td>
+                    <td className="px-4 py-4"><StatusBadge statut={item.statut} /></td>
+                    <td className="px-4 py-4 text-right">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectVehicle(item);
+                        }}
+                        aria-label={`Inspecter ${item.marque} ${item.modele}`}
+                        className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-[#0A3D2E]/25 px-3.5 py-1.5 text-sm font-medium text-[#0A3D2E] transition hover:border-[#0A3D2E] hover:bg-[#0A3D2E] hover:text-[#F1DFB6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 dark:border-[#F1DFB6]/30 dark:text-[#F1DFB6] dark:hover:bg-[#F1DFB6] dark:hover:text-[#0A3D2E]"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        Inspecter
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
 
-      {/* Instagram Feed Intelligent Pagination Footer */}
-      <div ref={loadMoreRef} className="border-t border-slate-200/70 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 p-4">
+      {/* Cartes (mobile) */}
+      <ul className="divide-y divide-slate-100 md:hidden dark:divide-slate-800/60">
+        {isLoading
+          ? Array.from({ length: 3 }).map((_, i) => (
+            <li key={i} className="space-y-3 p-4">
+              <Skel className="h-12 w-56" />
+              <Skel className="h-8 w-44" />
+              <Skel className="h-6 w-52" />
+            </li>
+          ))
+          : items.map((item) => {
+            const accent = accentOf(item);
+            return (
+              <li key={item.id} className={tintOf(item)}>
+                <button
+                  type="button"
+                  onClick={() => onSelectVehicle(item)}
+                  aria-label={`Inspecter ${item.marque} ${item.modele}`}
+                  className="group block w-full space-y-4 p-4 text-left transition-colors hover:bg-[#0A3D2E]/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0A3D2E]"
+                  style={accent ? { boxShadow: `inset 3px 0 0 0 ${accent}` } : undefined}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <VehicleCell item={item} />
+                    <StatusBadge statut={item.statut} />
+                  </div>
+
+                  <OwnerCell item={item} />
+
+                  <div className="flex flex-wrap items-end justify-between gap-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+                    <PriceCell item={item} />
+                    <WaitCell item={item} />
+                  </div>
+
+                  <DocChips item={item} />
+                </button>
+              </li>
+            );
+          })}
+      </ul>
+
+      {/* Pied : scroll infini */}
+      <div
+        ref={loadMoreRef}
+        aria-live="polite"
+        className="border-t border-slate-200/80 bg-[#F6F7F5] px-5 py-4 dark:border-slate-800 dark:bg-slate-950/40"
+      >
         {isLoadingMore ? (
-          <div className="flex flex-col items-center justify-center py-4 gap-2">
-            <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm text-xs text-slate-700 dark:text-slate-200">
-              <Loader2 className="w-4 h-4 animate-spin shrink-0" style={{ color: FOREST }} />
-              <span className="font-medium">Chargement des véhicules suivants...</span>
-            </div>
+          <div className={`flex items-center justify-center gap-2.5 py-1 text-sm ${MUTED}`}>
+            <Loader2 className="h-4 w-4 animate-spin text-[#0A3D2E] motion-reduce:animate-none dark:text-[#F1DFB6]" />
+            Chargement des véhicules suivants…
           </div>
         ) : hasMore ? (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2 py-1 text-xs">
-            <div className="text-slate-500 font-medium">
-              Affichage de <span className="font-semibold text-slate-900 dark:text-white">{items.length}</span> sur{' '}
-              <span className="font-semibold text-slate-900 dark:text-white">{totalItems}</span> véhicules
+          <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
+            <div>
+              <p className={`text-sm tabular-nums ${MUTED}`}>
+                <span className={`font-semibold ${TEXT}`}>{items.length}</span> sur{' '}
+                <span className={`font-semibold ${TEXT}`}>{total}</span> véhicules
+              </p>
+              <div
+                aria-hidden
+                className="mt-2 h-1 w-40 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
+              >
+                <div className="h-full rounded-full bg-[#0A3D2E]" style={{ width: `${loadedShare}%` }} />
+              </div>
             </div>
             <button
+              type="button"
               onClick={onLoadMore}
-              className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:shadow-sm transition-all font-medium flex items-center gap-2"
-              style={{ borderColor: undefined }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = FOREST;
-                e.currentTarget.style.color = FOREST;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '';
-                e.currentTarget.style.color = '';
-              }}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-5 py-2.5 text-sm font-semibold text-[#F1DFB6] shadow-md shadow-[#0A3D2E]/20 transition hover:bg-[#0D4B39] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
             >
-              <span>Charger la suite</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-500">
-                +{Math.max(0, totalItems - items.length)}
-              </span>
+              Charger la suite
+              <ChevronDown className="h-4 w-4" />
+              {remaining > 0 && (
+                <span className="rounded-full bg-[#F1DFB6]/20 px-2 text-xs tabular-nums">
+                  +{remaining}
+                </span>
+              )}
             </button>
           </div>
-        ) : items.length > 0 ? (
-          <div className="flex items-center justify-center py-2 text-xs text-slate-500">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 text-[11px] font-medium text-slate-600 dark:text-slate-400">
-              <Sparkles className="w-3.5 h-3.5" style={{ color: GOLD }} />
-              <span>Tous les véhicules ont été chargés ({items.length} au total)</span>
-            </div>
-          </div>
-        ) : null}
+        ) : (
+          <p className={`flex items-center justify-center gap-2 py-1 text-sm ${MUTED}`}>
+            <Check className="h-4 w-4 text-[#0A3D2E] dark:text-[#F1DFB6]" />
+            Tous les véhicules sont chargés ({items.length})
+          </p>
+        )}
       </div>
     </div>
   );
