@@ -21,6 +21,7 @@ interface UserState {
   // Actions d'État
   initializeFromSession: (user: UserProfile | null) => void;
   setUser: (user: UserProfile | null) => void;
+  setSessionFromAuthResponse: (res: { accessToken: string; refreshToken?: string; profile: any }) => UserProfile;
   updateProfilePartial: (partial: Partial<UserProfile>) => void;
   switchRole: (newRole: UserProfile['role']) => Promise<UserProfile | null>;
   setPendingIntent: (intent: PendingIntent | null) => void;
@@ -40,6 +41,7 @@ const getInitialStoreState = () => {
     const cachedUserRaw = localStorage.getItem('autoloc_user');
     if (token === 'mock_google_token' || cachedUserRaw?.includes('alexandre.diallo@gmail.com')) {
       localStorage.removeItem('autoloc_token');
+      localStorage.removeItem('autoloc_refresh_token');
       localStorage.removeItem('autoloc_user');
       clearAuthCookies();
     } else if (token && cachedUserRaw) {
@@ -111,6 +113,7 @@ export const useUserStore = create<UserState>((set, get) => ({
         }
       } else {
         localStorage.removeItem('autoloc_user');
+        localStorage.removeItem('autoloc_refresh_token');
         clearAuthCookies();
       }
     }
@@ -122,6 +125,35 @@ export const useUserStore = create<UserState>((set, get) => ({
     } else {
       broadcastAuthEvent({ type: 'LOGOUT' });
     }
+  },
+
+  setSessionFromAuthResponse: (res) => {
+    const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
+    if (typeof window !== 'undefined') {
+      if (res.accessToken) {
+        localStorage.setItem('autoloc_token', res.accessToken);
+      }
+      if (res.refreshToken) {
+        localStorage.setItem('autoloc_refresh_token', res.refreshToken);
+      }
+      localStorage.setItem('autoloc_user', JSON.stringify(userProfile));
+      if (res.accessToken) {
+        setAuthCookies(res.accessToken, userProfile.role);
+      }
+    }
+    set({
+      isInitialized: true,
+      isAuthenticated: true,
+      isGuestMode: false,
+      user: userProfile,
+      capabilities: computeUserCapabilities(userProfile),
+      lastProfileFetchTime: Date.now(),
+    });
+    broadcastAuthEvent({
+      type: 'USER_UPDATED',
+      payload: userProfile,
+    });
+    return userProfile;
   },
 
   updateProfilePartial: (partial) => {
@@ -148,30 +180,7 @@ export const useUserStore = create<UserState>((set, get) => ({
   switchRole: async (newRole) => {
     try {
       const res = await AuthService.switchRole(newRole as 'PROPRIETAIRE' | 'LOCATAIRE');
-      if (res.accessToken && typeof window !== 'undefined') {
-        localStorage.setItem('autoloc_token', res.accessToken);
-        if (res.refreshToken) {
-          localStorage.setItem('autoloc_refresh_token', res.refreshToken);
-        }
-      }
-      const updatedUser = AuthService.mapProfileResponseToUserProfile(res.profile);
-      const token = res.accessToken || (typeof window !== 'undefined' ? localStorage.getItem('autoloc_token') : null);
-      if (token) {
-        setAuthCookies(token, updatedUser.role);
-      }
-      set({
-        user: updatedUser,
-        capabilities: computeUserCapabilities(updatedUser),
-        lastProfileFetchTime: Date.now(),
-      });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('autoloc_user', JSON.stringify(updatedUser));
-      }
-      broadcastAuthEvent({
-        type: 'USER_UPDATED',
-        payload: updatedUser,
-      });
-      return updatedUser;
+      return get().setSessionFromAuthResponse(res);
     } catch (error) {
       console.warn('[useUserStore] switchRole backend call failed, fallback to local update:', error);
       get().updateProfilePartial({ role: newRole });
@@ -256,6 +265,7 @@ export const useUserStore = create<UserState>((set, get) => ({
   logout: async () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('autoloc_token');
+      localStorage.removeItem('autoloc_refresh_token');
       localStorage.removeItem('autoloc_user');
       clearAuthCookies();
     }

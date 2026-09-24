@@ -45,7 +45,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const { setUser, clearPendingIntent, closeGuestModal } = useUserStore();
+  const { setSessionFromAuthResponse, clearPendingIntent, closeGuestModal } = useUserStore();
 
   // Pré-compilation / Prefetching optimiste des routes cibles pendant que l'utilisateur remplit le formulaire
   React.useEffect(() => {
@@ -75,12 +75,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
       AuthService.loginWithGoogle(accessToken)
         .then((res) => {
-          if (res.accessToken && typeof window !== 'undefined') {
-            localStorage.setItem('autoloc_token', res.accessToken);
-            setAuthCookies(res.accessToken, res.profile.role);
-          }
-          const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
-          setUser(userProfile);
+          const userProfile = setSessionFromAuthResponse(res);
           closeGuestModal();
 
           const pending = IntentEngine.consumePendingIntent();
@@ -95,7 +90,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           setIsLoading(false);
         });
     }
-  }, [closeGuestModal, onSuccess, router, setUser]);
+  }, [closeGuestModal, onSuccess, router, setSessionFromAuthResponse]);
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,16 +118,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setIsLoading(true);
     try {
       const res = await AuthService.verifyPhoneLoginOtp(telephone, code);
-      if (res.accessToken && typeof window !== 'undefined') {
-        localStorage.setItem('autoloc_token', res.accessToken);
-      }
-      const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
-
-      if (res.accessToken) {
-        setAuthCookies(res.accessToken, userProfile.role);
-      }
-
-      setUser(userProfile);
+      const userProfile = setSessionFromAuthResponse(res);
       closeGuestModal();
 
       // Consommer l'intention et calculer l'URL de redirection basée sur le rôle
@@ -159,16 +145,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setIsLoading(true);
     try {
       const res = await AuthService.loginWithEmail(email.trim(), password);
-      if (res.accessToken && typeof window !== 'undefined') {
-        localStorage.setItem('autoloc_token', res.accessToken);
-      }
-      const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
-
-      if (res.accessToken) {
-        setAuthCookies(res.accessToken, userProfile.role);
-      }
-
-      setUser(userProfile);
+      const userProfile = setSessionFromAuthResponse(res);
       closeGuestModal();
 
       const pending = IntentEngine.consumePendingIntent();

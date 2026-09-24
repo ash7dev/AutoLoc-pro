@@ -82,7 +82,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { setUser } = useUserStore();
+  const { setSessionFromAuthResponse } = useUserStore();
 
   // Pré-compilation / Prefetching optimiste des routes cibles pendant l'inscription
   React.useEffect(() => {
@@ -112,12 +112,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
       AuthService.loginWithGoogle(accessToken)
         .then((res) => {
-          if (res.accessToken && typeof window !== 'undefined') {
-            localStorage.setItem('autoloc_token', res.accessToken);
-            setAuthCookies(res.accessToken, res.profile.role);
-          }
-          const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
-          setUser(userProfile);
+          const userProfile = setSessionFromAuthResponse(res);
 
           const pending = IntentEngine.consumePendingIntent();
           const redirectUrl = getPostAuthRedirectUrl(userProfile, pending);
@@ -131,7 +126,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           setIsLoading(false);
         });
     }
-  }, [onSuccess, router, setUser]);
+  }, [onSuccess, router, setSessionFromAuthResponse]);
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,9 +167,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     setIsLoading(true);
     try {
       const res = await AuthService.verifyPhoneLoginOtp(telephone, code);
-      if (res.accessToken && typeof window !== 'undefined') {
-        localStorage.setItem('autoloc_token', res.accessToken);
-      }
       
       // Enregistrer prénom, nom et email auprès du backend
       if (prenom || nom || email) {
@@ -185,18 +177,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         }
       }
 
-      const userProfile = AuthService.mapProfileResponseToUserProfile({
-        ...res.profile,
-        prenom: prenom || res.profile.prenom,
-        nom: nom || res.profile.nom,
-        email: email || res.profile.email,
-      });
-
-      if (res.accessToken) {
-        setAuthCookies(res.accessToken, userProfile.role);
-      }
-
-      setUser(userProfile);
+      const userProfile = setSessionFromAuthResponse(res);
 
       // Consommer et calculer la redirection dynamique par rôle
       const pending = IntentEngine.consumePendingIntent();
