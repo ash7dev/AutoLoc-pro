@@ -6,6 +6,8 @@ export * from './vehiclesApi';
 export * from './walletApi';
 export * from './reviewsApi';
 export * from './userApi';
+export * from './adminPayoutsApi';
+export * from './adminBroadcastApi';
 
 import { analyticsApi } from './analyticsApi';
 import { reservationsApi } from './reservationsApi';
