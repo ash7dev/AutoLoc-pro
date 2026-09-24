@@ -5,6 +5,29 @@ import { useState, useEffect, useCallback, useTransition } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Vehicle, VehicleType, TransmissionType, FuelType, VehicleSortOption } from '../types/vehicle.types';
 import { vehicleService } from '../services/vehicleService';
+import { MOCK_SENEGAL_VEHICLES } from '../constants/mockVehicles';
+
+function filterMockVehicles(all: Vehicle[], f: VehicleFilterState): Vehicle[] {
+  return all.filter(v => {
+    if (f.q && !(`${v.marque} ${v.modele} ${v.ville} ${v.description || ''}`.toLowerCase().includes(f.q.toLowerCase()))) {
+      return false;
+    }
+    if (f.ville && v.ville && !v.ville.toLowerCase().includes(f.ville.toLowerCase())) {
+      return false;
+    }
+    if (f.zone && v.adresse && !v.adresse.toLowerCase().includes(f.zone.toLowerCase())) {
+      return false;
+    }
+    if (f.type && v.type !== f.type) return false;
+    if (f.transmission && v.transmission !== f.transmission) return false;
+    if (f.carburant && v.carburant !== f.carburant) return false;
+    if (f.prixMin != null && v.prixParJour < f.prixMin) return false;
+    if (f.prixMax != null && v.prixParJour > f.prixMax) return false;
+    if (f.placesMin != null && v.nombrePlaces < f.placesMin) return false;
+    if (f.noteMin != null && v.note < f.noteMin) return false;
+    return true;
+  });
+}
 
 export interface VehicleFilterState {
   q: string;
@@ -161,12 +184,18 @@ export function useSearchVehicles() {
     }
   );
 
-  const initialList: Vehicle[] = Array.isArray(rawResponse)
+  const apiList: Vehicle[] = Array.isArray(rawResponse)
     ? rawResponse
     : (rawResponse?.data || []);
-  const totalCount: number = Array.isArray(rawResponse)
-    ? rawResponse.length
-    : (rawResponse?.total ?? initialList.length);
+
+  const mockFiltered = filterMockVehicles(MOCK_SENEGAL_VEHICLES, filters);
+  const initialList: Vehicle[] = (apiList.length > 0) 
+    ? apiList 
+    : (error || !rawResponse || apiList.length === 0 ? mockFiltered : []);
+
+  const totalCount: number = (apiList.length > 0)
+    ? (Array.isArray(rawResponse) ? rawResponse.length : (rawResponse?.total ?? apiList.length))
+    : mockFiltered.length;
 
   const vehicles = page === 1 ? initialList : [...initialList, ...extraVehicles];
   const hasMore = vehicles.length < totalCount;

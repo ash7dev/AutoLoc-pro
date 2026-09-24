@@ -54,8 +54,8 @@ export const DesktopVehicleLayout: React.FC<DesktopVehicleLayoutProps> = ({
 
   return (
     <div className="flex gap-8 items-start w-full">
-      {/* Sidebar Desktop */}
-      <div className="hidden lg:block">
+      {/* Sidebar Desktop Filtres */}
+      <div className="hidden lg:block shrink-0 w-64">
         <DesktopFilterSidebar
           filters={filters}
           onSetFilter={onSetFilter}
@@ -64,7 +64,7 @@ export const DesktopVehicleLayout: React.FC<DesktopVehicleLayoutProps> = ({
       </div>
 
       {/* Grille Desktop 3 Colonnes */}
-      <div className="flex-1 w-full flex flex-col pb-16">
+      <div className="flex-1 min-w-0 flex flex-col pb-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {vehicles.map((vehicle, index) => (
             <PremiumVehicleCard key={`${vehicle.id}-${index}`} vehicle={vehicle} />
