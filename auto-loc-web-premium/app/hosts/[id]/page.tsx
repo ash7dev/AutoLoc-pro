@@ -83,7 +83,7 @@ export default function HostPublicProfilePage({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 pb-24">
+      <div className="min-h-screen bg-white text-slate-900 pb-24">
         {/* Nav Header Skeleton Light */}
         <div className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-md px-4 py-4 sm:px-8">
           <div className="mx-auto flex max-w-7xl items-center justify-between">
@@ -138,7 +138,7 @@ export default function HostPublicProfilePage({
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-white text-slate-900 flex flex-col items-center justify-center p-6 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-rose-600">
           <Car className="h-8 w-8" />
         </div>
@@ -168,7 +168,7 @@ export default function HostPublicProfilePage({
       : vehicles.filter((v) => v.type?.toUpperCase() === filterType.toUpperCase());
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-24">
+    <div className="min-h-screen bg-white text-slate-900 pb-24">
       {/* ─── Top Navigation Bar Light ─── */}
       <div className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-md px-4 py-4 sm:px-8 shadow-xs">
         <div className="mx-auto flex max-w-7xl items-center justify-between">

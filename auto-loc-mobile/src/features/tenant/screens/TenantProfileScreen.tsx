@@ -11,6 +11,7 @@ import { TenantBecomeHostCard } from '../components/profile/TenantBecomeHostCard
 import { TenantProfileHero } from '../components/profile/TenantProfileHero';
 import { TenantProfileInformationCard } from '../components/profile/TenantProfileInformationCard';
 import { TenantSecurityCard } from '../components/profile/TenantSecurityCard';
+import { TenantLegalCard } from '../components/profile/TenantLegalCard';
 import { TenantVerificationCard } from '../components/profile/TenantVerificationCard';
 import { TenantProfileSkeleton } from '../components/profile/TenantProfileSkeleton';
 import { becomeAutoLocHost, TenantProfile } from '../api/tenantProfileApi';
@@ -150,6 +151,7 @@ export const TenantProfileScreen: React.FC = () => {
             refetch();
           }}
         />
+        <TenantLegalCard />
         <View style={styles.assistance}>
           <HelpCircle size={19} color={theme.colors.brand.main} />
           <View style={styles.assistanceText}>

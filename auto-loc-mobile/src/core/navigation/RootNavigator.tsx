@@ -334,7 +334,7 @@ export const RootNavigator: React.FC = () => {
               return (
                 <LoginScreen
                   onNavigateToRegister={() => navigateTo({ name: 'REGISTER' })}
-                  onNavigateToOtp={(phone, ch, em) => navigateToOtp(phone, ch, em)}
+                  onNavigateToOtp={(phone) => navigateToOtp(phone)}
                   onLoginSuccess={handleAuthSuccess}
                   onClose={handleAuthClose}
                 />

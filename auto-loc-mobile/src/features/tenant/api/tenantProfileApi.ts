@@ -84,6 +84,11 @@ export async function updateLoginSecurity(input: { email?: string; password?: st
   return response.data;
 }
 
+export async function deleteAccount() {
+  const response = await apiClient.delete<{ success: boolean; message: string }>('/users/me/account');
+  return response.data;
+}
+
 export interface PublicHostProfile {
   host: {
     id: string;

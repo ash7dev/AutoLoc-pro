@@ -20,10 +20,11 @@ export const MobileBottomNav: React.FC = () => {
   const isAuthenticated = useUserStore((s) => s.isAuthenticated);
   const profileHref = '/profile';
 
-  // Masquer la navigation basse sur les pages détails (ex: /vehicles/[id] et /reservations/[id])
+  // Masquer la navigation basse sur les pages détails (ex: /vehicles/[id], /reservations/[id] et /hosts/[id])
   const isDetailPage =
     (pathname?.startsWith('/vehicles/') && pathname !== '/vehicles') ||
-    (pathname?.startsWith('/reservations/') && pathname !== '/reservations');
+    (pathname?.startsWith('/reservations/') && pathname !== '/reservations') ||
+    pathname?.startsWith('/hosts');
   if (isDetailPage) {
     return null;
   }

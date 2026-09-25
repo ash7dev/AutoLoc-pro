@@ -21,12 +21,12 @@ import {
   ShieldCheck,
 } from 'lucide-react-native';
 import { OwnerWalletTransaction } from '../api/ownerApi';
-import { formatCurrency } from '../../../core/utils/currency';
+import { formatCurrency, CurrencyCode } from '../../../core/utils/currency';
 
 export interface TransactionReceiptModalProps {
   visible: boolean;
   transaction: OwnerWalletTransaction | null;
-  selectedCurrency?: string;
+  selectedCurrency?: CurrencyCode;
   onClose: () => void;
 }
 
