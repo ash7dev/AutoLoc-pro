@@ -17,6 +17,7 @@ import { DateSelectionModal } from './DateSelectionModal';
 import { VehicleMobileStickyBar } from './VehicleMobileStickyBar';
 import { useVehicleDetails } from '../hooks/useVehicleDetails';
 import { useUserStore } from '@/src/core/store/useUserStore';
+import { IntentEngine } from '@/src/core/auth/intentEngine';
 import { useBookingGate } from '@/src/features/reservations/hooks/useBookingGate';
 import { ReservationGateModal } from '@/src/features/reservations/components/ReservationGateModal';
 import { BookingCheckoutModal } from '@/src/features/reservations/components/checkout/BookingCheckoutModal';
@@ -113,6 +114,29 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
     }
   };
 
+  // Reprise automatique et transparente du processus de réservation après connexion/inscription
+  useEffect(() => {
+    if (isAuthenticated && vehicle) {
+      const intent = IntentEngine.consumePendingIntent();
+      if (
+        intent &&
+        intent.action === 'BOOK_VEHICLE' &&
+        (intent.vehicleId === vehicle.id || intent.vehicleId === vehicleId)
+      ) {
+        if (intent.payload) {
+          setPendingBookingParams(intent.payload as any);
+          if (intent.payload.startDate) setSelectedStartDate(intent.payload.startDate);
+          if (intent.payload.endDate) setSelectedEndDate(intent.payload.endDate);
+        }
+        if (gateEval.canProceed) {
+          setIsCheckoutModalOpen(true);
+        } else {
+          setIsGateModalOpen(true);
+        }
+      }
+    }
+  }, [isAuthenticated, vehicle, gateEval.canProceed, vehicleId]);
+
   // Handler du bouton "Réserver" soumis aux 2 verrous
   const handleBookNow = (bookingData: {
     startDate?: string;
@@ -124,12 +148,14 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
   }) => {
     setPendingBookingParams(bookingData);
 
-    // 1er VERROU : Invité -> Interception immédiate par le Auth Guard (Ouverture Modale Connexion)
+    // 1er VERROU : Invité -> Interception immédiate par le Auth Guard (Ouverture Modale & Redirection vers ce véhicule)
     if (!isAuthenticated) {
-      openGuestModal(
-        'Connectez-vous pour finaliser la réservation de ce véhicule.',
-        { action: 'BOOK_VEHICLE', vehicleId: vehicle?.id || vehicleId, payload: bookingData }
-      );
+      IntentEngine.guardAction('BOOK_VEHICLE', {
+        vehicleId: vehicle?.id || vehicleId,
+        payload: bookingData,
+        redirectToUrl: `/vehicles/${vehicle?.id || vehicleId}`,
+        reasonMessage: 'Connectez-vous pour finaliser la réservation de ce véhicule.',
+      });
       return;
     }
 

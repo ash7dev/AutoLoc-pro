@@ -19,7 +19,6 @@ export default function LoginPage() {
 
   const handleLoginSuccess = () => {
     closeGuestModal();
-    router.push('/');
   };
 
   const handleClose = () => {

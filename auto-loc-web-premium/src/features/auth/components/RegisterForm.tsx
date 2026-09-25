@@ -464,7 +464,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             </button>
           ) : (
             <Link
-              href="/login"
+              href={
+                typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('next')
+                  ? `/login?next=${encodeURIComponent(new URLSearchParams(window.location.search).get('next')!)}`
+                  : '/login'
+              }
               className="font-normal text-[#4ADE80] italic underline hover:text-emerald-300 ml-1"
             >
               Se connecter

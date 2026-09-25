@@ -34,6 +34,7 @@ const NavItem: React.FC<{ href: string; children: React.ReactNode }> = ({ href, 
 
 export const DesktopNav: React.FC = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const isAuthenticated = useUserStore((s) => s.isAuthenticated);
   const user = useUserStore((s) => s.user);
   const [scrolled, setScrolled] = useState(false);
@@ -127,8 +128,12 @@ export const DesktopNav: React.FC = () => {
               </div>
             ) : (
               <Link
-                href="/login"
-                className="rounded-full border border-slate-900/15 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:border-[#0A3D2E]/50 hover:bg-[#0A3D2E]/[0.04] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]"
+                href={
+                  pathname && pathname !== '/' && !pathname.startsWith('/login') && !pathname.startsWith('/register')
+                    ? `/login?next=${encodeURIComponent(pathname)}`
+                    : '/login'
+                }
+                className="rounded-full border border-slate-900/15 bg-[#FFFFFF] px-5 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:border-[#0A3D2E]/50 hover:bg-[#0A3D2E]/[0.04] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]"
               >
                 Se connecter
               </Link>

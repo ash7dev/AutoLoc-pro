@@ -481,7 +481,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             </button>
           ) : (
             <Link
-              href="/register"
+              href={
+                typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('next')
+                  ? `/register?next=${encodeURIComponent(new URLSearchParams(window.location.search).get('next')!)}`
+                  : '/register'
+              }
               className="font-semibold text-[#4ADE80] underline hover:text-emerald-300 ml-1"
             >
               S'inscrire gratuitement

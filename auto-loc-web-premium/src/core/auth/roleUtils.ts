@@ -35,14 +35,24 @@ export function getPostAuthRedirectUrl(
   pendingIntent?: PendingIntent | null,
   nextUrlParam?: string | null
 ): string {
-  // 1. Si un paramètre d'URL `next` est présent (ex: /login?next=/dashboard/wallet)
+  // 1. Si un paramètre d'URL `next` ou `redirectUrl` ou `redirect` est présent (ex: /login?next=/vehicles/123)
   if (nextUrlParam && nextUrlParam.startsWith('/')) {
     return nextUrlParam;
   }
 
-  // 2. Si une intention explicite de redirection est stockée dans le gatekeeper
+  // 2. Si une intention explicite de redirection est stockée dans le gatekeeper / session
   if (pendingIntent?.redirectToUrl) {
     return pendingIntent.redirectToUrl;
+  }
+
+  // 3. Si l'intention est la réservation d'un véhicule spécifique
+  if (pendingIntent?.action === 'BOOK_VEHICLE' && pendingIntent.vehicleId) {
+    return `/vehicles/${pendingIntent.vehicleId}`;
+  }
+
+  // 4. Si l'intention est de créer une annonce
+  if (pendingIntent?.action === 'ADD_VEHICLE') {
+    return '/dashboard/vehicles/new';
   }
 
   if (!user) return '/';
