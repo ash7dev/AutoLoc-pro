@@ -241,12 +241,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                   />
                 </Link>
 
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-[9px] sm:text-[10px] font-medium tracking-wider uppercase mb-2">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#059669]" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-emerald-600 text-[9px] sm:text-[10px] font-medium tracking-wider uppercase mb-2">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                   <span>INSCRIPTION GRATUITE EN 1 MIN</span>
                 </div>
 
-                <h2 className="text-xl sm:text-2xl font-normal text-[#041912] font-fraunces tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-normal text-brand-dark font-fraunces tracking-tight">
                   Créer un <span className="italic text-emerald-700">compte.</span>
                 </h2>
                 <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
@@ -383,7 +383,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-[50px] rounded-full bg-[#041912] hover:bg-[#06291e] border border-[#041912]/90 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#041912]/25 transition-all active:scale-[0.99] disabled:opacity-60 mt-1"
+                  className="w-full h-[50px] rounded-full bg-brand-dark hover:bg-[#06291e] border border-brand-dark/90 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-dark/25 transition-all active:scale-[0.99] disabled:opacity-60 mt-1"
                 >
                   {isLoading ? (
                     <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
@@ -391,7 +391,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                     <>
                       <span>Créer mon compte</span>
                       <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center ml-1">
-                        <ArrowRight className="w-3.5 h-3.5 text-[#4ADE80]" />
+                        <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />
                       </div>
                     </>
                   )}
@@ -458,7 +458,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           {onNavigateToLogin ? (
             <button
               onClick={onNavigateToLogin}
-              className="font-normal text-[#4ADE80] italic underline hover:text-emerald-300 ml-1"
+              className="font-normal text-emerald-400 italic underline hover:text-emerald-300 ml-1"
             >
               Se connecter
             </button>
@@ -469,7 +469,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                   ? `/login?next=${encodeURIComponent(new URLSearchParams(window.location.search).get('next')!)}`
                   : '/login'
               }
-              className="font-normal text-[#4ADE80] italic underline hover:text-emerald-300 ml-1"
+              className="font-normal text-emerald-400 italic underline hover:text-emerald-300 ml-1"
             >
               Se connecter
             </Link>

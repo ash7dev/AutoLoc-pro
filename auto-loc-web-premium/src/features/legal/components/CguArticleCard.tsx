@@ -21,17 +21,17 @@ export const CguArticleCard: React.FC<CguArticleCardProps> = ({
   return (
     <article
       id={id}
-      className="scroll-mt-32 rounded-3xl border border-[#041912]/8 bg-white overflow-hidden shadow-xs transition-shadow hover:shadow-md hover:shadow-slate-200/60"
+      className="scroll-mt-32 rounded-3xl border border-brand-dark/8 bg-white overflow-hidden shadow-xs transition-shadow hover:shadow-md hover:shadow-slate-200/60"
     >
       {/* Header */}
       <div className="flex items-start gap-4 px-6 py-5 sm:px-8 border-b border-slate-100">
-        <div className="flex-shrink-0 w-11 h-11 rounded-2xl bg-[#0A3D2E]/8 flex items-center justify-center mt-0.5">
-          <Icon className="h-5 w-5 text-[#0A3D2E]" strokeWidth={1.75} />
+        <div className="flex-shrink-0 w-11 h-11 rounded-2xl bg-brand-main/8 flex items-center justify-center mt-0.5">
+          <Icon className="h-5 w-5 text-brand-main" strokeWidth={1.75} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             {num ? (
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#0A3D2E]/60">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-brand-main/60">
                 Article {num}
               </span>
             ) : (
@@ -41,8 +41,7 @@ export const CguArticleCard: React.FC<CguArticleCardProps> = ({
             )}
           </div>
           <h2
-            className="font-fraunces text-lg text-[#041912] sm:text-xl font-normal"
-            style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+            className="font-fraunces text-lg text-brand-dark sm:text-xl font-normal"
           >
             {title}
           </h2>

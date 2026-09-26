@@ -16,14 +16,14 @@ export function TenantUnauthenticatedState() {
     <div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-sm text-center">
       <div className="max-w-md mx-auto space-y-4">
         {/* Icône compacte */}
-        <div className="w-14 h-14 rounded-2xl bg-[#0A3D2E] text-[#F1DFB6] flex items-center justify-center mx-auto shadow-md shadow-[#0A3D2E]/15">
-          <KeyRound className="w-7 h-7 text-[#F1DFB6]" strokeWidth={1.5} />
+        <div className="w-14 h-14 rounded-2xl bg-brand-main text-champagne flex items-center justify-center mx-auto shadow-md shadow-brand-main/15">
+          <KeyRound className="w-7 h-7 text-champagne" strokeWidth={1.5} />
         </div>
 
         {/* Titre & Sous-titre direct sans long discours */}
         <div className="space-y-1">
           <h2
-            className="text-2xl sm:text-3xl font-light tracking-tight text-[#041912]"
+            className="text-2xl sm:text-3xl font-light tracking-tight text-brand-dark"
             style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
           >
             Consultez vos réservations
@@ -38,10 +38,10 @@ export function TenantUnauthenticatedState() {
           <button
             type="button"
             onClick={handleLoginClick}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs sm:text-sm shadow-md hover:bg-[#0F4F3B] transition-all cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-brand-main text-champagne font-bold text-xs sm:text-sm shadow-md hover:bg-forest-700 transition-all cursor-pointer"
           >
             <span>Se connecter</span>
-            <ArrowRight className="w-4 h-4 text-[#F1DFB6]" />
+            <ArrowRight className="w-4 h-4 text-champagne" />
           </button>
 
           <Link

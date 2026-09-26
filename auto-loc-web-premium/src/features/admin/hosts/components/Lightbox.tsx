@@ -31,9 +31,9 @@ const MAX_ZOOM = 6;
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
 const TOOL =
-    'inline-flex h-10 w-10 items-center justify-center rounded-full text-white/85 hover:bg-white/10 hover:text-white disabled:opacity-35 disabled:pointer-events-none transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F1DFB6]';
+    'inline-flex h-10 w-10 items-center justify-center rounded-full text-white/85 hover:bg-white/10 hover:text-white disabled:opacity-35 disabled:pointer-events-none transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne';
 const NAV =
-    'absolute top-1/2 -translate-y-1/2 z-10 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#041912]/70 text-white hover:bg-[#041912] transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F1DFB6]';
+    'absolute top-1/2 -translate-y-1/2 z-10 inline-flex h-12 w-12 items-center justify-center rounded-full bg-brand-dark/70 text-white hover:bg-brand-dark transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne';
 
 export const Lightbox: React.FC<LightboxProps> = ({ items, index, onIndexChange, onClose, renderActions }) => {
     const rootRef = useRef<HTMLDivElement>(null);
@@ -190,7 +190,7 @@ export const Lightbox: React.FC<LightboxProps> = ({ items, index, onIndexChange,
             aria-label={`Visionneuse : ${current.title}`}
             tabIndex={-1}
             onKeyDown={onKeyDown}
-            className="fixed inset-0 z-[60] flex flex-col bg-[#041912]/95 text-white backdrop-blur-sm outline-none font-sans"
+            className="fixed inset-0 z-[60] flex flex-col bg-brand-dark/95 text-white backdrop-blur-sm outline-none font-sans"
         >
             {/* Barre du haut */}
             <header className="flex shrink-0 items-center justify-between gap-3 px-4 py-2 sm:px-6">
@@ -209,7 +209,7 @@ export const Lightbox: React.FC<LightboxProps> = ({ items, index, onIndexChange,
                                 onClick={() => setView(INITIAL_VIEW)}
                                 aria-label="Réinitialiser la vue"
                                 title="Réinitialiser (0)"
-                                className="hidden h-10 min-w-[3.5rem] items-center justify-center rounded-full px-2 text-xs font-semibold tabular-nums text-white/85 hover:bg-white/10 sm:inline-flex cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F1DFB6]"
+                                className="hidden h-10 min-w-[3.5rem] items-center justify-center rounded-full px-2 text-xs font-semibold tabular-nums text-white/85 hover:bg-white/10 sm:inline-flex cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne"
                             >
                                 {Math.round(view.zoom * 100)} %
                             </button>
@@ -311,7 +311,7 @@ export const Lightbox: React.FC<LightboxProps> = ({ items, index, onIndexChange,
                                         onClick={() => onIndexChange(i)}
                                         aria-label={`Afficher ${it.title}${it.caption ? `, ${it.caption}` : ''}`}
                                         aria-current={active ? 'true' : undefined}
-                                        className={`relative h-12 w-16 shrink-0 cursor-pointer overflow-hidden rounded-lg bg-white/10 ring-2 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F1DFB6] ${active ? 'ring-[#F1DFB6]' : 'opacity-60 ring-transparent hover:opacity-100'
+                                        className={`relative h-12 w-16 shrink-0 cursor-pointer overflow-hidden rounded-lg bg-white/10 ring-2 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne ${active ? 'ring-champagne' : 'opacity-60 ring-transparent hover:opacity-100'
                                             }`}
                                     >
                                         {isPdfUrl(it.src) ? (

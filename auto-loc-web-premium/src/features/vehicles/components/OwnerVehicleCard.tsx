@@ -48,9 +48,9 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
 
   let badgeInfo = {
     label: 'Actif',
-    bg: 'bg-[#0A3D2E]/85 text-[#F1DFB6] border-white/10',
+    bg: 'bg-brand-main/85 text-champagne border-white/10',
     icon: CheckCircle2,
-    dot: 'bg-[#4ADE80]',
+    dot: 'bg-emerald-400',
   };
 
   if (statusStr === 'EN_ATTENTE_VALIDATION') {
@@ -89,12 +89,12 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
       exit={{ opacity: 0, scale: 0.97 }}
       whileHover={{ y: -3 }}
       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      className={`group relative overflow-hidden rounded-2xl border border-[#041912]/8 bg-white shadow-[0_1px_2px_rgba(4,25,18,0.04),0_12px_28px_-14px_rgba(4,25,18,0.18)] transition-shadow duration-300 hover:shadow-[0_1px_2px_rgba(4,25,18,0.06),0_20px_36px_-16px_rgba(4,25,18,0.26)] sm:rounded-[26px] ${className}`}
+      className={`group relative overflow-hidden rounded-2xl border border-brand-dark/8 bg-white shadow-[0_1px_2px_rgba(4,25,18,0.04),0_12px_28px_-14px_rgba(4,25,18,0.18)] transition-shadow duration-300 hover:shadow-[0_1px_2px_rgba(4,25,18,0.06),0_20px_36px_-16px_rgba(4,25,18,0.26)] sm:rounded-[26px] ${className}`}
     >
       {/* 📱 MOBILE — vue liste */}
       <div className="flex sm:hidden flex-col p-3">
         <div className="flex items-start gap-3">
-          <div className="relative h-[104px] w-[104px] shrink-0 overflow-hidden rounded-xl bg-[#041912]">
+          <div className="relative h-[104px] w-[104px] shrink-0 overflow-hidden rounded-xl bg-brand-dark">
             <Image
               src={photoUrl}
               alt={`${vehicle.marque} ${vehicle.modele}`}
@@ -117,7 +117,7 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
                 <span className="text-[10px] font-semibold text-slate-500">{badgeInfo.label}</span>
               </div>
               <h3
-                className="mt-0.5 text-[17px] leading-tight text-[#041912] truncate"
+                className="mt-0.5 text-[17px] leading-tight text-brand-dark truncate"
                 style={{ fontFamily: SERIF }}
               >
                 {vehicle.marque} {vehicle.modele}
@@ -129,7 +129,7 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
             </div>
 
             <div className="flex items-baseline justify-between gap-2">
-              <span className="text-[15px] font-semibold text-[#0A3D2E]" style={{ fontFamily: SERIF }}>
+              <span className="text-[15px] font-semibold text-brand-main" style={{ fontFamily: SERIF }}>
                 {formattedPrice}
                 <span className="ml-1 text-[10px] font-sans font-normal text-slate-400">FCFA / jour</span>
               </span>
@@ -147,9 +147,9 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
           </Link>
           <Link
             href={`/dashboard/vehicles/${vehicle.id}/edit`}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#041912] py-2 text-xs font-semibold text-[#F1DFB6] active:bg-[#0A3D2E]"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-dark py-2 text-xs font-semibold text-champagne active:bg-brand-main"
           >
-            <Edit className="h-3.5 w-3.5 text-[#4ADE80]" />
+            <Edit className="h-3.5 w-3.5 text-emerald-400" />
             Modifier
           </Link>
         </div>
@@ -158,7 +158,7 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
       {/* 💻 DESKTOP — vue carte */}
       <div className="hidden sm:flex sm:flex-col">
         {/* Photo */}
-        <div className="relative h-48 w-full overflow-hidden bg-[#041912]">
+        <div className="relative h-48 w-full overflow-hidden bg-brand-dark">
           <Image
             src={photoUrl}
             alt={`${vehicle.marque} ${vehicle.modele}`}
@@ -196,12 +196,12 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
 
           <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
             <span className="flex items-center gap-1.5 text-[13px] font-medium">
-              <MapPin className="h-3.5 w-3.5 text-[#4ADE80]" />
+              <MapPin className="h-3.5 w-3.5 text-emerald-400" />
               {vehicle.ville || 'Dakar'}
             </span>
             {vehicle.immatriculation && (
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-white/15 bg-[#041912]/70 px-2 py-1 font-mono text-[11px] tracking-wider text-[#F1DFB6]/90 backdrop-blur-sm">
-                <ShieldCheck className="h-3 w-3 text-[#4ADE80]" />
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-white/15 bg-brand-dark/70 px-2 py-1 font-mono text-[11px] tracking-wider text-champagne/90 backdrop-blur-sm">
+                <ShieldCheck className="h-3 w-3 text-emerald-400" />
                 {vehicle.immatriculation}
               </span>
             )}
@@ -211,11 +211,11 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
         {/* Contenu */}
         <div className="flex flex-1 flex-col px-5 pb-5 pt-4">
           <div className="flex items-start justify-between gap-4">
-            <h3 className="text-[22px] leading-tight text-[#041912]" style={{ fontFamily: SERIF }}>
+            <h3 className="text-[22px] leading-tight text-brand-dark" style={{ fontFamily: SERIF }}>
               {vehicle.marque} {vehicle.modele}
             </h3>
             <div className="shrink-0 text-right">
-              <span className="block text-[20px] font-semibold leading-tight text-[#0A3D2E]" style={{ fontFamily: SERIF }}>
+              <span className="block text-[20px] font-semibold leading-tight text-brand-main" style={{ fontFamily: SERIF }}>
                 {formattedPrice}
               </span>
               <span className="text-[11px] text-slate-400">FCFA / jour</span>
@@ -228,17 +228,17 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
           {/* Caractéristiques — ligne fine, pas de bloc encadré */}
           <div className="mt-3.5 flex items-center gap-4 border-y border-slate-100 py-2.5 text-[12.5px] text-slate-600">
             <span className="flex items-center gap-1.5">
-              <Gauge className="h-3.5 w-3.5 text-[#059669]" />
+              <Gauge className="h-3.5 w-3.5 text-emerald-600" />
               {vehicle.transmission === 'AUTOMATIQUE' ? 'Automatique' : 'Manuelle'}
             </span>
             <span className="h-3 w-px bg-slate-200" />
             <span className="flex items-center gap-1.5">
-              <Fuel className="h-3.5 w-3.5 text-[#059669]" />
+              <Fuel className="h-3.5 w-3.5 text-emerald-600" />
               {vehicle.carburant || 'Essence'}
             </span>
             <span className="h-3 w-px bg-slate-200" />
             <span className="flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-[#059669]" />
+              <Users className="h-3.5 w-3.5 text-emerald-600" />
               {vehicle.nombrePlaces || 5} places
             </span>
           </div>
@@ -249,7 +249,7 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
               <Car className="h-3.5 w-3.5 text-slate-400" />
               {totalLocations} réservation{totalLocations > 1 ? 's' : ''} au total
             </span>
-            <span className="flex items-center gap-1.5 font-medium text-[#0A3D2E]">
+            <span className="flex items-center gap-1.5 font-medium text-brand-main">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
               Ouvert à la réservation
             </span>
@@ -266,9 +266,9 @@ export const OwnerVehicleCard: React.FC<OwnerVehicleCardProps> = ({
             </Link>
             <Link
               href={`/dashboard/vehicles/${vehicle.id}/edit`}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#041912] py-2.5 text-[13px] font-semibold text-[#F1DFB6] shadow-sm transition-colors hover:bg-[#0A3D2E]"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-dark py-2.5 text-[13px] font-semibold text-champagne shadow-sm transition-colors hover:bg-brand-main"
             >
-              <Edit className="h-3.5 w-3.5 text-[#4ADE80]" />
+              <Edit className="h-3.5 w-3.5 text-emerald-400" />
               Modifier l'annonce
             </Link>
           </div>

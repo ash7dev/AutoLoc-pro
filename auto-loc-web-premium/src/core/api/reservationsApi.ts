@@ -304,5 +304,72 @@ export const reservationsApi = {
   signalOverload: (id: string, payload: SignalOverloadPayload): Promise<{ success: boolean }> => {
     return apiClient.post<{ success: boolean }>(`/reservations/${id}/signal-overload`, payload);
   },
+
+  /**
+   * Upload direct des photos d'état des lieux (Check-in / Check-out) vers Cloudinary en parallèle
+   * puis association via POST /reservations/:id/photos-etat/link
+   */
+  uploadEtatLieuPhotos: async (
+    reservationId: string,
+    files: (File | Blob)[],
+    type: 'CHECKIN' | 'CHECKOUT',
+    categorie?: string
+  ): Promise<PhotoEtatLieu[]> => {
+    if (!files || files.length === 0) return [];
+
+    const sigRes = await reservationsApi.getEtatLieuUploadSignature();
+    const sigData = (sigRes as any)?.data || sigRes;
+
+    if (!sigData || !sigData.signature || !sigData.cloudName) {
+      throw new Error("Impossible d'obtenir la signature Cloudinary pour l'état des lieux");
+    }
+
+    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/image/upload`;
+
+    const uploadPromises = files.map(async (file, idx) => {
+      const formData = new FormData();
+      if (file instanceof File) {
+        formData.append('file', file);
+      } else {
+        formData.append('file', file, `etat_lieu_${Date.now()}_${idx}.jpg`);
+      }
+      formData.append('api_key', sigData.apiKey);
+      formData.append('timestamp', sigData.timestamp.toString());
+      formData.append('signature', sigData.signature);
+      if (sigData.folder) {
+        formData.append('folder', sigData.folder);
+      }
+
+      const res = await fetch(cloudinaryUrl, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Échec du téléversement de la photo vers Cloudinary (${res.status}): ${errText}`);
+      }
+
+      const data = await res.json();
+      return {
+        url: data.secure_url || data.url,
+        publicId: data.public_id || `photo_${Date.now()}_${idx}`,
+      };
+    });
+
+    const uploadedMedia = await Promise.all(uploadPromises);
+
+    const linkPromises = uploadedMedia.map((media) =>
+      reservationsApi.linkPhotoEtatLieu(reservationId, {
+        url: media.url,
+        publicId: media.publicId,
+        type,
+        categorie,
+      })
+    );
+
+    return Promise.all(linkPromises);
+  },
 };
+
 

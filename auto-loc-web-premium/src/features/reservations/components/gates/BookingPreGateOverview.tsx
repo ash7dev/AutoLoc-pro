@@ -60,22 +60,22 @@ export const BookingPreGateOverview: React.FC<BookingPreGateOverviewProps> = ({
     <div className="w-full max-w-[480px] mx-auto py-2 px-1 animate-in fade-in zoom-in-95 duration-200">
       <div className="relative">
         {/* Layer 1: Back Accent Card - Decalé 3px à gauche */}
-        <div className="absolute inset-0 -left-[3px] top-[3px] rounded-[28px] bg-[#041912] border border-[#0A3D2E]/80 pointer-events-none shadow-md" />
+        <div className="absolute inset-0 -left-[3px] top-[3px] rounded-[28px] bg-brand-dark border border-brand-main/80 pointer-events-none shadow-md" />
 
         {/* Layer 2: Front Glass Card */}
         <div className="relative bg-white border border-[rgba(255,255,255,0.80)] rounded-[28px] p-5 sm:p-6 shadow-[0_14px_24px_rgba(0,0,0,0.22)]">
           {/* Header Icon & Badges */}
           <div className="flex flex-col items-center text-center mb-3">
             <div className="w-[60px] h-[60px] rounded-[30px] bg-[#ECFDF5] border border-[#A7F3D0] flex items-center justify-center mb-2">
-              <ShieldCheck className="w-8 h-8 text-[#059669]" strokeWidth={2.2} />
+              <ShieldCheck className="w-8 h-8 text-emerald-600" strokeWidth={2.2} />
             </div>
 
-            <div className="inline-flex items-center gap-[6px] bg-[#ECFDF5] border border-[#A7F3D0] px-3 py-[5px] rounded-full text-[9px] font-medium tracking-[0.8px] text-[#059669] uppercase mb-2">
-              <ShieldCheck className="w-3 h-3 text-[#059669]" />
+            <div className="inline-flex items-center gap-[6px] bg-[#ECFDF5] border border-[#A7F3D0] px-3 py-[5px] rounded-full text-[9px] font-medium tracking-[0.8px] text-emerald-600 uppercase mb-2">
+              <ShieldCheck className="w-3 h-3 text-emerald-600" />
               <span>PRÉ-REQUIS DE RÉSERVATION</span>
             </div>
 
-            <h2 className="text-[22px] leading-[28px] font-normal text-[#041912] font-fraunces tracking-tight">
+            <h2 className="text-[22px] leading-[28px] font-normal text-brand-dark font-fraunces tracking-tight">
               {customTitle ? (
                 customTitle
               ) : (
@@ -88,7 +88,7 @@ export const BookingPreGateOverview: React.FC<BookingPreGateOverviewProps> = ({
               {customSubtitle || (
                 <>
                   Pour votre sécurité et celle du propriétaire, complétez votre profil pour réserver{' '}
-                  <strong className="font-medium text-[#041912]">{vehicleTitle}</strong>.
+                  <strong className="font-medium text-brand-dark">{vehicleTitle}</strong>.
                 </>
               )}
             </p>
@@ -96,15 +96,15 @@ export const BookingPreGateOverview: React.FC<BookingPreGateOverviewProps> = ({
 
           {/* Time Estimate Card */}
           <div className="flex items-center gap-[8px] bg-[#ECFDF5] border border-[#A7F3D0] px-[14px] py-[10px] rounded-[14px] mb-3">
-            <Clock className="w-4 h-4 text-[#059669] flex-shrink-0" />
-            <p className="text-[12px] text-[#041912] font-medium">
-              Temps estimé : <strong className="font-medium text-[#059669]">~2 minutes</strong> • Valide à vie
+            <Clock className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            <p className="text-[12px] text-brand-dark font-medium">
+              Temps estimé : <strong className="font-medium text-emerald-600">~2 minutes</strong> • Valide à vie
             </p>
           </div>
 
           {/* Checklist */}
           <div className="bg-[#F9FAFB] border border-[#E5E7EB] rounded-[18px] p-4 mb-3">
-            <p className="text-[12px] font-medium uppercase tracking-[0.5px] text-[#041912] mb-3">
+            <p className="text-[12px] font-medium uppercase tracking-[0.5px] text-brand-dark mb-3">
               Vérifications à effectuer :
             </p>
 
@@ -115,10 +115,10 @@ export const BookingPreGateOverview: React.FC<BookingPreGateOverviewProps> = ({
                 return (
                   <div key={step} className="flex items-center">
                     <div className="w-[34px] h-[34px] rounded-[10px] bg-white border border-[#E5E7EB] flex items-center justify-center mr-[10px] flex-shrink-0">
-                      <Icon className="w-4.5 h-4.5 text-[#059669]" />
+                      <Icon className="w-4.5 h-4.5 text-emerald-600" />
                     </div>
                     <div className="flex-1 min-w-0 mr-2">
-                      <p className="text-[13px] font-medium text-[#041912]">
+                      <p className="text-[13px] font-medium text-brand-dark">
                         {index + 1}. {info.title}
                       </p>
                       <p className="text-[11.5px] text-[#64748B] truncate mt-[1px]">
@@ -143,18 +143,18 @@ export const BookingPreGateOverview: React.FC<BookingPreGateOverviewProps> = ({
             <button
               type="button"
               onClick={onStart}
-              className="w-full h-[50px] rounded-[25px] bg-[#041912] border border-[rgba(4,25,18,0.90)] text-white font-medium text-[14.5px] flex items-center justify-center shadow-[0_4px_10px_rgba(4,25,18,0.25)] active:scale-[0.98] transition-all"
+              className="w-full h-[50px] rounded-[25px] bg-brand-dark border border-[rgba(4,25,18,0.90)] text-white font-medium text-[14.5px] flex items-center justify-center shadow-[0_4px_10px_rgba(4,25,18,0.25)] active:scale-[0.98] transition-all"
             >
               <span>Commencer la vérification</span>
               <div className="w-[26px] h-[26px] rounded-[13px] bg-[rgba(16,185,129,0.22)] border border-[rgba(74,222,128,0.35)] flex items-center justify-center ml-2">
-                <ArrowRight className="w-3.5 h-3.5 text-[#4ADE80]" strokeWidth={2.5} />
+                <ArrowRight className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2.5} />
               </div>
             </button>
 
             <button
               type="button"
               onClick={onCancel}
-              className="w-full h-[40px] text-[13px] font-medium text-[#64748B] hover:text-[#041912] transition-colors"
+              className="w-full h-[40px] text-[13px] font-medium text-[#64748B] hover:text-brand-dark transition-colors"
             >
               Annuler pour le moment
             </button>

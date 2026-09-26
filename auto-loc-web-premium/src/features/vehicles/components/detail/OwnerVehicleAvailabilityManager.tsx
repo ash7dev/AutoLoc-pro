@@ -105,11 +105,11 @@ export const OwnerVehicleAvailabilityManager: React.FC<OwnerVehicleAvailabilityM
   };
 
   return (
-    <div className="rounded-3xl border border-[#041912]/8 bg-white p-6 shadow-[0_1px_2px_rgba(4,25,18,0.04),0_12px_28px_-14px_rgba(4,25,18,0.14)] sm:p-8">
+    <div className="rounded-3xl border border-brand-dark/8 bg-white p-6 shadow-[0_1px_2px_rgba(4,25,18,0.04),0_12px_28px_-14px_rgba(4,25,18,0.14)] sm:p-8">
       {/* En-tête */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="font-fraunces text-xl leading-tight text-[#041912]">
+          <h3 className="font-fraunces text-xl leading-tight text-brand-dark">
             Disponibilité du véhicule
           </h3>
           <p className="mt-1 max-w-md text-[13px] text-slate-500">
@@ -121,9 +121,9 @@ export const OwnerVehicleAvailabilityManager: React.FC<OwnerVehicleAvailabilityM
           <button
             type="button"
             onClick={() => setIsAdding(true)}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#041912] px-4 py-2.5 text-[13px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E]"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-dark px-4 py-2.5 text-[13px] font-semibold text-champagne transition-colors hover:bg-brand-main"
           >
-            <Plus className="h-4 w-4 text-[#4ADE80]" />
+            <Plus className="h-4 w-4 text-emerald-400" />
             Bloquer une période
           </button>
         )}
@@ -144,10 +144,10 @@ export const OwnerVehicleAvailabilityManager: React.FC<OwnerVehicleAvailabilityM
       {isAdding && (
         <form
           onSubmit={handleAddIndisponibilite}
-          className="mt-5 space-y-4 rounded-2xl border border-[#0A3D2E]/12 bg-[#F6F5EF] p-4 sm:p-5"
+          className="mt-5 space-y-4 rounded-2xl border border-brand-main/12 bg-[#F6F5EF] p-4 sm:p-5"
         >
           <div className="flex items-center justify-between">
-            <h4 className="text-[13px] font-semibold text-[#041912]">
+            <h4 className="text-[13px] font-semibold text-brand-dark">
               Nouveau blocage
             </h4>
             <button
@@ -161,12 +161,12 @@ export const OwnerVehicleAvailabilityManager: React.FC<OwnerVehicleAvailabilityM
           </div>
 
           <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5">
-            <Calendar className="h-4 w-4 shrink-0 text-[#059669]" />
-            <span className="text-[12.5px] font-medium text-[#041912]">
+            <Calendar className="h-4 w-4 shrink-0 text-emerald-600" />
+            <span className="text-[12.5px] font-medium text-brand-dark">
               {dateDebut ? formatDateFr(dateDebut) : 'Date de début'}
             </span>
             <span className="text-slate-300">→</span>
-            <span className="text-[12.5px] font-medium text-[#041912]">
+            <span className="text-[12.5px] font-medium text-brand-dark">
               {dateFin ? formatDateFr(dateFin) : 'Date de fin'}
             </span>
             {!dateDebut && (
@@ -184,7 +184,7 @@ export const OwnerVehicleAvailabilityManager: React.FC<OwnerVehicleAvailabilityM
                 placeholder="Entretien, usage familial..."
                 value={motif}
                 onChange={(e) => setMotif(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] text-slate-900 placeholder:text-slate-400 focus:border-[#0A3D2E] focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] text-slate-900 placeholder:text-slate-400 focus:border-brand-main focus:outline-none"
               />
             </div>
 
@@ -195,7 +195,7 @@ export const OwnerVehicleAvailabilityManager: React.FC<OwnerVehicleAvailabilityM
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] text-slate-900 focus:border-[#0A3D2E] focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[12.5px] text-slate-900 focus:border-brand-main focus:outline-none"
               >
                 <option value="USAGE_PERSONNEL">Usage personnel</option>
                 <option value="ENTRETIEN">Entretien / révision</option>
@@ -216,9 +216,9 @@ export const OwnerVehicleAvailabilityManager: React.FC<OwnerVehicleAvailabilityM
             <button
               type="submit"
               disabled={isSubmitting || !dateDebut || !dateFin}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#041912] px-4 py-2 text-[13px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E] disabled:opacity-40"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-dark px-4 py-2 text-[13px] font-semibold text-champagne transition-colors hover:bg-brand-main disabled:opacity-40"
             >
-              <Check className="h-3.5 w-3.5 text-[#4ADE80]" />
+              <Check className="h-3.5 w-3.5 text-emerald-400" />
               {isSubmitting ? 'Enregistrement...' : 'Valider le blocage'}
             </button>
           </div>
@@ -228,7 +228,7 @@ export const OwnerVehicleAvailabilityManager: React.FC<OwnerVehicleAvailabilityM
       {/* Liste des périodes bloquées */}
       <div className="mt-6">
         <div className="flex items-center justify-between">
-          <h4 className="text-[13px] font-semibold text-[#041912]">
+          <h4 className="text-[13px] font-semibold text-brand-dark">
             Périodes bloquées
           </h4>
           <span className="text-[12px] text-slate-400">{list.length}</span>
@@ -252,7 +252,7 @@ export const OwnerVehicleAvailabilityManager: React.FC<OwnerVehicleAvailabilityM
                   className="flex items-center justify-between gap-3 py-3"
                 >
                   <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-[#041912]">
+                    <p className="text-[13px] font-medium text-brand-dark">
                       {formatDateFr(item.dateDebut)} → {formatDateFr(item.dateFin)}
                     </p>
                     <p className="mt-0.5 truncate text-[12px] text-slate-500">

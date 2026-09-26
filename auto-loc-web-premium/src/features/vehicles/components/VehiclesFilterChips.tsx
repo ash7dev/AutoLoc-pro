@@ -43,12 +43,12 @@ export const VehiclesFilterChips: React.FC<VehiclesFilterChipsProps> = ({
                 flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 shrink-0
                 ${
                   isActive
-                    ? "bg-[#0A3D2E] text-white shadow-md shadow-[#0A3D2E]/20 scale-105"
-                    : "bg-white/80 hover:bg-white text-slate-700 hover:text-[#0A3D2E] border border-slate-200/80 shadow-sm"
+                    ? "bg-brand-main text-white shadow-md shadow-brand-main/20 scale-105"
+                    : "bg-white/80 hover:bg-white text-slate-700 hover:text-brand-main border border-slate-200/80 shadow-sm"
                 }
               `}
             >
-              <span className={isActive ? "text-[#F1DFB6]" : "text-emerald-600"}>
+              <span className={isActive ? "text-champagne" : "text-emerald-600"}>
                 {cat.icon}
               </span>
               <span>{cat.label}</span>

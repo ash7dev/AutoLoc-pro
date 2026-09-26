@@ -120,7 +120,7 @@ export const OccupancyDonutCard: React.FC<OccupancyDonutCardProps> = ({ data, is
             </svg>
 
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <p className="font-display text-4xl leading-none tabular-nums text-[#041912]">
+              <p className="font-display text-4xl leading-none tabular-nums text-brand-dark">
                 {Math.round(rate)}
                 <span className="text-xl text-slate-500">&nbsp;%</span>
               </p>
@@ -135,7 +135,7 @@ export const OccupancyDonutCard: React.FC<OccupancyDonutCardProps> = ({ data, is
                   <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: s.color }} />
                   {s.label}
                 </p>
-                <p className="pl-[18px] font-display text-lg tabular-nums text-[#041912]">
+                <p className="pl-[18px] font-display text-lg tabular-nums text-brand-dark">
                   {s.days}
                   <span className="ml-1 font-sans text-xs text-slate-500">{s.days > 1 ? 'jours' : 'jour'}</span>
                 </p>

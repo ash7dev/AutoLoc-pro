@@ -2,7 +2,7 @@ import React from "react";
 
 export const SearchSectionSkeleton: React.FC = () => {
   return (
-    <div className="w-full overflow-hidden rounded-3xl border border-[#041912]/8 bg-white shadow-[0_20px_48px_-16px_rgba(4,25,18,0.18)] animate-pulse">
+    <div className="w-full overflow-hidden rounded-3xl border border-brand-dark/8 bg-white shadow-[0_20px_48px_-16px_rgba(4,25,18,0.18)] animate-pulse">
       {/* Header Skeleton */}
       <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
         <div className="space-y-2">

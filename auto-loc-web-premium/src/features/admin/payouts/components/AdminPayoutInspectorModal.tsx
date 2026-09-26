@@ -76,7 +76,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
       type="button"
       onClick={copy}
       aria-label={`Copier ${label}`}
-      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-[#0A3D2E] transition hover:bg-[#0A3D2E]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E]"
+      className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-brand-main transition hover:bg-brand-main/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main"
     >
       {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
       <span aria-live="polite">{copied ? 'Copié' : 'Copier'}</span>
@@ -231,7 +231,7 @@ export const AdminPayoutInspectorModal: React.FC<AdminPayoutInspectorModalProps>
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-stretch justify-center bg-[#04140E]/70 p-0 backdrop-blur-sm animate-in fade-in duration-200 motion-reduce:animate-none sm:items-center sm:p-5"
+      className="fixed inset-0 z-50 flex items-stretch justify-center bg-brand-dark/70 p-0 backdrop-blur-sm animate-in fade-in duration-200 motion-reduce:animate-none sm:items-center sm:p-5"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && !isMutating && !showRejectForm && !confirmingApprove) {
           onClose();
@@ -246,17 +246,17 @@ export const AdminPayoutInspectorModal: React.FC<AdminPayoutInspectorModalProps>
         className="relative flex h-full w-full max-w-2xl flex-col overflow-hidden bg-white shadow-[0_30px_80px_-20px_rgba(10,61,46,0.45)] sm:h-auto sm:max-h-[90vh] sm:rounded-[28px]"
       >
         {/* En-tête */}
-        <header className="flex shrink-0 items-start justify-between gap-4 bg-[#0A3D2E] px-6 py-5">
+        <header className="flex shrink-0 items-start justify-between gap-4 bg-brand-main px-6 py-5">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <h2
                 id={titleId}
                 style={DISPLAY_FONT}
-                className="text-2xl leading-tight text-[#F1DFB6]"
+                className="text-2xl leading-tight text-champagne"
               >
                 Demande de reversement
               </h2>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F1DFB6]/30 px-2.5 py-1 text-xs font-medium text-[#F1DFB6]">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-champagne/30 px-2.5 py-1 text-xs font-medium text-champagne">
                 <span className={`h-1.5 w-1.5 rounded-full ${statusMeta.dot}`} />
                 {statusMeta.label}
               </span>
@@ -272,7 +272,7 @@ export const AdminPayoutInspectorModal: React.FC<AdminPayoutInspectorModalProps>
             onClick={onClose}
             disabled={isMutating}
             aria-label="Fermer"
-            className="shrink-0 rounded-full p-2 text-[#F1DFB6]/80 transition hover:bg-[#F1DFB6]/10 hover:text-[#F1DFB6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6] disabled:opacity-50"
+            className="shrink-0 rounded-full p-2 text-champagne/80 transition hover:bg-champagne/10 hover:text-champagne focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
@@ -285,7 +285,7 @@ export const AdminPayoutInspectorModal: React.FC<AdminPayoutInspectorModalProps>
             <p className={`text-sm ${MUTED}`}>Montant réclamé</p>
             <div
               style={DISPLAY_FONT}
-              className="mt-1 flex flex-wrap items-baseline gap-x-3 leading-none tabular-nums text-[#0A3D2E]"
+              className="mt-1 flex flex-wrap items-baseline gap-x-3 leading-none tabular-nums text-brand-main"
             >
               <span className="text-5xl sm:text-6xl">{fmt(item.amount)}</span>
               <span className={`text-xl ${MUTED}`}>FCFA</span>
@@ -316,7 +316,7 @@ export const AdminPayoutInspectorModal: React.FC<AdminPayoutInspectorModalProps>
             <div className="mt-4 flex items-center gap-3">
               <span
                 style={DISPLAY_FONT}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0A3D2E] text-lg text-[#F1DFB6]"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-main text-lg text-champagne"
               >
                 {initialsOf(item.ownerName)}
               </span>
@@ -338,7 +338,7 @@ export const AdminPayoutInspectorModal: React.FC<AdminPayoutInspectorModalProps>
             <dl className="mt-3 divide-y divide-slate-100">
               <Row label="Numéro destinataire">
                 <span className="inline-flex items-center gap-1">
-                  <span className="font-mono tabular-nums text-[#0A3D2E]">
+                  <span className="font-mono tabular-nums text-brand-main">
                     {item.numeroDestinataire}
                   </span>
                   <CopyButton value={item.numeroDestinataire} label="le numéro destinataire" />
@@ -353,7 +353,7 @@ export const AdminPayoutInspectorModal: React.FC<AdminPayoutInspectorModalProps>
                 {item.ownerEmail ? (
                   <a
                     href={`mailto:${item.ownerEmail}`}
-                    className="break-all hover:text-[#0A3D2E] hover:underline"
+                    className="break-all hover:text-brand-main hover:underline"
                   >
                     {item.ownerEmail}
                   </a>
@@ -474,9 +474,9 @@ export const AdminPayoutInspectorModal: React.FC<AdminPayoutInspectorModalProps>
             <div
               role="alertdialog"
               aria-label="Confirmer la validation"
-              className="rounded-2xl border border-[#F1DFB6] bg-[#F1DFB6]/30 p-4 sm:flex sm:items-center sm:justify-between sm:gap-6"
+              className="rounded-2xl border border-champagne bg-champagne/30 p-4 sm:flex sm:items-center sm:justify-between sm:gap-6"
             >
-              <p className="text-sm text-[#0A3D2E]">
+              <p className="text-sm text-brand-main">
                 Vous confirmez le virement de{' '}
                 <strong className="font-semibold tabular-nums">{fmt(item.amount)} FCFA</strong> vers{' '}
                 <strong className="font-mono font-semibold">{item.numeroDestinataire}</strong> (
@@ -487,7 +487,7 @@ export const AdminPayoutInspectorModal: React.FC<AdminPayoutInspectorModalProps>
                   type="button"
                   onClick={() => setConfirmingApprove(false)}
                   disabled={isMutating}
-                  className={`${ghostBtn} text-[#0A3D2E] hover:bg-[#0A3D2E]/10 focus-visible:ring-[#0A3D2E]`}
+                  className={`${ghostBtn} text-brand-main hover:bg-brand-main/10 focus-visible:ring-brand-main`}
                 >
                   Retour
                 </button>
@@ -496,7 +496,7 @@ export const AdminPayoutInspectorModal: React.FC<AdminPayoutInspectorModalProps>
                   type="button"
                   onClick={handleApprove}
                   disabled={isMutating}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#0A3D2E] px-5 py-2.5 text-sm font-semibold text-[#F1DFB6] transition hover:bg-[#0D4B39] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-full bg-brand-main px-5 py-2.5 text-sm font-semibold text-champagne transition hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isMutating ? (
                     <>
@@ -534,7 +534,7 @@ export const AdminPayoutInspectorModal: React.FC<AdminPayoutInspectorModalProps>
                     type="button"
                     onClick={() => setConfirmingApprove(true)}
                     disabled={isMutating}
-                    className="inline-flex items-center gap-2 rounded-full bg-[#0A3D2E] px-6 py-2.5 text-sm font-semibold text-[#F1DFB6] shadow-md shadow-[#0A3D2E]/20 transition hover:bg-[#0D4B39] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-full bg-brand-main px-6 py-2.5 text-sm font-semibold text-champagne shadow-md shadow-brand-main/20 transition hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <Check className="h-4 w-4" />
                     Valider et marquer effectué

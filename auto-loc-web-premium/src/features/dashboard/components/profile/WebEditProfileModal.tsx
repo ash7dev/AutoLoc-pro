@@ -98,10 +98,10 @@ const BirthDatePicker: React.FC<BirthDatePickerProps> = ({ value, onChange }) =>
       <button
         type="button"
         onClick={() => setIsOpen((v) => !v)}
-        className="flex w-full items-center gap-2.5 rounded-xl border border-slate-200 px-4 py-3 text-left text-[13px] transition-colors hover:border-slate-300 focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10"
+        className="flex w-full items-center gap-2.5 rounded-xl border border-slate-200 px-4 py-3 text-left text-[13px] transition-colors hover:border-slate-300 focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/10"
       >
         <Calendar className="h-4 w-4 shrink-0 text-slate-400" />
-        <span className={selectedDate ? 'font-medium text-[#041912]' : 'text-slate-400'}>
+        <span className={selectedDate ? 'font-medium text-brand-dark' : 'text-slate-400'}>
           {displayLabel}
         </span>
       </button>
@@ -113,7 +113,7 @@ const BirthDatePicker: React.FC<BirthDatePickerProps> = ({ value, onChange }) =>
             <button
               type="button"
               onClick={() => shiftMonth(-1)}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-[#041912]"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-brand-dark"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -121,7 +121,7 @@ const BirthDatePicker: React.FC<BirthDatePickerProps> = ({ value, onChange }) =>
             <select
               value={viewMonth}
               onChange={(e) => setViewMonth(Number(e.target.value))}
-              className="flex-1 rounded-lg border-none bg-slate-50 px-2 py-1.5 text-center text-[12.5px] font-semibold text-[#041912] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/20"
+              className="flex-1 rounded-lg border-none bg-slate-50 px-2 py-1.5 text-center text-[12.5px] font-semibold text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-main/20"
             >
               {MOIS_FR.map((m, idx) => (
                 <option key={m} value={idx}>{m}</option>
@@ -131,7 +131,7 @@ const BirthDatePicker: React.FC<BirthDatePickerProps> = ({ value, onChange }) =>
             <select
               value={viewYear}
               onChange={(e) => setViewYear(Number(e.target.value))}
-              className="w-[84px] rounded-lg border-none bg-slate-50 px-2 py-1.5 text-center text-[12.5px] font-semibold text-[#041912] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/20"
+              className="w-[84px] rounded-lg border-none bg-slate-50 px-2 py-1.5 text-center text-[12.5px] font-semibold text-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-main/20"
             >
               {yearOptions.map((y) => (
                 <option key={y} value={y}>{y}</option>
@@ -141,7 +141,7 @@ const BirthDatePicker: React.FC<BirthDatePickerProps> = ({ value, onChange }) =>
             <button
               type="button"
               onClick={() => shiftMonth(1)}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-[#041912]"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-brand-dark"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -165,7 +165,7 @@ const BirthDatePicker: React.FC<BirthDatePickerProps> = ({ value, onChange }) =>
                   type="button"
                   onClick={() => handleSelectDay(day)}
                   className={`flex h-8 w-8 items-center justify-center rounded-lg text-[12.5px] font-medium transition-colors ${isSelected(day)
-                      ? 'bg-[#041912] text-[#F1DFB6]'
+                      ? 'bg-brand-dark text-champagne'
                       : 'text-slate-700 hover:bg-slate-100'
                     }`}
                 >
@@ -237,12 +237,12 @@ export const WebEditProfileModal: React.FC<WebEditProfileModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#041912]/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-dark/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="relative w-full max-w-lg rounded-3xl bg-white shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-6 pb-4 pt-5 sm:px-8 rounded-t-3xl bg-white">
           <div>
-            <h3 className="font-fraunces text-xl leading-tight text-[#041912]">Modifier le profil</h3>
+            <h3 className="font-fraunces text-xl leading-tight text-brand-dark">Modifier le profil</h3>
             <p className="mt-0.5 text-[12.5px] text-slate-500">Mettez à jour vos identifiants personnels</p>
           </div>
 
@@ -285,7 +285,7 @@ export const WebEditProfileModal: React.FC<WebEditProfileModalProps> = ({
                 onChange={(e) => setPrenom(e.target.value)}
                 placeholder="Ex : Ousmane"
                 required
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-[#041912] placeholder:text-slate-300 focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-brand-dark placeholder:text-slate-300 focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/10"
               />
             </div>
 
@@ -299,7 +299,7 @@ export const WebEditProfileModal: React.FC<WebEditProfileModalProps> = ({
                 onChange={(e) => setNom(e.target.value)}
                 placeholder="Ex : Diallo"
                 required
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-[#041912] placeholder:text-slate-300 focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-brand-dark placeholder:text-slate-300 focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/10"
               />
             </div>
 
@@ -325,9 +325,9 @@ export const WebEditProfileModal: React.FC<WebEditProfileModalProps> = ({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#041912] px-5 py-2.5 text-[12.5px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E] disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-brand-dark px-5 py-2.5 text-[12.5px] font-semibold text-champagne transition-colors hover:bg-brand-main disabled:opacity-50"
               >
-                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin text-[#4ADE80]" />}
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin text-emerald-400" />}
                 Enregistrer les modifications
               </button>
             </div>

@@ -170,7 +170,7 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAF4] text-[#0F172A] pt-[calc(5.25rem+env(safe-area-inset-top))] sm:pt-32 lg:pt-36 pb-32 lg:pb-24 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-cream-50 text-[#0F172A] pt-[calc(5.25rem+env(safe-area-inset-top))] sm:pt-32 lg:pt-36 pb-32 lg:pb-24 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Navigation & Actions (Masqué sur mobile < 640px car géré par le MobileDetailHeader) */}
@@ -264,7 +264,7 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
                 ) : null}
               </div>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-fraunces font-normal text-[#041912] tracking-tight">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-fraunces font-normal text-brand-dark tracking-tight">
                 {title}{' '}
                 <span className="text-slate-400 font-normal text-2xl sm:text-3xl lg:text-4xl">
                   ({vehicle.annee})

@@ -128,7 +128,7 @@ export const TenantCancellationPreviewModal: React.FC<TenantCancellationPreviewM
               <ShieldAlert className="w-3 h-3 text-amber-600" />
               <span>Politique d’annulation</span>
             </div>
-            <h3 className="text-lg font-bold text-[#041912]">Annuler la réservation</h3>
+            <h3 className="text-lg font-bold text-brand-dark">Annuler la réservation</h3>
             <p className="text-xs text-slate-500 font-mono font-medium">
               RÉF. #{booking.id.slice(0, 8).toUpperCase()}
             </p>
@@ -142,7 +142,7 @@ export const TenantCancellationPreviewModal: React.FC<TenantCancellationPreviewM
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <div className="space-y-1">
-              <h4 className="text-xl font-bold text-[#041912]">Réservation annulée</h4>
+              <h4 className="text-xl font-bold text-brand-dark">Réservation annulée</h4>
               <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
                 Votre réservation a bien été annulée. Une confirmation et les détails du remboursement vous ont été transmis.
               </p>
@@ -153,7 +153,7 @@ export const TenantCancellationPreviewModal: React.FC<TenantCancellationPreviewM
             {/* 1. Carte d'estimation du remboursement */}
             {loadingQuote ? (
               <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-2">
-                <Loader2 className="w-5 h-5 animate-spin text-[#0A3D2E] mx-auto" />
+                <Loader2 className="w-5 h-5 animate-spin text-brand-main mx-auto" />
                 <p className="text-xs text-slate-500 font-medium">Calcul des règles de remboursement AutoLoc...</p>
               </div>
             ) : quote ? (
@@ -206,7 +206,7 @@ export const TenantCancellationPreviewModal: React.FC<TenantCancellationPreviewM
                     onClick={() => setReason(preset)}
                     className={`px-3.5 py-1.5 rounded-full border text-xs font-bold transition-all cursor-pointer ${
                       reason === preset
-                        ? 'bg-[#0A3D2E] border-[#0A3D2E] text-[#F1DFB6] shadow-xs'
+                        ? 'bg-brand-main border-brand-main text-champagne shadow-xs'
                         : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                     }`}
                   >

@@ -115,8 +115,7 @@ export const TenantReviewSectionCard: React.FC<TenantReviewSectionCardProps> = (
           </div>
           <div>
             <h2
-              className="font-fraunces text-xl font-normal text-[#041912] tracking-tight"
-              style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+              className="font-fraunces text-xl font-normal text-brand-dark tracking-tight"
             >
               Avis & Évaluation
             </h2>
@@ -213,7 +212,7 @@ export const TenantReviewSectionCard: React.FC<TenantReviewSectionCardProps> = (
                       onClick={() => toggleTag(tag)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
                         selected
-                          ? 'bg-[#041912] text-white shadow-sm'
+                          ? 'bg-brand-dark text-white shadow-sm'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
                       }`}
                     >
@@ -240,7 +239,7 @@ export const TenantReviewSectionCard: React.FC<TenantReviewSectionCardProps> = (
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Racontez comment s'est déroulée la prise en charge, la conduite et la remise des clés..."
                 rows={3}
-                className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#041912]/20 focus:border-[#041912] text-sm text-slate-800 placeholder-slate-400 resize-none transition-all"
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-dark/20 focus:border-brand-dark text-sm text-slate-800 placeholder-slate-400 resize-none transition-all"
               />
             )}
           </div>
@@ -256,7 +255,7 @@ export const TenantReviewSectionCard: React.FC<TenantReviewSectionCardProps> = (
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting || rating === 0}
-              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 rounded-2xl bg-[#041912] text-white font-semibold text-sm hover:bg-[#072a1f] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 rounded-2xl bg-brand-dark text-white font-semibold text-sm hover:bg-[#072a1f] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
             >
               {isSubmitting ? (
                 <span>Publication...</span>

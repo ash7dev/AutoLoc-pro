@@ -73,7 +73,7 @@ export const AdminUserActivationFunnel: React.FC<AdminUserActivationFunnelProps>
             <UserCheck className="w-4.5 h-4.5" style={{ color: FOREST }} />
           </div>
           <div>
-            <h3 className="text-base font-normal text-[#041912] dark:text-white" style={fontStyle}>
+            <h3 className="text-base font-normal text-brand-dark dark:text-white" style={fontStyle}>
               Funnel d'activation
             </h3>
             <p className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5">
@@ -130,8 +130,8 @@ export const AdminUserActivationFunnel: React.FC<AdminUserActivationFunnelProps>
                 </div>
 
                 <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <h4 className="text-sm font-normal text-[#041912] dark:text-white">{step.label}</h4>
-                  <div className="text-2xl font-normal text-[#041912] dark:text-white tabular-nums">{step.count}</div>
+                  <h4 className="text-sm font-normal text-brand-dark dark:text-white">{step.label}</h4>
+                  <div className="text-2xl font-normal text-brand-dark dark:text-white tabular-nums">{step.count}</div>
                 </div>
 
                 <p className="text-[11px] font-normal text-slate-500 dark:text-slate-400 mt-1 leading-tight">

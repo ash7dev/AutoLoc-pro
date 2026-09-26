@@ -31,6 +31,10 @@ const nextConfig = {
         source: '/manifest.json',
         destination: '/manifest.webmanifest',
       },
+      {
+        source: '/auth-proxy/v1/:path*',
+        destination: 'https://tcnlndjrvfddsjblamsj.supabase.co/auth/v1/:path*',
+      },
     ];
   },
 };

@@ -44,6 +44,7 @@ export const VehicleDetailScreen: React.FC<VehicleDetailScreenProps> = ({
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
   const triggerGuestAuthGuard = useAppStore((state) => state.triggerGuestAuthGuard);
   const refreshProfileSilently = useAppStore((state) => state.refreshProfileSilently);
+  const { navigateToHostProfile } = useNavigation();
 
   const [isFavorited, setIsFavorited] = useState(false);
   const [gateModalVisible, setGateModalVisible] = useState(false);
@@ -112,8 +113,6 @@ export const VehicleDetailScreen: React.FC<VehicleDetailScreenProps> = ({
       setGateModalVisible(true);
     }
   };
-
-  const { navigateToHostProfile } = useNavigation();
 
   const handleViewProfile = () => {
     const hostId = detail?.proprietaire?.id || detail?.proprietaireId;

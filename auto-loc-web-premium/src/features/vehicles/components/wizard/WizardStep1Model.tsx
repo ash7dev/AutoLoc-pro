@@ -103,7 +103,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
     <div className="space-y-6">
       {/* Hero Header */}
       <div className="text-center space-y-1 sm:space-y-2 pb-1 sm:pb-2">
-        <div className="mx-auto hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-[#041912] border border-[#4ADE80]/30 text-[#4ADE80] shadow-md">
+        <div className="mx-auto hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-dark border border-[#4ADE80]/30 text-emerald-400 shadow-md">
           <Car className="h-6 w-6" strokeWidth={2.2} />
         </div>
         <h2 className="font-fraunces font-normal text-xl sm:text-3xl text-slate-900 tracking-tight">Votre véhicule</h2>
@@ -115,7 +115,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
       {/* Live Preview Card */}
       {Boolean(data.marque && data.modele) && (
         <div className="flex items-center gap-3.5 rounded-2xl bg-[#F0FDF4] border border-[#A7F3D0] p-4 shadow-sm">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#059669] text-white">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white">
             <Car className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
@@ -139,7 +139,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
       {/* Marque */}
       <div className="space-y-1.5">
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 font-fraunces">
-          <Car className="h-4 w-4 text-[#059669]" />
+          <Car className="h-4 w-4 text-emerald-600" />
           <span>Marque du véhicule *</span>
         </label>
         <button
@@ -159,7 +159,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
       {/* Modèle */}
       <div className="space-y-1.5">
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 font-fraunces">
-          <Sliders className="h-4 w-4 text-[#059669]" />
+          <Sliders className="h-4 w-4 text-emerald-600" />
           <span>Modèle *</span>
         </label>
         <button
@@ -186,7 +186,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
         {/* Année */}
         <div className="space-y-1.5">
           <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 font-fraunces">
-            <Calendar className="h-4 w-4 text-[#059669]" />
+            <Calendar className="h-4 w-4 text-emerald-600" />
             <span>Année *</span>
           </label>
           <button
@@ -203,11 +203,11 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 font-fraunces">
-              <Shield className="h-4 w-4 text-[#059669]" />
+              <Shield className="h-4 w-4 text-emerald-600" />
               <span>Catégorie *</span>
             </label>
             {Boolean(data.modele) && (
-              <span className="flex items-center gap-1 text-[10px] font-bold text-[#059669] bg-[#F0FDF4] px-2 py-0.5 rounded-full border border-[#A7F3D0]">
+              <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-[#F0FDF4] px-2 py-0.5 rounded-full border border-[#A7F3D0]">
                 <Sparkles className="h-3 w-3" /> Auto
               </span>
             )}
@@ -228,7 +228,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
       {/* Transmission */}
       <div className="space-y-2">
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 font-fraunces">
-          <Gauge className="h-4 w-4 text-[#059669]" />
+          <Gauge className="h-4 w-4 text-emerald-600" />
           <span>Transmission *</span>
         </label>
         <div className="grid grid-cols-2 gap-3">
@@ -253,7 +253,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
                     {tr.label}
                   </span>
                   {isSelected && (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#059669] text-white">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white">
                       <Check className="h-3 w-3 stroke-[3]" />
                     </span>
                   )}
@@ -268,7 +268,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
       {/* Carburant */}
       <div className="space-y-2">
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 font-fraunces">
-          <Fuel className="h-4 w-4 text-[#059669]" />
+          <Fuel className="h-4 w-4 text-emerald-600" />
           <span>Carburant *</span>
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -287,7 +287,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
                 onClick={() => onChange({ carburant: f.id as any })}
                 className={`flex items-center gap-2 p-3 rounded-xl border text-xs font-semibold transition-all ${
                   isSelected
-                    ? 'border-[#059669] bg-[#041912] text-[#4ADE80] shadow-sm'
+                    ? 'border-[#059669] bg-brand-dark text-emerald-400 shadow-sm'
                     : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                 }`}
               >
@@ -303,7 +303,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 font-fraunces">
-            <FileText className="h-4 w-4 text-[#059669]" />
+            <FileText className="h-4 w-4 text-emerald-600" />
             <span>Immatriculation *</span>
           </label>
           <span className="text-[11px] text-slate-500">Format Carte Grise : DK-1234-BA</span>
@@ -312,8 +312,8 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
         <div className={`flex items-center rounded-2xl border-2 p-1.5 transition-all ${
           plateValid ? 'border-[#059669] bg-[#F0FDF4]' : 'border-slate-200 bg-slate-50'
         }`}>
-          <div className="flex h-10 px-3 items-center justify-center rounded-xl bg-[#041912] text-white font-bold text-xs gap-1.5">
-            <span className="text-[#4ADE80]">SN</span>
+          <div className="flex h-10 px-3 items-center justify-center rounded-xl bg-brand-dark text-white font-bold text-xs gap-1.5">
+            <span className="text-emerald-400">SN</span>
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
           </div>
 
@@ -327,7 +327,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
           />
 
           {plateValid && (
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#059669] text-white mr-1">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white mr-1">
               <Check className="h-4 w-4 stroke-[3]" />
             </div>
           )}
@@ -367,7 +367,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
                       onClick={() => handleSelectMarque(make)}
                       className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                         data.marque === make
-                          ? 'bg-[#041912] text-[#4ADE80] border-[#041912]'
+                          ? 'bg-brand-dark text-emerald-400 border-brand-dark'
                           : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
                       }`}
                     >
@@ -389,7 +389,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
                   }`}
                 >
                   <span>{make}</span>
-                  {data.marque === make && <Check className="h-4 w-4 text-[#059669]" />}
+                  {data.marque === make && <Check className="h-4 w-4 text-emerald-600" />}
                 </button>
               ))}
             </div>
@@ -433,7 +433,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
                   }`}
                 >
                   <span>{model}</span>
-                  {data.modele === model && <Check className="h-4 w-4 text-[#059669]" />}
+                  {data.modele === model && <Check className="h-4 w-4 text-emerald-600" />}
                 </button>
               ))}
             </div>
@@ -456,7 +456,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
                       setCustomModele('');
                     }
                   }}
-                  className="rounded-xl bg-[#059669] px-3 py-2 text-xs font-bold text-white hover:bg-[#047857]"
+                  className="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-[#047857]"
                 >
                   Valider
                 </button>
@@ -490,7 +490,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
                     }}
                     className={`p-3 rounded-xl border text-sm font-bold transition-all text-center ${
                       isSelected
-                        ? 'bg-[#041912] text-[#4ADE80] border-[#041912] shadow-sm'
+                        ? 'bg-brand-dark text-emerald-400 border-brand-dark shadow-sm'
                         : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
@@ -536,7 +536,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
                   >
                     <div className="flex items-center gap-3">
                       <div className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${
-                        isSelected ? 'bg-[#041912] text-[#4ADE80]' : 'bg-slate-100 text-slate-600'
+                        isSelected ? 'bg-brand-dark text-emerald-400' : 'bg-slate-100 text-slate-600'
                       }`}>
                         <Shield className="h-5 w-5" />
                       </div>
@@ -548,7 +548,7 @@ export const WizardStep1Model: React.FC<WizardStep1ModelProps> = ({ data, onChan
                       </div>
                     </div>
                     {isSelected && (
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#059669] text-white shrink-0">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-white shrink-0">
                         <Check className="h-3.5 w-3.5 stroke-[3]" />
                       </div>
                     )}

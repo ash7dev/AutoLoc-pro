@@ -49,9 +49,9 @@ export const ProfileHeroCard: React.FC<ProfileHeroCardProps> = ({
   const isVerified = profile.statutKyc === 'VALIDE' || profile.statutKyc === 'VERIFIE';
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-[#041912] text-white">
+    <div className="relative overflow-hidden rounded-3xl bg-brand-dark text-white">
       {/* Halo décoratif */}
-      <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#4ADE80]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-emerald-400/10 blur-3xl" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#0A3D2E]/40 via-transparent to-transparent" />
 
       <div className="relative z-10 p-6 sm:p-8 lg:p-10">
@@ -59,7 +59,7 @@ export const ProfileHeroCard: React.FC<ProfileHeroCardProps> = ({
           {/* Avatar & identité */}
           <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:text-left">
             <div className="group relative shrink-0">
-              <div className="relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-[#0A3D2E]/60 ring-4 ring-[#F1DFB6]/20 sm:h-32 sm:w-32">
+              <div className="relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-brand-main/60 ring-4 ring-champagne/20 sm:h-32 sm:w-32">
                 {profile.avatarUrl ? (
                   <Image
                     src={profile.avatarUrl}
@@ -69,19 +69,19 @@ export const ProfileHeroCard: React.FC<ProfileHeroCardProps> = ({
                     sizes="128px"
                   />
                 ) : (
-                  <span className="font-fraunces text-3xl text-[#F1DFB6]/90 sm:text-4xl">
+                  <span className="font-fraunces text-3xl text-champagne/90 sm:text-4xl">
                     {getInitials(profile.prenom, profile.nom)}
                   </span>
                 )}
 
                 {isUploadingAvatar && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-xs">
-                    <Loader2 className="h-8 w-8 animate-spin text-[#4ADE80]" />
+                    <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
                   </div>
                 )}
               </div>
 
-              <div className="absolute bottom-0 right-0 flex items-center gap-1 rounded-full border border-white/10 bg-[#041912] p-1 shadow-lg">
+              <div className="absolute bottom-0 right-0 flex items-center gap-1 rounded-full border border-white/10 bg-brand-dark p-1 shadow-lg">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -119,7 +119,7 @@ export const ProfileHeroCard: React.FC<ProfileHeroCardProps> = ({
                   {profile.prenom} {profile.nom}
                 </h2>
                 {isVerified && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#4ADE80]/15 px-2.5 py-1 text-[11px] font-semibold text-[#4ADE80]">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-400">
                     <ShieldCheck className="h-3.5 w-3.5" />
                     Vérifié
                   </span>
@@ -152,7 +152,7 @@ export const ProfileHeroCard: React.FC<ProfileHeroCardProps> = ({
                 <span className="h-6 w-px bg-white/10" />
 
                 <div className="flex items-center gap-2">
-                  <Car className="h-4 w-4 text-[#4ADE80]" />
+                  <Car className="h-4 w-4 text-emerald-400" />
                   <div className="text-left leading-none">
                     <span className="font-fraunces text-lg text-white">{vehicleCount}</span>
                     <span className="ml-1 text-[11px] text-white/50">
@@ -185,7 +185,7 @@ export const ProfileHeroCard: React.FC<ProfileHeroCardProps> = ({
             <button
               type="button"
               onClick={onEditClick}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#F1DFB6] px-4 py-2.5 text-[12.5px] font-semibold text-[#041912] transition-colors hover:bg-[#e8d29e] sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-champagne px-4 py-2.5 text-[12.5px] font-semibold text-brand-dark transition-colors hover:bg-[#e8d29e] sm:w-auto"
             >
               <Pencil className="h-3.5 w-3.5" />
               Modifier le profil

@@ -12,7 +12,6 @@ import {
   Eye,
 } from 'lucide-react';
 import { OwnerReservationItem, reservationsApi } from '@/src/core/api/reservationsApi';
-import { vehicleService } from '@/src/features/vehicles/services/vehicleService';
 
 interface OwnerCheckoutModalProps {
   reservation: OwnerReservationItem;
@@ -47,26 +46,14 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
     if (!files || files.length === 0) return;
 
     setUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(20);
 
     try {
       const fileList = Array.from(files);
-      const total = fileList.length;
+      setUploadProgress(50);
 
-      for (let i = 0; i < total; i++) {
-        const file = fileList[i];
-        setUploadProgress(Math.round(((i + 1) / total) * 90));
-
-        // 1. Upload file via vehicleService
-        const uploaded = await vehicleService.uploadVehicleMedia(file, false);
-
-        // 2. Link photo to reservation
-        await reservationsApi.linkPhotoEtatLieu(reservation.id, {
-          url: uploaded.url,
-          publicId: uploaded.publicId,
-          type: 'CHECKOUT',
-        });
-      }
+      // Upload et liaison en parallèle de toutes les photos
+      await reservationsApi.uploadEtatLieuPhotos(reservation.id, fileList, 'CHECKOUT');
 
       setUploadProgress(100);
       await onRefetch(true);
@@ -85,10 +72,10 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#041912]/80 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] bg-brand-dark/80 backdrop-blur-md animate-fade-in">
       <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
         {/* Header Sombre Luxe */}
-        <div className="bg-[#041912] px-6 py-5 border-b border-emerald-900/40 flex items-center justify-between">
+        <div className="bg-brand-dark px-6 py-5 border-b border-emerald-900/40 flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-2xl bg-emerald-950 border border-emerald-700/50 flex items-center justify-center text-emerald-400 shadow-inner">
               <LogOut className="w-5 h-5" />
@@ -119,7 +106,7 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-sm font-bold text-[#041912] flex items-center gap-2">
+                <h4 className="text-sm font-bold text-brand-dark flex items-center gap-2">
                   <Camera className="w-4 h-4 text-emerald-600" />
                   <span>Photos de l'état du véhicule (Retour / Check-out)</span>
                 </h4>
@@ -229,10 +216,10 @@ export const OwnerCheckoutModal: React.FC<OwnerCheckoutModalProps> = ({
             type="button"
             onClick={handleSubmit}
             disabled={!checkedTerms || isSubmitting || uploading}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#0A3D2E] text-[#F1DFB6] text-xs font-bold hover:bg-[#0F4F3B] disabled:opacity-40 transition-all cursor-pointer shadow-md"
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-brand-main text-champagne text-xs font-bold hover:bg-forest-700 disabled:opacity-40 transition-all cursor-pointer shadow-md"
           >
             {isSubmitting ? (
-              <Loader2 className="w-4 h-4 animate-spin text-[#F1DFB6]" />
+              <Loader2 className="w-4 h-4 animate-spin text-champagne" />
             ) : (
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             )}

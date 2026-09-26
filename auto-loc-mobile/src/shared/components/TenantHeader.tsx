@@ -26,6 +26,7 @@ export const TenantHeader: React.FC<TenantHeaderProps> = ({
   const selectedCurrency = useAppStore((state) => state.selectedCurrency);
   const setSelectedCurrency = useAppStore((state) => state.setSelectedCurrency);
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
+  const user = useAppStore((state) => state.user);
   const triggerGuestAuthGuard = useAppStore((state) => state.triggerGuestAuthGuard);
 
   const currentCurrObj = CURRENCIES.find((c) => c.code === selectedCurrency) || CURRENCIES[0];
@@ -72,7 +73,11 @@ export const TenantHeader: React.FC<TenantHeaderProps> = ({
                 onPress={handleProfileClick}
                 activeOpacity={0.7}
               >
-                <User size={18} color={theme.colors.brand.main} />
+                {isAuthenticated && user?.avatarUrl ? (
+                  <Image source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
+                ) : (
+                  <User size={18} color={theme.colors.brand.main} />
+                )}
                 {isAuthenticated && <View style={styles.onlineDot} />}
               </TouchableOpacity>
             </View>
@@ -174,6 +179,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
   },
   onlineDot: {
     position: 'absolute',

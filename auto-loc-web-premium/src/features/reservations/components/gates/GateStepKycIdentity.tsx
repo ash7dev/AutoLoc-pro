@@ -153,7 +153,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
     <div className="w-full max-w-lg mx-auto py-2 px-1 animate-in fade-in zoom-in-95 duration-200">
       <div className="relative">
         {/* Layer 1: Back Accent Card - Decalé 3px à gauche */}
-        <div className="absolute inset-0 -left-[3px] top-[3px] rounded-[28px] bg-[#041912] border border-[#0A3D2E]/80 pointer-events-none shadow-md" />
+        <div className="absolute inset-0 -left-[3px] top-[3px] rounded-[28px] bg-brand-dark border border-brand-main/80 pointer-events-none shadow-md" />
 
         {/* Layer 2: Front Glass Card */}
         <div className="relative bg-white border border-white/80 rounded-[28px] p-6 sm:p-7 pb-7 shadow-2xl">
@@ -168,7 +168,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
               <span>CONTRÔLE D'IDENTITÉ</span>
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-normal text-[#041912] font-fraunces tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-normal text-brand-dark font-fraunces tracking-tight">
               Pièce d'Identité & <span className="italic text-emerald-700">Selfie.</span>
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
@@ -195,7 +195,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
                     }}
                     className={`flex-1 py-2 px-1 rounded-xl text-xs flex items-center justify-center gap-1 transition-all ${
                       isActive
-                        ? 'bg-[#041912] text-white font-medium shadow-md'
+                        ? 'bg-brand-dark text-white font-medium shadow-md'
                         : isCompleted
                         ? 'bg-emerald-600 text-white font-medium'
                         : 'text-slate-500 font-medium hover:text-slate-800'
@@ -244,7 +244,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
                     {frontPreview ? (
                       <div className="relative w-full h-full">
                         <img src={frontPreview} alt="Recto CNI" className="w-full h-full object-cover" />
-                        <div className="absolute bottom-3 right-3 bg-[#041912] border border-emerald-400/40 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
+                        <div className="absolute bottom-3 right-3 bg-brand-dark border border-emerald-400/40 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                           <span>Recto capturé</span>
                         </div>
@@ -258,7 +258,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
                         <p className="text-xs text-slate-500 mt-0.5">Parcourir les fichiers ou utiliser la caméra</p>
 
                         <div className="flex items-center gap-2 mt-3">
-                          <label className="cursor-pointer bg-[#041912] hover:bg-[#06291e] text-white text-xs font-medium px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-all">
+                          <label className="cursor-pointer bg-brand-dark hover:bg-[#06291e] text-white text-xs font-medium px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-all">
                             <Upload className="w-3.5 h-3.5" />
                             <span>Choisir un fichier</span>
                             <input
@@ -297,7 +297,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
                     {backPreview ? (
                       <div className="relative w-full h-full">
                         <img src={backPreview} alt="Verso CNI" className="w-full h-full object-cover" />
-                        <div className="absolute bottom-3 right-3 bg-[#041912] border border-emerald-400/40 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
+                        <div className="absolute bottom-3 right-3 bg-brand-dark border border-emerald-400/40 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                           <span>Verso capturé</span>
                         </div>
@@ -311,7 +311,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
                         <p className="text-xs text-slate-500 mt-0.5">Parcourir les fichiers ou utiliser la caméra</p>
 
                         <div className="flex items-center gap-2 mt-3">
-                          <label className="cursor-pointer bg-[#041912] hover:bg-[#06291e] text-white text-xs font-medium px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-all">
+                          <label className="cursor-pointer bg-brand-dark hover:bg-[#06291e] text-white text-xs font-medium px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-all">
                             <Upload className="w-3.5 h-3.5" />
                             <span>Choisir un fichier</span>
                             <input
@@ -350,7 +350,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
                     {selfiePreview ? (
                       <div className="relative w-full h-full">
                         <img src={selfiePreview} alt="Selfie" className="w-full h-full object-cover" />
-                        <div className="absolute bottom-3 right-3 bg-[#041912] border border-emerald-400/40 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
+                        <div className="absolute bottom-3 right-3 bg-brand-dark border border-emerald-400/40 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                           <span>Selfie capturé</span>
                         </div>
@@ -367,7 +367,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
                           <button
                             type="button"
                             onClick={startWebcam}
-                            className="bg-[#041912] hover:bg-[#06291e] text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-md"
+                            className="bg-brand-dark hover:bg-[#06291e] text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-md"
                           >
                             <Camera className="w-3.5 h-3.5" />
                             <span>Prendre le selfie</span>
@@ -416,7 +416,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
                   className={`h-11 px-5 rounded-full font-semibold text-xs flex items-center justify-center transition-all ml-auto ${
                     (subStep === 1 && !frontFile) || (subStep === 2 && !backFile)
                       ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
-                      : 'bg-[#041912] hover:bg-[#06291e] text-white shadow-lg active:scale-[0.98]'
+                      : 'bg-brand-dark hover:bg-[#06291e] text-white shadow-lg active:scale-[0.98]'
                   }`}
                 >
                   <span>Suivant</span>
@@ -436,7 +436,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
                   className={`h-11 px-5 rounded-full font-semibold text-xs flex items-center justify-center transition-all ml-auto ${
                     !selfieFile
                       ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
-                      : 'bg-[#041912] hover:bg-[#06291e] text-white shadow-lg active:scale-[0.98]'
+                      : 'bg-brand-dark hover:bg-[#06291e] text-white shadow-lg active:scale-[0.98]'
                   }`}
                 >
                   <span>Soumettre mon KYC</span>
@@ -474,7 +474,7 @@ export const GateStepKycIdentity: React.FC<GateStepKycIdentityProps> = ({ onSucc
             <button
               type="button"
               onClick={captureWebcamPhoto}
-              className="w-full h-12 rounded-full bg-[#041912] text-white font-bold text-sm flex items-center justify-center gap-2"
+              className="w-full h-12 rounded-full bg-brand-dark text-white font-bold text-sm flex items-center justify-center gap-2"
             >
               <Camera className="w-4 h-4 text-emerald-400" />
               <span>Prendre la photo</span>

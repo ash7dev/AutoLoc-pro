@@ -23,7 +23,7 @@ export const HeroSection: React.FC = () => {
   }, []);
 
   return (
-    <section className="relative min-h-0 lg:min-h-[85vh] bg-[#F8FAF4] text-slate-900 pt-[calc(5.25rem+env(safe-area-inset-top))] sm:pt-28 pb-3 sm:pb-12 overflow-hidden">
+    <section className="relative min-h-0 lg:min-h-[85vh] bg-cream-50 text-slate-900 pt-[calc(5.25rem+env(safe-area-inset-top))] sm:pt-28 pb-3 sm:pb-12 overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Badge & Title */}
         <div className="text-center max-w-3xl mx-auto mb-4 sm:mb-10">
@@ -41,8 +41,7 @@ export const HeroSection: React.FC = () => {
 
           {/* Main Title */}
           <h1
-            className="hidden sm:block text-3xl sm:text-5xl lg:text-6xl font-fraunces font-normal tracking-tight text-[#041912] leading-tight"
-            style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+            className="hidden sm:block text-3xl sm:text-5xl lg:text-6xl font-fraunces font-normal tracking-tight text-brand-dark leading-tight"
           >
             Louez la voiture idéale à{" "}
             <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-800 bg-clip-text text-transparent italic">
@@ -51,8 +50,7 @@ export const HeroSection: React.FC = () => {
           </h1>
 
           <h2
-            className="block sm:hidden text-[28px] font-fraunces font-normal text-[#041912] leading-[1.2] text-center mb-2.5 tracking-tight"
-            style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+            className="block sm:hidden text-[28px] font-fraunces font-normal text-brand-dark leading-[1.2] text-center mb-2.5 tracking-tight"
           >
             N°1 de la Location de Voiture entre Particuliers au Sénégal.
           </h2>
@@ -67,7 +65,7 @@ export const HeroSection: React.FC = () => {
           </p>
 
           {/* Quick Value Props (Desktop) */}
-          <div className="hidden sm:flex mt-6 flex-wrap items-center justify-center gap-3 text-xs font-bold text-[#041912]">
+          <div className="hidden sm:flex mt-6 flex-wrap items-center justify-center gap-3 text-xs font-bold text-brand-dark">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               <span>Assurance Comprise</span>
@@ -94,7 +92,7 @@ export const HeroSection: React.FC = () => {
               <WhereToSearchTrigger onPress={() => setMobileSearchOpen(true)} />
 
               {/* Quick Value Props (Mobile) */}
-              <div className="flex sm:hidden mt-4 flex-wrap items-center justify-center gap-2 text-xs font-bold text-[#041912]">
+              <div className="flex sm:hidden mt-4 flex-wrap items-center justify-center gap-2 text-xs font-bold text-brand-dark">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   <span>Assurance Comprise</span>
@@ -132,7 +130,7 @@ export const HeroSection: React.FC = () => {
                   <Zap className="w-3.5 h-3.5 text-amber-500" />
                   DISPONIBILITÉ EN TEMPS RÉEL
                 </div>
-                <h3 className="text-2xl font-fraunces font-normal text-[#041912] mt-0.5">
+                <h3 className="text-2xl font-fraunces font-normal text-brand-dark mt-0.5">
                   Annonces populaires à Dakar
                 </h3>
               </div>

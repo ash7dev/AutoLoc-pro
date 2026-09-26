@@ -20,7 +20,7 @@ const FOREST = '#0A3D2E';
 const CHAMPAGNE = '#F1DFB6';
 
 const FOCUS =
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E] dark:focus-visible:outline-[#F1DFB6]';
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main dark:focus-visible:outline-champagne';
 
 export function getPaginationRange(currentPage: number, totalPages: number): (number | 'ellipsis')[] {
   if (totalPages <= 7) {
@@ -116,7 +116,7 @@ export const AdminPagination: React.FC<AdminPaginationProps> = ({
                   aria-label={`Page ${p}`}
                   className={`min-w-[36px] h-9 px-2.5 rounded-lg text-[13px] font-semibold transition-colors cursor-pointer ${FOCUS} ${
                     isCurrent
-                      ? 'shadow-xs text-[#F1DFB6]'
+                      ? 'shadow-xs text-champagne'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent'
                   }`}
                   style={

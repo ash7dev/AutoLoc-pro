@@ -13,15 +13,15 @@ const TRUST_ITEMS = [
 
 export const PrivacyTrustBar: React.FC = () => {
   return (
-    <section className="rounded-2xl border border-[#0A3D2E]/10 bg-[#0A3D2E]/[0.03] p-4 sm:p-5">
+    <section className="rounded-2xl border border-brand-main/10 bg-brand-main/[0.03] p-4 sm:p-5">
       <div className="flex flex-wrap gap-2.5">
         {TRUST_ITEMS.map(({ icon: Icon, label }) => (
           <span
             key={label}
-            className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#0A3D2E]/10 px-3.5 py-2 shadow-xs"
+            className="inline-flex items-center gap-1.5 rounded-full bg-white border border-brand-main/10 px-3.5 py-2 shadow-xs"
           >
-            <Icon className="h-3.5 w-3.5 text-[#0A3D2E]" strokeWidth={2} />
-            <span className="text-[11.5px] font-semibold text-[#041912]">{label}</span>
+            <Icon className="h-3.5 w-3.5 text-brand-main" strokeWidth={2} />
+            <span className="text-[11.5px] font-semibold text-brand-dark">{label}</span>
           </span>
         ))}
       </div>

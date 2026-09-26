@@ -18,7 +18,7 @@ const FUEL_LABELS: Record<string, string> = {
 };
 
 const focusRing =
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main';
 
 /* Une caractéristique : libellé discret, valeur en serif */
 const Spec: React.FC<{
@@ -29,7 +29,7 @@ const Spec: React.FC<{
 }> = ({ icon, label, className = '', children }) => (
   <div className={`border-t border-slate-100 pt-3 ${className}`}>
     <dt className="flex items-center gap-1.5 text-xs text-slate-500">
-      <span className="text-[#0A3D2E]/55">{icon}</span>
+      <span className="text-brand-main/55">{icon}</span>
       {label}
     </dt>
     <dd className="mt-1.5 font-fraunces text-[17px] font-normal leading-snug text-slate-900">
@@ -86,7 +86,7 @@ export const TenantVehicleSpecsCard: React.FC<TenantVehicleSpecsCardProps> = ({ 
     <div className="space-y-6 rounded-3xl bg-white p-5 text-slate-900 shadow-[0_1px_2px_rgba(10,61,46,0.06),0_12px_28px_-16px_rgba(10,61,46,0.28)] ring-1 ring-slate-900/[0.06] sm:p-6">
       {/* En-tête */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0A3D2E] text-[#F1DFB6]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-main text-champagne">
           <Car className="h-5 w-5" strokeWidth={1.6} aria-hidden />
         </div>
         <div>
@@ -114,7 +114,7 @@ export const TenantVehicleSpecsCard: React.FC<TenantVehicleSpecsCardProps> = ({ 
 
           <div className="mt-4">
             <p className="font-fraunces text-2xl font-normal leading-tight tracking-tight text-slate-900">
-              {v?.marque} <span className="text-[#0A3D2E]">{v?.modele}</span>
+              {v?.marque} <span className="text-brand-main">{v?.modele}</span>
             </p>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-500">
               {v?.annee && <span>{v.annee}</span>}
@@ -154,7 +154,7 @@ export const TenantVehicleSpecsCard: React.FC<TenantVehicleSpecsCardProps> = ({ 
           >
             {v?.immatriculation ? (
               <span className="inline-flex items-stretch overflow-hidden rounded-md bg-white ring-1 ring-slate-300">
-                <span className="flex items-center bg-[#0A3D2E] px-1.5 font-sans text-[10px] font-semibold text-[#F1DFB6]">
+                <span className="flex items-center bg-brand-main px-1.5 font-sans text-[10px] font-semibold text-champagne">
                   SN
                 </span>
                 <span className="px-2.5 py-0.5 font-mono text-sm font-semibold tracking-wider text-slate-900">
@@ -169,9 +169,9 @@ export const TenantVehicleSpecsCard: React.FC<TenantVehicleSpecsCardProps> = ({ 
       </div>
 
       {/* Lieu et itinéraire */}
-      <div className="rounded-2xl bg-[#F1DFB6]/25 p-4 ring-1 ring-[#E4CB8E]/60 sm:p-5">
+      <div className="rounded-2xl bg-champagne/25 p-4 ring-1 ring-[#E4CB8E]/60 sm:p-5">
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0A3D2E] text-[#F1DFB6]">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-main text-champagne">
             <MapPin className="h-4 w-4" aria-hidden />
           </div>
           <div className="min-w-0">
@@ -182,7 +182,7 @@ export const TenantVehicleSpecsCard: React.FC<TenantVehicleSpecsCardProps> = ({ 
               {displayLocationText}
             </p>
             {!canShowAddress && (
-              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[#0A3D2E]/75">
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-brand-main/75">
                 <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 Adresse exacte débloquée 24h avant la prise en charge
               </p>
@@ -195,7 +195,7 @@ export const TenantVehicleSpecsCard: React.FC<TenantVehicleSpecsCardProps> = ({ 
             href={googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className={`${linkBase} bg-[#0A3D2E] text-[#F1DFB6] hover:bg-[#072B20] ${focusRing}`}
+            className={`${linkBase} bg-brand-main text-champagne hover:bg-forest-700 ${focusRing}`}
           >
             <Compass className="h-4 w-4" aria-hidden />
             Google Maps
@@ -204,7 +204,7 @@ export const TenantVehicleSpecsCard: React.FC<TenantVehicleSpecsCardProps> = ({ 
             href={wazeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className={`${linkBase} bg-white text-[#0A3D2E] ring-1 ring-[#0A3D2E]/20 hover:bg-[#0A3D2E]/5 ${focusRing}`}
+            className={`${linkBase} bg-white text-brand-main ring-1 ring-brand-main/20 hover:bg-brand-main/5 ${focusRing}`}
           >
             <Navigation className="h-4 w-4" aria-hidden />
             Waze

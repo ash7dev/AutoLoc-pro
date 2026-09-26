@@ -52,35 +52,35 @@ export const WebTransactionReceiptModal: React.FC<WebTransactionReceiptModalProp
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white text-slate-900 shadow-2xl ring-1 ring-black/10">
         {/* Top Header Card */}
-        <div className="relative bg-gradient-to-br from-[#041912] to-[#0A3D2E] p-6 text-[#F1DFB6]">
+        <div className="relative bg-gradient-to-br from-[#041912] to-[#0A3D2E] p-6 text-champagne">
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#F1DFB6] hover:bg-white/20 transition-colors cursor-pointer"
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-champagne hover:bg-white/20 transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
 
           <div className="space-y-4 text-center">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F1DFB6]/15 px-3 py-1 text-xs font-semibold text-[#F1DFB6]">
-              <Sparkles className="h-3.5 w-3.5 text-[#4ADE80]" />
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-champagne/15 px-3 py-1 text-xs font-semibold text-champagne">
+              <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
               <span>Reçu Financier AutoLoc</span>
             </div>
 
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-white backdrop-blur-md">
               {isCredit ? (
-                <ArrowDownLeft className="h-8 w-8 text-[#4ADE80]" />
+                <ArrowDownLeft className="h-8 w-8 text-emerald-400" />
               ) : (
                 <ArrowUpRight className="h-8 w-8 text-amber-300" />
               )}
             </div>
 
             <div>
-              <p className="text-xs text-[#F1DFB6]/75 uppercase tracking-wider font-semibold">
+              <p className="text-xs text-champagne/75 uppercase tracking-wider font-semibold">
                 {isCredit ? 'Gain de Location Encaissé' : 'Débit / Virement Effectué'}
               </p>
-              <h3 className="font-fraunces text-3xl sm:text-4xl font-normal text-[#F1DFB6] tabular-nums mt-1">
-                {isCredit ? '+' : '-'}&nbsp;{formatCurrency(numericMontant)} <span className="text-sm font-sans text-[#F1DFB6]/60 font-normal">FCFA</span>
+              <h3 className="font-fraunces text-3xl sm:text-4xl font-normal text-champagne tabular-nums mt-1">
+                {isCredit ? '+' : '-'}&nbsp;{formatCurrency(numericMontant)} <span className="text-sm font-sans text-champagne/60 font-normal">FCFA</span>
               </h3>
             </div>
           </div>
@@ -162,7 +162,7 @@ export const WebTransactionReceiptModal: React.FC<WebTransactionReceiptModalProp
 
           {/* Security stamp */}
           <div className="flex items-center gap-2 rounded-xl bg-slate-50 p-3 text-[11px] text-slate-500 border border-slate-200/60">
-            <ShieldCheck className="h-4 w-4 text-[#059669] shrink-0" />
+            <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
             <span>Document comptable officiel émis par AutoLoc Technologies S.A. Sénégal.</span>
           </div>
 
@@ -180,7 +180,7 @@ export const WebTransactionReceiptModal: React.FC<WebTransactionReceiptModalProp
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-[#041912] px-6 py-3 text-xs font-extrabold text-[#F1DFB6] shadow-md hover:bg-[#0A3D2E] transition-all cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-brand-dark px-6 py-3 text-xs font-extrabold text-champagne shadow-md hover:bg-brand-main transition-all cursor-pointer"
             >
               <span>Fermer</span>
             </button>

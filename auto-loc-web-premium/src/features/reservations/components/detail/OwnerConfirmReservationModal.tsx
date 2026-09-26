@@ -188,11 +188,11 @@ export const OwnerConfirmReservationModal: React.FC<OwnerConfirmReservationModal
         {/* ── En-tête de la Modale ────────────────────────────────────────── */}
         <div className="flex items-start justify-between gap-4 p-5 sm:p-6 pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3.5">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#4ADE80]/15 text-[#0A3D2E]">
-              <CheckCircle2 className="h-6 w-6 text-[#059669]" />
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-400/15 text-brand-main">
+              <CheckCircle2 className="h-6 w-6 text-emerald-600" />
             </span>
             <div>
-              <h2 id={titleId} className="font-fraunces text-xl font-normal text-[#041912]">
+              <h2 id={titleId} className="font-fraunces text-xl font-normal text-brand-dark">
                 Confirmer la réservation
               </h2>
               <p className="text-xs text-slate-500">
@@ -206,7 +206,7 @@ export const OwnerConfirmReservationModal: React.FC<OwnerConfirmReservationModal
             onClick={onClose}
             disabled={isSubmitting}
             aria-label="Fermer"
-            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main disabled:cursor-not-allowed disabled:opacity-50"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -218,7 +218,7 @@ export const OwnerConfirmReservationModal: React.FC<OwnerConfirmReservationModal
           <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 space-y-2.5 text-xs text-slate-700">
             <div className="flex items-center justify-between gap-2 border-b border-slate-200/60 pb-2">
               <span className="font-bold text-slate-900 text-sm">{vehicleName}</span>
-              <span className="font-mono text-[10px] font-bold text-[#0A3D2E] bg-emerald-100/60 px-2 py-0.5 rounded-md">
+              <span className="font-mono text-[10px] font-bold text-brand-main bg-emerald-100/60 px-2 py-0.5 rounded-md">
                 RÉF. #{reservation?.id?.slice(0, 8)?.toUpperCase()}
               </span>
             </div>
@@ -240,7 +240,7 @@ export const OwnerConfirmReservationModal: React.FC<OwnerConfirmReservationModal
               <Clock className="h-3.5 w-3.5 text-amber-700 shrink-0" />
               <span>
                 À valider avant le :{' '}
-                <strong className="font-bold text-[#0A3D2E]">
+                <strong className="font-bold text-brand-main">
                   {formatConfirmationDeadline(reservation?.creeLe, reservation?.dateDebut, reservation?.tacitCheckinDeadlineLe)}
                 </strong>
               </span>
@@ -251,10 +251,10 @@ export const OwnerConfirmReservationModal: React.FC<OwnerConfirmReservationModal
           <div className="space-y-3">
             <label className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-700">
               <span className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4 text-[#0A3D2E]" />
+                <Clock className="h-4 w-4 text-brand-main" />
                 Heure de rendez-vous (Check-in)
               </span>
-              <span className="text-[#059669] font-mono text-sm">{effectiveTime}</span>
+              <span className="text-emerald-600 font-mono text-sm">{effectiveTime}</span>
             </label>
 
             {/* Grille de créneaux rapides */}
@@ -271,7 +271,7 @@ export const OwnerConfirmReservationModal: React.FC<OwnerConfirmReservationModal
                     }}
                     className={`py-2 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-[#0A3D2E] bg-[#0A3D2E] text-[#F1DFB6] shadow-xs'
+                        ? 'border-brand-main bg-brand-main text-champagne shadow-xs'
                         : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
@@ -289,7 +289,7 @@ export const OwnerConfirmReservationModal: React.FC<OwnerConfirmReservationModal
                 value={customTime}
                 onChange={(e) => setCustomTime(e.target.value)}
                 placeholder="10:00"
-                className="px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-mono text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]"
+                className="px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-mono text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-brand-main"
               />
             </div>
           </div>
@@ -304,14 +304,14 @@ export const OwnerConfirmReservationModal: React.FC<OwnerConfirmReservationModal
               value={consignes}
               onChange={(e) => setConsignes(e.target.value)}
               placeholder="Ex: Rendez-vous au parking de la résidence, m'appeler 15 min avant d'arriver."
-              className="w-full rounded-xl border border-slate-300 p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]"
+              className="w-full rounded-xl border border-slate-300 p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-main"
             />
           </div>
 
           {/* Notice & Engagement */}
           <div className="space-y-3 pt-1 border-t border-slate-100">
             <div className="flex items-start gap-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 p-3 text-xs text-emerald-950">
-              <ShieldCheck className="h-4 w-4 text-[#059669] shrink-0 mt-0.5" />
+              <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
               <p className="leading-relaxed">
                 En confirmant, vous vous engagez à remettre le véhicule au locataire à l’heure et au lieu convenus.
               </p>
@@ -342,9 +342,9 @@ export const OwnerConfirmReservationModal: React.FC<OwnerConfirmReservationModal
           <button
             type="submit"
             disabled={!isTimeValid || !attested || isSubmitting}
-            className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-6 py-2.5 text-xs font-bold text-[#F1DFB6] shadow-md hover:bg-[#0F4F3B] active:scale-[0.98] transition-all disabled:opacity-40"
+            className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-full bg-brand-main px-6 py-2.5 text-xs font-bold text-champagne shadow-md hover:bg-forest-700 active:scale-[0.98] transition-all disabled:opacity-40"
           >
-            <CheckCircle2 className="h-4 w-4 text-[#4ADE80]" />
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
             <span>{isSubmitting ? 'Confirmation…' : `Confirmer (${effectiveTime})`}</span>
           </button>
         </div>

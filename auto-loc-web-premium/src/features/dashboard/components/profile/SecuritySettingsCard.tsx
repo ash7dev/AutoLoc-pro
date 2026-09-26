@@ -118,9 +118,9 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
   };
 
   return (
-    <div className="rounded-3xl border border-[#041912]/8 bg-white p-6 sm:p-8">
+    <div className="rounded-3xl border border-brand-dark/8 bg-white p-6 sm:p-8">
       <div>
-        <h3 className="font-fraunces text-xl leading-tight text-[#041912]">Sécurité du compte</h3>
+        <h3 className="font-fraunces text-xl leading-tight text-brand-dark">Sécurité du compte</h3>
         <p className="mt-1 text-[13px] text-slate-500">
           Identifiants de connexion, mot de passe et sécurité
         </p>
@@ -128,7 +128,7 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
 
       {/* Messages de retour */}
       {successMsg && (
-        <div className="mt-5 flex items-center gap-2.5 rounded-xl border border-[#0A3D2E]/15 bg-[#0A3D2E]/5 p-3.5 text-[12.5px] font-medium text-[#0A3D2E]">
+        <div className="mt-5 flex items-center gap-2.5 rounded-xl border border-brand-main/15 bg-brand-main/5 p-3.5 text-[12.5px] font-medium text-brand-main">
           <Check className="h-4 w-4 shrink-0" />
           {successMsg}
         </div>
@@ -148,7 +148,7 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
               <Mail className="h-4 w-4" />
             </div>
             <div>
-              <h4 className="text-[14px] font-semibold text-[#041912]">Adresse e-mail de connexion</h4>
+              <h4 className="text-[14px] font-semibold text-brand-dark">Adresse e-mail de connexion</h4>
               <p className="text-[12px] text-slate-500">{profile.email || 'Non renseignée'}</p>
             </div>
           </div>
@@ -178,7 +178,7 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
                 onChange={(e) => setNewEmail(e.target.value)}
                 placeholder="exemple@domaine.com"
                 required
-                className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10"
+                className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/10"
               />
             </div>
 
@@ -193,7 +193,7 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
               <button
                 type="submit"
                 disabled={isSubmittingEmail}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#041912] px-5 py-2 text-[12.5px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E] disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-brand-dark px-5 py-2 text-[12.5px] font-semibold text-champagne transition-colors hover:bg-brand-main disabled:opacity-50"
               >
                 {isSubmittingEmail && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 Enregistrer l'e-mail
@@ -211,7 +211,7 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
               <KeyRound className="h-4 w-4" />
             </div>
             <div>
-              <h4 className="text-[14px] font-semibold text-[#041912]">Mot de passe d'accès</h4>
+              <h4 className="text-[14px] font-semibold text-brand-dark">Mot de passe d'accès</h4>
               <p className="text-[12px] text-slate-500">Recommandé de le modifier périodiquement</p>
             </div>
           </div>
@@ -237,7 +237,7 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/10"
                 />
               </div>
 
@@ -250,7 +250,7 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Min. 8 car. (1 Maj, 1 Chiffre)"
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/10"
                 />
               </div>
 
@@ -263,7 +263,7 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/10"
                 />
               </div>
             </div>
@@ -279,7 +279,7 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#041912] px-5 py-2 text-[12.5px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E] disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-brand-dark px-5 py-2 text-[12.5px] font-semibold text-champagne transition-colors hover:bg-brand-main disabled:opacity-50"
               >
                 {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 Enregistrer le mot de passe
@@ -296,7 +296,7 @@ export const SecuritySettingsCard: React.FC<SecuritySettingsCardProps> = ({
             <LogOut className="h-4 w-4" />
           </div>
           <div>
-            <h4 className="text-[14px] font-semibold text-[#041912]">Fermer la session</h4>
+            <h4 className="text-[14px] font-semibold text-brand-dark">Fermer la session</h4>
             <p className="text-[12px] text-slate-500">Se déconnecter et retourner à la page d'accueil</p>
           </div>
         </div>

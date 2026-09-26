@@ -61,11 +61,11 @@ const getStatusBadge = (statut: ReservationStatut) => {
     case 'EN_COURS':
       return {
         label: 'En cours',
-        bg: 'bg-[#0A3D2E]/[0.06] text-[#0A3D2E] border-[#0A3D2E]/15',
-        dot: 'bg-[#059669]',
+        bg: 'bg-brand-main/[0.06] text-brand-main border-brand-main/15',
+        dot: 'bg-emerald-600',
         icon: Car,
         live: true,
-        accent: 'before:bg-[#059669]',
+        accent: 'before:bg-emerald-600',
       };
     case 'TERMINEE':
       return {
@@ -100,10 +100,24 @@ const getStatusBadge = (statut: ReservationStatut) => {
 };
 
 export const OwnerReservationCard: React.FC<OwnerReservationCardProps> = ({ reservation }) => {
-  const { vehicule, locataire, statut, dateDebut, dateFin, nbJours, netProprietaire, id } = reservation;
+  const { vehicule, locataire, statut, dateDebut, dateFin, nbJours, id } = reservation;
+  const resAny = reservation as any;
   const badge = getStatusBadge(statut);
   const StatusIcon = badge.icon;
-  const netAmount = Number(netProprietaire || 0);
+
+  const durationDays = Math.max(1, Number(nbJours || 1));
+  const dailyPrice = Number(resAny.prixParJour || (vehicule as any)?.prixParJour || 0);
+  const baseCalculated = dailyPrice * durationDays;
+
+  const rawAmount = Number(
+    resAny.netProprietaire ||
+    resAny.montantProprietaire ||
+    resAny.prixTotal ||
+    resAny.totalLocataire ||
+    0
+  );
+
+  const netAmount = rawAmount > 0 ? rawAmount : baseCalculated;
 
   const firstPhoto = Array.isArray(vehicule?.photos) && vehicule.photos.length > 0
     ? (typeof vehicule.photos[0] === 'string' ? vehicule.photos[0] : (vehicule.photos[0] as any)?.url)
@@ -124,7 +138,7 @@ export const OwnerReservationCard: React.FC<OwnerReservationCardProps> = ({ rese
       transition={{ duration: 0.25, ease: 'easeOut' }}
       className={`group relative isolate overflow-hidden rounded-2xl border border-slate-200/70 bg-white
         shadow-[0_1px_2px_rgba(4,25,18,0.04)] transition-all duration-300
-        hover:-translate-y-0.5 hover:border-[#0A3D2E]/20 hover:shadow-[0_12px_32px_-12px_rgba(4,25,18,0.18)]
+        hover:-translate-y-0.5 hover:border-brand-main/20 hover:shadow-[0_12px_32px_-12px_rgba(4,25,18,0.18)]
         sm:rounded-[28px]
         before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:content-[''] ${badge.accent}`}
     >
@@ -140,7 +154,7 @@ export const OwnerReservationCard: React.FC<OwnerReservationCardProps> = ({ rese
 
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="truncate font-fraunces text-[15px] font-normal leading-none text-[#041912]">
+            <h3 className="truncate font-fraunces text-[15px] font-normal leading-none text-brand-dark">
               {vehicule?.marque || 'Véhicule'} {vehicule?.modele || ''}
             </h3>
             <span className="shrink-0 text-[10px] font-medium tabular-nums text-slate-400">
@@ -169,7 +183,7 @@ export const OwnerReservationCard: React.FC<OwnerReservationCardProps> = ({ rese
               <span>{badge.label}</span>
             </div>
 
-            <span className="font-fraunces text-sm font-normal tabular-nums text-[#059669]">
+            <span className="font-fraunces text-sm font-normal tabular-nums text-emerald-600">
               {netAmount.toLocaleString('fr-FR')} FCFA
             </span>
           </div>
@@ -179,10 +193,10 @@ export const OwnerReservationCard: React.FC<OwnerReservationCardProps> = ({ rese
       <div className="px-3.5 pb-3.5 pl-4 sm:hidden">
         <Link
           href={`/dashboard/reservations/${id}`}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#4ADE80]/30 bg-gradient-to-r from-[#041912] via-[#0A3D2E] to-[#041912] py-2.5 px-4 text-xs font-bold tracking-wide text-[#F1DFB6] shadow-xs transition-all duration-200 hover:border-[#4ADE80]/50 active:scale-[0.98] active:opacity-95"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#4ADE80]/30 bg-gradient-to-r from-[#041912] via-[#0A3D2E] to-[#041912] py-2.5 px-4 text-xs font-bold tracking-wide text-champagne shadow-xs transition-all duration-200 hover:border-[#4ADE80]/50 active:scale-[0.98] active:opacity-95"
         >
           <span>Gérer la réservation</span>
-          <ArrowUpRight className="h-3.5 w-3.5 text-[#4ADE80] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          <ArrowUpRight className="h-3.5 w-3.5 text-emerald-400 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </Link>
       </div>
 
@@ -219,7 +233,7 @@ export const OwnerReservationCard: React.FC<OwnerReservationCardProps> = ({ rese
           </div>
 
           <div className="min-w-0 flex-1 space-y-1.5 pt-0.5">
-            <h3 className="truncate font-fraunces text-xl font-normal leading-tight text-[#041912]">
+            <h3 className="truncate font-fraunces text-xl font-normal leading-tight text-brand-dark">
               {vehicule?.marque || 'Véhicule'} {vehicule?.modele || ''}
             </h3>
 
@@ -234,7 +248,7 @@ export const OwnerReservationCard: React.FC<OwnerReservationCardProps> = ({ rese
         {/* Locataire + dates */}
         <div className="mt-5 grid grid-cols-2 gap-2.5 rounded-2xl border border-slate-200/60 bg-slate-50/60 p-3.5 text-xs text-slate-700">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-[#0A3D2E] shadow-xs">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-brand-main shadow-xs">
               <User className="h-3.5 w-3.5" />
             </div>
             <div className="min-w-0">
@@ -246,7 +260,7 @@ export const OwnerReservationCard: React.FC<OwnerReservationCardProps> = ({ rese
           </div>
 
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-[#0A3D2E] shadow-xs">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-brand-main shadow-xs">
               <Calendar className="h-3.5 w-3.5" />
             </div>
             <div className="min-w-0">
@@ -266,14 +280,14 @@ export const OwnerReservationCard: React.FC<OwnerReservationCardProps> = ({ rese
             <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
               Revenu net hôte
             </span>
-            <span className="font-fraunces text-2xl font-normal tabular-nums text-[#059669]">
+            <span className="font-fraunces text-2xl font-normal tabular-nums text-emerald-600">
               {netAmount.toLocaleString('fr-FR')} FCFA
             </span>
           </div>
 
           <Link
             href={`/dashboard/reservations/${id}`}
-            className="inline-flex items-center gap-1.5 rounded-2xl border border-[#4ADE80]/25 bg-[#041912] px-4 py-2.5 text-xs font-bold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E] hover:text-[#4ADE80]"
+            className="inline-flex items-center gap-1.5 rounded-2xl border border-[#4ADE80]/25 bg-brand-dark px-4 py-2.5 text-xs font-bold text-champagne transition-colors hover:bg-brand-main hover:text-emerald-400"
           >
             <span>Gérer</span>
             <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

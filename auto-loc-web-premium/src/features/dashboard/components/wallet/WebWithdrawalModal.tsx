@@ -177,7 +177,7 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
         <div className="border-b border-slate-100 px-6 pb-4 pt-5">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="font-fraunces text-xl leading-tight text-[#041912]">
+              <h3 className="font-fraunces text-xl leading-tight text-brand-dark">
                 Demande de virement
               </h3>
               <p className="mt-0.5 text-[12.5px] text-slate-500">Transfert instantané vers mobile money</p>
@@ -193,8 +193,8 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
 
           {!successMessage && (
             <div className="mt-4 flex items-center gap-1.5">
-              <span className={`h-1 flex-1 rounded-full ${step >= 1 ? 'bg-[#0A3D2E]' : 'bg-slate-150'}`} />
-              <span className={`h-1 flex-1 rounded-full ${step >= 2 ? 'bg-[#0A3D2E]' : 'bg-slate-150'}`} />
+              <span className={`h-1 flex-1 rounded-full ${step >= 1 ? 'bg-brand-main' : 'bg-slate-150'}`} />
+              <span className={`h-1 flex-1 rounded-full ${step >= 2 ? 'bg-brand-main' : 'bg-slate-150'}`} />
             </div>
           )}
         </div>
@@ -202,10 +202,10 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
         {/* Success Banner */}
         {successMessage ? (
           <div className="space-y-4 p-8 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#0A3D2E]/8 text-[#0A3D2E]">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-main/8 text-brand-main">
               <CheckCircle2 className="h-8 w-8" />
             </div>
-            <h4 className="font-fraunces text-xl text-[#041912]">Virement confirmé</h4>
+            <h4 className="font-fraunces text-xl text-brand-dark">Virement confirmé</h4>
             <p className="text-[13px] leading-relaxed text-slate-600">{successMessage}</p>
           </div>
         ) : (
@@ -223,7 +223,7 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
               <div className="space-y-5">
                 {/* Operator Selector */}
                 <div className="space-y-2">
-                  <label className="text-[12.5px] font-semibold text-[#041912]">
+                  <label className="text-[12.5px] font-semibold text-brand-dark">
                     Service de réception
                   </label>
                   <div className="grid grid-cols-2 gap-2.5">
@@ -266,7 +266,7 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
                 {/* Amount Input */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-[12.5px] font-semibold text-[#041912]">Montant à retirer</label>
+                    <label className="text-[12.5px] font-semibold text-brand-dark">Montant à retirer</label>
                     <span className="text-[11.5px] text-slate-400">
                       Max {formatCurrency(maxAllowedAmount)} FCFA
                     </span>
@@ -281,7 +281,7 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
                         setError(null);
                       }}
                       placeholder="25 000"
-                      className="w-full rounded-xl border border-slate-200 px-4 py-3 pr-16 font-fraunces text-lg text-[#041912] placeholder:font-sans placeholder:text-slate-300 focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10"
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3 pr-16 font-fraunces text-lg text-brand-dark placeholder:font-sans placeholder:text-slate-300 focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/10"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[11.5px] font-semibold text-slate-400">
                       FCFA
@@ -299,7 +299,7 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
                         key={chip.label}
                         type="button"
                         onClick={() => handleSetPercentage(chip.val)}
-                        className="rounded-lg border border-slate-200 px-3 py-1.5 text-[11.5px] font-semibold text-slate-600 transition-colors hover:border-[#0A3D2E]/40 hover:bg-[#0A3D2E]/5 hover:text-[#0A3D2E]"
+                        className="rounded-lg border border-slate-200 px-3 py-1.5 text-[11.5px] font-semibold text-slate-600 transition-colors hover:border-brand-main/40 hover:bg-brand-main/5 hover:text-brand-main"
                       >
                         {chip.label}
                       </button>
@@ -309,7 +309,7 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
 
                 {/* Destination Phone Input */}
                 <div className="space-y-2">
-                  <label className="text-[12.5px] font-semibold text-[#041912]">
+                  <label className="text-[12.5px] font-semibold text-brand-dark">
                     Numéro de réception (Sénégal)
                   </label>
                   <input
@@ -320,7 +320,7 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
                       setError(null);
                     }}
                     placeholder="+221 77 123 45 67"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-[#041912] placeholder:text-slate-300 focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-brand-dark placeholder:text-slate-300 focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/10"
                   />
                   <p className="text-[11px] text-slate-400">
                     Numéros acceptés : 77, 78, 70, 76, 75 — ex. 771234567
@@ -330,21 +330,21 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#041912] px-6 py-3.5 text-[13.5px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E]"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-dark px-6 py-3.5 text-[13.5px] font-semibold text-champagne transition-colors hover:bg-brand-main"
                 >
                   Continuer vers le récapitulatif
-                  <ArrowRight className="h-4 w-4 text-[#4ADE80]" />
+                  <ArrowRight className="h-4 w-4 text-emerald-400" />
                 </button>
               </div>
             ) : (
               /* STEP 2: RECAP & CONFIRMATION */
               <div className="space-y-5">
                 <div>
-                  <h4 className="text-[12.5px] font-semibold text-[#041912]">Récapitulatif</h4>
+                  <h4 className="text-[12.5px] font-semibold text-brand-dark">Récapitulatif</h4>
                   <div className="mt-2 divide-y divide-slate-100 border-y border-slate-100">
                     <div className="flex items-center justify-between py-2.5 text-[13px]">
                       <span className="text-slate-500">Opérateur</span>
-                      <span className="flex items-center gap-2 font-semibold text-[#041912]">
+                      <span className="flex items-center gap-2 font-semibold text-brand-dark">
                         <img
                           src={provider === 'WAVE' ? '/wave.png' : '/orange.png'}
                           alt={provider}
@@ -356,22 +356,22 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
 
                     <div className="flex items-center justify-between py-2.5 text-[13px]">
                       <span className="text-slate-500">Numéro destinataire</span>
-                      <span className="font-semibold text-[#041912]">{cleanPhoneFormatted(phone)}</span>
+                      <span className="font-semibold text-brand-dark">{cleanPhoneFormatted(phone)}</span>
                     </div>
 
                     <div className="flex items-center justify-between py-2.5 text-[13px]">
                       <span className="text-slate-500">Montant demandé</span>
-                      <span className="font-semibold text-[#041912]">{formatCurrency(numericAmount)} FCFA</span>
+                      <span className="font-semibold text-brand-dark">{formatCurrency(numericAmount)} FCFA</span>
                     </div>
 
                     <div className="flex items-center justify-between py-2.5 text-[13px]">
                       <span className="text-slate-500">Frais de retrait</span>
-                      <span className="font-semibold text-[#0A3D2E]">Offerts</span>
+                      <span className="font-semibold text-brand-main">Offerts</span>
                     </div>
 
                     <div className="flex items-center justify-between py-3">
-                      <span className="text-[13.5px] font-semibold text-[#041912]">Montant net versé</span>
-                      <span className="font-fraunces text-xl text-[#0A3D2E]">
+                      <span className="text-[13.5px] font-semibold text-brand-dark">Montant net versé</span>
+                      <span className="font-fraunces text-xl text-brand-main">
                         {formatCurrency(numericAmount)} FCFA
                       </span>
                     </div>
@@ -379,7 +379,7 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
                 </div>
 
                 <div className="flex items-start gap-2.5 text-[12px] text-slate-500">
-                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#0A3D2E]" />
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-main" />
                   <span>
                     En confirmant, le montant sera instantanément débité de votre solde et transféré sur votre compte mobile money.
                   </span>
@@ -400,16 +400,16 @@ export const WebWithdrawalModal: React.FC<WebWithdrawalModalProps> = ({
                     type="button"
                     onClick={handleSubmitWithdrawal}
                     disabled={isSubmitting}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#041912] px-6 py-3 text-[13.5px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E] disabled:opacity-50"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-dark px-6 py-3 text-[13.5px] font-semibold text-champagne transition-colors hover:bg-brand-main disabled:opacity-50"
                   >
                     {isSubmitting ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin text-[#4ADE80]" />
+                        <Loader2 className="h-4 w-4 animate-spin text-emerald-400" />
                         Traitement en cours...
                       </>
                     ) : (
                       <>
-                        <CheckCircle2 className="h-4 w-4 text-[#4ADE80]" />
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                         Confirmer le virement
                       </>
                     )}

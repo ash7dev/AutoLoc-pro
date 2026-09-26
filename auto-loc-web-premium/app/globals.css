@@ -12,11 +12,13 @@
 @layer base {
   :root {
     --background: #FFFFFF;
-    --foreground: #0F172A;
+    --foreground: #041912;
     --card: #FFFFFF;
-    --card-foreground: #0F172A;
-    --primary: #10b981;
+    --card-foreground: #041912;
+    --primary: #0A3D2E;
     --primary-foreground: #FFFFFF;
+    --accent-gold: #F1DFB6;
+    --accent-gold-light: #FBF6E9;
     --muted: #F1F5F9;
     --muted-foreground: #64748B;
     --border: #E2E8F0;

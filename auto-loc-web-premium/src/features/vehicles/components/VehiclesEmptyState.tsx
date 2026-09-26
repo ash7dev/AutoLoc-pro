@@ -22,10 +22,10 @@ export const VehiclesEmptyState: React.FC<VehiclesEmptyStateProps> = ({
     >
       {/* Ondes de recherche : trois cercles concentriques autour de l'icône */}
       <div className="relative flex h-48 w-48 items-center justify-center" aria-hidden>
-        <span className="absolute h-48 w-48 rounded-full border border-[#0A3D2E]/[0.05] bg-[#F1DFB6]/10" />
-        <span className="absolute h-36 w-36 rounded-full border border-[#0A3D2E]/[0.08] bg-[#F1DFB6]/20" />
-        <span className="absolute h-24 w-24 rounded-full border border-[#0A3D2E]/10 bg-[#F1DFB6]/40" />
-        <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[#0A3D2E] text-[#F1DFB6] shadow-lg shadow-[#0A3D2E]/25">
+        <span className="absolute h-48 w-48 rounded-full border border-brand-main/[0.05] bg-champagne/10" />
+        <span className="absolute h-36 w-36 rounded-full border border-brand-main/[0.08] bg-champagne/20" />
+        <span className="absolute h-24 w-24 rounded-full border border-brand-main/10 bg-champagne/40" />
+        <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-brand-main text-champagne shadow-lg shadow-brand-main/25">
           <Icon className="h-7 w-7" strokeWidth={1.6} />
         </span>
       </div>
@@ -44,7 +44,7 @@ export const VehiclesEmptyState: React.FC<VehiclesEmptyStateProps> = ({
         <button
           type="button"
           onClick={onResetFilters}
-          className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#0A3D2E] px-6 py-3 text-sm font-semibold text-[#F1DFB6] shadow-md shadow-[#0A3D2E]/20 transition-all duration-200 hover:bg-[#072B20] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E] active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+          className="mt-6 inline-flex items-center gap-2 rounded-full bg-brand-main px-6 py-3 text-sm font-semibold text-champagne shadow-md shadow-brand-main/20 transition-all duration-200 hover:bg-forest-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
         >
           <RotateCcw className="h-4 w-4" aria-hidden />
           Réinitialiser les filtres

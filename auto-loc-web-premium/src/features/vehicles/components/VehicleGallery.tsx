@@ -90,7 +90,7 @@ export const VehicleGallery: React.FC<VehicleGalleryProps> = ({
         onTouchEnd={handleTouchEnd}
         onClick={() => setModalOpen(true)}
         aria-label={`Photos de ${title}`}
-        className="group relative w-full aspect-[4/3] md:aspect-[16/8] rounded-[28px] overflow-hidden cursor-zoom-in select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0A3D2E]"
+        className="group relative w-full aspect-[4/3] md:aspect-[16/8] rounded-[28px] overflow-hidden cursor-zoom-in select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-main"
         style={{ backgroundColor: FOREST }}
       >
         {validImages.map((src, i) => (
@@ -138,7 +138,7 @@ export const VehicleGallery: React.FC<VehicleGalleryProps> = ({
                 type="button"
                 onClick={prev}
                 aria-label="Photo précédente"
-                className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-white/10 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6]"
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-white/10 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne"
                 style={{ color: CHAMPAGNE }}
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -156,7 +156,7 @@ export const VehicleGallery: React.FC<VehicleGalleryProps> = ({
                 type="button"
                 onClick={next}
                 aria-label="Photo suivante"
-                className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-white/10 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6]"
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-white/10 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne"
                 style={{ color: CHAMPAGNE }}
               >
                 <ChevronRight className="w-5 h-5" />
@@ -170,7 +170,7 @@ export const VehicleGallery: React.FC<VehicleGalleryProps> = ({
             type="button"
             onClick={() => setModalOpen(true)}
             aria-label="Voir en plein écran"
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6]"
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne"
             style={{ backgroundColor: CHAMPAGNE, color: FOREST }}
           >
             <Maximize2 className="w-4 h-4" />
@@ -193,8 +193,8 @@ export const VehicleGallery: React.FC<VehicleGalleryProps> = ({
                 onClick={() => goTo(i)}
                 aria-label={`Afficher la photo ${i + 1}`}
                 aria-current={isActive}
-                className={`relative shrink-0 w-24 aspect-[4/3] rounded-xl overflow-hidden transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0A3D2E] ${isActive
-                    ? 'ring-2 ring-offset-2 ring-[#0A3D2E] opacity-100'
+                className={`relative shrink-0 w-24 aspect-[4/3] rounded-xl overflow-hidden transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-main ${isActive
+                    ? 'ring-2 ring-offset-2 ring-brand-main opacity-100'
                     : 'opacity-55 hover:opacity-100'
                   }`}
               >

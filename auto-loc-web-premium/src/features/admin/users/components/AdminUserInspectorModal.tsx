@@ -102,7 +102,7 @@ export function AdminUserInspectorModal({
               <img
                 src={u.avatarUrl}
                 alt={fullName}
-                className="w-11 h-11 rounded-full object-cover border-2 border-[#F1DFB6]/40 shrink-0"
+                className="w-11 h-11 rounded-full object-cover border-2 border-champagne/40 shrink-0"
               />
             ) : (
               <div
@@ -155,7 +155,7 @@ export function AdminUserInspectorModal({
               onClick={() => setActiveTab(tab.id as any)}
               className={`px-4 py-2.5 text-xs font-normal transition-all border-b-2 whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'border-[#0A3D2E] text-[#0A3D2E] dark:text-[#F1DFB6] dark:border-[#F1DFB6] bg-white dark:bg-slate-900 shadow-xs'
+                  ? 'border-brand-main text-brand-main dark:text-champagne dark:border-champagne bg-white dark:bg-slate-900 shadow-xs'
                   : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >

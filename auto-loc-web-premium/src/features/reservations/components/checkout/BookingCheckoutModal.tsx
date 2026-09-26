@@ -270,10 +270,10 @@ export function BookingCheckoutModal({
                   onClose();
                   router.push(`/reservations/${successData.reservationId}`);
                 }}
-                className="w-full sm:w-auto py-3.5 px-8 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs sm:text-sm hover:bg-[#0F4F3B] cursor-pointer transition-all shadow-md flex items-center justify-center gap-2"
+                className="w-full sm:w-auto py-3.5 px-8 rounded-full bg-brand-main text-champagne font-bold text-xs sm:text-sm hover:bg-forest-700 cursor-pointer transition-all shadow-md flex items-center justify-center gap-2"
               >
                 <span>Consulter ma réservation</span>
-                <ArrowRight className="w-4 h-4 text-[#F1DFB6]" />
+                <ArrowRight className="w-4 h-4 text-champagne" />
               </button>
             </div>
           </div>

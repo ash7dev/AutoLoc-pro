@@ -89,7 +89,7 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
     <div className="space-y-5 sm:space-y-6">
       {/* Hero Header */}
       <div className="text-center space-y-1 sm:space-y-2 pb-1 sm:pb-2">
-        <div className="mx-auto hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-[#041912] border border-[#4ADE80]/30 text-[#4ADE80] shadow-md">
+        <div className="mx-auto hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-dark border border-[#4ADE80]/30 text-emerald-400 shadow-md">
           <Sliders className="h-6 w-6" strokeWidth={2.2} />
         </div>
         <h2 className="font-fraunces font-normal text-xl sm:text-3xl text-slate-900 tracking-tight">Spécifications & Confort</h2>
@@ -100,14 +100,14 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
 
       {/* Summary Pill */}
       <div className="flex items-center gap-2 rounded-2xl bg-[#F0FDF4] border border-[#A7F3D0] p-3 sm:p-3.5 shadow-sm text-xs font-bold text-[#047857] leading-relaxed">
-        <Sparkles className="h-4 w-4 shrink-0 text-[#059669]" />
+        <Sparkles className="h-4 w-4 shrink-0 text-emerald-600" />
         <span>{summaryText}</span>
       </div>
 
       {/* Nombre de places */}
       <div className="space-y-2">
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 font-fraunces">
-          <Users className="h-4 w-4 text-[#059669]" />
+          <Users className="h-4 w-4 text-emerald-600" />
           <span>Nombre de places *</span>
         </label>
         <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -131,7 +131,7 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
               type="button"
               disabled={data.nombrePlaces >= 50}
               onClick={() => onChange({ nombrePlaces: Math.min(50, data.nombrePlaces + 1) })}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-[#041912] border border-[#4ADE80]/30 text-[#4ADE80] hover:bg-[#06261c]"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-dark border border-[#4ADE80]/30 text-emerald-400 hover:bg-[#06261c]"
             >
               <Plus className="h-4 w-4" strokeWidth={2.5} />
             </button>
@@ -142,7 +142,7 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
       {/* Conditions d'accès */}
       <div className="space-y-3">
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 font-fraunces">
-          <ShieldCheck className="h-4 w-4 text-[#059669]" />
+          <ShieldCheck className="h-4 w-4 text-emerald-600" />
           <span>Conditions d'accès *</span>
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -168,7 +168,7 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
                 type="button"
                 disabled={data.ageMinimum >= 30}
                 onClick={() => onChange({ ageMinimum: Math.min(30, data.ageMinimum + 1) })}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#041912] border border-[#4ADE80]/30 text-[#4ADE80]"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-dark border border-[#4ADE80]/30 text-emerald-400"
               >
                 <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
               </button>
@@ -197,7 +197,7 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
                 type="button"
                 disabled={data.joursMinimum >= 30}
                 onClick={() => onChange({ joursMinimum: Math.min(30, data.joursMinimum + 1) })}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#041912] border border-[#4ADE80]/30 text-[#4ADE80]"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-dark border border-[#4ADE80]/30 text-emerald-400"
               >
                 <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
               </button>
@@ -210,10 +210,10 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 font-fraunces">
-            <Sliders className="h-4 w-4 text-[#059669]" />
+            <Sliders className="h-4 w-4 text-emerald-600" />
             <span>Équipements & Confort *</span>
           </label>
-          <span className="text-xs font-bold text-[#059669]">
+          <span className="text-xs font-bold text-emerald-600">
             {selectedCount} sélectionné{selectedCount > 1 ? 's' : ''}
           </span>
         </div>
@@ -225,7 +225,7 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
             onClick={toggleEssentials}
             className={`flex flex-1 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-all ${
               areAllEssentialsSelected
-                ? 'border-[#041912] bg-[#041912] text-[#4ADE80] shadow-sm'
+                ? 'border-brand-dark bg-brand-dark text-emerald-400 shadow-sm'
                 : 'border-[#A7F3D0] bg-[#F0FDF4] text-[#047857] hover:bg-[#DCFCE7]'
             }`}
           >
@@ -271,12 +271,12 @@ export const WizardStep2Specs: React.FC<WizardStep2SpecsProps> = ({ data, onChan
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className={`flex h-8 w-8 items-center justify-center rounded-xl border ${
-                    isSelected ? 'bg-[#041912] border-[#4ADE80]/40 text-[#4ADE80]' : 'bg-slate-50 border-slate-200 text-slate-600'
+                    isSelected ? 'bg-brand-dark border-[#4ADE80]/40 text-emerald-400' : 'bg-slate-50 border-slate-200 text-slate-600'
                   }`}>
                     <Icon className="h-4 w-4" />
                   </div>
                   {isSelected && (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#059669] text-white">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white">
                       <Check className="h-3 w-3 stroke-[3]" />
                     </span>
                   )}

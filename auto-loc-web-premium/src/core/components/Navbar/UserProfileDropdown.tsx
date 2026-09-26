@@ -29,7 +29,7 @@ const Avatar: React.FC<{ user: UserProfile; size: 'sm' | 'md' }> = ({ user, size
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#0A3D2E] font-semibold text-[#F1DFB6] ${size === 'sm' ? 'h-8 w-8 text-xs' : 'h-11 w-11 text-sm'
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-main font-semibold text-champagne ${size === 'sm' ? 'h-8 w-8 text-xs' : 'h-11 w-11 text-sm'
         }`}
     >
       {user.avatarUrl ? (
@@ -47,7 +47,7 @@ const Avatar: React.FC<{ user: UserProfile; size: 'sm' | 'md' }> = ({ user, size
 };
 
 const menuItemClass =
-  'group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left text-[13px] font-medium transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[#0A3D2E]';
+  'group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left text-[13px] font-medium transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-main';
 
 export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -84,7 +84,7 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }
     switch (user.statutKyc) {
       case 'VERIFIE':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0A3D2E]/[0.08] px-2.5 py-0.5 text-[11px] font-semibold text-[#0A3D2E]">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-main/[0.08] px-2.5 py-0.5 text-[11px] font-semibold text-brand-main">
             <ShieldCheck className="h-3.5 w-3.5" />
             Vérifié
           </span>
@@ -120,10 +120,10 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }
         className={`
           flex h-10 items-center gap-2 rounded-full border pl-1 pr-3
           transition-colors duration-200
-          focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]
+          focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main
           ${isOpen
-            ? 'border-[#0A3D2E]/40 bg-[#0A3D2E]/[0.04]'
-            : 'border-slate-900/10 bg-white hover:border-[#0A3D2E]/40'}
+            ? 'border-brand-main/40 bg-brand-main/[0.04]'
+            : 'border-slate-900/10 bg-white hover:border-brand-main/40'}
         `}
       >
         <Avatar user={user} size="sm" />
@@ -159,7 +159,7 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }
                 onClick={() => setIsOpen(false)}
                 className={`${menuItemClass} text-slate-700 hover:bg-slate-900/[0.04] hover:text-slate-900`}
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0A3D2E]/[0.07] text-[#0A3D2E]">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-main/[0.07] text-brand-main">
                   <LayoutDashboard className="h-4 w-4" />
                 </span>
                 <span className="font-semibold">Mon Espace Hôte</span>
@@ -188,7 +188,7 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }
               onClick={() => setIsOpen(false)}
               className={`${menuItemClass} text-slate-700 hover:bg-slate-900/[0.04] hover:text-slate-900`}
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0A3D2E]/[0.07] text-[#0A3D2E]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-main/[0.07] text-brand-main">
                 <Calendar className="h-4 w-4" />
               </span>
               <span>Mes réservations</span>

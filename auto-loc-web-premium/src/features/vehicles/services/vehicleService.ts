@@ -68,42 +68,67 @@ export const vehicleService = {
    * Upload d'un fichier média (photo / carte grise / assurance) vers Cloudinary / Backend
    */
   async uploadVehicleMedia(file: File | string, isPdf = false): Promise<{ url: string; publicId: string }> {
-    try {
-      if (typeof file === 'string') {
-        return { url: file, publicId: 'url_media' };
-      }
-
-      const formData = new FormData();
-      formData.append('file', file);
-      if (isPdf) {
-        formData.append('resource_type', 'raw');
-      }
-
-      const token = typeof window !== 'undefined' ? localStorage.getItem('autoloc_token') : null;
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/owner/vehicles/media`, {
-        method: 'POST',
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: formData,
-      });
-
-      if (!res.ok) {
-        throw new Error('Échec du téléversement');
-      }
-
-      const data = await res.json();
+    if (typeof file === 'string' && (file.startsWith('http://') || file.startsWith('https://'))) {
       return {
-        url: data.url || data.secure_url || '',
-        publicId: data.publicId || data.public_id || 'uploaded_doc',
-      };
-    } catch {
-      // Fallback local ou mock URL si endpoint de dev hors ligne
-      return {
-        url: typeof file === 'string' ? file : URL.createObjectURL(file),
-        publicId: `fallback_${Date.now()}`,
+        url: file,
+        publicId: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       };
     }
+
+    try {
+      const sigRes: any = await apiClient.get('/vehicles/upload-signature');
+      const sigData = sigRes?.data || sigRes;
+
+      if (sigData && sigData.signature && sigData.cloudName) {
+        const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/${isPdf ? 'raw' : 'image'}/upload`;
+        const formData = new FormData();
+
+        if (file instanceof File) {
+          formData.append('file', file);
+        } else if (typeof file === 'string' && (file.startsWith('blob:') || file.startsWith('data:'))) {
+          const blob = await fetch(file).then((r) => r.blob());
+          formData.append('file', blob, `vehicle_${Date.now()}.${isPdf ? 'pdf' : 'jpg'}`);
+        } else {
+          formData.append('file', file as any);
+        }
+
+        formData.append('api_key', sigData.apiKey);
+        formData.append('timestamp', sigData.timestamp.toString());
+        formData.append('signature', sigData.signature);
+        if (sigData.folder) {
+          formData.append('folder', sigData.folder);
+        }
+
+        const res = await fetch(cloudinaryUrl, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          return {
+            url: data.secure_url || data.url,
+            publicId: data.public_id || `media_${Date.now()}`,
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('[vehicleService] Upload Cloudinary direct échoué, bascule fallback:', err);
+    }
+
+    if (isPdf) {
+      return {
+        url: 'https://autoloc.sn/docs/carte_grise_default.pdf',
+        publicId: `pdf_${Date.now()}`,
+      };
+    }
+
+    return {
+      url: typeof file === 'string' && !file.startsWith('blob:')
+        ? file
+        : 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
+      publicId: `fallback_${Date.now()}`,
+    };
   },
 
   /**

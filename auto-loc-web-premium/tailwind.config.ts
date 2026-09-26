@@ -13,12 +13,24 @@ const config: Config = {
       fontFamily: {
         display: ["var(--font-fraunces)", "Georgia", "serif"],
         fraunces: ["var(--font-fraunces)", "Georgia", "serif"],
+        gloock: ["var(--font-gloock)", "Georgia", "serif"],
         body: ["var(--font-jakarta)", "system-ui", "sans-serif"],
+        jakarta: ["var(--font-jakarta)", "system-ui", "sans-serif"],
+        playfair: ["var(--font-playfair)", "Georgia", "serif"],
+        cormorant: ["var(--font-cormorant)", "Georgia", "serif"],
+        cinzel: ["var(--font-cinzel)", "Georgia", "serif"],
+        syne: ["var(--font-syne)", "sans-serif"],
       },
 
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        brand: {
+          dark: "#041912",
+          main: "#0A3D2E",
+          emerald: "#10b981",
+          gold: "#F1DFB6",
+        },
         forest: {
           50: "#F1F6EA",
           100: "#E4EBDB",
@@ -31,6 +43,19 @@ const config: Config = {
           800: "#041912",
           900: "#020F0B",
           950: "#010806",
+        },
+        gold: {
+          50: "#FBF6E9",
+          100: "#F5EBCE",
+          200: "#F1DFB6",
+          300: "#E6CA8B",
+          400: "#D4AF37",
+          500: "#B89320",
+        },
+        champagne: {
+          DEFAULT: "#F1DFB6",
+          light: "#FBF6E9",
+          dark: "#E6CA8B",
         },
         emerald: {
           50: "#ecfdf5",
@@ -49,6 +74,8 @@ const config: Config = {
           50: "#F8FBF4",
           100: "#F1F6EA",
           200: "#E4EBDB",
+          300: "#FBF6E9",
+          400: "#F1DFB6",
         },
       },
       borderRadius: {

@@ -13,6 +13,7 @@ import {
   FileImage,
 } from 'lucide-react';
 import { fetchApi } from '@/lib/config';
+import { reservationsApi } from '@/src/core/api/reservationsApi';
 import { TenantReservationDetailData } from '../../hooks/useTenantReservationDetail';
 
 interface TenantRefusalEvidenceModalProps {
@@ -68,15 +69,9 @@ export const TenantRefusalEvidenceModal: React.FC<TenantRefusalEvidenceModalProp
     try {
       setUploading(true);
 
-      // Si une photo de preuve est sélectionnée, la téléverser d'abord vers le backend
+      // Si une photo de preuve est sélectionnée, la téléverser d'abord via Cloudinary et lier la photo
       if (selectedFile) {
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-
-        await fetchApi(`/reservations/${booking.id}/photos-etat?type=CHECKIN&categorie=AUTRE`, {
-          method: 'POST',
-          body: formData,
-        });
+        await reservationsApi.uploadEtatLieuPhotos(booking.id, [selectedFile], 'CHECKIN', motif);
       }
 
       // Transmettre le refus et l'ouverture du litige
@@ -120,7 +115,7 @@ export const TenantRefusalEvidenceModal: React.FC<TenantRefusalEvidenceModalProp
               <ShieldAlert className="w-3 h-3 text-rose-600" />
               <span>Signalement & Refus</span>
             </div>
-            <h3 className="text-lg font-bold text-[#041912]">Véhicule non conforme</h3>
+            <h3 className="text-lg font-bold text-brand-dark">Véhicule non conforme</h3>
             <p className="text-xs text-slate-500 font-mono font-medium">
               RÉF. #{booking.id.slice(0, 8).toUpperCase()}
             </p>
@@ -203,13 +198,13 @@ export const TenantRefusalEvidenceModal: React.FC<TenantRefusalEvidenceModalProp
               {previewUrl ? (
                 <img src={previewUrl} alt="Preuve non-conformité" className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0" />
               ) : (
-                <div className="w-11 h-11 rounded-xl bg-emerald-100 text-[#0A3D2E] flex items-center justify-center shrink-0">
-                  <ImagePlus className="w-5 h-5 text-[#0A3D2E]" />
+                <div className="w-11 h-11 rounded-xl bg-emerald-100 text-brand-main flex items-center justify-center shrink-0">
+                  <ImagePlus className="w-5 h-5 text-brand-main" />
                 </div>
               )}
 
               <div className="flex-1">
-                <h5 className="text-xs font-bold text-[#065F46] group-hover:text-[#041912]">
+                <h5 className="text-xs font-bold text-[#065F46] group-hover:text-brand-dark">
                   {selectedFile ? selectedFile.name : 'Ajouter une photo du problème'}
                 </h5>
                 <p className="text-[11px] text-[#047857] mt-0.5">
@@ -217,7 +212,7 @@ export const TenantRefusalEvidenceModal: React.FC<TenantRefusalEvidenceModalProp
                 </p>
               </div>
 
-              {selectedFile && <CheckCircle2 className="w-5 h-5 text-[#0A3D2E] shrink-0" />}
+              {selectedFile && <CheckCircle2 className="w-5 h-5 text-brand-main shrink-0" />}
             </label>
           </div>
 

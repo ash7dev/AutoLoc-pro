@@ -143,20 +143,20 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
       : "Ajouter des dates";
 
   return (
-    <div className="w-full overflow-hidden rounded-3xl border border-[#041912]/8 bg-white shadow-[0_20px_48px_-16px_rgba(4,25,18,0.18)]">
+    <div className="w-full overflow-hidden rounded-3xl border border-brand-dark/8 bg-white shadow-[0_20px_48px_-16px_rgba(4,25,18,0.18)]">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#0A3D2E]/8 px-2.5 py-1 text-[10.5px] font-semibold text-[#0A3D2E]">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-main/8 px-2.5 py-1 text-[10.5px] font-semibold text-brand-main">
             <Sparkles className="h-3 w-3" />
             Recherche rapide · Dakar
           </div>
-          <h2 className="mt-1.5 font-fraunces text-xl leading-tight text-[#041912]">
+          <h2 className="mt-1.5 font-fraunces text-xl leading-tight text-brand-dark">
             Où & quand louer ?
           </h2>
         </div>
         {durationDays !== null && (
-          <div className="flex items-center gap-1 rounded-full bg-[#0A3D2E]/8 px-3 py-1 text-[12px] font-semibold text-[#0A3D2E]">
+          <div className="flex items-center gap-1 rounded-full bg-brand-main/8 px-3 py-1 text-[12px] font-semibold text-brand-main">
             {durationDays} jrs
           </div>
         )}
@@ -167,7 +167,7 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
         {/* STEP 1 : ZONE */}
         <div
           className={`overflow-hidden rounded-2xl border transition-all ${activeStep === "zone"
-              ? "border-[#041912] bg-white"
+              ? "border-brand-dark bg-white"
               : "border-slate-100 bg-slate-50/40 hover:border-slate-200"
             }`}
         >
@@ -178,8 +178,8 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
             >
               <div>
                 <span className="block text-[10.5px] font-medium text-slate-400">Périmètre</span>
-                <span className="flex items-center gap-1.5 text-[13.5px] font-semibold text-[#041912]">
-                  <selectedZoneObj.icon className="h-3.5 w-3.5 text-[#059669]" />
+                <span className="flex items-center gap-1.5 text-[13.5px] font-semibold text-brand-dark">
+                  <selectedZoneObj.icon className="h-3.5 w-3.5 text-emerald-600" />
                   {selectedZoneObj.label}
                 </span>
               </div>
@@ -190,10 +190,10 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
           ) : (
             <div className="flex flex-col gap-3 p-4">
               <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0A3D2E]/8 text-[#0A3D2E]">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-main/8 text-brand-main">
                   <MapPin className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-[12px] font-semibold text-[#041912]">
+                <span className="text-[12px] font-semibold text-brand-dark">
                   Où voulez-vous rouler ?
                 </span>
               </div>
@@ -210,23 +210,23 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
                         setActiveStep("dates");
                       }}
                       className={`flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all ${isSelected
-                          ? "border-[#041912] bg-[#041912] text-white"
+                          ? "border-brand-dark bg-brand-dark text-white"
                           : "border-slate-200 bg-white text-slate-900 hover:border-slate-300"
                         }`}
                     >
                       <div className="flex items-center gap-3">
-                        <ZoneIcon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-[#4ADE80]' : 'text-[#059669]'}`} />
+                        <ZoneIcon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-emerald-400' : 'text-emerald-600'}`} />
                         <div>
-                          <p className={`text-[13px] font-semibold ${isSelected ? "text-white" : "text-[#041912]"}`}>
+                          <p className={`text-[13px] font-semibold ${isSelected ? "text-white" : "text-brand-dark"}`}>
                             {z.label}
                           </p>
-                          <p className={`text-[11.5px] ${isSelected ? "text-[#F1DFB6]/70" : "text-slate-500"}`}>
+                          <p className={`text-[11.5px] ${isSelected ? "text-champagne/70" : "text-slate-500"}`}>
                             {z.subtitle}
                           </p>
                         </div>
                       </div>
                       <div
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${isSelected ? "border-[#4ADE80] bg-[#4ADE80] text-[#041912]" : "border-slate-300"
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${isSelected ? "border-[#4ADE80] bg-emerald-400 text-brand-dark" : "border-slate-300"
                           }`}
                       >
                         {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
@@ -242,7 +242,7 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
         {/* STEP 2 : DATES */}
         <div
           className={`overflow-hidden rounded-2xl border transition-all ${activeStep === "dates"
-              ? "border-[#041912] bg-white"
+              ? "border-brand-dark bg-white"
               : "border-slate-100 bg-slate-50/40 hover:border-slate-200"
             }`}
         >
@@ -253,8 +253,8 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
             >
               <div>
                 <span className="block text-[10.5px] font-medium text-slate-400">Dates de location</span>
-                <span className="flex items-center gap-1.5 text-[13.5px] font-semibold text-[#041912]">
-                  <CalendarIcon className="h-3.5 w-3.5 text-[#059669]" />
+                <span className="flex items-center gap-1.5 text-[13.5px] font-semibold text-brand-dark">
+                  <CalendarIcon className="h-3.5 w-3.5 text-emerald-600" />
                   {datesSummaryText}
                 </span>
               </div>
@@ -265,10 +265,10 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
           ) : (
             <div className="flex flex-col gap-3 p-4">
               <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0A3D2E]/8 text-[#0A3D2E]">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-main/8 text-brand-main">
                   <CalendarIcon className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-[12px] font-semibold text-[#041912]">
+                <span className="text-[12px] font-semibold text-brand-dark">
                   Quand souhaitez-vous louer ?
                 </span>
               </div>
@@ -277,7 +277,7 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
                 <button
                   type="button"
                   onClick={handlePresetWeekEnd}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#0A3D2E]/8 px-3 py-1.5 text-[12px] font-semibold text-[#0A3D2E] transition-colors hover:bg-[#0A3D2E]/12"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-brand-main/8 px-3 py-1.5 text-[12px] font-semibold text-brand-main transition-colors hover:bg-brand-main/12"
                 >
                   <Zap className="h-3 w-3" />
                   Ce week-end
@@ -285,14 +285,14 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
                 <button
                   type="button"
                   onClick={handlePreset7Days}
-                  className="rounded-full bg-[#0A3D2E]/8 px-3 py-1.5 text-[12px] font-semibold text-[#0A3D2E] transition-colors hover:bg-[#0A3D2E]/12"
+                  className="rounded-full bg-brand-main/8 px-3 py-1.5 text-[12px] font-semibold text-brand-main transition-colors hover:bg-brand-main/12"
                 >
                   7 jours
                 </button>
                 <button
                   type="button"
                   onClick={handlePreset14Days}
-                  className="rounded-full bg-[#0A3D2E]/8 px-3 py-1.5 text-[12px] font-semibold text-[#0A3D2E] transition-colors hover:bg-[#0A3D2E]/12"
+                  className="rounded-full bg-brand-main/8 px-3 py-1.5 text-[12px] font-semibold text-brand-main transition-colors hover:bg-brand-main/12"
                 >
                   14 jours
                 </button>
@@ -309,7 +309,7 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveStep("type")}
-                className="flex w-full items-center justify-center gap-1 rounded-xl bg-[#0A3D2E]/8 px-4 py-2.5 text-[12.5px] font-semibold text-[#0A3D2E] transition-colors hover:bg-[#0A3D2E]/12"
+                className="flex w-full items-center justify-center gap-1 rounded-xl bg-brand-main/8 px-4 py-2.5 text-[12.5px] font-semibold text-brand-main transition-colors hover:bg-brand-main/12"
               >
                 Valider les dates
                 <ChevronRight className="h-4 w-4" />
@@ -321,7 +321,7 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
         {/* STEP 3 : TYPE */}
         <div
           className={`overflow-hidden rounded-2xl border transition-all ${activeStep === "type"
-              ? "border-[#041912] bg-white"
+              ? "border-brand-dark bg-white"
               : "border-slate-100 bg-slate-50/40 hover:border-slate-200"
             }`}
         >
@@ -332,8 +332,8 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
             >
               <div>
                 <span className="block text-[10.5px] font-medium text-slate-400">Catégorie de véhicule</span>
-                <span className="flex items-center gap-1.5 text-[13.5px] font-semibold text-[#041912]">
-                  <selectedTypeObj.icon className="h-3.5 w-3.5 text-[#059669]" />
+                <span className="flex items-center gap-1.5 text-[13.5px] font-semibold text-brand-dark">
+                  <selectedTypeObj.icon className="h-3.5 w-3.5 text-emerald-600" />
                   {selectedTypeObj.label}
                 </span>
               </div>
@@ -344,10 +344,10 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
           ) : (
             <div className="flex flex-col gap-3 p-4">
               <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0A3D2E]/8 text-[#0A3D2E]">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-main/8 text-brand-main">
                   <Car className="h-3.5 w-3.5" />
                 </div>
-                <span className="text-[12px] font-semibold text-[#041912]">
+                <span className="text-[12px] font-semibold text-brand-dark">
                   Quel type de véhicule ?
                 </span>
               </div>
@@ -361,23 +361,23 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
                       key={t.value}
                       onClick={() => setType(t.value)}
                       className={`flex items-center justify-between rounded-xl border p-3 text-left transition-all ${isSelected
-                          ? "border-[#041912] bg-[#041912] text-white"
+                          ? "border-brand-dark bg-brand-dark text-white"
                           : "border-slate-200 bg-white text-slate-900 hover:border-slate-300"
                         }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <TypeIcon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-[#4ADE80]' : 'text-[#059669]'}`} />
+                        <TypeIcon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-emerald-400' : 'text-emerald-600'}`} />
                         <div>
-                          <p className={`text-[12.5px] font-semibold ${isSelected ? "text-white" : "text-[#041912]"}`}>
+                          <p className={`text-[12.5px] font-semibold ${isSelected ? "text-white" : "text-brand-dark"}`}>
                             {t.label}
                           </p>
-                          <p className={`text-[10.5px] ${isSelected ? "text-[#F1DFB6]/70" : "text-slate-500"}`}>
+                          <p className={`text-[10.5px] ${isSelected ? "text-champagne/70" : "text-slate-500"}`}>
                             {t.subtitle}
                           </p>
                         </div>
                       </div>
                       {isSelected && (
-                        <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#4ADE80] text-[#041912]">
+                        <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-brand-dark">
                           <Check className="h-2.5 w-2.5 stroke-[3]" />
                         </div>
                       )}
@@ -403,9 +403,9 @@ export const WhereToSearchSection: React.FC<WhereToSearchSectionProps> = ({
         <button
           onClick={handleSearch}
           onMouseEnter={handleMouseEnterSearch}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#041912] px-6 py-3 text-[13.5px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E]"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-dark px-6 py-3 text-[13.5px] font-semibold text-champagne transition-colors hover:bg-brand-main"
         >
-          <Search className="h-4 w-4 text-[#4ADE80]" />
+          <Search className="h-4 w-4 text-emerald-400" />
           Rechercher
         </button>
       </div>

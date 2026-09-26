@@ -34,7 +34,7 @@ export const ResumeDraftModal: React.FC<ResumeDraftModalProps> = ({
           className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-[#062017] p-6 shadow-2xl text-white"
         >
           <div className="flex items-center gap-4 mb-5">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#059669]/20 border border-[#4ADE80]/30 text-[#4ADE80]">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-600/20 border border-[#4ADE80]/30 text-emerald-400">
               <Bookmark className="h-7 w-7" />
             </div>
             <div>
@@ -45,7 +45,7 @@ export const ResumeDraftModal: React.FC<ResumeDraftModalProps> = ({
 
           <div className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-4 space-y-2">
             <div className="flex items-center gap-2 text-sm font-semibold text-emerald-300">
-              <Car className="h-4 w-4 text-[#4ADE80]" />
+              <Car className="h-4 w-4 text-emerald-400" />
               <span>{vehicleName}</span>
             </div>
             <p className="text-xs text-slate-300">

@@ -89,10 +89,10 @@ export function VehicleMobileStickyBar({
         {/* Côté Gauche: Tarification & Dates */}
         <div className="min-w-0 flex-1 flex flex-col justify-center">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-serif text-xl sm:text-2xl font-normal text-[#041912] tabular-nums tracking-tight leading-none">
+            <span className="font-serif text-xl sm:text-2xl font-normal text-brand-dark tabular-nums tracking-tight leading-none">
               {formatCurrency(tenantPricePerDay)}
             </span>
-            <span className="text-[10px] font-bold text-[#0A3D2E] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-brand-main bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 uppercase tracking-wider">
               FCFA / j
             </span>
           </div>
@@ -101,13 +101,13 @@ export function VehicleMobileStickyBar({
             <button
               type="button"
               onClick={onOpenDatesModal}
-              className="flex items-center gap-1 text-[11px] font-semibold text-slate-700 mt-0.5 hover:text-[#0A3D2E] transition-colors cursor-pointer text-left truncate group"
+              className="flex items-center gap-1 text-[11px] font-semibold text-slate-700 mt-0.5 hover:text-brand-main transition-colors cursor-pointer text-left truncate group"
             >
-              <Calendar className="w-3 h-3 text-[#0A3D2E] shrink-0" />
+              <Calendar className="w-3 h-3 text-brand-main shrink-0" />
               <span className="truncate">
                 {formatShortDate(startDate!)} – {formatShortDate(endDate!)}
               </span>
-              <span className="text-[10px] font-bold text-[#0A3D2E] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 shrink-0">
+              <span className="text-[10px] font-bold text-brand-main bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 shrink-0">
                 {daysCount}j
               </span>
             </button>
@@ -123,11 +123,11 @@ export function VehicleMobileStickyBar({
         <button
           type="button"
           onClick={handleCtaClick}
-          className="shrink-0 py-3 px-5 sm:px-6 rounded-full bg-[#0A3D2E] hover:bg-[#0F4F3B] active:scale-[0.96] text-[#F1DFB6] font-bold text-xs tracking-wider shadow-md shadow-[#0A3D2E]/20 flex items-center gap-2 cursor-pointer transition-all duration-200 group"
+          className="shrink-0 py-3 px-5 sm:px-6 rounded-full bg-brand-main hover:bg-forest-700 active:scale-[0.96] text-champagne font-bold text-xs tracking-wider shadow-md shadow-brand-main/20 flex items-center gap-2 cursor-pointer transition-all duration-200 group"
         >
-          <Zap className="w-3.5 h-3.5 text-[#F1DFB6] fill-[#F1DFB6]" />
+          <Zap className="w-3.5 h-3.5 text-champagne fill-[#F1DFB6]" />
           <span>Réserver</span>
-          <ArrowRight className="w-3.5 h-3.5 text-[#F1DFB6]/80 group-hover:translate-x-0.5 transition-transform" />
+          <ArrowRight className="w-3.5 h-3.5 text-champagne/80 group-hover:translate-x-0.5 transition-transform" />
         </button>
       </div>
     </div>

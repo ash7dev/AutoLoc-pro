@@ -39,7 +39,7 @@ const STATUS_STYLES: Record<
     label: 'Livré',
     badge: 'bg-emerald-50 text-emerald-800 ring-emerald-600/20',
     dot: 'bg-emerald-500',
-    bar: 'bg-[#0A3D2E]',
+    bar: 'bg-brand-main',
   },
   PARTIAL: {
     label: 'Partiel',
@@ -80,7 +80,7 @@ function ChannelIcons({ channels }: { channels: BroadcastChannel[] }) {
           <li
             key={ch}
             title={meta.label}
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0A3D2E]/[0.06] text-[#0A3D2E]"
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-main/[0.06] text-brand-main"
           >
             <Icon className="h-3.5 w-3.5" />
             <span className="sr-only">{meta.label}</span>
@@ -147,12 +147,12 @@ export function AdminBroadcastHistoryTable({
   return (
     <section
       aria-label="Historique des diffusions"
-      className="mt-8 rounded-[28px] border border-[#0A3D2E]/10 bg-white p-6 shadow-[0_20px_50px_-30px_rgba(10,61,46,0.35)] sm:p-8"
+      className="mt-8 rounded-[28px] border border-brand-main/10 bg-white p-6 shadow-[0_20px_50px_-30px_rgba(10,61,46,0.35)] sm:p-8"
     >
       {/* En-tête */}
       <div className="flex items-start justify-between gap-4 border-b border-gray-100 pb-6">
         <div>
-          <h2 style={DISPLAY_FONT} className="text-2xl leading-tight text-[#0A3D2E] sm:text-3xl">
+          <h2 style={DISPLAY_FONT} className="text-2xl leading-tight text-brand-main sm:text-3xl">
             Historique des diffusions
           </h2>
           <p className="mt-1 max-w-md text-sm text-gray-500">
@@ -164,7 +164,7 @@ export function AdminBroadcastHistoryTable({
           <div className="shrink-0 text-right">
             <div
               style={DISPLAY_FONT}
-              className="text-3xl leading-none tabular-nums text-[#0A3D2E] sm:text-4xl"
+              className="text-3xl leading-none tabular-nums text-brand-main sm:text-4xl"
             >
               {fmt(history.length)}
             </div>
@@ -195,10 +195,10 @@ export function AdminBroadcastHistoryTable({
       ) : history.length === 0 ? (
         /* État vide */
         <div className="flex flex-col items-center px-6 py-14 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0A3D2E] text-[#F1DFB6]">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-main text-champagne">
             <History className="h-6 w-6" />
           </span>
-          <p style={DISPLAY_FONT} className="mt-5 text-xl text-[#0A3D2E]">
+          <p style={DISPLAY_FONT} className="mt-5 text-xl text-brand-main">
             Aucune diffusion pour le moment
           </p>
           <p className="mt-1 max-w-sm text-sm text-gray-500">
@@ -229,7 +229,7 @@ export function AdminBroadcastHistoryTable({
                   return (
                     <tr
                       key={item.id}
-                      className="border-b border-gray-100 transition-colors last:border-0 hover:bg-[#0A3D2E]/[0.03]"
+                      className="border-b border-gray-100 transition-colors last:border-0 hover:bg-brand-main/[0.03]"
                     >
                       <td className="max-w-[280px] px-4 py-4">
                         <div className="truncate text-sm font-semibold text-gray-900" title={item.title}>

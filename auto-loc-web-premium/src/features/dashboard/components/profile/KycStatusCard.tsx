@@ -20,8 +20,8 @@ export const KycStatusCard: React.FC<KycStatusCardProps> = ({ profile }) => {
           title: 'Identité vérifiée',
           description:
             "Votre compte est certifié conforme. Vous bénéficiez de l'assurance premium et de la confiance maximale sur AutoLoc.",
-          iconBg: 'bg-[#0A3D2E]/8 text-[#0A3D2E]',
-          badge: 'bg-[#0A3D2E]/8 text-[#0A3D2E]',
+          iconBg: 'bg-brand-main/8 text-brand-main',
+          badge: 'bg-brand-main/8 text-brand-main',
           icon: <ShieldCheck className="h-5 w-5" />,
           label: 'Certifié conforme',
         };
@@ -85,10 +85,10 @@ export const KycStatusCard: React.FC<KycStatusCardProps> = ({ profile }) => {
   ];
 
   return (
-    <div className="rounded-3xl border border-[#041912]/8 bg-white p-6 sm:p-8">
+    <div className="rounded-3xl border border-brand-dark/8 bg-white p-6 sm:p-8">
       {/* En-tête */}
       <div>
-        <h3 className="font-fraunces text-xl leading-tight text-[#041912]">
+        <h3 className="font-fraunces text-xl leading-tight text-brand-dark">
           Statut de vérification KYC
         </h3>
         <p className="mt-1 text-[13px] text-slate-500">
@@ -104,7 +104,7 @@ export const KycStatusCard: React.FC<KycStatusCardProps> = ({ profile }) => {
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h4 className="text-[15px] font-semibold text-[#041912]">{config.title}</h4>
+              <h4 className="text-[15px] font-semibold text-brand-dark">{config.title}</h4>
               <span className={`rounded-full px-2.5 py-0.5 text-[10.5px] font-semibold ${config.badge}`}>
                 {config.label}
               </span>
@@ -118,10 +118,10 @@ export const KycStatusCard: React.FC<KycStatusCardProps> = ({ profile }) => {
         {!isVerified && (
           <Link
             href="/dashboard/kyc"
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#041912] px-4 py-2.5 text-[12.5px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E]"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-dark px-4 py-2.5 text-[12.5px] font-semibold text-champagne transition-colors hover:bg-brand-main"
           >
             {status === 'EN_ATTENTE' ? 'Voir mon dossier' : 'Vérifier mon identité'}
-            <ArrowRight className="h-3.5 w-3.5 text-[#4ADE80]" />
+            <ArrowRight className="h-3.5 w-3.5 text-emerald-400" />
           </Link>
         )}
       </div>
@@ -135,7 +135,7 @@ export const KycStatusCard: React.FC<KycStatusCardProps> = ({ profile }) => {
               {doc.label}
             </span>
             {doc.isDone ? (
-              <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#0A3D2E]">
+              <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-brand-main">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 {doc.doneLabel}
               </span>

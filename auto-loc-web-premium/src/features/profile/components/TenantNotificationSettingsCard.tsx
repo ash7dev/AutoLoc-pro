@@ -61,9 +61,9 @@ export const TenantNotificationSettingsCard: React.FC = () => {
   };
 
   return (
-    <div className="rounded-3xl border border-[#041912]/8 bg-white p-6 sm:p-8 shadow-xs">
+    <div className="rounded-3xl border border-brand-dark/8 bg-white p-6 sm:p-8 shadow-xs">
       <div>
-        <h3 className="font-fraunces text-xl leading-tight text-[#041912]">
+        <h3 className="font-fraunces text-xl leading-tight text-brand-dark">
           Notifications & Alertes Web Push
         </h3>
         <p className="mt-1 text-[13px] text-slate-500">
@@ -99,7 +99,7 @@ export const TenantNotificationSettingsCard: React.FC = () => {
               <div
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
                   isSubscribed
-                    ? 'bg-[#0A3D2E] text-[#F1DFB6]'
+                    ? 'bg-brand-main text-champagne'
                     : 'bg-slate-100 text-slate-500'
                 }`}
               >
@@ -112,13 +112,13 @@ export const TenantNotificationSettingsCard: React.FC = () => {
 
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h4 className="text-[14px] font-semibold text-[#041912]">
+                  <h4 className="text-[14px] font-semibold text-brand-dark">
                     Alertes de réservation instantanées (Push Web)
                   </h4>
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-[10.5px] font-semibold ${
                       isSubscribed
-                        ? 'bg-[#0A3D2E]/8 text-[#0A3D2E]'
+                        ? 'bg-brand-main/8 text-brand-main'
                         : permission === 'denied'
                         ? 'bg-rose-50 text-rose-700'
                         : 'bg-slate-100 text-slate-600'
@@ -145,7 +145,7 @@ export const TenantNotificationSettingsCard: React.FC = () => {
               className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[12.5px] font-semibold transition-colors cursor-pointer shadow-xs disabled:opacity-50 sm:w-auto ${
                 isSubscribed
                   ? 'border border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                  : 'bg-[#041912] text-[#F1DFB6] hover:bg-[#0A3D2E]'
+                  : 'bg-brand-dark text-champagne hover:bg-brand-main'
               }`}
             >
               {isLoading ? (
@@ -154,7 +154,7 @@ export const TenantNotificationSettingsCard: React.FC = () => {
                 'Désactiver'
               ) : (
                 <>
-                  <Bell className="h-4 w-4 text-[#F1DFB6]" />
+                  <Bell className="h-4 w-4 text-champagne" />
                   <span>Activer les notifications</span>
                 </>
               )}
@@ -174,8 +174,8 @@ export const TenantNotificationSettingsCard: React.FC = () => {
           {/* Test d'envoi Push VAPID si actif */}
           {isSubscribed && (
             <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-              <span className="flex items-center gap-2 text-[12.5px] font-medium text-[#0A3D2E]">
-                <CheckCircle2 className="h-4 w-4 text-[#0A3D2E]" />
+              <span className="flex items-center gap-2 text-[12.5px] font-medium text-brand-main">
+                <CheckCircle2 className="h-4 w-4 text-brand-main" />
                 Abonnement Push VAPID connecté et chiffré
               </span>
 
@@ -186,11 +186,11 @@ export const TenantNotificationSettingsCard: React.FC = () => {
                 className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-50"
               >
                 {isTesting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#0A3D2E]" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-main" />
                 ) : testSent ? (
                   <Check className="h-3.5 w-3.5 text-emerald-600" />
                 ) : (
-                  <Send className="h-3.5 w-3.5 text-[#0A3D2E]" />
+                  <Send className="h-3.5 w-3.5 text-brand-main" />
                 )}
                 <span>{testSent ? 'Notification envoyée !' : 'Tester l\'envoi push'}</span>
               </button>

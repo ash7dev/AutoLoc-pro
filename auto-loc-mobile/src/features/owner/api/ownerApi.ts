@@ -595,7 +595,13 @@ export const ownerApi = {
             dureeJours: calculatedDays,
             montantTotalBrut: Number(r.totalLocataire || r.montantTotalBrut || 0),
             commissionAutoLoc: Number(r.montantCommission || r.commissionAutoLoc || 0),
-            montantNetProprietaire: Number(r.netProprietaire || r.montantNetProprietaire || 0),
+            montantNetProprietaire: Number(
+              r.netProprietaire ||
+              r.montantNetProprietaire ||
+              r.totalLocataire ||
+              (Number(r.prixParJour || r.vehicule?.prixParJour || 0) * calculatedDays) ||
+              0
+            ),
             statut: mappedStatus,
             dateDemande: r.creeLe ? new Date(r.creeLe).toLocaleDateString('fr-FR') : 'Récemment',
             typeLivraison: r.typeLivraison || (r.adresseLivraison ? 'DAKAR' : 'AUCUNE'),

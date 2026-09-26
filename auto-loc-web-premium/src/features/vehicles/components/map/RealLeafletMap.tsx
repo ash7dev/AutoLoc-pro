@@ -81,8 +81,8 @@ export const RealLeafletMap: React.FC<RealLeafletMapProps> = ({
         }">
           <div class="px-2.5 py-1 rounded-full font-bold text-xs shadow-md border transition-colors flex items-center gap-1 ${
             isSelected
-              ? "bg-[#0A3D2E] text-white border-emerald-400 ring-2 ring-emerald-500/50"
-              : "bg-white text-slate-900 border-slate-300 hover:bg-[#0A3D2E] hover:text-white"
+              ? "bg-brand-main text-white border-emerald-400 ring-2 ring-emerald-500/50"
+              : "bg-white text-slate-900 border-slate-300 hover:bg-brand-main hover:text-white"
           }">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             <span>${priceText}</span>
@@ -175,7 +175,7 @@ export const RealLeafletMap: React.FC<RealLeafletMapProps> = ({
                 <MapPin className="w-3 h-3 text-emerald-600 shrink-0" />
                 <span>{selectedVehicle.ville || "Dakar"}</span>
               </p>
-              <div className="text-sm font-extrabold text-[#0A3D2E] mt-1.5">
+              <div className="text-sm font-extrabold text-brand-main mt-1.5">
                 {formatPrice(getTenantPricePerDay(selectedVehicle.prixParJour))}{" "}
                 <span className="text-[11px] font-normal text-slate-500">FCFA / jour</span>
               </div>
@@ -184,7 +184,7 @@ export const RealLeafletMap: React.FC<RealLeafletMapProps> = ({
 
           <Link
             href={`/vehicles/${selectedVehicle.id}`}
-            className="mt-3 w-full py-2.5 bg-[#0A3D2E] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-[#072B20] transition-colors shadow-md"
+            className="mt-3 w-full py-2.5 bg-brand-main text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-forest-700 transition-colors shadow-md"
           >
             <span>Voir l'offre & Réserver</span>
             <ExternalLink className="w-3.5 h-3.5" />

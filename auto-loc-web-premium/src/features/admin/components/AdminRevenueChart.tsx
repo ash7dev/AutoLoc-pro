@@ -67,7 +67,7 @@ export const AdminRevenueChart: React.FC<AdminRevenueChartProps> = ({ data, isLo
             <ChartIcon className="w-4.5 h-4.5" style={{ color: FOREST }} />
           </div>
           <div>
-            <h2 className="text-base font-normal text-[#041912] dark:text-white">Volume d'affaires & revenus nets</h2>
+            <h2 className="text-base font-normal text-brand-dark dark:text-white">Volume d'affaires & revenus nets</h2>
             <p className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5">
               GMV total vs commission nette AutoLoc, au prorata quotidien
             </p>
@@ -184,7 +184,7 @@ export const AdminRevenueChart: React.FC<AdminRevenueChartProps> = ({ data, isLo
           <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
             Total réservations
           </span>
-          <div className="text-base font-normal text-[#041912] dark:text-white mt-0.5 tabular-nums">
+          <div className="text-base font-normal text-brand-dark dark:text-white mt-0.5 tabular-nums">
             {summary.totalBookings} contrats
           </div>
         </div>

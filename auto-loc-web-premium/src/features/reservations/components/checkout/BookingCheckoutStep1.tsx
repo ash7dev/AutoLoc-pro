@@ -129,8 +129,8 @@ function OptionRow({
 }: OptionRowProps) {
   return (
     <label
-      className={`flex cursor-pointer items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#0A3D2E] has-[:focus-visible]:ring-offset-2 ${checked
-          ? 'border-[#0A3D2E] bg-[#0A3D2E]/[0.04] ring-1 ring-[#0A3D2E]'
+      className={`flex cursor-pointer items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-main has-[:focus-visible]:ring-offset-2 ${checked
+          ? 'border-brand-main bg-brand-main/[0.04] ring-1 ring-brand-main'
           : 'border-slate-200 hover:border-slate-300'
         }`}
     >
@@ -143,7 +143,7 @@ function OptionRow({
           className="h-4 w-4 shrink-0 cursor-pointer accent-[#0A3D2E]"
         />
         <Icon
-          className="h-[18px] w-[18px] shrink-0 text-[#0A3D2E]/70"
+          className="h-[18px] w-[18px] shrink-0 text-brand-main/70"
           strokeWidth={1.5}
           aria-hidden="true"
         />
@@ -355,7 +355,7 @@ export function BookingCheckoutStep1({
                 }}
               />
               {vehicle.type && (
-                <span className="absolute left-2 top-2 rounded-full bg-[#0A3D2E] px-2.5 py-0.5 text-xs font-semibold text-[#F1DFB6]">
+                <span className="absolute left-2 top-2 rounded-full bg-brand-main px-2.5 py-0.5 text-xs font-semibold text-champagne">
                   {vehicle.type}
                 </span>
               )}
@@ -400,7 +400,7 @@ export function BookingCheckoutStep1({
               )}
 
               <p className="flex items-baseline gap-1.5 pt-2">
-                <span className="font-display text-2xl tabular-nums text-[#0A3D2E]">
+                <span className="font-display text-2xl tabular-nums text-brand-main">
                   {formatCurrency(vehicle.tenantPricePerDay)}
                 </span>
                 <span className="text-xs font-medium text-slate-500">FCFA / jour</span>
@@ -413,12 +413,12 @@ export function BookingCheckoutStep1({
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
                 <Calendar
-                  className="mt-1 h-5 w-5 shrink-0 text-[#0A3D2E]"
+                  className="mt-1 h-5 w-5 shrink-0 text-brand-main"
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
                 <div>
-                  <h3 id="dates-title" className="font-display text-lg text-[#041912]">
+                  <h3 id="dates-title" className="font-display text-lg text-brand-dark">
                     Dates de location
                   </h3>
                   <p className="text-xs text-slate-500">
@@ -438,9 +438,9 @@ export function BookingCheckoutStep1({
               <button
                 type="button"
                 onClick={() => setShowCalendar((prev) => !prev)}
-                className="flex items-center gap-3 text-left rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 transition-all hover:border-[#041912] cursor-pointer"
+                className="flex items-center gap-3 text-left rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 transition-all hover:border-brand-dark cursor-pointer"
               >
-                <div className="w-8 h-8 rounded-xl bg-[#041912] border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-brand-dark border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
                   <Calendar className="w-4 h-4 text-emerald-400" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -460,7 +460,7 @@ export function BookingCheckoutStep1({
                 </div>
                 <ChevronDown
                   className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
-                    showCalendar ? 'rotate-180 text-[#041912]' : ''
+                    showCalendar ? 'rotate-180 text-brand-dark' : ''
                   }`}
                 />
               </button>
@@ -468,9 +468,9 @@ export function BookingCheckoutStep1({
               <button
                 type="button"
                 onClick={() => setShowCalendar((prev) => !prev)}
-                className="flex items-center gap-3 text-left rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 transition-all hover:border-[#041912] cursor-pointer"
+                className="flex items-center gap-3 text-left rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 transition-all hover:border-brand-dark cursor-pointer"
               >
-                <div className="w-8 h-8 rounded-xl bg-[#041912] border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-brand-dark border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
                   <Calendar className="w-4 h-4 text-emerald-400" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -490,7 +490,7 @@ export function BookingCheckoutStep1({
                 </div>
                 <ChevronDown
                   className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
-                    showCalendar ? 'rotate-180 text-[#041912]' : ''
+                    showCalendar ? 'rotate-180 text-brand-dark' : ''
                   }`}
                 />
               </button>
@@ -573,7 +573,7 @@ export function BookingCheckoutStep1({
           {/* 4. Options */}
           {hasOptions && (
             <section aria-labelledby="options-title" className={`${CARD_CLASS} space-y-5`}>
-              <h3 id="options-title" className="font-display text-lg text-[#041912]">
+              <h3 id="options-title" className="font-display text-lg text-brand-dark">
                 Options
               </h3>
 
@@ -642,7 +642,7 @@ export function BookingCheckoutStep1({
                             ? 'Ex : numéro de vol et heure d’arrivée'
                             : 'Ex : Mermoz Pyrotechnie, près de la banque'
                         }
-                        className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] sm:text-sm"
+                        className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-main sm:text-sm"
                       />
                     </label>
                   )}
@@ -693,7 +693,7 @@ export function BookingCheckoutStep1({
               onClick={onNext}
               disabled={blockingReason !== null}
               aria-describedby={blockingReason ? ctaHintId : undefined}
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-6 py-4 text-base font-bold text-[#F1DFB6] shadow-md transition-all hover:bg-[#0F4F3B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-main px-6 py-4 text-base font-bold text-champagne shadow-md transition-all hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
             >
               <span>{isDatesBlocked ? 'Dates indisponibles' : 'Continuer vers le paiement'}</span>
               <ArrowRight className="h-5 w-5" aria-hidden="true" />

@@ -22,11 +22,11 @@ interface OwnerDashboardGreetingProps {
 const plural = (n: number, one: string, many: string) => (n > 1 ? many : one);
 
 const PILL =
-  'inline-flex items-center justify-center gap-2.5 rounded-full border px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 md:py-2.5';
-const PILL_PRIMARY = 'border-[#0A3D2E] bg-[#0A3D2E] text-[#F1DFB6] hover:bg-[#0F4F3B]';
+  'inline-flex items-center justify-center gap-2.5 rounded-full border px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2 md:py-2.5';
+const PILL_PRIMARY = 'border-brand-main bg-brand-main text-champagne hover:bg-forest-700';
 
 const Num: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <strong className="font-semibold tabular-nums text-[#041912]">{children}</strong>
+  <strong className="font-semibold tabular-nums text-brand-dark">{children}</strong>
 );
 
 export const OwnerDashboardGreeting: React.FC<OwnerDashboardGreetingProps> = ({
@@ -105,7 +105,7 @@ export const OwnerDashboardGreeting: React.FC<OwnerDashboardGreetingProps> = ({
 
   const calm = (
     <>
-      <CheckCircle2 className="h-4 w-4 shrink-0 text-[#0A3D2E]" aria-hidden="true" />
+      <CheckCircle2 className="h-4 w-4 shrink-0 text-brand-main" aria-hidden="true" />
       Aucune action urgente pour le moment
     </>
   );
@@ -124,7 +124,7 @@ export const OwnerDashboardGreeting: React.FC<OwnerDashboardGreetingProps> = ({
             <h1
               id={titleId}
               suppressHydrationWarning
-              className="font-display text-[2rem] font-normal leading-[1.1] tracking-tight text-[#041912] md:text-4xl"
+              className="font-display text-[2rem] font-normal leading-[1.1] tracking-tight text-brand-dark md:text-4xl"
             >
               {greeting}
               {prenom ? `, ${prenom}` : ''}
@@ -140,9 +140,9 @@ export const OwnerDashboardGreeting: React.FC<OwnerDashboardGreetingProps> = ({
                 onClick={onRefresh}
                 disabled={isRefreshing}
                 title="Rafraîchir les données du dashboard"
-                className="inline-flex items-center gap-1.5 rounded-full border border-[#0A3D2E]/15 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:border-[#0A3D2E]/30 hover:bg-[#0A3D2E]/5 disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 rounded-full border border-brand-main/15 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:border-brand-main/30 hover:bg-brand-main/5 disabled:opacity-60"
               >
-                <RefreshCw className="h-3.5 w-3.5 text-[#0A3D2E]" />
+                <RefreshCw className="h-3.5 w-3.5 text-brand-main" />
                 <span>{isRefreshing ? 'Mise à jour...' : formattedRefreshedTime ? `Synchro ${formattedRefreshedTime}` : 'Rafraîchir'}</span>
                 {isRefreshing && (
                   <span className="relative flex h-2 w-2">
@@ -190,7 +190,7 @@ export const OwnerDashboardGreeting: React.FC<OwnerDashboardGreetingProps> = ({
               <Link href={OWNER_ROUTES.wallet} className={`${PILL} ${PILL_PRIMARY} md:hidden`}>
                 <Wallet className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
                 Retirer mes gains
-                <span className="rounded-full bg-[#F1DFB6] px-2 py-0.5 text-xs font-semibold tabular-nums text-[#041912]">
+                <span className="rounded-full bg-champagne px-2 py-0.5 text-xs font-semibold tabular-nums text-brand-dark">
                   {formatCurrency(soldeRetirableWallet)} FCFA
                 </span>
               </Link>
@@ -204,7 +204,7 @@ export const OwnerDashboardGreeting: React.FC<OwnerDashboardGreetingProps> = ({
         {hasActivity ? (
           <ul
             aria-label="Résumé de votre activité"
-            className="grid min-w-[26rem] grid-cols-3 divide-x divide-[#0A3D2E]/10 overflow-hidden rounded-2xl border border-[#0A3D2E]/10 bg-white"
+            className="grid min-w-[26rem] grid-cols-3 divide-x divide-[#0A3D2E]/10 overflow-hidden rounded-2xl border border-brand-main/10 bg-white"
           >
             {stats.map(({ key, count, label, needsAction }) => {
               const active = count > 0;
@@ -212,12 +212,12 @@ export const OwnerDashboardGreeting: React.FC<OwnerDashboardGreetingProps> = ({
                 <li
                   key={key}
                   className={`flex min-w-0 flex-col gap-1.5 px-6 py-4 ${
-                    active && needsAction ? 'bg-[#F1DFB6]/40' : ''
+                    active && needsAction ? 'bg-champagne/40' : ''
                   }`}
                 >
                   <span
                     className={`font-display text-3xl leading-none tabular-nums ${
-                      active ? 'text-[#0A3D2E]' : 'text-slate-300'
+                      active ? 'text-brand-main' : 'text-slate-300'
                     }`}
                   >
                     {count}
@@ -234,7 +234,7 @@ export const OwnerDashboardGreeting: React.FC<OwnerDashboardGreetingProps> = ({
             })}
           </ul>
         ) : (
-          <p className="inline-flex items-center gap-2 rounded-full border border-[#0A3D2E]/10 bg-white px-4 py-2 text-sm text-slate-600">
+          <p className="inline-flex items-center gap-2 rounded-full border border-brand-main/10 bg-white px-4 py-2 text-sm text-slate-600">
             {calm}
           </p>
         )}

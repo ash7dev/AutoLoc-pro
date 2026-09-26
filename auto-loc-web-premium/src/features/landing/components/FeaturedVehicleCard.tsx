@@ -45,7 +45,7 @@ export const FeaturedVehicleCard: React.FC<FeaturedVehicleCardProps> = ({ vehicl
     <Link
       href={`/vehicles/${vehicle.id}`}
       aria-label={`Voir ${title}`}
-      className="group relative flex flex-col rounded-[28px] bg-[#0A3D2E] p-2 ring-1 ring-[#F1DFB6]/15 shadow-[0_24px_48px_-24px_rgba(4,25,18,0.55)] transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_32px_64px_-24px_rgba(4,25,18,0.65)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      className="group relative flex flex-col rounded-[28px] bg-brand-main p-2 ring-1 ring-champagne/15 shadow-[0_24px_48px_-24px_rgba(4,25,18,0.55)] transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_32px_64px_-24px_rgba(4,25,18,0.65)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
       {/* Photo, en retrait du cadre */}
       <div className="relative h-52 w-full overflow-hidden rounded-[22px] bg-[#062A20]">
@@ -60,21 +60,21 @@ export const FeaturedVehicleCard: React.FC<FeaturedVehicleCardProps> = ({ vehicl
 
         {/* Badges */}
         <div className="absolute left-3 right-3 top-3 flex items-center justify-between">
-          <span className="flex items-center gap-1.5 rounded-full border border-[#F1DFB6]/30 bg-[#0A3D2E]/70 py-1 pl-2 pr-2.5 text-[11px] font-medium text-[#F1DFB6] backdrop-blur-md">
+          <span className="flex items-center gap-1.5 rounded-full border border-champagne/30 bg-brand-main/70 py-1 pl-2 pr-2.5 text-[11px] font-medium text-champagne backdrop-blur-md">
             <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.75} />
             100 % vérifié
           </span>
 
-          <span className="flex items-center gap-1 rounded-full border border-[#F1DFB6]/30 bg-[#0A3D2E]/70 px-2.5 py-1 text-[11px] font-medium text-[#F1DFB6] backdrop-blur-md">
-            <Star className="h-3 w-3 fill-[#F1DFB6] text-[#F1DFB6]" />
+          <span className="flex items-center gap-1 rounded-full border border-champagne/30 bg-brand-main/70 px-2.5 py-1 text-[11px] font-medium text-champagne backdrop-blur-md">
+            <Star className="h-3 w-3 fill-[#F1DFB6] text-champagne" />
             {Number(vehicle.note || 4.9).toFixed(1)}
-            <span className="text-[#F1DFB6]/60">({vehicle.totalAvis || 12})</span>
+            <span className="text-champagne/60">({vehicle.totalAvis || 12})</span>
           </span>
         </div>
 
         {/* Localisation */}
-        <div className="absolute bottom-3 left-4 flex items-center gap-1.5 text-xs font-medium text-[#FBF6E9]">
-          <MapPin className="h-3.5 w-3.5 text-[#F1DFB6]" strokeWidth={1.75} />
+        <div className="absolute bottom-3 left-4 flex items-center gap-1.5 text-xs font-medium text-champagne-light">
+          <MapPin className="h-3.5 w-3.5 text-champagne" strokeWidth={1.75} />
           <span>{vehicle.ville || "Dakar, Sénégal"}</span>
         </div>
       </div>
@@ -83,41 +83,41 @@ export const FeaturedVehicleCard: React.FC<FeaturedVehicleCardProps> = ({ vehicl
       <div className="flex flex-1 flex-col px-4 pb-4 pt-5">
         <div className="flex items-start justify-between gap-3">
           <h3
-            className="line-clamp-1 text-[22px] font-normal leading-tight text-[#FBF6E9]"
+            className="line-clamp-1 text-[22px] font-normal leading-tight text-champagne-light"
             style={{ fontFamily: SERIF }}
           >
             {title}
           </h3>
-          <span className="mt-0.5 shrink-0 rounded-full border border-[#F1DFB6]/30 px-2.5 py-0.5 text-[11px] font-medium text-[#F1DFB6]">
+          <span className="mt-0.5 shrink-0 rounded-full border border-champagne/30 px-2.5 py-0.5 text-[11px] font-medium text-champagne">
             {vehicle.type}
           </span>
         </div>
-        <p className="mt-1 text-xs text-[#F1DFB6]/60">Année {vehicle.annee}</p>
+        <p className="mt-1 text-xs text-champagne/60">Année {vehicle.annee}</p>
 
         {/* Caractéristiques : filets fins plutôt que pastilles */}
-        <div className="mt-5 grid grid-cols-3 divide-x divide-[#F1DFB6]/15 border-y border-[#F1DFB6]/15 py-3 text-xs text-[#FBF6E9]/85">
+        <div className="mt-5 grid grid-cols-3 divide-x divide-champagne/15 border-y border-champagne/15 py-3 text-xs text-champagne-light/85">
           <span className="flex items-center justify-center gap-1.5">
-            <Gauge className="h-3.5 w-3.5 text-[#F1DFB6]" strokeWidth={1.75} />
+            <Gauge className="h-3.5 w-3.5 text-champagne" strokeWidth={1.75} />
             {vehicle.transmission === "AUTOMATIQUE" ? "Auto" : "Manuel"}
           </span>
           <span className="flex items-center justify-center gap-1.5">
-            <Fuel className="h-3.5 w-3.5 text-[#F1DFB6]" strokeWidth={1.75} />
+            <Fuel className="h-3.5 w-3.5 text-champagne" strokeWidth={1.75} />
             {vehicle.carburant || "Essence"}
           </span>
           <span className="flex items-center justify-center gap-1.5">
-            <Users className="h-3.5 w-3.5 text-[#F1DFB6]" strokeWidth={1.75} />
+            <Users className="h-3.5 w-3.5 text-champagne" strokeWidth={1.75} />
             {vehicle.nombrePlaces || 5} places
           </span>
         </div>
 
         {/* Prix */}
         <div className="mt-5 flex items-end justify-between">
-          <span className="text-xs text-[#F1DFB6]/60">Tarif par jour</span>
-          <p className="flex items-baseline gap-1.5 text-[#F1DFB6]">
-            <span className="font-serif text-2xl font-normal tabular-nums text-[#F1DFB6]">
+          <span className="text-xs text-champagne/60">Tarif par jour</span>
+          <p className="flex items-baseline gap-1.5 text-champagne">
+            <span className="font-serif text-2xl font-normal tabular-nums text-champagne">
               {formattedPrice}
             </span>
-            <span className="text-xs text-[#F1DFB6]/70">FCFA / jour</span>
+            <span className="text-xs text-champagne/70">FCFA / jour</span>
           </p>
         </div>
       </div>

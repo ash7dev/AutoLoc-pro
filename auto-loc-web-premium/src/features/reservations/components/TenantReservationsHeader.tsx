@@ -17,7 +17,7 @@ export function TenantReservationsHeader({
       {/* Badge Locations en cours (si présent) */}
       {activeCount > 0 && (
         <div className="flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0A3D2E] text-[#F1DFB6] text-xs font-bold shadow-xs">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-main text-champagne text-xs font-bold shadow-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             {activeCount} location{activeCount > 1 ? 's' : ''} en cours
           </span>
@@ -27,7 +27,7 @@ export function TenantReservationsHeader({
       {/* Titre Principal avec Typographie Cormorant Garamond */}
       <div className="space-y-2">
         <h1
-          className="text-3xl sm:text-5xl lg:text-6xl font-light tracking-[0.01em] text-[#041912] leading-[1.1]"
+          className="text-3xl sm:text-5xl lg:text-6xl font-light tracking-[0.01em] text-brand-dark leading-[1.1]"
           style={{ fontFamily: 'var(--font-cormorant), var(--font-playfair), Georgia, serif' }}
         >
           Mes{' '}
@@ -43,7 +43,7 @@ export function TenantReservationsHeader({
 
       {/* Badges de Réassurance Premium : Disposition Triangulaire sur Mobile, Ligne horizontale sur Desktop */}
       {/* 1. Rendu Desktop (>= 640px) */}
-      <div className="hidden sm:flex flex-wrap items-center gap-3 pt-2 text-xs font-semibold text-[#041912]">
+      <div className="hidden sm:flex flex-wrap items-center gap-3 pt-2 text-xs font-semibold text-brand-dark">
         <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white border border-slate-200/90 shadow-xs text-slate-800">
           <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>Assurance Tous Risques Incluse</span>

@@ -23,7 +23,7 @@ const GOLD = '#b27c2d';
 const RUST = '#a13d3d';
 
 const FOCUS =
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E] dark:focus-visible:outline-[#F1DFB6]';
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main dark:focus-visible:outline-champagne';
 const CARD = 'rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs';
 const HEAD = 'py-3 px-4 text-[12px] font-semibold text-slate-500 dark:text-slate-400';
 
@@ -32,7 +32,7 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n > 1 ? man
 const KYC_BADGES: Record<string, { label: string; text: string; bg: string; Icon: React.ElementType }> = {
   VERIFIE: {
     label: 'KYC vérifié',
-    text: 'text-[#0A3D2E] dark:text-[#F1DFB6]',
+    text: 'text-brand-main dark:text-champagne',
     bg: 'rgba(10, 61, 46, 0.09)',
     Icon: ShieldCheck,
   },
@@ -180,13 +180,13 @@ export const AdminTenantTable: React.FC<AdminTenantTableProps> = ({
                 <tr
                   key={tenant.id}
                   onClick={() => onSelectTenant(tenant)}
-                  className="group cursor-pointer hover:bg-[#0A3D2E]/[0.03] dark:hover:bg-slate-800/40 transition-colors"
+                  className="group cursor-pointer hover:bg-brand-main/[0.03] dark:hover:bg-slate-800/40 transition-colors"
                 >
                   {/* Identité */}
                   <td className="py-3.5 px-4" style={accent ? { boxShadow: `inset 3px 0 0 0 ${accent}` } : undefined}>
                     <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden text-[13px] font-semibold ring-1 ring-inset ring-[#F1DFB6]/25"
+                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden text-[13px] font-semibold ring-1 ring-inset ring-champagne/25"
                         style={{ backgroundColor: FOREST, color: CHAMPAGNE }}
                       >
                         {u?.avatarUrl ? (

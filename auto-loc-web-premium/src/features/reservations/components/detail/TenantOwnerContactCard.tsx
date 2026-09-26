@@ -80,19 +80,19 @@ export const TenantOwnerContactCard: React.FC<TenantOwnerContactCardProps> = ({
                 className="w-full h-full rounded-2xl object-cover"
               />
             ) : (
-              <UserRound className="w-5 h-5 text-[#0A3D2E]" />
+              <UserRound className="w-5 h-5 text-brand-main" />
             )}
           </div>
 
           <div>
-            <span className="block text-[10px] font-extrabold uppercase tracking-widest text-[#0A3D2E]">
+            <span className="block text-[10px] font-extrabold uppercase tracking-widest text-brand-main">
               Votre Hôte AutoLoc
             </span>
-            <h3 className="font-fraunces text-xl text-[#041912] font-normal tracking-tight">{fullName}</h3>
+            <h3 className="font-fraunces text-xl text-brand-dark font-normal tracking-tight">{fullName}</h3>
           </div>
         </div>
 
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[#0A3D2E] text-xs font-bold shrink-0">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-brand-main text-xs font-bold shrink-0">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
           <span>Hôte Vérifié</span>
         </div>
@@ -103,7 +103,7 @@ export const TenantOwnerContactCard: React.FC<TenantOwnerContactCardProps> = ({
         <div className="rounded-2xl bg-emerald-50/60 border border-emerald-200/80 p-4 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-[#0A3D2E] text-[#F1DFB6] flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-brand-main text-champagne flex items-center justify-center shrink-0">
                 <Phone className="w-4 h-4" />
               </div>
               <div>
@@ -112,7 +112,7 @@ export const TenantOwnerContactCard: React.FC<TenantOwnerContactCardProps> = ({
                 </span>
                 <a
                   href={`tel:${cleanPhone}`}
-                  className="font-fraunces text-lg text-[#041912] hover:underline font-normal tracking-tight"
+                  className="font-fraunces text-lg text-brand-dark hover:underline font-normal tracking-tight"
                 >
                   {phone}
                 </a>
@@ -127,7 +127,7 @@ export const TenantOwnerContactCard: React.FC<TenantOwnerContactCardProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
             <a
               href={`tel:${cleanPhone}`}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs hover:bg-[#0F4F3B] transition-colors cursor-pointer shadow-xs"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-brand-main text-champagne font-bold text-xs hover:bg-forest-700 transition-colors cursor-pointer shadow-xs"
             >
               <Phone className="w-3.5 h-3.5" />
               <span>Appeler l’hôte</span>
@@ -150,7 +150,7 @@ export const TenantOwnerContactCard: React.FC<TenantOwnerContactCardProps> = ({
             <LockKeyhole className="w-4 h-4" />
           </div>
           <div className="space-y-1">
-            <h4 className="font-fraunces text-base text-[#041912] font-normal">Coordonnées protégées par AutoLoc</h4>
+            <h4 className="font-fraunces text-base text-brand-dark font-normal">Coordonnées protégées par AutoLoc</h4>
             <p className="text-xs text-slate-500 leading-relaxed font-medium">
               {statut === 'CONFIRMEE'
                 ? 'Les coordonnées de votre hôte seront débloquées 24 h avant la prise en charge du véhicule.'

@@ -76,10 +76,10 @@ export const AdminTenantHeaderBar: React.FC<AdminTenantHeaderBarProps> = ({
             className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
             style={{ background: `linear-gradient(135deg, ${FOREST}, #062a1f)` }}
           >
-            <Luggage className="w-5 h-5 text-[#F1DFB6]" />
+            <Luggage className="w-5 h-5 text-champagne" />
           </div>
           <div>
-            <h1 className="text-xl font-normal text-[#041912] dark:text-white">
+            <h1 className="text-xl font-normal text-brand-dark dark:text-white">
               Supervision des Locataires & Voyageurs
             </h1>
             <p className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5 font-sans">
@@ -92,9 +92,9 @@ export const AdminTenantHeaderBar: React.FC<AdminTenantHeaderBarProps> = ({
           type="button"
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="shrink-0 px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-[#0A3D2E]/30 transition-all flex items-center gap-2 text-xs font-semibold shadow-2xs cursor-pointer font-sans"
+          className="shrink-0 px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-brand-main/30 transition-all flex items-center gap-2 text-xs font-semibold shadow-2xs cursor-pointer font-sans"
         >
-          <RefreshCw className={`w-4 h-4 text-[#0A3D2E] ${isRefreshing ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 text-brand-main ${isRefreshing ? 'animate-spin' : ''}`} />
           <span>Actualiser</span>
         </button>
       </div>
@@ -141,7 +141,7 @@ export const AdminTenantHeaderBar: React.FC<AdminTenantHeaderBarProps> = ({
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Nom, email, téléphone, n° permis..."
-            className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 outline-none transition-all focus:border-[#0A3D2E] focus:ring-2 focus:ring-[#0A3D2E]/20"
+            className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 outline-none transition-all focus:border-brand-main focus:ring-2 focus:ring-brand-main/20"
           />
           {search && (
             <button

@@ -14,11 +14,11 @@ export const AdminSkeleton: React.FC = () => {
     <div aria-hidden="true" className="mx-auto w-full max-w-7xl space-y-8 p-4 sm:p-6 lg:p-8 animate-pulse">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="space-y-3">
-          <div className="h-9 w-64 rounded-2xl bg-[#0A3D2E]/[0.08]" />
-          <div className="h-4 w-40 rounded-xl bg-[#0A3D2E]/[0.05]" />
+          <div className="h-9 w-64 rounded-2xl bg-brand-main/[0.08]" />
+          <div className="h-4 w-40 rounded-xl bg-brand-main/[0.05]" />
         </div>
       </div>
-      <div className="h-96 w-full rounded-3xl bg-[#0A3D2E]/[0.05]" />
+      <div className="h-96 w-full rounded-3xl bg-brand-main/[0.05]" />
     </div>
   );
 };
@@ -49,8 +49,8 @@ export const AdminGuard: React.FC<AdminGuardProps> = ({ children }) => {
   if (!isAuthenticated) {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center p-6 text-center animate-pulse">
-        <div className="h-12 w-12 rounded-2xl bg-[#0A3D2E]/[0.08]" />
-        <div className="mt-4 h-4 w-48 rounded-xl bg-[#0A3D2E]/[0.05]" />
+        <div className="h-12 w-12 rounded-2xl bg-brand-main/[0.08]" />
+        <div className="mt-4 h-4 w-48 rounded-xl bg-brand-main/[0.05]" />
       </div>
     );
   }

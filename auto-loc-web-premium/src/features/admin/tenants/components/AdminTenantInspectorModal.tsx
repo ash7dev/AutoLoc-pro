@@ -50,24 +50,24 @@ type Pending = { kind: 'reject-permis' } | { kind: 'ban' } | { kind: 'unban' };
 const fontStyle = { fontFamily: 'var(--font-fraunces), Georgia, serif' };
 
 const TONES: Record<Tone, { hex: string; text: string }> = {
-  forest: { hex: '#0A3D2E', text: 'text-[#0A3D2E] dark:text-[#F1DFB6]' },
+  forest: { hex: '#0A3D2E', text: 'text-brand-main dark:text-champagne' },
   gold: { hex: '#b27c2d', text: 'text-[#8a5f1f] dark:text-[#e0b96a]' },
   rust: { hex: '#a13d3d', text: 'text-[#a13d3d] dark:text-[#e59a9a]' },
   slate: { hex: '#64748b', text: 'text-slate-600 dark:text-slate-300' },
 };
 
 const FOCUS =
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E] dark:focus-visible:outline-[#F1DFB6]';
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main dark:focus-visible:outline-champagne';
 const CARD = 'rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs';
 
 const BTN = `inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full text-[13px] font-semibold whitespace-nowrap cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${FOCUS}`;
-const BTN_PRIMARY = `${BTN} bg-[#0A3D2E] text-[#F1DFB6] hover:brightness-125`;
+const BTN_PRIMARY = `${BTN} bg-brand-main text-champagne hover:brightness-125`;
 const BTN_DANGER = `${BTN} bg-[#a13d3d] text-white hover:brightness-110`;
 const BTN_DANGER_OUTLINE = `${BTN} border border-[#a13d3d]/30 text-[#a13d3d] dark:text-[#e59a9a] hover:bg-[#a13d3d]/[0.06]`;
 const BTN_LIGHT =
-  'inline-flex items-center gap-2 h-9 px-4 rounded-full bg-white/10 hover:bg-white/20 text-white text-[13px] font-semibold cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F1DFB6]';
+  'inline-flex items-center gap-2 h-9 px-4 rounded-full bg-white/10 hover:bg-white/20 text-white text-[13px] font-semibold cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne';
 const BTN_LIGHT_DANGER =
-  'inline-flex items-center gap-2 h-9 px-4 rounded-full bg-[#a13d3d]/80 hover:bg-[#a13d3d] text-white text-[13px] font-semibold cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F1DFB6]';
+  'inline-flex items-center gap-2 h-9 px-4 rounded-full bg-[#a13d3d]/80 hover:bg-[#a13d3d] text-white text-[13px] font-semibold cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne';
 
 const KYC_BADGES: Record<string, { label: string; tone: Tone; icon: React.ElementType }> = {
   VERIFIE: { label: 'KYC vérifié', tone: 'forest', icon: ShieldCheck },
@@ -177,7 +177,7 @@ const VitalSigns: React.FC<{ matrix: TenantHealth360['healthMatrix'] }> = ({ mat
 
   const cell = 'bg-white dark:bg-slate-900 p-4 space-y-2 min-w-0';
   const label = 'text-[12px] text-slate-500 dark:text-slate-400';
-  const value = 'text-[26px] leading-none tabular-nums text-[#041912] dark:text-white';
+  const value = 'text-[26px] leading-none tabular-nums text-brand-dark dark:text-white';
 
   return (
     <div className="space-y-3">
@@ -266,7 +266,7 @@ const BookingCard: React.FC<{ b: Booking }> = ({ b }) => {
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div className="min-w-0 space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 style={fontStyle} className="text-[16px] leading-tight text-[#041912] dark:text-white">
+            <h3 style={fontStyle} className="text-[16px] leading-tight text-brand-dark dark:text-white">
               {title}
             </h3>
             {b.vehicule && (
@@ -286,7 +286,7 @@ const BookingCard: React.FC<{ b: Booking }> = ({ b }) => {
         </div>
 
         <div className="text-right space-y-1.5">
-          <p style={fontStyle} className="text-lg tabular-nums text-[#041912] dark:text-white">
+          <p style={fontStyle} className="text-lg tabular-nums text-brand-dark dark:text-white">
             {formatCurrency(b.totalLocataire)}
           </p>
           <div className="flex items-center justify-end gap-2 text-[12px] text-slate-500 dark:text-slate-400">
@@ -479,7 +479,7 @@ const InspectorDrawer: React.FC<AdminTenantInspectorModalProps & { item: TenantI
     <>
       <div className="fixed inset-0 z-50 font-sans">
         <div
-          className={`absolute inset-0 bg-[#041912]/60 backdrop-blur-[2px] transition-opacity duration-200 motion-reduce:transition-none ${shown ? 'opacity-100' : 'opacity-0'
+          className={`absolute inset-0 bg-brand-dark/60 backdrop-blur-[2px] transition-opacity duration-200 motion-reduce:transition-none ${shown ? 'opacity-100' : 'opacity-0'
             }`}
           onMouseDown={onClose}
           aria-hidden="true"
@@ -497,7 +497,7 @@ const InspectorDrawer: React.FC<AdminTenantInspectorModalProps & { item: TenantI
           {/* En-tête */}
           <header className="shrink-0 flex items-start gap-4 bg-white dark:bg-slate-900 px-4 py-4 sm:px-6">
             <div
-              className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden text-[15px] font-semibold ring-1 ring-inset ring-[#F1DFB6]/25"
+              className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden text-[15px] font-semibold ring-1 ring-inset ring-champagne/25"
               style={{ backgroundColor: '#0A3D2E', color: '#F1DFB6' }}
             >
               {tenant.avatarUrl ? (
@@ -510,7 +510,7 @@ const InspectorDrawer: React.FC<AdminTenantInspectorModalProps & { item: TenantI
 
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <h2 id={`${uid}-title`} style={fontStyle} className="text-xl leading-tight tracking-tight text-[#041912] dark:text-white">
+                <h2 id={`${uid}-title`} style={fontStyle} className="text-xl leading-tight tracking-tight text-brand-dark dark:text-white">
                   {tenant.fullName}
                 </h2>
                 <Pill tone={kyc.tone} icon={kyc.icon}>
@@ -582,7 +582,7 @@ const InspectorDrawer: React.FC<AdminTenantInspectorModalProps & { item: TenantI
                       {t.count}
                     </span>
                   )}
-                  {selected && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[#0A3D2E] dark:bg-[#F1DFB6]" />}
+                  {selected && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-brand-main dark:bg-champagne" />}
                 </button>
               );
             })}
@@ -742,7 +742,7 @@ const InspectorDrawer: React.FC<AdminTenantInspectorModalProps & { item: TenantI
             {tab === 'governance' && (
               <section {...panelProps('governance')}>
                 <div className={`${CARD} p-5 ${tenant.isBanned ? '' : 'border-[#a13d3d]/25'}`}>
-                  <h3 style={fontStyle} className="text-base text-[#041912] dark:text-white mb-4">
+                  <h3 style={fontStyle} className="text-base text-brand-dark dark:text-white mb-4">
                     Compte
                   </h3>
                   <ActionRow

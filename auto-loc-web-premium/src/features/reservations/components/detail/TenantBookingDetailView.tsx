@@ -201,7 +201,7 @@ export function TenantBookingDetailView({ reservationId }: TenantBookingDetailVi
         </div>
         <div className="space-y-2">
           <h2
-            className="text-2xl font-light text-[#041912]"
+            className="text-2xl font-light text-brand-dark"
             style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
           >
             Réservation introuvable
@@ -214,7 +214,7 @@ export function TenantBookingDetailView({ reservationId }: TenantBookingDetailVi
           <button
             type="button"
             onClick={refetch}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs hover:bg-[#0F4F3B] transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-main text-champagne font-bold text-xs hover:bg-forest-700 transition-all cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Réessayer</span>

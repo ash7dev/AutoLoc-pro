@@ -46,15 +46,15 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         resizeMode="cover"
       />
 
-      {/* 2. Multi-Stage Luxury Dark Gradient Overlay */}
+      {/* 2. Multi-Stage Luxury Dark & Forest Emerald Gradient Overlay */}
       <LinearGradient
         colors={[
-          'rgba(0, 0, 0, 0.30)',
-          'rgba(4, 25, 18, 0.45)',
-          'rgba(4, 25, 18, 0.85)',
-          '#041912',
+          'rgba(4, 25, 18, 0.35)',
+          'rgba(4, 25, 18, 0.65)',
+          'rgba(4, 25, 18, 0.92)',
+          theme.colors.brand.dark,
         ]}
-        locations={[0, 0.45, 0.78, 1]}
+        locations={[0, 0.45, 0.80, 1]}
         style={StyleSheet.absoluteFill}
       />
 
@@ -78,22 +78,25 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             />
           </View>
 
+          {/* Glassmorphism Security Badge with Champagne Touch */}
           <View style={styles.glassBadgeContainer}>
-            <ShieldCheck size={13} color="#4ADE80" />
+            <ShieldCheck size={13} color={theme.colors.gold[200]} />
             <Text style={styles.badgeText}>KYC & PAIEMENT 100% SÉCURISÉ</Text>
           </View>
         </View>
 
-        {/* Bottom Section : Tag, Headline, Subtitle & Modern CTA */}
+        {/* Bottom Section : VIP Champagne Tag, Headline, Subtitle & Luxury CTA */}
         <View style={styles.bottomSection}>
           {/* Glassmorphic VIP Mobility Pill Tag */}
           <View style={styles.vipTag}>
-            <Sparkles size={12} color="#4ADE80" />
+            <Sparkles size={12} color={theme.colors.gold[200]} />
             <Text style={styles.vipTagText}>AUTOLOC MOBILITY SÉNÉGAL</Text>
           </View>
 
+          {/* Headline Display using Fraunces Display with Champagne Accent */}
           <Text style={styles.mainTitle}>
-            Louez la voiture{'\n'}idéale à Dakar.
+            Louez la voiture{'\n'}
+            <Text style={styles.titleHighlight}>idéale</Text> à Dakar.
           </Text>
 
           <Text style={styles.subtitle}>
@@ -114,14 +117,15 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             style={styles.refinedLuxuryCta}
           />
 
-          {/* Subtle Micro Login Link */}
+          {/* Subtle Micro Login Link with Champagne Accent */}
           <TouchableOpacity
             onPress={handleLoginPress}
             style={styles.discreetLoginRow}
             activeOpacity={0.7}
           >
             <Text style={styles.discreetLoginText}>
-              Vous avez déjà un compte ? <Text style={styles.discreetLoginLink}>Se connecter</Text>
+              Vous avez déjà un compte ?{' '}
+              <Text style={styles.discreetLoginLink}>Se connecter</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -133,7 +137,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#041912',
+    backgroundColor: theme.colors.brand.dark,
   },
   backgroundImage: {
     position: 'absolute',
@@ -155,11 +159,10 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    // Glow subtle shadow for logo contrast
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
   },
   largeLogo: {
     width: Math.min(screenWidth * 0.58, 240),
@@ -168,9 +171,9 @@ const styles = StyleSheet.create({
   glassBadgeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: 'rgba(255, 255, 255, 0.10)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.20)',
+    borderColor: 'rgba(241, 223, 182, 0.30)',
     paddingHorizontal: theme.spacing[3],
     paddingVertical: 6,
     borderRadius: theme.radius.full,
@@ -180,7 +183,7 @@ const styles = StyleSheet.create({
     fontFamily: theme.typography.fontFamily.medium,
     fontSize: 10,
     letterSpacing: 0.8,
-    color: '#FFFFFF',
+    color: theme.colors.gold[50],
   },
   bottomSection: {
     gap: theme.spacing[2],
@@ -189,56 +192,60 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(16, 185, 129, 0.20)',
+    backgroundColor: 'rgba(241, 223, 182, 0.15)',
     paddingHorizontal: theme.spacing[3],
     paddingVertical: 6,
     borderRadius: theme.radius.full,
     alignSelf: 'flex-start',
     borderWidth: 1,
-    borderColor: 'rgba(74, 222, 128, 0.35)',
+    borderColor: 'rgba(241, 223, 182, 0.45)',
     marginBottom: theme.spacing[2],
   },
   vipTagText: {
     fontFamily: theme.typography.fontFamily.semiBold,
     fontSize: 10,
-    letterSpacing: 0.8,
-    color: '#4ADE80',
+    letterSpacing: 1.2,
+    color: theme.colors.gold[200],
   },
   mainTitle: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 34,
-    lineHeight: 40,
+    lineHeight: 42,
     letterSpacing: -0.5,
     color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 6,
+    textShadowRadius: 8,
+  },
+  titleHighlight: {
+    color: theme.colors.gold[200],
+    fontFamily: theme.typography.fontFamily.displayBold,
   },
   subtitle: {
     fontFamily: theme.typography.fontFamily.regular,
     fontSize: theme.typography.fontSize.sm,
     lineHeight: 22,
-    color: 'rgba(255, 255, 255, 0.82)',
+    color: 'rgba(255, 255, 255, 0.85)',
     marginBottom: theme.spacing[4],
   },
   refinedLuxuryCta: {
-    minHeight: 50,
-    borderRadius: 25,
+    minHeight: 52,
+    borderRadius: 26,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.90)',
+    borderColor: 'rgba(255, 255, 255, 0.95)',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 10,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    elevation: 8,
     paddingHorizontal: 20,
   },
   arrowIconCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#041912',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: theme.colors.brand.dark,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 4,
@@ -252,12 +259,12 @@ const styles = StyleSheet.create({
   discreetLoginText: {
     fontFamily: theme.typography.fontFamily.regular,
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.55)',
+    color: 'rgba(255, 255, 255, 0.65)',
   },
   discreetLoginLink: {
-    fontFamily: theme.typography.fontFamily.medium,
+    fontFamily: theme.typography.fontFamily.semiBold,
     fontSize: 12,
-    color: '#4ADE80',
+    color: theme.colors.gold[200],
     textDecorationLine: 'underline',
   },
 });

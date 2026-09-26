@@ -70,7 +70,7 @@ export const ActionDialog: React.FC<ActionDialogProps> = ({
 
     return createPortal(
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center sm:p-4">
-            <div className="absolute inset-0 bg-[#041912]/60 backdrop-blur-[2px]" onMouseDown={close} aria-hidden="true" />
+            <div className="absolute inset-0 bg-brand-dark/60 backdrop-blur-[2px]" onMouseDown={close} aria-hidden="true" />
 
             <div
                 ref={ref}
@@ -91,7 +91,7 @@ export const ActionDialog: React.FC<ActionDialogProps> = ({
                         </div>
                     )}
                     <div className="min-w-0">
-                        <h2 id={titleId} style={fontStyle} className="text-lg leading-snug text-[#041912] dark:text-white">
+                        <h2 id={titleId} style={fontStyle} className="text-lg leading-snug text-brand-dark dark:text-white">
                             {title}
                         </h2>
                         <p id={descId} className="mt-1.5 text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
@@ -118,7 +118,7 @@ export const ActionDialog: React.FC<ActionDialogProps> = ({
                             disabled={submitting}
                             aria-invalid={touched && reasonMissing}
                             aria-describedby={touched && reasonMissing ? errorId : undefined}
-                            className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-base sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-colors focus:border-[#0A3D2E] focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-[#0A3D2E]/10 aria-[invalid=true]:border-[#a13d3d]"
+                            className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 py-2.5 text-base sm:text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-colors focus:border-brand-main focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-main/10 aria-[invalid=true]:border-[#a13d3d]"
                             placeholder="Décrivez la raison de cette décision"
                         />
                         {touched && reasonMissing && (
@@ -142,7 +142,7 @@ export const ActionDialog: React.FC<ActionDialogProps> = ({
                         disabled={submitting}
                         // Action destructive sans motif : le focus initial est sur « Annuler »
                         data-autofocus={reasonLabel ? undefined : true}
-                        className="h-10 px-5 rounded-full border border-slate-200 dark:border-slate-700 text-[13px] font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E] dark:focus-visible:outline-[#F1DFB6]"
+                        className="h-10 px-5 rounded-full border border-slate-200 dark:border-slate-700 text-[13px] font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main dark:focus-visible:outline-champagne"
                     >
                         Annuler
                     </button>
@@ -150,7 +150,7 @@ export const ActionDialog: React.FC<ActionDialogProps> = ({
                         type="button"
                         onClick={submit}
                         disabled={submitting}
-                        className={`h-10 px-5 rounded-full text-[13px] font-semibold inline-flex items-center justify-center gap-2 cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E] dark:focus-visible:outline-[#F1DFB6] ${danger ? 'bg-[#a13d3d] text-white hover:brightness-110' : 'bg-[#0A3D2E] text-[#F1DFB6] hover:brightness-125'
+                        className={`h-10 px-5 rounded-full text-[13px] font-semibold inline-flex items-center justify-center gap-2 cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main dark:focus-visible:outline-champagne ${danger ? 'bg-[#a13d3d] text-white hover:brightness-110' : 'bg-brand-main text-champagne hover:brightness-125'
                             }`}
                     >
                         {submitting && <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" />}

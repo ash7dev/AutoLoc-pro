@@ -5,13 +5,13 @@ import { MapPin, Clock, Navigation } from 'lucide-react';
 
 export const ContactLocationCard: React.FC = () => {
   return (
-    <section className="rounded-3xl border border-[#041912]/8 bg-white p-6 sm:p-8 shadow-xs">
+    <section className="rounded-3xl border border-brand-dark/8 bg-white p-6 sm:p-8 shadow-xs">
       <div className="flex items-start gap-3 mb-5">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0A3D2E]/8 text-[#0A3D2E]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-main/8 text-brand-main">
           <MapPin className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="font-fraunces text-xl font-normal text-[#041912]">
+          <h2 className="font-fraunces text-xl font-normal text-brand-dark">
             Notre siège à Dakar
           </h2>
           <p className="mt-0.5 text-[13px] text-slate-500">
@@ -38,9 +38,9 @@ export const ContactLocationCard: React.FC = () => {
       {/* Address & Hours */}
       <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex items-start gap-3 rounded-xl bg-slate-50 p-4">
-          <Navigation className="h-4 w-4 shrink-0 text-[#0A3D2E] mt-0.5" />
+          <Navigation className="h-4 w-4 shrink-0 text-brand-main mt-0.5" />
           <div>
-            <p className="text-[12px] font-bold text-[#0A3D2E] uppercase tracking-wide">Adresse</p>
+            <p className="text-[12px] font-bold text-brand-main uppercase tracking-wide">Adresse</p>
             <p className="mt-0.5 text-[13px] text-slate-700 font-medium">
               Dakar, Sénégal
             </p>
@@ -48,9 +48,9 @@ export const ContactLocationCard: React.FC = () => {
         </div>
 
         <div className="flex items-start gap-3 rounded-xl bg-slate-50 p-4">
-          <Clock className="h-4 w-4 shrink-0 text-[#0A3D2E] mt-0.5" />
+          <Clock className="h-4 w-4 shrink-0 text-brand-main mt-0.5" />
           <div>
-            <p className="text-[12px] font-bold text-[#0A3D2E] uppercase tracking-wide">Horaires d'assistance</p>
+            <p className="text-[12px] font-bold text-brand-main uppercase tracking-wide">Horaires d'assistance</p>
             <p className="mt-0.5 text-[13px] text-slate-700 font-medium">
               7j/7 — de 8h00 à 22h00 (GMT)
             </p>

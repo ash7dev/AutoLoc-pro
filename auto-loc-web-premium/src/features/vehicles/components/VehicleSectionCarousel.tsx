@@ -44,8 +44,7 @@ export const VehicleSectionCarousel: React.FC<VehicleSectionCarouselProps> = ({
             )}
 
             <h2
-              className="text-2xl sm:text-3xl font-fraunces font-normal text-[#041912] tracking-tight"
-              style={{ fontFamily: "var(--font-fraunces), Georgia, serif" }}
+              className="text-2xl sm:text-3xl font-fraunces font-normal text-brand-dark tracking-tight"
             >
               {title}
             </h2>

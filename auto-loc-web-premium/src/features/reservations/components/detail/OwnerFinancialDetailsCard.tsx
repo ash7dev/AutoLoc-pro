@@ -26,7 +26,7 @@ const LineItem: React.FC<{
 }> = ({ icon, label, value, isNegative }) => (
   <div className="flex items-end gap-2 text-[13px]">
     <span className="flex min-w-0 items-center gap-1.5 text-slate-600 font-medium">
-      {icon && <span className="shrink-0 text-[#0A3D2E]">{icon}</span>}
+      {icon && <span className="shrink-0 text-brand-main">{icon}</span>}
       <span>{label}</span>
     </span>
     <span
@@ -74,11 +74,11 @@ export const OwnerFinancialDetailsCard: React.FC<OwnerFinancialDetailsCardProps>
     <div className="space-y-6 rounded-3xl bg-white p-5 text-slate-900 shadow-sm border border-slate-200/90 sm:p-6">
       {/* ── En-tête de la carte ─────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0A3D2E] text-[#F1DFB6]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-main text-champagne">
           <Receipt className="h-5 w-5" strokeWidth={1.75} aria-hidden />
         </div>
         <div>
-          <h3 className="font-fraunces text-xl font-normal leading-tight tracking-tight text-[#041912]">
+          <h3 className="font-fraunces text-xl font-normal leading-tight tracking-tight text-brand-dark">
             Détails financiers & Paiement
           </h3>
           <p className="text-xs text-slate-500 font-medium">Décompte des montants et net hôte en FCFA</p>
@@ -117,21 +117,21 @@ export const OwnerFinancialDetailsCard: React.FC<OwnerFinancialDetailsCardProps>
         {/* Ligne Total Net Propriétaire */}
         <div className="flex items-baseline justify-between gap-4 border-t border-slate-200 pt-4">
           <div>
-            <span className="text-sm font-bold text-[#041912]">Revenu Net Propriétaire</span>
+            <span className="text-sm font-bold text-brand-dark">Revenu Net Propriétaire</span>
             <span className="block text-[11px] text-slate-500 font-medium">Montant perçu après commission</span>
           </div>
-          <span className="font-fraunces text-2xl sm:text-3xl font-bold leading-none tabular-nums tracking-tight text-[#0A3D2E]">
+          <span className="font-fraunces text-2xl sm:text-3xl font-bold leading-none tabular-nums tracking-tight text-brand-main">
             {formatCurrency(netProprietaire)} FCFA
           </span>
         </div>
       </div>
 
       {/* ── Bloc Sombre Répartition Encaissement & Escrow AutoLoc ──────── */}
-      <div className="rounded-2xl bg-[#0A3D2E] p-4 text-white sm:p-5 space-y-4 shadow-sm">
+      <div className="rounded-2xl bg-brand-main p-4 text-white sm:p-5 space-y-4 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <Wallet className="w-4 h-4 text-[#F1DFB6]" />
+              <Wallet className="w-4 h-4 text-champagne" />
               <p className="text-sm font-bold text-white">
                 {isDepositMode ? 'Modalité d’encaissement mixte' : 'Encaissement intégral en ligne'}
               </p>
@@ -147,7 +147,7 @@ export const OwnerFinancialDetailsCard: React.FC<OwnerFinancialDetailsCardProps>
             <span className="block text-[10px] font-bold uppercase tracking-wider text-white/60">
               Net Hôte Réglé
             </span>
-            <span className="font-fraunces text-2xl font-bold tabular-nums text-[#F1DFB6]">
+            <span className="font-fraunces text-2xl font-bold tabular-nums text-champagne">
               {formatCurrency(netProprietaire)} FCFA
             </span>
           </div>
@@ -163,7 +163,7 @@ export const OwnerFinancialDetailsCard: React.FC<OwnerFinancialDetailsCardProps>
           className="h-2 w-full overflow-hidden rounded-full bg-white/20"
         >
           <div
-            className="h-full rounded-full bg-[#F1DFB6] transition-all duration-500"
+            className="h-full rounded-full bg-champagne transition-all duration-500"
             style={{ width: `${paidPercent}%` }}
           />
         </div>
@@ -184,7 +184,7 @@ export const OwnerFinancialDetailsCard: React.FC<OwnerFinancialDetailsCardProps>
               <span className="block text-[10px] uppercase text-white/60 font-bold">
                 Solde au Check-in ({soldePercent}%)
               </span>
-              <span className="text-sm font-bold text-[#F1DFB6]">
+              <span className="text-sm font-bold text-champagne">
                 {formatCurrency(soldeCheckin)} FCFA
               </span>
             </div>
@@ -193,7 +193,7 @@ export const OwnerFinancialDetailsCard: React.FC<OwnerFinancialDetailsCardProps>
 
         {/* Note de garantie Escrow AutoLoc */}
         <div className="flex items-start gap-2.5 border-t border-white/10 pt-3 text-xs leading-relaxed text-white/80 font-medium">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#F1DFB6]" aria-hidden />
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-champagne" aria-hidden />
           <p>
             {isDepositMode
               ? `L'acompte de ${paidPercent}% est consigné en séquestre bancaire. Recevez les ${soldePercent}% restants en direct du locataire lors de la remise des clés.`

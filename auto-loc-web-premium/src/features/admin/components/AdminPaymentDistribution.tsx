@@ -36,7 +36,7 @@ export const AdminPaymentDistribution: React.FC<AdminPaymentDistributionProps> =
             <Smartphone className="w-4.5 h-4.5" style={{ color: FOREST }} />
           </div>
           <div>
-            <h3 className="text-base font-normal text-[#041912] dark:text-white">Répartition Mobile Money</h3>
+            <h3 className="text-base font-normal text-brand-dark dark:text-white">Répartition Mobile Money</h3>
             <p className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5">
               Volumes encaissés via Wave & Orange Money Sénégal
             </p>
@@ -59,7 +59,7 @@ export const AdminPaymentDistribution: React.FC<AdminPaymentDistributionProps> =
                 W
               </div>
               <div>
-                <div className="font-normal text-[#041912] dark:text-white text-sm">Wave Sénégal</div>
+                <div className="font-normal text-brand-dark dark:text-white text-sm">Wave Sénégal</div>
                 <div className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">
                   Mobile Money (0% frais client)
                 </div>
@@ -69,7 +69,7 @@ export const AdminPaymentDistribution: React.FC<AdminPaymentDistributionProps> =
           </div>
 
           <div className="mt-4">
-            <div className="text-2xl font-normal text-[#041912] dark:text-white tabular-nums">{formatXOF(wave.volume)}</div>
+            <div className="text-2xl font-normal text-brand-dark dark:text-white tabular-nums">{formatXOF(wave.volume)}</div>
             <div className="w-full h-1.5 rounded-full mt-3 overflow-hidden bg-slate-200/70 dark:bg-slate-800">
               <div className="h-full rounded-full bg-[#1DA1F2]" style={{ width: `${wave.sharePercent}%` }} />
             </div>
@@ -88,7 +88,7 @@ export const AdminPaymentDistribution: React.FC<AdminPaymentDistributionProps> =
                 OM
               </div>
               <div>
-                <div className="font-normal text-[#041912] dark:text-white text-sm">Orange Money</div>
+                <div className="font-normal text-brand-dark dark:text-white text-sm">Orange Money</div>
                 <div className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">
                   QR Code & USSD (Sonatel)
                 </div>
@@ -98,7 +98,7 @@ export const AdminPaymentDistribution: React.FC<AdminPaymentDistributionProps> =
           </div>
 
           <div className="mt-4">
-            <div className="text-2xl font-normal text-[#041912] dark:text-white tabular-nums">{formatXOF(om.volume)}</div>
+            <div className="text-2xl font-normal text-brand-dark dark:text-white tabular-nums">{formatXOF(om.volume)}</div>
             <div className="w-full h-1.5 rounded-full mt-3 overflow-hidden bg-slate-200/70 dark:bg-slate-800">
               <div className="h-full rounded-full bg-[#FF6600]" style={{ width: `${om.sharePercent}%` }} />
             </div>
@@ -126,7 +126,7 @@ export const AdminPaymentDistribution: React.FC<AdminPaymentDistributionProps> =
                   className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 flex flex-col gap-1 text-xs"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-[#041912] dark:text-slate-200">
+                    <span className="font-medium text-brand-dark dark:text-slate-200">
                       {m.mode === 'TOTAL_EN_LIGNE' ? '100% en ligne' : 'Acompte + solde check-in'}
                     </span>
                     <span className="text-[11px] text-slate-500 dark:text-slate-400">

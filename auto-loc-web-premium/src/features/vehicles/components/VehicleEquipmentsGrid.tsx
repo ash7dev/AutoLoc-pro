@@ -77,7 +77,7 @@ export function VehicleEquipmentsGrid({ equipements }: VehicleEquipmentsGridProp
       className="bg-white border border-slate-200/80 rounded-[28px] overflow-hidden shadow-sm"
     >
       <div className="flex items-baseline justify-between gap-4 px-5 sm:px-6 pt-5 sm:pt-6 pb-4">
-        <h3 className="text-lg text-[#041912] font-fraunces font-normal">Équipements et confort</h3>
+        <h3 className="text-lg text-brand-dark font-fraunces font-normal">Équipements et confort</h3>
         <span className="text-sm text-slate-500 shrink-0">
           {total} équipement{total > 1 ? 's' : ''}
         </span>
@@ -92,7 +92,7 @@ export function VehicleEquipmentsGrid({ equipements }: VehicleEquipmentsGridProp
               className="flex items-start gap-3 text-sm leading-5 text-slate-700"
             >
               <Icon
-                className="w-5 h-5 shrink-0 text-[#0A3D2E]"
+                className="w-5 h-5 shrink-0 text-brand-main"
                 strokeWidth={1.5}
                 aria-hidden="true"
               />
@@ -107,7 +107,7 @@ export function VehicleEquipmentsGrid({ equipements }: VehicleEquipmentsGridProp
           type="button"
           onClick={() => setExpanded((prev) => !prev)}
           aria-expanded={expanded}
-          className="w-full flex items-center justify-center gap-1.5 py-3.5 border-t border-slate-200/80 text-sm font-semibold text-[#0A3D2E] transition-colors hover:bg-[#F1DFB6]/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0A3D2E]"
+          className="w-full flex items-center justify-center gap-1.5 py-3.5 border-t border-slate-200/80 text-sm font-semibold text-brand-main transition-colors hover:bg-champagne/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-main"
         >
           {expanded ? 'Voir moins' : `Voir les ${total} équipements`}
           <ChevronDown

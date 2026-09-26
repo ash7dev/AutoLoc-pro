@@ -54,7 +54,7 @@ export const MobileDetailHeader: React.FC = () => {
           type="button"
           onClick={handleBack}
           aria-label="Retour"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100/80 text-[#041912] transition-colors hover:bg-slate-200 active:scale-95 cursor-pointer shrink-0"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100/80 text-brand-dark transition-colors hover:bg-slate-200 active:scale-95 cursor-pointer shrink-0"
         >
           <ChevronLeft className="h-5 w-5 stroke-[2.2]" />
         </button>
@@ -64,24 +64,24 @@ export const MobileDetailHeader: React.FC = () => {
           {isReservationDetail ? (
             <div className="flex items-center justify-center gap-1.5 truncate">
               <span
-                className="text-sm font-semibold text-[#041912] tracking-tight"
+                className="text-sm font-semibold text-brand-dark tracking-tight"
                 style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
               >
                 Réservation
               </span>
-              <span className="font-mono text-[10.5px] font-bold text-[#0A3D2E] bg-emerald-50/90 px-1.5 py-0.5 rounded-md border border-emerald-200/80 shadow-2xs">
+              <span className="font-mono text-[10.5px] font-bold text-brand-main bg-emerald-50/90 px-1.5 py-0.5 rounded-md border border-emerald-200/80 shadow-2xs">
                 #{extractId()}
               </span>
             </div>
           ) : (
-            <h2 className="truncate font-display text-sm font-bold text-[#041912] tracking-tight">
+            <h2 className="truncate font-display text-sm font-bold text-brand-dark tracking-tight">
               {pageTitle}
             </h2>
           )}
 
           <div className="flex items-center justify-center gap-1 pt-0.5">
             <Sparkles className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
-            <span className="text-[9px] font-bold uppercase tracking-widest text-[#0A3D2E]/90">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-brand-main/90">
               AutoLoc
             </span>
           </div>
@@ -92,7 +92,7 @@ export const MobileDetailHeader: React.FC = () => {
           type="button"
           onClick={handleShare}
           aria-label="Partager"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0A3D2E] text-[#F1DFB6] transition-colors hover:bg-[#0F4F3B] active:scale-95 cursor-pointer shrink-0 shadow-xs"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-main text-champagne transition-colors hover:bg-forest-700 active:scale-95 cursor-pointer shrink-0 shadow-xs"
         >
           {copied ? (
             <span className="text-[10px] font-bold">✓</span>

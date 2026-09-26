@@ -196,11 +196,11 @@ export const AutoCalendar: React.FC<AutoCalendarProps> = ({
           <div
             className={`w-8.5 h-8.5 rounded-full flex items-center justify-center font-semibold text-xs transition-all ${
               isStart || isEnd
-                ? 'bg-[#041912] text-emerald-400 font-black shadow-md'
+                ? 'bg-brand-dark text-emerald-400 font-black shadow-md'
                 : isBlocked
                 ? 'bg-rose-100 text-rose-600 line-through'
                 : isInRange
-                ? 'text-[#041912] font-bold'
+                ? 'text-brand-dark font-bold'
                 : 'text-slate-800'
             }`}
           >
@@ -251,7 +251,7 @@ export const AutoCalendar: React.FC<AutoCalendarProps> = ({
       {/* Legend */}
       <div className="flex items-center justify-around text-[10px] text-slate-500 mt-3 pt-2.5 border-t border-slate-100">
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#041912]" />
+          <span className="w-2.5 h-2.5 rounded-full bg-brand-dark" />
           <span>Sélectionné</span>
         </div>
         <div className="flex items-center gap-1.5">

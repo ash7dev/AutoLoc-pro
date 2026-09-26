@@ -1,26 +1,25 @@
 import { TextStyle, Platform } from 'react-native';
 
 /**
- * AUTO-LOC MOBILE — Design Tokens: Typography Architecture (Émeraude Klef / AutoLoc)
+ * AUTO-LOC MOBILE — Design Tokens: Typography Architecture (AutoLoc Premium System)
  *
- * Duo de polices :
- * 1. Fraunces (Display / Éditorial) : Titres H1 à H3, headers modales, titres du profil & réservation.
- *    ⚠️ Plafond de graisse : La graisse des titres Fraunces est plafonnée à 600 (SemiBold).
- * 2. Inter (Interface / Corps / Prix) : Libellés, boutons, prix FCFA (tabular-nums), badges, formulaires.
+ * Duo de polices (100% Alignement Web Premium) :
+ * 1. Fraunces (Display / Éditorial) : Titres H1 à H3, headers modales, cartes premium.
+ * 2. Plus Jakarta Sans (UI / Corps / Prix / Boutons) : Formulaires, badges, boutons, navigation.
  * 3. System Mono : Données brutes, ID de réservation ou logs.
  */
 
 export const fontFamily = {
-  // Fraunces (Éditorial & Titres)
+  // Fraunces (Éditorial & Titres - Web Premium Identique)
   displaySemiBold: 'Fraunces_600SemiBold',
   displayBold: 'Fraunces_700Bold',
 
-  // Inter (UI & Montants)
-  regular: 'Inter_400Regular',
-  medium: 'Inter_500Medium',
-  semiBold: 'Inter_600SemiBold',
-  bold: 'Inter_700Bold',
-  extraBold: 'Inter_800ExtraBold',
+  // Plus Jakarta Sans (UI & Montants - Web Premium Identique)
+  regular: 'PlusJakartaSans_400Regular',
+  medium: 'PlusJakartaSans_500Medium',
+  semiBold: 'PlusJakartaSans_600SemiBold',
+  bold: 'PlusJakartaSans_700Bold',
+  extraBold: 'PlusJakartaSans_800ExtraBold',
 
   // Mono (Technique)
   mono: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),

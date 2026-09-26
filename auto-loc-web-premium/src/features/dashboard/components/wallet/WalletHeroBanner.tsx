@@ -20,13 +20,13 @@ export const WalletHeroBanner: React.FC<WalletHeroBannerProps> = ({
 }) => {
   if (isLoading || !wallet) {
     return (
-      <div className="relative overflow-hidden rounded-[24px] bg-[#0A3D2E] p-5 text-[#F1DFB6] ring-1 ring-inset ring-[#F1DFB6]/10 sm:rounded-[32px] sm:p-8">
+      <div className="relative overflow-hidden rounded-[24px] bg-brand-main p-5 text-champagne ring-1 ring-inset ring-champagne/10 sm:rounded-[32px] sm:p-8">
         <div className="animate-pulse space-y-6">
-          <div className="h-5 w-40 rounded bg-[#F1DFB6]/20" />
-          <div className="h-10 w-56 rounded bg-[#F1DFB6]/20" />
+          <div className="h-5 w-40 rounded bg-champagne/20" />
+          <div className="h-10 w-56 rounded bg-champagne/20" />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="h-20 rounded-2xl bg-[#F1DFB6]/10" />
-            <div className="h-20 rounded-2xl bg-[#F1DFB6]/10" />
+            <div className="h-20 rounded-2xl bg-champagne/10" />
+            <div className="h-20 rounded-2xl bg-champagne/10" />
           </div>
         </div>
       </div>
@@ -44,29 +44,29 @@ export const WalletHeroBanner: React.FC<WalletHeroBannerProps> = ({
   const lastOmNum = accounts?.lastOmNumber;
 
   return (
-    <div className="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-[#041912] via-[#0A3D2E] to-[#062c21] p-5 text-[#F1DFB6] shadow-xl ring-1 ring-inset ring-[#F1DFB6]/15 sm:rounded-[32px] sm:p-8">
+    <div className="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-[#041912] via-[#0A3D2E] to-[#062c21] p-5 text-champagne shadow-xl ring-1 ring-inset ring-champagne/15 sm:rounded-[32px] sm:p-8">
       {/* Visual Background Accents */}
-      <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#059669]/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#4ADE80]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-600/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-emerald-400/10 blur-3xl" />
 
       <div className="relative z-10 space-y-6 sm:space-y-8">
         {/* Header & Primary Solde */}
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-[#F1DFB6]/10 px-3 py-1 text-xs font-semibold text-[#F1DFB6]">
-              <Sparkles className="h-3.5 w-3.5 text-[#4ADE80]" />
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-champagne/10 px-3 py-1 text-xs font-semibold text-champagne">
+              <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
               <span>Portefeuille Propriétaire Certifié</span>
             </div>
-            <p className="text-xs sm:text-sm font-medium text-[#F1DFB6]/75">Solde Retirable Instantané</p>
+            <p className="text-xs sm:text-sm font-medium text-champagne/75">Solde Retirable Instantané</p>
             <div className="flex items-baseline gap-2.5 flex-wrap">
-              <h2 className="font-fraunces text-4xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-[#F1DFB6] tabular-nums">
+              <h2 className="font-fraunces text-4xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-champagne tabular-nums">
                 {formatCurrency(soldeRetirable)}
               </h2>
-              <span className="text-base font-bold text-[#F1DFB6]/60 sm:text-lg">FCFA</span>
+              <span className="text-base font-bold text-champagne/60 sm:text-lg">FCFA</span>
             </div>
             {soldeDisponible !== soldeRetirable && (
-              <p className="text-[11px] sm:text-xs text-[#F1DFB6]/70 leading-relaxed">
-                Solde total brut : <span className="font-fraunces font-semibold text-[#F1DFB6] tabular-nums">{formatCurrency(soldeDisponible)} FCFA</span>
+              <p className="text-[11px] sm:text-xs text-champagne/70 leading-relaxed">
+                Solde total brut : <span className="font-fraunces font-semibold text-champagne tabular-nums">{formatCurrency(soldeDisponible)} FCFA</span>
                 {totalPenalites > 0 && (
                   <span className="block sm:inline sm:ml-1 text-amber-300">({formatCurrency(totalPenalites)} FCFA de pénalité déduite)</span>
                 )}
@@ -80,9 +80,9 @@ export const WalletHeroBanner: React.FC<WalletHeroBannerProps> = ({
               type="button"
               onClick={() => onOpenWithdrawal()}
               disabled={soldeRetirable <= 0}
-              className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl bg-[#F1DFB6] px-5 py-3.5 text-xs sm:text-sm font-extrabold text-[#041912] shadow-lg transition-all hover:bg-white active:scale-[0.98] disabled:opacity-40 cursor-pointer"
+              className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl bg-champagne px-5 py-3.5 text-xs sm:text-sm font-extrabold text-brand-dark shadow-lg transition-all hover:bg-white active:scale-[0.98] disabled:opacity-40 cursor-pointer"
             >
-              <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 text-[#041912]" />
+              <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 text-brand-dark" />
               <span>Demander un virement</span>
             </button>
           </div>
@@ -177,12 +177,12 @@ export const WalletHeroBanner: React.FC<WalletHeroBannerProps> = ({
         )}
 
         {/* Security badge */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-t border-[#F1DFB6]/15 pt-3.5 text-[11px] text-[#F1DFB6]/70">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-t border-champagne/15 pt-3.5 text-[11px] text-champagne/70">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-[#4ADE80] shrink-0" />
+            <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
             <span>Fonds sécurisés par escrow bancaire & API Mobile Money directes.</span>
           </div>
-          <span className="hidden sm:inline font-mono text-[10px] text-[#F1DFB6]/50">Réf: SENEGAL-MOBILE-GATEWAY</span>
+          <span className="hidden sm:inline font-mono text-[10px] text-champagne/50">Réf: SENEGAL-MOBILE-GATEWAY</span>
         </div>
       </div>
     </div>

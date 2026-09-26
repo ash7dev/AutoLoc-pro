@@ -44,7 +44,7 @@ export const LoginHeroCard: React.FC = () => {
           </Link>
 
           {/* Badge Pilule */}
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-[9px] font-bold tracking-wider uppercase">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-emerald-600 text-[9px] font-bold tracking-wider uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>PREMIUM MOBILITY</span>
           </div>
@@ -52,7 +52,7 @@ export const LoginHeroCard: React.FC = () => {
 
         {/* Corps Central : Titre & Description */}
         <div className="space-y-3">
-          <h1 className="text-xl sm:text-2xl font-normal leading-[1.25] text-[#041912] font-fraunces" style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}>
+          <h1 className="text-xl sm:text-2xl font-normal leading-[1.25] text-brand-dark font-fraunces">
             La plateforme des <span className="italic text-emerald-800">passionnés d'auto</span> qui visent <em className="italic text-emerald-600 font-fraunces">l'excellence.</em>
           </h1>
 
@@ -62,17 +62,17 @@ export const LoginHeroCard: React.FC = () => {
         </div>
 
         {/* Pied de carte : Témoignage Glassmorphism */}
-        <div className="bg-[#041912]/[0.03] border border-[#041912]/10 rounded-2xl p-4 shadow-sm">
+        <div className="bg-brand-dark/[0.03] border border-brand-dark/10 rounded-2xl p-4 shadow-sm">
           <p className="text-xs text-slate-700 italic leading-relaxed mb-3 font-fraunces">
             « Avec AutoLoc Premium, je réserve mes véhicules de prestige à Dakar en 1 clic et je règle mon acompte Wave en toute sécurité. »
           </p>
 
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#041912] text-white font-medium text-xs flex items-center justify-center shadow-md">
+            <div className="w-8 h-8 rounded-full bg-brand-dark text-white font-medium text-xs flex items-center justify-center shadow-md">
               AD
             </div>
             <div>
-              <h4 className="text-xs font-fraunces font-normal text-[#041912] leading-tight" style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}>
+              <h4 className="text-xs font-fraunces font-normal text-brand-dark leading-tight">
                 Aïssatou Diallo
               </h4>
               <p className="text-[10px] text-emerald-700 font-normal italic">

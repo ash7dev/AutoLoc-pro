@@ -97,14 +97,14 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ className = "" }) => {
   return (
     <section
       aria-labelledby="how-it-works-title"
-      className={`bg-[#F8FAF4] py-10 sm:py-16 ${className}`}
+      className={`bg-cream-50 py-10 sm:py-16 ${className}`}
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* En-tête compact */}
         <div className="mb-6 flex flex-col gap-2 sm:mb-10 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
           <h2
             id="how-it-works-title"
-            className="text-2xl font-normal leading-tight tracking-tight text-[#0A3D2E] sm:text-4xl"
+            className="text-2xl font-normal leading-tight tracking-tight text-brand-main sm:text-4xl"
             style={{ fontFamily: SERIF }}
           >
             Louez en 3 étapes.
@@ -128,19 +128,19 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ className = "" }) => {
             <li
               key={number}
               onClick={() => scrollToStep(index)}
-              className="group relative flex w-[85vw] max-w-[310px] shrink-0 snap-center flex-col rounded-2xl border border-[#0A3D2E]/10 bg-white p-5 shadow-[0_1px_2px_rgba(10,61,46,0.04)] transition-[border-color,box-shadow] duration-300 hover:border-[#0A3D2E]/25 hover:shadow-[0_12px_32px_-16px_rgba(10,61,46,0.25)] motion-reduce:transition-none md:w-auto md:max-w-none md:shrink"
+              className="group relative flex w-[85vw] max-w-[310px] shrink-0 snap-center flex-col rounded-2xl border border-brand-main/10 bg-white p-5 shadow-[0_1px_2px_rgba(10,61,46,0.04)] transition-[border-color,box-shadow] duration-300 hover:border-brand-main/25 hover:shadow-[0_12px_32px_-16px_rgba(10,61,46,0.25)] motion-reduce:transition-none md:w-auto md:max-w-none md:shrink"
             >
               <div className="flex items-start gap-3.5">
                 <span
                   aria-hidden="true"
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#0A3D2E] text-[#F1DFB6]"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-main text-champagne"
                 >
                   <Icon className="h-5 w-5" strokeWidth={1.75} />
                 </span>
 
                 <div className="min-w-0 flex-1">
                   <h3
-                    className="text-xl font-normal leading-none text-[#0A3D2E] sm:text-2xl"
+                    className="text-xl font-normal leading-none text-brand-main sm:text-2xl"
                     style={{ fontFamily: SERIF }}
                   >
                     <span className="sr-only">Étape {number} : </span>
@@ -151,14 +151,14 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ className = "" }) => {
 
                 <span
                   aria-hidden="true"
-                  className="text-3xl leading-none text-[#0A3D2E]/15 transition-colors duration-500 group-hover:text-[#0A3D2E]/45 motion-reduce:transition-none sm:text-4xl"
+                  className="text-3xl leading-none text-brand-main/15 transition-colors duration-500 group-hover:text-brand-main/45 motion-reduce:transition-none sm:text-4xl"
                   style={{ fontFamily: SERIF }}
                 >
                   {number}
                 </span>
               </div>
 
-              <div className="mt-4 flex items-center justify-between border-t border-[#0A3D2E]/10 pt-3 text-xs font-medium text-[#0A3D2E]">
+              <div className="mt-4 flex items-center justify-between border-t border-brand-main/10 pt-3 text-xs font-medium text-brand-main">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-[#9A7B32]" strokeWidth={1.75} />
                   <span>{feature}</span>
@@ -183,7 +183,7 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ className = "" }) => {
               onClick={() => scrollToStep(i)}
               aria-label={`Aller à l'étape ${i + 1}`}
               className={`h-2 rounded-full transition-all duration-300 ${
-                activeIndex === i ? "w-6 bg-[#0A3D2E]" : "w-2 bg-[#0A3D2E]/20"
+                activeIndex === i ? "w-6 bg-brand-main" : "w-2 bg-brand-main/20"
               }`}
             />
           ))}

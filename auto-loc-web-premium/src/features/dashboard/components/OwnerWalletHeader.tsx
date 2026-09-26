@@ -23,8 +23,8 @@ export const OwnerWalletHeader: React.FC<OwnerWalletHeaderProps> = ({
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between pb-2">
       <div className="min-w-0 space-y-2">
-        <h1 className="font-fraunces text-3xl font-normal leading-[1.1] tracking-tight text-[#041912] sm:text-4xl lg:text-5xl">
-          Mon <span className="text-[#059669]">Portefeuille</span>
+        <h1 className="font-fraunces text-3xl font-normal leading-[1.1] tracking-tight text-brand-dark sm:text-4xl lg:text-5xl">
+          Mon <span className="text-emerald-600">Portefeuille</span>
         </h1>
         <p className="max-w-2xl text-xs sm:text-sm leading-relaxed text-slate-500 font-medium">
           Consultez votre solde disponible, suivez l'historique de vos revenus et gérez vos demandes de virement.
@@ -39,7 +39,7 @@ export const OwnerWalletHeader: React.FC<OwnerWalletHeaderProps> = ({
             disabled={isLoading || isRefreshing}
             className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50 cursor-pointer shadow-2xs"
           >
-            <RefreshCw className="h-4 w-4 text-[#059669]" />
+            <RefreshCw className="h-4 w-4 text-emerald-600" />
             <span>
               {isRefreshing
                 ? 'Mise à jour...'

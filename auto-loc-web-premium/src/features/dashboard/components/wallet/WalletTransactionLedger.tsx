@@ -35,10 +35,10 @@ const WalletLedgerEmptyState: React.FC<{
 
   return (
     <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50/60 p-8 text-center sm:p-12 my-2 w-full">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[#059669] shadow-xs ring-1 ring-slate-200/80 mb-4">
-        <IconComp className="h-7 w-7 text-[#059669]" />
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-xs ring-1 ring-slate-200/80 mb-4">
+        <IconComp className="h-7 w-7 text-emerald-600" />
       </div>
-      <h3 className="font-fraunces text-lg sm:text-xl font-normal text-[#041912]">{title}</h3>
+      <h3 className="font-fraunces text-lg sm:text-xl font-normal text-brand-dark">{title}</h3>
       <p className="mt-1.5 max-w-md text-xs sm:text-sm text-slate-500 leading-relaxed">
         {description}
       </p>
@@ -46,7 +46,7 @@ const WalletLedgerEmptyState: React.FC<{
         <button
           type="button"
           onClick={onReset}
-          className="mt-5 inline-flex items-center justify-center rounded-xl bg-[#041912] px-4 py-2 text-xs font-bold text-[#F1DFB6] shadow-xs hover:bg-[#0A3D2E] transition-all cursor-pointer"
+          className="mt-5 inline-flex items-center justify-center rounded-xl bg-brand-dark px-4 py-2 text-xs font-bold text-champagne shadow-xs hover:bg-brand-main transition-all cursor-pointer"
         >
           Réinitialiser tous les filtres
         </button>
@@ -170,7 +170,7 @@ export const WalletTransactionLedger: React.FC<WalletTransactionLedgerProps> = (
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <h2 className="font-fraunces text-xl sm:text-3xl font-normal tracking-tight text-[#041912]">
+            <h2 className="font-fraunces text-xl sm:text-3xl font-normal tracking-tight text-brand-dark">
               Grand Livre des Transactions
             </h2>
             <span className="whitespace-nowrap shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
@@ -210,7 +210,7 @@ export const WalletTransactionLedger: React.FC<WalletTransactionLedgerProps> = (
               type="button"
               onClick={() => onFilterChange({ ...filters, tab: tabItem.key as any, page: 1 })}
               className={`shrink-0 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${isActive
-                  ? 'bg-[#041912] text-[#F1DFB6] shadow-xs'
+                  ? 'bg-brand-dark text-champagne shadow-xs'
                   : 'bg-slate-100/80 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
                 }`}
             >
@@ -293,7 +293,7 @@ export const WalletTransactionLedger: React.FC<WalletTransactionLedgerProps> = (
                       e.stopPropagation();
                       onSelectTransaction(tx);
                     }}
-                    className="font-bold text-[#059669] hover:underline text-xs cursor-pointer"
+                    className="font-bold text-emerald-600 hover:underline text-xs cursor-pointer"
                   >
                     Reçu &rarr;
                   </button>
@@ -365,7 +365,7 @@ export const WalletTransactionLedger: React.FC<WalletTransactionLedgerProps> = (
                           )}
                         </div>
                         <div>
-                          <p className="font-bold text-slate-900 group-hover:text-[#059669] transition-colors">
+                          <p className="font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
                             {info.title}
                           </p>
                           <p className="text-[11px] text-slate-500">{info.desc}</p>
@@ -396,7 +396,7 @@ export const WalletTransactionLedger: React.FC<WalletTransactionLedgerProps> = (
                     </td>
 
                     {/* Montant */}
-                    <td className="py-4 text-right font-fraunces font-bold text-[#041912] text-base tabular-nums">
+                    <td className="py-4 text-right font-fraunces font-bold text-brand-dark text-base tabular-nums">
                       <span className={isCredit ? 'text-emerald-700' : 'text-slate-900'}>
                         {isCredit ? '+' : '-'}&nbsp;{formatCurrency(numericMontant)}
                       </span>

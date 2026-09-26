@@ -114,7 +114,7 @@ export const OwnerReservationsList: React.FC<OwnerReservationsListProps> = ({
         </div>
 
         <div className="mx-auto max-w-md space-y-1.5">
-          <h3 className="font-fraunces text-xl font-normal text-[#041912]">
+          <h3 className="font-fraunces text-xl font-normal text-brand-dark">
             {hasActiveFilter ? 'Aucune réservation ne correspond' : 'Aucune réservation pour le moment'}
           </h3>
           <p className="text-xs text-slate-500 sm:text-sm">
@@ -131,7 +131,7 @@ export const OwnerReservationsList: React.FC<OwnerReservationsListProps> = ({
             <Link
               href="/dashboard/vehicles/new"
               onClick={handlePublishVehicleClick}
-              className="inline-flex items-center gap-2 rounded-2xl border border-[#4ADE80]/30 bg-[#041912] px-5 py-2.5 text-xs font-bold text-[#4ADE80] transition-colors hover:bg-[#0A3D2E] sm:text-sm"
+              className="inline-flex items-center gap-2 rounded-2xl border border-[#4ADE80]/30 bg-brand-dark px-5 py-2.5 text-xs font-bold text-emerald-400 transition-colors hover:bg-brand-main sm:text-sm"
             >
               <Car className="h-4 w-4" />
               <span>Publier un véhicule</span>
@@ -200,12 +200,12 @@ export const OwnerReservationsList: React.FC<OwnerReservationsListProps> = ({
           className="flex w-full items-center justify-between p-5 text-left transition-colors hover:bg-slate-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
         >
           <div className="flex items-center gap-3.5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#041912]/5 text-[#0A3D2E]">
-              <History className="h-5 w-5 text-[#059669]" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-dark/5 text-brand-main">
+              <History className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-fraunces text-base font-normal text-[#041912] sm:text-lg">
+                <h3 className="font-fraunces text-base font-normal text-brand-dark sm:text-lg">
                   Historique des réservations
                 </h3>
                 <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-700">

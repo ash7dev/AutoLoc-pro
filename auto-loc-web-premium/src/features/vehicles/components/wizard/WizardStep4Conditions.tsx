@@ -50,7 +50,7 @@ export const WizardStep4Conditions: React.FC<WizardStep4ConditionsProps> = ({ da
     <div className="space-y-4 sm:space-y-6">
       {/* Hero Header */}
       <div className="text-center space-y-1 sm:space-y-2 pb-1 sm:pb-2">
-        <div className="mx-auto hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-[#041912] border border-[#4ADE80]/30 text-[#4ADE80] shadow-md">
+        <div className="mx-auto hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-dark border border-[#4ADE80]/30 text-emerald-400 shadow-md">
           <Shield className="h-6 w-6" strokeWidth={2.2} />
         </div>
         <h2 className="font-fraunces font-normal text-xl sm:text-3xl text-slate-900 tracking-tight">Protection & Conditions</h2>
@@ -68,15 +68,15 @@ export const WizardStep4Conditions: React.FC<WizardStep4ConditionsProps> = ({ da
             className="w-full flex items-center justify-between p-4 bg-slate-50/70 hover:bg-slate-100/60 transition-colors text-left"
           >
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F0FDF4] text-[#059669] border border-[#059669]/20">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F0FDF4] text-emerald-600 border border-[#059669]/20">
                 <Shield className="h-5 w-5" />
               </div>
               <div>
                 <h3 className="font-fraunces text-sm font-semibold text-slate-900">
-                  Formule d'Assurance <span className="text-[#059669]">*</span>
+                  Formule d'Assurance <span className="text-emerald-600">*</span>
                 </h3>
                 {data.assurance && (
-                  <p className="text-xs text-[#059669] font-medium truncate max-w-[180px] sm:max-w-none">
+                  <p className="text-xs text-emerald-600 font-medium truncate max-w-[180px] sm:max-w-none">
                     {data.assurance}
                   </p>
                 )}
@@ -116,7 +116,7 @@ export const WizardStep4Conditions: React.FC<WizardStep4ConditionsProps> = ({ da
                       <p className="text-xs text-slate-500 leading-relaxed">{opt.sub}</p>
                     </div>
                     {isSelected && (
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#059669] text-white mt-0.5">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white mt-0.5">
                         <Check className="h-3 w-3 stroke-[3]" />
                       </span>
                     )}
@@ -135,15 +135,15 @@ export const WizardStep4Conditions: React.FC<WizardStep4ConditionsProps> = ({ da
             className="w-full flex items-center justify-between p-4 bg-slate-50/70 hover:bg-slate-100/60 transition-colors text-left"
           >
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F0FDF4] text-[#059669] border border-[#059669]/20">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F0FDF4] text-emerald-600 border border-[#059669]/20">
                 <Fuel className="h-5 w-5" />
               </div>
               <div>
                 <h3 className="font-fraunces text-sm font-semibold text-slate-900">
-                  Politique de Carburant <span className="text-[#059669]">*</span>
+                  Politique de Carburant <span className="text-emerald-600">*</span>
                 </h3>
                 {data.carburantCondition && (
-                  <p className="text-xs text-[#059669] font-medium truncate max-w-[180px] sm:max-w-none">
+                  <p className="text-xs text-emerald-600 font-medium truncate max-w-[180px] sm:max-w-none">
                     {data.carburantCondition}
                   </p>
                 )}
@@ -181,7 +181,7 @@ export const WizardStep4Conditions: React.FC<WizardStep4ConditionsProps> = ({ da
                         {opt.title}
                       </h4>
                       {isSelected && (
-                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#059669] text-white">
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-white">
                           <Check className="h-2.5 w-2.5 stroke-[3]" />
                         </span>
                       )}
@@ -202,7 +202,7 @@ export const WizardStep4Conditions: React.FC<WizardStep4ConditionsProps> = ({ da
             className="w-full flex items-center justify-between p-4 bg-slate-50/70 hover:bg-slate-100/60 transition-colors text-left"
           >
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F0FDF4] text-[#059669] border border-[#059669]/20">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F0FDF4] text-emerald-600 border border-[#059669]/20">
                 <FileText className="h-5 w-5" />
               </div>
               <div>

@@ -79,7 +79,7 @@ export const OwnerSignalNoshowModal: React.FC<OwnerSignalNoshowModalProps> = ({
               <UserX className="h-6 w-6 text-amber-700" />
             </span>
             <div>
-              <h2 id={titleId} className="font-fraunces text-xl font-normal text-[#041912]">
+              <h2 id={titleId} className="font-fraunces text-xl font-normal text-brand-dark">
                 Signalement d'absence (No-Show)
               </h2>
               <p className="text-xs text-slate-500">
@@ -93,7 +93,7 @@ export const OwnerSignalNoshowModal: React.FC<OwnerSignalNoshowModalProps> = ({
             onClick={onClose}
             disabled={isSubmitting}
             aria-label="Fermer"
-            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main disabled:cursor-not-allowed disabled:opacity-50"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>

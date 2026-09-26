@@ -72,7 +72,7 @@ export const LatestReviewsCarousel: React.FC<LatestReviewsCarouselProps> = ({
             type="button"
             onClick={() => scrollBy(dir)}
             aria-label={dir === -1 ? 'Avis précédents' : 'Avis suivants'}
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-[#0A3D2E]/15 text-[#0A3D2E] transition-colors hover:bg-[#0A3D2E]/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-brand-main/15 text-brand-main transition-colors hover:bg-brand-main/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2"
           >
             <Icon className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -110,7 +110,7 @@ export const LatestReviewsCarousel: React.FC<LatestReviewsCarouselProps> = ({
           aria-roledescription="carrousel"
           aria-label="Avis des locataires"
           tabIndex={0}
-          className="-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-6 px-6 pb-1 [scrollbar-width:none] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] sm:-mx-7 sm:scroll-px-7 sm:px-7 [&::-webkit-scrollbar]:hidden"
+          className="-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-6 px-6 pb-1 [scrollbar-width:none] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main sm:-mx-7 sm:scroll-px-7 sm:px-7 [&::-webkit-scrollbar]:hidden"
         >
           {items.map((r, i) => {
             const author = r.auteur ?? r.locataire;
@@ -121,11 +121,11 @@ export const LatestReviewsCarousel: React.FC<LatestReviewsCarouselProps> = ({
             return (
               <article
                 key={r.id ?? i}
-                className="flex w-[19rem] shrink-0 snap-start flex-col justify-between gap-5 rounded-2xl border border-[#0A3D2E]/10 bg-white p-5 sm:w-[21rem]"
+                className="flex w-[19rem] shrink-0 snap-start flex-col justify-between gap-5 rounded-2xl border border-brand-main/10 bg-white p-5 sm:w-[21rem]"
               >
                 <div className="space-y-3">
                   {note > 0 && <Stars value={note} />}
-                  <p className="line-clamp-4 font-display text-base leading-relaxed text-[#041912]">
+                  <p className="line-clamp-4 font-display text-base leading-relaxed text-brand-dark">
                     {r.commentaire?.trim() || 'Aucun commentaire laissé.'}
                   </p>
                 </div>
@@ -133,12 +133,12 @@ export const LatestReviewsCarousel: React.FC<LatestReviewsCarouselProps> = ({
                 <footer className="flex items-center gap-3">
                   <span
                     aria-hidden="true"
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0A3D2E] text-sm font-semibold text-[#F1DFB6]"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-main text-sm font-semibold text-champagne"
                   >
                     {initialsOf(author?.prenom, author?.nom)}
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-[#041912]">{name || 'Locataire AutoLoc'}</p>
+                    <p className="truncate text-sm font-medium text-brand-dark">{name || 'Locataire AutoLoc'}</p>
                     {date && <p className="text-xs text-slate-500">{date}</p>}
                   </div>
                 </footer>

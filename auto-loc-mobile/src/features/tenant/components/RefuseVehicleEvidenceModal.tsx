@@ -65,18 +65,43 @@ export const RefuseVehicleEvidenceModal: React.FC<{
     }
     try {
       setUploading(true);
-      const form = new FormData();
-      form.append('file', {
-        uri: imageUri,
-        name: 'preuve-non-conformite.jpg',
-        type: 'image/jpeg',
-      } as any);
+      let photoUrl = imageUri;
+      let publicId = `evidence_${Date.now()}`;
 
-      await apiClient.post(
-        `/reservations/${reservationId}/photos-etat?type=CHECKIN&categorie=AUTRE`,
-        form,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
-      );
+      try {
+        const sigRes = await apiClient.get('/reservations/photos-etat/upload-signature');
+        const sigData = sigRes.data;
+
+        if (sigData && sigData.signature && sigData.cloudName) {
+          const url = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/image/upload`;
+          const formData = new FormData();
+          formData.append('file', {
+            uri: imageUri,
+            type: 'image/jpeg',
+            name: `evidence_${Date.now()}.jpg`,
+          } as any);
+          formData.append('api_key', sigData.apiKey);
+          formData.append('timestamp', sigData.timestamp.toString());
+          formData.append('signature', sigData.signature);
+          if (sigData.folder) formData.append('folder', sigData.folder);
+
+          const res = await fetch(url, { method: 'POST', body: formData });
+          if (res.ok) {
+            const data = await res.json();
+            photoUrl = data.secure_url || data.url;
+            publicId = data.public_id || publicId;
+          }
+        }
+      } catch (err) {
+        console.warn('Fallback upload signature photo etat:', err);
+      }
+
+      await apiClient.post(`/reservations/${reservationId}/photos-etat/link`, {
+        url: photoUrl,
+        publicId,
+        type: 'CHECKIN',
+        categorie: motif,
+      });
 
       const ok = await onSubmit(motif, comment.trim());
       if (ok) {

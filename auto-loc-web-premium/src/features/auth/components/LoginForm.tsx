@@ -190,7 +190,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           {/* Header Card */}
           <div className="flex flex-col items-center text-center mb-3">
             <div className="relative mb-2.5 group">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#041912] border-2 border-emerald-400/40 flex items-center justify-center shadow-xl shadow-[#041912]/35 transition-transform duration-300 group-hover:scale-105">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-brand-dark border-2 border-emerald-400/40 flex items-center justify-center shadow-xl shadow-brand-dark/35 transition-transform duration-300 group-hover:scale-105">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center">
                   <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400 stroke-[2.2]" />
                 </div>
@@ -213,12 +213,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               />
             </Link>
 
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-[9px] sm:text-[10px] font-medium tracking-wider uppercase mb-2">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#059669]" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-emerald-600 text-[9px] sm:text-[10px] font-medium tracking-wider uppercase mb-2">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
               <span>ESPACE CLIENT SÉCURISÉ</span>
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-fraunces font-normal text-[#041912] tracking-tight" style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}>
+            <h2 className="text-xl sm:text-2xl font-fraunces font-normal text-brand-dark tracking-tight">
               Bon <span className="italic text-emerald-700">retour.</span>
             </h2>
             <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 font-body">
@@ -268,7 +268,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               }}
               className={`flex-1 py-2 rounded-full text-xs font-medium transition-all ${
                 authMethod === 'PHONE'
-                  ? 'bg-[#041912] text-white shadow-md'
+                  ? 'bg-brand-dark text-white shadow-md'
                   : 'text-slate-500 hover:text-slate-900'
               }`}
             >
@@ -285,7 +285,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               }}
               className={`flex-1 py-2 rounded-full text-xs font-medium transition-all ${
                 authMethod === 'EMAIL'
-                  ? 'bg-[#041912] text-white shadow-md'
+                  ? 'bg-brand-dark text-white shadow-md'
                   : 'text-slate-500 hover:text-slate-900'
               }`}
             >
@@ -313,7 +313,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-[48px] rounded-full bg-[#041912] hover:bg-[#06291e] border border-[#041912]/90 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#041912]/20 transition-all active:scale-[0.99] disabled:opacity-60 mt-2"
+                  className="w-full h-[48px] rounded-full bg-brand-dark hover:bg-[#06291e] border border-brand-dark/90 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-dark/20 transition-all active:scale-[0.99] disabled:opacity-60 mt-2"
                 >
                   {isLoading ? (
                     <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
@@ -403,7 +403,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               <div className="flex justify-end pt-0.5">
                 <button
                   type="button"
-                  className="text-xs font-medium text-[#059669] hover:underline italic"
+                  className="text-xs font-medium text-emerald-600 hover:underline italic"
                 >
                   Mot de passe oublié ?
                 </button>
@@ -412,7 +412,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-[48px] rounded-full bg-[#041912] hover:bg-[#06291e] border border-[#041912]/90 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#041912]/20 transition-all active:scale-[0.99] disabled:opacity-60"
+                className="w-full h-[48px] rounded-full bg-brand-dark hover:bg-[#06291e] border border-brand-dark/90 text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-dark/20 transition-all active:scale-[0.99] disabled:opacity-60"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
@@ -475,7 +475,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           {onNavigateToRegister ? (
             <button
               onClick={onNavigateToRegister}
-              className="font-semibold text-[#4ADE80] underline hover:text-emerald-300 ml-1"
+              className="font-semibold text-emerald-400 underline hover:text-emerald-300 ml-1"
             >
               S'inscrire gratuitement
             </button>
@@ -486,7 +486,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                   ? `/register?next=${encodeURIComponent(new URLSearchParams(window.location.search).get('next')!)}`
                   : '/register'
               }
-              className="font-semibold text-[#4ADE80] underline hover:text-emerald-300 ml-1"
+              className="font-semibold text-emerald-400 underline hover:text-emerald-300 ml-1"
             >
               S'inscrire gratuitement
             </Link>

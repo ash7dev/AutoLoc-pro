@@ -45,7 +45,7 @@ export const WizardStep7Review: React.FC<WizardStep7ReviewProps> = ({
     <div className="space-y-6">
       {/* Hero Header */}
       <div className="text-center space-y-2 pb-2">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#041912] border border-[#4ADE80]/30 text-[#4ADE80] shadow-md">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-dark border border-[#4ADE80]/30 text-emerald-400 shadow-md">
           <FileCheck2 className="h-6 w-6" strokeWidth={2.2} />
         </div>
         <h2 className="font-fraunces font-normal text-2xl sm:text-3xl text-slate-900 tracking-tight">Récapitulatif & Validation</h2>
@@ -58,7 +58,7 @@ export const WizardStep7Review: React.FC<WizardStep7ReviewProps> = ({
       <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-lg space-y-0">
         <div className="relative aspect-video w-full bg-slate-100">
           <img src={coverPhoto} alt="Preview" className="w-full h-full object-cover" />
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-[#041912] px-3 py-1 text-[10px] font-bold text-[#4ADE80] border border-[#4ADE80]/40">
+          <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-brand-dark px-3 py-1 text-[10px] font-bold text-emerald-400 border border-[#4ADE80]/40">
             <Sparkles className="h-3 w-3" />
             <span>APERÇU DE L'ANNONCE</span>
           </div>
@@ -75,7 +75,7 @@ export const WizardStep7Review: React.FC<WizardStep7ReviewProps> = ({
                 {step1.marque || 'Marque'} {step1.modele || 'Modèle'} ({step1.annee || 2024})
               </h3>
               <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
-                <MapPin className="h-3.5 w-3.5 text-[#059669]" />
+                <MapPin className="h-3.5 w-3.5 text-emerald-600" />
                 <span>{step3.ville || 'Dakar'} · Sénégal</span>
               </div>
             </div>
@@ -92,7 +92,7 @@ export const WizardStep7Review: React.FC<WizardStep7ReviewProps> = ({
           <div className="flex items-center justify-between text-xs text-slate-600 font-medium">
             <span>{step2.nombrePlaces} places · {step1.transmission} · {step1.carburant}</span>
             <div className="text-right">
-              <span className="font-display text-lg font-bold text-[#059669]">
+              <span className="font-display text-lg font-bold text-emerald-600">
                 {(step5.prixParJour || 25000).toLocaleString('fr-FR')} FCFA
               </span>
               <span className="text-slate-500 text-[11px]"> / jour</span>
@@ -107,7 +107,7 @@ export const WizardStep7Review: React.FC<WizardStep7ReviewProps> = ({
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 font-fraunces text-sm font-semibold text-slate-900">
-            <Car className="h-4 w-4 text-[#059669]" />
+            <Car className="h-4 w-4 text-emerald-600" />
             <span>1. Véhicule & Caractéristiques</span>
           </div>
           <button
@@ -130,7 +130,7 @@ export const WizardStep7Review: React.FC<WizardStep7ReviewProps> = ({
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 font-fraunces text-sm font-semibold text-slate-900">
-            <MapPin className="h-4 w-4 text-[#059669]" />
+            <MapPin className="h-4 w-4 text-emerald-600" />
             <span>2. Localisation & Logistique</span>
           </div>
           <button
@@ -163,7 +163,7 @@ export const WizardStep7Review: React.FC<WizardStep7ReviewProps> = ({
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 font-fraunces text-sm font-semibold text-slate-900">
-            <Shield className="h-4 w-4 text-[#059669]" />
+            <Shield className="h-4 w-4 text-emerald-600" />
             <span>3. Protection & Conditions</span>
           </div>
           <button
@@ -184,7 +184,7 @@ export const WizardStep7Review: React.FC<WizardStep7ReviewProps> = ({
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 font-fraunces text-sm font-semibold text-slate-900">
-            <Banknote className="h-4 w-4 text-[#059669]" />
+            <Banknote className="h-4 w-4 text-emerald-600" />
             <span>4. Tarification & Remises</span>
           </div>
           <button
@@ -196,7 +196,7 @@ export const WizardStep7Review: React.FC<WizardStep7ReviewProps> = ({
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100">
-          <div><span className="text-slate-500">Tarif journalier de base :</span> <strong className="text-[#059669] font-bold">{step5.prixParJour.toLocaleString('fr-FR')} FCFA / j.</strong></div>
+          <div><span className="text-slate-500">Tarif journalier de base :</span> <strong className="text-emerald-600 font-bold">{step5.prixParJour.toLocaleString('fr-FR')} FCFA / j.</strong></div>
           <div><span className="text-slate-500">Paliers dégressifs :</span> <strong className="text-slate-900">{step5.tiers.length} configuré(s)</strong></div>
         </div>
       </div>
@@ -205,7 +205,7 @@ export const WizardStep7Review: React.FC<WizardStep7ReviewProps> = ({
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 font-fraunces text-sm font-semibold text-slate-900">
-            <Images className="h-4 w-4 text-[#059669]" />
+            <Images className="h-4 w-4 text-emerald-600" />
             <span>5. Photos & Documents Légaux</span>
           </div>
           <button

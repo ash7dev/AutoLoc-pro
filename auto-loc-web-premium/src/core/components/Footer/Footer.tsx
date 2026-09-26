@@ -50,7 +50,7 @@ export const Footer: React.FC = () => {
     <footer className="bg-transparent pt-6 pb-24 lg:pt-8 lg:pb-16 px-3 sm:px-6 lg:px-8 font-sans text-slate-200">
       <div className="max-w-7xl mx-auto">
         {/* Main Floating Footer Container (Vert Forêt Luxury) */}
-        <div className="rounded-2xl sm:rounded-[36px] bg-[#0A3D2E] border border-[#F1DFB6]/20 p-4 sm:p-8 lg:p-12 shadow-2xl shadow-[#0A3D2E]/40 text-slate-200 backdrop-blur-md">
+        <div className="rounded-2xl sm:rounded-[36px] bg-brand-main border border-champagne/20 p-4 sm:p-8 lg:p-12 shadow-2xl shadow-brand-main/40 text-slate-200 backdrop-blur-md">
           
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10 lg:gap-12 mb-6 sm:mb-10">
@@ -72,7 +72,7 @@ export const Footer: React.FC = () => {
                   </div>
                 </Link>
 
-                <h3 className="font-fraunces text-base sm:text-xl font-normal leading-snug text-[#F1DFB6]">
+                <h3 className="font-fraunces text-base sm:text-xl font-normal leading-snug text-champagne">
                   La mobilité d'exception <span className="italic text-emerald-400 font-normal">au Sénégal</span>.
                 </h3>
               </div>
@@ -98,18 +98,18 @@ export const Footer: React.FC = () => {
               </div>
 
               {/* Contact Info Pill */}
-              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#041912]/70 border border-[#F1DFB6]/15 space-y-1.5 text-xs">
-                <p className="font-bold text-[#F1DFB6] uppercase tracking-wider text-[9px] sm:text-[10px]">Support &amp; Assistance Client</p>
+              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-brand-dark/70 border border-champagne/15 space-y-1.5 text-xs">
+                <p className="font-bold text-champagne uppercase tracking-wider text-[9px] sm:text-[10px]">Support &amp; Assistance Client</p>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-slate-300 text-[11px] sm:text-xs">
                   <div className="flex items-center gap-2">
                     <Phone className="w-3 h-3 text-emerald-400 shrink-0" />
-                    <a href="tel:+221786637705" className="hover:text-[#F1DFB6] transition-colors font-medium">
+                    <a href="tel:+221786637705" className="hover:text-champagne transition-colors font-medium">
                       +221 78 663 77 05
                     </a>
                   </div>
                   <div className="flex items-center gap-2">
                     <Mail className="w-3 h-3 text-emerald-400 shrink-0" />
-                    <a href="mailto:support@autoloc.sn" className="hover:text-[#F1DFB6] transition-colors">
+                    <a href="mailto:support@autoloc.sn" className="hover:text-champagne transition-colors">
                       support@autoloc.sn
                     </a>
                   </div>
@@ -122,22 +122,22 @@ export const Footer: React.FC = () => {
               
               {/* Column 1: EXPLORER */}
               <div className="space-y-2.5 sm:space-y-4">
-                <h4 className="font-fraunces text-sm sm:text-base font-normal text-[#F1DFB6] tracking-wide">
+                <h4 className="font-fraunces text-sm sm:text-base font-normal text-champagne tracking-wide">
                   Explorer
                 </h4>
                 <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-slate-300/90 font-medium">
                   <li>
-                    <Link href="/vehicles" className="hover:text-[#F1DFB6] transition-colors">
+                    <Link href="/vehicles" className="hover:text-champagne transition-colors">
                       Location à Dakar
                     </Link>
                   </li>
                   <li>
-                    <Link href="/vehicles?type=SUV" className="hover:text-[#F1DFB6] transition-colors">
+                    <Link href="/vehicles?type=SUV" className="hover:text-champagne transition-colors">
                       SUV &amp; 4x4 Tout-terrain
                     </Link>
                   </li>
                   <li>
-                    <Link href="/vehicles?zone=AIBD" className="hover:text-[#F1DFB6] transition-colors">
+                    <Link href="/vehicles?zone=AIBD" className="hover:text-champagne transition-colors">
                       Livraison Aéroport AIBD
                     </Link>
                   </li>
@@ -152,7 +152,7 @@ export const Footer: React.FC = () => {
                           'Veuillez vous connecter pour accéder à vos réservations.'
                         )
                       }
-                      className="hover:text-[#F1DFB6] transition-colors"
+                      className="hover:text-champagne transition-colors"
                     >
                       Mes Réservations
                     </Link>
@@ -162,7 +162,7 @@ export const Footer: React.FC = () => {
 
               {/* Column 2: ESPACE HÔTE */}
               <div className="space-y-2.5 sm:space-y-4">
-                <h4 className="font-fraunces text-sm sm:text-base font-normal text-[#F1DFB6] tracking-wide">
+                <h4 className="font-fraunces text-sm sm:text-base font-normal text-champagne tracking-wide">
                   Espace Hôte
                 </h4>
                 <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-slate-300/90 font-medium">
@@ -177,7 +177,7 @@ export const Footer: React.FC = () => {
                           'Veuillez vous connecter en tant que propriétaire pour accéder à votre espace hôte.'
                         )
                       }
-                      className="hover:text-[#F1DFB6] transition-colors text-[#F1DFB6] font-semibold"
+                      className="hover:text-champagne transition-colors text-champagne font-semibold"
                     >
                       Mon Espace Hôte
                     </Link>
@@ -193,7 +193,7 @@ export const Footer: React.FC = () => {
                           'Veuillez vous connecter en tant que propriétaire pour publier une annonce.'
                         )
                       }
-                      className="hover:text-[#F1DFB6] transition-colors"
+                      className="hover:text-champagne transition-colors"
                     >
                       Publier une annonce
                     </Link>
@@ -209,7 +209,7 @@ export const Footer: React.FC = () => {
                           'Veuillez vous connecter en tant que propriétaire pour gérer votre flotte.'
                         )
                       }
-                      className="hover:text-[#F1DFB6] transition-colors"
+                      className="hover:text-champagne transition-colors"
                     >
                       Gérer ma flotte
                     </Link>
@@ -225,7 +225,7 @@ export const Footer: React.FC = () => {
                           'Veuillez vous connecter en tant que propriétaire pour consulter vos revenus.'
                         )
                       }
-                      className="hover:text-[#F1DFB6] transition-colors"
+                      className="hover:text-champagne transition-colors"
                     >
                       Revenus &amp; Portefeuille
                     </Link>
@@ -235,27 +235,27 @@ export const Footer: React.FC = () => {
 
               {/* Column 3: ASSISTANCE & LÉGAL */}
               <div className="col-span-2 sm:col-span-1 space-y-2.5 sm:space-y-4">
-                <h4 className="font-fraunces text-sm sm:text-base font-normal text-[#F1DFB6] tracking-wide">
+                <h4 className="font-fraunces text-sm sm:text-base font-normal text-champagne tracking-wide">
                   Assistance &amp; Légal
                 </h4>
                 <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-slate-300/90 font-medium flex sm:flex-col flex-wrap gap-x-4 gap-y-2">
                   <li>
-                    <Link href="/help" className="hover:text-[#F1DFB6] transition-colors">
+                    <Link href="/help" className="hover:text-champagne transition-colors">
                       Centre d'aide &amp; FAQ
                     </Link>
                   </li>
                   <li>
-                    <Link href="/contact" className="hover:text-[#F1DFB6] transition-colors">
+                    <Link href="/contact" className="hover:text-champagne transition-colors">
                       Service Client
                     </Link>
                   </li>
                   <li>
-                    <Link href="/cgu" className="hover:text-[#F1DFB6] transition-colors">
+                    <Link href="/cgu" className="hover:text-champagne transition-colors">
                       Conditions (CGU)
                     </Link>
                   </li>
                   <li>
-                    <Link href="/privacy" className="hover:text-[#F1DFB6] transition-colors">
+                    <Link href="/privacy" className="hover:text-champagne transition-colors">
                       Confidentialité
                     </Link>
                   </li>
@@ -267,7 +267,7 @@ export const Footer: React.FC = () => {
           </div>
 
           {/* Payment Badges Bar */}
-          <div className="py-3 px-4 sm:py-4 sm:px-6 rounded-xl sm:rounded-2xl bg-[#041912]/80 border border-[#F1DFB6]/15 flex flex-row items-center justify-between gap-3 mb-5 sm:mb-8">
+          <div className="py-3 px-4 sm:py-4 sm:px-6 rounded-xl sm:rounded-2xl bg-brand-dark/80 border border-champagne/15 flex flex-row items-center justify-between gap-3 mb-5 sm:mb-8">
             <div className="flex items-center gap-2.5 text-[11px] sm:text-xs">
               <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <div>
@@ -278,21 +278,21 @@ export const Footer: React.FC = () => {
 
             {/* Accepted Payment Logos */}
             <div className="flex items-center gap-2 shrink-0">
-              <div className="flex items-center gap-1.5 bg-[#0A3D2E] border border-[#F1DFB6]/20 px-2.5 py-1 rounded-lg sm:rounded-xl shadow-2xs">
+              <div className="flex items-center gap-1.5 bg-brand-main border border-champagne/20 px-2.5 py-1 rounded-lg sm:rounded-xl shadow-2xs">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/wave.png" alt="Wave Sénégal" title="Wave Sénégal" className="w-4 h-4 rounded-full object-cover shrink-0" />
-                <span className="text-[11px] sm:text-xs font-bold text-[#F1DFB6]">Wave</span>
+                <span className="text-[11px] sm:text-xs font-bold text-champagne">Wave</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-[#0A3D2E] border border-[#F1DFB6]/20 px-2.5 py-1 rounded-lg sm:rounded-xl shadow-2xs">
+              <div className="flex items-center gap-1.5 bg-brand-main border border-champagne/20 px-2.5 py-1 rounded-lg sm:rounded-xl shadow-2xs">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/orange_money.jpg" alt="Orange Money" title="Orange Money" className="w-4 h-4 rounded-full object-cover shrink-0" />
-                <span className="text-[11px] sm:text-xs font-bold text-[#F1DFB6]">Orange</span>
+                <span className="text-[11px] sm:text-xs font-bold text-champagne">Orange</span>
               </div>
             </div>
           </div>
 
           {/* Bottom Divider & Copyright */}
-          <div className="border-t border-[#F1DFB6]/15 pt-4 sm:pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs text-slate-400 font-medium text-center sm:text-left">
+          <div className="border-t border-champagne/15 pt-4 sm:pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] sm:text-xs text-slate-400 font-medium text-center sm:text-left">
             <p suppressHydrationWarning>© {new Date().getFullYear()} AutoLoc. Tous droits réservés.</p>
             <p className="flex items-center gap-1.5 text-slate-300">
               <span>Mobilité d'exception au Sénégal</span>

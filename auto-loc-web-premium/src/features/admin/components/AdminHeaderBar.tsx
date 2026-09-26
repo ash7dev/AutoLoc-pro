@@ -35,30 +35,28 @@ export const AdminHeaderBar: React.FC<AdminHeaderBarProps> = ({
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-emerald-900/10 dark:border-slate-800">
       <div>
         <div className="flex items-center gap-2.5">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100/80 border border-emerald-300 text-[#041912]">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100/80 border border-emerald-300 text-brand-dark">
             <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-            <span className="font-fraunces" style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}>
+            <span className="font-fraunces">
               Serveur AutoLoc en Direct
             </span>
           </span>
           <span className="inline-flex items-center gap-1 text-xs text-slate-600 font-medium">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span className="font-fraunces" style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}>
+            <span className="font-fraunces">
               Console Administrateur
             </span>
           </span>
         </div>
 
         <h1
-          className="text-3xl md:text-4xl lg:text-5xl font-fraunces font-normal tracking-tight text-[#041912] dark:text-white mt-2"
-          style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+          className="text-3xl md:text-4xl lg:text-5xl font-fraunces font-normal tracking-tight text-brand-dark dark:text-white mt-2"
         >
           Tour de Contrôle AutoLoc
         </h1>
 
         <p
           className="text-sm font-fraunces text-slate-600 dark:text-slate-400 mt-1"
-          style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
         >
           Pilotage financier, gouvernance des opérations et analytics de la marketplace en temps réel.
         </p>
@@ -74,10 +72,9 @@ export const AdminHeaderBar: React.FC<AdminHeaderBarProps> = ({
               className={clsx(
                 'px-3.5 py-1.5 text-xs font-fraunces rounded-xl transition-all duration-200',
                 period === opt.value
-                  ? 'bg-[#0A3D2E] text-[#F1DFB6] font-bold shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-[#041912] dark:hover:text-white font-medium'
+                  ? 'bg-brand-main text-champagne font-bold shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-brand-dark dark:hover:text-white font-medium'
               )}
-              style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
             >
               {opt.label}
             </button>
@@ -88,8 +85,7 @@ export const AdminHeaderBar: React.FC<AdminHeaderBarProps> = ({
         <button
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-fraunces font-bold text-[#041912] dark:text-[#F1DFB6] bg-white dark:bg-slate-900 hover:bg-emerald-50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all shadow-xs active:scale-95 disabled:opacity-50"
-          style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+          className="flex items-center gap-2 px-4 py-2 text-xs font-fraunces font-bold text-brand-dark dark:text-champagne bg-white dark:bg-slate-900 hover:bg-emerald-50 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 rounded-2xl transition-all shadow-xs active:scale-95 disabled:opacity-50"
         >
           <RefreshCw className={clsx('w-3.5 h-3.5 text-emerald-600', isRefreshing && 'animate-spin')} />
           <span className="hidden sm:inline">

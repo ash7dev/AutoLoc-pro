@@ -15,7 +15,7 @@ interface VehicleOwnerCardProps {
 }
 
 const ACTION_CLASS =
-  'w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-full border border-[#0A3D2E] text-[#0A3D2E] font-semibold text-sm cursor-pointer transition-colors hover:bg-[#0A3D2E] hover:text-[#F1DFB6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2';
+  'w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-full border border-brand-main text-brand-main font-semibold text-sm cursor-pointer transition-colors hover:bg-brand-main hover:text-champagne focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2';
 
 export function VehicleOwnerCard({
   proprietaire,
@@ -43,7 +43,7 @@ export function VehicleOwnerCard({
       aria-label="Votre hôte"
       className="bg-white border border-slate-200/80 rounded-[28px] overflow-hidden shadow-sm"
     >
-      <h3 className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 text-lg text-[#041912] font-fraunces font-normal">
+      <h3 className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 text-lg text-brand-dark font-fraunces font-normal">
         Votre hôte
       </h3>
 
@@ -56,12 +56,12 @@ export function VehicleOwnerCard({
               alt={fullName}
               width={56}
               height={56}
-              className="w-14 h-14 shrink-0 rounded-full object-cover ring-2 ring-[#F1DFB6]"
+              className="w-14 h-14 shrink-0 rounded-full object-cover ring-2 ring-champagne"
             />
           ) : (
             <div
               aria-hidden="true"
-              className="w-14 h-14 shrink-0 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-display text-lg flex items-center justify-center ring-2 ring-[#F1DFB6]"
+              className="w-14 h-14 shrink-0 rounded-full bg-brand-main text-champagne font-display text-lg flex items-center justify-center ring-2 ring-champagne"
             >
               {initials}
             </div>
@@ -71,7 +71,7 @@ export function VehicleOwnerCard({
             <h4 className="text-base font-semibold text-slate-900 truncate">{fullName}</h4>
 
             <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-              <span className="inline-flex items-center gap-1.5 font-medium text-[#0A3D2E]">
+              <span className="inline-flex items-center gap-1.5 font-medium text-brand-main">
                 <ShieldCheck className="w-4 h-4" strokeWidth={1.75} aria-hidden="true" />
                 Hôte vérifié
               </span>
@@ -79,7 +79,7 @@ export function VehicleOwnerCard({
               {hasRating ? (
                 <span className="inline-flex items-center gap-1.5 text-slate-500">
                   <Star
-                    className="w-4 h-4 fill-[#0A3D2E] text-[#0A3D2E]"
+                    className="w-4 h-4 fill-[#0A3D2E] text-brand-main"
                     aria-hidden="true"
                   />
                   <span className="font-semibold text-slate-900">

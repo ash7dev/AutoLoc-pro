@@ -88,14 +88,14 @@ export function AdminBroadcastHeaderBar({
   return (
     <section
       aria-label="Audience du Broadcast Studio"
-      className="relative mb-8 overflow-hidden rounded-[28px] border border-[#F1DFB6]/15 bg-[#0A3D2E] p-6 text-white shadow-[0_24px_60px_-24px_rgba(10,61,46,0.6)] sm:p-8"
+      className="relative mb-8 overflow-hidden rounded-[28px] border border-champagne/15 bg-brand-main p-6 text-white shadow-[0_24px_60px_-24px_rgba(10,61,46,0.6)] sm:p-8"
     >
       {/* En-tête */}
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-xl">
           <h1
             style={DISPLAY_FONT}
-            className="text-3xl leading-tight tracking-tight text-[#F1DFB6] sm:text-4xl"
+            className="text-3xl leading-tight tracking-tight text-champagne sm:text-4xl"
           >
             Broadcast Studio
           </h1>
@@ -109,7 +109,7 @@ export function AdminBroadcastHeaderBar({
           onClick={onRefresh}
           disabled={isRefreshing}
           aria-busy={isRefreshing}
-          className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-[#F1DFB6]/30 px-4 py-2 text-sm font-medium text-[#F1DFB6] transition hover:bg-[#F1DFB6]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A3D2E] disabled:opacity-60"
+          className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-champagne/30 px-4 py-2 text-sm font-medium text-champagne transition hover:bg-champagne/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne focus-visible:ring-offset-2 focus-visible:ring-offset-brand-main disabled:opacity-60"
         >
           <RefreshCw
             className={`h-4 w-4 ${isRefreshing ? 'animate-spin motion-reduce:animate-none' : ''}`}
@@ -135,12 +135,12 @@ export function AdminBroadcastHeaderBar({
             aria-label={`Répartition : ${hostShare} % d'hôtes, ${tenantShare} % de locataires`}
             className="mt-6 flex h-2 overflow-hidden rounded-full bg-white/10"
           >
-            <div className="bg-[#F1DFB6]" style={{ width: `${hostShare}%` }} />
+            <div className="bg-champagne" style={{ width: `${hostShare}%` }} />
             <div className="bg-emerald-400/80" style={{ width: `${tenantShare}%` }} />
           </div>
           <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-emerald-100/75">
             <span className="inline-flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-[#F1DFB6]" />
+              <span className="h-2 w-2 rounded-full bg-champagne" />
               Hôtes {isLoading ? '' : `${hostShare} %`}
             </span>
             <span className="inline-flex items-center gap-2">
@@ -151,15 +151,15 @@ export function AdminBroadcastHeaderBar({
         </div>
 
         {/* Détail par segment */}
-        <dl className="divide-y divide-[#F1DFB6]/15 border-y border-[#F1DFB6]/15">
+        <dl className="divide-y divide-champagne/15 border-y border-champagne/15">
           {/* Hôtes */}
           <div className="py-4">
             <div className="flex items-baseline justify-between gap-4">
               <dt className="inline-flex items-center gap-2 text-sm text-emerald-100/80">
-                <ShieldCheck className="h-4 w-4 text-[#F1DFB6]" />
+                <ShieldCheck className="h-4 w-4 text-champagne" />
                 Hôtes
               </dt>
-              <dd className="text-2xl tabular-nums text-[#F1DFB6]" style={DISPLAY_FONT}>
+              <dd className="text-2xl tabular-nums text-champagne" style={DISPLAY_FONT}>
                 {isLoading ? <Skeleton className="h-7 w-14" /> : fmt(totalHotes)}
               </dd>
             </div>
@@ -192,7 +192,7 @@ export function AdminBroadcastHeaderBar({
           <div className="py-4">
             <div className="flex items-baseline justify-between gap-4">
               <dt className="inline-flex items-center gap-2 text-sm text-emerald-100/80">
-                <Smartphone className="h-4 w-4 text-[#F1DFB6]" />
+                <Smartphone className="h-4 w-4 text-champagne" />
                 Joignables en push
               </dt>
               <dd className="text-2xl tabular-nums text-white" style={DISPLAY_FONT}>
@@ -207,7 +207,7 @@ export function AdminBroadcastHeaderBar({
             <MiniBar
               label={`${mobileSplit} % des appareils sont mobiles, le reste est web`}
               segments={[
-                { value: mobileSplit, className: 'bg-[#F1DFB6]' },
+                { value: mobileSplit, className: 'bg-champagne' },
                 { value: pushTotal > 0 ? 100 - mobileSplit : 0, className: 'bg-emerald-400/80' },
               ]}
             />
@@ -216,14 +216,14 @@ export function AdminBroadcastHeaderBar({
       </div>
 
       {/* Canaux disponibles */}
-      <ul className="mt-6 flex flex-wrap items-center gap-2 border-t border-[#F1DFB6]/15 pt-5">
+      <ul className="mt-6 flex flex-wrap items-center gap-2 border-t border-champagne/15 pt-5">
         <li className="mr-2 text-xs text-emerald-100/60">Canaux d'envoi</li>
         {CHANNELS.map(({ label, Icon }) => (
           <li
             key={label}
             className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.07] px-3 py-1.5 text-xs text-emerald-50"
           >
-            <Icon className="h-3.5 w-3.5 text-[#F1DFB6]" />
+            <Icon className="h-3.5 w-3.5 text-champagne" />
             {label}
           </li>
         ))}

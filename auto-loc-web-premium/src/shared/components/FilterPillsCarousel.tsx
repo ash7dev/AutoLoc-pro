@@ -79,7 +79,7 @@ export const FilterPillsCarousel: React.FC<FilterPillsCarouselProps> = ({
           type="button"
           onClick={() => scroll("left")}
           aria-label="Faire défiler vers la gauche"
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 border border-slate-200 text-[#041912] shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 backdrop-blur-md"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 border border-slate-200 text-brand-dark shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 backdrop-blur-md"
         >
           <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
         </button>
@@ -87,7 +87,7 @@ export const FilterPillsCarousel: React.FC<FilterPillsCarouselProps> = ({
 
       {/* Left Gradient Mask */}
       {canScrollLeft && (
-        <div className="absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-[#F8FAF4] via-[#F8FAF4]/80 to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-cream-50 via-cream-50/80 to-transparent z-10 pointer-events-none" />
       )}
 
       {/* Scrollable Container */}
@@ -102,7 +102,7 @@ export const FilterPillsCarousel: React.FC<FilterPillsCarouselProps> = ({
           let buttonStyle = "";
           if (variant === "dark") {
             buttonStyle = isActive
-              ? "bg-[#041912] text-white border-[#041912] shadow-md shadow-[#041912]/20 font-medium"
+              ? "bg-brand-dark text-white border-brand-dark shadow-md shadow-brand-dark/20 font-medium"
               : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200/80 font-normal";
           } else if (variant === "glass") {
             buttonStyle = isActive
@@ -111,8 +111,8 @@ export const FilterPillsCarousel: React.FC<FilterPillsCarouselProps> = ({
           } else {
             // Emerald (default)
             buttonStyle = isActive
-              ? "bg-[#041912] text-white border-[#041912] shadow-lg shadow-[#041912]/25 font-medium"
-              : "bg-white border-slate-200/90 text-slate-700 hover:border-emerald-300 hover:text-[#041912] shadow-xs font-normal";
+              ? "bg-brand-dark text-white border-brand-dark shadow-lg shadow-brand-dark/25 font-medium"
+              : "bg-white border-slate-200/90 text-slate-700 hover:border-emerald-300 hover:text-brand-dark shadow-xs font-normal";
           }
 
           return (
@@ -130,7 +130,7 @@ export const FilterPillsCarousel: React.FC<FilterPillsCarouselProps> = ({
                 <span
                   className={`text-[9px] px-1.5 py-0.5 rounded-full uppercase tracking-wider font-semibold ${
                     isActive
-                      ? "bg-emerald-500/20 text-[#4ADE80] border border-emerald-400/30"
+                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-400/30"
                       : "bg-emerald-50 text-emerald-800 border border-emerald-200"
                   }`}
                 >
@@ -154,7 +154,7 @@ export const FilterPillsCarousel: React.FC<FilterPillsCarouselProps> = ({
 
       {/* Right Gradient Mask */}
       {canScrollRight && (
-        <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-[#F8FAF4] via-[#F8FAF4]/80 to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-cream-50 via-cream-50/80 to-transparent z-10 pointer-events-none" />
       )}
 
       {/* Scroll Right Action Button */}
@@ -163,7 +163,7 @@ export const FilterPillsCarousel: React.FC<FilterPillsCarouselProps> = ({
           type="button"
           onClick={() => scroll("right")}
           aria-label="Faire défiler vers la droite"
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 border border-slate-200 text-[#041912] shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 backdrop-blur-md"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/95 border border-slate-200 text-brand-dark shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 backdrop-blur-md"
         >
           <ChevronRight className="w-4 h-4 stroke-[2.5]" />
         </button>

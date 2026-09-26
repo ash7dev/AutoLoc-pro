@@ -74,13 +74,13 @@ export const AdminPayoutsHeaderBar: React.FC<AdminPayoutsHeaderBarProps> = ({
       {/* Synthèse */}
       <section
         aria-label="Synthèse des reversements"
-        className="relative overflow-hidden rounded-[28px] border border-[#F1DFB6]/15 bg-[#0A3D2E] p-6 text-white shadow-[0_24px_60px_-24px_rgba(10,61,46,0.6)] sm:p-8"
+        className="relative overflow-hidden rounded-[28px] border border-champagne/15 bg-brand-main p-6 text-white shadow-[0_24px_60px_-24px_rgba(10,61,46,0.6)] sm:p-8"
       >
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-xl">
             <h1
               style={DISPLAY_FONT}
-              className="text-3xl leading-tight tracking-tight text-[#F1DFB6] sm:text-4xl"
+              className="text-3xl leading-tight tracking-tight text-champagne sm:text-4xl"
             >
               Payouts et wallets
             </h1>
@@ -95,7 +95,7 @@ export const AdminPayoutsHeaderBar: React.FC<AdminPayoutsHeaderBarProps> = ({
             onClick={onRefresh}
             disabled={isRefreshing}
             aria-busy={isRefreshing}
-            className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-[#F1DFB6]/30 px-4 py-2 text-sm font-medium text-[#F1DFB6] transition hover:bg-[#F1DFB6]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A3D2E] disabled:opacity-60"
+            className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-champagne/30 px-4 py-2 text-sm font-medium text-champagne transition hover:bg-champagne/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne focus-visible:ring-offset-2 focus-visible:ring-offset-brand-main disabled:opacity-60"
           >
             <RefreshCw
               className={`h-4 w-4 ${isRefreshing ? 'animate-spin motion-reduce:animate-none' : ''}`}
@@ -113,7 +113,7 @@ export const AdminPayoutsHeaderBar: React.FC<AdminPayoutsHeaderBarProps> = ({
               className="mt-1 flex flex-wrap items-baseline gap-x-3 leading-none tabular-nums"
             >
               <span className="text-5xl text-white sm:text-6xl">{amount(pendingAmount)}</span>
-              <span className="text-xl text-[#F1DFB6]/80">FCFA</span>
+              <span className="text-xl text-champagne/80">FCFA</span>
             </div>
             <p className="mt-3 text-sm text-emerald-100/75">
               {hasStats
@@ -142,7 +142,7 @@ export const AdminPayoutsHeaderBar: React.FC<AdminPayoutsHeaderBarProps> = ({
           </div>
 
           {/* Détail par canal */}
-          <dl className="divide-y divide-[#F1DFB6]/15 border-y border-[#F1DFB6]/15">
+          <dl className="divide-y divide-champagne/15 border-y border-champagne/15">
             <div className="py-4">
               <div className="flex items-baseline justify-between gap-4">
                 <dt className="inline-flex items-center gap-2 text-sm text-emerald-100/80">
@@ -151,7 +151,7 @@ export const AdminPayoutsHeaderBar: React.FC<AdminPayoutsHeaderBarProps> = ({
                 </dt>
                 <dd style={DISPLAY_FONT} className="text-2xl tabular-nums text-white">
                   {amount(waveAmount)}
-                  <span className="ml-1.5 text-sm text-[#F1DFB6]/70">FCFA</span>
+                  <span className="ml-1.5 text-sm text-champagne/70">FCFA</span>
                 </dd>
               </div>
               <p className="mt-1 text-xs text-emerald-100/60">
@@ -167,7 +167,7 @@ export const AdminPayoutsHeaderBar: React.FC<AdminPayoutsHeaderBarProps> = ({
                 </dt>
                 <dd style={DISPLAY_FONT} className="text-2xl tabular-nums text-white">
                   {amount(omAmount)}
-                  <span className="ml-1.5 text-sm text-[#F1DFB6]/70">FCFA</span>
+                  <span className="ml-1.5 text-sm text-champagne/70">FCFA</span>
                 </dd>
               </div>
               <p className="mt-1 text-xs text-emerald-100/60">
@@ -178,9 +178,9 @@ export const AdminPayoutsHeaderBar: React.FC<AdminPayoutsHeaderBarProps> = ({
             <div className="py-4">
               <div className="flex items-baseline justify-between gap-4">
                 <dt className="text-sm text-emerald-100/80">Remboursements</dt>
-                <dd style={DISPLAY_FONT} className="text-2xl tabular-nums text-[#F1DFB6]">
+                <dd style={DISPLAY_FONT} className="text-2xl tabular-nums text-champagne">
                   {hasStats ? refundsCount : '–'}
-                  <span className="ml-1.5 text-sm text-[#F1DFB6]/70">
+                  <span className="ml-1.5 text-sm text-champagne/70">
                     dossier{s(refundsCount)}
                   </span>
                 </dd>
@@ -196,7 +196,7 @@ export const AdminPayoutsHeaderBar: React.FC<AdminPayoutsHeaderBarProps> = ({
       {/* Recherche et filtres */}
       <section
         aria-label="Recherche et filtres"
-        className="rounded-[28px] border border-[#0A3D2E]/10 bg-white p-4 shadow-[0_20px_50px_-30px_rgba(10,61,46,0.35)] sm:p-5"
+        className="rounded-[28px] border border-brand-main/10 bg-white p-4 shadow-[0_20px_50px_-30px_rgba(10,61,46,0.35)] sm:p-5"
       >
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           {/* Recherche */}
@@ -211,14 +211,14 @@ export const AdminPayoutsHeaderBar: React.FC<AdminPayoutsHeaderBarProps> = ({
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Nom de l'hôte, téléphone, ID de retrait"
-              className="w-full rounded-full border border-gray-200 bg-white py-2.5 pl-11 pr-10 text-sm text-gray-900 placeholder:text-gray-400 transition focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/25 [&::-webkit-search-cancel-button]:hidden"
+              className="w-full rounded-full border border-gray-200 bg-white py-2.5 pl-11 pr-10 text-sm text-gray-900 placeholder:text-gray-400 transition focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/25 [&::-webkit-search-cancel-button]:hidden"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => onSearchChange('')}
                 aria-label="Effacer la recherche"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E]"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -229,7 +229,7 @@ export const AdminPayoutsHeaderBar: React.FC<AdminPayoutsHeaderBarProps> = ({
           <div
             role="radiogroup"
             aria-label="Filtrer par canal"
-            className="inline-flex self-start rounded-full bg-[#0A3D2E]/[0.06] p-1 md:self-auto"
+            className="inline-flex self-start rounded-full bg-brand-main/[0.06] p-1 md:self-auto"
           >
             {METHODS.map((m) => {
               const selected = methode === m.id;
@@ -240,9 +240,9 @@ export const AdminPayoutsHeaderBar: React.FC<AdminPayoutsHeaderBarProps> = ({
                   role="radio"
                   aria-checked={selected}
                   onClick={() => onMethodeChange(m.id)}
-                  className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] ${selected
-                      ? 'bg-[#0A3D2E] text-[#F1DFB6] shadow'
-                      : 'text-gray-600 hover:text-[#0A3D2E]'
+                  className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main ${selected
+                      ? 'bg-brand-main text-champagne shadow'
+                      : 'text-gray-600 hover:text-brand-main'
                     }`}
                 >
                   {m.dot && <span className={`h-2 w-2 rounded-full ${m.dot}`} />}
@@ -267,15 +267,15 @@ export const AdminPayoutsHeaderBar: React.FC<AdminPayoutsHeaderBarProps> = ({
                 type="button"
                 aria-pressed={isActive}
                 onClick={() => onStatutChange(tab.id)}
-                className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium ring-1 ring-inset transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] ${isActive
-                    ? 'bg-[#0A3D2E] text-[#F1DFB6] ring-[#0A3D2E]'
-                    : 'bg-white text-gray-600 ring-gray-200 hover:text-[#0A3D2E] hover:ring-[#0A3D2E]/40'
+                className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium ring-1 ring-inset transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main ${isActive
+                    ? 'bg-brand-main text-champagne ring-brand-main'
+                    : 'bg-white text-gray-600 ring-gray-200 hover:text-brand-main hover:ring-brand-main/40'
                   }`}
               >
                 {tab.dot && <span className={`h-2 w-2 rounded-full ${tab.dot}`} />}
                 {tab.label}
                 <span
-                  className={`rounded-full px-2 text-xs tabular-nums ${isActive ? 'bg-[#F1DFB6]/20 text-[#F1DFB6]' : 'bg-[#0A3D2E]/[0.07] text-[#0A3D2E]'
+                  className={`rounded-full px-2 text-xs tabular-nums ${isActive ? 'bg-champagne/20 text-champagne' : 'bg-brand-main/[0.07] text-brand-main'
                     }`}
                 >
                   {tab.count}

@@ -83,9 +83,9 @@ export const AdminSidebar: React.FC = () => {
   const logout = useUserStore((s) => s.logout);
 
   const sidebarContent = (
-    <div className="relative flex h-full select-none flex-col overflow-hidden bg-[#041912] text-white/70">
+    <div className="relative flex h-full select-none flex-col overflow-hidden bg-brand-dark text-white/70">
       {/* Matière décorative : halo + grain de lumière, comme le hero de profil */}
-      <div className="pointer-events-none absolute -top-32 -right-20 h-72 w-72 rounded-full bg-[#4ADE80]/[0.08] blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 -right-20 h-72 w-72 rounded-full bg-emerald-400/[0.08] blur-3xl" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0A3D2E]/50 via-transparent to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" />
 
@@ -106,11 +106,11 @@ export const AdminSidebar: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-gradient-to-r from-white/[0.06] to-transparent px-3.5 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#4ADE80]/12 text-[#4ADE80] ring-1 ring-[#4ADE80]/25">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-400/12 text-emerald-400 ring-1 ring-[#4ADE80]/25">
             <ShieldCheck className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <p className="font-fraunces font-normal text-[15px] leading-tight text-[#F1DFB6]" style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}>Suite administrateur</p>
+            <p className="font-fraunces font-normal text-[15px] leading-tight text-champagne">Suite administrateur</p>
             <p className="text-[10.5px] text-white/35">Accès complet à la plateforme</p>
           </div>
         </div>
@@ -138,13 +138,13 @@ export const AdminSidebar: React.FC = () => {
                     href={item.href}
                     onClick={() => setIsMobileOpen(false)}
                     className={`group relative flex items-center gap-3 rounded-xl px-2.5 py-2.5 text-[13px] transition-all ${isActive
-                      ? 'bg-gradient-to-r from-white/[0.09] to-white/[0.02] font-semibold text-[#F1DFB6] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
+                      ? 'bg-gradient-to-r from-white/[0.09] to-white/[0.02] font-semibold text-champagne shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
                       : 'font-medium text-white/50 hover:bg-white/[0.04] hover:text-white/85'
                       }`}
                   >
                     <div
                       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${isActive
-                        ? 'bg-[#4ADE80]/15 text-[#4ADE80] ring-1 ring-[#4ADE80]/20'
+                        ? 'bg-emerald-400/15 text-emerald-400 ring-1 ring-[#4ADE80]/20'
                         : 'text-white/40 group-hover:bg-white/[0.06] group-hover:text-white/70'
                         }`}
                     >
@@ -165,10 +165,10 @@ export const AdminSidebar: React.FC = () => {
       <div className="relative z-10 px-4 py-4">
         <Link
           href="/dashboard"
-          className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3 text-[12.5px] font-medium text-white/60 transition-all hover:border-[#F1DFB6]/25 hover:bg-white/[0.06] hover:text-[#F1DFB6]"
+          className="group flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3 text-[12.5px] font-medium text-white/60 transition-all hover:border-champagne/25 hover:bg-white/[0.06] hover:text-champagne"
         >
           Accéder à l'espace hôte
-          <ArrowUpRight className="h-3.5 w-3.5 text-white/30 transition-colors group-hover:text-[#F1DFB6]" />
+          <ArrowUpRight className="h-3.5 w-3.5 text-white/30 transition-colors group-hover:text-champagne" />
         </Link>
       </div>
 
@@ -177,7 +177,7 @@ export const AdminSidebar: React.FC = () => {
         <div className="relative z-10 border-t border-white/8 px-4 py-4">
           <div className="flex items-center justify-between rounded-xl bg-white/[0.04] p-2.5">
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1DFB6] font-fraunces text-[14px] text-[#041912] ring-2 ring-[#F1DFB6]/20">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-champagne font-fraunces text-[14px] text-brand-dark ring-2 ring-champagne/20">
                 {user.prenom?.[0] || 'A'}
               </div>
               <div className="truncate">
@@ -204,7 +204,7 @@ export const AdminSidebar: React.FC = () => {
   return (
     <>
       {/* Topbar mobile */}
-      <div className="sticky top-0 z-40 flex items-center justify-between bg-[#041912] px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] text-white lg:hidden">
+      <div className="sticky top-0 z-40 flex items-center justify-between bg-brand-dark px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] text-white lg:hidden">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileOpen(true)}
@@ -212,10 +212,10 @@ export const AdminSidebar: React.FC = () => {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <span className="font-fraunces text-[15px] text-[#F1DFB6]">AutoLoc Admin</span>
+          <span className="font-fraunces text-[15px] text-champagne">AutoLoc Admin</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#4ADE80]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
           <span className="text-[11.5px] text-white/40">En ligne</span>
         </div>
       </div>

@@ -62,7 +62,7 @@ export const GateStepDriverLicense: React.FC<GateStepDriverLicenseProps> = ({ on
     <div className="w-full max-w-lg mx-auto py-2 px-1 animate-in fade-in zoom-in-95 duration-200">
       <div className="relative">
         {/* Layer 1: Back Accent Card - Decalé 3px à gauche */}
-        <div className="absolute inset-0 -left-[3px] top-[3px] rounded-[28px] bg-[#041912] border border-[#0A3D2E]/80 pointer-events-none shadow-md" />
+        <div className="absolute inset-0 -left-[3px] top-[3px] rounded-[28px] bg-brand-dark border border-brand-main/80 pointer-events-none shadow-md" />
 
         {/* Layer 2: Front Glass Card */}
         <div className="relative bg-white border border-white/80 rounded-[28px] p-6 sm:p-7 pb-7 shadow-2xl">
@@ -77,7 +77,7 @@ export const GateStepDriverLicense: React.FC<GateStepDriverLicenseProps> = ({ on
               <span>PERMIS DE CONDUIRE</span>
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-normal text-[#041912] font-fraunces tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-normal text-brand-dark font-fraunces tracking-tight">
               Permis de <span className="italic text-emerald-700">conduire.</span>
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
@@ -108,7 +108,7 @@ export const GateStepDriverLicense: React.FC<GateStepDriverLicenseProps> = ({ on
               {permisPreview ? (
                 <div className="relative w-full h-full">
                   <img src={permisPreview} alt="Permis" className="w-full h-full object-cover" />
-                  <div className="absolute bottom-3 right-3 bg-[#041912] border border-emerald-400/40 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
+                  <div className="absolute bottom-3 right-3 bg-brand-dark border border-emerald-400/40 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Permis ajouté</span>
                   </div>
@@ -121,7 +121,7 @@ export const GateStepDriverLicense: React.FC<GateStepDriverLicenseProps> = ({ on
                   <p className="text-sm font-medium text-slate-900">Ajouter mon permis de conduire</p>
                   <p className="text-xs text-slate-500 mt-0.5">Glissez un fichier ou cliquez pour parcourir</p>
 
-                  <label className="cursor-pointer bg-[#041912] hover:bg-[#06291e] text-white text-xs font-medium px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all mt-3 shadow-md">
+                  <label className="cursor-pointer bg-brand-dark hover:bg-[#06291e] text-white text-xs font-medium px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all mt-3 shadow-md">
                     <Upload className="w-3.5 h-3.5" />
                     <span>Choisir une photo</span>
                     <input
@@ -141,7 +141,7 @@ export const GateStepDriverLicense: React.FC<GateStepDriverLicenseProps> = ({ on
               className={`w-full h-12 rounded-full font-semibold text-sm flex items-center justify-center transition-all ${
                 !permisData || uploading
                   ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
-                  : 'bg-[#041912] hover:bg-[#06291e] text-white shadow-lg shadow-[#041912]/20 active:scale-[0.98]'
+                  : 'bg-brand-dark hover:bg-[#06291e] text-white shadow-lg shadow-brand-dark/20 active:scale-[0.98]'
               }`}
             >
               {uploading ? (

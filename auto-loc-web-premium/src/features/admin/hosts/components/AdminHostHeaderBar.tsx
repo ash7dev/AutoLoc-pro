@@ -27,7 +27,7 @@ const RUST = '#a13d3d';
 const SLATE = '#4a5f75';
 
 const FOCUS =
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E] dark:focus-visible:outline-[#F1DFB6]';
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main dark:focus-visible:outline-champagne';
 
 // "–" tant que les compteurs ne sont pas chargés (évite d'afficher un faux 0)
 const fmt = (n?: number) => (n === undefined ? '–' : n.toLocaleString('fr-FR'));
@@ -81,13 +81,13 @@ export const AdminHostHeaderBar: React.FC<AdminHostHeaderBarProps> = ({
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3.5 min-w-0">
           <div
-            className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-inset ring-[#F1DFB6]/25"
+            className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-inset ring-champagne/25"
             style={{ backgroundColor: FOREST }}
           >
             <Building2 className="w-5 h-5" style={{ color: CHAMPAGNE }} strokeWidth={1.75} />
           </div>
           <div className="min-w-0">
-            <h1 className="text-[22px] sm:text-2xl leading-tight tracking-tight font-normal text-[#041912] dark:text-white">
+            <h1 className="text-[22px] sm:text-2xl leading-tight tracking-tight font-normal text-brand-dark dark:text-white">
               Hôtes et flottes
             </h1>
             <p className="text-[13px] leading-snug text-slate-500 dark:text-slate-400 mt-1 font-sans">
@@ -101,10 +101,10 @@ export const AdminHostHeaderBar: React.FC<AdminHostHeaderBarProps> = ({
           onClick={onRefresh}
           disabled={isRefreshing}
           aria-label="Actualiser la liste"
-          className={`shrink-0 h-10 px-3 sm:px-4 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-[#0A3D2E]/40 hover:bg-[#0A3D2E]/[0.03] disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-[13px] font-semibold cursor-pointer font-sans ${FOCUS}`}
+          className={`shrink-0 h-10 px-3 sm:px-4 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-brand-main/40 hover:bg-brand-main/[0.03] disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-[13px] font-semibold cursor-pointer font-sans ${FOCUS}`}
         >
           <RefreshCw
-            className={`w-4 h-4 text-[#0A3D2E] dark:text-[#F1DFB6] ${isRefreshing ? 'animate-spin motion-reduce:animate-none' : ''}`}
+            className={`w-4 h-4 text-brand-main dark:text-champagne ${isRefreshing ? 'animate-spin motion-reduce:animate-none' : ''}`}
           />
           <span className="hidden sm:inline">{isRefreshing ? 'Actualisation…' : 'Actualiser'}</span>
         </button>
@@ -129,7 +129,7 @@ export const AdminHostHeaderBar: React.FC<AdminHostHeaderBarProps> = ({
                   aria-selected={isActive}
                   onClick={() => onStatusChange(tab.id)}
                   className={`flex items-center gap-2 h-10 pl-3.5 pr-2.5 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${FOCUS} ${isActive
-                      ? 'text-[#F1DFB6] dark:ring-1 dark:ring-[#F1DFB6]/30'
+                      ? 'text-champagne dark:ring-1 dark:ring-champagne/30'
                       : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   style={isActive ? { backgroundColor: FOREST } : undefined}
@@ -164,7 +164,7 @@ export const AdminHostHeaderBar: React.FC<AdminHostHeaderBarProps> = ({
               placeholder="Nom, email, téléphone, immatriculation"
               aria-label="Rechercher un hôte"
               autoComplete="off"
-              className="w-full h-10 pl-10 pr-10 text-base sm:text-[13px] rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-colors focus:border-[#0A3D2E] focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-[#0A3D2E]/10"
+              className="w-full h-10 pl-10 pr-10 text-base sm:text-[13px] rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-colors focus:border-brand-main focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-main/10"
             />
             {search ? (
               <button

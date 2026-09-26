@@ -57,7 +57,7 @@ export const VehicleMobileHeader: React.FC<VehicleMobileHeaderProps> = ({
           type="button"
           onClick={handleBack}
           aria-label="Retour"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100/80 text-[#041912] transition-colors hover:bg-slate-200 active:scale-95 cursor-pointer shrink-0"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100/80 text-brand-dark transition-colors hover:bg-slate-200 active:scale-95 cursor-pointer shrink-0"
         >
           <ChevronLeft className="h-5 w-5 stroke-[2.2]" />
         </button>
@@ -65,11 +65,11 @@ export const VehicleMobileHeader: React.FC<VehicleMobileHeaderProps> = ({
         {/* Informations centrales : Marque/Modèle & Immatriculation / Statut */}
         <div className="min-w-0 flex-1 px-2 text-center">
           <div className="flex items-center justify-center gap-1.5 truncate">
-            <span className="font-fraunces text-sm font-semibold tracking-tight text-[#041912] truncate max-w-[140px]">
+            <span className="font-fraunces text-sm font-semibold tracking-tight text-brand-dark truncate max-w-[140px]">
               {title}
             </span>
             {immatriculation && (
-              <span className="font-mono text-[10px] font-bold text-[#0A3D2E] bg-emerald-50/90 px-1.5 py-0.5 rounded-md border border-emerald-200/80 shrink-0">
+              <span className="font-mono text-[10px] font-bold text-brand-main bg-emerald-50/90 px-1.5 py-0.5 rounded-md border border-emerald-200/80 shrink-0">
                 {immatriculation}
               </span>
             )}
@@ -81,7 +81,7 @@ export const VehicleMobileHeader: React.FC<VehicleMobileHeaderProps> = ({
             ) : (
               <Clock className="w-2.5 h-2.5 text-amber-600 shrink-0" />
             )}
-            <span className="text-[9px] font-bold uppercase tracking-widest text-[#0A3D2E]/90 truncate max-w-[140px]">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-brand-main/90 truncate max-w-[140px]">
               {isVerifie ? 'Véhicule Vérifié' : statut || 'En attente'}
             </span>
           </div>

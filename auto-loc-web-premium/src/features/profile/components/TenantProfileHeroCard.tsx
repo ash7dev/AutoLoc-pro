@@ -53,9 +53,9 @@ export const TenantProfileHeroCard: React.FC<TenantProfileHeroCardProps> = ({
   const isVerified = profile.statutKyc === 'VALIDE' || profile.statutKyc === 'VERIFIE';
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-[#041912] text-white shadow-xl">
+    <div className="relative overflow-hidden rounded-3xl bg-brand-dark text-white shadow-xl">
       {/* Halo décoratif & Dégradé glassmorphism */}
-      <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-[#4ADE80]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-emerald-400/10 blur-3xl" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#0A3D2E]/40 via-transparent to-transparent" />
 
       <div className="relative z-10 p-6 sm:p-8 lg:p-10">
@@ -63,7 +63,7 @@ export const TenantProfileHeroCard: React.FC<TenantProfileHeroCardProps> = ({
           {/* Avatar & identité du locataire */}
           <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:text-left">
             <div className="group relative shrink-0">
-              <div className="relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-[#0A3D2E]/60 ring-4 ring-[#F1DFB6]/20 sm:h-32 sm:w-32 shadow-inner">
+              <div className="relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-brand-main/60 ring-4 ring-champagne/20 sm:h-32 sm:w-32 shadow-inner">
                 {profile.avatarUrl ? (
                   <Image
                     src={profile.avatarUrl}
@@ -73,19 +73,19 @@ export const TenantProfileHeroCard: React.FC<TenantProfileHeroCardProps> = ({
                     sizes="128px"
                   />
                 ) : (
-                  <span className="font-fraunces text-3xl text-[#F1DFB6]/90 sm:text-4xl">
+                  <span className="font-fraunces text-3xl text-champagne/90 sm:text-4xl">
                     {getInitials(profile.prenom, profile.nom)}
                   </span>
                 )}
 
                 {isUploadingAvatar && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-xs">
-                    <Loader2 className="h-8 w-8 animate-spin text-[#4ADE80]" />
+                    <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
                   </div>
                 )}
               </div>
 
-              <div className="absolute bottom-0 right-0 flex items-center gap-1 rounded-full border border-white/10 bg-[#041912] p-1 shadow-lg">
+              <div className="absolute bottom-0 right-0 flex items-center gap-1 rounded-full border border-white/10 bg-brand-dark p-1 shadow-lg">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -123,7 +123,7 @@ export const TenantProfileHeroCard: React.FC<TenantProfileHeroCardProps> = ({
                   {profile.prenom} {profile.nom}
                 </h2>
                 {isVerified && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#4ADE80]/15 px-2.5 py-1 text-[11px] font-semibold text-[#4ADE80]">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-400">
                     <ShieldCheck className="h-3.5 w-3.5" />
                     Vérifié
                   </span>
@@ -131,7 +131,7 @@ export const TenantProfileHeroCard: React.FC<TenantProfileHeroCardProps> = ({
               </div>
 
               <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[13px] text-white/60 sm:justify-start">
-                <span className="font-medium text-[#F1DFB6]/90">Locataire membre</span>
+                <span className="font-medium text-champagne/90">Locataire membre</span>
                 {memberDate && (
                   <>
                     <span className="text-white/25">·</span>
@@ -168,7 +168,7 @@ export const TenantProfileHeroCard: React.FC<TenantProfileHeroCardProps> = ({
                 {isSwitchingRole ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <ArrowLeftRight className="h-3.5 w-3.5 text-[#F1DFB6]" />
+                  <ArrowLeftRight className="h-3.5 w-3.5 text-champagne" />
                 )}
                 Espace Propriétaire
               </button>
@@ -177,7 +177,7 @@ export const TenantProfileHeroCard: React.FC<TenantProfileHeroCardProps> = ({
             <button
               type="button"
               onClick={onEditClick}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#F1DFB6] px-4 py-2.5 text-[12.5px] font-semibold text-[#041912] transition-colors hover:bg-[#e8d29e] cursor-pointer sm:w-auto shadow-md"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-champagne px-4 py-2.5 text-[12.5px] font-semibold text-brand-dark transition-colors hover:bg-[#e8d29e] cursor-pointer sm:w-auto shadow-md"
             >
               <Pencil className="h-3.5 w-3.5" />
               Modifier le profil

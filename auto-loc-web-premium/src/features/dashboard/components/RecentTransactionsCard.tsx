@@ -70,7 +70,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
         items.length > 0 ? (
           <Link
             href={OWNER_ROUTES.wallet}
-            className="rounded-md text-sm font-medium text-[#0A3D2E] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
+            className="rounded-md text-sm font-medium text-brand-main underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2"
           >
             Ouvrir le wallet
           </Link>
@@ -113,7 +113,7 @@ export const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-semibold text-[#041912]">{label}</p>
+                    <p className="truncate text-sm font-semibold text-brand-dark">{label}</p>
                     {statusBadge && (
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusBadge.className}`}>
                         {statusBadge.text}

@@ -65,6 +65,7 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
   const [publishProgress, setPublishProgress] = useState(0);
   const [publishStatusText, setPublishStatusText] = useState('Validation des données...');
   const [publishSuccess, setPublishSuccess] = useState(false);
+  const [publishError, setPublishError] = useState(false);
 
   // Draft & Exit Modals State
   const [abandonModalVisible, setAbandonModalVisible] = useState(false);
@@ -95,11 +96,26 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
             immatriculation: v.immatriculation || '',
           });
 
+          const rawEquipements = Array.isArray(v.options)
+            ? v.options
+            : Array.isArray(v.equipements)
+              ? v.equipements
+              : ['CLIMATISATION'];
+          const normalizedEquipements: string[] = rawEquipements
+            .map((e: any) => {
+              if (typeof e === 'string') return e;
+              if (e && typeof e === 'object') {
+                return e.equipement?.nom || e.nom || e.id || '';
+              }
+              return '';
+            })
+            .filter((str: string) => str.length > 0);
+
           setStep2({
             nombrePlaces: v.places || v.nombrePlaces || 5,
             ageMinimum: v.ageMinimum || 21,
             joursMinimum: v.joursMinimum || 1,
-            equipements: Array.isArray(v.options) ? v.options : Array.isArray(v.equipements) ? v.equipements : ['CLIMATISATION'],
+            equipements: normalizedEquipements.length > 0 ? normalizedEquipements : ['CLIMATISATION'],
           });
 
           const hasHorsDakar = Boolean(v.autoriseHorsDakar ?? (v.supplementHorsDakarParJour && Number(v.supplementHorsDakarParJour) > 0));
@@ -300,67 +316,66 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
     try {
       setSubmitting(true);
       setPublishModalVisible(true);
-      setPublishProgress(15);
+      setPublishProgress(20);
       setPublishStatusText('Vérification des données du véhicule...');
       setPublishSuccess(false);
+      setPublishError(false);
 
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
-      setPublishProgress(45);
-      setPublishStatusText('Téléversement des visuels HD...');
+      setPublishProgress(50);
+      setPublishStatusText('Préparation des visuels et documents...');
 
-      let photoPayload: Array<{ url: string; publicId: string }> = [];
+      // 1. Traitement 100% PARALLÈLE de toutes les photos + documents (Carte Grise & Assurance)
+      const [photoPayloadResolved, carteGriseRes, assuranceRes] = await Promise.all([
+        // Photos en parallèle
+        step6.photos && step6.photos.length > 0
+          ? Promise.all(
+            step6.photos.map(async (p) => {
+              if (p.uri.startsWith('http://') || p.uri.startsWith('https://')) {
+                return {
+                  url: p.uri,
+                  publicId: p.publicId || `photo_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+                };
+              }
+              const uploaded = await vehicleService.uploadVehicleMedia(p.uri, false);
+              return {
+                url: uploaded.url,
+                publicId: p.publicId || uploaded.publicId,
+              };
+            })
+          )
+          : Promise.resolve(undefined),
 
-      if (step6.photos.length > 0) {
-        photoPayload = await Promise.all(
-          step6.photos.map(async (p) => {
-            const uploaded = await vehicleService.uploadVehicleMedia(p.uri, false);
-            return {
-              url: uploaded.url,
-              publicId: uploaded.publicId,
-            };
-          })
-        );
-      } else {
-        photoPayload.push({
-          url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
-          publicId: 'default_car_photo',
-        });
-      }
+        // Carte Grise en parallèle
+        step6.carteGrise?.uri
+          ? step6.carteGrise.uri.startsWith('http://') || step6.carteGrise.uri.startsWith('https://')
+            ? Promise.resolve({ url: step6.carteGrise.uri, publicId: undefined })
+            : vehicleService.uploadVehicleMedia(step6.carteGrise.uri, !step6.carteGrise.isImage)
+          : Promise.resolve(undefined),
 
-      setPublishProgress(75);
-      setPublishStatusText('Upload des pièces justificatives (Carte Grise & Assurance)...');
+        // Assurance en parallèle
+        step6.assuranceDoc?.uri
+          ? step6.assuranceDoc.uri.startsWith('http://') || step6.assuranceDoc.uri.startsWith('https://')
+            ? Promise.resolve({ url: step6.assuranceDoc.uri, publicId: undefined })
+            : vehicleService.uploadVehicleMedia(step6.assuranceDoc.uri, !step6.assuranceDoc.isImage)
+          : Promise.resolve(undefined),
+      ]);
 
-      let carteGriseRes = {
-        url: 'https://autoloc.sn/docs/carte_grise_default.pdf',
-        publicId: 'carte_grise_doc',
-      };
-      if (step6.carteGrise?.uri) {
-        carteGriseRes = await vehicleService.uploadVehicleMedia(
-          step6.carteGrise.uri,
-          !step6.carteGrise.isImage
-        );
-      }
+      let photoPayload = photoPayloadResolved;
+      let carteGriseUrl = carteGriseRes?.url;
+      let carteGrisePublicId = carteGriseRes?.publicId;
+      let assuranceDocUrl = assuranceRes?.url;
+      let assuranceDocPublicId = assuranceRes?.publicId;
 
-      let assuranceRes = {
-        url: 'https://autoloc.sn/docs/assurance_default.pdf',
-        publicId: 'assurance_doc',
-      };
-      if (step6.assuranceDoc?.uri) {
-        assuranceRes = await vehicleService.uploadVehicleMedia(
-          step6.assuranceDoc.uri,
-          !step6.assuranceDoc.isImage
-        );
-      }
-
-      setPublishProgress(90);
+      setPublishProgress(85);
       setPublishStatusText(
         isEditMode
           ? 'Enregistrement des modifications...'
           : 'Finalisation et mise en ligne de votre annonce...'
       );
 
-      const payload = {
+      const payload: any = {
         marque: step1.marque.trim(),
         modele: step1.modele.trim(),
         annee: Number(step1.annee),
@@ -395,27 +410,45 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
               prix: Number(t.prix),
             }))
             : undefined,
-        photos: photoPayload,
-        carteGriseUrl: carteGriseRes.url,
-        carteGrisePublicId: carteGriseRes.publicId,
-        assuranceDocUrl: assuranceRes.url,
-        assuranceDocPublicId: assuranceRes.publicId,
       };
 
-      try {
-        if (isEditMode && vehicleToEdit) {
-          await vehicleService.updateVehicle(vehicleToEdit.id, payload);
-        } else {
-          await vehicleService.createVehicle(payload);
-          clearDraft();
-        }
-      } catch (err) {
-        console.warn('API Sync fallback', err);
+      if (photoPayload && photoPayload.length > 0) {
+        payload.photos = photoPayload;
+      }
+
+      if (!isEditMode && (!payload.photos || payload.photos.length === 0)) {
+        payload.photos = [{
+          url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
+          publicId: 'default_car_photo',
+        }];
+      }
+
+      if (carteGriseUrl) {
+        payload.carteGriseUrl = carteGriseUrl;
+        if (carteGrisePublicId) payload.carteGrisePublicId = carteGrisePublicId;
+      } else if (!isEditMode) {
+        payload.carteGriseUrl = 'https://autoloc.sn/docs/carte_grise_default.pdf';
+        payload.carteGrisePublicId = 'carte_grise_doc';
+      }
+
+      if (assuranceDocUrl) {
+        payload.assuranceDocUrl = assuranceDocUrl;
+        if (assuranceDocPublicId) payload.assuranceDocPublicId = assuranceDocPublicId;
+      } else if (!isEditMode) {
+        payload.assuranceDocUrl = 'https://autoloc.sn/docs/assurance_default.pdf';
+        payload.assuranceDocPublicId = 'assurance_doc';
+      }
+
+      if (isEditMode && vehicleToEdit) {
+        await vehicleService.updateVehicle(vehicleToEdit.id, payload);
+      } else {
+        await vehicleService.createVehicle(payload);
+        clearDraft();
       }
 
       if (!isEditMode) clearDraft();
 
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       setPublishProgress(100);
       setPublishStatusText(
         isEditMode
@@ -423,11 +456,13 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
           : '🎉 Félicitations ! Votre véhicule est officiellement publié.'
       );
       setPublishSuccess(true);
-    } catch {
-      if (!isEditMode) clearDraft();
+    } catch (err: any) {
+      console.error('Erreur lors de la sauvegarde du véhicule:', err);
+      const rawMsg = err?.response?.data?.message || err?.message || 'Une erreur est survenue lors de l\'enregistrement.';
+      const formattedMsg = Array.isArray(rawMsg) ? rawMsg.join(', ') : rawMsg;
       setPublishProgress(100);
-      setPublishStatusText('Votre annonce a été enregistrée avec succès.');
-      setPublishSuccess(true);
+      setPublishStatusText(`⚠️ Échec de l'enregistrement : ${formattedMsg}`);
+      setPublishError(true);
     } finally {
       setSubmitting(false);
     }
@@ -456,7 +491,7 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
           className="relative flex flex-col w-full h-full sm:h-auto max-w-4xl mx-auto overflow-hidden rounded-none sm:rounded-3xl border-0 sm:border border-slate-200/80 bg-[#062017] sm:bg-white shadow-none sm:shadow-xl"
         >
           {/* Header Navigation Bar */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/10 sm:border-slate-100 bg-white/5 sm:bg-white backdrop-blur-md shrink-0">
+          <div className="flex items-center justify-between px-4 sm:px-6 pt-[calc(0.875rem+env(safe-area-inset-top))] sm:pt-4 pb-3.5 sm:pb-4 border-b border-white/10 sm:border-slate-100 bg-white/5 sm:bg-white backdrop-blur-md shrink-0">
             <button
               type="button"
               onClick={isEditMode ? handleCloseAttempt : handleBack}
@@ -473,15 +508,15 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
 
             {isEditMode ? (
               <div className="flex flex-col items-center">
-                <div className="flex items-center gap-2 rounded-full border border-[#4ADE80]/40 sm:border-[#059669]/30 bg-[#10B981]/20 sm:bg-[#F0FDF4] px-3 py-1 text-[11px] font-bold text-[#4ADE80] sm:text-[#047857]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#4ADE80] sm:bg-[#059669] animate-pulse" />
+                <div className="flex items-center gap-2 rounded-full border border-[#4ADE80]/40 sm:border-[#059669]/30 bg-[#10B981]/20 sm:bg-[#F0FDF4] px-3 py-1 text-[11px] font-bold text-emerald-400 sm:text-[#047857]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 sm:bg-emerald-600 animate-pulse" />
                   MODE ÉDITION
                 </div>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-1">
-                <div className="flex items-center gap-2 rounded-full border border-[#4ADE80]/40 sm:border-[#059669]/30 bg-[#10B981]/20 sm:bg-[#F0FDF4] px-3 py-1 text-[11px] font-bold text-[#4ADE80] sm:text-[#047857]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#4ADE80] sm:bg-[#059669] animate-pulse" />
+                <div className="flex items-center gap-2 rounded-full border border-[#4ADE80]/40 sm:border-[#059669]/30 bg-[#10B981]/20 sm:bg-[#F0FDF4] px-3 py-1 text-[11px] font-bold text-emerald-400 sm:text-[#047857]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 sm:bg-emerald-600 animate-pulse" />
                   {`ÉTAPE ${currentStep} SUR 7`}
                 </div>
                 <h2 className="font-fraunces font-normal text-white sm:text-slate-900 tracking-tight text-sm sm:text-base">
@@ -496,7 +531,7 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
                   type="button"
                   onClick={handleFinalSubmit}
                   disabled={submitting}
-                  className="flex items-center gap-2 rounded-full bg-[#059669] px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-[#047857] transition-all"
+                  className="flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-[#047857] transition-all"
                 >
                   <Save className="h-3.5 w-3.5" />
                   Enregistrer
@@ -526,9 +561,9 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
                     type="button"
                     onClick={() => setCurrentStep(stepNum)}
                     className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all ${isActive
-                        ? 'bg-[#059669] text-white font-bold border border-[#4ADE80]'
+                        ? 'bg-emerald-600 text-white font-bold border border-[#4ADE80]'
                         : isCompleted
-                          ? 'bg-[#10B981]/20 sm:bg-[#F0FDF4] text-[#4ADE80] sm:text-[#047857] border border-[#4ADE80]/30 sm:border-[#A7F3D0]'
+                          ? 'bg-[#10B981]/20 sm:bg-[#F0FDF4] text-emerald-400 sm:text-[#047857] border border-[#4ADE80]/30 sm:border-[#A7F3D0]'
                           : 'bg-white/5 sm:bg-white text-slate-400 sm:text-slate-600 border border-white/10 sm:border-slate-200'
                       }`}
                   >
@@ -549,9 +584,9 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
                 <div
                   key={stepNum}
                   className={`flex-1 transition-all duration-300 ${isCompleted
-                      ? 'bg-[#4ADE80] sm:bg-[#059669] opacity-80'
+                      ? 'bg-emerald-400 sm:bg-emerald-600 opacity-80'
                       : isActive
-                        ? 'bg-[#059669]'
+                        ? 'bg-emerald-600'
                         : 'bg-white/10 sm:bg-slate-200'
                     }`}
                 />
@@ -597,7 +632,7 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
           </div>
 
           {/* Footer Action Bar */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-t border-white/10 sm:border-slate-100 bg-[#041912] sm:bg-slate-50 shrink-0">
+          <div className="flex items-center justify-between px-4 sm:px-6 pt-3.5 sm:pt-4 pb-[calc(0.875rem+env(safe-area-inset-bottom))] sm:pb-4 border-t border-white/10 sm:border-slate-100 bg-brand-dark sm:bg-slate-50 shrink-0">
             {currentStep > 1 ? (
               <button
                 type="button"
@@ -617,7 +652,7 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
               disabled={!canProceed || submitting}
               className={`flex items-center justify-center gap-3 rounded-full px-6 py-3 text-sm font-bold text-white shadow-xl transition-all ${!canProceed
                   ? 'bg-white/15 sm:bg-slate-200 text-white/50 sm:text-slate-400 cursor-not-allowed'
-                  : 'bg-[#041912] sm:bg-[#059669] border border-[#4ADE80]/40 sm:border-[#059669] hover:bg-[#047857] active:scale-[0.98]'
+                  : 'bg-brand-dark sm:bg-emerald-600 border border-[#4ADE80]/40 sm:border-[#059669] hover:bg-[#047857] active:scale-[0.98]'
                 }`}
             >
               <span>
@@ -627,7 +662,7 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
                     : 'Publier mon annonce'
                   : 'Continuer'}
               </span>
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10B981]/20 sm:bg-white/20 text-[#4ADE80] sm:text-white">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10B981]/20 sm:bg-white/20 text-emerald-400 sm:text-white">
                 <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
               </div>
             </button>
@@ -640,7 +675,10 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
           progress={publishProgress}
           statusText={publishStatusText}
           isSuccess={publishSuccess}
+          isError={publishError}
+          isEditMode={isEditMode}
           onFinish={handleFinishModal}
+          onCloseError={() => setPublishModalVisible(false)}
         />
 
         <ResumeDraftModal

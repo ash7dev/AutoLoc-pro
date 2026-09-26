@@ -184,7 +184,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({
     <div
       role="group"
       aria-label="Sélectionner la période d'évolution des revenus"
-      className="inline-flex rounded-full bg-[#0A3D2E]/[0.06] p-1"
+      className="inline-flex rounded-full bg-brand-main/[0.06] p-1"
     >
       {RANGES.map((r) => (
         <button
@@ -192,7 +192,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({
           type="button"
           aria-pressed={timeRange === r.id}
           onClick={() => handleTimeRange(r)}
-          className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] ${timeRange === r.id ? 'bg-[#0A3D2E] text-[#F1DFB6]' : 'text-slate-600 hover:text-[#041912]'
+          className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main ${timeRange === r.id ? 'bg-brand-main text-champagne' : 'text-slate-600 hover:text-brand-dark'
             }`}
         >
           {r.label}
@@ -309,18 +309,18 @@ const ChartBody: React.FC<{
       <div className="mb-6 flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
         <div>
           <p className="text-sm text-slate-500">Net sur la période</p>
-          <p className="font-display text-3xl tabular-nums text-[#041912]">
+          <p className="font-display text-3xl tabular-nums text-brand-dark">
             {formatCurrency(totalNet)}
             <span className="ml-1.5 font-sans text-sm text-slate-500">FCFA</span>
           </p>
         </div>
         <ul className="flex items-center gap-5 text-sm text-slate-600">
           <li className="flex items-center gap-2">
-            <span aria-hidden="true" className="h-0.5 w-4 rounded-full bg-[#0A3D2E]" />
+            <span aria-hidden="true" className="h-0.5 w-4 rounded-full bg-brand-main" />
             Net propriétaire
           </li>
           <li className="flex items-center gap-2">
-            <span aria-hidden="true" className="h-2.5 w-4 rounded-sm bg-[#F1DFB6]" />
+            <span aria-hidden="true" className="h-2.5 w-4 rounded-sm bg-champagne" />
             Commission AutoLoc
           </li>
         </ul>
@@ -351,7 +351,7 @@ const ChartBody: React.FC<{
             onPointerDown={handlePointer}
             onPointerLeave={() => setHovered(null)}
             onKeyDown={handleKeyDown}
-            className="relative touch-pan-y select-none rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E]/40"
+            className="relative touch-pan-y select-none rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main/40"
             style={{ height }}
           >
             {ready && (
@@ -422,7 +422,7 @@ const ChartBody: React.FC<{
                 <div
                   aria-hidden="true"
                   style={{ left: bubbleX, top: 0 }}
-                  className="pointer-events-none absolute -translate-x-1/2 whitespace-nowrap rounded-full bg-[#0A3D2E] px-3.5 py-1.5 text-xs font-semibold tabular-nums text-[#F1DFB6]"
+                  className="pointer-events-none absolute -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-main px-3.5 py-1.5 text-xs font-semibold tabular-nums text-champagne"
                 >
                   {fcfa(active.net)}
                 </div>
@@ -438,7 +438,7 @@ const ChartBody: React.FC<{
                   <span
                     key={`${p.label}-${i}`}
                     style={{ left: xAt(i) }}
-                    className={`absolute -translate-x-1/2 whitespace-nowrap text-[11px] ${i === activeIndex ? 'font-semibold text-[#041912]' : 'text-slate-500'
+                    className={`absolute -translate-x-1/2 whitespace-nowrap text-[11px] ${i === activeIndex ? 'font-semibold text-brand-dark' : 'text-slate-500'
                       }`}
                   >
                     {p.label}
@@ -452,23 +452,23 @@ const ChartBody: React.FC<{
       {/* Détail de la période active */}
       <dl
         aria-live="polite"
-        className="mt-6 grid grid-cols-2 gap-x-4 gap-y-3 rounded-2xl bg-[#0A3D2E]/[0.04] p-4 text-sm sm:grid-cols-4 sm:p-5"
+        className="mt-6 grid grid-cols-2 gap-x-4 gap-y-3 rounded-2xl bg-brand-main/[0.04] p-4 text-sm sm:grid-cols-4 sm:p-5"
       >
         <div>
           <dt className="text-slate-500">Période</dt>
-          <dd className="mt-0.5 font-display text-lg text-[#041912]">{active.label}</dd>
+          <dd className="mt-0.5 font-display text-lg text-brand-dark">{active.label}</dd>
         </div>
         <div>
           <dt className="text-slate-500">Net propriétaire</dt>
-          <dd className="mt-0.5 font-display text-lg tabular-nums text-[#041912]">{fcfa(active.net)}</dd>
+          <dd className="mt-0.5 font-display text-lg tabular-nums text-brand-dark">{fcfa(active.net)}</dd>
         </div>
         <div>
           <dt className="text-slate-500">Commission AutoLoc</dt>
-          <dd className="mt-0.5 font-display text-lg tabular-nums text-[#041912]">{fcfa(active.commission)}</dd>
+          <dd className="mt-0.5 font-display text-lg tabular-nums text-brand-dark">{fcfa(active.commission)}</dd>
         </div>
         <div>
           <dt className="text-slate-500">Jours loués</dt>
-          <dd className="mt-0.5 font-display text-lg tabular-nums text-[#041912]">{active.jours}</dd>
+          <dd className="mt-0.5 font-display text-lg tabular-nums text-brand-dark">{active.jours}</dd>
         </div>
       </dl>
     </div>

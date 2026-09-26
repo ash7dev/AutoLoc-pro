@@ -87,17 +87,17 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({ insights, isLoadin
 
             return (
               <li key={item.id ?? `${item.titre}-${i}`} className="flex gap-4 py-4 first:pt-0 last:pb-0">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F1DFB6]/40 text-[#0A3D2E]">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-champagne/40 text-brand-main">
                   <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden="true" />
                 </span>
                 <div className="min-w-0 flex-1 space-y-1">
                   <p className="text-xs text-slate-500">{meta.label}</p>
-                  {item.titre && <p className="font-medium text-[#041912]">{item.titre}</p>}
+                  {item.titre && <p className="font-medium text-brand-dark">{item.titre}</p>}
                   {body && <p className="text-sm leading-relaxed text-slate-600">{body}</p>}
                   {action && (
                     <Link
                       href={action.href}
-                      className="inline-block rounded-md pt-1 text-sm font-semibold text-[#0A3D2E] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
+                      className="inline-block rounded-md pt-1 text-sm font-semibold text-brand-main underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2"
                     >
                       {action.label}
                     </Link>

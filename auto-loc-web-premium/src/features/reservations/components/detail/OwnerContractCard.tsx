@@ -203,7 +203,7 @@ export const OwnerContractCard: React.FC<OwnerContractCardProps> = ({
           if (isSealed) handlePressLocked('SEALED');
           else if (restricted) setShowRestrictionModal(true);
         }}
-        className={`rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[#041912] ${
+        className={`rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-brand-dark ${
           isDisabledAction ? 'cursor-pointer' : ''
         }`}
       >
@@ -214,7 +214,7 @@ export const OwnerContractCard: React.FC<OwnerContractCardProps> = ({
                 ? 'bg-rose-50 border-rose-200 text-rose-700'
                 : restricted
                 ? 'bg-amber-50 border-amber-200 text-amber-700'
-                : 'bg-emerald-50 border-emerald-100 text-[#0A3D2E]'
+                : 'bg-emerald-50 border-emerald-100 text-brand-main'
             }`}
           >
             {isSealed ? (
@@ -222,15 +222,15 @@ export const OwnerContractCard: React.FC<OwnerContractCardProps> = ({
             ) : restricted ? (
               <Lock className="w-5 h-5 text-amber-700" />
             ) : isCompleted ? (
-              <FileCheck2 className="w-5 h-5 text-[#0A3D2E]" />
+              <FileCheck2 className="w-5 h-5 text-brand-main" />
             ) : (
-              <FileText className="w-5 h-5 text-[#0A3D2E]" />
+              <FileText className="w-5 h-5 text-brand-main" />
             )}
           </div>
 
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h3 className="font-fraunces text-xl text-[#041912] font-normal tracking-tight">
+              <h3 className="font-fraunces text-xl text-brand-dark font-normal tracking-tight">
                 {isCompleted
                   ? 'Contrat de location (Archivé)'
                   : isSealed
@@ -246,7 +246,7 @@ export const OwnerContractCard: React.FC<OwnerContractCardProps> = ({
                     ? 'bg-rose-50 border-rose-200 text-rose-800'
                     : restricted
                     ? 'bg-amber-50 border-amber-200 text-amber-800'
-                    : 'bg-emerald-50 border-emerald-200 text-[#0A3D2E]'
+                    : 'bg-emerald-50 border-emerald-200 text-brand-main'
                 }`}
               >
                 {isSealed
@@ -289,18 +289,18 @@ export const OwnerContractCard: React.FC<OwnerContractCardProps> = ({
               }
               handleOpenContract('view');
             }}
-            className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs transition-all shadow-xs ${
+            className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-brand-main text-champagne font-bold text-xs transition-all shadow-xs ${
               isDisabledAction
                 ? 'opacity-40 cursor-not-allowed'
-                : 'hover:bg-[#0F4F3B] cursor-pointer'
+                : 'hover:bg-forest-700 cursor-pointer'
             }`}
           >
             {loadingAction === 'view' ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#F1DFB6]" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-champagne" />
             ) : isDisabledAction ? (
-              <Lock className="w-3.5 h-3.5 text-[#F1DFB6]" />
+              <Lock className="w-3.5 h-3.5 text-champagne" />
             ) : (
-              <ExternalLink className="w-3.5 h-3.5 text-[#F1DFB6]" />
+              <ExternalLink className="w-3.5 h-3.5 text-champagne" />
             )}
             <span>Consulter</span>
           </button>
@@ -374,10 +374,10 @@ function InfoModal({
         </button>
 
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#0A3D2E] text-[#F1DFB6] flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-brand-main text-champagne flex items-center justify-center shrink-0">
             <Info className="w-5 h-5" />
           </div>
-          <h3 className="text-base font-bold text-[#041912]">{message.title}</h3>
+          <h3 className="text-base font-bold text-brand-dark">{message.title}</h3>
         </div>
 
         <p className="text-xs text-slate-600 leading-relaxed font-medium">{message.desc}</p>
@@ -386,7 +386,7 @@ function InfoModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs hover:bg-[#0F4F3B] transition-colors cursor-pointer"
+            className="px-5 py-2.5 rounded-full bg-brand-main text-champagne font-bold text-xs hover:bg-forest-700 transition-colors cursor-pointer"
           >
             J’ai compris
           </button>
@@ -494,7 +494,7 @@ function PrintRestrictionModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2.5 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs hover:bg-[#0F4F3B] transition-colors cursor-pointer"
+            className="px-6 py-2.5 rounded-full bg-brand-main text-champagne font-bold text-xs hover:bg-forest-700 transition-colors cursor-pointer"
           >
             J’ai compris
           </button>

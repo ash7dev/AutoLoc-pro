@@ -60,8 +60,8 @@ export const AdminReservationHeaderBar: React.FC<AdminReservationHeaderBarProps>
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-normal text-[#041912] dark:text-white">Centre de Contrôle des Réservations</h1>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#0A3D2E]/10 text-[#0A3D2E] dark:bg-[#F1DFB6]/20 dark:text-[#F1DFB6]">
+              <h1 className="text-xl font-normal text-brand-dark dark:text-white">Centre de Contrôle des Réservations</h1>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand-main/10 text-brand-main dark:bg-champagne/20 dark:text-champagne">
                 Temps Réel AutoLoc
               </span>
             </div>
@@ -74,7 +74,7 @@ export const AdminReservationHeaderBar: React.FC<AdminReservationHeaderBarProps>
         <div className="flex items-center gap-2">
           <Link
             href="/admin/disputes"
-            className="px-3 py-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-[#041912] dark:hover:text-white transition-all flex items-center gap-2 text-xs font-medium"
+            className="px-3 py-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-brand-dark dark:hover:text-white transition-all flex items-center gap-2 text-xs font-medium"
           >
             <AlertOctagon className="w-4 h-4 text-red-500" />
             <span>Gestion des Litiges ({counts?.dispute ?? 0})</span>
@@ -83,7 +83,7 @@ export const AdminReservationHeaderBar: React.FC<AdminReservationHeaderBarProps>
           <button
             onClick={onRefresh}
             disabled={isRefreshing}
-            className="p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:text-[#041912] dark:hover:text-white transition-colors flex items-center gap-2 text-xs font-medium cursor-pointer"
+            className="p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:text-brand-dark dark:hover:text-white transition-colors flex items-center gap-2 text-xs font-medium cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">Actualiser</span>

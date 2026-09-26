@@ -118,15 +118,15 @@ function getStepStates(f: Flags, hasTenantCheckin: boolean): StepState[] {
 }
 
 const CIRCLE_CLASS: Record<StepState, string> = {
-  done: 'bg-[#0A3D2E] text-[#F1DFB6]',
-  current: 'border-2 border-[#0A3D2E] bg-white text-[#0A3D2E] ring-4 ring-[#0A3D2E]/10',
+  done: 'bg-brand-main text-champagne',
+  current: 'border-2 border-brand-main bg-white text-brand-main ring-4 ring-brand-main/10',
   alert: 'bg-rose-600 text-white ring-4 ring-rose-100',
   upcoming: 'border border-slate-200 bg-slate-100 text-slate-400',
 };
 
 const STEP_LABEL_CLASS: Record<StepState, string> = {
-  done: 'font-semibold text-[#041912]',
-  current: 'font-semibold text-[#041912]',
+  done: 'font-semibold text-brand-dark',
+  current: 'font-semibold text-brand-dark',
   alert: 'font-semibold text-rose-700',
   upcoming: 'text-slate-500',
 };
@@ -154,8 +154,8 @@ interface LifecycleView {
 
 const TONE_CLASS: Record<Tone, { panel: string; icon: string }> = {
   neutral: {
-    panel: 'border-[#0A3D2E]/10 bg-[#0A3D2E]/[0.04] text-[#041912]',
-    icon: 'bg-[#0A3D2E] text-[#F1DFB6]',
+    panel: 'border-brand-main/10 bg-brand-main/[0.04] text-brand-dark',
+    icon: 'bg-brand-main text-champagne',
   },
   action: {
     panel: 'border-amber-200 bg-amber-50 text-amber-950',
@@ -172,7 +172,7 @@ const TONE_CLASS: Record<Tone, { panel: string; icon: string }> = {
 };
 
 const CHIP_CLASS: Record<LifecycleView['chipTone'], string> = {
-  default: 'border-[#0A3D2E]/15 bg-[#0A3D2E]/5 text-[#0A3D2E]',
+  default: 'border-brand-main/15 bg-brand-main/5 text-brand-main',
   action: 'border-amber-200 bg-amber-50 text-amber-800',
   danger: 'border-rose-200 bg-rose-50 text-rose-800',
 };
@@ -406,14 +406,14 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
           <span
             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${view.chipTone === 'danger'
                 ? 'bg-rose-50 text-rose-600'
-                : 'bg-[#F1DFB6]/40 text-[#0A3D2E]'
+                : 'bg-champagne/40 text-brand-main'
               }`}
           >
             <HeaderIcon className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
           </span>
 
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-            <h2 id={titleId} className="font-fraunces text-xl sm:text-2xl font-normal text-[#041912] tracking-tight">
+            <h2 id={titleId} className="font-fraunces text-xl sm:text-2xl font-normal text-brand-dark tracking-tight">
               {view.title}
             </h2>
             {view.stepLabel && (
@@ -432,10 +432,10 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
             onClick={handleRefresh}
             disabled={isRefreshing}
             aria-label="Actualiser le suivi"
-            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 disabled:cursor-wait"
+            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2 disabled:cursor-wait"
           >
             <RefreshCw
-              className={`h-4 w-4 ${isRefreshing ? 'text-[#0A3D2E] motion-safe:animate-spin' : ''}`}
+              className={`h-4 w-4 ${isRefreshing ? 'text-brand-main motion-safe:animate-spin' : ''}`}
               aria-hidden="true"
             />
           </button>
@@ -456,7 +456,7 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
                 {i < STEP_LABELS.length - 1 && (
                   <span
                     aria-hidden="true"
-                    className={`absolute left-1/2 top-3.5 h-0.5 w-full -translate-y-1/2 ${state === 'done' ? 'bg-[#0A3D2E]' : 'bg-slate-200'
+                    className={`absolute left-1/2 top-3.5 h-0.5 w-full -translate-y-1/2 ${state === 'done' ? 'bg-brand-main' : 'bg-slate-200'
                       }`}
                   />
                 )}
@@ -542,31 +542,31 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
 
       {/* 5. Règlement de l'acompte */}
       {isPendingPayment && (
-        <div className="space-y-5 rounded-3xl bg-[#0A3D2E] p-5 text-[#F1DFB6] shadow-xl shadow-[#0A3D2E]/15 sm:p-6">
+        <div className="space-y-5 rounded-3xl bg-brand-main p-5 text-champagne shadow-xl shadow-brand-main/15 sm:p-6">
           <div className="space-y-1">
             <h3 className="font-display text-xl">Règlement de l’acompte en ligne</h3>
-            <p className="text-sm leading-relaxed text-[#F1DFB6]/75">
+            <p className="text-sm leading-relaxed text-champagne/75">
               Afin de bloquer définitivement les dates du véhicule, procédez au règlement de
               l’acompte en ligne.
             </p>
           </div>
 
           <div>
-            <p className="text-sm text-[#F1DFB6]/70">Acompte à payer</p>
+            <p className="text-sm text-champagne/70">Acompte à payer</p>
             <p className="font-display text-4xl leading-tight tabular-nums">
               {formatCurrency(depositDue)}
-              <span className="ml-2 font-sans text-sm text-[#F1DFB6]/60">FCFA</span>
+              <span className="ml-2 font-sans text-sm text-champagne/60">FCFA</span>
             </p>
           </div>
 
-          <dl className="space-y-1.5 border-t border-[#F1DFB6]/15 pt-4 text-sm">
-            <div className="flex justify-between gap-4 text-[#F1DFB6]/75">
+          <dl className="space-y-1.5 border-t border-champagne/15 pt-4 text-sm">
+            <div className="flex justify-between gap-4 text-champagne/75">
               <dt>Solde à la remise des clés</dt>
-              <dd className="tabular-nums text-[#F1DFB6]">{formatCurrency(balanceDue)} FCFA</dd>
+              <dd className="tabular-nums text-champagne">{formatCurrency(balanceDue)} FCFA</dd>
             </div>
-            <div className="flex justify-between gap-4 text-[#F1DFB6]/75">
+            <div className="flex justify-between gap-4 text-champagne/75">
               <dt>Total de la location</dt>
-              <dd className="tabular-nums text-[#F1DFB6]">{formatCurrency(total)} FCFA</dd>
+              <dd className="tabular-nums text-champagne">{formatCurrency(total)} FCFA</dd>
             </div>
           </dl>
 
@@ -575,7 +575,7 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
               type="button"
               onClick={() => setShowPaymentModal(true)}
               aria-haspopup="dialog"
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#F1DFB6] px-6 py-3.5 text-base font-semibold text-[#041912] transition-colors hover:bg-[#F7E9C9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A3D2E]"
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-champagne px-6 py-3.5 text-base font-semibold text-brand-dark transition-colors hover:bg-[#F7E9C9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne focus-visible:ring-offset-2 focus-visible:ring-offset-brand-main"
             >
               <CreditCard className="h-4 w-4" aria-hidden="true" />
               Payer {formatCurrency(depositDue)} FCFA
@@ -586,7 +586,7 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
                 href={booking.paymentUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1.5 text-sm font-medium text-[#F1DFB6]/80 underline-offset-4 hover:text-[#F1DFB6] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A3D2E]"
+                className="flex items-center justify-center gap-1.5 text-sm font-medium text-champagne/80 underline-offset-4 hover:text-champagne hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne focus-visible:ring-offset-2 focus-visible:ring-offset-brand-main"
               >
                 Ouvrir le lien de paiement
                 <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
@@ -594,7 +594,7 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
             )}
           </div>
 
-          <p className="flex items-center gap-2 text-xs text-[#F1DFB6]/70">
+          <p className="flex items-center gap-2 text-xs text-champagne/70">
             <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             Paiement sécurisé par un tiers de confiance : Wave, Orange Money ou carte.
           </p>
@@ -610,7 +610,7 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
                 type="button"
                 disabled={isSubmitting}
                 onClick={onConfirmCheckinClick}
-                className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-6 py-3.5 text-sm font-semibold text-[#F1DFB6] shadow-md transition-colors hover:bg-[#0F4F3B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-main px-6 py-3.5 text-sm font-semibold text-champagne shadow-md transition-colors hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                 {isSubmitting ? 'Validation…' : 'Confirmer la prise en charge'}
@@ -650,9 +650,9 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
           <button
             type="button"
             onClick={() => setShowPaymentModal(true)}
-            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-6 py-3.5 text-sm font-bold text-[#F1DFB6] shadow-lg hover:bg-[#0F4F3B] active:scale-[0.98] transition-all"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-main px-6 py-3.5 text-sm font-bold text-champagne shadow-lg hover:bg-forest-700 active:scale-[0.98] transition-all"
           >
-            <CreditCard className="h-4 w-4 text-[#F1DFB6]" />
+            <CreditCard className="h-4 w-4 text-champagne" />
             Payer l’acompte ({formatCurrency(depositDue)} FCFA)
           </button>
         )}
@@ -663,7 +663,7 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
               type="button"
               disabled={isSubmitting}
               onClick={onConfirmCheckinClick}
-              className="flex-1 inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-4 py-3.5 text-xs font-bold text-[#F1DFB6] shadow-lg hover:bg-[#0F4F3B] active:scale-[0.98] transition-all disabled:opacity-50"
+              className="flex-1 inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-main px-4 py-3.5 text-xs font-bold text-champagne shadow-lg hover:bg-forest-700 active:scale-[0.98] transition-all disabled:opacity-50"
             >
               <CheckCircle2 className="h-4 w-4" />
               <span>{isSubmitting ? 'Validation…' : 'Confirmer le check-in'}</span>
@@ -716,7 +716,7 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
           <div className="space-y-6 p-6 sm:p-7">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 id={`${titleId}-payment`} className="font-display text-xl text-[#041912]">
+                <h3 id={`${titleId}-payment`} className="font-display text-xl text-brand-dark">
                   Finaliser le paiement
                 </h3>
                 <p className="mt-0.5 text-sm text-slate-500">Choisissez votre moyen de paiement.</p>
@@ -725,7 +725,7 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
                 type="button"
                 onClick={() => setShowPaymentModal(false)}
                 aria-label="Fermer"
-                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E]"
+                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -736,7 +736,7 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
               {GATEWAYS.map((gateway) => (
                 <label
                   key={gateway.id}
-                  className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-slate-200 p-3.5 text-center text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 has-[:checked]:border-[#0A3D2E] has-[:checked]:bg-[#0A3D2E]/[0.04] has-[:checked]:text-[#0A3D2E] has-[:checked]:ring-1 has-[:checked]:ring-[#0A3D2E] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#0A3D2E] has-[:focus-visible]:ring-offset-2"
+                  className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-slate-200 p-3.5 text-center text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 has-[:checked]:border-brand-main has-[:checked]:bg-brand-main/[0.04] has-[:checked]:text-brand-main has-[:checked]:ring-1 has-[:checked]:ring-brand-main has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-main has-[:focus-visible]:ring-offset-2"
                 >
                   <input
                     type="radio"
@@ -768,7 +768,7 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
                   <span className="mb-1.5 block text-sm font-semibold text-slate-800">
                     Numéro {gatewayLabel}
                   </span>
-                  <span className="flex items-center overflow-hidden rounded-2xl border border-slate-300 bg-slate-50 focus-within:ring-2 focus-within:ring-[#0A3D2E]">
+                  <span className="flex items-center overflow-hidden rounded-2xl border border-slate-300 bg-slate-50 focus-within:ring-2 focus-within:ring-brand-main">
                     <span className="border-r border-slate-200 bg-slate-100 px-3.5 py-3 text-sm font-semibold text-slate-700">
                       +221
                     </span>
@@ -791,7 +791,7 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
 
             <div className="flex items-baseline justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5">
               <span className="text-sm font-medium text-slate-700">Montant à débiter</span>
-              <span className="font-display text-2xl tabular-nums text-[#0A3D2E]">
+              <span className="font-display text-2xl tabular-nums text-brand-main">
                 {formatCurrency(depositDue)}
                 <span className="ml-1.5 font-sans text-sm text-slate-500">FCFA</span>
               </span>
@@ -802,7 +802,7 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
                 <button
                   type="button"
                   onClick={() => setShowPaymentModal(false)}
-                  className="cursor-pointer rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E]"
+                  className="cursor-pointer rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main"
                 >
                   Annuler
                 </button>
@@ -810,7 +810,7 @@ export const TenantBookingLifecyclePanel: React.FC<TenantBookingLifecyclePanelPr
                   type="button"
                   onClick={handleLaunchPayment}
                   disabled={!booking.paymentUrl}
-                  className="flex cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-6 py-3 text-sm font-semibold text-[#F1DFB6] shadow-md transition-colors hover:bg-[#0F4F3B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-main px-6 py-3 text-sm font-semibold text-champagne shadow-md transition-colors hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Lock className="h-3.5 w-3.5" aria-hidden="true" />
                   Payer {formatCurrency(depositDue)} FCFA

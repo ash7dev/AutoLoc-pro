@@ -93,15 +93,15 @@ export const OwnerTenantKycModal: React.FC<OwnerTenantKycModalProps> = ({
 
         {/* ── 1. En-tête Modale ───────────────────────────────────────────── */}
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-[#0A3D2E] text-[#F1DFB6] flex items-center justify-center shrink-0 shadow-md">
+          <div className="w-12 h-12 rounded-2xl bg-brand-main text-champagne flex items-center justify-center shrink-0 shadow-md">
             <UserCheck className="w-6 h-6" />
           </div>
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[#0A3D2E] text-[10px] font-bold uppercase tracking-wider mb-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-brand-main text-[10px] font-bold uppercase tracking-wider mb-1">
               <ShieldCheck className="w-3 h-3 text-emerald-600" />
               <span>Vérification d’identité Hôte</span>
             </div>
-            <h2 id={titleId} className="font-fraunces text-xl font-normal text-[#041912]">
+            <h2 id={titleId} className="font-fraunces text-xl font-normal text-brand-dark">
               Dossier KYC & Permis du locataire
             </h2>
             <p className="text-xs text-slate-500 font-mono font-medium">
@@ -111,11 +111,11 @@ export const OwnerTenantKycModal: React.FC<OwnerTenantKycModalProps> = ({
         </div>
 
         {/* ── 2. Statut KYC & Consignes ──────────────────────────────────── */}
-        <div className="p-4 rounded-2xl bg-[#0A3D2E]/5 border border-[#0A3D2E]/10 flex items-start gap-3">
-          <Info className="w-4 h-4 text-[#0A3D2E] shrink-0 mt-0.5" />
+        <div className="p-4 rounded-2xl bg-brand-main/5 border border-brand-main/10 flex items-start gap-3">
+          <Info className="w-4 h-4 text-brand-main shrink-0 mt-0.5" />
           <div className="text-xs space-y-1 text-slate-700 font-medium leading-relaxed">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-[#041912]">Statut du contrôle :</span>
+              <span className="font-bold text-brand-dark">Statut du contrôle :</span>
               {isKycValid ? (
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
                   <CheckCircle2 className="w-3 h-3" />
@@ -143,7 +143,7 @@ export const OwnerTenantKycModal: React.FC<OwnerTenantKycModalProps> = ({
         {/* ── 3. Contenu / Grille des documents réels ───────────────────── */}
         {loading ? (
           <div className="py-12 text-center space-y-3">
-            <Loader2 className="w-6 h-6 animate-spin text-[#0A3D2E] mx-auto" />
+            <Loader2 className="w-6 h-6 animate-spin text-brand-main mx-auto" />
             <p className="text-xs text-slate-500 font-medium">Récupération des documents locataire depuis le serveur...</p>
           </div>
         ) : (
@@ -153,7 +153,7 @@ export const OwnerTenantKycModal: React.FC<OwnerTenantKycModalProps> = ({
               <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                    <IdCard className="w-4 h-4 text-[#0A3D2E]" />
+                    <IdCard className="w-4 h-4 text-brand-main" />
                     <span>Pièce d’identité (Recto)</span>
                   </div>
                   {docs?.kycDocumentUrl ? (
@@ -197,7 +197,7 @@ export const OwnerTenantKycModal: React.FC<OwnerTenantKycModalProps> = ({
               <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                    <FileText className="w-4 h-4 text-[#0A3D2E]" />
+                    <FileText className="w-4 h-4 text-brand-main" />
                     <span>Permis de conduire</span>
                   </div>
                   {docs?.permisUrl ? (
@@ -245,7 +245,7 @@ export const OwnerTenantKycModal: React.FC<OwnerTenantKycModalProps> = ({
                   <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                        <IdCard className="w-4 h-4 text-[#0A3D2E]" />
+                        <IdCard className="w-4 h-4 text-brand-main" />
                         <span>Pièce d’identité (Verso)</span>
                       </div>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
@@ -274,7 +274,7 @@ export const OwnerTenantKycModal: React.FC<OwnerTenantKycModalProps> = ({
                   <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                        <ImageIcon className="w-4 h-4 text-[#0A3D2E]" />
+                        <ImageIcon className="w-4 h-4 text-brand-main" />
                         <span>Selfie de contrôle</span>
                       </div>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
@@ -316,7 +316,7 @@ export const OwnerTenantKycModal: React.FC<OwnerTenantKycModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2.5 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs hover:bg-[#0F4F3B] transition-colors cursor-pointer shadow-sm"
+            className="px-6 py-2.5 rounded-full bg-brand-main text-champagne font-bold text-xs hover:bg-forest-700 transition-colors cursor-pointer shadow-sm"
           >
             Fermer le dossier
           </button>

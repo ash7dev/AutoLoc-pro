@@ -45,7 +45,7 @@ export const WhereToSearchTrigger: React.FC<WhereToSearchTriggerProps> = ({
       {/* Text Container */}
       <div className="flex-1 px-3 min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className="text-base font-fraunces font-normal text-[#041912] truncate" style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}>
+          <span className="text-base font-fraunces font-normal text-brand-dark truncate">
             {displayTitle}
           </span>
 
@@ -63,10 +63,10 @@ export const WhereToSearchTrigger: React.FC<WhereToSearchTriggerProps> = ({
       </div>
 
       {/* Right Filter Icon */}
-      <div className="w-9 h-9 rounded-full bg-[#041912] flex items-center justify-center shrink-0 relative shadow-md">
+      <div className="w-9 h-9 rounded-full bg-brand-dark flex items-center justify-center shrink-0 relative shadow-md">
         <SlidersHorizontal className="w-4 h-4 text-emerald-400" />
         {hasActiveFilters && (
-          <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#041912]" />
+          <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-brand-dark" />
         )}
       </div>
     </button>

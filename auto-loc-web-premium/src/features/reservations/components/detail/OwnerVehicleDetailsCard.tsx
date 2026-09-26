@@ -46,7 +46,7 @@ const SpecItem: React.FC<{
 }> = ({ icon, label, className = '', children }) => (
   <div className={`border-t border-slate-100 pt-3.5 ${className}`}>
     <dt className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-      <span className="text-[#0A3D2E]">{icon}</span>
+      <span className="text-brand-main">{icon}</span>
       {label}
     </dt>
     <dd className="mt-1 font-fraunces text-base sm:text-lg font-normal leading-snug text-slate-900">
@@ -92,11 +92,11 @@ export const OwnerVehicleDetailsCard: React.FC<OwnerVehicleDetailsCardProps> = (
     <div className="space-y-6 rounded-3xl bg-white p-5 text-slate-900 shadow-sm border border-slate-200/90 sm:p-6">
       {/* ── En-tête de la carte ─────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0A3D2E] text-[#F1DFB6]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-main text-champagne">
           <Car className="h-5 w-5" strokeWidth={1.75} aria-hidden />
         </div>
         <div>
-          <h3 className="font-fraunces text-xl font-normal leading-tight tracking-tight text-[#041912]">
+          <h3 className="font-fraunces text-xl font-normal leading-tight tracking-tight text-brand-dark">
             Détails du véhicule hôte
           </h3>
           <p className="text-xs text-slate-500 font-medium">Fiche technique et localisation du véhicule</p>
@@ -116,8 +116,8 @@ export const OwnerVehicleDetailsCard: React.FC<OwnerVehicleDetailsCardProps> = (
           </div>
 
           <div>
-            <h4 className="font-fraunces text-2xl font-normal leading-tight tracking-tight text-[#041912]">
-              {brand} <span className="text-[#0A3D2E] font-bold">{model}</span>
+            <h4 className="font-fraunces text-2xl font-normal leading-tight tracking-tight text-brand-dark">
+              {brand} <span className="text-brand-main font-bold">{model}</span>
             </h4>
             <div className="mt-1 flex items-center gap-2 text-xs text-slate-500 font-medium">
               {year && <span>Année {year}</span>}
@@ -149,7 +149,7 @@ export const OwnerVehicleDetailsCard: React.FC<OwnerVehicleDetailsCardProps> = (
           >
             {immat !== 'Non renseignée' ? (
               <span className="inline-flex items-stretch overflow-hidden rounded-md bg-white ring-1 ring-slate-300 shadow-2xs">
-                <span className="flex items-center bg-[#0A3D2E] px-2 font-sans text-[10px] font-bold text-[#F1DFB6]">
+                <span className="flex items-center bg-brand-main px-2 font-sans text-[10px] font-bold text-champagne">
                   SN
                 </span>
                 <span className="px-3 py-1 font-mono text-sm font-bold tracking-wider text-slate-900">
@@ -164,10 +164,10 @@ export const OwnerVehicleDetailsCard: React.FC<OwnerVehicleDetailsCardProps> = (
       </div>
 
       {/* ── Options, Services & Modalités de Livraison ───────────────────── */}
-      <div className="rounded-2xl border border-[#0A3D2E]/10 bg-[#0A3D2E]/[0.03] p-4 sm:p-5 space-y-3">
+      <div className="rounded-2xl border border-brand-main/10 bg-brand-main/[0.03] p-4 sm:p-5 space-y-3">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-[#0A3D2E]" />
-          <h4 className="font-fraunces text-base font-normal text-[#041912] tracking-tight">
+          <Sparkles className="h-4 w-4 text-brand-main" />
+          <h4 className="font-fraunces text-base font-normal text-brand-dark tracking-tight">
             Options & Services souscrits
           </h4>
         </div>
@@ -175,12 +175,12 @@ export const OwnerVehicleDetailsCard: React.FC<OwnerVehicleDetailsCardProps> = (
         <div className="flex flex-wrap gap-2 pt-0.5">
           {/* Option Livraison */}
           {adresseLivraison?.toLowerCase().includes('aibd') ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[#0A3D2E] text-xs font-bold shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-brand-main text-xs font-bold shadow-2xs">
               <Plane className="w-3.5 h-3.5 text-emerald-600" />
               <span>Livraison Aéroport AIBD</span>
             </span>
           ) : adresseLivraison ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[#0A3D2E] text-xs font-bold shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-brand-main text-xs font-bold shadow-2xs">
               <Truck className="w-3.5 h-3.5 text-emerald-600" />
               <span>Livraison à Domicile / Dakar</span>
             </span>
@@ -201,8 +201,8 @@ export const OwnerVehicleDetailsCard: React.FC<OwnerVehicleDetailsCardProps> = (
 
           {/* Zone de Conduite */}
           {v?.horsDakar ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0A3D2E] text-[#F1DFB6] text-xs font-bold shadow-2xs">
-              <Navigation className="w-3.5 h-3.5 text-[#4ADE80]" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-main text-champagne text-xs font-bold shadow-2xs">
+              <Navigation className="w-3.5 h-3.5 text-emerald-400" />
               <span>Autorisation Trajet Hors Dakar</span>
             </span>
           ) : (
@@ -223,14 +223,14 @@ export const OwnerVehicleDetailsCard: React.FC<OwnerVehicleDetailsCardProps> = (
       {/* ── Bloc Lieu & Itinéraire ─────────────────────────────────────── */}
       <div className="rounded-2xl bg-slate-50 p-4 sm:p-5 border border-slate-200/90 space-y-3">
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0A3D2E] text-[#F1DFB6]">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-main text-champagne">
             <MapPin className="h-4 w-4" aria-hidden />
           </div>
           <div className="min-w-0">
             <p className="text-xs text-slate-500 font-medium">
               {adresseLivraison ? 'Lieu de livraison convenu' : 'Adresse de stationnement / remise'}
             </p>
-            <p className="mt-0.5 font-fraunces text-base sm:text-lg font-normal leading-snug text-[#041912]">
+            <p className="mt-0.5 font-fraunces text-base sm:text-lg font-normal leading-snug text-brand-dark">
               {rawAddress}
             </p>
           </div>
@@ -241,7 +241,7 @@ export const OwnerVehicleDetailsCard: React.FC<OwnerVehicleDetailsCardProps> = (
             href={googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs hover:bg-[#0F4F3B] transition-colors cursor-pointer shadow-2xs"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-brand-main text-champagne font-bold text-xs hover:bg-forest-700 transition-colors cursor-pointer shadow-2xs"
           >
             <Compass className="h-4 w-4" aria-hidden />
             <span>Google Maps</span>
@@ -250,7 +250,7 @@ export const OwnerVehicleDetailsCard: React.FC<OwnerVehicleDetailsCardProps> = (
             href={wazeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-white border border-slate-200 text-[#0A3D2E] font-bold text-xs hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-white border border-slate-200 text-brand-main font-bold text-xs hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs"
           >
             <Navigation className="h-4 w-4" aria-hidden />
             <span>Waze</span>

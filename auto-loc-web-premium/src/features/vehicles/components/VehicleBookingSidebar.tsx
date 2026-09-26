@@ -116,8 +116,8 @@ function OptionRow({
 }: OptionRowProps) {
   return (
     <label
-      className={`flex cursor-pointer items-center justify-between gap-3 rounded-2xl border px-3.5 py-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#041912] has-[:focus-visible]:ring-offset-2 ${checked
-          ? 'border-[#041912] bg-[#041912]/[0.04] ring-1 ring-[#041912]'
+      className={`flex cursor-pointer items-center justify-between gap-3 rounded-2xl border px-3.5 py-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-dark has-[:focus-visible]:ring-offset-2 ${checked
+          ? 'border-brand-dark bg-brand-dark/[0.04] ring-1 ring-brand-dark'
           : 'border-slate-200 hover:border-slate-300'
         }`}
     >
@@ -130,7 +130,7 @@ function OptionRow({
           className="h-4 w-4 shrink-0 cursor-pointer accent-[#041912]"
         />
         <Icon
-          className="h-[18px] w-[18px] shrink-0 text-[#041912]/70"
+          className="h-[18px] w-[18px] shrink-0 text-brand-dark/70"
           strokeWidth={1.5}
           aria-hidden="true"
         />
@@ -161,7 +161,7 @@ function SummaryLine({
   return (
     <div className={`flex justify-between gap-4 ${small ? 'text-xs' : ''}`}>
       <dt>{label}</dt>
-      <dd className="font-medium tabular-nums text-[#F1DFB6]">{value}</dd>
+      <dd className="font-medium tabular-nums text-champagne">{value}</dd>
     </div>
   );
 }
@@ -292,7 +292,7 @@ export function VehicleBookingSidebar({
             </p>
           )}
           <p className="flex items-baseline gap-2">
-            <span className="font-serif text-3xl sm:text-4xl font-normal leading-none tabular-nums text-[#041912]">
+            <span className="font-serif text-3xl sm:text-4xl font-normal leading-none tabular-nums text-brand-dark">
               {formatCurrency(tenantPricePerDay)}
             </span>
             <span className="text-sm text-slate-500">FCFA / jour</span>
@@ -300,7 +300,7 @@ export function VehicleBookingSidebar({
         </div>
 
         {discountPercent > 0 && (
-          <span className="shrink-0 rounded-full bg-[#F1DFB6]/60 px-3 py-1 text-xs font-semibold text-[#041912]">
+          <span className="shrink-0 rounded-full bg-champagne/60 px-3 py-1 text-xs font-semibold text-brand-dark">
             −{discountPercent}&nbsp;% longue durée
           </span>
         )}
@@ -312,11 +312,11 @@ export function VehicleBookingSidebar({
           <button
             type="button"
             onClick={onSelectDatesClick}
-            className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border border-slate-200 px-4 py-3.5 text-left transition-colors hover:border-[#041912]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#041912] focus-visible:ring-offset-2"
+            className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl border border-slate-200 px-4 py-3.5 text-left transition-colors hover:border-brand-dark/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-offset-2"
           >
             <div className="flex min-w-0 items-center gap-3">
               <Calendar
-                className="h-5 w-5 shrink-0 text-[#041912]"
+                className="h-5 w-5 shrink-0 text-brand-dark"
                 strokeWidth={1.5}
                 aria-hidden="true"
               />
@@ -400,7 +400,7 @@ export function VehicleBookingSidebar({
                 {/* Champ Saisie Adresse / Repère précis quand Livraison sélectionnée */}
                 {typeLivraison !== 'AUCUNE' && (
                   <div className="mt-2.5 p-3 rounded-2xl border border-emerald-200 bg-emerald-50/40 space-y-1.5 animate-in fade-in duration-200">
-                    <label className="flex items-center gap-1.5 text-xs font-semibold text-[#041912]">
+                    <label className="flex items-center gap-1.5 text-xs font-semibold text-brand-dark">
                       <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                       <span>
                         {typeLivraison === 'AIBD'
@@ -417,7 +417,7 @@ export function VehicleBookingSidebar({
                           ? 'Ex: Vol HC301, Arrivée à 14h30...'
                           : 'Ex: Les Almadies, Villa 12, près de la banque...'
                       }
-                      className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#041912] focus:border-transparent transition-all"
+                      className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-dark focus:border-transparent transition-all"
                     />
                   </div>
                 )}
@@ -441,9 +441,9 @@ export function VehicleBookingSidebar({
       </div>
 
       {/* Décompte, total et réservation */}
-      <div className="space-y-5 bg-[#041912] px-6 py-6 text-[#F1DFB6]">
+      <div className="space-y-5 bg-brand-dark px-6 py-6 text-champagne">
         {hasDates && (
-          <dl className="space-y-2 text-sm text-[#F1DFB6]/75">
+          <dl className="space-y-2 text-sm text-champagne/75">
             <SummaryLine
               label={`${formatCurrency(tenantPricePerDay)} FCFA × ${plural(daysCount, 'jour')}`}
               value={`${formatCurrency(baseTotal)} FCFA`}
@@ -467,39 +467,39 @@ export function VehicleBookingSidebar({
 
         <div
           aria-live="polite"
-          className="flex items-baseline justify-between gap-4 border-t border-[#F1DFB6]/15 pt-4"
+          className="flex items-baseline justify-between gap-4 border-t border-champagne/15 pt-4"
         >
-          <span className="text-sm text-[#F1DFB6]/75">Total estimé</span>
+          <span className="text-sm text-champagne/75">Total estimé</span>
           {hasDates ? (
-            <span className="font-serif text-3xl font-normal leading-none tabular-nums text-[#F1DFB6]">
+            <span className="font-serif text-3xl font-normal leading-none tabular-nums text-champagne">
               {formatCurrency(totalAmount)}
-              <span className="ml-1.5 font-sans text-sm text-[#F1DFB6]/60">FCFA</span>
+              <span className="ml-1.5 font-sans text-sm text-champagne/60">FCFA</span>
             </span>
           ) : (
-            <span className="text-sm text-[#F1DFB6]/60">Choisissez vos dates</span>
+            <span className="text-sm text-champagne/60">Choisissez vos dates</span>
           )}
         </div>
 
         <button
           type="button"
           onClick={handleCtaClick}
-          className="w-full cursor-pointer rounded-full bg-[#F1DFB6] px-6 py-4 text-base font-bold text-[#041912] shadow-md shadow-black/20 transition-all hover:bg-[#F7E9C9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#041912] active:scale-[0.99]"
+          className="w-full cursor-pointer rounded-full bg-champagne px-6 py-4 text-base font-bold text-brand-dark shadow-md shadow-black/20 transition-all hover:bg-[#F7E9C9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne focus-visible:ring-offset-2 focus-visible:ring-offset-brand-dark active:scale-[0.99]"
         >
           {ctaLabel}
         </button>
 
-        <ul className="space-y-3 text-xs text-[#F1DFB6]/80">
+        <ul className="space-y-3 text-xs text-champagne/80">
           <li className="space-y-2">
             <div className="flex items-start gap-2.5">
               <ShieldCheck
-                className="mt-0.5 h-4 w-4 shrink-0 text-[#F1DFB6]"
+                className="mt-0.5 h-4 w-4 shrink-0 text-champagne"
                 strokeWidth={1.5}
                 aria-hidden="true"
               />
               <span>Paiement sécurisé instantané</span>
             </div>
             <div className="flex items-center gap-2 pl-[26px]">
-              <span className="flex items-center gap-1.5 rounded-lg border border-[#F1DFB6]/15 bg-white/10 px-2.5 py-1">
+              <span className="flex items-center gap-1.5 rounded-lg border border-champagne/15 bg-white/10 px-2.5 py-1">
                 <Image
                   src="/wave.png"
                   alt=""
@@ -507,9 +507,9 @@ export function VehicleBookingSidebar({
                   height={16}
                   className="h-4 w-4 shrink-0 rounded-full object-cover"
                 />
-                <span className="text-[11px] font-bold text-[#F1DFB6]">Wave</span>
+                <span className="text-[11px] font-bold text-champagne">Wave</span>
               </span>
-              <span className="flex items-center gap-1.5 rounded-lg border border-[#F1DFB6]/15 bg-white/10 px-2.5 py-1">
+              <span className="flex items-center gap-1.5 rounded-lg border border-champagne/15 bg-white/10 px-2.5 py-1">
                 <Image
                   src="/orange_money.jpg"
                   alt=""
@@ -517,13 +517,13 @@ export function VehicleBookingSidebar({
                   height={16}
                   className="h-4 w-4 shrink-0 rounded-full object-cover"
                 />
-                <span className="text-[11px] font-bold text-[#F1DFB6]">Orange Money</span>
+                <span className="text-[11px] font-bold text-champagne">Orange Money</span>
               </span>
             </div>
           </li>
           <li className="flex items-start gap-2.5">
             <ShieldCheck
-              className="mt-0.5 h-4 w-4 shrink-0 text-[#F1DFB6]"
+              className="mt-0.5 h-4 w-4 shrink-0 text-champagne"
               strokeWidth={1.5}
               aria-hidden="true"
             />

@@ -107,7 +107,7 @@ export function TenantReservationsList({
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3.5 min-w-0">
                 <div className="relative shrink-0">
-                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#041912] border border-emerald-500/30 text-emerald-400 flex items-center justify-center shadow-xs">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-brand-dark border border-emerald-500/30 text-emerald-400 flex items-center justify-center shadow-xs">
                     <Sparkles className="w-5 h-5 text-emerald-400" />
                   </div>
                   <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
@@ -119,8 +119,7 @@ export function TenantReservationsList({
                 <div className="min-w-0 flex-1 space-y-0.5">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4
-                      className="text-sm sm:text-base font-bold text-[#041912] tracking-tight"
-                      style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                      className="text-sm sm:text-base font-bold text-brand-dark tracking-tight"
                     >
                       Aucune location active
                     </h4>
@@ -136,10 +135,10 @@ export function TenantReservationsList({
 
               <Link
                 href="/vehicles"
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs shadow-xs hover:bg-[#0F4F3B] transition-all cursor-pointer shrink-0 self-start sm:self-auto group"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-brand-main text-champagne font-bold text-xs shadow-xs hover:bg-forest-700 transition-all cursor-pointer shrink-0 self-start sm:self-auto group"
               >
                 <span>Explorer les véhicules</span>
-                <ArrowRight className="w-3.5 h-3.5 text-[#F1DFB6] group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRight className="w-3.5 h-3.5 text-champagne group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>
           </div>
@@ -158,11 +157,11 @@ export function TenantReservationsList({
             className="flex w-full items-center justify-between gap-4 p-4 text-left hover:bg-slate-50/80 transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-[#041912] border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-brand-dark border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
                 <History className="w-5 h-5 text-emerald-400" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-sm sm:text-base font-display font-bold text-[#041912] leading-snug truncate">
+                <h3 className="text-sm sm:text-base font-display font-bold text-brand-dark leading-snug truncate">
                   Historique & Réservations passées
                 </h3>
                 <p className="text-xs text-slate-500 font-medium">
@@ -177,7 +176,7 @@ export function TenantReservationsList({
               </span>
               <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center">
                 <ChevronDown
-                  className={`w-4 h-4 text-[#041912] transition-transform duration-200 ${
+                  className={`w-4 h-4 text-brand-dark transition-transform duration-200 ${
                     isHistoryExpanded ? 'rotate-180' : ''
                   }`}
                 />

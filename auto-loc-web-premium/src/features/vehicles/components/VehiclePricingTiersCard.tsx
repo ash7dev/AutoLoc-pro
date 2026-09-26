@@ -33,7 +33,7 @@ function TierRow({
         <p className="text-sm font-semibold text-slate-900">{duration}</p>
         <p
           className={`mt-0.5 text-sm ${
-            noteHighlighted ? 'font-semibold text-[#0A3D2E]' : 'text-slate-500'
+            noteHighlighted ? 'font-semibold text-brand-main' : 'text-slate-500'
           }`}
         >
           {note}
@@ -43,17 +43,17 @@ function TierRow({
       {/* Barre proportionnelle au prix : plus elle est courte, plus le tarif baisse */}
       <div
         aria-hidden="true"
-        className="order-3 sm:order-none col-span-2 sm:col-span-1 h-2 rounded-full bg-[#F1DFB6]/45 overflow-hidden"
+        className="order-3 sm:order-none col-span-2 sm:col-span-1 h-2 rounded-full bg-champagne/45 overflow-hidden"
       >
         <div
-          className={`h-full rounded-full ${isReference ? 'bg-slate-300' : 'bg-[#0A3D2E]'}`}
+          className={`h-full rounded-full ${isReference ? 'bg-slate-300' : 'bg-brand-main'}`}
           style={{ width: `${barPercent}%` }}
         />
       </div>
 
       {/* Prix par jour */}
       <div className="order-2 sm:order-none text-right">
-        <p className="font-serif text-lg font-normal leading-tight tabular-nums text-[#0A3D2E]">
+        <p className="font-serif text-lg font-normal leading-tight tabular-nums text-brand-main">
           {formatCurrency(price)}
         </p>
         <p className="mt-0.5 text-sm text-slate-500">FCFA / jour</p>
@@ -94,7 +94,7 @@ export function VehiclePricingTiersCard({
       className="bg-white border border-slate-200/80 rounded-[28px] overflow-hidden shadow-sm"
     >
       <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4">
-        <h3 className="text-lg text-[#041912] font-fraunces font-normal">Tarifs dégressifs</h3>
+        <h3 className="text-lg text-brand-dark font-fraunces font-normal">Tarifs dégressifs</h3>
         <p className="mt-1 text-sm text-slate-500">
           Le prix par jour baisse automatiquement quand vous louez plus longtemps.
         </p>

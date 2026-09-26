@@ -67,23 +67,23 @@ type LightboxState =
 const fontStyle = { fontFamily: 'var(--font-fraunces), Georgia, serif' };
 
 const TONES: Record<Tone, { hex: string; text: string }> = {
-  forest: { hex: '#0A3D2E', text: 'text-[#0A3D2E] dark:text-[#F1DFB6]' },
+  forest: { hex: '#0A3D2E', text: 'text-brand-main dark:text-champagne' },
   gold: { hex: '#b27c2d', text: 'text-[#8a5f1f] dark:text-[#e0b96a]' },
   rust: { hex: '#a13d3d', text: 'text-[#a13d3d] dark:text-[#e59a9a]' },
   slate: { hex: '#64748b', text: 'text-slate-600 dark:text-slate-300' },
 };
 
 const FOCUS =
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E] dark:focus-visible:outline-[#F1DFB6]';
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main dark:focus-visible:outline-champagne';
 const CARD = 'rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs';
 
 const BTN = `inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full text-[13px] font-semibold whitespace-nowrap cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${FOCUS}`;
-const BTN_PRIMARY = `${BTN} bg-[#0A3D2E] text-[#F1DFB6] hover:brightness-125`;
+const BTN_PRIMARY = `${BTN} bg-brand-main text-champagne hover:brightness-125`;
 const BTN_OUTLINE = `${BTN} border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800`;
 const BTN_DANGER_OUTLINE = `${BTN} border border-[#a13d3d]/30 text-[#a13d3d] dark:text-[#e59a9a] hover:bg-[#a13d3d]/[0.06]`;
 const BTN_DANGER = `${BTN} bg-[#a13d3d] text-white hover:brightness-110`;
 const BTN_GOLD = `${BTN} border border-[#b27c2d]/40 text-[#8a5f1f] dark:text-[#e0b96a] hover:bg-[#b27c2d]/10`;
-const BTN_LIGHT = 'inline-flex items-center gap-2 h-9 px-4 rounded-full bg-white/10 hover:bg-white/20 text-white text-[13px] font-semibold cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F1DFB6]';
+const BTN_LIGHT = 'inline-flex items-center gap-2 h-9 px-4 rounded-full bg-white/10 hover:bg-white/20 text-white text-[13px] font-semibold cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne';
 
 const KYC_BADGES: Record<string, { label: string; tone: Tone; icon: React.ElementType }> = {
   VERIFIE: { label: 'KYC vérifié', tone: 'forest', icon: ShieldCheck },
@@ -156,7 +156,7 @@ const VitalSigns: React.FC<{ matrix: HostHealth360['healthMatrix'] }> = ({ matri
 
   const cell = 'bg-white dark:bg-slate-900 p-4 space-y-2 min-w-0';
   const label = 'text-[12px] text-slate-500 dark:text-slate-400';
-  const value = 'text-[26px] leading-none tabular-nums text-[#041912] dark:text-white';
+  const value = 'text-[26px] leading-none tabular-nums text-brand-dark dark:text-white';
 
   return (
     <div className="space-y-3">
@@ -246,7 +246,7 @@ const DocRow: React.FC<{ label: string; available: boolean; onOpen: () => void }
       <button
         type="button"
         onClick={onOpen}
-        className={`h-8 px-3 rounded-full font-semibold cursor-pointer hover:bg-[#0A3D2E]/[0.06] dark:hover:bg-white/10 ${TONES.forest.text} ${FOCUS}`}
+        className={`h-8 px-3 rounded-full font-semibold cursor-pointer hover:bg-brand-main/[0.06] dark:hover:bg-white/10 ${TONES.forest.text} ${FOCUS}`}
       >
         Consulter
       </button>
@@ -294,7 +294,7 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ v, busy, onOpenPhotos, onOpen
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={cover.url} alt="" loading="lazy" className="h-full w-full object-cover" />
-            <span className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-[#041912]/75 text-white text-[12px] font-semibold">
+            <span className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-brand-dark/75 text-white text-[12px] font-semibold">
               <Images className="w-3.5 h-3.5" />
               {photos.length}
             </span>
@@ -312,7 +312,7 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ v, busy, onOpenPhotos, onOpen
           <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
             <div className="min-w-0 space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 style={fontStyle} className="text-[17px] leading-tight text-[#041912] dark:text-white">
+                <h3 style={fontStyle} className="text-[17px] leading-tight text-brand-dark dark:text-white">
                   {v.marque} {v.modele} <span className="text-slate-400">{v.annee}</span>
                 </h3>
                 <span className="font-mono text-[12px] font-semibold tracking-wide px-2 py-0.5 rounded-md border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
@@ -326,7 +326,7 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ v, busy, onOpenPhotos, onOpen
             </div>
 
             <div className="text-right space-y-1">
-              <p style={fontStyle} className="text-lg tabular-nums text-[#041912] dark:text-white">
+              <p style={fontStyle} className="text-lg tabular-nums text-brand-dark dark:text-white">
                 {formatCurrency(v.prixParJour)}
                 <span className="font-sans text-[13px] text-slate-500 dark:text-slate-400"> / jour</span>
               </p>
@@ -505,7 +505,7 @@ const InspectorDrawer: React.FC<DrawerProps> = ({
         )}
         <button
           type="button"
-          className="inline-flex items-center gap-2 h-9 px-4 rounded-full bg-[#a13d3d]/80 hover:bg-[#a13d3d] text-white text-[13px] font-semibold cursor-pointer transition-colors disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F1DFB6]"
+          className="inline-flex items-center gap-2 h-9 px-4 rounded-full bg-[#a13d3d]/80 hover:bg-[#a13d3d] text-white text-[13px] font-semibold cursor-pointer transition-colors disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne"
           disabled={isMutating}
           onClick={() => setPending({ kind: 'delete-photo', vehicleId: v.id, photoId: photo.id })}
         >
@@ -624,7 +624,7 @@ const InspectorDrawer: React.FC<DrawerProps> = ({
     <>
       <div className="fixed inset-0 z-50 font-sans">
         <div
-          className={`absolute inset-0 bg-[#041912]/60 backdrop-blur-[2px] transition-opacity duration-200 motion-reduce:transition-none ${shown ? 'opacity-100' : 'opacity-0'
+          className={`absolute inset-0 bg-brand-dark/60 backdrop-blur-[2px] transition-opacity duration-200 motion-reduce:transition-none ${shown ? 'opacity-100' : 'opacity-0'
             }`}
           onMouseDown={onClose}
           aria-hidden="true"
@@ -642,7 +642,7 @@ const InspectorDrawer: React.FC<DrawerProps> = ({
           {/* En-tête */}
           <header className="shrink-0 flex items-start gap-4 bg-white dark:bg-slate-900 px-4 py-4 sm:px-6">
             <div
-              className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden text-[15px] font-semibold ring-1 ring-inset ring-[#F1DFB6]/25"
+              className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden text-[15px] font-semibold ring-1 ring-inset ring-champagne/25"
               style={{ backgroundColor: '#0A3D2E', color: '#F1DFB6' }}
             >
               {host.avatarUrl ? (
@@ -655,7 +655,7 @@ const InspectorDrawer: React.FC<DrawerProps> = ({
 
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <h2 id={`${uid}-title`} style={fontStyle} className="text-xl leading-tight tracking-tight text-[#041912] dark:text-white">
+                <h2 id={`${uid}-title`} style={fontStyle} className="text-xl leading-tight tracking-tight text-brand-dark dark:text-white">
                   {host.fullName}
                 </h2>
                 <Pill tone={kyc.tone} icon={kyc.icon}>
@@ -724,7 +724,7 @@ const InspectorDrawer: React.FC<DrawerProps> = ({
                       {t.count}
                     </span>
                   )}
-                  {selected && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[#0A3D2E] dark:bg-[#F1DFB6]" />}
+                  {selected && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-brand-main dark:bg-champagne" />}
                 </button>
               );
             })}
@@ -881,7 +881,7 @@ const InspectorDrawer: React.FC<DrawerProps> = ({
             {tab === 'governance' && (
               <section role="tabpanel" id={`${uid}-panel-governance`} aria-labelledby={`${uid}-tab-governance`} tabIndex={0} className={`space-y-5 outline-none ${FOCUS}`}>
                 <div className={`${CARD} p-5`}>
-                  <h3 style={fontStyle} className="text-base text-[#041912] dark:text-white mb-4">
+                  <h3 style={fontStyle} className="text-base text-brand-dark dark:text-white mb-4">
                     Flotte
                   </h3>
                   <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -907,7 +907,7 @@ const InspectorDrawer: React.FC<DrawerProps> = ({
                 </div>
 
                 <div className={`${CARD} p-5 border-[#a13d3d]/25`}>
-                  <h3 style={fontStyle} className="text-base text-[#041912] dark:text-white mb-4">
+                  <h3 style={fontStyle} className="text-base text-brand-dark dark:text-white mb-4">
                     Compte
                   </h3>
                   <ActionRow

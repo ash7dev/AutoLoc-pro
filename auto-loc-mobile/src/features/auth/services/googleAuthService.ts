@@ -11,9 +11,11 @@ export const googleAuthService = {
     try {
       const rawUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL;
       const supabaseUrl = rawUrl.includes('autoloc-backend') ? DEFAULT_SUPABASE_URL : rawUrl;
-      const redirectUri = 'autoloc://auth/callback';
+      const redirectUri = Linking.createURL('auth/callback');
 
-      const authUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUri)}`;
+      // Utiliser directement l'URL Supabase Auth pour garantir la réussite de l'authentification
+      const authBaseUrl = `${supabaseUrl}/auth/v1`;
+      const authUrl = `${authBaseUrl}/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUri)}`;
 
       const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri, {
         showInRecents: false,

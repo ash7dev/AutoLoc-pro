@@ -131,7 +131,7 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
     <div className="w-full max-w-lg mx-auto py-2 px-1 animate-in fade-in zoom-in-95 duration-200">
       <div className="relative">
         {/* Layer 1: Back Accent Card - Decalé 3px à gauche */}
-        <div className="absolute inset-0 -left-[3px] top-[3px] rounded-[28px] bg-[#041912] border border-[#0A3D2E]/80 pointer-events-none shadow-md" />
+        <div className="absolute inset-0 -left-[3px] top-[3px] rounded-[28px] bg-brand-dark border border-brand-main/80 pointer-events-none shadow-md" />
 
         {/* Layer 2: Front Glass Card */}
         <div className="relative bg-white border border-white/80 rounded-[28px] p-6 sm:p-7 pb-7 shadow-2xl">
@@ -146,7 +146,7 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
               <span>AUTHENTIFICATION MOBILE</span>
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-normal text-[#041912] font-fraunces tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-normal text-brand-dark font-fraunces tracking-tight">
               {step === 'PHONE_INPUT' ? (
                 <>
                   Numéro de <span className="italic text-emerald-700">téléphone.</span>
@@ -191,7 +191,7 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
                 type="button"
                 onClick={() => handleSendOtp('auto')}
                 disabled={loading}
-                className={`w-full h-12.5 rounded-full bg-[#041912] hover:bg-[#06291e] text-white font-medium text-sm flex items-center justify-center shadow-lg shadow-[#041912]/20 active:scale-[0.98] transition-all ${
+                className={`w-full h-12.5 rounded-full bg-brand-dark hover:bg-[#06291e] text-white font-medium text-sm flex items-center justify-center shadow-lg shadow-brand-dark/20 active:scale-[0.98] transition-all ${
                   loading ? 'opacity-65 cursor-not-allowed' : ''
                 }`}
               >
@@ -316,7 +316,7 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
                 type="button"
                 onClick={() => handleVerifyOtp()}
                 disabled={loading || otpCode.length < OTP_LENGTH}
-                className={`w-full h-12.5 rounded-full bg-[#041912] hover:bg-[#06291e] text-white font-medium text-sm flex items-center justify-center shadow-lg shadow-[#041912]/20 active:scale-[0.98] transition-all ${
+                className={`w-full h-12.5 rounded-full bg-brand-dark hover:bg-[#06291e] text-white font-medium text-sm flex items-center justify-center shadow-lg shadow-brand-dark/20 active:scale-[0.98] transition-all ${
                   loading || otpCode.length < OTP_LENGTH ? 'opacity-65 cursor-not-allowed' : ''
                 }`}
               >

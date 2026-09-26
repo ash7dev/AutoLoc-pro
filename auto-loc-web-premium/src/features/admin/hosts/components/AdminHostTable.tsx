@@ -16,7 +16,7 @@ const GOLD = '#b27c2d';
 const RUST = '#a13d3d';
 
 const FOCUS =
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E] dark:focus-visible:outline-[#F1DFB6]';
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main dark:focus-visible:outline-champagne';
 
 const CARD =
   'rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs';
@@ -115,7 +115,7 @@ export const AdminHostTable: React.FC<AdminHostTableProps> = ({ items, isLoading
                 <tr
                   key={item.id}
                   onClick={() => onSelectHost(item)}
-                  className="group cursor-pointer hover:bg-[#0A3D2E]/[0.03] dark:hover:bg-slate-800/40 transition-colors"
+                  className="group cursor-pointer hover:bg-brand-main/[0.03] dark:hover:bg-slate-800/40 transition-colors"
                 >
                   {/* Identité */}
                   <td
@@ -124,7 +124,7 @@ export const AdminHostTable: React.FC<AdminHostTableProps> = ({ items, isLoading
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden text-[13px] font-semibold ring-1 ring-inset ring-[#F1DFB6]/25"
+                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden text-[13px] font-semibold ring-1 ring-inset ring-champagne/25"
                         style={{ backgroundColor: FOREST, color: CHAMPAGNE }}
                       >
                         {u?.avatarUrl ? (
@@ -186,7 +186,7 @@ export const AdminHostTable: React.FC<AdminHostTableProps> = ({ items, isLoading
                         </div>
                         <p className="text-[12px] text-slate-500 dark:text-slate-400 tabular-nums">
                           {verified > 0 && (
-                            <span style={{ color: FOREST }} className="font-medium dark:!text-[#F1DFB6]">
+                            <span style={{ color: FOREST }} className="font-medium dark:!text-champagne">
                               {plural(verified, 'actif')}
                             </span>
                           )}

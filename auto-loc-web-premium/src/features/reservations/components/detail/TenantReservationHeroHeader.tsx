@@ -121,7 +121,7 @@ const STATUS_CONFIG: Record<string, StatusInfo> = {
   },
   EN_COURS: {
     label: 'Location en cours',
-    className: 'border-transparent bg-[#F1DFB6] text-[#041912]',
+    className: 'border-transparent bg-champagne text-brand-dark',
     desc: 'Votre véhicule est en cours d’utilisation. Bon trajet !',
     live: true,
   },
@@ -174,16 +174,16 @@ function DateBlock({
 
   return (
     <div className={align === 'right' ? 'text-right' : ''}>
-      <p className="text-[10px] sm:text-xs text-[#F1DFB6]/60 font-medium uppercase tracking-wider">{label}</p>
+      <p className="text-[10px] sm:text-xs text-champagne/60 font-medium uppercase tracking-wider">{label}</p>
       {date ? (
         <time dateTime={value} className="mt-0.5 block">
-          <span className="block text-sm sm:text-lg font-bold leading-tight text-[#F1DFB6]">
+          <span className="block text-sm sm:text-lg font-bold leading-tight text-champagne">
             {dayMonth.format(date)}
           </span>
-          <span className="hidden sm:block text-xs text-[#F1DFB6]/60">{yearOnly.format(date)}</span>
+          <span className="hidden sm:block text-xs text-champagne/60">{yearOnly.format(date)}</span>
         </time>
       ) : (
-        <p className="mt-0.5 text-sm sm:text-lg font-bold text-[#F1DFB6]/60">—</p>
+        <p className="mt-0.5 text-sm sm:text-lg font-bold text-champagne/60">—</p>
       )}
     </div>
   );
@@ -223,12 +223,12 @@ export function TenantReservationHeroHeader({
   const days = nbJours || 1;
 
   const chipClass =
-    'inline-flex items-center gap-1 sm:gap-1.5 rounded-full border border-[#F1DFB6]/20 bg-white/[0.06] px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-medium text-[#F1DFB6]';
+    'inline-flex items-center gap-1 sm:gap-1.5 rounded-full border border-champagne/20 bg-white/[0.06] px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-medium text-champagne';
 
   return (
     <section
       aria-labelledby={titleId}
-      className="overflow-hidden rounded-2xl sm:rounded-3xl border border-[#F1DFB6]/10 bg-[#041912] p-3.5 sm:p-8 lg:p-10 text-[#F1DFB6] shadow-xl shadow-[#041912]/20"
+      className="overflow-hidden rounded-2xl sm:rounded-3xl border border-champagne/10 bg-brand-dark p-3.5 sm:p-8 lg:p-10 text-champagne shadow-xl shadow-brand-dark/20"
     >
       {/* Statut, référence, date de création */}
       <div className="space-y-2">
@@ -240,25 +240,25 @@ export function TenantReservationHeroHeader({
               {status.live ? (
                 <span
                   aria-hidden="true"
-                  className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-[#041912] motion-safe:animate-pulse"
+                  className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-brand-dark motion-safe:animate-pulse"
                 />
               ) : (
                 StatusIcon && <StatusIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
               )}
               {status.label}
             </span>
-            <span className="text-[11px] sm:text-xs font-mono tabular-nums text-[#F1DFB6]/70 bg-white/5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-white/10">
+            <span className="text-[11px] sm:text-xs font-mono tabular-nums text-champagne/70 bg-white/5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-white/10">
               Réf. {refShort}
             </span>
           </div>
 
           {created && (
-            <span className="text-[11px] sm:text-xs text-[#F1DFB6]/60">Réservé le {fullDate.format(created)}</span>
+            <span className="text-[11px] sm:text-xs text-champagne/60">Réservé le {fullDate.format(created)}</span>
           )}
         </div>
 
         {status.desc && (
-          <p className="hidden sm:block text-sm text-[#F1DFB6]/80 pt-1 border-t border-white/5">
+          <p className="hidden sm:block text-sm text-champagne/80 pt-1 border-t border-white/5">
             {status.desc}
           </p>
         )}
@@ -267,7 +267,7 @@ export function TenantReservationHeroHeader({
       {/* ── VUE MOBILE SOMBRE COMPACTE (< 640px) ──────────────────────────── */}
       <div className="mt-3 flex items-start gap-3 sm:hidden">
         {/* Photo miniature */}
-        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-white/5 ring-1 ring-[#F1DFB6]/20">
+        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-white/5 ring-1 ring-champagne/20">
           <img
             src={photo}
             alt={vehicleName}
@@ -278,7 +278,7 @@ export function TenantReservationHeroHeader({
             }}
           />
           {vehicule?.type && (
-            <span className="absolute bottom-1 left-1 right-1 rounded bg-[#041912]/90 px-1 py-0.5 font-sans text-[9px] font-bold text-center text-[#F1DFB6] truncate">
+            <span className="absolute bottom-1 left-1 right-1 rounded bg-brand-dark/90 px-1 py-0.5 font-sans text-[9px] font-bold text-center text-champagne truncate">
               {vehicule.type}
             </span>
           )}
@@ -286,22 +286,22 @@ export function TenantReservationHeroHeader({
 
         {/* Info véhicule + livraison */}
         <div className="min-w-0 flex-1 space-y-1 pt-0.5">
-          <h1 id={titleId} className="font-fraunces text-lg font-normal leading-snug text-[#F1DFB6] truncate">
+          <h1 id={titleId} className="font-fraunces text-lg font-normal leading-snug text-champagne truncate">
             {vehicleName}
             {vehicule?.annee ? (
-              <span className="ml-1.5 text-xs font-sans text-[#F1DFB6]/50">
+              <span className="ml-1.5 text-xs font-sans text-champagne/50">
                 {vehicule.annee}
               </span>
             ) : null}
           </h1>
 
-          <div className="flex items-center gap-1.5 text-xs text-[#F1DFB6]/80 truncate">
-            <DeliveryIcon className="h-3.5 w-3.5 shrink-0 text-[#F1DFB6]" />
+          <div className="flex items-center gap-1.5 text-xs text-champagne/80 truncate">
+            <DeliveryIcon className="h-3.5 w-3.5 shrink-0 text-champagne" />
             <span className="truncate font-medium">{DELIVERY_CHIP[deliveryMode].label}</span>
           </div>
 
-          <div className="flex items-center gap-1.5 text-[11px] text-[#F1DFB6]/70 truncate pt-0.5">
-            <MapPin className="h-3 w-3 shrink-0 text-[#F1DFB6]/80" />
+          <div className="flex items-center gap-1.5 text-[11px] text-champagne/70 truncate pt-0.5">
+            <MapPin className="h-3 w-3 shrink-0 text-champagne/80" />
             <span className="truncate">{locationText}</span>
           </div>
         </div>
@@ -309,7 +309,7 @@ export function TenantReservationHeroHeader({
 
       {/* ── VUE DESKTOP GRANDE TAILLE (>= 640px) ─────────────────────────── */}
       <div className="hidden sm:grid sm:mt-6 gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-center lg:gap-10">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-white/5 ring-1 ring-[#F1DFB6]/15 sm:aspect-[16/9] lg:col-start-2 lg:row-start-1 lg:aspect-[4/3]">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-white/5 ring-1 ring-champagne/15 sm:aspect-[16/9] lg:col-start-2 lg:row-start-1 lg:aspect-[4/3]">
           <img
             src={photo}
             alt={vehicleName}
@@ -321,7 +321,7 @@ export function TenantReservationHeroHeader({
             }}
           />
           {vehicule?.type && (
-            <span className="absolute left-3 top-3 rounded-full bg-[#041912]/85 px-3 py-1 text-xs font-semibold text-[#F1DFB6]">
+            <span className="absolute left-3 top-3 rounded-full bg-brand-dark/85 px-3 py-1 text-xs font-semibold text-champagne">
               {vehicule.type}
             </span>
           )}
@@ -329,11 +329,11 @@ export function TenantReservationHeroHeader({
 
         <div className="min-w-0 space-y-5 lg:col-start-1 lg:row-start-1">
           <h2
-            className="font-display text-4xl leading-[1.05] text-[#F1DFB6] sm:text-5xl"
+            className="font-display text-4xl leading-[1.05] text-champagne sm:text-5xl"
           >
             {vehicleName}
             {vehicule?.annee ? (
-              <span className="ml-3 align-baseline text-xl text-[#F1DFB6]/50 sm:text-2xl">
+              <span className="ml-3 align-baseline text-xl text-champagne/50 sm:text-2xl">
                 {vehicule.annee}
               </span>
             ) : null}
@@ -352,7 +352,7 @@ export function TenantReservationHeroHeader({
             )}
           </ul>
 
-          <p className="flex items-start gap-2 text-sm text-[#F1DFB6]/80">
+          <p className="flex items-start gap-2 text-sm text-champagne/80">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
             <span>{locationText}</span>
           </p>
@@ -360,16 +360,16 @@ export function TenantReservationHeroHeader({
       </div>
 
       {/* Période */}
-      <div className="mt-3 sm:mt-8 rounded-xl sm:rounded-2xl border border-[#F1DFB6]/15 bg-white/[0.04] p-3 sm:p-5">
+      <div className="mt-3 sm:mt-8 rounded-xl sm:rounded-2xl border border-champagne/15 bg-white/[0.04] p-3 sm:p-5">
         <div className="flex items-center gap-2 sm:gap-5">
           <DateBlock label="Prise en charge" value={dateDebut} />
 
           <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3">
-            <span aria-hidden="true" className="h-px flex-1 bg-[#F1DFB6]/25" />
-            <span className="whitespace-nowrap rounded-full border border-[#F1DFB6]/25 px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold text-[#F1DFB6]">
+            <span aria-hidden="true" className="h-px flex-1 bg-champagne/25" />
+            <span className="whitespace-nowrap rounded-full border border-champagne/25 px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold text-champagne">
               {plural(days, 'jour')}
             </span>
-            <span aria-hidden="true" className="h-px flex-1 bg-[#F1DFB6]/25" />
+            <span aria-hidden="true" className="h-px flex-1 bg-champagne/25" />
           </div>
 
           <DateBlock label="Restitution" value={dateFin} align="right" />

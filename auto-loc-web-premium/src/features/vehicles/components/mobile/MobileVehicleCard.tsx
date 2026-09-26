@@ -99,7 +99,7 @@ const VehicleBadge: React.FC<{ featured?: boolean; compact?: boolean }> = ({
   if (featured) {
     return (
       <span
-        className={`inline-flex items-center rounded-full bg-[#F1DFB6] font-semibold text-[#0A3D2E] shadow-sm ${size}`}
+        className={`inline-flex items-center rounded-full bg-champagne font-semibold text-brand-main shadow-sm ${size}`}
       >
         <Sparkles className={icon} aria-hidden />
         Premium
@@ -108,7 +108,7 @@ const VehicleBadge: React.FC<{ featured?: boolean; compact?: boolean }> = ({
   }
   return (
     <span
-      className={`inline-flex items-center rounded-full bg-[#0A3D2E]/85 font-medium text-[#F1DFB6] backdrop-blur-sm ${size}`}
+      className={`inline-flex items-center rounded-full bg-brand-main/85 font-medium text-champagne backdrop-blur-sm ${size}`}
     >
       <ShieldCheck className={icon} aria-hidden />
       Vérifié
@@ -132,7 +132,7 @@ const PhotoIndicator: React.FC<{ count: number; index: number }> = ({ count, ind
       {Array.from({ length: count }).map((_, i) => (
         <span
           key={i}
-          className={`h-1.5 rounded-full transition-all duration-200 motion-reduce:transition-none ${i === index ? "w-4 bg-[#F1DFB6]" : "w-1.5 bg-white/60"
+          className={`h-1.5 rounded-full transition-all duration-200 motion-reduce:transition-none ${i === index ? "w-4 bg-champagne" : "w-1.5 bg-white/60"
             }`}
         />
       ))}
@@ -153,7 +153,7 @@ const Spec: React.FC<{ icon: React.ReactNode; children: React.ReactNode }> = ({
   children,
 }) => (
   <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-    <span className="text-[#0A3D2E]/55">{icon}</span>
+    <span className="text-brand-main/55">{icon}</span>
     {children}
   </span>
 );
@@ -161,7 +161,7 @@ const Spec: React.FC<{ icon: React.ReactNode; children: React.ReactNode }> = ({
 const ArrowButton: React.FC<{ size?: "sm" | "md" }> = ({ size = "md" }) => (
   <span
     aria-hidden
-    className={`flex shrink-0 items-center justify-center rounded-full bg-[#0A3D2E] text-[#F1DFB6] transition-colors duration-200 group-hover:bg-[#072B20] motion-reduce:transition-none ${size === "sm" ? "h-8 w-8" : "h-10 w-10"
+    className={`flex shrink-0 items-center justify-center rounded-full bg-brand-main text-champagne transition-colors duration-200 group-hover:bg-forest-700 motion-reduce:transition-none ${size === "sm" ? "h-8 w-8" : "h-10 w-10"
       }`}
   >
     <ArrowUpRight className={size === "sm" ? "h-4 w-4" : "h-5 w-5"} />
@@ -202,7 +202,7 @@ export const MobileVehicleCard: React.FC<MobileVehicleCardProps> = ({
     }`;
 
   const focus =
-    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]";
+    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main";
 
   /* ------------------------------------------------------------------------ */
   /*  HORIZONTAL : vignette à gauche, infos à droite                          */
@@ -246,7 +246,7 @@ export const MobileVehicleCard: React.FC<MobileVehicleCardProps> = ({
 
             <div className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-500">
               <span className="flex min-w-0 items-center gap-1">
-                <MapPin className="h-3 w-3 shrink-0 text-[#0A3D2E]/60" aria-hidden />
+                <MapPin className="h-3 w-3 shrink-0 text-brand-main/60" aria-hidden />
                 <span className="truncate">{vehicle.ville || "Dakar"}</span>
                 <span className="h-3 w-px shrink-0 bg-slate-200" aria-hidden />
                 <span className="shrink-0">{vehicle.annee}</span>
@@ -264,7 +264,7 @@ export const MobileVehicleCard: React.FC<MobileVehicleCardProps> = ({
 
           <div className="mt-2.5 flex items-center justify-between border-t border-slate-100 pt-2">
             <p className="flex items-baseline gap-1">
-              <span className="font-serif text-lg font-normal tabular-nums text-[#0A3D2E]">
+              <span className="font-serif text-lg font-normal tabular-nums text-brand-main">
                 {formatPrice(tenantPrice)}
               </span>
               <span className="text-[10px] text-slate-500">FCFA/jour</span>
@@ -341,7 +341,7 @@ export const MobileVehicleCard: React.FC<MobileVehicleCardProps> = ({
         </div>
 
         <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
-          <MapPin className="h-3.5 w-3.5 shrink-0 text-[#0A3D2E]/60" aria-hidden />
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-main/60" aria-hidden />
           <span>{vehicle.ville || "Dakar"}</span>
           <span className="h-3 w-px bg-slate-200" aria-hidden />
           <span>{vehicle.annee}</span>
@@ -359,7 +359,7 @@ export const MobileVehicleCard: React.FC<MobileVehicleCardProps> = ({
 
         <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3.5">
           <p className="flex items-baseline gap-1.5">
-            <span className="font-serif text-2xl font-normal tabular-nums text-[#0A3D2E]">
+            <span className="font-serif text-2xl font-normal tabular-nums text-brand-main">
               {formatPrice(tenantPrice)}
             </span>
             <span className="text-xs text-slate-500">FCFA / jour</span>

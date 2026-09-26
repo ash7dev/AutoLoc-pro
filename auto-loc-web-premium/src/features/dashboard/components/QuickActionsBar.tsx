@@ -16,10 +16,10 @@ interface QuickActionsBarProps {
 }
 
 const BASE =
-  'group inline-flex shrink-0 items-center gap-2.5 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2';
+  'group inline-flex shrink-0 items-center gap-2.5 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2';
 const PLAIN =
-  'border-[#0A3D2E]/15 bg-white text-[#041912] hover:border-[#0A3D2E]/35 hover:bg-[#0A3D2E]/[0.03]';
-const PRIMARY = 'border-[#0A3D2E] bg-[#0A3D2E] text-[#F1DFB6] hover:bg-[#0F4F3B]';
+  'border-brand-main/15 bg-white text-brand-dark hover:border-brand-main/35 hover:bg-brand-main/[0.03]';
+const PRIMARY = 'border-brand-main bg-brand-main text-champagne hover:bg-forest-700';
 
 export const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
   demandesEnAttenteCount = 0,
@@ -54,7 +54,7 @@ export const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
               <BellRing className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
               {hasDemandes ? 'Demandes à traiter' : 'Réservations'}
               {hasDemandes && (
-                <span className="min-w-[1.5rem] rounded-full bg-[#F1DFB6] px-1.5 py-0.5 text-center text-xs font-semibold tabular-nums text-[#041912]">
+                <span className="min-w-[1.5rem] rounded-full bg-champagne px-1.5 py-0.5 text-center text-xs font-semibold tabular-nums text-brand-dark">
                   {demandesEnAttenteCount}
                 </span>
               )}
@@ -69,7 +69,7 @@ export const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
               <Wallet className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
               Retirer mes gains
               {soldeRetirableWallet > 0 && (
-                <span className="rounded-full bg-[#F1DFB6] px-2 py-0.5 text-xs font-semibold tabular-nums text-[#041912]">
+                <span className="rounded-full bg-champagne px-2 py-0.5 text-xs font-semibold tabular-nums text-brand-dark">
                   {formatCurrency(soldeRetirableWallet)} FCFA
                 </span>
               )}

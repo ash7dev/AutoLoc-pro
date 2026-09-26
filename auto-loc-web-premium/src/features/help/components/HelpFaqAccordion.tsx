@@ -46,7 +46,7 @@ function FaqAccordionItem({
   return (
     <div className="relative">
       {isOpen && (
-        <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-[#0A3D2E]" />
+        <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-brand-main" />
       )}
 
       <h4>
@@ -56,17 +56,17 @@ function FaqAccordionItem({
           onClick={onToggle}
           aria-expanded={isOpen}
           aria-controls={panelId}
-          className={`group flex w-full cursor-pointer items-center justify-between gap-4 px-6 py-5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0A3D2E] ${isOpen ? 'bg-[#0A3D2E]/[0.03]' : 'hover:bg-[#0A3D2E]/[0.02]'
+          className={`group flex w-full cursor-pointer items-center justify-between gap-4 px-6 py-5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-main ${isOpen ? 'bg-brand-main/[0.03]' : 'hover:bg-brand-main/[0.02]'
             }`}
         >
-          <span className="text-[15px] font-semibold leading-snug text-[#041912]">
+          <span className="text-[15px] font-semibold leading-snug text-brand-dark">
             {item.question}
           </span>
           <span
             aria-hidden
             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition duration-300 motion-reduce:transition-none ${isOpen
-                ? 'rotate-180 bg-[#0A3D2E] text-[#F1DFB6]'
-                : 'bg-slate-100 text-slate-500 group-hover:bg-[#0A3D2E]/10 group-hover:text-[#0A3D2E]'
+                ? 'rotate-180 bg-brand-main text-champagne'
+                : 'bg-slate-100 text-slate-500 group-hover:bg-brand-main/10 group-hover:text-brand-main'
               }`}
           >
             <ChevronDown className="h-4 w-4" />
@@ -133,7 +133,7 @@ export const HelpFaqAccordion: React.FC<HelpFaqAccordionProps> = ({ categories }
       <div className="mb-8">
         <h2
           style={DISPLAY_FONT}
-          className="text-2xl font-normal text-[#041912] sm:text-3xl"
+          className="text-2xl font-normal text-brand-dark sm:text-3xl"
         >
           Questions fréquentes
         </h2>
@@ -149,14 +149,14 @@ export const HelpFaqAccordion: React.FC<HelpFaqAccordionProps> = ({ categories }
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Rechercher une question"
-            className="w-full rounded-full border border-[#041912]/10 bg-white py-3 pl-11 pr-11 text-sm text-[#041912] placeholder:text-slate-400 transition focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/20 [&::-webkit-search-cancel-button]:hidden"
+            className="w-full rounded-full border border-brand-dark/10 bg-white py-3 pl-11 pr-11 text-sm text-brand-dark placeholder:text-slate-400 transition focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/20 [&::-webkit-search-cancel-button]:hidden"
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery('')}
               aria-label="Effacer la recherche"
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E]"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main"
             >
               <X className="h-4 w-4" />
             </button>
@@ -186,13 +186,13 @@ export const HelpFaqAccordion: React.FC<HelpFaqAccordionProps> = ({ categories }
               >
                 <div className="mb-3 flex items-center justify-between gap-3 px-1">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0A3D2E] text-[#F1DFB6]">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-main text-champagne">
                       <Icon className="h-4 w-4" strokeWidth={1.75} />
                     </span>
                     <h3
                       id={`${uid}-${cat.id}-title`}
                       style={DISPLAY_FONT}
-                      className="text-xl font-normal text-[#041912]"
+                      className="text-xl font-normal text-brand-dark"
                     >
                       {cat.title}
                     </h3>
@@ -202,7 +202,7 @@ export const HelpFaqAccordion: React.FC<HelpFaqAccordionProps> = ({ categories }
                   </span>
                 </div>
 
-                <div className="divide-y divide-slate-100 overflow-hidden rounded-[28px] border border-[#041912]/[0.08] bg-white shadow-[0_20px_50px_-36px_rgba(10,61,46,0.35)]">
+                <div className="divide-y divide-slate-100 overflow-hidden rounded-[28px] border border-brand-dark/[0.08] bg-white shadow-[0_20px_50px_-36px_rgba(10,61,46,0.35)]">
                   {cat.items.map(({ item, idx }) => (
                     <FaqAccordionItem
                       key={item.question}
@@ -219,11 +219,11 @@ export const HelpFaqAccordion: React.FC<HelpFaqAccordionProps> = ({ categories }
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center rounded-[28px] border border-[#041912]/[0.08] bg-white px-6 py-14 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0A3D2E] text-[#F1DFB6]">
+        <div className="flex flex-col items-center rounded-[28px] border border-brand-dark/[0.08] bg-white px-6 py-14 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-main text-champagne">
             <SearchX className="h-6 w-6" />
           </span>
-          <p style={DISPLAY_FONT} className="mt-5 text-xl text-[#0A3D2E]">
+          <p style={DISPLAY_FONT} className="mt-5 text-xl text-brand-main">
             Aucun résultat
           </p>
           <p className="mt-1 max-w-xs text-sm text-slate-500">
@@ -232,7 +232,7 @@ export const HelpFaqAccordion: React.FC<HelpFaqAccordionProps> = ({ categories }
           <button
             type="button"
             onClick={() => setQuery('')}
-            className="mt-5 rounded-full border border-[#0A3D2E]/25 px-4 py-2 text-sm font-medium text-[#0A3D2E] transition hover:bg-[#0A3D2E] hover:text-[#F1DFB6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
+            className="mt-5 rounded-full border border-brand-main/25 px-4 py-2 text-sm font-medium text-brand-main transition hover:bg-brand-main hover:text-champagne focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2"
           >
             Effacer la recherche
           </button>

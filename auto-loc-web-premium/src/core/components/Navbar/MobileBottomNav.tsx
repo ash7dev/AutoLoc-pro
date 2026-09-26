@@ -77,7 +77,7 @@ export const MobileBottomNav: React.FC = () => {
       aria-label="Navigation principale"
       className="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 lg:hidden"
     >
-      <div className="mx-auto flex max-w-[340px] items-center justify-between rounded-full border border-[#F1DFB6]/10 bg-[#0A3D2E] p-2 shadow-[0_14px_34px_-12px_rgba(10,61,46,0.55)]">
+      <div className="mx-auto flex max-w-[340px] items-center justify-between rounded-full border border-champagne/10 bg-brand-main p-2 shadow-[0_14px_34px_-12px_rgba(10,61,46,0.55)]">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -94,10 +94,10 @@ export const MobileBottomNav: React.FC = () => {
               aria-current={isActive ? 'page' : undefined}
               className={clsx(
                 'flex h-12 w-12 items-center justify-center rounded-full transition-colors duration-200',
-                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F1DFB6]',
+                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne',
                 isActive
-                  ? 'bg-[#F1DFB6] text-[#0A3D2E]'
-                  : 'text-[#F1DFB6]/60 hover:text-[#F1DFB6] active:bg-[#F1DFB6]/10'
+                  ? 'bg-champagne text-brand-main'
+                  : 'text-champagne/60 hover:text-champagne active:bg-champagne/10'
               )}
             >
               <Icon className="h-[22px] w-[22px]" strokeWidth={isActive ? 2.1 : 1.75} />

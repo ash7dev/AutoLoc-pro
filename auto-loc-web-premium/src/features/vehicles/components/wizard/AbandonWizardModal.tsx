@@ -21,7 +21,7 @@ export const AbandonWizardModal: React.FC<AbandonWizardModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#04150F]/80 p-4 backdrop-blur-md">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#04150F]/80 p-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}

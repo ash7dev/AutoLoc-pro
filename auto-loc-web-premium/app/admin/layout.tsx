@@ -1,5 +1,8 @@
 import React from 'react';
 import type { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
+
 import { AdminGuard } from '@/src/core/auth/AdminGuard';
 import { AdminSidebar } from '@/src/features/admin/components/AdminSidebar';
 import { AdminHeader } from '@/src/features/admin/components/AdminHeader';

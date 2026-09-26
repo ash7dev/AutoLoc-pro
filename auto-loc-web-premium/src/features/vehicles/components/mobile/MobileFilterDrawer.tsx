@@ -79,7 +79,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
         {/* Header Drawer */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-white sticky top-0 z-20">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-5 h-5 text-[#0A3D2E]" />
+            <SlidersHorizontal className="w-5 h-5 text-brand-main" />
             <h3 className="text-base font-bold font-serif text-slate-900">Filtres de recherche</h3>
           </div>
           <button
@@ -104,7 +104,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                 value={localFilters.q}
                 onChange={(e) => setLocalFilters({ ...localFilters, q: e.target.value })}
                 placeholder="Ex: Range Rover, Prado, BMW..."
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#0A3D2E]"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-brand-main"
               />
             </div>
           </div>
@@ -119,7 +119,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                 onClick={() => setLocalFilters({ ...localFilters, ville: "" })}
                 className={`px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all ${
                   !localFilters.ville
-                    ? "bg-[#0A3D2E] text-white border-[#0A3D2E]"
+                    ? "bg-brand-main text-white border-brand-main"
                     : "bg-slate-50 text-slate-700 border-slate-200"
                 }`}
               >
@@ -131,7 +131,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                   onClick={() => setLocalFilters({ ...localFilters, ville: c })}
                   className={`px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all ${
                     localFilters.ville === c
-                      ? "bg-[#0A3D2E] text-white border-[#0A3D2E]"
+                      ? "bg-brand-main text-white border-brand-main"
                       : "bg-slate-50 text-slate-700 border-slate-200"
                   }`}
                 >
@@ -153,12 +153,12 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                   onClick={() => setLocalFilters({ ...localFilters, type: t.id })}
                   className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold border transition-all ${
                     localFilters.type === t.id
-                      ? "bg-[#0A3D2E] text-white border-[#0A3D2E]"
+                      ? "bg-brand-main text-white border-brand-main"
                       : "bg-slate-50 text-slate-700 border-slate-200"
                   }`}
                 >
                   <span>{t.label}</span>
-                  {localFilters.type === t.id && <Check className="w-4 h-4 text-[#F1DFB6]" />}
+                  {localFilters.type === t.id && <Check className="w-4 h-4 text-champagne" />}
                 </button>
               ))}
             </div>
@@ -170,7 +170,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
               <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 Budget max / jour
               </label>
-              <span className="text-xs font-bold text-[#0A3D2E]">
+              <span className="text-xs font-bold text-brand-main">
                 {localFilters.prixMax
                   ? `${new Intl.NumberFormat("fr-FR").format(localFilters.prixMax)} FCFA`
                   : "Sans limite"}
@@ -188,7 +188,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                   }
                   className={`py-2 rounded-xl text-xs font-semibold border transition-all ${
                     localFilters.prixMax === p
-                      ? "bg-[#0A3D2E] text-white border-[#0A3D2E]"
+                      ? "bg-brand-main text-white border-brand-main"
                       : "bg-slate-50 text-slate-700 border-slate-200"
                   }`}
                 >
@@ -210,7 +210,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                   onClick={() => setLocalFilters({ ...localFilters, transmission: tr.id })}
                   className={`py-2.5 rounded-xl text-xs font-semibold border transition-all ${
                     localFilters.transmission === tr.id
-                      ? "bg-[#0A3D2E] text-white border-[#0A3D2E]"
+                      ? "bg-brand-main text-white border-brand-main"
                       : "bg-slate-50 text-slate-700 border-slate-200"
                   }`}
                 >
@@ -232,7 +232,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                   onClick={() => setLocalFilters({ ...localFilters, carburant: f.id })}
                   className={`py-2.5 rounded-xl text-xs font-semibold border transition-all ${
                     localFilters.carburant === f.id
-                      ? "bg-[#0A3D2E] text-white border-[#0A3D2E]"
+                      ? "bg-brand-main text-white border-brand-main"
                       : "bg-slate-50 text-slate-700 border-slate-200"
                   }`}
                 >
@@ -259,7 +259,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                   }
                   className={`flex items-center justify-center gap-1 py-2.5 rounded-xl text-xs font-semibold border transition-all ${
                     localFilters.noteMin === n
-                      ? "bg-[#0A3D2E] text-white border-[#0A3D2E]"
+                      ? "bg-brand-main text-white border-brand-main"
                       : "bg-slate-50 text-slate-700 border-slate-200"
                   }`}
                 >
@@ -283,7 +283,7 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
 
           <button
             onClick={handleApply}
-            className="flex-1 py-3.5 rounded-xl bg-[#0A3D2E] text-white text-xs font-bold shadow-lg shadow-[#0A3D2E]/20 hover:bg-[#072B20] transition-all text-center"
+            className="flex-1 py-3.5 rounded-xl bg-brand-main text-white text-xs font-bold shadow-lg shadow-brand-main/20 hover:bg-forest-700 transition-all text-center"
           >
             Voir les véhicules ({totalResults})
           </button>

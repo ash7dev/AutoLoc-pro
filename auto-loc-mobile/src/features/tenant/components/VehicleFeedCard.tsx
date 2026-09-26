@@ -300,10 +300,9 @@ export const VehicleFeedCard: React.FC<VehicleFeedCardProps> = ({
           ) : null}
         </View>
 
-
         {/* ─── Bloc Prix Vert Nuit Forêt ─── */}
         <LinearGradient
-          colors={['#041912', '#06281C']}
+          colors={[theme.colors.brand.dark, '#06281C']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.priceBlock}
@@ -314,7 +313,7 @@ export const VehicleFeedCard: React.FC<VehicleFeedCardProps> = ({
           </View>
 
           <View style={styles.priceArrowCircle}>
-            <ChevronRight size={13} color="#4ADE80" strokeWidth={2.5} />
+            <ChevronRight size={13} color={theme.colors.emerald[400]} strokeWidth={2.5} />
           </View>
         </LinearGradient>
       </View>
@@ -323,7 +322,7 @@ export const VehicleFeedCard: React.FC<VehicleFeedCardProps> = ({
 };
 
 /* ─────────────────────────────────────────────
-   Styles — Premium Vehicle Feed Card (No Emojis)
+   Styles — Premium Vehicle Feed Card (Design System Aligned)
    ───────────────────────────────────────────── */
 
 const styles = StyleSheet.create({
@@ -331,13 +330,13 @@ const styles = StyleSheet.create({
     width: CARD_WIDTH,
     borderRadius: 22,
     overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface.card,
     marginRight: 16,
     borderWidth: 1.5,
-    borderColor: '#E4EBDB',
+    borderColor: theme.colors.border.default,
     ...Platform.select({
       ios: {
-        shadowColor: '#041912',
+        shadowColor: theme.colors.brand.dark,
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.10,
         shadowRadius: 20,
@@ -352,7 +351,7 @@ const styles = StyleSheet.create({
   imageWrapper: {
     width: CARD_WIDTH,
     height: IMAGE_HEIGHT,
-    backgroundColor: '#04150F',
+    backgroundColor: theme.colors.brand.dark,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -393,16 +392,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(4, 25, 18, 0.75)',
+    backgroundColor: 'rgba(4, 25, 18, 0.85)',
     paddingHorizontal: 9,
     paddingVertical: 4.5,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(245, 196, 81, 0.40)',
+    borderColor: 'rgba(241, 223, 182, 0.50)',
   },
   premiumText: {
     fontFamily: theme.typography.fontFamily.bold,
-    color: '#F5C451',
+    color: theme.colors.gold[200],
     fontSize: 8.5,
     letterSpacing: 1.2,
   },
@@ -410,16 +409,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: theme.colors.emerald[50],
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: theme.colors.emerald[200],
   },
   horsDakarText: {
     fontFamily: theme.typography.fontFamily.bold,
-    color: '#059669',
+    color: theme.colors.emerald[600],
     fontSize: 8.5,
     letterSpacing: 0.5,
   },
@@ -465,12 +464,12 @@ const styles = StyleSheet.create({
     width: 16,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#4ADE80',
+    backgroundColor: theme.colors.emerald[400],
   },
 
   /* ── Zone Contenu ── */
   contentBody: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface.card,
     paddingHorizontal: 14,
     paddingTop: 13,
     paddingBottom: 13,
@@ -485,7 +484,7 @@ const styles = StyleSheet.create({
   titleText: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 16.5,
-    color: '#041912',
+    color: theme.colors.text.primary,
     flex: 1,
     marginRight: 6,
     letterSpacing: -0.3,
@@ -510,17 +509,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: theme.colors.emerald[50],
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: theme.colors.emerald[200],
   },
   newBadgeText: {
     fontSize: 9.5,
     fontFamily: theme.typography.fontFamily.bold,
-    color: '#059669',
+    color: theme.colors.emerald[600],
   },
 
   /* Localisation */
@@ -532,13 +531,13 @@ const styles = StyleSheet.create({
   locationText: {
     fontFamily: theme.typography.fontFamily.medium,
     fontSize: 11.5,
-    color: '#64748B',
+    color: theme.colors.text.secondary,
   },
   superhostTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: theme.colors.emerald[50],
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 6,
@@ -547,7 +546,7 @@ const styles = StyleSheet.create({
   superhostTagText: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 9,
-    color: '#059669',
+    color: theme.colors.emerald[600],
   },
 
   /* Spécifications */
@@ -560,20 +559,19 @@ const styles = StyleSheet.create({
   specChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.colors.surface.canvas,
     paddingHorizontal: 6,
     paddingVertical: 3,
     borderRadius: 10,
     gap: 3,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: theme.colors.border.default,
   },
   specText: {
     fontSize: 9.5,
     fontFamily: theme.typography.fontFamily.medium,
-    color: '#475569',
+    color: theme.colors.text.secondary,
   },
-
 
   /* Bloc Prix */
   priceBlock: {
@@ -585,7 +583,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginTop: 4,
     borderWidth: 1,
-    borderColor: 'rgba(74, 222, 128, 0.20)',
+    borderColor: 'rgba(16, 185, 129, 0.25)',
   },
   priceTextGroup: {
     flexDirection: 'row',
@@ -610,7 +608,7 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     backgroundColor: 'rgba(16, 185, 129, 0.20)',
     borderWidth: 1,
-    borderColor: 'rgba(74, 222, 128, 0.35)',
+    borderColor: 'rgba(16, 185, 129, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },

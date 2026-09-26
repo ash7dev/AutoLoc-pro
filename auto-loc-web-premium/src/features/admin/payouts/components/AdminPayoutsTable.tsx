@@ -89,7 +89,7 @@ function BeneficiaryCell({ item }: { item: AdminWithdrawalItem }) {
     <div className="flex min-w-0 items-center gap-3">
       <span
         style={DISPLAY_FONT}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0A3D2E] text-sm text-[#F1DFB6]"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-main text-sm text-champagne"
       >
         {initialsOf(item.ownerName)}
       </span>
@@ -126,7 +126,7 @@ function AmountCell({ item }: { item: AdminWithdrawalItem }) {
   return (
     <div className="whitespace-nowrap">
       <div className="flex items-baseline gap-1.5">
-        <span style={DISPLAY_FONT} className="text-xl tabular-nums text-[#0A3D2E]">
+        <span style={DISPLAY_FONT} className="text-xl tabular-nums text-brand-main">
           {fmt(item.amount)}
         </span>
         <span className={`text-xs ${MUTED}`}>FCFA</span>
@@ -193,7 +193,7 @@ export const AdminPayoutsTable: React.FC<AdminPayoutsTableProps> = ({
   }, [hasMore, isLoadingMore, loadMore]);
 
   const shell =
-    'overflow-hidden rounded-[28px] border border-[#0A3D2E]/10 bg-white shadow-[0_20px_50px_-30px_rgba(10,61,46,0.35)]';
+    'overflow-hidden rounded-[28px] border border-brand-main/10 bg-white shadow-[0_20px_50px_-30px_rgba(10,61,46,0.35)]';
 
   /* Chargement initial */
   if (isLoadingInitial) {
@@ -224,10 +224,10 @@ export const AdminPayoutsTable: React.FC<AdminPayoutsTableProps> = ({
   if (items.length === 0) {
     return (
       <div className={`${shell} flex flex-col items-center px-6 py-16 text-center`}>
-        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0A3D2E] text-[#F1DFB6]">
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-main text-champagne">
           <Inbox className="h-6 w-6" />
         </span>
-        <p style={DISPLAY_FONT} className="mt-5 text-xl text-[#0A3D2E]">
+        <p style={DISPLAY_FONT} className="mt-5 text-xl text-brand-main">
           Aucun retrait trouvé
         </p>
         <p className={`mt-1 max-w-sm text-sm ${MUTED}`}>
@@ -267,7 +267,7 @@ export const AdminPayoutsTable: React.FC<AdminPayoutsTableProps> = ({
                 <tr
                   key={item.id}
                   onClick={() => onSelect(item.id)}
-                  className="cursor-pointer border-b border-slate-100 transition-colors last:border-0 hover:bg-[#0A3D2E]/[0.04]"
+                  className="cursor-pointer border-b border-slate-100 transition-colors last:border-0 hover:bg-brand-main/[0.04]"
                 >
                   <td
                     className="max-w-[260px] px-6 py-4"
@@ -294,7 +294,7 @@ export const AdminPayoutsTable: React.FC<AdminPayoutsTableProps> = ({
                         onSelect(item.id);
                       }}
                       aria-label={`Inspecter le retrait de ${item.ownerName}`}
-                      className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-[#0A3D2E]/25 px-3.5 py-1.5 text-sm font-medium text-[#0A3D2E] transition hover:border-[#0A3D2E] hover:bg-[#0A3D2E] hover:text-[#F1DFB6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
+                      className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-brand-main/25 px-3.5 py-1.5 text-sm font-medium text-brand-main transition hover:border-brand-main hover:bg-brand-main hover:text-champagne focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2"
                     >
                       <Eye className="h-3.5 w-3.5" />
                       Inspecter
@@ -317,7 +317,7 @@ export const AdminPayoutsTable: React.FC<AdminPayoutsTableProps> = ({
                 type="button"
                 onClick={() => onSelect(item.id)}
                 aria-label={`Inspecter le retrait de ${item.ownerName}`}
-                className="block w-full space-y-4 p-4 text-left transition-colors hover:bg-[#0A3D2E]/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0A3D2E]"
+                className="block w-full space-y-4 p-4 text-left transition-colors hover:bg-brand-main/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-main"
                 style={
                   item.statut === 'EN_ATTENTE' ? { boxShadow: `inset 3px 0 0 0 ${GOLD}` } : undefined
                 }
@@ -357,7 +357,7 @@ export const AdminPayoutsTable: React.FC<AdminPayoutsTableProps> = ({
       >
         {isLoadingMore ? (
           <div className={`flex items-center justify-center gap-2.5 py-1 text-sm ${MUTED}`}>
-            <Loader2 className="h-4 w-4 animate-spin text-[#0A3D2E] motion-reduce:animate-none" />
+            <Loader2 className="h-4 w-4 animate-spin text-brand-main motion-reduce:animate-none" />
             Chargement des retraits suivants…
           </div>
         ) : hasMore ? (
@@ -368,18 +368,18 @@ export const AdminPayoutsTable: React.FC<AdminPayoutsTableProps> = ({
                 <span className={`font-semibold ${TEXT}`}>{total}</span> transactions
               </p>
               <div aria-hidden className="mt-2 h-1 w-40 overflow-hidden rounded-full bg-slate-200">
-                <div className="h-full rounded-full bg-[#0A3D2E]" style={{ width: `${loadedShare}%` }} />
+                <div className="h-full rounded-full bg-brand-main" style={{ width: `${loadedShare}%` }} />
               </div>
             </div>
             <button
               type="button"
               onClick={loadMore}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-5 py-2.5 text-sm font-semibold text-[#F1DFB6] shadow-md shadow-[#0A3D2E]/20 transition hover:bg-[#0D4B39] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-brand-main px-5 py-2.5 text-sm font-semibold text-champagne shadow-md shadow-brand-main/20 transition hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2"
             >
               Charger la suite
               <ChevronDown className="h-4 w-4" />
               {remaining > 0 && (
-                <span className="rounded-full bg-[#F1DFB6]/20 px-2 text-xs tabular-nums">
+                <span className="rounded-full bg-champagne/20 px-2 text-xs tabular-nums">
                   +{remaining}
                 </span>
               )}
@@ -387,7 +387,7 @@ export const AdminPayoutsTable: React.FC<AdminPayoutsTableProps> = ({
           </div>
         ) : (
           <p className={`flex items-center justify-center gap-2 py-1 text-sm ${MUTED}`}>
-            <Check className="h-4 w-4 text-[#0A3D2E]" />
+            <Check className="h-4 w-4 text-brand-main" />
             {items.length} transaction{items.length > 1 ? 's' : ''} sur {total}, tout est chargé
           </p>
         )}

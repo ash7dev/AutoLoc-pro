@@ -290,7 +290,7 @@ export const AirbnbVehicleCard: React.FC<AirbnbVehicleCardProps> = ({
 
         {/* ─── Price Block — Forest gradient ─── */}
         <LinearGradient
-          colors={['#041912', '#06281C']}
+          colors={[theme.colors.brand.dark, '#06281C']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.priceBlock}
@@ -304,7 +304,7 @@ export const AirbnbVehicleCard: React.FC<AirbnbVehicleCardProps> = ({
           </View>
 
           <View style={styles.priceArrow}>
-            <ChevronRight size={15} color="#4ADE80" strokeWidth={2.5} />
+            <ChevronRight size={15} color={theme.colors.emerald[400]} strokeWidth={2.5} />
           </View>
         </LinearGradient>
 
@@ -382,17 +382,17 @@ const styles = StyleSheet.create({
   premiumPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(4, 25, 18, 0.75)',
+    backgroundColor: 'rgba(4, 25, 18, 0.85)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
     gap: 5,
     borderWidth: 1,
-    borderColor: 'rgba(245, 196, 81, 0.40)',
+    borderColor: 'rgba(241, 223, 182, 0.50)',
   },
   premiumPillText: {
     fontFamily: theme.typography.fontFamily.bold,
-    color: '#F5C451',
+    color: theme.colors.gold[200],
     fontSize: 9,
     letterSpacing: 1.3,
   },
@@ -400,21 +400,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: theme.colors.emerald[50],
     paddingHorizontal: 9,
     paddingVertical: 5,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: theme.colors.emerald[200],
   },
   horsDakarText: {
     fontFamily: theme.typography.fontFamily.bold,
-    color: '#059669',
+    color: theme.colors.emerald[600],
     fontSize: 9,
     letterSpacing: 0.5,
   },
   discountPill: {
-    backgroundColor: '#059669',
+    backgroundColor: theme.colors.emerald[600],
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
@@ -468,17 +468,16 @@ const styles = StyleSheet.create({
     width: 18,
     height: 5,
     borderRadius: 3,
-    backgroundColor: '#4ADE80',
+    backgroundColor: theme.colors.emerald[400],
   },
 
   contentBody: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface.card,
     paddingHorizontal: 18,
     paddingTop: 16,
     paddingBottom: 16,
     gap: 6,
   },
-
 
   titleRow: {
     flexDirection: 'row',
@@ -488,7 +487,7 @@ const styles = StyleSheet.create({
   titleText: {
     fontFamily: theme.typography.fontFamily.displaySemiBold,
     fontSize: 19,
-    color: '#041912',
+    color: theme.colors.text.primary,
     flex: 1,
     marginRight: 10,
     letterSpacing: -0.3,
@@ -515,17 +514,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: theme.colors.emerald[50],
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: theme.colors.emerald[200],
   },
   newBadgeText: {
     fontSize: 10,
     fontFamily: theme.typography.fontFamily.bold,
-    color: '#059669',
+    color: theme.colors.emerald[600],
   },
 
   locationRow: {
@@ -537,18 +536,18 @@ const styles = StyleSheet.create({
   locationText: {
     fontFamily: theme.typography.fontFamily.medium,
     fontSize: 12.5,
-    color: '#64748B',
+    color: theme.colors.text.secondary,
   },
   reviewCount: {
     fontFamily: theme.typography.fontFamily.medium,
     fontSize: 12.5,
-    color: '#64748B',
+    color: theme.colors.text.secondary,
   },
   superhostTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: theme.colors.emerald[50],
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -557,7 +556,7 @@ const styles = StyleSheet.create({
   superhostTagText: {
     fontFamily: theme.typography.fontFamily.bold,
     fontSize: 9.5,
-    color: '#059669',
+    color: theme.colors.emerald[600],
   },
 
   specsRow: {

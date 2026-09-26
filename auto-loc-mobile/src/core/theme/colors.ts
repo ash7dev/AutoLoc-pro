@@ -17,16 +17,16 @@ export const primitives = {
     300: '#4DA788',
     400: '#22805D', // forest-500
     500: '#14654C', // forest-600 (Bouton primary)
-    600: '#0B3D2E', // forest-800 (Texte foncé sur émeraude vif)
+    600: '#0B3D2E', // forest-800 (#0A3D2E brand main)
     700: '#072A20', // forest-900 (Surface sombre récapitulatif)
-    800: '#041912', // forest-950 (Titres & en-têtes)
+    800: '#041912', // forest-950 (Brand Dark / Titres)
     900: '#020F0B',
   },
   emerald: {
     50: '#ecfdf5',
     100: '#d1fae5',
     200: '#a7f3d0',
-    300: '#6ee7b7', // Émeraude lumineux (Total à payer / Réductions)
+    300: '#6ee7b7',
     400: '#34d399',
     500: '#10b981', // Émeraude principal Web (#10B981)
     600: '#059669', // Émeraude CTA principal Web (#059669)
@@ -34,6 +34,19 @@ export const primitives = {
     800: '#065f46',
     900: '#064e3b',
     950: '#022c22',
+  },
+  gold: {
+    50: '#FBF6E9',
+    100: '#F5EBCE',
+    200: '#F1DFB6', // Champagne Gold (#F1DFB6)
+    300: '#E6CA8B', // Dark Champagne (#E6CA8B)
+    400: '#D4AF37', // Gold Accent (#D4AF37)
+    500: '#B89320',
+  },
+  champagne: {
+    DEFAULT: '#F1DFB6',
+    light: '#FBF6E9',
+    dark: '#E6CA8B',
   },
   amber: {
     50: '#fffbeb',
@@ -62,7 +75,7 @@ export const primitives = {
     500: '#7D8975', // Sous-titres & labels
     600: '#5F6B59', // Libellés de période (FCFA / jour)
     700: '#3D4638',
-    800: '#22271F', // Texte sombre principal
+    800: '#041912', // Texte sombre principal (#041912)
     900: '#171717',
     950: '#041912',
   },
@@ -71,14 +84,17 @@ export const primitives = {
 export type SemanticColors = {
   primary: typeof primitives.forest;
   emerald: typeof primitives.emerald;
+  gold: typeof primitives.gold;
+  champagne: typeof primitives.champagne;
   amber: typeof primitives.amber;
   forest: typeof primitives.forest;
   brand: {
     subtle: string; muted: string; border: string; light: string;
     main: string; dark: string; text: string; action: string; actionText: string;
+    champagne: string; emerald: string;
   };
   accent: {
-    subtle: string; muted: string; main: string; text: string;
+    subtle: string; muted: string; main: string; text: string; gold: string;
   };
   surface: {
     canvas: string; page: string; elevated: string; elevatedHover: string;
@@ -88,11 +104,11 @@ export type SemanticColors = {
   text: {
     primary: string; secondary: string; tertiary: string;
     disabled: string; inverse: string; brand: string; accent: string;
-    inverseDisplay: string; periodLabel: string;
+    inverseDisplay: string; periodLabel: string; champagne: string;
   };
   border: {
     subtle: string; light: string; default: string; strong: string;
-    brand: string; disabled: string; focus: string; actionEdge: string;
+    brand: string; disabled: string; focus: string; actionEdge: string; champagne: string;
   };
   status: {
     success: string; successBg: string; successBorder: string;
@@ -109,6 +125,8 @@ export type SemanticColors = {
 const lightColors: SemanticColors = {
   primary: primitives.forest,
   emerald: primitives.emerald,
+  gold: primitives.gold,
+  champagne: primitives.champagne,
   amber: primitives.amber,
   forest: primitives.forest,
   brand: {
@@ -116,17 +134,20 @@ const lightColors: SemanticColors = {
     muted: primitives.emerald[100],
     border: primitives.emerald[200],
     light: primitives.emerald[400],
-    main: primitives.emerald[600],
-    dark: primitives.forest[800],
-    text: primitives.forest[800],
-    action: primitives.emerald[600],
+    main: '#0A3D2E', // Brand main identique Web Premium (#0A3D2E)
+    dark: '#041912', // Brand dark identique Web Premium (#041912)
+    text: '#041912',
+    action: primitives.emerald[500], // #10B981 Émeraude Action
     actionText: '#FFFFFF',
+    champagne: primitives.gold[200], // #F1DFB6
+    emerald: primitives.emerald[500], // #10B981
   },
   accent: {
-    subtle: primitives.amber[50],
-    muted: primitives.amber[100],
-    main: primitives.amber[500],
-    text: primitives.amber[600],
+    subtle: primitives.gold[50],
+    muted: primitives.gold[100],
+    main: primitives.gold[200],
+    text: primitives.gold[500],
+    gold: primitives.gold[200],
   },
   surface: {
     canvas: primitives.neutral[50],
@@ -135,35 +156,37 @@ const lightColors: SemanticColors = {
     elevatedHover: primitives.neutral[100],
     card: primitives.neutral[0],
     subtle: primitives.neutral[100],
-    inverse: primitives.forest[800],
-    darkForest: primitives.forest[700],
+    inverse: '#041912',
+    darkForest: '#072A20',
     overlay: 'rgba(4, 25, 18, 0.65)',
-    glass: 'rgba(255, 255, 255, 0.72)',
+    glass: 'rgba(255, 255, 255, 0.85)',
     disabled: primitives.neutral[200],
   },
   text: {
-    primary: primitives.neutral[800], // #22271F
-    secondary: primitives.neutral[600], // #5F6B59
-    tertiary: primitives.neutral[500], // #7D8975
+    primary: '#041912', // Identique Web Premium
+    secondary: primitives.neutral[600],
+    tertiary: primitives.neutral[500],
     disabled: primitives.neutral[300],
     inverse: primitives.neutral[0],
-    brand: primitives.forest[800],
-    accent: primitives.amber[600],
+    brand: '#0A3D2E',
+    accent: primitives.gold[500],
+    champagne: primitives.gold[200],
     inverseDisplay: '#F8FBF4',
     periodLabel: '#5F6B59',
   },
   border: {
     subtle: primitives.neutral[50],
     light: primitives.neutral[100],
-    default: primitives.neutral[200], // #E4EBDB
+    default: primitives.neutral[200],
     strong: primitives.neutral[400],
     brand: primitives.emerald[200],
     disabled: primitives.neutral[200],
-    focus: primitives.emerald[600],
-    actionEdge: 'rgba(22, 163, 74, 0.30)',
+    focus: primitives.emerald[500],
+    actionEdge: 'rgba(16, 185, 129, 0.30)',
+    champagne: primitives.gold[200],
   },
   status: {
-    success: primitives.emerald[600],
+    success: primitives.emerald[500],
     successBg: primitives.emerald[50],
     successBorder: primitives.emerald[200],
     warning: primitives.amber[500],
@@ -172,7 +195,7 @@ const lightColors: SemanticColors = {
     error: primitives.red[600],
     errorBg: primitives.red[50],
     errorBorder: primitives.red[200],
-    info: primitives.emerald[600],
+    info: primitives.emerald[500],
     infoBg: primitives.emerald[50],
     infoBorder: primitives.emerald[200],
   },

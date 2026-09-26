@@ -111,14 +111,14 @@ export const AdminKycInspectorModal: React.FC<AdminKycInspectorModalProps> = ({
         <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-950/50">
           <div className="flex items-center gap-3 min-w-0">
             <div
-              className="w-10 h-10 rounded-full text-[#041912] font-normal flex items-center justify-center text-base shrink-0 border border-black/5"
+              className="w-10 h-10 rounded-full text-brand-dark font-normal flex items-center justify-center text-base shrink-0 border border-black/5"
               style={{ backgroundColor: CHAMPAGNE }}
             >
               {item.prenom?.[0] || 'U'}
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base sm:text-lg font-normal text-[#041912] dark:text-white truncate">{item.fullName}</h2>
+                <h2 className="text-base sm:text-lg font-normal text-brand-dark dark:text-white truncate">{item.fullName}</h2>
                 {item.waitHours !== undefined && (
                   <span
                     className="px-2.5 py-0.5 rounded-full text-[11px] font-medium flex items-center gap-1 shrink-0"

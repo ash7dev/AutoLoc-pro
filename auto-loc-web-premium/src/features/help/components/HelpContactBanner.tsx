@@ -5,12 +5,9 @@ import { MessageCircle, Mail, Phone, ExternalLink, Clock } from 'lucide-react';
 
 export const HelpContactBanner: React.FC = () => {
   return (
-    <section className="rounded-3xl border border-[#041912]/8 bg-white p-6 sm:p-8 shadow-xs">
+    <section className="rounded-3xl border border-brand-dark/8 bg-white p-6 sm:p-8 shadow-xs">
       <div className="mb-5">
-        <h2
-          className="font-fraunces text-xl font-normal text-[#041912]"
-          style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
-        >
+        <h2 className="font-fraunces text-xl font-normal text-brand-dark">
           Vous ne trouvez pas votre réponse ?
         </h2>
         <p className="mt-1 text-[13px] text-slate-500">
@@ -31,7 +28,7 @@ export const HelpContactBanner: React.FC = () => {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <p className="text-[14px] font-semibold text-[#041912]">WhatsApp</p>
+              <p className="text-[14px] font-semibold text-brand-dark">WhatsApp</p>
               <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-100 text-green-700 uppercase tracking-wide">
                 Recommandé
               </span>
@@ -46,16 +43,16 @@ export const HelpContactBanner: React.FC = () => {
         {/* Téléphone */}
         <a
           href="tel:+221786637705"
-          className="group flex items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 transition-all hover:border-[#0A3D2E]/20 hover:shadow-sm"
+          className="group flex items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 transition-all hover:border-brand-main/20 hover:shadow-sm"
         >
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#0A3D2E] shadow-sm">
-            <Phone className="h-5 w-5 text-[#F1DFB6]" />
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-main shadow-sm">
+            <Phone className="h-5 w-5 text-champagne" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold text-[#041912]">+221 78 663 77 05</p>
+            <p className="text-[14px] font-semibold text-brand-dark">+221 78 663 77 05</p>
             <p className="text-[12px] text-slate-400 mt-0.5">7j/7 — 8h à 22h (GMT)</p>
           </div>
-          <span className="text-[12px] font-semibold text-[#0A3D2E]">
+          <span className="text-[12px] font-semibold text-brand-main">
             Appeler
           </span>
         </a>
@@ -69,7 +66,7 @@ export const HelpContactBanner: React.FC = () => {
             <Mail className="h-5 w-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold text-[#041912]">support@autoloc.sn</p>
+            <p className="text-[14px] font-semibold text-brand-dark">support@autoloc.sn</p>
             <p className="text-[12px] text-slate-400 mt-0.5">Réponse sous 24h ouvrées</p>
           </div>
           <span className="text-[12px] font-semibold text-blue-600">
@@ -79,15 +76,15 @@ export const HelpContactBanner: React.FC = () => {
       </div>
 
       {/* Availability */}
-      <div className="mt-5 flex items-center gap-3 rounded-2xl bg-[#0A3D2E]/5 border border-[#0A3D2E]/10 p-4">
+      <div className="mt-5 flex items-center gap-3 rounded-2xl bg-brand-main/5 border border-brand-main/10 p-4">
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse" />
-          <span className="text-[11px] font-bold text-[#0A3D2E]">En ligne</span>
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[11px] font-bold text-brand-main">En ligne</span>
         </div>
-        <div className="h-3 w-px bg-[#0A3D2E]/15" />
+        <div className="h-3 w-px bg-brand-main/15" />
         <div className="flex items-center gap-1.5">
-          <Clock className="h-3 w-3 text-[#0A3D2E]/60" strokeWidth={2} />
-          <span className="text-[11px] text-[#0A3D2E]/70 font-medium">Support disponible — Lun–Dim · 8h00 – 22h00 (GMT)</span>
+          <Clock className="h-3 w-3 text-brand-main/60" strokeWidth={2} />
+          <span className="text-[11px] text-brand-main/70 font-medium">Support disponible — Lun–Dim · 8h00 – 22h00 (GMT)</span>
         </div>
       </div>
     </section>

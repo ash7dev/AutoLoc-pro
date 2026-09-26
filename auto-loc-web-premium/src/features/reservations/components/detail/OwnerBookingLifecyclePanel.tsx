@@ -163,15 +163,15 @@ function getStepStates(f: Flags): StepState[] {
 }
 
 const CIRCLE_CLASS: Record<StepState, string> = {
-  done: 'bg-[#0A3D2E] text-[#F1DFB6]',
-  current: 'border-2 border-[#0A3D2E] bg-white text-[#0A3D2E] ring-4 ring-[#0A3D2E]/10',
+  done: 'bg-brand-main text-champagne',
+  current: 'border-2 border-brand-main bg-white text-brand-main ring-4 ring-brand-main/10',
   alert: 'bg-rose-600 text-white ring-4 ring-rose-100',
   upcoming: 'border border-slate-200 bg-slate-100 text-slate-400',
 };
 
 const STEP_LABEL_CLASS: Record<StepState, string> = {
-  done: 'font-semibold text-[#041912]',
-  current: 'font-semibold text-[#041912]',
+  done: 'font-semibold text-brand-dark',
+  current: 'font-semibold text-brand-dark',
   alert: 'font-semibold text-rose-700',
   upcoming: 'text-slate-500',
 };
@@ -188,8 +188,8 @@ interface LifecycleView {
 
 const TONE_CLASS: Record<Tone, { panel: string; icon: string }> = {
   neutral: {
-    panel: 'border-[#0A3D2E]/10 bg-[#0A3D2E]/[0.04] text-[#041912]',
-    icon: 'bg-[#0A3D2E] text-[#F1DFB6]',
+    panel: 'border-brand-main/10 bg-brand-main/[0.04] text-brand-dark',
+    icon: 'bg-brand-main text-champagne',
   },
   action: {
     panel: 'border-amber-200 bg-amber-50 text-amber-950',
@@ -206,7 +206,7 @@ const TONE_CLASS: Record<Tone, { panel: string; icon: string }> = {
 };
 
 const CHIP_CLASS: Record<LifecycleView['chipTone'], string> = {
-  default: 'border-[#0A3D2E]/15 bg-[#0A3D2E]/5 text-[#0A3D2E]',
+  default: 'border-brand-main/15 bg-brand-main/5 text-brand-main',
   action: 'border-amber-200 bg-amber-50 text-amber-800',
   danger: 'border-rose-200 bg-rose-50 text-rose-800',
 };
@@ -399,14 +399,14 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
                 ? 'bg-rose-50 text-rose-600'
                 : view.chipTone === 'action'
                   ? 'bg-amber-100 text-amber-800'
-                  : 'bg-[#F1DFB6]/40 text-[#0A3D2E]'
+                  : 'bg-champagne/40 text-brand-main'
               }`}
           >
             <HeaderIcon className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
           </span>
 
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-            <h2 id={titleId} className="font-fraunces text-xl sm:text-2xl font-normal text-[#041912] tracking-tight">
+            <h2 id={titleId} className="font-fraunces text-xl sm:text-2xl font-normal text-brand-dark tracking-tight">
               {view.title}
             </h2>
             {view.stepLabel && (
@@ -428,7 +428,7 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
             className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800 disabled:cursor-wait"
           >
             <RefreshCw
-              className={`h-4 w-4 ${isRefreshing ? 'text-[#0A3D2E] motion-safe:animate-spin' : ''}`}
+              className={`h-4 w-4 ${isRefreshing ? 'text-brand-main motion-safe:animate-spin' : ''}`}
               aria-hidden="true"
             />
           </button>
@@ -449,7 +449,7 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
                 {i < STEP_LABELS.length - 1 && (
                   <span
                     aria-hidden="true"
-                    className={`absolute left-1/2 top-3.5 h-0.5 w-full -translate-y-1/2 ${state === 'done' ? 'bg-[#0A3D2E]' : 'bg-slate-200'
+                    className={`absolute left-1/2 top-3.5 h-0.5 w-full -translate-y-1/2 ${state === 'done' ? 'bg-brand-main' : 'bg-slate-200'
                       }`}
                   />
                 )}
@@ -510,7 +510,7 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
             <Clock className="w-4 h-4 text-amber-800 shrink-0" />
             <p className="leading-snug">
               <strong className="font-bold text-amber-900">Délai limite d'acceptation :</strong> Vous devez confirmer cette demande avant le{' '}
-              <span className="font-extrabold text-[#0A3D2E] underline">
+              <span className="font-extrabold text-brand-main underline">
                 {formatConfirmationDeadline(reservation.creeLe, reservation.dateDebut, reservation.tacitCheckinDeadlineLe)}
               </span>
               . Passé ce délai, le locataire sera intégralement remboursé.
@@ -570,7 +570,7 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
 
             {/* Mode de règlement & Solde au Check-in */}
             <div className="flex items-start gap-2.5 bg-white/90 p-3 rounded-xl border border-amber-200/70">
-              <CreditCard className="w-4 h-4 text-[#0A3D2E] shrink-0 mt-0.5" />
+              <CreditCard className="w-4 h-4 text-brand-main shrink-0 mt-0.5" />
               <div className="min-w-0">
                 <span className="block font-bold text-slate-900">Modalité de paiement</span>
                 <span className="text-slate-700 font-medium block">
@@ -626,7 +626,7 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
                 type="button"
                 disabled={isSubmitting}
                 onClick={onConfirmReservationClick}
-                className="flex-1 cursor-pointer inline-flex items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-6 py-3.5 text-sm font-bold text-[#F1DFB6] shadow-md hover:bg-[#0F4F3B] active:scale-[0.98] transition-all disabled:opacity-50"
+                className="flex-1 cursor-pointer inline-flex items-center justify-center gap-2 rounded-full bg-brand-main px-6 py-3.5 text-sm font-bold text-champagne shadow-md hover:bg-forest-700 active:scale-[0.98] transition-all disabled:opacity-50"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 <span>{isSubmitting ? 'Confirmation…' : 'Confirmer la réservation'}</span>
@@ -655,9 +655,9 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
                 type="button"
                 disabled={isSubmitting}
                 onClick={onCheckinClick}
-                className="w-full cursor-pointer inline-flex items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-6 py-3.5 text-sm font-bold text-[#F1DFB6] shadow-md hover:bg-[#0F4F3B] active:scale-[0.98] transition-all disabled:opacity-50"
+                className="w-full cursor-pointer inline-flex items-center justify-center gap-2 rounded-full bg-brand-main px-6 py-3.5 text-sm font-bold text-champagne shadow-md hover:bg-forest-700 active:scale-[0.98] transition-all disabled:opacity-50"
               >
-                <LogIn className="h-4 w-4 text-[#4ADE80]" />
+                <LogIn className="h-4 w-4 text-emerald-400" />
                 <span>{isSubmitting ? 'Validation…' : 'Valider le Check-in (Départ du véhicule)'}</span>
               </button>
             )}
@@ -698,9 +698,9 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
                 type="button"
                 disabled={isSubmitting}
                 onClick={onCheckoutClick}
-                className="flex-1 cursor-pointer inline-flex items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-6 py-3.5 text-sm font-bold text-[#F1DFB6] shadow-md hover:bg-[#0F4F3B] active:scale-[0.98] transition-all disabled:opacity-50"
+                className="flex-1 cursor-pointer inline-flex items-center justify-center gap-2 rounded-full bg-brand-main px-6 py-3.5 text-sm font-bold text-champagne shadow-md hover:bg-forest-700 active:scale-[0.98] transition-all disabled:opacity-50"
               >
-                <LogOut className="h-4 w-4 text-[#4ADE80]" />
+                <LogOut className="h-4 w-4 text-emerald-400" />
                 <span>{isSubmitting ? 'Clôture en cours…' : 'Valider le Check-out (Clôturer la location)'}</span>
               </button>
             )}
@@ -730,9 +730,9 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
                 type="button"
                 disabled={isSubmitting}
                 onClick={onConfirmReservationClick}
-                className="flex-1 inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-4 py-3.5 text-xs font-bold text-[#F1DFB6] shadow-lg hover:bg-[#0F4F3B] active:scale-[0.98] transition-all disabled:opacity-50"
+                className="flex-1 inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-main px-4 py-3.5 text-xs font-bold text-champagne shadow-lg hover:bg-forest-700 active:scale-[0.98] transition-all disabled:opacity-50"
               >
-                <CheckCircle2 className="h-4 w-4 text-[#4ADE80]" />
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                 <span>{isSubmitting ? 'Validation…' : 'Confirmer la réservation'}</span>
               </button>
             )}
@@ -758,9 +758,9 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
                 type="button"
                 disabled={isSubmitting}
                 onClick={onCheckinClick}
-                className="w-full inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-4 py-3.5 text-xs font-bold text-[#F1DFB6] shadow-lg hover:bg-[#0F4F3B] active:scale-[0.98] transition-all disabled:opacity-50"
+                className="w-full inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-main px-4 py-3.5 text-xs font-bold text-champagne shadow-lg hover:bg-forest-700 active:scale-[0.98] transition-all disabled:opacity-50"
               >
-                <LogIn className="h-4 w-4 text-[#4ADE80]" />
+                <LogIn className="h-4 w-4 text-emerald-400" />
                 <span>{isSubmitting ? 'Validation…' : 'Valider le Check-in (Départ)'}</span>
               </button>
             )}
@@ -799,9 +799,9 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
                 type="button"
                 disabled={isSubmitting}
                 onClick={onCheckoutClick}
-                className="flex-1 inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-4 py-3.5 text-xs font-bold text-[#F1DFB6] shadow-lg hover:bg-[#0F4F3B] active:scale-[0.98] transition-all disabled:opacity-50"
+                className="flex-1 inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-main px-4 py-3.5 text-xs font-bold text-champagne shadow-lg hover:bg-forest-700 active:scale-[0.98] transition-all disabled:opacity-50"
               >
-                <LogOut className="h-4 w-4 text-[#4ADE80]" />
+                <LogOut className="h-4 w-4 text-emerald-400" />
                 <span>{isSubmitting ? 'Clôture…' : 'Valider Check-out (Fin)'}</span>
               </button>
             )}

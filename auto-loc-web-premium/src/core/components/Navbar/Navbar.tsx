@@ -92,7 +92,7 @@ export const Navbar: React.FC = () => {
             {/* Logo */}
             <Link
               href="/"
-              className="relative h-8 w-28 shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0A3D2E]"
+              className="relative h-8 w-28 shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-main"
             >
               <Image
                 src="/logo.png"
@@ -112,7 +112,7 @@ export const Navbar: React.FC = () => {
             ) : (
               <Link
                 href="/login"
-                className="rounded-full bg-[#0A3D2E] px-4 py-2 text-xs font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0F4F3B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]"
+                className="rounded-full bg-brand-main px-4 py-2 text-xs font-semibold text-champagne transition-colors hover:bg-forest-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main"
               >
                 Se connecter
               </Link>

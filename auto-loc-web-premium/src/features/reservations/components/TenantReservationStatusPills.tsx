@@ -103,11 +103,11 @@ export function TenantReservationStatusPills({
               className={`
                 flex shrink-0 items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold
                 transition-all duration-200 cursor-pointer select-none
-                focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]
+                focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main
                 ${
                   isActive
-                    ? 'bg-[#0A3D2E] text-[#F1DFB6] shadow-md shadow-[#0A3D2E]/20 scale-[1.02]'
-                    : 'bg-white border border-slate-200/90 text-slate-700 hover:border-[#0A3D2E]/40 hover:bg-slate-50 hover:text-slate-900 shadow-2xs'
+                    ? 'bg-brand-main text-champagne shadow-md shadow-brand-main/20 scale-[1.02]'
+                    : 'bg-white border border-slate-200/90 text-slate-700 hover:border-brand-main/40 hover:bg-slate-50 hover:text-slate-900 shadow-2xs'
                 }
               `}
             >
@@ -117,7 +117,7 @@ export function TenantReservationStatusPills({
               ) : (
                 <Icon
                   className={`h-4 w-4 shrink-0 ${
-                    isActive ? 'text-[#F1DFB6]' : 'text-slate-500'
+                    isActive ? 'text-champagne' : 'text-slate-500'
                   }`}
                   strokeWidth={2}
                 />
@@ -130,7 +130,7 @@ export function TenantReservationStatusPills({
                 <span
                   className={`ml-0.5 rounded-full px-2 py-0.5 text-[11px] font-extrabold tabular-nums ${
                     isActive
-                      ? 'bg-[#F1DFB6]/20 text-[#F1DFB6]'
+                      ? 'bg-champagne/20 text-champagne'
                       : 'bg-slate-100 text-slate-600'
                   }`}
                 >

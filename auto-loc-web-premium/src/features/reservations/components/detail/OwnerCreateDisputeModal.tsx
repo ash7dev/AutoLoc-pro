@@ -152,7 +152,7 @@ export const OwnerCreateDisputeModal: React.FC<OwnerCreateDisputeModalProps> = (
               <ShieldAlert className="w-3 h-3 text-rose-600" />
               <span>Arbitrage & Support AutoLoc</span>
             </div>
-            <h2 id={titleId} className="font-fraunces text-xl font-normal text-[#041912]">
+            <h2 id={titleId} className="font-fraunces text-xl font-normal text-brand-dark">
               Déclarer un litige / dégât
             </h2>
             <p className="text-xs text-slate-500 font-mono font-medium">
@@ -168,7 +168,7 @@ export const OwnerCreateDisputeModal: React.FC<OwnerCreateDisputeModalProps> = (
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-xl font-bold text-[#041912]">Dossier de litige ouvert</h3>
+              <h3 className="text-xl font-bold text-brand-dark">Dossier de litige ouvert</h3>
               <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
                 Votre signalement a été enregistré. Le solde de la réservation reste consigné en escrow pendant l’instruction du dossier par notre cellule d'arbitrage.
               </p>

@@ -78,7 +78,7 @@ const TABS: { id: TabId; label: string; icon: React.ComponentType<{ className?: 
 const STATUS_META: Record<string, { label: string; dot: string }> = {
   PAYEE: { label: 'Payée', dot: 'bg-emerald-400' },
   EN_COURS: { label: 'En cours', dot: 'bg-sky-300' },
-  TERMINEE: { label: 'Terminée', dot: 'bg-[#F1DFB6]' },
+  TERMINEE: { label: 'Terminée', dot: 'bg-champagne' },
   ANNULEE: { label: 'Annulée', dot: 'bg-rose-400' },
 };
 
@@ -172,7 +172,7 @@ function PersonCard({
       <div className="mt-4 flex items-center gap-3">
         <span
           style={DISPLAY_FONT}
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0A3D2E] text-lg text-[#F1DFB6]"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-main text-lg text-champagne"
         >
           {initials}
         </span>
@@ -181,7 +181,7 @@ function PersonCard({
           {person?.email ? (
             <a
               href={`mailto:${person.email}`}
-              className={`block truncate text-xs ${MUTED} hover:text-[#0A3D2E] dark:hover:text-[#F1DFB6]`}
+              className={`block truncate text-xs ${MUTED} hover:text-brand-main dark:hover:text-champagne`}
             >
               {person.email}
             </a>
@@ -196,7 +196,7 @@ function PersonCard({
         <div className="mt-4 grid grid-cols-2 gap-2">
           <a
             href={`tel:${tel}`}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#0A3D2E]/25 px-3 py-2.5 text-sm font-medium text-[#0A3D2E] transition hover:bg-[#0A3D2E]/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] dark:border-[#F1DFB6]/30 dark:text-[#F1DFB6] dark:hover:bg-[#F1DFB6]/10"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-brand-main/25 px-3 py-2.5 text-sm font-medium text-brand-main transition hover:bg-brand-main/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main dark:border-champagne/30 dark:text-champagne dark:hover:bg-champagne/10"
           >
             <Phone className="h-4 w-4" />
             Appeler
@@ -205,7 +205,7 @@ function PersonCard({
             href={`https://wa.me/${wa}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0A3D2E] px-3 py-2.5 text-sm font-medium text-[#F1DFB6] transition hover:bg-[#0D4B39] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-main px-3 py-2.5 text-sm font-medium text-champagne transition hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2"
           >
             <MessageSquare className="h-4 w-4" />
             WhatsApp
@@ -439,11 +439,11 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
   };
 
   const primaryBtn =
-    'inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0A3D2E] px-4 py-3.5 text-sm font-semibold text-[#F1DFB6] shadow-lg shadow-[#0A3D2E]/20 transition hover:bg-[#0D4B39] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
+    'inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-main px-4 py-3.5 text-sm font-semibold text-champagne shadow-lg shadow-brand-main/20 transition hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-stretch justify-center bg-[#04140E]/70 p-0 backdrop-blur-sm animate-in fade-in duration-200 motion-reduce:animate-none sm:items-center sm:p-5"
+      className="fixed inset-0 z-50 flex items-stretch justify-center bg-brand-dark/70 p-0 backdrop-blur-sm animate-in fade-in duration-200 motion-reduce:animate-none sm:items-center sm:p-5"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && !isMutating) onClose();
       }}
@@ -456,17 +456,17 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
         className="relative flex h-full w-full max-w-5xl flex-col overflow-hidden bg-white shadow-[0_30px_80px_-20px_rgba(10,61,46,0.45)] dark:bg-slate-900 sm:h-auto sm:max-h-[92vh] sm:rounded-[28px]"
       >
         {/* En-tête */}
-        <header className="flex shrink-0 items-start justify-between gap-4 bg-[#0A3D2E] px-6 py-5">
+        <header className="flex shrink-0 items-start justify-between gap-4 bg-brand-main px-6 py-5">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <h2
                 id={titleId}
                 style={DISPLAY_FONT}
-                className="truncate text-2xl leading-tight text-[#F1DFB6]"
+                className="truncate text-2xl leading-tight text-champagne"
               >
                 Réservation {refId}
               </h2>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F1DFB6]/30 px-2.5 py-1 text-xs font-medium text-[#F1DFB6]">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-champagne/30 px-2.5 py-1 text-xs font-medium text-champagne">
                 <span className={`h-1.5 w-1.5 rounded-full ${statusMeta.dot}`} />
                 {statusMeta.label}
               </span>
@@ -482,7 +482,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                 href={reservation.contratUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-[#F1DFB6]/30 px-4 py-2 text-sm font-medium text-[#F1DFB6] transition hover:bg-[#F1DFB6]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6]"
+                className="inline-flex items-center gap-2 rounded-full border border-champagne/30 px-4 py-2 text-sm font-medium text-champagne transition hover:bg-champagne/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne"
               >
                 <FileText className="h-4 w-4" />
                 <span className="hidden sm:inline">Contrat PDF</span>
@@ -495,7 +495,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
               onClick={onClose}
               disabled={isMutating}
               aria-label="Fermer"
-              className="rounded-full p-2 text-[#F1DFB6]/80 transition hover:bg-[#F1DFB6]/10 hover:text-[#F1DFB6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6] disabled:opacity-50"
+              className="rounded-full p-2 text-champagne/80 transition hover:bg-champagne/10 hover:text-champagne focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne disabled:opacity-50"
             >
               <X className="h-5 w-5" />
             </button>
@@ -511,7 +511,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                 role="tablist"
                 aria-label="Sections de la réservation"
                 onKeyDown={onTabKeyDown}
-                className="inline-flex items-center rounded-full bg-[#0A3D2E]/[0.07] p-1"
+                className="inline-flex items-center rounded-full bg-brand-main/[0.07] p-1"
               >
                 {TABS.map((tab) => {
                   const selected = activeTab === tab.id;
@@ -529,16 +529,16 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                       aria-controls={`${uid}-panel`}
                       tabIndex={selected ? 0 : -1}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] ${selected
-                          ? 'bg-[#0A3D2E] text-[#F1DFB6] shadow'
-                          : 'text-slate-600 hover:text-[#0A3D2E] dark:text-slate-400 dark:hover:text-[#F1DFB6]'
+                      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main ${selected
+                          ? 'bg-brand-main text-champagne shadow'
+                          : 'text-slate-600 hover:text-brand-main dark:text-slate-400 dark:hover:text-champagne'
                         }`}
                     >
                       <Icon className="h-3.5 w-3.5" />
                       {tab.label}
                       {tab.id === 'PHOTOS_ETAT' && (
                         <span
-                          className={`rounded-full px-1.5 text-xs tabular-nums ${selected ? 'bg-[#F1DFB6]/20' : 'bg-[#0A3D2E]/10'
+                          className={`rounded-full px-1.5 text-xs tabular-nums ${selected ? 'bg-champagne/20' : 'bg-brand-main/10'
                             }`}
                         >
                           {allPhotos.length}
@@ -569,22 +569,22 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                           {!isLast && (
                             <span
                               aria-hidden
-                              className={`absolute bottom-0 left-[13px] top-7 w-px ${s.done ? 'bg-[#0A3D2E]' : 'bg-slate-200 dark:bg-slate-800'
+                              className={`absolute bottom-0 left-[13px] top-7 w-px ${s.done ? 'bg-brand-main' : 'bg-slate-200 dark:bg-slate-800'
                                 }`}
                             />
                           )}
                           <span
                             className={`relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${s.done
-                                ? 'bg-[#0A3D2E] text-[#F1DFB6]'
+                                ? 'bg-brand-main text-champagne'
                                 : isCurrent
-                                  ? 'border-2 border-[#0A3D2E] bg-white dark:bg-slate-950'
+                                  ? 'border-2 border-brand-main bg-white dark:bg-slate-950'
                                   : 'border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-950'
                               }`}
                           >
                             {s.done ? (
                               <Check className="h-3.5 w-3.5" />
                             ) : isCurrent ? (
-                              <span className="h-2 w-2 rounded-full bg-[#0A3D2E]" />
+                              <span className="h-2 w-2 rounded-full bg-brand-main" />
                             ) : null}
                           </span>
                           <div className="min-w-0 pt-0.5">
@@ -594,7 +594,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                             >
                               {s.label}
                               {isCurrent && (
-                                <span className="ml-2 rounded-full bg-[#F1DFB6]/60 px-2 py-0.5 text-xs font-medium text-[#0A3D2E]">
+                                <span className="ml-2 rounded-full bg-champagne/60 px-2 py-0.5 text-xs font-medium text-brand-main">
                                   Prochaine étape
                                 </span>
                               )}
@@ -630,9 +630,9 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                           role="radio"
                           aria-checked={selected}
                           onClick={() => setActivePhotoType(opt.id)}
-                          className={`rounded-full px-4 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] ${selected
-                              ? 'bg-[#0A3D2E] text-[#F1DFB6]'
-                              : 'text-slate-600 hover:text-[#0A3D2E] dark:text-slate-400'
+                          className={`rounded-full px-4 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main ${selected
+                              ? 'bg-brand-main text-champagne'
+                              : 'text-slate-600 hover:text-brand-main dark:text-slate-400'
                             }`}
                         >
                           {opt.label}
@@ -654,7 +654,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                             }}
                             aria-label={`Agrandir la photo ${idx + 1}${p.categorie ? `, ${p.categorie}` : ''
                               }`}
-                            className="group relative block aspect-[4/3] w-full overflow-hidden rounded-2xl bg-slate-900 ring-1 ring-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] dark:ring-slate-800"
+                            className="group relative block aspect-[4/3] w-full overflow-hidden rounded-2xl bg-slate-900 ring-1 ring-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main dark:ring-slate-800"
                           >
                             <Image
                               src={p.url}
@@ -663,7 +663,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                               className="object-cover transition duration-300 group-hover:scale-[1.03] motion-reduce:transition-none"
                               unoptimized
                             />
-                            <span className="absolute inset-0 flex items-center justify-center bg-[#04140E]/0 text-white opacity-0 transition group-hover:bg-[#04140E]/40 group-hover:opacity-100 group-focus-visible:bg-[#04140E]/40 group-focus-visible:opacity-100">
+                            <span className="absolute inset-0 flex items-center justify-center bg-brand-dark/0 text-white opacity-0 transition group-hover:bg-brand-dark/40 group-hover:opacity-100 group-focus-visible:bg-brand-dark/40 group-focus-visible:opacity-100">
                               <Maximize2 className="h-5 w-5" />
                             </span>
                             <span className="absolute bottom-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
@@ -675,10 +675,10 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                     </ul>
                   ) : (
                     <div className={`${CARD} flex flex-col items-center py-12 text-center`}>
-                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0A3D2E] text-[#F1DFB6]">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-main text-champagne">
                         <Camera className="h-5 w-5" />
                       </span>
-                      <p style={DISPLAY_FONT} className="mt-4 text-lg text-[#0A3D2E] dark:text-[#F1DFB6]">
+                      <p style={DISPLAY_FONT} className="mt-4 text-lg text-brand-main dark:text-champagne">
                         Aucune photo
                       </p>
                       <p className={`mt-1 max-w-xs text-sm ${MUTED}`}>
@@ -697,7 +697,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h3 className={`text-sm font-semibold ${TEXT}`}>Ventilation financière</h3>
                     {reservation.modePaiement && (
-                      <span className="rounded-full bg-[#0A3D2E]/[0.07] px-2.5 py-1 text-xs font-medium text-[#0A3D2E] dark:text-[#F1DFB6]">
+                      <span className="rounded-full bg-brand-main/[0.07] px-2.5 py-1 text-xs font-medium text-brand-main dark:text-champagne">
                         Paiement : {humanize(reservation.modePaiement).toLowerCase()}
                       </span>
                     )}
@@ -724,16 +724,16 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                         aria-label={`Net hôte ${100 - commissionShare} %, commission AutoLoc ${commissionShare} %`}
                         className="flex h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
                       >
-                        <div className="bg-[#0A3D2E]" style={{ width: `${100 - commissionShare}%` }} />
-                        <div className="bg-[#F1DFB6]" style={{ width: `${commissionShare}%` }} />
+                        <div className="bg-brand-main" style={{ width: `${100 - commissionShare}%` }} />
+                        <div className="bg-champagne" style={{ width: `${commissionShare}%` }} />
                       </div>
                       <div className={`mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs ${MUTED}`}>
                         <span className="inline-flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-[#0A3D2E]" />
+                          <span className="h-2 w-2 rounded-full bg-brand-main" />
                           Net hôte {100 - commissionShare} %
                         </span>
                         <span className="inline-flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-[#F1DFB6]" />
+                          <span className="h-2 w-2 rounded-full bg-champagne" />
                           Commission {commissionShare} %
                         </span>
                       </div>
@@ -760,11 +760,11 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
           <aside className="space-y-5 self-start lg:sticky lg:top-0 lg:col-span-5">
             {/* Véhicule et période */}
             <div className={`${CARD} overflow-hidden p-0`}>
-              <div className="relative h-40 bg-[#0A3D2E]/10">
+              <div className="relative h-40 bg-brand-main/10">
                 {vehiclePhoto ? (
                   <Image src={vehiclePhoto} alt="" fill className="object-cover" unoptimized />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-[#0A3D2E]/40">
+                  <div className="flex h-full items-center justify-center text-brand-main/40">
                     <Car className="h-10 w-10" />
                   </div>
                 )}
@@ -774,7 +774,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
               </div>
 
               <div className="p-5">
-                <p style={DISPLAY_FONT} className="text-xl leading-tight text-[#0A3D2E] dark:text-[#F1DFB6]">
+                <p style={DISPLAY_FONT} className="text-xl leading-tight text-brand-main dark:text-champagne">
                   {reservation.vehicule?.marque} {reservation.vehicule?.modele}
                 </p>
                 <p className={`text-sm ${MUTED}`}>{reservation.vehicule?.ville || 'Sénégal'}</p>
@@ -798,7 +798,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                   <span className={`text-sm ${MUTED}`}>Total, {plural(nbJours, 'jour')}</span>
                   <span
                     style={DISPLAY_FONT}
-                    className="text-2xl leading-none tabular-nums text-[#0A3D2E] dark:text-[#F1DFB6]"
+                    className="text-2xl leading-none tabular-nums text-brand-main dark:text-champagne"
                   >
                     {formatCurrency(Number(reservation.prixTotal || 0))}
                   </span>
@@ -893,8 +893,8 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                   </div>
                 </div>
               ) : pendingAction ? (
-                <div className="mt-4 rounded-2xl border border-[#F1DFB6] bg-[#F1DFB6]/30 p-4">
-                  <p className="text-sm text-[#0A3D2E]">
+                <div className="mt-4 rounded-2xl border border-champagne bg-champagne/30 p-4">
+                  <p className="text-sm text-brand-main">
                     {pendingAction === 'CONFIRM'
                       ? "Vous confirmez la réservation à la place de l'hôte."
                       : 'Vous forcez la clôture de la location.'}{' '}
@@ -905,7 +905,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                       type="button"
                       onClick={() => setPendingAction(null)}
                       disabled={isMutating}
-                      className="rounded-xl px-4 py-2.5 text-sm font-medium text-[#0A3D2E] transition hover:bg-[#0A3D2E]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] disabled:opacity-50"
+                      className="rounded-xl px-4 py-2.5 text-sm font-medium text-brand-main transition hover:bg-brand-main/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main disabled:opacity-50"
                     >
                       Retour
                     </button>
@@ -913,7 +913,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                       type="button"
                       onClick={handleRunPending}
                       disabled={isMutating}
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0A3D2E] px-4 py-2.5 text-sm font-semibold text-[#F1DFB6] transition hover:bg-[#0D4B39] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-main px-4 py-2.5 text-sm font-semibold text-champagne transition hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isMutating ? (
                         <>
@@ -983,7 +983,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
         >
           <div className="flex items-center justify-between gap-4 px-5 py-4 text-white">
             <div className="min-w-0">
-              <p style={DISPLAY_FONT} className="truncate text-lg text-[#F1DFB6]">
+              <p style={DISPLAY_FONT} className="truncate text-lg text-champagne">
                 {activePhotos[lightboxIndex].categorie ||
                   `${activePhotoType === 'CHECKIN' ? 'Check-in' : 'Check-out'}, photo ${lightboxIndex + 1}`}
               </p>
@@ -996,7 +996,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
               type="button"
               onClick={() => setLightboxIndex(null)}
               aria-label="Fermer la visionneuse"
-              className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6]"
+              className="rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne"
             >
               <X className="h-6 w-6" />
             </button>
@@ -1025,7 +1025,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                     setLightboxIndex((lightboxIndex - 1 + activePhotos.length) % activePhotos.length)
                   }
                   aria-label="Photo précédente"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur transition hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6]"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur transition hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne"
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </button>
@@ -1033,7 +1033,7 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                   type="button"
                   onClick={() => setLightboxIndex((lightboxIndex + 1) % activePhotos.length)}
                   aria-label="Photo suivante"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur transition hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur transition hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne"
                 >
                   <ChevronRight className="h-6 w-6" />
                 </button>
@@ -1050,8 +1050,8 @@ export const AdminReservationInspectorModal: React.FC<AdminReservationInspectorM
                     onClick={() => setLightboxIndex(idx)}
                     aria-label={`Voir la photo ${idx + 1}`}
                     aria-current={idx === lightboxIndex}
-                    className={`relative block h-14 w-20 overflow-hidden rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F1DFB6] ${idx === lightboxIndex
-                        ? 'ring-2 ring-[#F1DFB6]'
+                    className={`relative block h-14 w-20 overflow-hidden rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-champagne ${idx === lightboxIndex
+                        ? 'ring-2 ring-champagne'
                         : 'opacity-60 hover:opacity-100'
                       }`}
                   >

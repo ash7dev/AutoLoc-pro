@@ -49,7 +49,7 @@ export const AdminGrowthInsights: React.FC<AdminGrowthInsightsProps> = ({
                 <Compass className="w-4.5 h-4.5" style={{ color: GOLD }} />
               </div>
               <div>
-                <h3 className="text-base font-normal text-[#041912] dark:text-white">Demande non satisfaite</h3>
+                <h3 className="text-base font-normal text-brand-dark dark:text-white">Demande non satisfaite</h3>
                 <p className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5">
                   Recherches à 0 résultat (manque d'offre)
                 </p>
@@ -101,7 +101,7 @@ export const AdminGrowthInsights: React.FC<AdminGrowthInsightsProps> = ({
                 <Repeat className="w-4.5 h-4.5" style={{ color: FOREST }} />
               </div>
               <div>
-                <h3 className="text-base font-normal text-[#041912] dark:text-white">Rétention & LTV</h3>
+                <h3 className="text-base font-normal text-brand-dark dark:text-white">Rétention & LTV</h3>
                 <p className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5">
                   Taux de réservation récurrente locataires
                 </p>
@@ -155,7 +155,7 @@ export const AdminGrowthInsights: React.FC<AdminGrowthInsightsProps> = ({
                 <ShieldCheck className="w-4.5 h-4.5" style={{ color: FOREST }} />
               </div>
               <div>
-                <h3 className="text-base font-normal text-[#041912] dark:text-white">Séquestre & escrow float</h3>
+                <h3 className="text-base font-normal text-brand-dark dark:text-white">Séquestre & escrow float</h3>
                 <p className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5">
                   Fonds immobilisés sur les comptes Wave/OM
                 </p>

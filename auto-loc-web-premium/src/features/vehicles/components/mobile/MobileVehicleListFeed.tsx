@@ -55,7 +55,7 @@ export const MobileVehicleListFeed: React.FC<MobileVehicleListFeedProps> = ({
             onClick={() => setCardLayout("horizontal")}
             className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
               cardLayout === "horizontal"
-                ? "bg-white text-[#0A3D2E] shadow-sm"
+                ? "bg-white text-brand-main shadow-sm"
                 : "text-slate-500 hover:text-slate-800"
             }`}
           >
@@ -67,7 +67,7 @@ export const MobileVehicleListFeed: React.FC<MobileVehicleListFeedProps> = ({
             onClick={() => setCardLayout("vertical")}
             className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
               cardLayout === "vertical"
-                ? "bg-white text-[#0A3D2E] shadow-sm"
+                ? "bg-white text-brand-main shadow-sm"
                 : "text-slate-500 hover:text-slate-800"
             }`}
           >
@@ -93,7 +93,7 @@ export const MobileVehicleListFeed: React.FC<MobileVehicleListFeedProps> = ({
       {hasMore && (
         <div ref={sentinelRef} className="py-6 flex items-center justify-center">
           {isLoadingMore ? (
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#0A3D2E] bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200 shadow-sm">
+            <div className="flex items-center gap-2 text-xs font-semibold text-brand-main bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200 shadow-sm">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span>Chargement des véhicules...</span>
             </div>

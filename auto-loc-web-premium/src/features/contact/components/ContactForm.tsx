@@ -49,9 +49,9 @@ export const ContactForm: React.FC = () => {
   };
 
   return (
-    <section className="rounded-3xl border border-[#041912]/8 bg-white p-6 sm:p-8 shadow-xs">
+    <section className="rounded-3xl border border-brand-dark/8 bg-white p-6 sm:p-8 shadow-xs">
       <div className="mb-6">
-        <h2 className="font-fraunces text-2xl font-normal text-[#041912] sm:text-3xl">
+        <h2 className="font-fraunces text-2xl font-normal text-brand-dark sm:text-3xl">
           Envoyez-nous un message
         </h2>
         <p className="mt-1.5 text-sm text-slate-500 font-medium">
@@ -61,13 +61,13 @@ export const ContactForm: React.FC = () => {
 
       {/* Success State */}
       {submitStatus === 'success' && (
-        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-[#0A3D2E]/15 bg-[#0A3D2E]/5 p-4 text-[#0A3D2E]">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#0A3D2E] text-[#F1DFB6]">
+        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-brand-main/15 bg-brand-main/5 p-4 text-brand-main">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-brand-main text-champagne">
             <Check className="h-4 w-4" />
           </div>
           <div>
             <p className="text-sm font-semibold">Message envoyé avec succès !</p>
-            <p className="mt-0.5 text-xs text-[#0A3D2E]/70">
+            <p className="mt-0.5 text-xs text-brand-main/70">
               Notre équipe à Dakar vous répondra sous 24h ouvrées. Vérifiez vos e-mails pour notre réponse.
             </p>
           </div>
@@ -97,7 +97,7 @@ export const ContactForm: React.FC = () => {
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Ex : Ousmane Diallo"
               required
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-[#041912] placeholder:text-slate-300 focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10 transition-colors"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-brand-dark placeholder:text-slate-300 focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/10 transition-colors"
             />
           </div>
 
@@ -113,7 +113,7 @@ export const ContactForm: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="exemple@domaine.com"
               required
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-[#041912] placeholder:text-slate-300 focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10 transition-colors"
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-brand-dark placeholder:text-slate-300 focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/10 transition-colors"
             />
           </div>
         </div>
@@ -129,7 +129,7 @@ export const ContactForm: React.FC = () => {
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             required
-            className="w-full appearance-none rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-[#041912] focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10 transition-colors bg-white"
+            className="w-full appearance-none rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-brand-dark focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/10 transition-colors bg-white"
           >
             <option value="" disabled>Sélectionnez un sujet…</option>
             {SUBJECTS.map((s) => (
@@ -151,7 +151,7 @@ export const ContactForm: React.FC = () => {
             placeholder="Décrivez votre demande en détail (numéro de réservation, problème rencontré, etc.)…"
             required
             rows={5}
-            className="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-[#041912] placeholder:text-slate-300 focus:border-[#0A3D2E] focus:outline-none focus:ring-2 focus:ring-[#0A3D2E]/10 transition-colors leading-relaxed"
+            className="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-[13.5px] font-medium text-brand-dark placeholder:text-slate-300 focus:border-brand-main focus:outline-none focus:ring-2 focus:ring-brand-main/10 transition-colors leading-relaxed"
           />
           <p className="mt-1 text-right text-[11px] text-slate-400">{message.length} / 2000 caractères</p>
         </div>
@@ -161,10 +161,10 @@ export const ContactForm: React.FC = () => {
           <button
             type="submit"
             disabled={isSubmitting || !fullName.trim() || !email.trim() || !subject || !message.trim()}
-            className="inline-flex items-center gap-2.5 rounded-xl bg-[#041912] px-6 py-3 text-[13px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-md"
+            className="inline-flex items-center gap-2.5 rounded-xl bg-brand-dark px-6 py-3 text-[13px] font-semibold text-champagne transition-colors hover:bg-brand-main disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-md"
           >
             {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin text-[#4ADE80]" />
+              <Loader2 className="h-4 w-4 animate-spin text-emerald-400" />
             ) : (
               <Send className="h-4 w-4" />
             )}

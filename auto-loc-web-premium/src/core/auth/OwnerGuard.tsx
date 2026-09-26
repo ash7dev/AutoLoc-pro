@@ -20,31 +20,31 @@ export const OwnerDashboardSkeleton: React.FC = () => {
       {/* 1. En-tête Salutation Skeleton */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="space-y-3">
-          <div className="h-9 w-64 rounded-2xl bg-[#0A3D2E]/[0.08]" />
-          <div className="h-4 w-40 rounded-xl bg-[#0A3D2E]/[0.05]" />
+          <div className="h-9 w-64 rounded-2xl bg-brand-main/[0.08]" />
+          <div className="h-4 w-40 rounded-xl bg-brand-main/[0.05]" />
         </div>
         <div className="hidden md:flex gap-3">
-          <div className="h-16 w-32 rounded-2xl bg-[#0A3D2E]/[0.06]" />
-          <div className="h-16 w-32 rounded-2xl bg-[#0A3D2E]/[0.06]" />
-          <div className="h-16 w-32 rounded-2xl bg-[#0A3D2E]/[0.06]" />
+          <div className="h-16 w-32 rounded-2xl bg-brand-main/[0.06]" />
+          <div className="h-16 w-32 rounded-2xl bg-brand-main/[0.06]" />
+          <div className="h-16 w-32 rounded-2xl bg-brand-main/[0.06]" />
         </div>
       </div>
 
       {/* 2. Hero Card Financier Skeleton */}
-      <div className="h-64 w-full rounded-3xl bg-[#0A3D2E]/[0.08]" />
+      <div className="h-64 w-full rounded-3xl bg-brand-main/[0.08]" />
 
       {/* 3. KPI Tiles Grid Skeleton */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div className="h-32 rounded-3xl bg-[#0A3D2E]/[0.06]" />
-        <div className="h-32 rounded-3xl bg-[#0A3D2E]/[0.06]" />
-        <div className="h-32 rounded-3xl bg-[#0A3D2E]/[0.06]" />
-        <div className="h-32 rounded-3xl bg-[#0A3D2E]/[0.06]" />
+        <div className="h-32 rounded-3xl bg-brand-main/[0.06]" />
+        <div className="h-32 rounded-3xl bg-brand-main/[0.06]" />
+        <div className="h-32 rounded-3xl bg-brand-main/[0.06]" />
+        <div className="h-32 rounded-3xl bg-brand-main/[0.06]" />
       </div>
 
       {/* 4. Graphiques & Performance Flotte Skeleton */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="h-72 rounded-3xl bg-[#0A3D2E]/[0.06] lg:col-span-2" />
-        <div className="h-72 rounded-3xl bg-[#0A3D2E]/[0.06] lg:col-span-1" />
+        <div className="h-72 rounded-3xl bg-brand-main/[0.06] lg:col-span-2" />
+        <div className="h-72 rounded-3xl bg-brand-main/[0.06] lg:col-span-1" />
       </div>
     </div>
   );
@@ -104,8 +104,8 @@ export const OwnerGuard: React.FC<OwnerGuardProps> = ({
   if (!isAuthenticated) {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center p-6 text-center animate-pulse">
-        <div className="h-12 w-12 rounded-2xl bg-[#0A3D2E]/[0.08]" />
-        <div className="mt-4 h-4 w-48 rounded-xl bg-[#0A3D2E]/[0.05]" />
+        <div className="h-12 w-12 rounded-2xl bg-brand-main/[0.08]" />
+        <div className="mt-4 h-4 w-48 rounded-xl bg-brand-main/[0.05]" />
       </div>
     );
   }

@@ -167,7 +167,7 @@ export const TenantBookingTimelineCard: React.FC<TenantBookingTimelineCardProps>
       case 'CREATED':
         return <Clock className="w-4 h-4 text-emerald-800" />;
       case 'PAYMENT':
-        return <CreditCard className="w-4 h-4 text-[#4ADE80]" />;
+        return <CreditCard className="w-4 h-4 text-emerald-400" />;
       case 'CONFIRMED':
         return <CheckCircle2 className="w-4 h-4 text-emerald-600" />;
       case 'CHECKIN':
@@ -186,7 +186,7 @@ export const TenantBookingTimelineCard: React.FC<TenantBookingTimelineCardProps>
   const getItemBadgeStyle = (type: TimelineItem['type']) => {
     switch (type) {
       case 'PAYMENT':
-        return 'bg-[#041912] border-[#4ADE80]/40 text-[#4ADE80]';
+        return 'bg-brand-dark border-[#4ADE80]/40 text-emerald-400';
       case 'DISPUTE':
       case 'CANCELLED':
         return 'bg-rose-50 border-rose-200 text-rose-700';
@@ -200,17 +200,16 @@ export const TenantBookingTimelineCard: React.FC<TenantBookingTimelineCardProps>
   };
 
   return (
-    <div className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm space-y-5 text-[#041912]">
+    <div className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm space-y-5 text-brand-dark">
       {/* En-tête */}
       <div className="flex items-center justify-between gap-4 flex-wrap pb-3 border-b border-slate-100">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 text-[#0A3D2E] flex items-center justify-center shrink-0 shadow-xs">
-            <Clock className="w-5 h-5 text-[#0A3D2E]" />
+          <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 text-brand-main flex items-center justify-center shrink-0 shadow-xs">
+            <Clock className="w-5 h-5 text-brand-main" />
           </div>
           <div>
             <h3
-              className="font-fraunces text-xl text-[#041912] font-normal tracking-tight"
-              style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+              className="font-fraunces text-xl text-brand-dark font-normal tracking-tight"
             >
               Historique & Suivi d’activité
             </h3>
@@ -245,8 +244,7 @@ export const TenantBookingTimelineCard: React.FC<TenantBookingTimelineCardProps>
             <div className="flex-1 space-y-1 bg-slate-50/70 hover:bg-slate-50 rounded-2xl p-3.5 border border-slate-200/70 transition-colors">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <p
-                  className="font-fraunces text-base font-normal text-[#041912] tracking-tight leading-snug"
-                  style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                  className="font-fraunces text-base font-normal text-brand-dark tracking-tight leading-snug"
                 >
                   {item.titre}
                 </p>

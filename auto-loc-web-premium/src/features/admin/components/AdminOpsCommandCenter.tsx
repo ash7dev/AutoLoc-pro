@@ -44,7 +44,7 @@ export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ da
   return (
     <div className="space-y-4" style={fontStyle}>
       <div>
-        <h2 className="text-lg font-normal text-[#041912] dark:text-white flex items-center gap-2">
+        <h2 className="text-lg font-normal text-brand-dark dark:text-white flex items-center gap-2">
           <Clock className="w-4.5 h-4.5" style={{ color: FOREST }} />
           Centre de commande & SLA opérationnel
         </h2>
@@ -62,7 +62,7 @@ export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ da
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(178, 124, 45, 0.1)' }}>
                   <UserCheck className="w-4 h-4" style={{ color: GOLD }} />
                 </div>
-                <span className="text-xs font-normal text-[#041912] dark:text-slate-200">Vérification KYC</span>
+                <span className="text-xs font-normal text-brand-dark dark:text-slate-200">Vérification KYC</span>
               </div>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium tabular-nums" style={{ backgroundColor: 'rgba(178, 124, 45, 0.12)', color: GOLD }}>
                 {kyc.pendingCount}
@@ -90,7 +90,7 @@ export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ da
                     className="p-2.5 rounded-xl bg-slate-50/60 dark:bg-slate-800/50 flex items-center justify-between text-xs border border-slate-200/60 dark:border-slate-800 hover:border-[#b27c2d]/50 cursor-pointer transition-colors"
                   >
                     <div className="truncate pr-2">
-                      <div className="font-normal text-[#041912] dark:text-white truncate">{item.name}</div>
+                      <div className="font-normal text-brand-dark dark:text-white truncate">{item.name}</div>
                       <div className="text-[11px] font-normal text-slate-500 truncate">{item.phone || item.email}</div>
                     </div>
                     <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0" style={{ backgroundColor: 'rgba(178, 124, 45, 0.1)', color: GOLD }}>
@@ -120,7 +120,7 @@ export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ da
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(10, 61, 46, 0.08)' }}>
                   <Car className="w-4 h-4" style={{ color: FOREST }} />
                 </div>
-                <span className="text-xs font-normal text-[#041912] dark:text-slate-200">Modération annonces</span>
+                <span className="text-xs font-normal text-brand-dark dark:text-slate-200">Modération annonces</span>
               </div>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium tabular-nums" style={{ backgroundColor: 'rgba(10, 61, 46, 0.08)', color: FOREST }}>
                 {vehicles.pendingCount}
@@ -146,10 +146,10 @@ export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ da
                         waitHours: v.waitHours,
                       })
                     }
-                    className="p-2.5 rounded-xl bg-slate-50/60 dark:bg-slate-800/50 flex items-center justify-between text-xs border border-slate-200/60 dark:border-slate-800 hover:border-[#0A3D2E]/40 cursor-pointer transition-colors"
+                    className="p-2.5 rounded-xl bg-slate-50/60 dark:bg-slate-800/50 flex items-center justify-between text-xs border border-slate-200/60 dark:border-slate-800 hover:border-brand-main/40 cursor-pointer transition-colors"
                   >
                     <div className="truncate pr-2">
-                      <div className="font-normal text-[#041912] dark:text-white truncate">{v.title}</div>
+                      <div className="font-normal text-brand-dark dark:text-white truncate">{v.title}</div>
                       <div className="text-[11px] font-normal text-slate-500">{v.city} • Hôte : {v.ownerName}</div>
                     </div>
                     <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0" style={{ backgroundColor: 'rgba(10, 61, 46, 0.08)', color: FOREST }}>
@@ -179,7 +179,7 @@ export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ da
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(74, 95, 117, 0.1)' }}>
                   <Smartphone className="w-4 h-4" style={{ color: SLATE }} />
                 </div>
-                <span className="text-xs font-normal text-[#041912] dark:text-slate-200">Payouts Wave / OM</span>
+                <span className="text-xs font-normal text-brand-dark dark:text-slate-200">Payouts Wave / OM</span>
               </div>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium tabular-nums" style={{ backgroundColor: 'rgba(74, 95, 117, 0.12)', color: SLATE }}>
                 {withdrawals.pendingCount}
@@ -208,7 +208,7 @@ export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ da
                     className="p-2.5 rounded-xl bg-slate-50/60 dark:bg-slate-800/50 flex items-center justify-between text-xs border border-slate-200/60 dark:border-slate-800 hover:border-[#4a5f75]/50 cursor-pointer transition-colors"
                   >
                     <div className="truncate pr-2">
-                      <div className="font-normal text-[#041912] dark:text-white truncate">{w.userName}</div>
+                      <div className="font-normal text-brand-dark dark:text-white truncate">{w.userName}</div>
                       <div className="text-[11px] font-normal text-slate-500">{w.method} • {w.recipient}</div>
                     </div>
                     <span className="text-[10px] font-medium px-2 py-0.5 rounded-md shrink-0" style={{ backgroundColor: 'rgba(74, 95, 117, 0.1)', color: SLATE }}>
@@ -238,7 +238,7 @@ export const AdminOpsCommandCenter: React.FC<AdminOpsCommandCenterProps> = ({ da
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(161, 61, 61, 0.1)' }}>
                   <AlertTriangle className="w-4 h-4" style={{ color: RUST }} />
                 </div>
-                <span className="text-xs font-normal text-[#041912] dark:text-slate-200">Litiges & sinistres</span>
+                <span className="text-xs font-normal text-brand-dark dark:text-slate-200">Litiges & sinistres</span>
               </div>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium tabular-nums" style={{ backgroundColor: 'rgba(161, 61, 61, 0.12)', color: RUST }}>
                 {disputes.pendingCount}

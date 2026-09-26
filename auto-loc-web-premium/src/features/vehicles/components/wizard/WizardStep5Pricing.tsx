@@ -54,7 +54,7 @@ export const WizardStep5Pricing: React.FC<WizardStep5PricingProps> = ({ data, on
     <div className="space-y-5 sm:space-y-6">
       {/* Hero Header */}
       <div className="text-center space-y-1 sm:space-y-2 pb-1 sm:pb-2">
-        <div className="mx-auto hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-[#041912] border border-[#4ADE80]/30 text-[#4ADE80] shadow-md">
+        <div className="mx-auto hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-dark border border-[#4ADE80]/30 text-emerald-400 shadow-md">
           <Banknote className="h-6 w-6" strokeWidth={2.2} />
         </div>
         <h2 className="font-fraunces font-normal text-xl sm:text-3xl text-slate-900 tracking-tight">Tarification & Revenus</h2>
@@ -66,7 +66,7 @@ export const WizardStep5Pricing: React.FC<WizardStep5PricingProps> = ({ data, on
       {/* Base Daily Price Input Card */}
       <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs">
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 font-fraunces">
-          <Banknote className="h-4 w-4 text-[#059669]" />
+          <Banknote className="h-4 w-4 text-emerald-600" />
           <span>Prix de base par jour *</span>
         </label>
 
@@ -78,7 +78,7 @@ export const WizardStep5Pricing: React.FC<WizardStep5PricingProps> = ({ data, on
             placeholder="25000"
             className="w-full min-w-0 flex-1 bg-transparent font-display text-xl sm:text-2xl font-bold text-slate-900 focus:outline-none"
           />
-          <span className="shrink-0 whitespace-nowrap font-display text-xs sm:text-sm font-bold text-[#059669] bg-[#059669]/10 px-2.5 py-1 rounded-xl">
+          <span className="shrink-0 whitespace-nowrap font-display text-xs sm:text-sm font-bold text-emerald-600 bg-emerald-600/10 px-2.5 py-1 rounded-xl">
             FCFA / jour
           </span>
         </div>
@@ -96,7 +96,7 @@ export const WizardStep5Pricing: React.FC<WizardStep5PricingProps> = ({ data, on
                   onClick={() => onChange({ prixParJour: price })}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                     isSelected
-                      ? 'bg-[#041912] text-[#4ADE80] border-[#041912]'
+                      ? 'bg-brand-dark text-emerald-400 border-brand-dark'
                       : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                   }`}
                 >
@@ -109,10 +109,10 @@ export const WizardStep5Pricing: React.FC<WizardStep5PricingProps> = ({ data, on
 
         {/* Host Net Earnings Simulator Box */}
         {prixParJour > 0 && (
-          <div className="flex items-center gap-3 rounded-xl bg-[#041912] border border-[#4ADE80]/30 p-3.5 text-white">
-            <Coins className="h-5 w-5 text-[#4ADE80] shrink-0" />
+          <div className="flex items-center gap-3 rounded-xl bg-brand-dark border border-[#4ADE80]/30 p-3.5 text-white">
+            <Coins className="h-5 w-5 text-emerald-400 shrink-0" />
             <div className="text-xs space-y-0.5 min-w-0">
-              <p className="font-bold text-[#4ADE80] text-xs sm:text-sm">
+              <p className="font-bold text-emerald-400 text-xs sm:text-sm">
                 Gain estimé : ~{netEarnings3Days.toLocaleString('fr-FR')} FCFA net sur 3 jours
               </p>
               <p className="text-[11px] text-emerald-200/70 leading-normal">
@@ -131,7 +131,7 @@ export const WizardStep5Pricing: React.FC<WizardStep5PricingProps> = ({ data, on
           className="flex w-full items-center justify-between text-left"
         >
           <div className="flex items-center gap-2">
-            <TrendingDown className="h-4 w-4 text-[#059669]" />
+            <TrendingDown className="h-4 w-4 text-emerald-600" />
             <h3 className="font-fraunces text-sm font-semibold text-slate-900">Réductions Longue Durée</h3>
             {tiers.length > 0 && !discountsExpanded && (
               <span className="rounded-full bg-[#F0FDF4] px-2 py-0.5 text-[10px] font-bold text-[#047857] border border-[#A7F3D0]">
@@ -139,7 +139,7 @@ export const WizardStep5Pricing: React.FC<WizardStep5PricingProps> = ({ data, on
               </span>
             )}
           </div>
-          {discountsExpanded ? <ChevronUp className="h-4 w-4 text-[#059669]" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+          {discountsExpanded ? <ChevronUp className="h-4 w-4 text-emerald-600" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
         </button>
 
         {discountsExpanded && (
@@ -192,7 +192,7 @@ export const WizardStep5Pricing: React.FC<WizardStep5PricingProps> = ({ data, on
 
                       <div className="flex items-center justify-between sm:justify-end gap-2 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
                         {pct > 0 && (
-                          <span className="rounded-lg bg-[#041912] px-2.5 py-1 text-[11px] font-bold text-[#4ADE80] border border-[#4ADE80]/30 shrink-0">
+                          <span className="rounded-lg bg-brand-dark px-2.5 py-1 text-[11px] font-bold text-emerald-400 border border-[#4ADE80]/30 shrink-0">
                             -{pct}%
                           </span>
                         )}

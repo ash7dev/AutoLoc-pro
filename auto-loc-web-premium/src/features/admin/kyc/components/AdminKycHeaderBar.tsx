@@ -58,7 +58,7 @@ export const AdminKycHeaderBar: React.FC<AdminKycHeaderBarProps> = ({
             <UserCheck className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-normal text-[#041912] dark:text-white">Modération & vérification KYC</h1>
+            <h1 className="text-xl font-normal text-brand-dark dark:text-white">Modération & vérification KYC</h1>
             <p className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5">
               Contrôle de conformité des cartes d'identité, permis de conduire et selfies
             </p>
@@ -68,7 +68,7 @@ export const AdminKycHeaderBar: React.FC<AdminKycHeaderBarProps> = ({
         <button
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="shrink-0 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:text-[#041912] dark:hover:text-white transition-colors flex items-center gap-2 text-xs font-medium"
+          className="shrink-0 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:text-brand-dark dark:hover:text-white transition-colors flex items-center gap-2 text-xs font-medium"
         >
           <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           <span>Actualiser</span>

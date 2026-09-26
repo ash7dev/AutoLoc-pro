@@ -108,16 +108,16 @@ export const OwnerMobileQuickActions: React.FC = () => {
               onClick={(e) => handleActionClick(action.key, action.href, e)}
               className={`group flex items-center justify-between gap-4 rounded-2xl border p-4 shadow-sm transition-all duration-200 active:scale-[0.99] ${
                 isForest
-                  ? 'border-[#0A3D2E] bg-[#0A3D2E] text-[#F1DFB6] active:bg-[#0F4F3B]'
-                  : 'border-[#0A3D2E]/10 bg-white text-[#041912] hover:border-[#0A3D2E]/30'
+                  ? 'border-brand-main bg-brand-main text-champagne active:bg-[#0F4F3B]'
+                  : 'border-brand-main/10 bg-white text-brand-dark hover:border-brand-main/30'
               }`}
             >
               <div className="flex items-center gap-3.5 min-w-0">
                 <span
                   className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-transform duration-200 group-hover:scale-105 ${
                     isForest
-                      ? 'bg-[#F1DFB6] text-[#0A3D2E]'
-                      : 'bg-[#0A3D2E] text-[#F1DFB6]'
+                      ? 'bg-champagne text-brand-main'
+                      : 'bg-brand-main text-champagne'
                   }`}
                 >
                   <Icon className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
@@ -125,14 +125,14 @@ export const OwnerMobileQuickActions: React.FC = () => {
                 <div className="min-w-0 space-y-0.5">
                   <h3
                     className={`font-display text-sm font-semibold tracking-tight ${
-                      isForest ? 'text-[#F1DFB6]' : 'text-[#041912]'
+                      isForest ? 'text-champagne' : 'text-brand-dark'
                     }`}
                   >
                     {action.title}
                   </h3>
                   <p
                     className={`text-xs truncate leading-snug ${
-                      isForest ? 'text-[#F1DFB6]/75' : 'text-slate-500'
+                      isForest ? 'text-champagne/75' : 'text-slate-500'
                     }`}
                   >
                     {action.subtitle}
@@ -141,7 +141,7 @@ export const OwnerMobileQuickActions: React.FC = () => {
               </div>
               <ChevronRight
                 className={`h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 ${
-                  isForest ? 'text-[#F1DFB6]/60' : 'text-slate-400'
+                  isForest ? 'text-champagne/60' : 'text-slate-400'
                 }`}
                 aria-hidden="true"
               />

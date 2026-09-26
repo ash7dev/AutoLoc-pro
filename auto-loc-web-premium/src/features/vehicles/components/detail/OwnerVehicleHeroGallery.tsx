@@ -81,7 +81,7 @@ export const OwnerVehicleHeroGallery: React.FC<OwnerVehicleHeroGalleryProps> = (
 
   return (
     <>
-      <div className="relative overflow-hidden rounded-3xl bg-[#041912] shadow-xl text-white">
+      <div className="relative overflow-hidden rounded-3xl bg-brand-dark shadow-xl text-white">
         {/* Mobile View: Single Image Carousel with Overlay Info */}
         <div className="relative h-72 w-full sm:hidden">
           <Image
@@ -102,7 +102,7 @@ export const OwnerVehicleHeroGallery: React.FC<OwnerVehicleHeroGalleryProps> = (
               <span>{badge.label}</span>
             </span>
 
-            <span className="rounded-full bg-[#0A3D2E]/90 border border-[#059669]/40 px-3 py-1 text-xs font-bold text-[#F1DFB6] backdrop-blur-md shadow-xs">
+            <span className="rounded-full bg-brand-main/90 border border-[#059669]/40 px-3 py-1 text-xs font-bold text-champagne backdrop-blur-md shadow-xs">
               {formatCurrency(vehicle.prixParJour || 0)} / j
             </span>
           </div>
@@ -114,7 +114,7 @@ export const OwnerVehicleHeroGallery: React.FC<OwnerVehicleHeroGalleryProps> = (
                 {marque} {modele} <span className="text-sm font-sans text-emerald-300/80">{annee}</span>
               </h2>
               {vehicle.immatriculation && (
-                <span className="mt-1 inline-block font-mono text-xs font-semibold text-[#4ADE80] bg-[#041912]/80 px-2 py-0.5 rounded border border-[#4ADE80]/30">
+                <span className="mt-1 inline-block font-mono text-xs font-semibold text-emerald-400 bg-brand-dark/80 px-2 py-0.5 rounded border border-[#4ADE80]/30">
                   {vehicle.immatriculation}
                 </span>
               )}
@@ -124,9 +124,9 @@ export const OwnerVehicleHeroGallery: React.FC<OwnerVehicleHeroGalleryProps> = (
               <button
                 type="button"
                 onClick={() => setIsLightboxOpen(true)}
-                className="flex items-center gap-1.5 rounded-full bg-[#041912]/80 border border-white/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm"
+                className="flex items-center gap-1.5 rounded-full bg-brand-dark/80 border border-white/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm"
               >
-                <Camera className="h-3.5 w-3.5 text-[#4ADE80]" />
+                <Camera className="h-3.5 w-3.5 text-emerald-400" />
                 <span>{displayPhotos.length} photos</span>
               </button>
             )}
@@ -167,12 +167,12 @@ export const OwnerVehicleHeroGallery: React.FC<OwnerVehicleHeroGalleryProps> = (
               <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
                 <div className="space-y-1">
                   <h1 className="font-fraunces text-3xl lg:text-4xl font-normal leading-tight text-white">
-                    {marque} <span className="text-[#4ADE80] font-normal">{modele}</span>{' '}
+                    {marque} <span className="text-emerald-400 font-normal">{modele}</span>{' '}
                     <span className="text-lg font-sans text-slate-300 font-light">{annee}</span>
                   </h1>
                   <div className="flex items-center gap-3">
                     {vehicle.immatriculation && (
-                      <span className="font-mono text-xs font-bold text-[#4ADE80] bg-[#0A3D2E]/90 px-2.5 py-0.5 rounded-md border border-[#059669]/50 tracking-wider">
+                      <span className="font-mono text-xs font-bold text-emerald-400 bg-brand-main/90 px-2.5 py-0.5 rounded-md border border-[#059669]/50 tracking-wider">
                         {vehicle.immatriculation}
                       </span>
                     )}
@@ -186,7 +186,7 @@ export const OwnerVehicleHeroGallery: React.FC<OwnerVehicleHeroGalleryProps> = (
                   type="button"
                   className="flex items-center gap-2 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2 text-xs font-semibold text-white backdrop-blur-md transition-colors"
                 >
-                  <Eye className="h-4 w-4 text-[#4ADE80]" />
+                  <Eye className="h-4 w-4 text-emerald-400" />
                   <span>Agrandir la galerie</span>
                 </button>
               </div>
@@ -213,7 +213,7 @@ export const OwnerVehicleHeroGallery: React.FC<OwnerVehicleHeroGalleryProps> = (
 
                   {/* Icon view overlay */}
                   {idx === 1 && displayPhotos.length > 3 && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-[#041912]/60 backdrop-blur-xs font-fraunces text-lg font-normal text-[#F1DFB6]">
+                    <div className="absolute inset-0 flex items-center justify-center bg-brand-dark/60 backdrop-blur-xs font-fraunces text-lg font-normal text-champagne">
                       +{displayPhotos.length - 3} photos
                     </div>
                   )}
@@ -222,8 +222,8 @@ export const OwnerVehicleHeroGallery: React.FC<OwnerVehicleHeroGalleryProps> = (
 
               {/* Si une seule photo principale existe, remplir le slot secondaire proprement */}
               {displayPhotos.length < 2 && (
-                <div className="relative row-span-2 flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#059669]/30 bg-[#0A3D2E]/20 p-6 text-center text-slate-400">
-                  <Camera className="h-8 w-8 text-[#059669]/60 mb-2" />
+                <div className="relative row-span-2 flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#059669]/30 bg-brand-main/20 p-6 text-center text-slate-400">
+                  <Camera className="h-8 w-8 text-emerald-600/60 mb-2" />
                   <span className="text-xs font-medium text-slate-300">Aucune photo secondaire</span>
                 </div>
               )}

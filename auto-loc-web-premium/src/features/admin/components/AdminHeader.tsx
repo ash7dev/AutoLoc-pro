@@ -62,7 +62,7 @@ export const AdminHeader: React.FC = () => {
           </div>
 
           <h1
-            className="text-lg sm:text-2xl font-fraunces font-normal tracking-tight text-[#041912] truncate flex items-center gap-2"
+            className="text-lg sm:text-2xl font-fraunces font-normal tracking-tight text-brand-dark truncate flex items-center gap-2"
             style={FRAUNCES_STYLE}
           >
             <span>{currentNav.title}</span>
@@ -142,7 +142,7 @@ export const AdminHeader: React.FC = () => {
           {/* Capsule Profil Administrateur en Fraunces */}
           {user && (
             <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/80 p-1.5 pr-3 rounded-2xl shadow-xs">
-              <div className="w-8 h-8 rounded-xl bg-[#041912] text-[#F1DFB6] font-fraunces font-normal flex items-center justify-center text-xs shadow-sm shrink-0" style={FRAUNCES_STYLE}>
+              <div className="w-8 h-8 rounded-xl bg-brand-dark text-champagne font-fraunces font-normal flex items-center justify-center text-xs shadow-sm shrink-0" style={FRAUNCES_STYLE}>
                 {user.prenom?.[0] || 'A'}
               </div>
 

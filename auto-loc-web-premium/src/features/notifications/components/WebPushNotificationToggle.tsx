@@ -57,7 +57,7 @@ export function WebPushNotificationToggle() {
           <div
             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-colors ${
               isSubscribed
-                ? 'bg-[#0A3D2E] text-[#F1DFB6]'
+                ? 'bg-brand-main text-champagne'
                 : 'bg-slate-100 text-slate-500'
             }`}
           >
@@ -66,7 +66,7 @@ export function WebPushNotificationToggle() {
 
           <div>
             <div className="flex items-center gap-2">
-              <h4 className="text-base font-semibold text-[#041912]">Notifications Web Push VAPID</h4>
+              <h4 className="text-base font-semibold text-brand-dark">Notifications Web Push VAPID</h4>
               <span
                 className={`rounded-full px-2.5 py-0.5 text-[10.5px] font-bold ${
                   isSubscribed
@@ -98,7 +98,7 @@ export function WebPushNotificationToggle() {
           className={`shrink-0 inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold transition-all cursor-pointer shadow-xs disabled:opacity-50 ${
             isSubscribed
               ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
-              : 'bg-[#0A3D2E] text-[#F1DFB6] hover:bg-[#0F4F3B]'
+              : 'bg-brand-main text-champagne hover:bg-forest-700'
           }`}
         >
           {isLoading ? (

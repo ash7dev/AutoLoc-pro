@@ -177,7 +177,7 @@ export const OwnerBookingTimelineCard: React.FC<OwnerBookingTimelineCardProps> =
   const getItemIcon = (type: TimelineItem['type']) => {
     switch (type) {
       case 'CREATED':
-        return <Clock className="w-4 h-4 text-[#0A3D2E]" />;
+        return <Clock className="w-4 h-4 text-brand-main" />;
       case 'PAYMENT':
         return <CreditCard className="w-4 h-4 text-emerald-600" />;
       case 'CONFIRMED':
@@ -212,15 +212,15 @@ export const OwnerBookingTimelineCard: React.FC<OwnerBookingTimelineCardProps> =
   };
 
   return (
-    <div className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm space-y-5 text-[#041912]">
+    <div className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm space-y-5 text-brand-dark">
       {/* ── En-tête de la carte ─────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-4 flex-wrap pb-3 border-b border-slate-100">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#0A3D2E] text-[#F1DFB6] flex items-center justify-center shrink-0 shadow-xs">
-            <Clock className="w-5 h-5 text-[#F1DFB6]" />
+          <div className="w-10 h-10 rounded-2xl bg-brand-main text-champagne flex items-center justify-center shrink-0 shadow-xs">
+            <Clock className="w-5 h-5 text-champagne" />
           </div>
           <div>
-            <h3 className="font-fraunces text-xl text-[#041912] font-normal tracking-tight">
+            <h3 className="font-fraunces text-xl text-brand-dark font-normal tracking-tight">
               Historique & Suivi d’activité
             </h3>
             <p className="text-xs text-slate-500 font-medium">
@@ -253,7 +253,7 @@ export const OwnerBookingTimelineCard: React.FC<OwnerBookingTimelineCardProps> =
             {/* Contenu de l'événement */}
             <div className="flex-1 space-y-1 bg-slate-50/80 hover:bg-slate-50 rounded-2xl p-3.5 border border-slate-200/80 transition-colors">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <p className="font-fraunces text-base font-normal text-[#041912] tracking-tight leading-snug">
+                <p className="font-fraunces text-base font-normal text-brand-dark tracking-tight leading-snug">
                   {item.titre}
                 </p>
                 <span className="font-sans text-[11px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200/80">

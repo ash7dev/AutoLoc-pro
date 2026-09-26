@@ -62,7 +62,7 @@ export function VehicleMainSpecsCard({
       aria-label="Caractéristiques clés"
       className="bg-white border border-slate-200/80 rounded-[28px] overflow-hidden shadow-sm"
     >
-      <h3 className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 text-lg text-[#041912] font-fraunces font-normal">
+      <h3 className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 text-lg text-brand-dark font-fraunces font-normal">
         Caractéristiques clés
       </h3>
 
@@ -76,12 +76,12 @@ export function VehicleMainSpecsCard({
               className="flex items-center gap-4 sm:flex-col sm:items-start sm:gap-4 px-5 sm:px-6 py-4 sm:py-5"
             >
               <Icon
-                className="w-6 h-6 shrink-0 text-[#0A3D2E]"
+                className="w-6 h-6 shrink-0 text-brand-main"
                 strokeWidth={1.5}
                 aria-hidden="true"
               />
               <div>
-                <p className="text-xl leading-tight text-[#0A3D2E] font-display">
+                <p className="text-xl leading-tight text-brand-main font-display">
                   {spec.value}
                 </p>
                 <p className="mt-0.5 text-sm text-slate-500">{spec.label}</p>
@@ -92,8 +92,8 @@ export function VehicleMainSpecsCard({
       </div>
 
       {/* Conditions de location : bandeau champagne, distinct de la fiche */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-8 px-5 sm:px-6 py-4 bg-[#F1DFB6]/35 border-t border-[#F1DFB6]">
-        <p className="text-sm font-semibold text-[#0A3D2E]">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-8 px-5 sm:px-6 py-4 bg-champagne/35 border-t border-champagne">
+        <p className="text-sm font-semibold text-brand-main">
           Conditions de location
         </p>
         <ul className="flex flex-col sm:flex-row gap-2 sm:gap-6">
@@ -105,7 +105,7 @@ export function VehicleMainSpecsCard({
                 className="flex items-center gap-2 text-sm text-slate-700"
               >
                 <Icon
-                  className="w-4 h-4 shrink-0 text-[#0A3D2E]"
+                  className="w-4 h-4 shrink-0 text-brand-main"
                   strokeWidth={1.75}
                   aria-hidden="true"
                 />

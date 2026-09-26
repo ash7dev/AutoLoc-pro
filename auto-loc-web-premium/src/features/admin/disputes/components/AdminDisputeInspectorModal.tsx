@@ -218,7 +218,7 @@ export const AdminDisputeInspectorModal: React.FC<AdminDisputeInspectorModalProp
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <Camera className="w-4 h-4 text-[#0A3D2E] dark:text-[#F1DFB6]" />
+                <Camera className="w-4 h-4 text-brand-main dark:text-champagne" />
                 <span>Preuves Photos : Comparatif État des Lieux</span>
               </h3>
             </div>
@@ -274,7 +274,7 @@ export const AdminDisputeInspectorModal: React.FC<AdminDisputeInspectorModalProp
           {isPending ? (
             <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 space-y-4">
               <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-[#0A3D2E] dark:text-[#F1DFB6]" />
+                <ShieldCheck className="w-4 h-4 text-brand-main dark:text-champagne" />
                 <span>Panneau de Décision & Arbitrage Financier</span>
               </div>
 
@@ -286,7 +286,7 @@ export const AdminDisputeInspectorModal: React.FC<AdminDisputeInspectorModalProp
                   onClick={() => setDecisionType('FONDE')}
                   className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 ${
                     decisionType === 'FONDE'
-                      ? 'border-[#0A3D2E] bg-[#0A3D2E]/10 dark:bg-[#F1DFB6]/20 text-[#0A3D2E] dark:text-[#F1DFB6] font-semibold'
+                      ? 'border-brand-main bg-brand-main/10 dark:bg-champagne/20 text-brand-main dark:text-champagne font-semibold'
                       : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
                   }`}
                 >
@@ -376,7 +376,7 @@ export const AdminDisputeInspectorModal: React.FC<AdminDisputeInspectorModalProp
                   </>
                 ) : (
                   <>
-                    <ShieldCheck className="w-4 h-4 text-[#F1DFB6]" />
+                    <ShieldCheck className="w-4 h-4 text-champagne" />
                     <span>Valider et appliquer l'arbitrage officiel</span>
                   </>
                 )}

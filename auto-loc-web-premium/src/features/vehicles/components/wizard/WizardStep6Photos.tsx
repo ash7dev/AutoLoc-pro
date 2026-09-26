@@ -67,7 +67,7 @@ export const WizardStep6Photos: React.FC<WizardStep6PhotosProps> = ({ data, onCh
 
       {/* Hero Header */}
       <div className="text-center space-y-1 sm:space-y-2 pb-1 sm:pb-2">
-        <div className="hidden sm:flex mx-auto h-12 w-12 items-center justify-center rounded-2xl bg-[#041912] border border-[#4ADE80]/30 text-[#4ADE80] shadow-md">
+        <div className="hidden sm:flex mx-auto h-12 w-12 items-center justify-center rounded-2xl bg-brand-dark border border-[#4ADE80]/30 text-emerald-400 shadow-md">
           <Camera className="h-6 w-6" strokeWidth={2.2} />
         </div>
         <h2 className="font-fraunces font-normal text-xl sm:text-3xl text-slate-900 tracking-tight">Photos & Documents</h2>
@@ -82,7 +82,7 @@ export const WizardStep6Photos: React.FC<WizardStep6PhotosProps> = ({ data, onCh
       <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ImageIcon className="h-4 w-4 text-[#059669]" />
+            <ImageIcon className="h-4 w-4 text-emerald-600" />
             <h3 className="font-fraunces text-sm font-semibold text-slate-900">Galerie du Véhicule *</h3>
           </div>
           <button
@@ -105,8 +105,8 @@ export const WizardStep6Photos: React.FC<WizardStep6PhotosProps> = ({ data, onCh
 
                 {/* Badge Cover */}
                 {isCover ? (
-                  <div className="absolute top-2 left-2 flex items-center gap-1 rounded-md bg-[#041912] px-2 py-1 text-[9px] font-bold text-[#4ADE80] border border-[#4ADE80]/40">
-                    <Crown className="h-3 w-3 text-[#4ADE80]" />
+                  <div className="absolute top-2 left-2 flex items-center gap-1 rounded-md bg-brand-dark px-2 py-1 text-[9px] font-bold text-emerald-400 border border-[#4ADE80]/40">
+                    <Crown className="h-3 w-3 text-emerald-400" />
                     <span>COUVERTURE</span>
                   </div>
                 ) : (
@@ -136,7 +136,7 @@ export const WizardStep6Photos: React.FC<WizardStep6PhotosProps> = ({ data, onCh
             onClick={() => photoInputRef.current?.click()}
             className="flex flex-col items-center justify-center gap-2 aspect-video rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-500 hover:border-[#059669] hover:bg-[#F0FDF4] transition-all"
           >
-            <Plus className="h-6 w-6 text-[#059669]" />
+            <Plus className="h-6 w-6 text-emerald-600" />
             <span className="text-xs font-semibold">Ajouter des photos</span>
           </button>
         </div>
@@ -146,7 +146,7 @@ export const WizardStep6Photos: React.FC<WizardStep6PhotosProps> = ({ data, onCh
       {!isEditMode && (
         <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-[#059669]" />
+            <FileText className="h-4 w-4 text-emerald-600" />
             <h3 className="font-fraunces text-sm font-semibold text-slate-900">Documents Administratifs *</h3>
           </div>
 
@@ -155,7 +155,7 @@ export const WizardStep6Photos: React.FC<WizardStep6PhotosProps> = ({ data, onCh
             <div className="rounded-2xl border border-slate-200 p-4 space-y-3 bg-slate-50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-5 w-5 text-[#059669]" />
+                  <ShieldCheck className="h-5 w-5 text-emerald-600" />
                   <span className="font-fraunces text-xs font-semibold text-slate-900">Carte Grise</span>
                 </div>
                 {carteGrise ? (
@@ -171,7 +171,7 @@ export const WizardStep6Photos: React.FC<WizardStep6PhotosProps> = ({ data, onCh
                 <div className="flex items-center justify-between text-xs bg-white p-2.5 rounded-xl border border-slate-200">
                   <span className="truncate font-medium text-slate-700 max-w-[150px]">{carteGrise.name}</span>
                   <div className="flex items-center gap-1">
-                    <button type="button" onClick={() => setPreviewDoc({ title: 'Carte Grise', doc: carteGrise })} className="p-1 text-slate-600 hover:text-[#059669]">
+                    <button type="button" onClick={() => setPreviewDoc({ title: 'Carte Grise', doc: carteGrise })} className="p-1 text-slate-600 hover:text-emerald-600">
                       <Eye className="h-4 w-4" />
                     </button>
                     <button type="button" onClick={() => onChange({ carteGrise: null })} className="p-1 text-red-500 hover:text-red-700">
@@ -185,7 +185,7 @@ export const WizardStep6Photos: React.FC<WizardStep6PhotosProps> = ({ data, onCh
                   onClick={() => carteGriseInputRef.current?.click()}
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white py-2.5 px-3 text-xs font-bold text-slate-700 hover:border-[#059669]"
                 >
-                  <Upload className="h-4 w-4 text-[#059669]" />
+                  <Upload className="h-4 w-4 text-emerald-600" />
                   <span>Ajouter la Carte Grise</span>
                 </button>
               )}
@@ -195,7 +195,7 @@ export const WizardStep6Photos: React.FC<WizardStep6PhotosProps> = ({ data, onCh
             <div className="rounded-2xl border border-slate-200 p-4 space-y-3 bg-slate-50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-5 w-5 text-[#059669]" />
+                  <ShieldCheck className="h-5 w-5 text-emerald-600" />
                   <span className="font-fraunces text-xs font-semibold text-slate-900">Attestation Assurance</span>
                 </div>
                 {assuranceDoc ? (
@@ -211,7 +211,7 @@ export const WizardStep6Photos: React.FC<WizardStep6PhotosProps> = ({ data, onCh
                 <div className="flex items-center justify-between text-xs bg-white p-2.5 rounded-xl border border-slate-200">
                   <span className="truncate font-medium text-slate-700 max-w-[150px]">{assuranceDoc.name}</span>
                   <div className="flex items-center gap-1">
-                    <button type="button" onClick={() => setPreviewDoc({ title: 'Attestation Assurance', doc: assuranceDoc })} className="p-1 text-slate-600 hover:text-[#059669]">
+                    <button type="button" onClick={() => setPreviewDoc({ title: 'Attestation Assurance', doc: assuranceDoc })} className="p-1 text-slate-600 hover:text-emerald-600">
                       <Eye className="h-4 w-4" />
                     </button>
                     <button type="button" onClick={() => onChange({ assuranceDoc: null })} className="p-1 text-red-500 hover:text-red-700">
@@ -225,7 +225,7 @@ export const WizardStep6Photos: React.FC<WizardStep6PhotosProps> = ({ data, onCh
                   onClick={() => assuranceInputRef.current?.click()}
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white py-2.5 px-3 text-xs font-bold text-slate-700 hover:border-[#059669]"
                 >
-                  <Upload className="h-4 w-4 text-[#059669]" />
+                  <Upload className="h-4 w-4 text-emerald-600" />
                   <span>Ajouter l'Assurance</span>
                 </button>
               )}
@@ -249,7 +249,7 @@ export const WizardStep6Photos: React.FC<WizardStep6PhotosProps> = ({ data, onCh
                 <img src={previewDoc.doc.uri} alt="Doc preview" className="w-full h-full object-contain" />
               ) : (
                 <div className="text-center space-y-2">
-                  <FileText className="h-12 w-12 text-[#4ADE80] mx-auto" />
+                  <FileText className="h-12 w-12 text-emerald-400 mx-auto" />
                   <p className="text-xs font-semibold">{previewDoc.doc.name}</p>
                 </div>
               )}

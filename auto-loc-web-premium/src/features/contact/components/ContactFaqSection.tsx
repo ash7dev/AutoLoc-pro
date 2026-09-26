@@ -44,13 +44,13 @@ export const ContactFaqSection: React.FC = () => {
   };
 
   return (
-    <section className="rounded-3xl border border-[#041912]/8 bg-white p-6 sm:p-8 shadow-xs">
+    <section className="rounded-3xl border border-brand-dark/8 bg-white p-6 sm:p-8 shadow-xs">
       <div className="mb-6 flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0A3D2E]/8 text-[#0A3D2E]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-main/8 text-brand-main">
           <HelpCircle className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="font-fraunces text-2xl font-normal text-[#041912] sm:text-3xl">
+          <h2 className="font-fraunces text-2xl font-normal text-brand-dark sm:text-3xl">
             Questions fréquentes
           </h2>
           <p className="mt-1 text-sm text-slate-500 font-medium">
@@ -69,10 +69,10 @@ export const ContactFaqSection: React.FC = () => {
                 onClick={() => toggle(index)}
                 className="flex w-full items-center justify-between gap-4 text-left cursor-pointer group"
               >
-                <h3 className="text-[14px] font-semibold text-[#041912] group-hover:text-[#0A3D2E] transition-colors">
+                <h3 className="text-[14px] font-semibold text-brand-dark group-hover:text-brand-main transition-colors">
                   {item.question}
                 </h3>
-                <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors ${isOpen ? 'bg-[#0A3D2E] text-[#F1DFB6]' : 'bg-slate-100 text-slate-500'}`}>
+                <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors ${isOpen ? 'bg-brand-main text-champagne' : 'bg-slate-100 text-slate-500'}`}>
                   {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </div>
               </button>

@@ -144,7 +144,7 @@ export const OwnerCancellationPreviewModal: React.FC<OwnerCancellationPreviewMod
               <ShieldAlert className="w-3 h-3 text-amber-600" />
               <span>Politique d’annulation hôte</span>
             </div>
-            <h2 id={titleId} className="font-fraunces text-xl font-normal text-[#041912]">
+            <h2 id={titleId} className="font-fraunces text-xl font-normal text-brand-dark">
               {actionText}
             </h2>
             <p className="text-xs text-slate-500 font-mono font-medium">
@@ -160,7 +160,7 @@ export const OwnerCancellationPreviewModal: React.FC<OwnerCancellationPreviewMod
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-xl font-bold text-[#041912]">Réservation annulée</h3>
+              <h3 className="text-xl font-bold text-brand-dark">Réservation annulée</h3>
               <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
                 L’annulation a été traitée. Le locataire a été notifié et remboursé selon les conditions d’annulation AutoLoc.
               </p>
@@ -171,7 +171,7 @@ export const OwnerCancellationPreviewModal: React.FC<OwnerCancellationPreviewMod
             {/* 1. Simulation du remboursement & pénalité hôte */}
             {loadingQuote ? (
               <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-2">
-                <Loader2 className="w-5 h-5 animate-spin text-[#0A3D2E] mx-auto" />
+                <Loader2 className="w-5 h-5 animate-spin text-brand-main mx-auto" />
                 <p className="text-xs text-slate-500 font-medium">Calcul des règles d’annulation AutoLoc...</p>
               </div>
             ) : quote ? (
@@ -248,7 +248,7 @@ export const OwnerCancellationPreviewModal: React.FC<OwnerCancellationPreviewMod
                     onClick={() => setReason(preset)}
                     className={`px-3 py-1.5 rounded-full border text-xs font-bold transition-all cursor-pointer ${
                       reason === preset
-                        ? 'bg-[#0A3D2E] border-[#0A3D2E] text-[#F1DFB6] shadow-xs'
+                        ? 'bg-brand-main border-brand-main text-champagne shadow-xs'
                         : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                     }`}
                   >

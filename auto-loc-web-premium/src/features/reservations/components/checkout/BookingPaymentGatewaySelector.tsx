@@ -32,13 +32,12 @@ export function BookingPaymentGatewaySelector({
   return (
     <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm">
       <div className="flex items-center gap-3">
-        <div className="w-7 h-7 rounded-xl bg-[#041912] border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
+        <div className="w-7 h-7 rounded-xl bg-brand-dark border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
           <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
         </div>
         <div>
           <h3 
-            className="text-base font-fraunces font-normal text-[#041912] tracking-tight"
-            style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+            className="text-base font-fraunces font-normal text-brand-dark tracking-tight"
           >
             Moyen de paiement
           </h3>

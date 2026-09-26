@@ -18,7 +18,7 @@ const Line: React.FC<{
 }> = ({ icon, label, value }) => (
   <div className="flex items-end gap-2 text-[13px]">
     <span className="flex min-w-0 items-center gap-1.5 text-slate-600">
-      {icon && <span className="shrink-0 text-[#0A3D2E]/55">{icon}</span>}
+      {icon && <span className="shrink-0 text-brand-main/55">{icon}</span>}
       <span>{label}</span>
     </span>
     <span
@@ -84,7 +84,7 @@ export const TenantFinancialDetailsCard: React.FC<TenantFinancialDetailsCardProp
     <div className="space-y-6 rounded-3xl bg-white p-5 text-slate-900 shadow-[0_1px_2px_rgba(10,61,46,0.06),0_12px_28px_-16px_rgba(10,61,46,0.28)] ring-1 ring-slate-900/[0.06] sm:p-6">
       {/* En-tête */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0A3D2E] text-[#F1DFB6]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-main text-champagne">
           <Receipt className="h-5 w-5" strokeWidth={1.6} aria-hidden />
         </div>
         <div>
@@ -127,14 +127,14 @@ export const TenantFinancialDetailsCard: React.FC<TenantFinancialDetailsCardProp
 
         <div className="flex items-baseline justify-between gap-4 border-t border-slate-100 pt-4">
           <span className="text-sm font-semibold text-slate-900">Total de la location</span>
-          <span className="font-fraunces text-[28px] font-normal leading-none tabular-nums tracking-tight text-[#0A3D2E]">
+          <span className="font-fraunces text-[28px] font-normal leading-none tabular-nums tracking-tight text-brand-main">
             {formatCurrency(totalLoc)}
           </span>
         </div>
       </div>
 
       {/* Paiement : part réglée en ligne et solde */}
-      <div className="rounded-2xl bg-[#0A3D2E] p-4 text-white sm:p-5">
+      <div className="rounded-2xl bg-brand-main p-4 text-white sm:p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-sm font-semibold">
@@ -164,7 +164,7 @@ export const TenantFinancialDetailsCard: React.FC<TenantFinancialDetailsCardProp
             </p>
           </div>
 
-          <p className="shrink-0 font-fraunces text-2xl font-normal leading-none tabular-nums text-[#F1DFB6]">
+          <p className="shrink-0 font-fraunces text-2xl font-normal leading-none tabular-nums text-champagne">
             {formatCurrency(paidOnline)}
           </p>
         </div>
@@ -179,7 +179,7 @@ export const TenantFinancialDetailsCard: React.FC<TenantFinancialDetailsCardProp
           className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/15"
         >
           <div
-            className="h-full rounded-full bg-[#F1DFB6] transition-[width] duration-500 motion-reduce:transition-none"
+            className="h-full rounded-full bg-champagne transition-[width] duration-500 motion-reduce:transition-none"
             style={{ width: `${paidPercent}%` }}
           />
         </div>
@@ -195,7 +195,7 @@ export const TenantFinancialDetailsCard: React.FC<TenantFinancialDetailsCardProp
 
         {/* Garantie */}
         <div className="mt-4 flex items-start gap-2.5 border-t border-white/10 pt-4 text-xs leading-relaxed text-white/70">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#F1DFB6]" aria-hidden />
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-champagne" aria-hidden />
           <p>
             {isDepositMode
               ? `L’acompte de ${paidPercent}% est conservé sous séquestre par AutoLoc. Le solde de ${soldePercent}% est remis à l’hôte lors du check-in.`

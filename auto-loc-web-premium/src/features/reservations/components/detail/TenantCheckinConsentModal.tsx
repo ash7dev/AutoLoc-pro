@@ -125,11 +125,11 @@ export const TenantCheckinConsentModal: React.FC<TenantCheckinConsentModalProps>
           {/* En-tête */}
           <div className="flex items-start justify-between gap-4 p-6 pb-4 sm:p-7 sm:pb-4">
             <div className="flex items-center gap-3.5">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#F1DFB6]/40 text-[#0A3D2E]">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-champagne/40 text-brand-main">
                 <ShieldCheck className="h-6 w-6" strokeWidth={1.5} aria-hidden="true" />
               </span>
               <div>
-                <h2 id={titleId} className="font-display text-xl text-[#041912]">
+                <h2 id={titleId} className="font-display text-xl text-brand-dark">
                   Validation de la prise en charge
                 </h2>
                 <p className="text-sm text-slate-500">
@@ -143,7 +143,7 @@ export const TenantCheckinConsentModal: React.FC<TenantCheckinConsentModalProps>
               onClick={onClose}
               disabled={isSubmitting}
               aria-label="Fermer"
-              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main disabled:cursor-not-allowed disabled:opacity-50"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -155,11 +155,11 @@ export const TenantCheckinConsentModal: React.FC<TenantCheckinConsentModalProps>
             <section aria-label="Photos de l’état des lieux" className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                  <Camera className="h-4 w-4 text-[#0A3D2E]" strokeWidth={1.5} aria-hidden="true" />
+                  <Camera className="h-4 w-4 text-brand-main" strokeWidth={1.5} aria-hidden="true" />
                   État des lieux déposé par l’hôte
                 </h3>
                 {photos.length > 0 && (
-                  <span className="shrink-0 rounded-full border border-[#0A3D2E]/15 bg-[#0A3D2E]/5 px-2.5 py-0.5 text-xs font-semibold text-[#0A3D2E]">
+                  <span className="shrink-0 rounded-full border border-brand-main/15 bg-brand-main/5 px-2.5 py-0.5 text-xs font-semibold text-brand-main">
                     {plural(photos.length, 'photo')}
                   </span>
                 )}
@@ -174,7 +174,7 @@ export const TenantCheckinConsentModal: React.FC<TenantCheckinConsentModalProps>
                         onClick={() => setSelectedIndex(idx)}
                         aria-label={`Agrandir la photo ${idx + 1}${photo.categorie ? ` (${formatCategory(photo.categorie)})` : ''
                           }`}
-                        className="relative block aspect-square w-full cursor-pointer overflow-hidden rounded-2xl border border-slate-200 transition-colors hover:border-[#0A3D2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
+                        className="relative block aspect-square w-full cursor-pointer overflow-hidden rounded-2xl border border-slate-200 transition-colors hover:border-brand-main focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2"
                       >
                         <img
                           src={photo.url}
@@ -194,7 +194,7 @@ export const TenantCheckinConsentModal: React.FC<TenantCheckinConsentModalProps>
                 </ul>
               ) : (
                 <div className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-slate-50 p-4 text-sm text-slate-600">
-                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#0A3D2E]" aria-hidden="true" />
+                  <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-main" aria-hidden="true" />
                   <p>
                     L’hôte a validé son inspection de départ. Inspectez physiquement le véhicule
                     avant de donner votre consentement.
@@ -206,7 +206,7 @@ export const TenantCheckinConsentModal: React.FC<TenantCheckinConsentModalProps>
             {/* 2. Attestation */}
             <fieldset className="space-y-3 border-t border-slate-100 pt-6">
               <div className="flex items-baseline justify-between gap-3">
-                <legend className="font-display text-lg text-[#041912]">Votre attestation</legend>
+                <legend className="font-display text-lg text-brand-dark">Votre attestation</legend>
                 <span className="text-xs tabular-nums text-slate-500" aria-live="polite">
                   {consentCount} sur {CONSENT_ITEMS.length}
                 </span>
@@ -216,7 +216,7 @@ export const TenantCheckinConsentModal: React.FC<TenantCheckinConsentModalProps>
                 {CONSENT_ITEMS.map((item) => (
                   <label
                     key={item.key}
-                    className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 p-4 transition-colors hover:border-slate-300 has-[:checked]:border-[#0A3D2E] has-[:checked]:bg-[#0A3D2E]/[0.04] has-[:checked]:ring-1 has-[:checked]:ring-[#0A3D2E] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#0A3D2E] has-[:focus-visible]:ring-offset-2"
+                    className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 p-4 transition-colors hover:border-slate-300 has-[:checked]:border-brand-main has-[:checked]:bg-brand-main/[0.04] has-[:checked]:ring-1 has-[:checked]:ring-brand-main has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand-main has-[:focus-visible]:ring-offset-2"
                   >
                     <input
                       type="checkbox"
@@ -246,7 +246,7 @@ export const TenantCheckinConsentModal: React.FC<TenantCheckinConsentModalProps>
                 type="button"
                 disabled={isSubmitting}
                 onClick={onClose}
-                className="cursor-pointer rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] disabled:cursor-not-allowed disabled:opacity-50"
+                className="cursor-pointer rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Annuler
               </button>
@@ -256,7 +256,7 @@ export const TenantCheckinConsentModal: React.FC<TenantCheckinConsentModalProps>
                 aria-describedby={!isAllConsented ? hintId : undefined}
                 aria-busy={isSubmitting}
                 onClick={() => onConfirm()}
-                className="flex cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-6 py-3 text-sm font-semibold text-[#F1DFB6] shadow-md transition-colors hover:bg-[#0F4F3B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-main px-6 py-3 text-sm font-semibold text-champagne shadow-md transition-colors hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Lock className="h-3.5 w-3.5" aria-hidden="true" />
                 {isSubmitting ? 'Validation…' : 'Confirmer et démarrer la location'}

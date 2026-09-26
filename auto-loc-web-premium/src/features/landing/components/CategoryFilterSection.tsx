@@ -62,7 +62,7 @@ export const CategoryFilterSection: React.FC = () => {
   };
 
   return (
-    <section className="py-2 sm:py-6 bg-[#F8FAF4] overflow-hidden">
+    <section className="py-2 sm:py-6 bg-cream-50 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <FilterPillsCarousel
           items={items}

@@ -73,14 +73,14 @@ export const OwnerDashboardView: React.FC = () => {
 
       {/* SECTION 1: PILOTAGE FINANCIER & PERFORMANCE GLOBALE */}
       <section className="space-y-6">
-        <div className="flex items-center justify-between border-b border-[#0A3D2E]/10 pb-3">
+        <div className="flex items-center justify-between border-b border-brand-main/10 pb-3">
           <div>
-            <h2 className="font-display text-xl font-medium tracking-tight text-[#041912]">
+            <h2 className="font-display text-xl font-medium tracking-tight text-brand-dark">
               Synthèse Financière & Indicateurs
             </h2>
             <p className="text-xs text-slate-500">Aperçu du mois en cours et métriques clés</p>
           </div>
-          <span className="rounded-full bg-[#0A3D2E]/5 px-3 py-1 text-xs font-semibold text-[#0A3D2E]">
+          <span className="rounded-full bg-brand-main/5 px-3 py-1 text-xs font-semibold text-brand-main">
             Mois en cours
           </span>
         </div>
@@ -158,9 +158,9 @@ export const OwnerDashboardView: React.FC = () => {
 
       {/* SECTION 2: ANALYSE DES REVENUS & PERFORMANCE FLOTTE (Masqué sur mobile) */}
       <section className="hidden space-y-6 pt-2 md:block">
-        <div className="flex items-center justify-between border-b border-[#0A3D2E]/10 pb-3">
+        <div className="flex items-center justify-between border-b border-brand-main/10 pb-3">
           <div>
-            <h2 className="font-display text-xl font-medium tracking-tight text-[#041912]">
+            <h2 className="font-display text-xl font-medium tracking-tight text-brand-dark">
               Analyse des Revenus & Flotte
             </h2>
             <p className="text-xs text-slate-500">Évolution temporelle et rentabilité par véhicule</p>
@@ -190,9 +190,9 @@ export const OwnerDashboardView: React.FC = () => {
 
       {/* SECTION 3: PORTEFEUILLE, CONSEILS IA & AVIS (Masqué sur mobile) */}
       <section className="hidden space-y-6 pt-2 md:block">
-        <div className="flex items-center justify-between border-b border-[#0A3D2E]/10 pb-3">
+        <div className="flex items-center justify-between border-b border-brand-main/10 pb-3">
           <div>
-            <h2 className="font-display text-xl font-medium tracking-tight text-[#041912]">
+            <h2 className="font-display text-xl font-medium tracking-tight text-brand-dark">
               Activité Récente & Recommandations
             </h2>
             <p className="text-xs text-slate-500">Mouvements bancaires, conseils IA et retours locataires</p>

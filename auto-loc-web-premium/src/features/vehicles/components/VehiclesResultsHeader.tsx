@@ -49,8 +49,7 @@ export const VehiclesResultsHeader: React.FC<VehiclesResultsHeaderProps> = ({
       <div className="flex items-center gap-2">
         <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
         <h2
-          className="text-base sm:text-lg font-fraunces font-normal tracking-tight text-[#041912]"
-          style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+          className="text-base sm:text-lg font-fraunces font-normal tracking-tight text-brand-dark"
         >
           {total} {total > 1 ? "véhicules disponibles" : "véhicule disponible"}
         </h2>
@@ -61,12 +60,12 @@ export const VehiclesResultsHeader: React.FC<VehiclesResultsHeaderProps> = ({
         {onOpenMobileFilters && (
           <button
             onClick={onOpenMobileFilters}
-            className="lg:hidden flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 shadow-sm hover:border-[#0A3D2E] transition-colors"
+            className="lg:hidden flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 shadow-sm hover:border-brand-main transition-colors"
           >
-            <SlidersHorizontal className="w-4 h-4 text-[#0A3D2E]" />
+            <SlidersHorizontal className="w-4 h-4 text-brand-main" />
             <span>Filtres</span>
             {activeFiltersCount > 0 && (
-              <span className="w-5 h-5 rounded-full bg-[#0A3D2E] text-white text-[10px] flex items-center justify-center font-bold">
+              <span className="w-5 h-5 rounded-full bg-brand-main text-white text-[10px] flex items-center justify-center font-bold">
                 {activeFiltersCount}
               </span>
             )}

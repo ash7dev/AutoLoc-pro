@@ -8,12 +8,12 @@ import {
   Fraunces_700Bold,
 } from '@expo-google-fonts/fraunces';
 import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  Inter_800ExtraBold,
-} from '@expo-google-fonts/inter';
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+} from '@expo-google-fonts/plus-jakarta-sans';
 import { theme } from '../theme';
 import { useAppStore } from '../store/useAppStore';
 import { SplashScreen } from '../../features/splash/SplashScreen';
@@ -78,15 +78,15 @@ export const useNavigation = () => {
 };
 
 export const RootNavigator: React.FC = () => {
-  // 1. Polices d'écriture Google Fonts
+  // 1. Polices d'écriture Google Fonts (Alignées à 100% sur Web Premium)
   const [fontsLoaded] = useFonts({
     Fraunces_600SemiBold,
     Fraunces_700Bold,
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-    Inter_800ExtraBold,
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
   });
 
   // 2. État Global Zustand

@@ -100,7 +100,7 @@ export const FleetPerformanceTable: React.FC<FleetPerformanceTableProps> = ({
           rows.length > 0 ? (
             <Link
               href={OWNER_ROUTES.fleet}
-              className="rounded-md text-sm font-medium text-[#0A3D2E] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
+              className="rounded-md text-sm font-medium text-brand-main underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2"
             >
               Voir la flotte
             </Link>
@@ -122,7 +122,7 @@ export const FleetPerformanceTable: React.FC<FleetPerformanceTableProps> = ({
               <Link
                 href={OWNER_ROUTES.newListing}
                 onClick={handleCreateListingClick}
-                className="rounded-full bg-[#0A3D2E] px-5 py-2.5 text-sm font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0F4F3B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
+                className="rounded-full bg-brand-main px-5 py-2.5 text-sm font-semibold text-champagne transition-colors hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2"
               >
                 Créer une annonce
               </Link>
@@ -133,7 +133,7 @@ export const FleetPerformanceTable: React.FC<FleetPerformanceTableProps> = ({
             {/* En-tête de colonnes (desktop) */}
             <div
               aria-hidden="true"
-              className={`hidden border-b border-[#0A3D2E]/10 pb-3 text-xs text-slate-500 ${GRID}`}
+              className={`hidden border-b border-brand-main/10 pb-3 text-xs text-slate-500 ${GRID}`}
             >
               <span>Véhicule</span>
               <span>Revenu net</span>
@@ -149,35 +149,35 @@ export const FleetPerformanceTable: React.FC<FleetPerformanceTableProps> = ({
                   <div className="flex min-w-0 items-center gap-3.5">
                     <span
                       aria-label={`Rang ${i + 1}`}
-                      className="w-5 shrink-0 text-center font-display text-lg tabular-nums text-[#0A3D2E]/50"
+                      className="w-5 shrink-0 text-center font-display text-lg tabular-nums text-brand-main/50"
                     >
                       {i + 1}
                     </span>
-                    <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#F1DFB6]/40 text-[#0A3D2E]">
+                    <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-champagne/40 text-brand-main">
                       {v.photoUrl ? (
                         <Image src={v.photoUrl} alt="" width={48} height={48} unoptimized className="h-12 w-12 object-cover" />
                       ) : (
                         <Car className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
                       )}
                     </span>
-                    <p className="min-w-0 truncate font-medium text-[#041912]">{v.name}</p>
+                    <p className="min-w-0 truncate font-medium text-brand-dark">{v.name}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-x-4 gap-y-3 md:contents">
                     {/* Revenu net */}
                     <div>
                       <p className="text-xs text-slate-500 md:hidden">Revenu net</p>
-                      <p className="font-display text-lg tabular-nums text-[#041912]">{fcfa(v.caNet)}</p>
+                      <p className="font-display text-lg tabular-nums text-brand-dark">{fcfa(v.caNet)}</p>
                     </div>
 
                     {/* Occupation */}
                     <div>
                       <p className="text-xs text-slate-500 md:hidden">Occupation</p>
                       <div className="flex items-center gap-2.5">
-                        <span aria-hidden="true" className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#0A3D2E]/10">
-                          <span className="block h-full rounded-full bg-[#0A3D2E]" style={{ width: `${v.occupation}%` }} />
+                        <span aria-hidden="true" className="h-1.5 flex-1 overflow-hidden rounded-full bg-brand-main/10">
+                          <span className="block h-full rounded-full bg-brand-main" style={{ width: `${v.occupation}%` }} />
                         </span>
-                        <span className="w-10 text-right text-sm font-medium tabular-nums text-[#041912]">
+                        <span className="w-10 text-right text-sm font-medium tabular-nums text-brand-dark">
                           {Math.round(v.occupation)}&nbsp;%
                         </span>
                       </div>
@@ -186,7 +186,7 @@ export const FleetPerformanceTable: React.FC<FleetPerformanceTableProps> = ({
                     {/* Audience */}
                     <div>
                       <p className="text-xs text-slate-500 md:hidden">Audience</p>
-                      <p className="text-sm tabular-nums text-[#041912]">
+                      <p className="text-sm tabular-nums text-brand-dark">
                         {integer.format(v.vues)} vues, {integer.format(v.clics)} clics
                       </p>
                       <p className="text-xs tabular-nums text-slate-500">
@@ -198,7 +198,7 @@ export const FleetPerformanceTable: React.FC<FleetPerformanceTableProps> = ({
                     <div className="md:text-right">
                       <p className="text-xs text-slate-500 md:hidden">Note</p>
                       {v.note > 0 ? (
-                        <p className="inline-flex items-center gap-1 text-sm font-medium tabular-nums text-[#041912]">
+                        <p className="inline-flex items-center gap-1 text-sm font-medium tabular-nums text-brand-dark">
                           <Star className="h-3.5 w-3.5 fill-[#C79A3B] text-[#C79A3B]" aria-hidden="true" />
                           {decimal1.format(v.note)}
                         </p>
@@ -220,7 +220,7 @@ export const FleetPerformanceTable: React.FC<FleetPerformanceTableProps> = ({
                 {rows.length - MAX_ROWS > 1 ? 's' : ''} dans{' '}
                 <Link
                   href={OWNER_ROUTES.fleet}
-                  className="font-medium text-[#0A3D2E] underline underline-offset-4"
+                  className="font-medium text-brand-main underline underline-offset-4"
                 >
                   votre flotte
                 </Link>

@@ -91,8 +91,8 @@ export function TenantEmptyReservationsState({
       <div className="relative z-10 max-w-lg mx-auto space-y-6">
         {/* Badge Visuel de l'Icône */}
         <div className="relative inline-flex items-center justify-center">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-[#0A3D2E]/[0.06] border border-[#0A3D2E]/15 text-[#0A3D2E] flex items-center justify-center shadow-inner">
-            <Icon className="w-10 h-10 sm:w-12 sm:h-12 text-[#0A3D2E]" strokeWidth={1.5} />
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-brand-main/[0.06] border border-brand-main/15 text-brand-main flex items-center justify-center shadow-inner">
+            <Icon className="w-10 h-10 sm:w-12 sm:h-12 text-brand-main" strokeWidth={1.5} />
           </div>
           <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xs">
             <Sparkles className="w-3.5 h-3.5" />
@@ -106,7 +106,7 @@ export function TenantEmptyReservationsState({
           </div>
 
           <h3
-            className="text-2xl sm:text-4xl font-light tracking-tight text-[#041912]"
+            className="text-2xl sm:text-4xl font-light tracking-tight text-brand-dark"
             style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
           >
             {config.title}
@@ -121,10 +121,10 @@ export function TenantEmptyReservationsState({
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
           <Link
             href="/vehicles"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs sm:text-sm shadow-md shadow-[#0A3D2E]/15 hover:bg-[#0F4F3B] transition-all cursor-pointer active:scale-95"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full bg-brand-main text-champagne font-bold text-xs sm:text-sm shadow-md shadow-brand-main/15 hover:bg-forest-700 transition-all cursor-pointer active:scale-95"
           >
             <span>Explorer les véhicules</span>
-            <ArrowRight className="w-4 h-4 text-[#F1DFB6]" />
+            <ArrowRight className="w-4 h-4 text-champagne" />
           </Link>
 
           {activeStatus !== 'ALL' && onResetFilter && (

@@ -50,7 +50,7 @@ export function VehicleConditionsCard({
       aria-label="Conditions et garanties"
       className="bg-white border border-slate-200/80 rounded-[28px] overflow-hidden shadow-sm"
     >
-      <h3 className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 text-lg text-[#041912] font-fraunces font-normal">
+      <h3 className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 text-lg text-brand-dark font-fraunces font-normal">
         Conditions et garanties
       </h3>
 
@@ -61,12 +61,12 @@ export function VehicleConditionsCard({
             <div key={item.id} className="flex flex-col gap-4 px-5 sm:px-6 py-5">
               <div className="flex items-start justify-between gap-3">
                 <Icon
-                  className="w-6 h-6 shrink-0 text-[#0A3D2E]"
+                  className="w-6 h-6 shrink-0 text-brand-main"
                   strokeWidth={1.5}
                   aria-hidden="true"
                 />
                 {item.included && (
-                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0A3D2E]">
+                  <span className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-main">
                     <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                     Inclus
                   </span>

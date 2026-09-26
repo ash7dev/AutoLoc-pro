@@ -28,7 +28,7 @@ interface OptionCellProps {
 }
 
 const STATUS_STYLES: Record<StatusTone, { className: string; icon?: LucideIcon }> = {
-  positive: { className: 'text-[#0A3D2E]', icon: CheckCircle2 },
+  positive: { className: 'text-brand-main', icon: CheckCircle2 },
   restricted: { className: 'text-amber-700', icon: XCircle },
   neutral: { className: 'text-slate-500' },
 };
@@ -50,7 +50,7 @@ function OptionCell({
       <div className="space-y-4">
         <div className="flex items-start justify-between gap-3">
           <Icon
-            className="w-6 h-6 shrink-0 text-[#0A3D2E]"
+            className="w-6 h-6 shrink-0 text-brand-main"
             strokeWidth={1.5}
             aria-hidden="true"
           />
@@ -70,7 +70,7 @@ function OptionCell({
 
       <div className="pt-4 border-t border-slate-200/80">
         <p
-          className={`text-xl leading-tight font-display ${muted ? 'text-slate-500' : 'text-[#0A3D2E]'
+          className={`text-xl leading-tight font-display ${muted ? 'text-slate-500' : 'text-brand-main'
             }`}
         >
           {value}
@@ -117,7 +117,7 @@ export function VehicleOptionsCard({
       aria-label="Déplacements et livraison"
       className="bg-white border border-slate-200/80 rounded-[28px] overflow-hidden shadow-sm"
     >
-      <h3 className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 text-lg text-[#041912] font-fraunces font-normal">
+      <h3 className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 text-lg text-brand-dark font-fraunces font-normal">
         Déplacements et livraison
       </h3>
 

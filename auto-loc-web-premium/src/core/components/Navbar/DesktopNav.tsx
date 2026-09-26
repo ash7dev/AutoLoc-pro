@@ -21,7 +21,7 @@ const NavItem: React.FC<{ href: string; children: React.ReactNode }> = ({ href, 
       className={`
         rounded-full px-4 py-2 text-sm font-medium
         transition-colors duration-200
-        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]
+        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main
         ${active
           ? 'bg-slate-900/[0.06] text-slate-900'
           : 'text-slate-600 hover:bg-slate-900/[0.04] hover:text-slate-900'}
@@ -92,7 +92,7 @@ export const DesktopNav: React.FC = () => {
           {/* Logo */}
           <Link
             href="/"
-            className="relative h-9 w-32 shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0A3D2E]"
+            className="relative h-9 w-32 shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-main"
           >
             <Image
               src="/logo.png"
@@ -117,7 +117,7 @@ export const DesktopNav: React.FC = () => {
             <Link
               href="/dashboard/vehicles/new"
               onClick={handleCreateListingClick}
-              className="rounded-full bg-[#0A3D2E] px-5 py-2.5 text-sm font-semibold text-[#F1DFB6] transition-all hover:bg-[#0F4F3B] hover:shadow-lg hover:shadow-[#0A3D2E]/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]"
+              className="rounded-full bg-brand-main px-5 py-2.5 text-sm font-semibold text-champagne transition-all hover:bg-forest-700 hover:shadow-lg hover:shadow-brand-main/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main"
             >
               Créer une annonce
             </Link>
@@ -133,7 +133,7 @@ export const DesktopNav: React.FC = () => {
                     ? `/login?next=${encodeURIComponent(pathname)}`
                     : '/login'
                 }
-                className="rounded-full border border-slate-900/15 bg-[#FFFFFF] px-5 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:border-[#0A3D2E]/50 hover:bg-[#0A3D2E]/[0.04] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]"
+                className="rounded-full border border-slate-900/15 bg-[#FFFFFF] px-5 py-2.5 text-sm font-semibold text-slate-900 transition-colors hover:border-brand-main/50 hover:bg-brand-main/[0.04] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main"
               >
                 Se connecter
               </Link>

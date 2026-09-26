@@ -34,7 +34,7 @@ export const DesktopFilterSidebar: React.FC<DesktopFilterSidebarProps> = ({
       {/* Header Sidebar */}
       <div className="flex items-center justify-between pb-4 border-b border-slate-100">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-[#0A3D2E]" />
+          <Filter className="w-4 h-4 text-brand-main" />
           <h3 className="text-sm font-bold font-serif text-slate-900 uppercase tracking-wider">Filtres</h3>
         </div>
         <button
@@ -58,7 +58,7 @@ export const DesktopFilterSidebar: React.FC<DesktopFilterSidebarProps> = ({
             value={filters.q}
             onChange={(e) => onSetFilter("q", e.target.value)}
             placeholder="Marque, modèle..."
-            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-[#0A3D2E] transition-colors"
+            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-brand-main transition-colors"
           />
         </div>
       </div>
@@ -73,7 +73,7 @@ export const DesktopFilterSidebar: React.FC<DesktopFilterSidebarProps> = ({
           <select
             value={filters.ville}
             onChange={(e) => onSetFilter("ville", e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#0A3D2E] cursor-pointer"
+            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-brand-main cursor-pointer"
           >
             <option value="">Toutes les villes</option>
             {CITIES.map((c) => (
@@ -99,7 +99,7 @@ export const DesktopFilterSidebar: React.FC<DesktopFilterSidebarProps> = ({
                 onClick={() => onSetFilter("type", cat.id)}
                 className={`w-full text-left px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                   isSelected
-                    ? "bg-[#0A3D2E] text-white font-bold shadow-sm"
+                    ? "bg-brand-main text-white font-bold shadow-sm"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
@@ -126,7 +126,7 @@ export const DesktopFilterSidebar: React.FC<DesktopFilterSidebarProps> = ({
               onClick={() => onSetFilter("transmission", t.id as TransmissionType | "")}
               className={`py-2 rounded-xl text-xs font-semibold border transition-all ${
                 filters.transmission === t.id
-                  ? "bg-[#0A3D2E] text-white border-[#0A3D2E]"
+                  ? "bg-brand-main text-white border-brand-main"
                   : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
               }`}
             >
@@ -153,7 +153,7 @@ export const DesktopFilterSidebar: React.FC<DesktopFilterSidebarProps> = ({
               onClick={() => onSetFilter("carburant", f.id as FuelType | "")}
               className={`py-2 rounded-xl text-xs font-semibold border transition-all ${
                 filters.carburant === f.id
-                  ? "bg-[#0A3D2E] text-white border-[#0A3D2E]"
+                  ? "bg-brand-main text-white border-brand-main"
                   : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
               }`}
             >
@@ -175,7 +175,7 @@ export const DesktopFilterSidebar: React.FC<DesktopFilterSidebarProps> = ({
               onClick={() => onSetFilter("noteMin", filters.noteMin === n ? null : n)}
               className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                 filters.noteMin === n
-                  ? "bg-[#0A3D2E] text-white border-[#0A3D2E]"
+                  ? "bg-brand-main text-white border-brand-main"
                   : "bg-slate-50 text-slate-600 border-slate-200"
               }`}
             >

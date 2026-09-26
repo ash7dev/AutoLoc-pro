@@ -16,7 +16,7 @@ export const GateStepAgeWarning: React.FC<GateStepAgeWarningProps> = ({
     <div className="w-full max-w-lg mx-auto py-2 px-1 animate-in fade-in zoom-in-95 duration-200">
       <div className="relative">
         {/* Layer 1: Back Accent Card - Decalé 3px à gauche */}
-        <div className="absolute inset-0 -left-[3px] top-[3px] rounded-[28px] bg-[#041912] border border-[#0A3D2E]/80 pointer-events-none shadow-md" />
+        <div className="absolute inset-0 -left-[3px] top-[3px] rounded-[28px] bg-brand-dark border border-brand-main/80 pointer-events-none shadow-md" />
 
         {/* Layer 2: Front Glass Card */}
         <div className="relative bg-white border border-white/80 rounded-[28px] p-6 shadow-2xl space-y-4">
@@ -54,7 +54,7 @@ export const GateStepAgeWarning: React.FC<GateStepAgeWarningProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-full h-12.5 rounded-full bg-[#041912] hover:bg-[#06291e] text-white font-medium text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#041912]/20 active:scale-[0.98] transition-all"
+            className="w-full h-12.5 rounded-full bg-brand-dark hover:bg-[#06291e] text-white font-medium text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-dark/20 active:scale-[0.98] transition-all"
           >
             <span>Retour à la recherche</span>
             <ArrowRight className="w-4 h-4 text-emerald-400" />

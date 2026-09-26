@@ -117,7 +117,7 @@ export const AdminDisputeTable: React.FC<AdminDisputeTableProps> = ({
               return (
                 <tr
                   key={item.id}
-                  className="hover:bg-[#0A3D2E]/[0.03] dark:hover:bg-[#F1DFB6]/[0.04] transition-colors group cursor-pointer"
+                  className="hover:bg-brand-main/[0.03] dark:hover:bg-champagne/[0.04] transition-colors group cursor-pointer"
                   onClick={() => onSelectDispute(item.id)}
                 >
                   {/* Litige & Motif */}

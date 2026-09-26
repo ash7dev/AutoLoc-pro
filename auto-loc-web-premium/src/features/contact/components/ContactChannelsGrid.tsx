@@ -13,8 +13,8 @@ const CHANNELS = [
     actionLabel: 'Appeler maintenant',
     availability: '7j/7 — 8h à 22h (GMT)',
     accentColor: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-    iconBg: 'bg-[#0A3D2E]',
-    iconColor: 'text-[#F1DFB6]',
+    iconBg: 'bg-brand-main',
+    iconColor: 'text-champagne',
   },
   {
     icon: MessageCircle,
@@ -46,7 +46,7 @@ export const ContactChannelsGrid: React.FC = () => {
   return (
     <section className="space-y-6">
       <div>
-        <h2 className="font-fraunces text-2xl font-normal text-[#041912] sm:text-3xl">
+        <h2 className="font-fraunces text-2xl font-normal text-brand-dark sm:text-3xl">
           Contactez-nous
         </h2>
         <p className="mt-1.5 text-sm text-slate-500 font-medium">
@@ -60,7 +60,7 @@ export const ContactChannelsGrid: React.FC = () => {
           return (
             <div
               key={channel.title}
-              className="group relative rounded-3xl border border-[#041912]/8 bg-white p-6 transition-shadow hover:shadow-lg hover:shadow-slate-200/60"
+              className="group relative rounded-3xl border border-brand-dark/8 bg-white p-6 transition-shadow hover:shadow-lg hover:shadow-slate-200/60"
             >
               {/* Icon */}
               <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${channel.iconBg} shadow-sm`}>
@@ -68,11 +68,11 @@ export const ContactChannelsGrid: React.FC = () => {
               </div>
 
               {/* Content */}
-              <h3 className="mt-4 font-fraunces text-lg text-[#041912]">{channel.title}</h3>
+              <h3 className="mt-4 font-fraunces text-lg text-brand-dark">{channel.title}</h3>
               <p className="mt-1 text-[13px] leading-relaxed text-slate-500">{channel.description}</p>
 
               {/* Value */}
-              <p className="mt-3 text-[14px] font-semibold text-[#041912]">{channel.value}</p>
+              <p className="mt-3 text-[14px] font-semibold text-brand-dark">{channel.value}</p>
 
               {/* Availability badge */}
               <div className="mt-2.5 flex items-center gap-1.5">
@@ -85,7 +85,7 @@ export const ContactChannelsGrid: React.FC = () => {
                 href={channel.href}
                 target={channel.href.startsWith('http') ? '_blank' : undefined}
                 rel={channel.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#041912] px-4 py-2.5 text-[12.5px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E] cursor-pointer shadow-sm"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand-dark px-4 py-2.5 text-[12.5px] font-semibold text-champagne transition-colors hover:bg-brand-main cursor-pointer shadow-sm"
               >
                 {channel.actionLabel}
                 {channel.href.startsWith('http') && <ExternalLink className="h-3 w-3" />}

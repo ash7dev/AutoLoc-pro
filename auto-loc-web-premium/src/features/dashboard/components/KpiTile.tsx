@@ -24,10 +24,10 @@ interface KpiTileProps {
 
 const BADGE_CLASS: Record<BadgeVariant, string> = {
   // amber = attention : champagne appuyé
-  amber: 'bg-[#F1DFB6]/60 text-[#5C4410]',
+  amber: 'bg-champagne/60 text-[#5C4410]',
   slate: 'bg-slate-100 text-slate-700',
   // emerald = positif : teinte forêt
-  emerald: 'bg-[#0A3D2E]/[0.08] text-[#0A3D2E]',
+  emerald: 'bg-brand-main/[0.08] text-brand-main',
 };
 
 const RING_R = 24;
@@ -50,11 +50,11 @@ export const KpiTile: React.FC<KpiTileProps> = ({
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay: delayIndex * 0.07, ease: [0.22, 1, 0.36, 1] }}
-      className="flex min-h-[8.5rem] flex-col justify-between gap-3 rounded-2xl border border-[#0A3D2E]/10 bg-white p-3.5 sm:rounded-3xl sm:p-6"
+      className="flex min-h-[8.5rem] flex-col justify-between gap-3 rounded-2xl border border-brand-main/10 bg-white p-3.5 sm:rounded-3xl sm:p-6"
     >
       <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
         <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#F1DFB6]/40 text-[#0A3D2E] sm:h-9 sm:w-9 sm:rounded-xl">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-champagne/40 text-brand-main sm:h-9 sm:w-9 sm:rounded-xl">
             <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={1.75} aria-hidden="true" />
           </span>
           <h3 className="truncate text-xs font-medium text-slate-600 sm:text-sm">{title}</h3>
@@ -70,7 +70,7 @@ export const KpiTile: React.FC<KpiTileProps> = ({
 
       <div className="flex items-end justify-between gap-2 sm:gap-4">
         <div className="min-w-0 space-y-1 sm:space-y-1.5">
-          <p className="font-display text-2xl leading-none tracking-tight tabular-nums text-[#041912] sm:text-4xl">
+          <p className="font-display text-2xl leading-none tracking-tight tabular-nums text-brand-dark sm:text-4xl">
             {value}
           </p>
           {subtitle && <p className="text-[11px] leading-tight text-slate-500 sm:text-sm">{subtitle}</p>}

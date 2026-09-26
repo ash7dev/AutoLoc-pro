@@ -117,7 +117,7 @@ export const OwnerVehiclesView: React.FC = () => {
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600">
             <Sparkles className="h-5 w-5" />
           </div>
-          <h3 className="mt-4 font-fraunces text-xl leading-tight text-[#041912]">
+          <h3 className="mt-4 font-fraunces text-xl leading-tight text-brand-dark">
             Activation de l'espace hôte nécessaire
           </h3>
           <p className="mt-1.5 max-w-md text-[13.5px] leading-relaxed text-slate-600">
@@ -132,9 +132,9 @@ export const OwnerVehiclesView: React.FC = () => {
               await fetchVehicles();
               setIsSwitching(false);
             }}
-            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-[#041912] px-6 py-3 text-[13px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E] disabled:opacity-50"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-dark px-6 py-3 text-[13px] font-semibold text-champagne transition-colors hover:bg-brand-main disabled:opacity-50"
           >
-            <Sparkles className="h-4 w-4 text-[#4ADE80]" />
+            <Sparkles className="h-4 w-4 text-emerald-400" />
             {isSwitching ? 'Bascule en cours…' : 'Activer mon espace hôte'}
           </button>
         </div>
@@ -151,10 +151,10 @@ export const OwnerVehiclesView: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col items-center rounded-3xl border border-dashed border-slate-200 bg-white p-12 text-center"
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0A3D2E]/8 text-[#0A3D2E]">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-main/8 text-brand-main">
             <Car className="h-7 w-7" />
           </div>
-          <h3 className="mt-4 font-fraunces text-xl leading-tight text-[#041912]">
+          <h3 className="mt-4 font-fraunces text-xl leading-tight text-brand-dark">
             {searchQuery || selectedStatus !== 'ALL'
               ? 'Aucun véhicule ne correspond à vos filtres'
               : 'Aucun véhicule dans votre flotte'}
@@ -180,9 +180,9 @@ export const OwnerVehiclesView: React.FC = () => {
             <button
               type="button"
               onClick={handleOpenAddVehicle}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#041912] px-5 py-2.5 text-[12.5px] font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0A3D2E]"
+              className="inline-flex items-center gap-2 rounded-xl bg-brand-dark px-5 py-2.5 text-[12.5px] font-semibold text-champagne transition-colors hover:bg-brand-main"
             >
-              <Plus className="h-4 w-4 text-[#4ADE80]" />
+              <Plus className="h-4 w-4 text-emerald-400" />
               Ajouter un véhicule
             </button>
           </div>

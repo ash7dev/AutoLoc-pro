@@ -47,8 +47,8 @@ const STATUS: Record<string, { label: string; badge: string; dot: string }> = {
   },
   VERIFIE: {
     label: 'Vérifié',
-    badge: 'bg-[#0A3D2E]/[0.08] text-[#0A3D2E] ring-[#0A3D2E]/20',
-    dot: 'bg-[#0A3D2E]',
+    badge: 'bg-brand-main/[0.08] text-brand-main ring-brand-main/20',
+    dot: 'bg-brand-main',
   },
   SUSPENDU: {
     label: 'Suspendu',
@@ -113,7 +113,7 @@ function VehicleCell({ item }: { item: AdminVehicleQueueItem }) {
   const meta = [item.ville, item.transmission].filter(Boolean).join(', ');
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-xl bg-[#0A3D2E]/10 ring-1 ring-slate-200 dark:ring-slate-700">
+      <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-xl bg-brand-main/10 ring-1 ring-slate-200 dark:ring-slate-700">
         {photo ? (
           <Image
             src={photo.url}
@@ -123,7 +123,7 @@ function VehicleCell({ item }: { item: AdminVehicleQueueItem }) {
             unoptimized
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-[#0A3D2E]/40">
+          <div className="flex h-full items-center justify-center text-brand-main/40">
             <Car className="h-5 w-5" />
           </div>
         )}
@@ -196,7 +196,7 @@ function PriceCell({ item }: { item: AdminVehicleQueueItem }) {
   return (
     <div className="whitespace-nowrap">
       <div className="flex items-baseline gap-1.5">
-        <span style={DISPLAY_FONT} className="text-lg tabular-nums text-[#0A3D2E] dark:text-[#F1DFB6]">
+        <span style={DISPLAY_FONT} className="text-lg tabular-nums text-brand-main dark:text-champagne">
           {fmt(item.prixParJour)}
         </span>
         <span className={`text-xs ${MUTED}`}>FCFA / jour</span>
@@ -305,16 +305,16 @@ export const AdminVehicleTable: React.FC<AdminVehicleTableProps> = ({
   }, [hasMore, isLoadingMore, onLoadMore]);
 
   const shell =
-    'overflow-hidden rounded-[28px] border border-[#0A3D2E]/10 bg-white shadow-[0_20px_50px_-30px_rgba(10,61,46,0.35)] dark:border-slate-800 dark:bg-slate-900';
+    'overflow-hidden rounded-[28px] border border-brand-main/10 bg-white shadow-[0_20px_50px_-30px_rgba(10,61,46,0.35)] dark:border-slate-800 dark:bg-slate-900';
 
   /* État vide */
   if (!isLoading && items.length === 0) {
     return (
       <div className={`${shell} flex flex-col items-center px-6 py-16 text-center`}>
-        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0A3D2E] text-[#F1DFB6]">
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-main text-champagne">
           <ShieldCheck className="h-6 w-6" />
         </span>
-        <p style={DISPLAY_FONT} className="mt-5 text-xl text-[#0A3D2E] dark:text-[#F1DFB6]">
+        <p style={DISPLAY_FONT} className="mt-5 text-xl text-brand-main dark:text-champagne">
           Aucun véhicule trouvé
         </p>
         <p className={`mt-1 max-w-sm text-sm ${MUTED}`}>
@@ -367,7 +367,7 @@ export const AdminVehicleTable: React.FC<AdminVehicleTableProps> = ({
                   <tr
                     key={item.id}
                     onClick={() => onSelectVehicle(item)}
-                    className={`group cursor-pointer border-b border-slate-100 transition-colors last:border-0 hover:bg-[#0A3D2E]/[0.04] dark:border-slate-800/60 dark:hover:bg-[#F1DFB6]/[0.05] ${tintOf(
+                    className={`group cursor-pointer border-b border-slate-100 transition-colors last:border-0 hover:bg-brand-main/[0.04] dark:border-slate-800/60 dark:hover:bg-champagne/[0.05] ${tintOf(
                       item
                     )}`}
                   >
@@ -390,7 +390,7 @@ export const AdminVehicleTable: React.FC<AdminVehicleTableProps> = ({
                           onSelectVehicle(item);
                         }}
                         aria-label={`Inspecter ${item.marque} ${item.modele}`}
-                        className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-[#0A3D2E]/25 px-3.5 py-1.5 text-sm font-medium text-[#0A3D2E] transition hover:border-[#0A3D2E] hover:bg-[#0A3D2E] hover:text-[#F1DFB6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 dark:border-[#F1DFB6]/30 dark:text-[#F1DFB6] dark:hover:bg-[#F1DFB6] dark:hover:text-[#0A3D2E]"
+                        className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-brand-main/25 px-3.5 py-1.5 text-sm font-medium text-brand-main transition hover:border-brand-main hover:bg-brand-main hover:text-champagne focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2 dark:border-champagne/30 dark:text-champagne dark:hover:bg-champagne dark:hover:text-brand-main"
                       >
                         <Eye className="h-3.5 w-3.5" />
                         Inspecter
@@ -421,7 +421,7 @@ export const AdminVehicleTable: React.FC<AdminVehicleTableProps> = ({
                   type="button"
                   onClick={() => onSelectVehicle(item)}
                   aria-label={`Inspecter ${item.marque} ${item.modele}`}
-                  className="group block w-full space-y-4 p-4 text-left transition-colors hover:bg-[#0A3D2E]/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0A3D2E]"
+                  className="group block w-full space-y-4 p-4 text-left transition-colors hover:bg-brand-main/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-main"
                   style={accent ? { boxShadow: `inset 3px 0 0 0 ${accent}` } : undefined}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -451,7 +451,7 @@ export const AdminVehicleTable: React.FC<AdminVehicleTableProps> = ({
       >
         {isLoadingMore ? (
           <div className={`flex items-center justify-center gap-2.5 py-1 text-sm ${MUTED}`}>
-            <Loader2 className="h-4 w-4 animate-spin text-[#0A3D2E] motion-reduce:animate-none dark:text-[#F1DFB6]" />
+            <Loader2 className="h-4 w-4 animate-spin text-brand-main motion-reduce:animate-none dark:text-champagne" />
             Chargement des véhicules suivants…
           </div>
         ) : hasMore ? (
@@ -465,18 +465,18 @@ export const AdminVehicleTable: React.FC<AdminVehicleTableProps> = ({
                 aria-hidden
                 className="mt-2 h-1 w-40 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
               >
-                <div className="h-full rounded-full bg-[#0A3D2E]" style={{ width: `${loadedShare}%` }} />
+                <div className="h-full rounded-full bg-brand-main" style={{ width: `${loadedShare}%` }} />
               </div>
             </div>
             <button
               type="button"
               onClick={onLoadMore}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0A3D2E] px-5 py-2.5 text-sm font-semibold text-[#F1DFB6] shadow-md shadow-[#0A3D2E]/20 transition hover:bg-[#0D4B39] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-brand-main px-5 py-2.5 text-sm font-semibold text-champagne shadow-md shadow-brand-main/20 transition hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2"
             >
               Charger la suite
               <ChevronDown className="h-4 w-4" />
               {remaining > 0 && (
-                <span className="rounded-full bg-[#F1DFB6]/20 px-2 text-xs tabular-nums">
+                <span className="rounded-full bg-champagne/20 px-2 text-xs tabular-nums">
                   +{remaining}
                 </span>
               )}
@@ -484,7 +484,7 @@ export const AdminVehicleTable: React.FC<AdminVehicleTableProps> = ({
           </div>
         ) : (
           <p className={`flex items-center justify-center gap-2 py-1 text-sm ${MUTED}`}>
-            <Check className="h-4 w-4 text-[#0A3D2E] dark:text-[#F1DFB6]" />
+            <Check className="h-4 w-4 text-brand-main dark:text-champagne" />
             Tous les véhicules sont chargés ({items.length})
           </p>
         )}

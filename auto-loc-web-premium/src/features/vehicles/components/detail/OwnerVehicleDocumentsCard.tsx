@@ -67,10 +67,10 @@ export const OwnerVehicleDocumentsCard: React.FC<OwnerVehicleDocumentsCardProps>
 
   return (
     <>
-      <div className="rounded-3xl border border-[#041912]/8 bg-white p-6 shadow-[0_1px_2px_rgba(4,25,18,0.04),0_12px_28px_-14px_rgba(4,25,18,0.14)] sm:p-8">
+      <div className="rounded-3xl border border-brand-dark/8 bg-white p-6 shadow-[0_1px_2px_rgba(4,25,18,0.04),0_12px_28px_-14px_rgba(4,25,18,0.14)] sm:p-8">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="font-fraunces text-xl leading-tight text-[#041912]">
+            <h3 className="font-fraunces text-xl leading-tight text-brand-dark">
               Documents & conformité
             </h3>
             <p className="mt-1 max-w-md text-[13px] text-slate-500">
@@ -79,7 +79,7 @@ export const OwnerVehicleDocumentsCard: React.FC<OwnerVehicleDocumentsCardProps>
           </div>
 
           {missingCount === 0 ? (
-            <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full bg-[#0A3D2E]/8 px-3 py-1 text-[11px] font-semibold text-[#0A3D2E]">
+            <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full bg-brand-main/8 px-3 py-1 text-[11px] font-semibold text-brand-main">
               <CheckCircle2 className="h-3.5 w-3.5" />
               Dossier complet
             </span>
@@ -98,7 +98,7 @@ export const OwnerVehicleDocumentsCard: React.FC<OwnerVehicleDocumentsCardProps>
               <div key={doc.label} className="flex items-start gap-3.5 py-4">
                 <div
                   className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                    doc.isOk ? 'bg-[#0A3D2E]/8 text-[#0A3D2E]' : 'bg-amber-50 text-amber-600'
+                    doc.isOk ? 'bg-brand-main/8 text-brand-main' : 'bg-amber-50 text-amber-600'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -106,9 +106,9 @@ export const OwnerVehicleDocumentsCard: React.FC<OwnerVehicleDocumentsCardProps>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-[13.5px] font-semibold text-[#041912]">{doc.label}</span>
+                    <span className="text-[13.5px] font-semibold text-brand-dark">{doc.label}</span>
                     {doc.isOk ? (
-                      <span className="inline-flex shrink-0 items-center gap-1 text-[11.5px] font-semibold text-[#0A3D2E]">
+                      <span className="inline-flex shrink-0 items-center gap-1 text-[11.5px] font-semibold text-brand-main">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         {doc.okLabel}
                       </span>
@@ -128,9 +128,9 @@ export const OwnerVehicleDocumentsCard: React.FC<OwnerVehicleDocumentsCardProps>
                     <button
                       type="button"
                       onClick={() => setActiveDoc({ title: doc.label, url: doc.url! })}
-                      className="mt-2 inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-[12px] font-semibold text-[#0A3D2E] transition-colors hover:border-[#0A3D2E]/40 hover:bg-[#0A3D2E]/5 cursor-pointer shadow-2xs"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-[12px] font-semibold text-brand-main transition-colors hover:border-brand-main/40 hover:bg-brand-main/5 cursor-pointer shadow-2xs"
                     >
-                      <Eye className="h-3.5 w-3.5 text-[#059669]" />
+                      <Eye className="h-3.5 w-3.5 text-emerald-600" />
                       <span>Visualiser le document</span>
                     </button>
                   ) : (
@@ -161,9 +161,9 @@ export const OwnerVehicleDocumentsCard: React.FC<OwnerVehicleDocumentsCardProps>
               className="relative flex h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
             >
               {/* Header Modal */}
-              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-[#041912] text-white">
+              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-brand-dark text-white">
                 <div className="flex items-center gap-2.5">
-                  <FileText className="h-5 w-5 text-[#4ADE80]" />
+                  <FileText className="h-5 w-5 text-emerald-400" />
                   <h3 className="font-fraunces text-lg font-normal text-white">
                     {activeDoc.title}
                   </h3>

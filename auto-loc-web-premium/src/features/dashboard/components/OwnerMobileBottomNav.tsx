@@ -34,7 +34,7 @@ export const OwnerMobileBottomNav: React.FC<OwnerMobileBottomNavProps> = ({
       aria-label="Navigation propriétaire mobile"
       className="fixed inset-x-3 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 md:hidden"
     >
-      <div className="mx-auto flex max-w-[420px] items-center rounded-full border border-[#F1DFB6]/15 bg-[#0A3D2E] p-1.5 shadow-[0_14px_34px_-12px_rgba(10,61,46,0.55)]">
+      <div className="mx-auto flex max-w-[420px] items-center rounded-full border border-champagne/15 bg-brand-main p-1.5 shadow-[0_14px_34px_-12px_rgba(10,61,46,0.55)]">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -51,10 +51,10 @@ export const OwnerMobileBottomNav: React.FC<OwnerMobileBottomNavProps> = ({
               aria-label={hasBadge ? `${item.label}, ${item.badge} en attente` : undefined}
               className={clsx(
                 'flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-full px-1 py-1.5 text-[10px] font-medium transition-colors duration-200',
-                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F1DFB6]',
+                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-champagne',
                 isActive
-                  ? 'bg-[#F1DFB6] text-[#0A3D2E] font-bold shadow-md'
-                  : 'text-[#F1DFB6]/70 hover:text-[#F1DFB6] active:bg-[#F1DFB6]/10'
+                  ? 'bg-champagne text-brand-main font-bold shadow-md'
+                  : 'text-champagne/70 hover:text-champagne active:bg-champagne/10'
               )}
             >
               <span className="relative">
@@ -69,8 +69,8 @@ export const OwnerMobileBottomNav: React.FC<OwnerMobileBottomNavProps> = ({
                     className={clsx(
                       'absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold leading-none',
                       isActive
-                        ? 'bg-[#0A3D2E] text-[#F1DFB6]'
-                        : 'bg-[#F1DFB6] text-[#0A3D2E]'
+                        ? 'bg-brand-main text-champagne'
+                        : 'bg-champagne text-brand-main'
                     )}
                   >
                     {item.badge > 99 ? '99+' : item.badge}

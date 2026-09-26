@@ -352,7 +352,7 @@ export const AdminVehicleInspectorModal: React.FC<AdminVehicleInspectorModalProp
                           type="button"
                           disabled={isMutating}
                           onClick={() => onSetMainPhoto(vehicle.id, currentPhoto.id)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#0A3D2E] text-[#F1DFB6] hover:brightness-125 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-main text-champagne hover:brightness-125 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                         >
                           <Star className="w-3.5 h-3.5 fill-current" />
                           <span>Définir comme photo principale</span>
@@ -642,7 +642,7 @@ export const AdminVehicleInspectorModal: React.FC<AdminVehicleInspectorModalProp
                     type="checkbox"
                     checked={checkedPlaque}
                     onChange={(e) => setCheckedPlaque(e.target.checked)}
-                    className="mt-0.5 rounded accent-[#0A3D2E] focus:ring-[#0A3D2E]"
+                    className="mt-0.5 rounded accent-[#0A3D2E] focus:ring-brand-main"
                   />
                   <span className="text-slate-700 dark:text-slate-300">Plaque d'immatriculation nette & valide ({vehicle.immatriculation || 'Plaque N/A'})</span>
                 </label>
@@ -652,7 +652,7 @@ export const AdminVehicleInspectorModal: React.FC<AdminVehicleInspectorModalProp
                     type="checkbox"
                     checked={checkedCarteGrise}
                     onChange={(e) => setCheckedCarteGrise(e.target.checked)}
-                    className="mt-0.5 rounded accent-[#0A3D2E] focus:ring-[#0A3D2E]"
+                    className="mt-0.5 rounded accent-[#0A3D2E] focus:ring-brand-main"
                   />
                   <span className="text-slate-700 dark:text-slate-300">Carte Grise officielle vérifiée et lisible</span>
                 </label>
@@ -662,7 +662,7 @@ export const AdminVehicleInspectorModal: React.FC<AdminVehicleInspectorModalProp
                     type="checkbox"
                     checked={checkedAssurance}
                     onChange={(e) => setCheckedAssurance(e.target.checked)}
-                    className="mt-0.5 rounded accent-[#0A3D2E] focus:ring-[#0A3D2E]"
+                    className="mt-0.5 rounded accent-[#0A3D2E] focus:ring-brand-main"
                   />
                   <span className="text-slate-700 dark:text-slate-300">Attestation d'assurance en règle</span>
                 </label>
@@ -672,7 +672,7 @@ export const AdminVehicleInspectorModal: React.FC<AdminVehicleInspectorModalProp
                     type="checkbox"
                     checked={checkedPhotos}
                     onChange={(e) => setCheckedPhotos(e.target.checked)}
-                    className="mt-0.5 rounded accent-[#0A3D2E] focus:ring-[#0A3D2E]"
+                    className="mt-0.5 rounded accent-[#0A3D2E] focus:ring-brand-main"
                   />
                   <span className="text-slate-700 dark:text-slate-300">Photos HD de qualité (sans filigrane / pub / numéro)</span>
                 </label>
@@ -682,7 +682,7 @@ export const AdminVehicleInspectorModal: React.FC<AdminVehicleInspectorModalProp
                     type="checkbox"
                     checked={checkedTarif}
                     onChange={(e) => setCheckedTarif(e.target.checked)}
-                    className="mt-0.5 rounded accent-[#0A3D2E] focus:ring-[#0A3D2E]"
+                    className="mt-0.5 rounded accent-[#0A3D2E] focus:ring-brand-main"
                   />
                   <span className="text-slate-700 dark:text-slate-300">
                     Cohérence du tarif journalier ({vehicle.prixParJour?.toLocaleString('fr-FR')} FCFA/j • {vehicle.type || 'Standard'})

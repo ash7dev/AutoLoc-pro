@@ -96,7 +96,7 @@ export const AdminOpsDrawer: React.FC<AdminOpsDrawerProps> = ({ isOpen, onClose,
                   </span>
                 )}
               </div>
-              <h2 className="text-lg font-normal text-[#041912] dark:text-white mt-2">{data.title}</h2>
+              <h2 className="text-lg font-normal text-brand-dark dark:text-white mt-2">{data.title}</h2>
               {data.subtitle && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{data.subtitle}</p>}
             </div>
 

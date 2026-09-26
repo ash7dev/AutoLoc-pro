@@ -30,13 +30,12 @@ export function BookingCheckoutHeader({
 
       {/* Titre central et badge étape */}
       <div className="flex-1 text-center min-w-0">
-        <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#0A3D2E]/10 border border-[#0A3D2E]/20 text-[#0A3D2E] text-[11px] font-bold uppercase tracking-wider mb-1">
-          <ShieldCheck className="w-3.5 h-3.5 text-[#0A3D2E]" />
+        <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-brand-main/10 border border-brand-main/20 text-brand-main text-[11px] font-bold uppercase tracking-wider mb-1">
+          <ShieldCheck className="w-3.5 h-3.5 text-brand-main" />
           <span>Étape {step} sur 2</span>
         </div>
         <h2 
-          className="text-lg sm:text-xl font-fraunces font-normal text-[#041912] tracking-tight truncate"
-          style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+          className="text-lg sm:text-xl font-fraunces font-normal text-brand-dark tracking-tight truncate"
         >
           {title}
         </h2>

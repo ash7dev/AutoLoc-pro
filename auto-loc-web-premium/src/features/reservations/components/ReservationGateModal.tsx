@@ -116,7 +116,7 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
 
           {/* Indicateur de Progression */}
           {!isPreGate && !isAgeWarning ? (
-            <div className="flex items-center gap-2 bg-[#041912] border border-[#0A3D2E] px-3.5 py-1.5 rounded-full shadow-md text-white">
+            <div className="flex items-center gap-2 bg-brand-dark border border-brand-main px-3.5 py-1.5 rounded-full shadow-md text-white">
               <span className="text-[11px] font-semibold text-white">
                 Étape {currentStepIndex} / {totalSteps - 1}
               </span>
@@ -144,7 +144,7 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 bg-[#041912] border border-emerald-500/40 px-3.5 py-1.5 rounded-full shadow-md">
+            <div className="flex items-center gap-1.5 bg-brand-dark border border-emerald-500/40 px-3.5 py-1.5 rounded-full shadow-md">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               <span className="text-[10px] font-bold tracking-wider text-emerald-400 uppercase">
                 {isOwnerMode ? 'ESPACE PROPRIÉTAIRE' : 'VÉRIFICATION SÉCURISÉE'}

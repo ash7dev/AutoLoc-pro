@@ -60,7 +60,7 @@ function buildSparkline(values: number[]) {
 }
 
 const SHELL =
-  'relative overflow-hidden rounded-[28px] bg-[#0A3D2E] p-5 text-[#F1DFB6] ring-1 ring-inset ring-[#F1DFB6]/10 sm:rounded-[32px] sm:p-9';
+  'relative overflow-hidden rounded-[28px] bg-brand-main p-5 text-champagne ring-1 ring-inset ring-champagne/10 sm:rounded-[32px] sm:p-9';
 
 /* -------------------------------------------------------------------------- */
 /* Composant                                                                  */
@@ -84,14 +84,14 @@ export const FinancialHeroCard: React.FC<FinancialHeroCardProps> = ({
       <section aria-busy="true" aria-label="Synthèse financière du mois" className={SHELL}>
         <div className="space-y-6 sm:space-y-8">
           <div className="space-y-4">
-            <div className="h-4 w-44 animate-pulse rounded bg-[#F1DFB6]/15" />
-            <div className="h-12 w-60 max-w-full animate-pulse rounded bg-[#F1DFB6]/15 sm:h-14 sm:w-72" />
-            <div className="hidden h-7 w-40 animate-pulse rounded-full bg-[#F1DFB6]/10 sm:block" />
+            <div className="h-4 w-44 animate-pulse rounded bg-champagne/15" />
+            <div className="h-12 w-60 max-w-full animate-pulse rounded bg-champagne/15 sm:h-14 sm:w-72" />
+            <div className="hidden h-7 w-40 animate-pulse rounded-full bg-champagne/10 sm:block" />
           </div>
-          <div className="h-2 w-full animate-pulse rounded-full bg-[#F1DFB6]/10" />
+          <div className="h-2 w-full animate-pulse rounded-full bg-champagne/10" />
           <div className="grid grid-cols-3 gap-3 sm:gap-4">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-12 animate-pulse rounded-xl bg-[#F1DFB6]/[0.07] sm:h-16" />
+              <div key={i} className="h-12 animate-pulse rounded-xl bg-champagne/[0.07] sm:h-16" />
             ))}
           </div>
         </div>
@@ -106,10 +106,10 @@ export const FinancialHeroCard: React.FC<FinancialHeroCardProps> = ({
   const down = variationMoisPourcentage < 0;
   const VariationIcon = up ? ArrowUpRight : down ? ArrowDownRight : Minus;
   const variationClass = up
-    ? 'bg-[#F1DFB6] text-[#041912]'
+    ? 'bg-champagne text-brand-dark'
     : down
       ? 'bg-rose-300/15 text-rose-200'
-      : 'bg-[#F1DFB6]/10 text-[#F1DFB6]/80';
+      : 'bg-champagne/10 text-champagne/80';
 
   const variationShort =
     variationMoisPourcentage === 0 ? 'Stable' : `${variationFormat.format(variationMoisPourcentage)}\u00a0%`;
@@ -129,10 +129,10 @@ export const FinancialHeroCard: React.FC<FinancialHeroCardProps> = ({
       <div className="grid gap-6 sm:gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-end">
         {/* Net du mois : sur mobile, la variation passe à droite du libellé */}
         <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-3 sm:flex sm:flex-col sm:items-start sm:gap-5">
-          <p className="text-sm text-[#F1DFB6]/75">Net propriétaire du mois</p>
+          <p className="text-sm text-champagne/75">Net propriétaire du mois</p>
           <p className="col-span-2 font-display text-[2.75rem] leading-none tracking-tight tabular-nums sm:text-6xl">
             {formatCurrency(netProprietaireMois)}
-            <span className="ml-2 font-sans text-base text-[#F1DFB6]/60 sm:text-lg">FCFA</span>
+            <span className="ml-2 font-sans text-base text-champagne/60 sm:text-lg">FCFA</span>
           </p>
           <p
             className={`col-start-2 row-start-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold sm:col-auto sm:row-auto sm:px-3 sm:text-sm ${variationClass}`}
@@ -175,11 +175,11 @@ export const FinancialHeroCard: React.FC<FinancialHeroCardProps> = ({
               <span
                 aria-hidden="true"
                 style={{ top: `${spark.lastYPercent}%` }}
-                className="absolute right-0 h-2.5 w-2.5 -translate-y-1/2 translate-x-1/2 rounded-full bg-[#F1DFB6] ring-4 ring-[#F1DFB6]/20"
+                className="absolute right-0 h-2.5 w-2.5 -translate-y-1/2 translate-x-1/2 rounded-full bg-champagne ring-4 ring-champagne/20"
               />
             </div>
           ) : (
-            <p className="max-w-xs text-sm leading-relaxed text-[#F1DFB6]/60">
+            <p className="max-w-xs text-sm leading-relaxed text-champagne/60">
               La courbe d’évolution apparaîtra dès que vous aurez quelques réservations.
             </p>
           )}
@@ -189,21 +189,21 @@ export const FinancialHeroCard: React.FC<FinancialHeroCardProps> = ({
       {/* Décomposition du chiffre d'affaires */}
       <div className="mt-6 space-y-2.5 sm:mt-9 sm:space-y-3">
         <div aria-hidden="true" className="flex h-1.5 gap-1 sm:h-2">
-          <span className="rounded-full bg-[#F1DFB6]" style={{ width: `${netShare}%` }} />
-          <span className="flex-1 rounded-full bg-[#F1DFB6]/20" />
+          <span className="rounded-full bg-champagne" style={{ width: `${netShare}%` }} />
+          <span className="flex-1 rounded-full bg-champagne/20" />
         </div>
         <dl className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1.5 text-xs sm:gap-x-8 sm:text-sm">
           <div className="flex items-baseline gap-2">
-            <dt className="flex items-center gap-2 text-[#F1DFB6]/75">
-              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[#F1DFB6]" />
+            <dt className="flex items-center gap-2 text-champagne/75">
+              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-champagne" />
               <span className="sm:hidden">Brut</span>
               <span className="hidden sm:inline">Chiffre d’affaires brut</span>
             </dt>
             <dd className="font-medium tabular-nums">{fcfa(caBrutMois)}</dd>
           </div>
           <div className="flex items-baseline gap-2">
-            <dt className="flex items-center gap-2 text-[#F1DFB6]/75">
-              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-[#F1DFB6]/25" />
+            <dt className="flex items-center gap-2 text-champagne/75">
+              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-champagne/25" />
               <span className="sm:hidden">Commission</span>
               <span className="hidden sm:inline">Commission AutoLoc</span>
             </dt>
@@ -213,24 +213,24 @@ export const FinancialHeroCard: React.FC<FinancialHeroCardProps> = ({
       </div>
 
       {/* Soldes : trois colonnes compactes sur mobile, détail complet dès sm */}
-      <dl className="mt-6 grid grid-cols-3 divide-x divide-[#F1DFB6]/15 border-t border-[#F1DFB6]/15 sm:mt-8">
+      <dl className="mt-6 grid grid-cols-3 divide-x divide-champagne/15 border-t border-champagne/15 sm:mt-8">
         {stats.map((s) => (
           <div
             key={s.label}
             className="min-w-0 space-y-1 px-3 py-3.5 first:pl-0 last:pr-0 sm:px-6 sm:py-4 sm:first:pl-0 sm:last:pr-0"
           >
-            <dt className="truncate text-xs text-[#F1DFB6]/75 sm:text-sm">
+            <dt className="truncate text-xs text-champagne/75 sm:text-sm">
               <span className="sm:hidden">{s.shortLabel}</span>
               <span className="hidden sm:inline">{s.label}</span>
             </dt>
             <dd className="font-display text-lg tabular-nums sm:text-2xl">
               <span className="sm:hidden">
                 {compactNumber.format(s.value)}
-                <span className="ml-1 font-sans text-[10px] text-[#F1DFB6]/55">FCFA</span>
+                <span className="ml-1 font-sans text-[10px] text-champagne/55">FCFA</span>
               </span>
               <span className="hidden sm:inline">{fcfa(s.value)}</span>
             </dd>
-            <p className="hidden text-xs text-[#F1DFB6]/55 sm:block">{s.note}</p>
+            <p className="hidden text-xs text-champagne/55 sm:block">{s.note}</p>
           </div>
         ))}
       </dl>

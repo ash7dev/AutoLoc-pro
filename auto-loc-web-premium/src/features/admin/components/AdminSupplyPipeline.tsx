@@ -39,7 +39,7 @@ export const AdminSupplyPipeline: React.FC<AdminSupplyPipelineProps> = ({ data, 
             <Car className="w-4.5 h-4.5" style={{ color: FOREST }} />
           </div>
           <div>
-            <h3 className="text-base font-normal text-[#041912] dark:text-white">Pipeline de l'offre</h3>
+            <h3 className="text-base font-normal text-brand-dark dark:text-white">Pipeline de l'offre</h3>
             <p className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5">
               Acquisition de véhicules, annonces en cours et flotteurs stratégiques
             </p>
@@ -131,7 +131,7 @@ export const AdminSupplyPipeline: React.FC<AdminSupplyPipelineProps> = ({ data, 
                       #{i + 1}
                     </span>
                     <div className="min-w-0">
-                      <div className="font-normal text-[#041912] dark:text-white truncate">{owner.name}</div>
+                      <div className="font-normal text-brand-dark dark:text-white truncate">{owner.name}</div>
                       <div className="text-[11px] font-normal text-slate-500 flex items-center gap-1">
                         <Phone className="w-3 h-3" style={{ color: FOREST }} /> {owner.phone || 'N/A'}
                       </div>

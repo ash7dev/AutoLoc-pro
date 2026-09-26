@@ -26,7 +26,7 @@ import { OwnerMobileBottomNav } from './OwnerMobileBottomNav';
 const SUPPORT_WHATSAPP = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP;
 
 const focusRing =
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]';
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main';
 
 const menuItem = `flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-semibold transition-colors disabled:cursor-wait disabled:opacity-60 ${focusRing}`;
 
@@ -36,7 +36,7 @@ const Avatar: React.FC<{ user: UserProfile | null }> = ({ user }) => {
     : 'P';
 
   return (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#0A3D2E] font-semibold text-[#F1DFB6] text-xs">
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-main font-semibold text-champagne text-xs">
       {user?.avatarUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -217,7 +217,7 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
                     inline-flex items-center rounded-full px-3 py-2 text-sm font-medium transition-colors duration-200 lg:px-4
                     ${focusRing}
                     ${isActive
-                      ? 'bg-[#0A3D2E] text-[#F1DFB6] font-semibold shadow-sm'
+                      ? 'bg-brand-main text-champagne font-semibold shadow-sm'
                       : 'text-slate-600 hover:bg-slate-900/[0.05] hover:text-slate-900'}
                   `}
                 >
@@ -226,8 +226,8 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
                     <span
                       aria-hidden="true"
                       className={`ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${isActive
-                          ? 'bg-[#F1DFB6] text-[#0A3D2E]'
-                          : 'bg-[#0A3D2E] text-[#F1DFB6]'
+                          ? 'bg-champagne text-brand-main'
+                          : 'bg-brand-main text-champagne'
                         }`}
                     >
                       {item.badge > 99 ? '99+' : item.badge}
@@ -246,7 +246,7 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
               href="/dashboard/vehicles/new"
               onClick={handleAddVehicleClick}
               aria-label="Ajouter un véhicule"
-              className={`inline-flex items-center justify-center gap-1.5 rounded-full bg-[#F1DFB6] px-3.5 py-2 text-xs font-semibold text-[#0A3D2E] ring-1 ring-inset ring-[#0A3D2E]/15 transition-colors hover:bg-[#EBD49A] sm:px-5 sm:py-2.5 sm:text-sm md:p-2.5 lg:px-5 lg:py-2.5 ${focusRing}`}
+              className={`inline-flex items-center justify-center gap-1.5 rounded-full bg-champagne px-3.5 py-2 text-xs font-semibold text-brand-main ring-1 ring-inset ring-brand-main/15 transition-colors hover:bg-[#EBD49A] sm:px-5 sm:py-2.5 sm:text-sm md:p-2.5 lg:px-5 lg:py-2.5 ${focusRing}`}
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
               <span className="sm:hidden">Ajouter</span>
@@ -266,8 +266,8 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
                   flex h-10 items-center gap-2 rounded-full border pl-1 pr-3 transition-colors duration-200
                   ${focusRing}
                   ${isOpen
-                    ? 'border-[#0A3D2E]/40 bg-[#0A3D2E]/[0.05]'
-                    : 'border-slate-900/10 bg-white hover:border-[#0A3D2E]/40'}
+                    ? 'border-brand-main/40 bg-brand-main/[0.05]'
+                    : 'border-slate-900/10 bg-white hover:border-brand-main/40'}
                 `}
               >
                 <Avatar user={user} />
@@ -305,7 +305,7 @@ export const OwnerNavbar: React.FC<OwnerNavbarProps> = ({
                       disabled={pendingAction !== null}
                       className={`${menuItem} text-slate-700 hover:bg-slate-100 hover:text-slate-900`}
                     >
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0A3D2E]/10 text-[#0A3D2E]">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-main/10 text-brand-main">
                         <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
                       </span>
                       <span>

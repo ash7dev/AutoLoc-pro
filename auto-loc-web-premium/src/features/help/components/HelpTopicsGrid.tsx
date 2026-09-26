@@ -72,7 +72,7 @@ export const HelpTopicsGrid: React.FC<HelpTopicsGridProps> = ({ counts }) => {
       <h2
         id="help-topics-title"
         style={DISPLAY_FONT}
-        className="mb-5 text-2xl font-normal text-[#041912] sm:text-3xl"
+        className="mb-5 text-2xl font-normal text-brand-dark sm:text-3xl"
       >
         Sujets populaires
       </h2>
@@ -85,14 +85,14 @@ export const HelpTopicsGrid: React.FC<HelpTopicsGridProps> = ({ counts }) => {
             <Link
               key={topic.id}
               href={`#${topic.id}`}
-              className="group relative flex flex-col rounded-[28px] border border-[#041912]/[0.08] bg-white p-5 transition duration-300 hover:-translate-y-0.5 hover:border-[#0A3D2E]/25 hover:shadow-[0_18px_40px_-24px_rgba(10,61,46,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F8FAF4] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              className="group relative flex flex-col rounded-[28px] border border-brand-dark/[0.08] bg-white p-5 transition duration-300 hover:-translate-y-0.5 hover:border-brand-main/25 hover:shadow-[0_18px_40px_-24px_rgba(10,61,46,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2 focus-visible:ring-offset-cream-50 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             >
               <div className="flex items-start justify-between gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0A3D2E] text-[#F1DFB6]">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-main text-champagne">
                   <Icon className="h-5 w-5" strokeWidth={1.75} />
                 </span>
                 {count ? (
-                  <span className="rounded-full bg-[#0A3D2E]/[0.07] px-2.5 py-1 text-xs font-medium tabular-nums text-[#0A3D2E]">
+                  <span className="rounded-full bg-brand-main/[0.07] px-2.5 py-1 text-xs font-medium tabular-nums text-brand-main">
                     {count} question{count > 1 ? 's' : ''}
                   </span>
                 ) : null}
@@ -100,7 +100,7 @@ export const HelpTopicsGrid: React.FC<HelpTopicsGridProps> = ({ counts }) => {
 
               <h3
                 style={DISPLAY_FONT}
-                className="mt-4 text-lg font-normal leading-snug text-[#041912]"
+                className="mt-4 text-lg font-normal leading-snug text-brand-dark"
               >
                 {topic.title}
               </h3>

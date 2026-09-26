@@ -75,7 +75,7 @@ export const DesktopVehicleLayout: React.FC<DesktopVehicleLayoutProps> = ({
         {hasMore && (
           <div ref={sentinelRef} className="py-10 flex items-center justify-center">
             {isLoadingMore ? (
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#0A3D2E] bg-white px-5 py-2.5 rounded-full border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-2 text-xs font-semibold text-brand-main bg-white px-5 py-2.5 rounded-full border border-slate-200 shadow-sm">
                 <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
                 <span>Chargement de plus de véhicules...</span>
               </div>

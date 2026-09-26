@@ -111,7 +111,7 @@ const PENDING_PAYMENT: StatusConfig = {
 const STATUS_CONFIG: Record<string, StatusConfig> = {
   EN_COURS: {
     label: 'Location en cours',
-    className: 'border-transparent bg-[#0A3D2E] text-[#F1DFB6]',
+    className: 'border-transparent bg-brand-main text-champagne',
     live: true,
   },
   CONFIRMEE: CONFIRMED,
@@ -150,7 +150,7 @@ function StatusBadge({ statut }: { statut: string }) {
       {config.live ? (
         <span
           aria-hidden="true"
-          className="h-2 w-2 rounded-full bg-[#F1DFB6] motion-safe:animate-pulse"
+          className="h-2 w-2 rounded-full bg-champagne motion-safe:animate-pulse"
         />
       ) : (
         Icon && <Icon className="h-3.5 w-3.5" aria-hidden="true" />
@@ -212,7 +212,7 @@ export function TenantReservationCard({ reservation }: TenantReservationCardProp
   return (
     <article
       aria-labelledby={titleId}
-      className={`rounded-3xl border bg-white p-4 sm:p-5 ${isActive ? 'border-[#0A3D2E]/40 shadow-md shadow-[#0A3D2E]/5' : 'border-slate-200/90 shadow-sm'
+      className={`rounded-3xl border bg-white p-4 sm:p-5 ${isActive ? 'border-brand-main/40 shadow-md shadow-brand-main/5' : 'border-slate-200/90 shadow-sm'
         }`}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:gap-5">
@@ -230,7 +230,7 @@ export function TenantReservationCard({ reservation }: TenantReservationCardProp
             }}
           />
           {vehicule?.type && (
-            <span className="absolute left-2 top-2 rounded-full bg-[#0A3D2E] px-2.5 py-0.5 text-xs font-semibold text-[#F1DFB6]">
+            <span className="absolute left-2 top-2 rounded-full bg-brand-main px-2.5 py-0.5 text-xs font-semibold text-champagne">
               {vehicule.type}
             </span>
           )}
@@ -248,7 +248,7 @@ export function TenantReservationCard({ reservation }: TenantReservationCardProp
 
             <h3
               id={titleId}
-              className="truncate font-display text-xl leading-tight text-[#041912] sm:text-2xl"
+              className="truncate font-display text-xl leading-tight text-brand-dark sm:text-2xl"
             >
               {vehicleName}
               {vehicule?.annee ? (
@@ -260,7 +260,7 @@ export function TenantReservationCard({ reservation }: TenantReservationCardProp
               {start && end && (
                 <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <Calendar
-                    className="h-4 w-4 shrink-0 text-[#0A3D2E]"
+                    className="h-4 w-4 shrink-0 text-brand-main"
                     strokeWidth={1.5}
                     aria-hidden="true"
                   />
@@ -278,7 +278,7 @@ export function TenantReservationCard({ reservation }: TenantReservationCardProp
               {vehicule?.ville && (
                 <p className="flex items-center gap-1.5">
                   <MapPin
-                    className="h-4 w-4 shrink-0 text-[#0A3D2E]"
+                    className="h-4 w-4 shrink-0 text-brand-main"
                     strokeWidth={1.5}
                     aria-hidden="true"
                   />
@@ -291,7 +291,7 @@ export function TenantReservationCard({ reservation }: TenantReservationCardProp
               <div className="flex items-center gap-2.5 pt-0.5">
                 <span
                   aria-hidden="true"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F1DFB6] text-xs font-semibold text-[#041912]"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-champagne text-xs font-semibold text-brand-dark"
                 >
                   {hostInitials}
                 </span>
@@ -305,7 +305,7 @@ export function TenantReservationCard({ reservation }: TenantReservationCardProp
                   <a
                     href={`tel:${proprietaire.telephone.replace(/\s/g, '')}`}
                     aria-label={`Appeler ${proprietaire.prenom}`}
-                    className="ml-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-[#0A3D2E] transition-colors hover:bg-[#0A3D2E]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
+                    className="ml-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 text-brand-main transition-colors hover:bg-brand-main/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2"
                   >
                     <Phone className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
                   </a>
@@ -319,7 +319,7 @@ export function TenantReservationCard({ reservation }: TenantReservationCardProp
             <div className="lg:text-right">
               <p className="text-xs text-slate-500">Total</p>
               <p
-                className={`font-display text-2xl leading-tight tabular-nums ${isCancelled ? 'text-slate-400 line-through' : 'text-[#0A3D2E]'
+                className={`font-display text-2xl leading-tight tabular-nums ${isCancelled ? 'text-slate-400 line-through' : 'text-brand-main'
                   }`}
               >
                 {formatCurrency(total)}
@@ -350,7 +350,7 @@ export function TenantReservationCard({ reservation }: TenantReservationCardProp
 
             <Link
               href={`/reservations/${reservation.id}`}
-              className="inline-flex shrink-0 items-center justify-center gap-1 rounded-full bg-[#0A3D2E] px-4 py-2.5 text-sm font-semibold text-[#F1DFB6] transition-colors hover:bg-[#0F4F3B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A3D2E] focus-visible:ring-offset-2"
+              className="inline-flex shrink-0 items-center justify-center gap-1 rounded-full bg-brand-main px-4 py-2.5 text-sm font-semibold text-champagne transition-colors hover:bg-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-main focus-visible:ring-offset-2"
             >
               Voir détail réservation
               <ChevronRight className="h-4 w-4" aria-hidden="true" />

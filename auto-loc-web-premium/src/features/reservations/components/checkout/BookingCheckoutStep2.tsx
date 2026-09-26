@@ -82,13 +82,12 @@ export function BookingCheckoutStep2({
           {/* 3. Numéro de Téléphone Mobile Money */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-xl bg-[#041912] border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
+              <div className="w-7 h-7 rounded-xl bg-brand-dark border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
                 <Phone className="w-3.5 h-3.5 text-emerald-400" />
               </div>
               <div>
                 <h4 
-                  className="text-base font-fraunces font-normal text-[#041912] tracking-tight"
-                  style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                  className="text-base font-fraunces font-normal text-brand-dark tracking-tight"
                 >
                   Numéro de téléphone
                 </h4>
@@ -97,7 +96,7 @@ export function BookingCheckoutStep2({
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center rounded-2xl border border-slate-300 bg-slate-50/50 overflow-hidden focus-within:ring-2 focus-within:ring-[#0A3D2E] focus-within:border-transparent">
+              <div className="flex items-center rounded-2xl border border-slate-300 bg-slate-50/50 overflow-hidden focus-within:ring-2 focus-within:ring-brand-main focus-within:border-transparent">
                 <div className="flex items-center gap-1.5 px-3.5 py-3 bg-slate-100 border-r border-slate-200 text-xs font-bold text-slate-900 shrink-0">
                   <span>🇸🇳</span>
                   <span>+221</span>
@@ -118,29 +117,28 @@ export function BookingCheckoutStep2({
           </div>
 
           {/* 4. Carte Récapitulative du Règlement */}
-          <div className="bg-[#0A3D2E] border border-[#0A3D2E]/80 rounded-3xl p-6 text-[#F1DFB6] space-y-4 shadow-xl">
+          <div className="bg-brand-main border border-brand-main/80 rounded-3xl p-6 text-champagne space-y-4 shadow-xl">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#F1DFB6]" />
+              <Sparkles className="w-4 h-4 text-champagne" />
               <h4 
-                className="text-sm font-fraunces font-normal text-[#F1DFB6] tracking-tight"
-                style={{ fontFamily: 'var(--font-fraunces), Georgia, serif' }}
+                className="text-sm font-fraunces font-normal text-champagne tracking-tight"
               >
                 Montant à régler en ligne
               </h4>
             </div>
 
-            <div className="flex items-baseline justify-between pt-1 border-t border-[#F1DFB6]/20">
-              <span className="text-xs text-[#F1DFB6]/80 uppercase tracking-wider font-semibold">
+            <div className="flex items-baseline justify-between pt-1 border-t border-champagne/20">
+              <span className="text-xs text-champagne/80 uppercase tracking-wider font-semibold">
                 {paymentMode === 'DEPOSIT_30' ? 'Acompte 30%' : 'Totalité 100%'}
               </span>
-              <span className="text-3xl font-display font-extrabold text-[#F1DFB6] tabular-nums">
+              <span className="text-3xl font-display font-extrabold text-champagne tabular-nums">
                 {formatCurrency(toPayAmount)}
-                <span className="ml-1 text-sm font-sans font-normal text-[#F1DFB6]/80">FCFA</span>
+                <span className="ml-1 text-sm font-sans font-normal text-champagne/80">FCFA</span>
               </span>
             </div>
 
             {paymentMode === 'DEPOSIT_30' && (
-              <p className="text-xs text-[#F1DFB6]/75">
+              <p className="text-xs text-champagne/75">
                 Le solde de {formatCurrency(numGrandTotal - deposit30)} FCFA sera réglé directement au propriétaire lors de la remise du véhicule.
               </p>
             )}
@@ -177,16 +175,16 @@ export function BookingCheckoutStep2({
           <button
             type="submit"
             disabled={!hasConsented || !phoneNumber.trim() || isProcessing}
-            className="w-full py-4 px-6 rounded-full bg-[#0A3D2E] hover:bg-[#0F4F3B] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed text-[#F1DFB6] font-bold text-base flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md"
+            className="w-full py-4 px-6 rounded-full bg-brand-main hover:bg-forest-700 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed text-champagne font-bold text-base flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md"
           >
             {isProcessing ? (
               <>
-                <Loader2 className="w-5 h-5 text-[#F1DFB6] animate-spin" />
+                <Loader2 className="w-5 h-5 text-champagne animate-spin" />
                 <span>Validation en cours...</span>
               </>
             ) : (
               <>
-                <ShieldCheck className="w-5 h-5 text-[#F1DFB6]" />
+                <ShieldCheck className="w-5 h-5 text-champagne" />
                 <span>
                   Payer {formatCurrency(toPayAmount)} FCFA avec {getGatewayName()}
                 </span>

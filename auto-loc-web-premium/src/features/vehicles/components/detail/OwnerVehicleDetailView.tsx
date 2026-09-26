@@ -112,13 +112,13 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 text-rose-600">
           <AlertTriangle className="h-7 w-7" />
         </div>
-        <h3 className="font-fraunces text-xl font-normal text-[#041912]">Véhicule introuvable</h3>
+        <h3 className="font-fraunces text-xl font-normal text-brand-dark">Véhicule introuvable</h3>
         <p className="text-xs text-slate-500 sm:text-sm">
           Ce véhicule n'existe pas ou vous n'avez pas les autorisations requises pour y accéder.
         </p>
         <Link
           href="/dashboard/vehicles"
-          className="inline-flex items-center gap-2 rounded-2xl bg-[#041912] px-5 py-2.5 text-xs font-bold text-[#4ADE80]"
+          className="inline-flex items-center gap-2 rounded-2xl bg-brand-dark px-5 py-2.5 text-xs font-bold text-emerald-400"
         >
           <ChevronLeft className="h-4 w-4" />
           <span>Retour à la flotte</span>
@@ -145,11 +145,11 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
       {/* Fil d'ariane Desktop */}
       <div className="hidden sm:flex items-center justify-between">
         <div className="flex items-center gap-2 text-[13px] text-slate-500">
-          <Link href="/dashboard/vehicles" className="hover:text-[#041912] transition-colors">
+          <Link href="/dashboard/vehicles" className="hover:text-brand-dark transition-colors">
             Flotte
           </Link>
           <span className="text-slate-300">/</span>
-          <span className="font-semibold text-[#041912]">
+          <span className="font-semibold text-brand-dark">
             {vehicle.marque} {vehicle.modele}
           </span>
         </div>
@@ -159,7 +159,7 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
             href={`/dashboard/vehicles/${vehicleId}/edit`}
             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-[13px] font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
           >
-            <Edit className="h-3.5 w-3.5 text-[#059669]" />
+            <Edit className="h-3.5 w-3.5 text-emerald-600" />
             Modifier l'annonce
           </Link>
 
@@ -187,13 +187,13 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
       <OwnerVehicleHeroGallery vehicle={vehicle} />
 
       {/* Bandeau de métriques clés — une seule bande, pas 4 cartes dupliquées */}
-      <div className="grid grid-cols-2 divide-y divide-slate-100 rounded-2xl border border-[#041912]/8 bg-white sm:grid-cols-4 sm:divide-x sm:divide-y-0">
+      <div className="grid grid-cols-2 divide-y divide-slate-100 rounded-2xl border border-brand-dark/8 bg-white sm:grid-cols-4 sm:divide-x sm:divide-y-0">
         <div className="flex flex-col gap-1 p-4 sm:p-5">
           <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
             <DollarSign className="h-3.5 w-3.5" />
             Tarif journalier
           </span>
-          <p className="font-fraunces text-xl text-[#041912] sm:text-2xl">
+          <p className="font-fraunces text-xl text-brand-dark sm:text-2xl">
             {formatCurrency(vehicle.prixParJour || 0)}
           </p>
         </div>
@@ -203,7 +203,7 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
             <Calendar className="h-3.5 w-3.5" />
             Réservations
           </span>
-          <p className="font-fraunces text-xl text-[#041912] sm:text-2xl">{nbReservations}</p>
+          <p className="font-fraunces text-xl text-brand-dark sm:text-2xl">{nbReservations}</p>
         </div>
 
         <div className="flex flex-col gap-1 p-4 sm:p-5">
@@ -211,19 +211,19 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
             <Clock className="h-3.5 w-3.5" />
             Dates bloquées
           </span>
-          <p className="font-fraunces text-xl text-[#041912] sm:text-2xl">{indisponibilites.length}</p>
+          <p className="font-fraunces text-xl text-brand-dark sm:text-2xl">{indisponibilites.length}</p>
         </div>
 
         <div className="flex flex-col gap-1 p-4 sm:p-5">
           <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
             {isVerifie ? (
-              <CheckCircle2 className="h-3.5 w-3.5 text-[#0A3D2E]" />
+              <CheckCircle2 className="h-3.5 w-3.5 text-brand-main" />
             ) : (
               <Clock className="h-3.5 w-3.5 text-amber-600" />
             )}
             Statut
           </span>
-          <p className="truncate text-[15px] font-semibold text-[#041912] sm:text-base">
+          <p className="truncate text-[15px] font-semibold text-brand-dark sm:text-base">
             {isVerifie ? 'Actif & disponible' : vehicle.statut || 'En révision'}
           </p>
         </div>
@@ -237,8 +237,8 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
             type="button"
             onClick={() => setActiveTab(tab.key)}
             className={`shrink-0 rounded-xl px-4 py-2 text-[13px] font-semibold transition-colors ${activeTab === tab.key
-                ? 'bg-[#041912] text-[#F1DFB6] shadow-sm'
-                : 'text-slate-500 hover:text-[#041912]'
+                ? 'bg-brand-dark text-champagne shadow-sm'
+                : 'text-slate-500 hover:text-brand-dark'
               }`}
           >
             {tab.label}
@@ -251,45 +251,45 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
       {/* Onglet 1 : Vue d'ensemble */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          <div className="rounded-3xl border border-[#041912]/8 bg-white p-6 sm:p-8">
-            <h3 className="font-fraunces text-xl leading-tight text-[#041912]">Caractéristiques</h3>
+          <div className="rounded-3xl border border-brand-dark/8 bg-white p-6 sm:p-8">
+            <h3 className="font-fraunces text-xl leading-tight text-brand-dark">Caractéristiques</h3>
 
             <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-y border-slate-100 py-4 sm:grid-cols-4">
               <div className="flex items-center gap-2.5">
-                <Fuel className="h-4 w-4 shrink-0 text-[#059669]" />
+                <Fuel className="h-4 w-4 shrink-0 text-emerald-600" />
                 <div className="min-w-0">
                   <p className="text-[11px] text-slate-400">Carburant</p>
-                  <p className="truncate text-[13px] font-semibold capitalize text-[#041912]">
+                  <p className="truncate text-[13px] font-semibold capitalize text-brand-dark">
                     {vehicle.carburant || 'Essence'}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2.5">
-                <Settings className="h-4 w-4 shrink-0 text-[#059669]" />
+                <Settings className="h-4 w-4 shrink-0 text-emerald-600" />
                 <div className="min-w-0">
                   <p className="text-[11px] text-slate-400">Transmission</p>
-                  <p className="truncate text-[13px] font-semibold capitalize text-[#041912]">
+                  <p className="truncate text-[13px] font-semibold capitalize text-brand-dark">
                     {vehicle.transmission || 'AUTOMATIQUE'}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2.5">
-                <Users className="h-4 w-4 shrink-0 text-[#059669]" />
+                <Users className="h-4 w-4 shrink-0 text-emerald-600" />
                 <div className="min-w-0">
                   <p className="text-[11px] text-slate-400">Places</p>
-                  <p className="truncate text-[13px] font-semibold text-[#041912]">
+                  <p className="truncate text-[13px] font-semibold text-brand-dark">
                     {vehicle.nombrePlaces || 5} places
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2.5">
-                <Layers className="h-4 w-4 shrink-0 text-[#059669]" />
+                <Layers className="h-4 w-4 shrink-0 text-emerald-600" />
                 <div className="min-w-0">
                   <p className="text-[11px] text-slate-400">Catégorie</p>
-                  <p className="truncate text-[13px] font-semibold capitalize text-[#041912]">
+                  <p className="truncate text-[13px] font-semibold capitalize text-brand-dark">
                     {vehicle.type || 'SUV'}
                   </p>
                 </div>
@@ -298,7 +298,7 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
 
             {vehicle.description && (
               <div className="mt-4">
-                <h4 className="text-[13px] font-semibold text-[#041912]">Description de l'annonce</h4>
+                <h4 className="text-[13px] font-semibold text-brand-dark">Description de l'annonce</h4>
                 <p className="mt-1.5 whitespace-pre-line text-[13px] leading-relaxed text-slate-600">
                   {vehicle.description}
                 </p>
@@ -329,15 +329,15 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
       {activeTab === 'pricing' && (
         <div className="space-y-6">
           {/* Tarif de base & conditions */}
-          <div className="rounded-3xl border border-[#041912]/8 bg-white p-6 sm:p-8">
-            <h3 className="font-fraunces text-xl leading-tight text-[#041912]">
+          <div className="rounded-3xl border border-brand-dark/8 bg-white p-6 sm:p-8">
+            <h3 className="font-fraunces text-xl leading-tight text-brand-dark">
               Tarif de base & conditions
             </h3>
 
             <div className="mt-4 grid grid-cols-1 divide-y divide-slate-100 border-y border-slate-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
               <div className="py-4 sm:px-5 sm:py-1 sm:first:pl-0">
                 <span className="text-[11px] text-slate-400">Tarif journalier standard</span>
-                <p className="mt-1 font-fraunces text-2xl text-[#041912]">
+                <p className="mt-1 font-fraunces text-2xl text-brand-dark">
                   {formatCurrency(vehicle.prixParJour || 0)}
                 </p>
                 <p className="mt-0.5 text-[12px] text-slate-500">Tarif de référence (1 à 2 jours)</p>
@@ -345,7 +345,7 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
 
               <div className="py-4 sm:px-5 sm:py-1">
                 <span className="text-[11px] text-slate-400">Durée minimale</span>
-                <p className="mt-1 font-fraunces text-2xl text-[#041912]">
+                <p className="mt-1 font-fraunces text-2xl text-brand-dark">
                   {vehicle.joursMinimum || 1} {vehicle.joursMinimum && vehicle.joursMinimum > 1 ? 'jours' : 'jour'}
                 </p>
                 <p className="mt-0.5 text-[12px] text-slate-500">Minimum par réservation</p>
@@ -353,7 +353,7 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
 
               <div className="py-4 sm:px-5 sm:py-1">
                 <span className="text-[11px] text-slate-400">Âge minimal requis</span>
-                <p className="mt-1 font-fraunces text-2xl text-[#041912]">
+                <p className="mt-1 font-fraunces text-2xl text-brand-dark">
                   {vehicle.ageMinimum || 21} ans
                 </p>
                 <p className="mt-0.5 text-[12px] text-slate-500">Avec permis validé</p>
@@ -362,8 +362,8 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
           </div>
 
           {/* Réductions longs séjours */}
-          <div className="rounded-3xl border border-[#041912]/8 bg-white p-6 sm:p-8">
-            <h3 className="font-fraunces text-xl leading-tight text-[#041912]">
+          <div className="rounded-3xl border border-brand-dark/8 bg-white p-6 sm:p-8">
+            <h3 className="font-fraunces text-xl leading-tight text-brand-dark">
               Réductions longs séjours
             </h3>
             <p className="mt-1 text-[13px] text-slate-500">
@@ -387,14 +387,14 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
                       className="rounded-2xl border border-slate-100 p-4"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[12.5px] font-semibold text-[#041912]">{durationLabel}</span>
+                        <span className="text-[12.5px] font-semibold text-brand-dark">{durationLabel}</span>
                         {discountPct > 0 && (
-                          <span className="rounded-full bg-[#0A3D2E]/8 px-2 py-0.5 text-[10.5px] font-bold text-[#0A3D2E]">
+                          <span className="rounded-full bg-brand-main/8 px-2 py-0.5 text-[10.5px] font-bold text-brand-main">
                             -{discountPct}%
                           </span>
                         )}
                       </div>
-                      <p className="mt-2 font-fraunces text-xl text-[#041912]">
+                      <p className="mt-2 font-fraunces text-xl text-brand-dark">
                         {formatCurrency(tierPrix)}
                         <span className="ml-1 text-[11px] font-sans font-normal text-slate-400">/ jour</span>
                       </p>
@@ -416,8 +416,8 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
           </div>
 
           {/* Options & services de livraison */}
-          <div className="rounded-3xl border border-[#041912]/8 bg-white p-6 sm:p-8">
-            <h3 className="font-fraunces text-xl leading-tight text-[#041912]">
+          <div className="rounded-3xl border border-brand-dark/8 bg-white p-6 sm:p-8">
+            <h3 className="font-fraunces text-xl leading-tight text-brand-dark">
               Options & services de livraison
             </h3>
 
@@ -428,8 +428,8 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-[13.5px] font-semibold text-[#041912]">Déplacement hors Dakar</span>
-                    <span className={`text-[11.5px] font-semibold ${vehicle.autoriseHorsDakar ? 'text-[#0A3D2E]' : 'text-slate-400'}`}>
+                    <span className="text-[13.5px] font-semibold text-brand-dark">Déplacement hors Dakar</span>
+                    <span className={`text-[11.5px] font-semibold ${vehicle.autoriseHorsDakar ? 'text-brand-main' : 'text-slate-400'}`}>
                       {vehicle.autoriseHorsDakar ? 'Autorisé' : 'Dakar uniquement'}
                     </span>
                   </div>
@@ -437,7 +437,7 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
                     Supplément pour déplacements en région (Mbour, Thiès, Saly, Saint-Louis...)
                   </p>
                   {vehicle.autoriseHorsDakar && (
-                    <p className="mt-1 text-[13px] font-medium text-[#041912]">
+                    <p className="mt-1 text-[13px] font-medium text-brand-dark">
                       {vehicle.supplementHorsDakarParJour || (vehicle as any).prixParJourHorsDakar
                         ? `+ ${formatCurrency(vehicle.supplementHorsDakarParJour || (vehicle as any).prixParJourHorsDakar || 0)} / jour`
                         : 'Inclus (0 FCFA)'}
@@ -452,8 +452,8 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-[13.5px] font-semibold text-[#041912]">Livraison aéroport AIBD</span>
-                    <span className={`text-[11.5px] font-semibold ${vehicle.proposeLivraisonAibd ? 'text-[#0A3D2E]' : 'text-slate-400'}`}>
+                    <span className="text-[13.5px] font-semibold text-brand-dark">Livraison aéroport AIBD</span>
+                    <span className={`text-[11.5px] font-semibold ${vehicle.proposeLivraisonAibd ? 'text-brand-main' : 'text-slate-400'}`}>
                       {vehicle.proposeLivraisonAibd ? 'Proposé' : 'Non proposé'}
                     </span>
                   </div>
@@ -461,7 +461,7 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
                     Remise des clés directement à la sortie du terminal AIBD (Diass)
                   </p>
                   {vehicle.proposeLivraisonAibd && (
-                    <p className="mt-1 text-[13px] font-medium text-[#041912]">
+                    <p className="mt-1 text-[13px] font-medium text-brand-dark">
                       {vehicle.fraisLivraisonAibd ? formatCurrency(vehicle.fraisLivraisonAibd) : 'Gratuit'}
                     </p>
                   )}
@@ -474,8 +474,8 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-[13.5px] font-semibold text-[#041912]">Livraison à domicile / Dakar</span>
-                    <span className={`text-[11.5px] font-semibold ${vehicle.proposeLivraisonDakar ? 'text-[#0A3D2E]' : 'text-slate-400'}`}>
+                    <span className="text-[13.5px] font-semibold text-brand-dark">Livraison à domicile / Dakar</span>
+                    <span className={`text-[11.5px] font-semibold ${vehicle.proposeLivraisonDakar ? 'text-brand-main' : 'text-slate-400'}`}>
                       {vehicle.proposeLivraisonDakar ? 'Proposé' : 'Retrait sur place'}
                     </span>
                   </div>
@@ -483,7 +483,7 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
                     Livraison du véhicule au domicile ou à l'hôtel du locataire à Dakar
                   </p>
                   {vehicle.proposeLivraisonDakar && (
-                    <p className="mt-1 text-[13px] font-medium text-[#041912]">
+                    <p className="mt-1 text-[13px] font-medium text-brand-dark">
                       {vehicle.fraisLivraisonDakar ? formatCurrency(vehicle.fraisLivraisonDakar) : 'Gratuit'}
                     </p>
                   )}
@@ -497,7 +497,7 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
       {/* Onglet 4 : Historique des réservations */}
       {activeTab === 'reservations' && (
         <div className="space-y-4">
-          <h3 className="font-fraunces text-xl leading-tight text-[#041912]">
+          <h3 className="font-fraunces text-xl leading-tight text-brand-dark">
             Réservations liées à ce véhicule ({vehicleReservations.length})
           </h3>
 

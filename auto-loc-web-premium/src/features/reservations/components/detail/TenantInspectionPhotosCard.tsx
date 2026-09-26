@@ -42,12 +42,12 @@ const TABS = [
 type Tab = (typeof TABS)[number]['key'];
 
 const focusRing =
-  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D2E]';
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-main';
 
 /* Badge Départ / Retour sur les vignettes */
 const TypeBadge: React.FC<{ type: string }> = ({ type }) =>
   type === 'CHECKIN' ? (
-    <span className="rounded-full bg-[#F1DFB6] px-2 py-0.5 text-[10px] font-semibold text-[#0A3D2E] shadow-sm">
+    <span className="rounded-full bg-champagne px-2 py-0.5 text-[10px] font-semibold text-brand-main shadow-sm">
       Départ
     </span>
   ) : (
@@ -144,7 +144,7 @@ export const TenantInspectionPhotosCard: React.FC<TenantInspectionPhotosCardProp
         {/* En-tête */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0A3D2E] text-[#F1DFB6]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-main text-champagne">
               <Camera className="h-5 w-5" strokeWidth={1.6} aria-hidden />
             </div>
             <div>
@@ -158,7 +158,7 @@ export const TenantInspectionPhotosCard: React.FC<TenantInspectionPhotosCardProp
           </div>
 
           {photos.length > 0 && (
-            <span className="hidden shrink-0 items-center gap-1.5 pt-1 text-xs font-medium text-[#0A3D2E] sm:inline-flex">
+            <span className="hidden shrink-0 items-center gap-1.5 pt-1 text-xs font-medium text-brand-main sm:inline-flex">
               <ShieldCheck className="h-4 w-4" aria-hidden />
               Horodatées
             </span>
@@ -182,7 +182,7 @@ export const TenantInspectionPhotosCard: React.FC<TenantInspectionPhotosCardProp
                   aria-selected={active}
                   onClick={() => setActiveTab(tab.key)}
                   className={`shrink-0 rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors duration-200 motion-reduce:transition-none ${focusRing} ${active
-                      ? 'bg-[#0A3D2E] text-[#F1DFB6] shadow-sm'
+                      ? 'bg-brand-main text-champagne shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
                     }`}
                 >
@@ -199,7 +199,7 @@ export const TenantInspectionPhotosCard: React.FC<TenantInspectionPhotosCardProp
         {/* Grille */}
         {count === 0 ? (
           <div className="flex flex-col items-center rounded-2xl bg-slate-50 px-4 py-10 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0A3D2E] text-[#F1DFB6]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-main text-champagne">
               <Camera className="h-5 w-5" strokeWidth={1.6} aria-hidden />
             </div>
             <p className="mt-3 font-fraunces text-lg font-normal text-slate-900">
@@ -277,7 +277,7 @@ export const TenantInspectionPhotosCard: React.FC<TenantInspectionPhotosCardProp
               type="button"
               onClick={() => setSelectedIndex(null)}
               aria-label="Fermer"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#F1DFB6]"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-champagne"
             >
               <X className="h-5 w-5" />
             </button>
@@ -307,7 +307,7 @@ export const TenantInspectionPhotosCard: React.FC<TenantInspectionPhotosCardProp
                   type="button"
                   onClick={() => step(-1)}
                   aria-label="Photo précédente"
-                  className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#F1DFB6]"
+                  className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-champagne"
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </button>
@@ -315,7 +315,7 @@ export const TenantInspectionPhotosCard: React.FC<TenantInspectionPhotosCardProp
                   type="button"
                   onClick={() => step(1)}
                   aria-label="Photo suivante"
-                  className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#F1DFB6]"
+                  className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-champagne"
                 >
                   <ChevronRight className="h-6 w-6" />
                 </button>
@@ -338,7 +338,7 @@ export const TenantInspectionPhotosCard: React.FC<TenantInspectionPhotosCardProp
                     aria-label={`Voir la photo ${idx + 1} : ${getCategoryLabel(p.categorie)}`}
                     aria-current={idx === selectedIndex}
                     className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-opacity duration-200 motion-reduce:transition-none ${idx === selectedIndex
-                        ? 'border-[#F1DFB6]'
+                        ? 'border-champagne'
                         : 'border-transparent opacity-50 hover:opacity-100'
                       }`}
                   >

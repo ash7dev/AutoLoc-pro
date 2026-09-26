@@ -70,7 +70,7 @@ export const OwnerTenantCard: React.FC<OwnerTenantCardProps> = ({
       {/* ── 1. En-tête Identité Locataire ─────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-[#0A3D2E] text-[#F1DFB6] font-fraunces text-lg font-bold flex items-center justify-center shrink-0 shadow-xs">
+          <div className="w-12 h-12 rounded-2xl bg-brand-main text-champagne font-fraunces text-lg font-bold flex items-center justify-center shrink-0 shadow-xs">
             {locataire?.prenom?.[0]?.toUpperCase() || 'L'}
             {locataire?.nom?.[0]?.toUpperCase() || ''}
           </div>
@@ -79,7 +79,7 @@ export const OwnerTenantCard: React.FC<OwnerTenantCardProps> = ({
             <span className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
               Locataire Titulaire
             </span>
-            <h3 className="font-fraunces text-xl text-[#041912] font-normal tracking-tight">
+            <h3 className="font-fraunces text-xl text-brand-dark font-normal tracking-tight">
               {fullName}
             </h3>
           </div>
@@ -90,14 +90,14 @@ export const OwnerTenantCard: React.FC<OwnerTenantCardProps> = ({
             <button
               type="button"
               onClick={onViewKycClick}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[#0A3D2E] text-xs font-bold hover:bg-emerald-100 transition-colors cursor-pointer shrink-0 shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-brand-main text-xs font-bold hover:bg-emerald-100 transition-colors cursor-pointer shrink-0 shadow-2xs"
             >
               <BadgeCheck className="w-4 h-4 text-emerald-600" />
               <span>Dossier KYC & Permis</span>
-              <Eye className="w-3.5 h-3.5 text-[#0A3D2E]/70" />
+              <Eye className="w-3.5 h-3.5 text-brand-main/70" />
             </button>
           ) : isKycValid ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[#0A3D2E] text-xs font-bold shrink-0">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-brand-main text-xs font-bold shrink-0">
               <BadgeCheck className="w-3.5 h-3.5 text-emerald-600" />
               <span>KYC & Permis Vérifiés</span>
             </span>
@@ -110,7 +110,7 @@ export const OwnerTenantCard: React.FC<OwnerTenantCardProps> = ({
         <div className="rounded-2xl bg-emerald-50/60 border border-emerald-200/80 p-4 sm:p-5 space-y-4">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#0A3D2E] text-[#F1DFB6] flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-brand-main text-champagne flex items-center justify-center shrink-0">
                 <Phone className="w-4 h-4" />
               </div>
               <div>
@@ -119,7 +119,7 @@ export const OwnerTenantCard: React.FC<OwnerTenantCardProps> = ({
                 </span>
                 <a
                   href={`tel:${cleanPhone}`}
-                  className="font-fraunces text-lg text-[#041912] hover:underline font-normal tracking-tight"
+                  className="font-fraunces text-lg text-brand-dark hover:underline font-normal tracking-tight"
                 >
                   {phone}
                 </a>
@@ -137,7 +137,7 @@ export const OwnerTenantCard: React.FC<OwnerTenantCardProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
             <a
               href={`tel:${cleanPhone}`}
-              className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-[#0A3D2E] text-[#F1DFB6] font-bold text-xs hover:bg-[#0F4F3B] active:scale-[0.98] transition-all cursor-pointer shadow-xs"
+              className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-brand-main text-champagne font-bold text-xs hover:bg-forest-700 active:scale-[0.98] transition-all cursor-pointer shadow-xs"
             >
               <Phone className="w-3.5 h-3.5" />
               <span>Appeler le locataire</span>
@@ -160,7 +160,7 @@ export const OwnerTenantCard: React.FC<OwnerTenantCardProps> = ({
             <LockKeyhole className="w-4.5 h-4.5 text-slate-600" />
           </div>
           <div className="space-y-1">
-            <h4 className="font-fraunces text-base text-[#041912] font-normal">
+            <h4 className="font-fraunces text-base text-brand-dark font-normal">
               Coordonnées protégées par AutoLoc
             </h4>
             <p className="text-xs text-slate-500 leading-relaxed font-medium">

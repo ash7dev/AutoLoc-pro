@@ -49,7 +49,7 @@ export const AdminKycTable: React.FC<AdminKycTableProps> = ({ items, isLoading, 
         <div className="w-12 h-12 rounded-full mx-auto flex items-center justify-center" style={{ backgroundColor: 'rgba(10, 61, 46, 0.08)', color: FOREST }}>
           <CheckCircle2 className="w-6 h-6" />
         </div>
-        <h3 className="text-base font-normal text-[#041912] dark:text-white">Aucun dossier dans cette liste</h3>
+        <h3 className="text-base font-normal text-brand-dark dark:text-white">Aucun dossier dans cette liste</h3>
         <p className="text-xs text-slate-500 max-w-sm mx-auto">
           Toutes les demandes de vérification KYC dans cette catégorie sont traitées ou aucune ne correspond à vos critères de recherche.
         </p>
@@ -85,13 +85,13 @@ export const AdminKycTable: React.FC<AdminKycTableProps> = ({ items, isLoading, 
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-9 h-9 rounded-full text-[#041912] font-normal flex items-center justify-center text-sm shrink-0 border border-black/5"
+                        className="w-9 h-9 rounded-full text-brand-dark font-normal flex items-center justify-center text-sm shrink-0 border border-black/5"
                         style={{ backgroundColor: CHAMPAGNE }}
                       >
                         {item.prenom?.[0] || 'U'}
                       </div>
                       <div className="min-w-0">
-                        <div className="font-normal text-[#041912] dark:text-white text-sm truncate">{item.fullName}</div>
+                        <div className="font-normal text-brand-dark dark:text-white text-sm truncate">{item.fullName}</div>
                         <div className="text-[11px] text-slate-500 truncate">{item.phone || item.email}</div>
                       </div>
                     </div>

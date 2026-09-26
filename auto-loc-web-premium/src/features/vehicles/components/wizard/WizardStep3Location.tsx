@@ -97,7 +97,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
     <div className="space-y-6">
       {/* Hero Header */}
       <div className="text-center space-y-1 sm:space-y-2 pb-1 sm:pb-2">
-        <div className="mx-auto hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-[#041912] border border-[#4ADE80]/30 text-[#4ADE80] shadow-md">
+        <div className="mx-auto hidden sm:flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-dark border border-[#4ADE80]/30 text-emerald-400 shadow-md">
           <MapPin className="h-6 w-6" strokeWidth={2.2} />
         </div>
         <h2 className="font-fraunces font-normal text-xl sm:text-3xl text-slate-900 tracking-tight">Localisation & Logistique</h2>
@@ -109,7 +109,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
       {/* Ville & Quartier */}
       <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-900 font-fraunces">
-          <MapPin className="h-4 w-4 text-[#059669]" />
+          <MapPin className="h-4 w-4 text-emerald-600" />
           <span>Ville & Zone d’attache *</span>
         </label>
         <p className="text-xs text-slate-500">Sélectionnez la ville principale où le véhicule sera restitué.</p>
@@ -124,7 +124,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${data.ville ? 'bg-[#041912] text-[#4ADE80]' : 'bg-slate-100 text-slate-500'}`}>
+            <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${data.ville ? 'bg-brand-dark text-emerald-400' : 'bg-slate-100 text-slate-500'}`}>
               <MapPin className="h-4 w-4" />
             </div>
             <div>
@@ -139,7 +139,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
       {/* Adresse Exacte */}
       <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <label className="flex items-center gap-2 text-xs font-semibold text-slate-900 font-fraunces">
-          <Navigation className="h-4 w-4 text-[#059669]" />
+          <Navigation className="h-4 w-4 text-emerald-600" />
           <span>Adresse ou Quartier exact *</span>
         </label>
         <p className="text-xs text-slate-500">Indiquez le lieu précis de prise en main (ex: Almadies, Rue des Baronnies).</p>
@@ -147,7 +147,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
         <div className={`flex items-center rounded-xl border px-3.5 py-2.5 transition-all ${
           data.adresse ? 'border-[#059669] bg-[#F0FDF4]' : 'border-slate-200 bg-slate-50'
         }`}>
-          <Navigation className={`h-4 w-4 mr-2 ${data.adresse ? 'text-[#059669]' : 'text-slate-400'}`} />
+          <Navigation className={`h-4 w-4 mr-2 ${data.adresse ? 'text-emerald-600' : 'text-slate-400'}`} />
           <input
             type="text"
             value={data.adresse}
@@ -164,7 +164,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
 
         {/* Privacy Reassurance Badge */}
         <div className="flex items-start gap-2.5 rounded-xl bg-[#F0FDF4] border border-[#A7F3D0] p-3 text-xs text-[#166534]">
-          <ShieldCheck className="h-4 w-4 shrink-0 text-[#059669] mt-0.5" />
+          <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
           <span>
             <strong>Confidentialité garantie :</strong> L’adresse exacte n’est partagée qu’après la confirmation de la réservation.
           </span>
@@ -178,7 +178,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all ${
-              data.autoriseHorsDakar ? 'bg-[#041912] text-[#4ADE80]' : 'bg-sky-100 text-sky-700'
+              data.autoriseHorsDakar ? 'bg-brand-dark text-emerald-400' : 'bg-sky-100 text-sky-700'
             }`}>
               <Compass className="h-5 w-5" />
             </div>
@@ -193,7 +193,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
             aria-checked={data.autoriseHorsDakar}
             onClick={() => handleToggleHorsDakar(!data.autoriseHorsDakar)}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-              data.autoriseHorsDakar ? 'bg-[#059669]' : 'bg-slate-300'
+              data.autoriseHorsDakar ? 'bg-emerald-600' : 'bg-slate-300'
             }`}
           >
             <span
@@ -216,7 +216,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
                     type="button"
                     onClick={() => onChange({ supplementHorsDakarParJour: preset })}
                     className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                      isSelected ? 'bg-[#041912] text-[#4ADE80] border-[#041912]' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      isSelected ? 'bg-brand-dark text-emerald-400 border-brand-dark' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                     }`}
                   >
                     +{preset.toLocaleString('fr-FR')} F
@@ -226,7 +226,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
             </div>
 
             <div className="flex items-center rounded-xl border border-slate-200 px-3 py-2 bg-white">
-              <Coins className="h-4 w-4 text-[#059669] mr-2" />
+              <Coins className="h-4 w-4 text-emerald-600 mr-2" />
               <input
                 type="number"
                 value={data.supplementHorsDakarParJour || ''}
@@ -247,7 +247,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all ${
-              proposeLivraisonDakar ? 'bg-[#041912] text-[#4ADE80]' : 'bg-purple-100 text-purple-700'
+              proposeLivraisonDakar ? 'bg-brand-dark text-emerald-400' : 'bg-purple-100 text-purple-700'
             }`}>
               <Truck className="h-5 w-5" />
             </div>
@@ -262,7 +262,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
             aria-checked={proposeLivraisonDakar}
             onClick={() => handleToggleLivraisonDakar(!proposeLivraisonDakar)}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-              proposeLivraisonDakar ? 'bg-[#059669]' : 'bg-slate-300'
+              proposeLivraisonDakar ? 'bg-emerald-600' : 'bg-slate-300'
             }`}
           >
             <span
@@ -285,7 +285,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
                     type="button"
                     onClick={() => onChange({ fraisLivraisonDakar: preset, fraisLivraison: preset })}
                     className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                      isSelected ? 'bg-[#041912] text-[#4ADE80] border-[#041912]' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      isSelected ? 'bg-brand-dark text-emerald-400 border-brand-dark' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                     }`}
                   >
                     {preset === 0 ? 'Gratuit' : `${preset.toLocaleString('fr-FR')} F`}
@@ -304,7 +304,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all ${
-              proposeLivraisonAibd ? 'bg-[#041912] text-[#4ADE80]' : 'bg-amber-100 text-amber-700'
+              proposeLivraisonAibd ? 'bg-brand-dark text-emerald-400' : 'bg-amber-100 text-amber-700'
             }`}>
               <Plane className="h-5 w-5" />
             </div>
@@ -319,7 +319,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
             aria-checked={proposeLivraisonAibd}
             onClick={() => handleToggleLivraisonAibd(!proposeLivraisonAibd)}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-              proposeLivraisonAibd ? 'bg-[#059669]' : 'bg-slate-300'
+              proposeLivraisonAibd ? 'bg-emerald-600' : 'bg-slate-300'
             }`}
           >
             <span
@@ -342,7 +342,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
                     type="button"
                     onClick={() => onChange({ fraisLivraisonAibd: preset })}
                     className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                      isSelected ? 'bg-[#041912] text-[#4ADE80] border-[#041912]' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      isSelected ? 'bg-brand-dark text-emerald-400 border-brand-dark' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                     }`}
                   >
                     {preset.toLocaleString('fr-FR')} F
@@ -379,7 +379,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
             <div className="flex-1 overflow-y-auto space-y-4 pr-1 min-h-0">
               {Object.entries(filteredLocations).map(([region, cities]) => (
                 <div key={region} className="space-y-2">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-[#059669] uppercase tracking-wider font-fraunces">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 uppercase tracking-wider font-fraunces">
                     <MapPin className="h-3.5 w-3.5" />
                     <span>{region}</span>
                   </div>
@@ -397,7 +397,7 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
                           }`}
                         >
                           <span className="truncate">{city}</span>
-                          {isSelected && <Check className="h-3.5 w-3.5 text-[#059669] shrink-0" />}
+                          {isSelected && <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />}
                         </button>
                       );
                     })}

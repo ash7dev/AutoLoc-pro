@@ -21,6 +21,7 @@ export const OwnerHeader: React.FC<OwnerHeaderProps> = ({
   onProfilePress,
 }) => {
   const isAuthenticated = useAppStore((state) => state.isAuthenticated);
+  const user = useAppStore((state) => state.user);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -45,7 +46,11 @@ export const OwnerHeader: React.FC<OwnerHeaderProps> = ({
               accessibilityRole="button"
               accessibilityLabel="Accéder à mon profil"
             >
-              <User size={18} color={theme.colors.brand.main} />
+              {isAuthenticated && user?.avatarUrl ? (
+                <Image source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
+              ) : (
+                <User size={18} color={theme.colors.brand.main} />
+              )}
               {isAuthenticated && <View style={styles.onlineDot} />}
             </TouchableOpacity>
           </View>
@@ -71,7 +76,11 @@ export const OwnerHeader: React.FC<OwnerHeaderProps> = ({
               accessibilityRole="button"
               accessibilityLabel="Accéder à mon profil"
             >
-              <User size={18} color={theme.colors.brand.main} />
+              {isAuthenticated && user?.avatarUrl ? (
+                <Image source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
+              ) : (
+                <User size={18} color={theme.colors.brand.main} />
+              )}
               {isAuthenticated && <View style={styles.onlineDot} />}
             </TouchableOpacity>
           </View>
@@ -112,6 +121,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
   },
   onlineDot: {
     position: 'absolute',
