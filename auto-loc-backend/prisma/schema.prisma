@@ -46,6 +46,11 @@ model Utilisateur {
   kycRejectionReason       String?
   permisPublicId           String?
   permisUrl                String?
+  // Growth Attribution (UTMs & Meta fbc/fbp)
+  utmSource                String?
+  utmMedium                String?
+  utmCampaign              String?
+  fbclid                   String?
   avisEnvoyes              Avis[]                   @relation("auteur")
   avisRecus                Avis[]                   @relation("cible")
   reservationsLocataire    Reservation[]            @relation("locataire")
@@ -220,6 +225,11 @@ model Reservation {
   absenceSignalee        Boolean                 @default(false)
   occupantsSignales      Boolean                 @default(false)
   walletCredite          Boolean                 @default(false)
+  // Growth Attribution (UTMs & Meta fbc/fbp)
+  utmSource              String?
+  utmMedium              String?
+  utmCampaign            String?
+  fbclid                 String?
   avis                   Avis[]
   idempotencyKey         IdempotencyKey?
   litige                 Litige?

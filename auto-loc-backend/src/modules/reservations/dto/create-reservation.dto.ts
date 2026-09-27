@@ -78,4 +78,22 @@ export class CreateReservationDto {
   @IsOptional()
   @IsBoolean()
   horsDakar?: boolean;
+
+  // ── Growth Attribution (optionnel) ─────────────────────────────────────────
+
+  @IsOptional()
+  @IsString()
+  utmSource?: string;
+
+  @IsOptional()
+  @IsString()
+  utmMedium?: string;
+
+  @IsOptional()
+  @IsString()
+  utmCampaign?: string;
+
+  @IsOptional()
+  @IsString()
+  fbclid?: string;
 }

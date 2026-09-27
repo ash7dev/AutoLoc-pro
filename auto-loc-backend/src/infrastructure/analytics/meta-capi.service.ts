@@ -7,6 +7,11 @@ export interface MetaUserData {
   phone?: string;
   clientIpAddress?: string;
   clientUserAgent?: string;
+  fbc?: string; // Facebook Click ID (_fbc cookie)
+  fbp?: string; // Facebook Browser ID (_fbp cookie)
+  firstName?: string;
+  lastName?: string;
+  city?: string;
 }
 
 export interface MetaCustomData {
@@ -14,12 +19,25 @@ export interface MetaCustomData {
   value?: number;
   contentName?: string;
   contentType?: string;
+  contentCategory?: string;
   orderId?: string;
+  searchString?: string;
+  status?: string;
   contents?: Array<{ id: string; quantity: number }>;
 }
 
+export type MetaEventName =
+  | 'PageView'
+  | 'ViewContent'
+  | 'Search'
+  | 'InitiateCheckout'
+  | 'Purchase'
+  | 'Lead'
+  | 'CompleteRegistration'
+  | 'AddVehicle';
+
 export interface SendMetaEventPayload {
-  eventName: 'PageView' | 'ViewContent' | 'Search' | 'InitiateCheckout' | 'Purchase';
+  eventName: MetaEventName;
   eventId?: string;
   eventSourceUrl?: string;
   userData?: MetaUserData;
@@ -71,6 +89,9 @@ export class MetaCapiService {
 
     const hashedEmail = this.hashField(userData?.email);
     const hashedPhone = this.hashField(this.normalizePhone(userData?.phone));
+    const hashedFn = this.hashField(userData?.firstName);
+    const hashedLn = this.hashField(userData?.lastName);
+    const hashedCity = this.hashField(userData?.city);
 
     const eventPayload = {
       data: [
@@ -83,8 +104,13 @@ export class MetaCapiService {
           user_data: {
             em: hashedEmail ? [hashedEmail] : undefined,
             ph: hashedPhone ? [hashedPhone] : undefined,
+            fn: hashedFn ? [hashedFn] : undefined,
+            ln: hashedLn ? [hashedLn] : undefined,
+            ct: hashedCity ? [hashedCity] : undefined,
             client_ip_address: userData?.clientIpAddress,
             client_user_agent: userData?.clientUserAgent,
+            fbc: userData?.fbc,
+            fbp: userData?.fbp,
           },
           custom_data: customData
             ? {
@@ -92,7 +118,10 @@ export class MetaCapiService {
                 value: customData.value,
                 content_name: customData.contentName,
                 content_type: customData.contentType || 'product',
+                content_category: customData.contentCategory,
                 order_id: customData.orderId,
+                search_string: customData.searchString,
+                status: customData.status,
                 contents: customData.contents,
               }
             : undefined,

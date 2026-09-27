@@ -1041,6 +1041,60 @@ export class AdminAnalyticsService {
     return result;
   }
 
+  // ── 12. GROWTH & META ADS ATTRIBUTION SUMMARY ───────────────────────────
+
+  async getGrowthAttributionSummary(query: AdminAnalyticsQueryDto) {
+    const cacheKey = `growth_attribution_${query.period || '30d'}`;
+    const cached = this.getFromCache(cacheKey);
+    if (cached) return cached;
+
+    const { currentStart, endDate } = this.resolveDateRange(query.period);
+
+    // Group reservations by utmSource
+    const reservationsBySource = await this.prisma.reservation.groupBy({
+      by: ['utmSource'],
+      where: {
+        creeLe: { gte: currentStart, lte: endDate },
+        statut: { in: [StatutReservation.CONFIRMEE, StatutReservation.EN_COURS, StatutReservation.TERMINEE] },
+      },
+      _count: { id: true },
+      _sum: { totalLocataire: true, montantCommission: true },
+    });
+
+    // Group users by utmSource
+    const usersBySource = await this.prisma.utilisateur.groupBy({
+      by: ['utmSource'],
+      where: { creeLe: { gte: currentStart, lte: endDate } },
+      _count: { id: true },
+    });
+
+    const sources = reservationsBySource.map((s) => ({
+      source: s.utmSource || 'direct_or_organic',
+      bookingsCount: s._count.id,
+      gmv: Math.round(Number(s._sum.totalLocataire ?? 0)),
+      netCommission: Math.round(Number(s._sum.montantCommission ?? 0)),
+    }));
+
+    const userAcquisition = usersBySource.map((u) => ({
+      source: u.utmSource || 'direct_or_organic',
+      userCount: u._count.id,
+    }));
+
+    const result = {
+      period: query.period || '30d',
+      sources,
+      userAcquisition,
+      metaCapiStatus: {
+        active: true,
+        pixelId: process.env.META_PIXEL_ID || '1108223318341633',
+        capiConfigured: Boolean(process.env.META_CAPI_ACCESS_TOKEN),
+      },
+    };
+
+    this.setCache(cacheKey, result);
+    return result;
+  }
+
   private resolveDateRange(period?: AdminPeriod) {
     const endDate = new Date();
     let daysCount = 30;

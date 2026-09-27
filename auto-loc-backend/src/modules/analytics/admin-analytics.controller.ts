@@ -151,4 +151,14 @@ export class AdminAnalyticsController {
   getFinancialEscrow() {
     return this.adminAnalyticsService.getFinancialEscrow();
   }
+
+  /**
+   * GET /admin/analytics/growth-attribution
+   * Performance des campagnes Meta Ads, attributions UTM et état de l'API CAPI.
+   */
+  @Get('growth-attribution')
+  @HttpCode(HttpStatus.OK)
+  getGrowthAttribution(@Query() query: AdminAnalyticsQueryDto) {
+    return this.adminAnalyticsService.getGrowthAttributionSummary(query);
+  }
 }

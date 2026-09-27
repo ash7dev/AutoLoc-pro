@@ -4,6 +4,8 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Script from 'next/script';
 
+import { initAttributionTracking } from '../../utils/attribution';
+
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || '1108223318341633';
 
 declare global {
@@ -17,6 +19,7 @@ export function MetaPixel() {
   const pathname = usePathname();
 
   useEffect(() => {
+    initAttributionTracking();
     if (typeof window !== 'undefined' && window.fbq) {
       window.fbq('track', 'PageView');
     }
