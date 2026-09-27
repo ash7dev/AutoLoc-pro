@@ -44,6 +44,7 @@ describe('AuthService', () => {
     const notification = { send: jest.fn().mockResolvedValue(undefined) };
     const telegram = { sendAdminAlert: jest.fn().mockResolvedValue(undefined) };
     const supabaseAdmin = { auth: { signInWithPassword: jest.fn() } };
+    const metaCapi = { sendEvent: jest.fn().mockResolvedValue(true) };
 
     const service = new AuthService(
       prisma as any,
@@ -55,6 +56,7 @@ describe('AuthService', () => {
       notification as any,
       telegram as any,
       supabaseAdmin as any,
+      metaCapi as any,
     );
 
     return {

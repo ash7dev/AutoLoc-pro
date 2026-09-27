@@ -26,6 +26,7 @@ import { RevalidateService } from '../../infrastructure/revalidate/revalidate.se
 import { QueueService } from '../../infrastructure/queue/queue.service';
 import { FeedScoringService } from './feed-scoring.service';
 import { FeedOptimizerService } from './feed-optimizer.service';
+import { MetaCapiService } from '../../infrastructure/analytics/meta-capi.service';
 
 const MAX_PHOTOS = 8;
 const SEARCH_PAGE_SIZE = 12;
@@ -122,6 +123,7 @@ export class VehiclesService {
     private readonly feedScoring: FeedScoringService,
     // private readonly feedPersonalization: FeedPersonalizationService, // Pour usage futur
     private readonly feedOptimizer: FeedOptimizerService,
+    private readonly metaCapi: MetaCapiService,
   ) { }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -282,6 +284,30 @@ export class VehiclesService {
         `Documents : ${dto.carteGriseUrl ? 'Carte grise' : ''}${dto.carteGriseUrl && dto.assuranceDocUrl ? ' + ' : ''}${dto.assuranceDocUrl ? 'Assurance' : ''}\n` +
         `<a href="https://autoloc.sn/dashboard/admin/vehicles">Valider →</a>`,
       ).catch(() => { });
+    }
+
+    // ── Meta CAPI Event (Server-to-Server AddVehicle Event for Supply Growth) ──
+    if (result) {
+      this.metaCapi
+        .sendEvent({
+          eventName: 'AddVehicle',
+          eventId: result.id,
+          eventSourceUrl: `https://autoloc.sn/vehicle/${result.id}`,
+          userData: {
+            email: user.email ?? undefined,
+            phone: user.phone ?? undefined,
+          },
+          customData: {
+            currency: 'XOF',
+            value: Number(dto.prixParJour) * 30, // 30-day potential earning
+            contentName: `${dto.marque} ${dto.modele}`,
+            contentCategory: dto.type || 'BERLINE',
+            orderId: result.id,
+          },
+        })
+        .catch((err) => {
+          this.logger.warn(`Failed to send Meta CAPI AddVehicle event: ${err.message}`);
+        });
     }
 
     // Invalider les caches pour que la page d'accueil et les feeds se mettent à jour

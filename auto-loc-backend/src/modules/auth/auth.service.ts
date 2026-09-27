@@ -17,6 +17,8 @@ import { ALLOWED_MIMES } from '../upload/upload.config';
 import { NotificationService } from '../../infrastructure/notifications/notification.service';
 import { TelegramService } from '../../infrastructure/telegram/telegram.service';
 import { SupabaseAdminService } from '../../infrastructure/supabase/supabase-admin.service';
+import { MetaCapiService } from '../../infrastructure/analytics/meta-capi.service';
+
 const DEFAULT_ROLE = 'LOCATAIRE';
 const ACCESS_TOKEN_TTL_DEFAULT = '15m';
 const REFRESH_TOKEN_TTL_DEFAULT = '30d';
@@ -40,6 +42,7 @@ export class AuthService {
     private readonly notification: NotificationService,
     private readonly telegram: TelegramService,
     private readonly supabaseAdmin: SupabaseAdminService,
+    private readonly metaCapi: MetaCapiService,
   ) { }
 
   async checkAvailability(email?: string, phone?: string): Promise<{
@@ -249,6 +252,24 @@ export class AuthService {
         type: 'user.welcome',
         data: { prenom: dto.prenom },
       }).catch(() => { });
+
+      // ── Meta CAPI Event (Server-to-Server CompleteRegistration Event) ──
+      this.metaCapi
+        .sendEvent({
+          eventName: 'CompleteRegistration',
+          eventId: created.id,
+          eventSourceUrl: 'https://autoloc.sn/register',
+          userData: {
+            email: normalizedEmail,
+            phone: normalizedPhone,
+            firstName: dto.prenom,
+            lastName: dto.nom,
+          },
+          customData: {
+            status: 'REGISTERED',
+          },
+        })
+        .catch(() => { });
     }
 
     // Sync du téléphone sur le Profile (cas mise à jour)
@@ -708,6 +729,24 @@ export class AuthService {
       `Utilisateur : ${identity}\n` +
       `Statut : EN_ATTENTE — <a href="https://autoloc.sn/dashboard/admin/users">Vérifier →</a>`,
     ).catch(() => { });
+
+    // ── Meta CAPI Event (Server-to-Server Lead Event for KYC) ─────────────
+    this.metaCapi
+      .sendEvent({
+        eventName: 'Lead',
+        eventId: updated.id,
+        eventSourceUrl: 'https://autoloc.sn/profile/kyc',
+        userData: {
+          email: updated.email ?? undefined,
+          phone: updated.telephone ?? undefined,
+          firstName: updated.prenom ?? undefined,
+          lastName: updated.nom ?? undefined,
+        },
+        customData: {
+          contentName: 'KYC_SUBMITTED',
+        },
+      })
+      .catch(() => { });
 
     return this.toResponse(profile, {
       id: updated.id,
