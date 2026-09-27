@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   TrendingUp,
+  Rocket,
   UserCheck,
   ShieldAlert,
   Scale,
@@ -21,8 +22,6 @@ import {
   LogOut,
   Menu,
   X,
-
-
   ArrowUpRight,
 } from 'lucide-react';
 import { useUserStore } from '@/src/core/store/useUserStore';
@@ -44,6 +43,7 @@ const ADMIN_NAVIGATION: NavSection[] = [
     title: "Vue d'ensemble",
     items: [
       { id: 'dashboard', label: 'Tableau de bord', href: '/admin', icon: LayoutDashboard },
+      { id: 'growth', label: 'Growth & Meta CAPI', href: '/admin/growth', icon: Rocket },
       { id: 'stats', label: 'Revenus & stats', href: '/admin/stats', icon: TrendingUp },
     ],
   },
