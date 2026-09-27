@@ -53,7 +53,7 @@ export class MetaCapiService {
 
   constructor(private readonly configService: ConfigService) {
     this.pixelId =
-      this.configService.get<string>('META_PIXEL_ID') || '1108223318341633';
+      this.configService.get<string>('META_PIXEL_ID') || '1576915253582646';
     this.accessToken =
       this.configService.get<string>('META_CAPI_ACCESS_TOKEN') || '';
   }

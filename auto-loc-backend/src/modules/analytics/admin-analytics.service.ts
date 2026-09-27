@@ -1086,7 +1086,7 @@ export class AdminAnalyticsService {
       userAcquisition,
       metaCapiStatus: {
         active: true,
-        pixelId: process.env.META_PIXEL_ID || '1108223318341633',
+        pixelId: process.env.META_PIXEL_ID || '1576915253582646',
         capiConfigured: Boolean(process.env.META_CAPI_ACCESS_TOKEN),
       },
     };
