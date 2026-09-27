@@ -9,14 +9,14 @@ interface CapiTelemetryLogProps {
 
 export function CapiTelemetryLog({ pixelId, isCapiConfigured }: CapiTelemetryLogProps) {
   const eventsTracked = [
-    { name: 'PageView', status: '200 OK', match: 'IP, User-Agent, fbp' },
-    { name: 'Search', status: '200 OK', match: 'SearchString, City, Type' },
-    { name: 'ViewContent', status: '200 OK', match: 'Vehicle ID, Value, XOF' },
-    { name: 'InitiateCheckout', status: '200 OK', match: 'Reservation ID, Amount, fbc' },
-    { name: 'Purchase', status: '200 OK', match: 'SHA-256 (em, ph, fn, ln), Value' },
-    { name: 'Lead', status: '200 OK', match: 'SHA-256 (em, ph), KYC Doc' },
-    { name: 'CompleteRegistration', status: '200 OK', match: 'SHA-256 (em, ph)' },
-    { name: 'AddVehicle', status: '200 OK', match: 'Vehicle ID, Host Email, Value' },
+    { name: 'PageView', match: 'IP, User-Agent, fbp' },
+    { name: 'Search', match: 'SearchString, City, Type' },
+    { name: 'ViewContent', match: 'Vehicle ID, Value, XOF' },
+    { name: 'InitiateCheckout', match: 'Reservation ID, Amount, fbc' },
+    { name: 'Purchase', match: 'SHA-256 (em, ph, fn, ln), Value' },
+    { name: 'Lead', match: 'SHA-256 (em, ph), KYC Doc' },
+    { name: 'CompleteRegistration', match: 'SHA-256 (em, ph)' },
+    { name: 'AddVehicle', match: 'Vehicle ID, Host Email, Value' },
   ];
 
   return (
@@ -51,7 +51,7 @@ export function CapiTelemetryLog({ pixelId, isCapiConfigured }: CapiTelemetryLog
                   : 'bg-[#C9A24B]/15 text-[#C9A24B]'
                 }`}
             >
-              {isCapiConfigured ? item.status : 'Simulation — définir META_CAPI_ACCESS_TOKEN'}
+              {isCapiConfigured ? 'CAPI Actif' : 'Jeton CAPI non configuré'}
             </span>
           </div>
         ))}
