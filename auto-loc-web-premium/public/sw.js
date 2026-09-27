@@ -58,10 +58,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const request = event.request;
 
-  // Ignorer les requêtes non-GET et les extensions Chrome/analytics
+  // Ignorer les requêtes non-GET, les APIs et les domaines tiers (Facebook, Google, TikTok, CDNs)
   if (request.method !== 'GET') return;
   if (!request.url.startsWith('http')) return;
   if (request.url.includes('/api/')) return; // Laisser passer l'API en direct
+
+  const urlObj = new URL(request.url);
+  if (urlObj.origin !== self.location.origin) return; // Seules les ressources locales sont gérées par le PWA SW
 
   // Navigation HTML (Pages de l'application)
   if (request.mode === 'navigate') {
