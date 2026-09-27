@@ -166,18 +166,32 @@ export function VehicleOptionsCard({
           </div>
 
           <div className="mt-auto space-y-2">
-            <DestinationRow
-              label="Dakar"
-              icon={MapPin}
-              available={isDakarAvailable}
-              fee={actualFraisDakar}
-            />
-            <DestinationRow
-              label="AIBD"
-              icon={Plane}
-              available={isAibdAvailable}
-              fee={actualFraisAibd}
-            />
+            {isDakarAvailable && (
+              <DestinationRow
+                label="Dakar"
+                icon={MapPin}
+                available={isDakarAvailable}
+                fee={actualFraisDakar}
+              />
+            )}
+            {isAibdAvailable && (
+              <DestinationRow
+                label="AIBD"
+                icon={Plane}
+                available={isAibdAvailable}
+                fee={actualFraisAibd}
+              />
+            )}
+            {!isDakarAvailable && !isAibdAvailable && (
+              <div className="rounded-2xl bg-slate-50 px-3.5 py-3">
+                <p className="font-display text-xl leading-tight text-slate-400">
+                  Sur place uniquement
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Pas de livraison à domicile ou à l&apos;aéroport
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
