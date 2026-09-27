@@ -6,11 +6,26 @@ import { Roles } from '../../shared/decorators/roles.decorator';
 import { AdminAnalyticsService } from './admin-analytics.service';
 import { AdminAnalyticsQueryDto } from './dto/admin-analytics-query.dto';
 
+import { LiveVisitorsTrackerService } from './live-visitors-tracker.service';
+
 @Controller('admin/analytics')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(RoleProfile.ADMIN)
 export class AdminAnalyticsController {
-  constructor(private readonly adminAnalyticsService: AdminAnalyticsService) {}
+  constructor(
+    private readonly adminAnalyticsService: AdminAnalyticsService,
+    private readonly liveTracker: LiveVisitorsTrackerService,
+  ) {}
+
+  /**
+   * GET /admin/analytics/live-visitors
+   * Visiteurs en temps réel (Spotify style)
+   */
+  @Get('live-visitors')
+  @HttpCode(HttpStatus.OK)
+  getLiveVisitors() {
+    return this.liveTracker.getLiveStats();
+  }
 
   /**
    * GET /admin/analytics/dashboard-summary
