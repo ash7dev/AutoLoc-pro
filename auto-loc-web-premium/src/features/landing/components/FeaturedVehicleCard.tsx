@@ -65,11 +65,18 @@ export const FeaturedVehicleCard: React.FC<FeaturedVehicleCardProps> = ({ vehicl
             100 % vérifié
           </span>
 
-          <span className="flex items-center gap-1 rounded-full border border-champagne/30 bg-brand-main/70 px-2.5 py-1 text-[11px] font-medium text-champagne backdrop-blur-md">
-            <Star className="h-3 w-3 fill-[#F1DFB6] text-champagne" />
-            {Number(vehicle.note || 4.9).toFixed(1)}
-            <span className="text-champagne/60">({vehicle.totalAvis || 12})</span>
-          </span>
+          {vehicle.note && vehicle.totalAvis && vehicle.totalAvis > 0 ? (
+            <span className="flex items-center gap-1 rounded-full border border-champagne/30 bg-brand-main/70 px-2.5 py-1 text-[11px] font-medium text-champagne backdrop-blur-md">
+              <Star className="h-3 w-3 fill-[#F1DFB6] text-champagne" />
+              {Number(vehicle.note).toFixed(1)}
+              <span className="text-champagne/60">({vehicle.totalAvis})</span>
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 rounded-full border border-champagne/30 bg-brand-main/70 px-2.5 py-1 text-[11px] font-medium text-champagne/80 backdrop-blur-md">
+              <Star className="h-3 w-3 text-champagne/40" />
+              <span>Nouveau</span>
+            </span>
+          )}
         </div>
 
         {/* Localisation */}

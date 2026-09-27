@@ -19,10 +19,10 @@ export interface UseOwnerVehiclesReturn {
 }
 
 const VEHICLES_SWR_OPTIONS = {
-  dedupingInterval: 5 * 60 * 1000, // 5 minutes de rétention cache (données statiques)
-  revalidateIfStale: false, // Empêche le re-fetch automatique au remontage du composant
-  revalidateOnFocus: false,
-  focusThrottleInterval: 30 * 1000,
+  dedupingInterval: 5 * 1000, // 5 secondes de dédoublonnage pour synchro immédiate au changement de page
+  revalidateIfStale: true, // Re-fetcher silencieusement en arrière-plan au retour sur la page
+  revalidateOnFocus: true, // Synchro automatique au retour sur l'onglet
+  focusThrottleInterval: 10 * 1000, // Throttlé à 10s au focus
   keepPreviousData: true, // 0ms de clignotement lors de la réhydratation
   errorRetryCount: 1,
 };

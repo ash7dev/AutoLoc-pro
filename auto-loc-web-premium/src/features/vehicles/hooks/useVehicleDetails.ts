@@ -5,10 +5,10 @@ import { Vehicle } from '../types/vehicle.types';
 import { vehicleService } from '../services/vehicleService';
 
 const VEHICLE_DETAIL_SWR_OPTIONS = {
-  dedupingInterval: 5 * 60 * 1000, // 5 minutes TTL
-  revalidateIfStale: false,
-  revalidateOnFocus: false,
-  keepPreviousData: true,
+  dedupingInterval: 5 * 1000, // 5 secondes TTL
+  revalidateIfStale: true, // Synchro automatique du détail véhicule au remontage
+  revalidateOnFocus: true, // Synchro au retour sur l'onglet
+  keepPreviousData: true, // 0ms de clignotement
 };
 
 export function useVehicleDetails(vehicleId: string) {

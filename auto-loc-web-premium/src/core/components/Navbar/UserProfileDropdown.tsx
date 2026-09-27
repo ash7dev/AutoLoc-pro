@@ -165,13 +165,14 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }
                 <span className="font-semibold">Mon Espace Hôte</span>
               </Link>
             ) : (
-              <Link
-                href="/dashboard"
-                onClick={() => {
+              <button
+                type="button"
+                onClick={async () => {
                   setIsOpen(false);
-                  switchRole('PROPRIETAIRE');
+                  await switchRole('PROPRIETAIRE');
+                  router.push('/dashboard');
                 }}
-                className={`${menuItemClass} text-slate-700 hover:bg-slate-900/[0.04] hover:text-slate-900`}
+                className={`${menuItemClass} text-slate-700 hover:bg-slate-900/[0.04] hover:text-slate-900 w-full text-left cursor-pointer`}
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-800">
                   <LayoutDashboard className="h-4 w-4 text-emerald-700" />
@@ -180,7 +181,7 @@ export const UserProfileDropdown: React.FC<UserProfileDropdownProps> = ({ user }
                   <span className="font-bold text-slate-900">Devenir Hôte</span>
                   <span className="text-[11px] text-slate-500 font-normal">Rentabiliser ma voiture</span>
                 </div>
-              </Link>
+              </button>
             )}
 
             <Link

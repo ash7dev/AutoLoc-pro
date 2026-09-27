@@ -22,10 +22,12 @@ export function useOwnerProfileView() {
     isValidating: isValidatingProfile,
     mutate: rawMutateProfile,
   } = useSWR<UserProfileData>('user-profile', () => userApi.getProfile(), {
-    dedupingInterval: 5 * 60 * 1000,
-    revalidateIfStale: false,
-    revalidateOnFocus: false,
+    dedupingInterval: 5 * 1000,
+    revalidateIfStale: true,
+    revalidateOnFocus: true,
     keepPreviousData: true,
+    shouldRetryOnError: true,
+    errorRetryCount: 3,
   });
 
   const mutateProfile = useCallback(async () => {
@@ -65,7 +67,7 @@ export function useOwnerProfileView() {
     phoneVerified: Boolean(storeUser.phoneVerified),
     profileCompleted: true,
     statutKyc: (storeUser.statutKyc as any) || 'NON_VERIFIE',
-    role: (storeUser.role as any) || 'LOCATAIRE',
+    role: (storeUser.role as any) || 'PROPRIETAIRE',
     noteLocataire: 5,
     noteProprietaire: 5,
     totalAvis: 0,
@@ -128,7 +130,8 @@ export function useOwnerProfileView() {
     isLoadingProfile: isLoadingProfile && !profile,
     isRefreshing: isValidatingProfile,
     lastRefreshedAt,
-    errorProfile,
+    errorProfile: !profile ? errorProfile : null,
+    hasSyncError: Boolean(errorProfile && profile),
     isUploadingAvatar,
     mutateProfile,
     handleUploadAvatar,

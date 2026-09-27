@@ -205,7 +205,7 @@ export default function OwnerReservationDetailPage() {
               onCancelClick={() => setShowCancelModal(true)}
               onSignalNoshowClick={() => setShowNoshowModal(true)}
               onOpenDisputeClick={() => setShowDisputeModal(true)}
-              onRefetch={refetch}
+              onRefetch={() => refetch(true)}
             />
 
             {/* ── Carte Information & Coordonnées du Locataire (avec règles de confidentialité) ── */}
@@ -258,7 +258,7 @@ export default function OwnerReservationDetailPage() {
               isSubmitting={isSubmitting}
               onClose={() => setShowCheckinModal(false)}
               onConfirm={handleCheckinModalSubmit}
-              onRefetch={refetch}
+              onRefetch={(isSilent) => refetch(isSilent ?? true)}
             />
 
             {/* ── Modale de Check-out (Restitution & Upload Photos) ──────────── */}
@@ -268,7 +268,7 @@ export default function OwnerReservationDetailPage() {
               isSubmitting={isSubmitting}
               onClose={() => setShowCheckoutModal(false)}
               onConfirm={handleCheckoutModalSubmit}
-              onRefetch={refetch}
+              onRefetch={(isSilent) => refetch(isSilent ?? true)}
             />
 
             {/* ── Modale de Signalement No-Show ──────────────────────────────── */}

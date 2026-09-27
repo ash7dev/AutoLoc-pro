@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { reservationsApi, OwnerReservationItem, CreateDisputePayload } from '../../../core/api/reservationsApi';
+import { useCacheInvalidator } from '../../../core/hooks/useCacheInvalidator';
 
 export function useOwnerReservationDetail(reservationId: string) {
   const [reservation, setReservation] = useState<OwnerReservationItem | null>(null);
@@ -9,6 +10,8 @@ export function useOwnerReservationDetail(reservationId: string) {
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const { invalidateReservations, invalidateDashboardAll } = useCacheInvalidator();
 
   const fetchDetail = useCallback(async (isSilent: boolean = false) => {
     if (!reservationId) return;
@@ -43,11 +46,14 @@ export function useOwnerReservationDetail(reservationId: string) {
   const confirmReservation = async (heureDebut: string = '10:00'): Promise<boolean> => {
     if (!reservationId) return false;
     setIsSubmitting(true);
+    // Mise à jour optimiste réactive (0ms de latence visuelle)
+    setReservation((prev) => (prev ? { ...prev, statut: 'CONFIRMEE' } : null));
     try {
       await reservationsApi.confirmReservation(reservationId, heureDebut);
-      await fetchDetail();
+      await Promise.all([fetchDetail(true), invalidateReservations()]);
       return true;
     } catch (err: any) {
+      await fetchDetail(true);
       alert(err?.message || 'Erreur lors de la confirmation de la réservation');
       return false;
     } finally {
@@ -58,11 +64,14 @@ export function useOwnerReservationDetail(reservationId: string) {
   const checkinReservation = async (soldeRecu: boolean = true): Promise<boolean> => {
     if (!reservationId) return false;
     setIsSubmitting(true);
+    // Mise à jour optimiste réactive
+    setReservation((prev) => (prev ? { ...prev, statut: 'EN_COURS' } : null));
     try {
       await reservationsApi.checkinReservation(reservationId, soldeRecu);
-      await fetchDetail();
+      await Promise.all([fetchDetail(true), invalidateDashboardAll()]);
       return true;
     } catch (err: any) {
+      await fetchDetail(true);
       alert(err?.message || 'Erreur lors de la validation du check-in');
       return false;
     } finally {
@@ -73,11 +82,14 @@ export function useOwnerReservationDetail(reservationId: string) {
   const checkoutReservation = async (): Promise<boolean> => {
     if (!reservationId) return false;
     setIsSubmitting(true);
+    // Mise à jour optimiste réactive
+    setReservation((prev) => (prev ? { ...prev, statut: 'TERMINEE' } : null));
     try {
       await reservationsApi.checkoutReservation(reservationId);
-      await fetchDetail();
+      await Promise.all([fetchDetail(true), invalidateDashboardAll()]);
       return true;
     } catch (err: any) {
+      await fetchDetail(true);
       alert(err?.message || 'Erreur lors de la clôture du check-out');
       return false;
     } finally {
@@ -88,11 +100,14 @@ export function useOwnerReservationDetail(reservationId: string) {
   const cancelReservation = async (raison?: string): Promise<boolean> => {
     if (!reservationId) return false;
     setIsSubmitting(true);
+    // Mise à jour optimiste réactive
+    setReservation((prev) => (prev ? { ...prev, statut: 'ANNULEE', raisonAnnulation: raison } : null));
     try {
       await reservationsApi.cancelReservation(reservationId, raison);
-      await fetchDetail();
+      await Promise.all([fetchDetail(true), invalidateReservations()]);
       return true;
     } catch (err: any) {
+      await fetchDetail(true);
       alert(err?.message || 'Erreur lors de l’annulation de la réservation');
       return false;
     } finally {
@@ -103,12 +118,15 @@ export function useOwnerReservationDetail(reservationId: string) {
   const signalNoshow = async (commentaire?: string): Promise<boolean> => {
     if (!reservationId) return false;
     setIsSubmitting(true);
+    // Mise à jour optimiste réactive
+    setReservation((prev) => (prev ? { ...prev, statut: 'ANNULEE' } : null));
     try {
       await reservationsApi.signalTenantNoshow(reservationId, commentaire);
       alert('Signalement No-Show enregistré.');
-      await fetchDetail();
+      await Promise.all([fetchDetail(true), invalidateReservations()]);
       return true;
     } catch (err: any) {
+      await fetchDetail(true);
       alert(err?.message || 'Erreur lors du signalement No-Show');
       return false;
     } finally {
@@ -119,11 +137,14 @@ export function useOwnerReservationDetail(reservationId: string) {
   const createDispute = async (payload: CreateDisputePayload): Promise<boolean> => {
     if (!reservationId) return false;
     setIsSubmitting(true);
+    // Mise à jour optimiste réactive
+    setReservation((prev) => (prev ? { ...prev, statut: 'LITIGE' } : null));
     try {
       await reservationsApi.createDispute(reservationId, payload);
-      await fetchDetail();
+      await Promise.all([fetchDetail(true), invalidateReservations()]);
       return true;
     } catch (err: any) {
+      await fetchDetail(true);
       alert(err?.message || 'Erreur lors de la création du litige');
       return false;
     } finally {

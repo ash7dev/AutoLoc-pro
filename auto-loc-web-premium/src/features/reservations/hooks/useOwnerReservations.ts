@@ -11,12 +11,12 @@ import { useCacheInvalidator } from '../../../core/hooks/useCacheInvalidator';
 import { OwnerReservationStats } from '../components/OwnerReservationsHeader';
 
 const RESERVATIONS_SWR_OPTIONS = {
-  dedupingInterval: 3 * 60 * 1000, // 3 minutes de rétention cache
-  revalidateIfStale: false, // Ne pas re-fetcher automatiquement au remontage du composant
-  revalidateOnFocus: true, // Capturer les réservations créées pendant l'absence de l'hôte
-  focusThrottleInterval: 30 * 1000, // Throttlé à 30 secondes max au focus
-  refreshInterval: 60 * 1000, // Polling passif d'arrière-plan toutes les 60 secondes
-  keepPreviousData: true, // 0ms de clignotement lors de la réhydratation
+  dedupingInterval: 5 * 1000, // 5 secondes de dédoublonnage pour synchro immédiate au changement de page
+  revalidateIfStale: true, // Re-fetcher silencieusement en arrière-plan au retour sur la page
+  revalidateOnFocus: true, // Capturer les réservations entrantes lors du retour sur l'onglet
+  focusThrottleInterval: 10 * 1000, // Throttlé à 10 secondes au focus
+  refreshInterval: 30 * 1000, // Polling passif toutes les 30 secondes
+  keepPreviousData: true, // 0ms de clignotement lors de la réhydratation des données
 };
 
 export function useOwnerReservations() {

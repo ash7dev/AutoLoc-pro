@@ -22,10 +22,12 @@ export function useTenantProfileView() {
     isValidating: isValidatingProfile,
     mutate: rawMutateProfile,
   } = useSWR<UserProfileData>('user-profile-tenant', () => userApi.getProfile(), {
-    dedupingInterval: 5 * 60 * 1000,
-    revalidateIfStale: false,
-    revalidateOnFocus: false,
+    dedupingInterval: 5 * 1000,
+    revalidateIfStale: true,
+    revalidateOnFocus: true,
     keepPreviousData: true,
+    shouldRetryOnError: true,
+    errorRetryCount: 3,
   });
 
   const mutateProfile = useCallback(async () => {
@@ -128,7 +130,8 @@ export function useTenantProfileView() {
     isLoadingProfile: isLoadingProfile && !profile,
     isRefreshing: isValidatingProfile,
     lastRefreshedAt,
-    errorProfile,
+    errorProfile: !profile ? errorProfile : null,
+    hasSyncError: Boolean(errorProfile && profile),
     isUploadingAvatar,
     mutateProfile,
     handleUploadAvatar,

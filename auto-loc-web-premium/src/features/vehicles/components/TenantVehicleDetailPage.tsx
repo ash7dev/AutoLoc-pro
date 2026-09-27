@@ -241,13 +241,20 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
                 <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs font-bold uppercase tracking-wider">
                   {vehicle.type}
                 </span>
-                <span className="flex items-center gap-1 text-xs font-bold text-slate-800">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                  {Number(vehicle.note || 4.9).toFixed(1)}
-                  <span className="text-slate-400 font-normal">
-                    ({vehicle.totalAvis || 12} avis)
+                {vehicle.note && vehicle.totalAvis && vehicle.totalAvis > 0 ? (
+                  <span className="flex items-center gap-1 text-xs font-bold text-slate-800">
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    {Number(vehicle.note).toFixed(1)}
+                    <span className="text-slate-400 font-normal">
+                      ({vehicle.totalAvis} avis)
+                    </span>
                   </span>
-                </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-xs font-medium text-slate-500">
+                    <Star className="w-3.5 h-3.5 text-slate-300" />
+                    <span>Nouveau</span>
+                  </span>
+                )}
                 <span className="text-slate-300">•</span>
                 <span className="flex items-center gap-1 text-xs font-medium text-slate-600">
                   <MapPin className="w-3.5 h-3.5 text-emerald-600" />

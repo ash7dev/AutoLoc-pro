@@ -166,10 +166,8 @@ export const useUserStore = create<UserState>((set, get) => ({
     });
     if (typeof window !== 'undefined') {
       localStorage.setItem('autoloc_user', JSON.stringify(updated));
-      const token = localStorage.getItem('autoloc_token');
-      if (token) {
-        setAuthCookies(token, updated.role);
-      }
+      const token = localStorage.getItem('autoloc_token') || '';
+      setAuthCookies(token, updated.role);
     }
     broadcastAuthEvent({
       type: 'USER_UPDATED',

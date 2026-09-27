@@ -26,6 +26,7 @@ export const OwnerProfileView: React.FC = () => {
     isRefreshing,
     lastRefreshedAt,
     errorProfile,
+    hasSyncError,
     isUploadingAvatar,
     mutateProfile,
     handleUploadAvatar,
@@ -37,18 +38,14 @@ export const OwnerProfileView: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const handleSwitchRole = async () => {
-    if (isSwitchingRole || !profile) return;
+    if (isSwitchingRole) return;
     try {
       setIsSwitchingRole(true);
-      const targetRole = profile.role === 'PROPRIETAIRE' ? 'LOCATAIRE' : 'PROPRIETAIRE';
-      await switchRole(targetRole);
-      if (targetRole === 'LOCATAIRE') {
-        router.push('/');
-      } else {
-        router.push('/dashboard');
-      }
+      await switchRole('LOCATAIRE');
+      router.push('/');
     } catch (err) {
       console.error('Switch role failed:', err);
+      router.push('/');
     } finally {
       setIsSwitchingRole(false);
     }
@@ -58,7 +55,7 @@ export const OwnerProfileView: React.FC = () => {
     return <OwnerProfileSkeleton />;
   }
 
-  if (errorProfile || !profile) {
+  if (!profile) {
     return (
       <div className="max-w-7xl mx-auto pb-16">
         <div className="rounded-3xl border border-rose-200 bg-rose-50 p-8 text-center space-y-4">
@@ -93,6 +90,22 @@ export const OwnerProfileView: React.FC = () => {
         lastRefreshedAt={lastRefreshedAt}
         onRefresh={() => mutateProfile()}
       />
+
+      {hasSyncError && (
+        <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-amber-50 border border-amber-200/90 text-amber-900 text-xs font-medium animate-fade-in">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>Mode synchro restreint · Vos informations de session restent accessibles.</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => mutateProfile()}
+            className="px-3 py-1 rounded-xl bg-amber-200/80 hover:bg-amber-200 text-amber-950 font-bold transition-colors cursor-pointer shrink-0"
+          >
+            Réessayer
+          </button>
+        </div>
+      )}
 
       {/* 2. Hero Profile Banner */}
       <ProfileHeroCard

@@ -78,16 +78,19 @@ export function setAuthCookies(token: string, role: string) {
 
   const normalized = normalizeRole(role);
   const maxAge = 60 * 60 * 24 * 30; // 30 jours
+  const isSecure = window.location.protocol === 'https:' ? '; Secure' : '';
 
   // Cookie de Token JWT
-  document.cookie = `autoloc_token=${encodeURIComponent(
-    token
-  )}; Path=/; Max-Age=${maxAge}; SameSite=Lax; Secure`;
+  if (token) {
+    document.cookie = `autoloc_token=${encodeURIComponent(
+      token
+    )}; Path=/; Max-Age=${maxAge}; SameSite=Lax${isSecure}`;
+  }
 
   // Cookie de Rôle Actif pour le Middleware Edge (0ms redirection)
   document.cookie = `autoloc_role=${encodeURIComponent(
     normalized
-  )}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+  )}; Path=/; Max-Age=${maxAge}; SameSite=Lax${isSecure}`;
 }
 
 /**
