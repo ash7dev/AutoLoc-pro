@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Navigation, Truck, CheckCircle2, XCircle } from 'lucide-react';
+import { Navigation, Truck, MapPin, Plane } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -17,66 +17,65 @@ interface VehicleOptionsCardProps {
 
 type StatusTone = 'positive' | 'restricted' | 'neutral';
 
-interface OptionCellProps {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-  status: { label: string; tone: StatusTone };
-  value: string;
-  valueLabel: string;
-  muted?: boolean;
-}
-
-const STATUS_STYLES: Record<StatusTone, { className: string; icon?: LucideIcon }> = {
-  positive: { className: 'text-brand-main', icon: CheckCircle2 },
-  restricted: { className: 'text-amber-700', icon: XCircle },
-  neutral: { className: 'text-slate-500' },
+const STATUS_STYLES: Record<StatusTone, string> = {
+  positive: 'bg-brand-main/10 text-brand-main',
+  restricted: 'bg-amber-50 text-amber-700',
+  neutral: 'bg-slate-100 text-slate-500',
 };
 
-function OptionCell({
-  icon: Icon,
-  title,
-  description,
-  status,
-  value,
-  valueLabel,
-  muted = false,
-}: OptionCellProps) {
-  const statusStyle = STATUS_STYLES[status.tone];
-  const StatusIcon = statusStyle.icon;
+const DOT_STYLES: Record<StatusTone, string> = {
+  positive: 'bg-brand-main',
+  restricted: 'bg-amber-600',
+  neutral: 'bg-slate-400',
+};
 
+function StatusPill({ tone, label }: { tone: StatusTone; label: string }) {
   return (
-    <div className="flex flex-col justify-between gap-5 px-5 sm:px-6 py-5">
-      <div className="space-y-4">
-        <div className="flex items-start justify-between gap-3">
-          <Icon
-            className="w-6 h-6 shrink-0 text-brand-main"
-            strokeWidth={1.5}
-            aria-hidden="true"
-          />
-          <span
-            className={`inline-flex items-center gap-1.5 text-sm font-medium ${statusStyle.className}`}
-          >
-            {StatusIcon && <StatusIcon className="w-4 h-4" aria-hidden="true" />}
-            {status.label}
-          </span>
-        </div>
+    <span
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[tone]}`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${DOT_STYLES[tone]}`} aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
 
-        <div>
-          <h4 className="text-base font-semibold text-slate-900">{title}</h4>
-          <p className="mt-1 text-sm text-slate-500">{description}</p>
-        </div>
-      </div>
+function IconBadge({ icon: Icon, muted }: { icon: LucideIcon; muted?: boolean }) {
+  return (
+    <div
+      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${muted ? 'bg-slate-100 text-slate-400' : 'bg-brand-main/10 text-brand-main'
+        }`}
+    >
+      <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
+    </div>
+  );
+}
 
-      <div className="pt-4 border-t border-slate-200/80">
-        <p
-          className={`text-xl leading-tight font-display ${muted ? 'text-slate-500' : 'text-brand-main'
-            }`}
-        >
-          {value}
-        </p>
-        <p className="mt-0.5 text-sm text-slate-500">{valueLabel}</p>
-      </div>
+interface DestinationRowProps {
+  label: string;
+  icon: LucideIcon;
+  available: boolean;
+  fee: number;
+}
+
+function DestinationRow({ label, icon: Icon, available, fee }: DestinationRowProps) {
+  return (
+    <div
+      className={`flex items-center justify-between rounded-2xl px-3.5 py-2.5 ${available ? 'bg-brand-main/5' : 'bg-slate-50'
+        }`}
+    >
+      <span
+        className={`flex items-center gap-2 text-sm font-medium ${available ? 'text-slate-800' : 'text-slate-400'
+          }`}
+      >
+        <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+        {label}
+      </span>
+      <span
+        className={`font-display text-sm ${available ? 'text-brand-main' : 'text-slate-400'}`}
+      >
+        {available ? (fee === 0 ? 'Gratuit' : `${formatCurrency(fee)} FCFA`) : 'Non proposé'}
+      </span>
     </div>
   );
 }
@@ -90,67 +89,97 @@ export function VehicleOptionsCard({
   fraisLivraisonAibd,
   fraisLivraison,
 }: VehicleOptionsCardProps) {
-  const isDakarAvailable = proposeLivraisonDakar ?? (fraisLivraison !== null && fraisLivraison !== undefined);
+  const isDakarAvailable =
+    proposeLivraisonDakar ?? (fraisLivraison !== null && fraisLivraison !== undefined);
   const actualFraisDakar = fraisLivraisonDakar ?? fraisLivraison ?? 0;
 
   const isAibdAvailable = Boolean(proposeLivraisonAibd);
   const actualFraisAibd = fraisLivraisonAibd ?? 0;
+
+  const livraisonDisponible = isDakarAvailable || isAibdAvailable;
 
   const supplementValue =
     supplementHorsDakarParJour && supplementHorsDakarParJour > 0
       ? `+${formatCurrency(supplementHorsDakarParJour)} FCFA`
       : 'Inclus';
 
-  let livraisonLabel = 'Non disponible';
-  if (isDakarAvailable && isAibdAvailable) {
-    livraisonLabel = `Dakar (${actualFraisDakar === 0 ? 'Gratuit' : formatCurrency(actualFraisDakar) + ' F'}) | AIBD (${actualFraisAibd === 0 ? 'Gratuit' : formatCurrency(actualFraisAibd) + ' F'})`;
-  } else if (isDakarAvailable) {
-    livraisonLabel = `Dakar (${actualFraisDakar === 0 ? 'Gratuit' : formatCurrency(actualFraisDakar) + ' FCFA'})`;
-  } else if (isAibdAvailable) {
-    livraisonLabel = `AIBD (${actualFraisAibd === 0 ? 'Gratuit' : formatCurrency(actualFraisAibd) + ' FCFA'})`;
-  }
-
-  const livraisonDisponible = isDakarAvailable || isAibdAvailable;
-
   return (
     <section
       aria-label="Déplacements et livraison"
-      className="bg-white border border-slate-200/80 rounded-[28px] overflow-hidden shadow-sm"
+      className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-sm"
     >
-      <h3 className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 text-lg text-brand-dark font-fraunces font-normal">
+      <h3 className="px-5 pt-5 pb-4 font-fraunces text-lg font-normal text-brand-dark sm:px-6 sm:pt-6">
         Déplacements et livraison
       </h3>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 border-t border-slate-200/80 divide-y sm:divide-y-0 sm:divide-x divide-slate-200/80">
-        <OptionCell
-          icon={Navigation}
-          title="Trajets hors Dakar"
-          description="Rouler en dehors de la région de Dakar"
-          status={
-            autoriseHorsDakar
-              ? { label: 'Autorisé', tone: 'positive' }
-              : { label: 'Non autorisé', tone: 'restricted' }
-          }
-          value={autoriseHorsDakar ? supplementValue : 'Dakar uniquement'}
-          valueLabel={
-            autoriseHorsDakar ? 'Supplément par jour' : 'Trajets limités à la région'
-          }
-          muted={!autoriseHorsDakar}
-        />
+      <div className="grid grid-cols-1 divide-y divide-slate-200/80 border-t border-slate-200/80 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+        {/* Trajets hors Dakar */}
+        <div className="flex flex-col gap-4 px-5 py-5 sm:px-6">
+          <div className="flex items-start justify-between gap-3">
+            <IconBadge icon={Navigation} muted={!autoriseHorsDakar} />
+            <StatusPill
+              tone={autoriseHorsDakar ? 'positive' : 'restricted'}
+              label={autoriseHorsDakar ? 'Autorisé' : 'Non autorisé'}
+            />
+          </div>
 
-        <OptionCell
-          icon={Truck}
-          title="Service de livraison"
-          description="À domicile (Dakar) ou à l'aéroport (AIBD)"
-          status={
-            livraisonDisponible
-              ? { label: 'Disponible', tone: 'positive' }
-              : { label: 'Non disponible', tone: 'neutral' }
-          }
-          value={livraisonLabel}
-          valueLabel="Options de livraison configurées"
-          muted={!livraisonDisponible}
-        />
+          <div>
+            <h4 className="font-fraunces font-normal text-lg sm:text-xl text-brand-dark tracking-tight">
+              Trajets hors Dakar
+            </h4>
+            <p className="mt-1 text-sm text-slate-500">
+              Rouler en dehors de la région de Dakar
+            </p>
+          </div>
+
+          <div className="mt-auto rounded-2xl bg-slate-50 px-3.5 py-3">
+            <p
+              className={`font-display text-xl leading-tight ${
+                autoriseHorsDakar ? 'text-brand-main' : 'text-slate-400'
+              }`}
+            >
+              {autoriseHorsDakar ? supplementValue : 'Dakar uniquement'}
+            </p>
+            <p className="mt-0.5 text-xs text-slate-500">
+              {autoriseHorsDakar ? 'Supplément par jour' : 'Trajets limités à la région'}
+            </p>
+          </div>
+        </div>
+
+        {/* Service de livraison */}
+        <div className="flex flex-col gap-4 px-5 py-5 sm:px-6">
+          <div className="flex items-start justify-between gap-3">
+            <IconBadge icon={Truck} muted={!livraisonDisponible} />
+            <StatusPill
+              tone={livraisonDisponible ? 'positive' : 'neutral'}
+              label={livraisonDisponible ? 'Disponible' : 'Non disponible'}
+            />
+          </div>
+
+          <div>
+            <h4 className="font-fraunces font-normal text-lg sm:text-xl text-brand-dark tracking-tight">
+              Service de livraison
+            </h4>
+            <p className="mt-1 text-sm text-slate-500">
+              À domicile ou à l&apos;aéroport (AIBD)
+            </p>
+          </div>
+
+          <div className="mt-auto space-y-2">
+            <DestinationRow
+              label="Dakar"
+              icon={MapPin}
+              available={isDakarAvailable}
+              fee={actualFraisDakar}
+            />
+            <DestinationRow
+              label="AIBD"
+              icon={Plane}
+              available={isAibdAvailable}
+              fee={actualFraisAibd}
+            />
+          </div>
+        </div>
       </div>
     </section>
   );
