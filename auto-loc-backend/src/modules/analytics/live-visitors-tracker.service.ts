@@ -67,7 +67,7 @@ export class LiveVisitorsTrackerService {
           }),
           this.prisma.searchHistory.findMany({
             where: { creeLe: { gte: minutes15Ago } },
-            select: { id: true, ville: { select: { nom: true } }, creeLe: true },
+            select: { id: true, ville: true, creeLe: true },
             take: 20,
           }),
         ]);
