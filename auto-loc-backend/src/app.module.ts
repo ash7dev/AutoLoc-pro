@@ -23,6 +23,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SupabaseModule } from './infrastructure/supabase/supabase.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { MetaCapiModule } from './infrastructure/analytics/meta-capi.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     WalletModule,
     NotificationsModule,
     AnalyticsModule,
+    MetaCapiModule,
   ],
   providers: [
     // Global rate limiter guard

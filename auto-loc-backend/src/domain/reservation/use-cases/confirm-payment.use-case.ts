@@ -10,6 +10,7 @@ import { QueueService } from '../../../infrastructure/queue/queue.service';
 import { ReservationStateMachine } from '../reservation.state-machine';
 import { ContractGenerationService } from '../contract-generation.service';
 import { TelegramService } from '../../../infrastructure/telegram/telegram.service';
+import { MetaCapiService } from '../../../infrastructure/analytics/meta-capi.service';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -43,6 +44,7 @@ export class ConfirmPaymentUseCase {
         private readonly stateMachine: ReservationStateMachine,
         private readonly contractGeneration: ContractGenerationService,
         private readonly telegram: TelegramService,
+        private readonly metaCapi: MetaCapiService,
     ) { }
 
     /**
@@ -84,6 +86,7 @@ export class ConfirmPaymentUseCase {
                     dateDebut: true,
                     dateFin: true,
                     netProprietaire: true,
+                    totalLocataire: true,
                     vehicule: { select: { marque: true, modele: true } },
                     proprietaire: {
                         select: {
@@ -179,6 +182,28 @@ export class ConfirmPaymentUseCase {
                 `Le propriétaire doit maintenant confirmer la réservation.\n` +
                 `<a href="https://autoloc.sn/dashboard/admin/reservations">Voir →</a>`,
             ).catch(() => { });
+
+            // ── Meta CAPI Event (Server-to-Server Purchase Event) ────────────────
+            const amount = Number(reservation.totalLocataire ?? reservation.netProprietaire ?? 0);
+            this.metaCapi
+                .sendEvent({
+                    eventName: 'Purchase',
+                    eventId: reservationId,
+                    eventSourceUrl: `https://autoloc.sn/reservations/${reservationId}`,
+                    userData: {
+                        email: reservation.locataire?.email ?? undefined,
+                        phone: reservation.locataire?.telephone ?? reservation.locataire?.profile?.phone ?? undefined,
+                    },
+                    customData: {
+                        currency: 'XOF',
+                        value: amount,
+                        contentName: reservation.vehicule ? `${reservation.vehicule.marque} ${reservation.vehicule.modele}` : 'Réservation AutoLoc',
+                        orderId: reservationId,
+                    },
+                })
+                .catch((err) => {
+                    this.logger.warn(`Failed to send Meta CAPI Purchase event: ${err.message}`);
+                });
 
             // ── 7. Post-commit: Generate contract PDF (EN_COURS — awaiting owner confirmation) ──
             const contrat = await this.contractGeneration
