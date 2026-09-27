@@ -21,7 +21,7 @@ export function AttributionFunnelWidget({
     <div className="rounded-[20px] border border-[#0A3D2E]/10 bg-white p-6">
       <div className="mb-7 flex items-start justify-between gap-4">
         <div>
-          <h3 className="font-serif text-[17px] font-semibold text-[#041912]">
+          <h3 className="font-fraunces text-[17px] font-normal text-[#041912]">
             Entonnoir de conversion
           </h3>
           <p className="mt-1 max-w-md font-sans text-[12.5px] text-[#0A3D2E]/50">
@@ -33,7 +33,7 @@ export function AttributionFunnelWidget({
           <span className="block font-sans text-[11px] text-[#0A3D2E]/40">
             Conversion globale
           </span>
-          <span className="font-serif text-2xl font-semibold tabular-nums text-[#0A3D2E]">
+          <span className="font-fraunces text-2xl font-normal tabular-nums text-[#0A3D2E]">
             {overallConversion}%
           </span>
         </div>
@@ -64,9 +64,9 @@ export function AttributionFunnelWidget({
                 </div>
 
                 <div className="mt-4">
-                  <div className="font-serif text-xl font-semibold tabular-nums text-[#041912]">
+                  <span className="font-fraunces text-xl font-normal tabular-nums text-[#041912]">
                     {step.count.toLocaleString('fr-FR')}
-                  </div>
+                  </span>
                   {!isFirst && stepDropOff > 0 && (
                     <span className="mt-1 block font-sans text-[11px] text-[#9C4A32]">
                       −{stepDropOff.toLocaleString('fr-FR')} abandons

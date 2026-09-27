@@ -45,7 +45,7 @@ export function GrowthKpiCard({
       </div>
 
       <div className="mt-4 flex items-baseline gap-2">
-        <span className="font-serif text-[28px] font-semibold leading-none tracking-tight text-[#041912] tabular-nums lg:text-[32px]">
+        <span className="font-fraunces text-[28px] font-normal leading-none tracking-tight text-[#041912] tabular-nums lg:text-[32px]">
           {value}
         </span>
 

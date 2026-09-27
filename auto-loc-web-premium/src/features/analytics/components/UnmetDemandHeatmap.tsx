@@ -18,7 +18,7 @@ export function UnmetDemandHeatmap({
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-serif text-[17px] font-semibold text-[#041912]">
+            <h3 className="font-fraunces text-[17px] font-normal text-[#041912]">
               Demande non satisfaite
             </h3>
             <span className="rounded-full bg-[#C9A24B]/12 px-2 py-0.5 font-sans text-[11px] font-medium text-[#C9A24B]">
@@ -34,7 +34,7 @@ export function UnmetDemandHeatmap({
           <span className="block font-sans text-[11px] text-[#0A3D2E]/40">
             Recherches infructueuses
           </span>
-          <span className="font-serif text-2xl font-semibold tabular-nums text-[#041912]">
+          <span className="font-fraunces text-2xl font-normal tabular-nums text-[#041912]">
             {totalFailedSearches.toLocaleString('fr-FR')}
           </span>
         </div>

@@ -30,7 +30,7 @@ export function MetaCapiHealthWidget({
 
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-serif text-[15px] font-semibold text-[#041912]">
+              <h3 className="font-fraunces text-[16px] font-normal text-[#041912]">
                 Meta Pixel &amp; Conversions API
               </h3>
               <span className="rounded-full bg-[#0A3D2E]/6 px-2 py-0.5 font-mono text-[11px] text-[#0A3D2E]/70">

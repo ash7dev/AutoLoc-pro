@@ -24,7 +24,7 @@ export function CampaignPerformanceTable({ sources }: CampaignPerformanceTablePr
     <div className="rounded-[20px] border border-[#0A3D2E]/10 bg-white p-6">
       <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h3 className="font-serif text-[17px] font-semibold text-[#041912]">
+          <h3 className="font-fraunces text-[17px] font-normal text-[#041912]">
             Performance des canaux d&apos;acquisition
           </h3>
           <p className="mt-1 font-sans text-[12.5px] text-[#0A3D2E]/50">
@@ -68,13 +68,13 @@ export function CampaignPerformanceTable({ sources }: CampaignPerformanceTablePr
                       {item.source}
                     </span>
                   </td>
-                  <td className="px-4 py-3.5 text-center font-serif font-semibold tabular-nums text-[#041912]">
+                  <td className="px-4 py-3.5 text-center font-fraunces font-normal tabular-nums text-[#041912]">
                     {item.bookingsCount}
                   </td>
-                  <td className="px-4 py-3.5 text-right font-serif font-semibold tabular-nums text-[#041912]">
+                  <td className="px-4 py-3.5 text-right font-fraunces font-normal tabular-nums text-[#041912]">
                     {item.gmv.toLocaleString('fr-FR')} FCFA
                   </td>
-                  <td className="pl-4 py-3.5 text-right font-serif font-semibold tabular-nums text-[#0A3D2E]">
+                  <td className="pl-4 py-3.5 text-right font-fraunces font-normal tabular-nums text-[#0A3D2E]">
                     {item.netCommission.toLocaleString('fr-FR')} FCFA
                   </td>
                 </tr>

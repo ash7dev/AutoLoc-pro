@@ -61,7 +61,7 @@ export default function GrowthPage() {
           <span className="font-sans text-[11px] font-medium text-[#0A3D2E]/45">
             Growth &amp; attribution
           </span>
-          <h1 className="mt-0.5 font-serif text-2xl font-semibold text-[#041912] lg:text-[28px]">
+          <h1 className="mt-0.5 font-fraunces font-normal tracking-tight text-[#041912] text-2xl lg:text-3xl">
             Tableau de bord Growth
           </h1>
           <p className="mt-1 font-sans text-[12.5px] text-[#0A3D2E]/50">
