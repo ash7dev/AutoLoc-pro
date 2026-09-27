@@ -24,9 +24,9 @@ export function CapiTelemetryLog({ pixelId, isCapiConfigured }: CapiTelemetryLog
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <span className="h-2 w-2 rounded-full bg-[#F1DFB6] animate-pulse" />
-          <h3 className="font-sans text-[13px] font-semibold text-[#041912]">
+          <h3 className="font-fraunces font-normal tracking-tight text-[16px] text-[#041912]">
             Télémétrie des événements CAPI
-            <span className="ml-1.5 font-normal text-[#0A3D2E]/40">— Graph API v19.0</span>
+            <span className="ml-1.5 font-sans font-normal text-[#0A3D2E]/40">— Graph API v19.0</span>
           </h3>
         </div>
         <span className="rounded-full bg-[#F1DFB6]/50 px-2.5 py-0.5 font-mono text-[11px] text-[#0A3D2E]">
@@ -43,7 +43,7 @@ export function CapiTelemetryLog({ pixelId, isCapiConfigured }: CapiTelemetryLog
 
         {eventsTracked.map((item) => (
           <div key={item.name} className="flex items-center justify-between py-1.5">
-            <span className="font-semibold text-[#F1DFB6]">{item.name}</span>
+            <span className="font-normal text-[#F1DFB6]">{item.name}</span>
             <span className="text-[11px] text-[#F1DFB6]/45">{item.match}</span>
             <span
               className={`rounded-full px-2 py-0.5 text-[10px] ${isCapiConfigured

@@ -32,7 +32,7 @@ export function GrowthKpiCard({
   return (
     <div className="group relative rounded-[20px] border border-[#0A3D2E]/10 bg-white p-5 transition-colors duration-300 hover:border-[#0A3D2E]/20">
       <div className="flex items-start justify-between gap-3">
-        <span className="font-sans text-[13px] font-medium text-[#0A3D2E]/55">
+        <span className="font-sans text-[13px] font-normal text-[#0A3D2E]/55">
           {title}
         </span>
         {icon && (
@@ -51,7 +51,7 @@ export function GrowthKpiCard({
 
         {hasTrend && (
           <span
-            className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold ${isPositive
+            className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-normal ${isPositive
                 ? 'bg-[#0A3D2E]/8 text-[#0A3D2E]'
                 : 'bg-[#9C4A32]/10 text-[#9C4A32]'
               }`}

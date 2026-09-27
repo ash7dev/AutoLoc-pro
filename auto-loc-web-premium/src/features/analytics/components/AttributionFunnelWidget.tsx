@@ -21,7 +21,7 @@ export function AttributionFunnelWidget({
     <div className="rounded-[20px] border border-[#0A3D2E]/10 bg-white p-6">
       <div className="mb-7 flex items-start justify-between gap-4">
         <div>
-          <h3 className="font-fraunces text-[17px] font-normal text-[#041912]">
+          <h3 className="font-fraunces font-normal tracking-tight text-[18px] text-[#041912]">
             Entonnoir de conversion
           </h3>
           <p className="mt-1 max-w-md font-sans text-[12.5px] text-[#0A3D2E]/50">
@@ -33,7 +33,7 @@ export function AttributionFunnelWidget({
           <span className="block font-sans text-[11px] text-[#0A3D2E]/40">
             Conversion globale
           </span>
-          <span className="font-fraunces text-2xl font-normal tabular-nums text-[#0A3D2E]">
+          <span className="font-fraunces font-normal tracking-tight text-2xl tabular-nums text-[#0A3D2E]">
             {overallConversion}%
           </span>
         </div>
@@ -51,10 +51,10 @@ export function AttributionFunnelWidget({
               <div className="flex w-full flex-col justify-between rounded-2xl border border-[#0A3D2E]/8 bg-[#0A3D2E]/[0.025] p-4">
                 <div>
                   <div className="mb-1.5 flex items-center gap-2">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0A3D2E] font-mono text-[10px] font-medium text-[#F1DFB6]">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0A3D2E] font-mono text-[10px] font-normal text-[#F1DFB6]">
                       {index + 1}
                     </span>
-                    <h4 className="font-sans text-[13px] font-medium text-[#041912]">
+                    <h4 className="font-fraunces font-normal tracking-tight text-[15px] text-[#041912]">
                       {step.name}
                     </h4>
                   </div>

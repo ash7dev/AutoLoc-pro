@@ -24,7 +24,7 @@ export function CampaignPerformanceTable({ sources }: CampaignPerformanceTablePr
     <div className="rounded-[20px] border border-[#0A3D2E]/10 bg-white p-6">
       <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h3 className="font-fraunces text-[17px] font-normal text-[#041912]">
+          <h3 className="font-fraunces font-normal tracking-tight text-[18px] text-[#041912]">
             Performance des canaux d&apos;acquisition
           </h3>
           <p className="mt-1 font-sans text-[12.5px] text-[#0A3D2E]/50">
@@ -50,12 +50,12 @@ export function CampaignPerformanceTable({ sources }: CampaignPerformanceTablePr
           <table className="w-full text-left font-sans text-[13px]">
             <thead>
               <tr className="border-b border-[#0A3D2E]/10">
-                <th className="py-3 pr-4 font-medium text-[#0A3D2E]/50">Source</th>
-                <th className="px-4 py-3 text-center font-medium text-[#0A3D2E]/50">
+                <th className="py-3 pr-4 font-normal text-[#0A3D2E]/50">Source</th>
+                <th className="px-4 py-3 text-center font-normal text-[#0A3D2E]/50">
                   Réservations
                 </th>
-                <th className="px-4 py-3 text-right font-medium text-[#0A3D2E]/50">GMV</th>
-                <th className="pl-4 py-3 text-right font-medium text-[#0A3D2E]/50">
+                <th className="px-4 py-3 text-right font-normal text-[#0A3D2E]/50">GMV</th>
+                <th className="pl-4 py-3 text-right font-normal text-[#0A3D2E]/50">
                   Commission nette
                 </th>
               </tr>
@@ -64,7 +64,7 @@ export function CampaignPerformanceTable({ sources }: CampaignPerformanceTablePr
               {filteredSources.map((item) => (
                 <tr key={item.source} className="transition-colors hover:bg-[#0A3D2E]/[0.02]">
                   <td className="py-3.5 pr-4">
-                    <span className="rounded-full bg-[#F1DFB6]/50 px-2.5 py-1 font-mono text-[12px] font-medium text-[#0A3D2E]">
+                    <span className="rounded-full bg-[#F1DFB6]/50 px-2.5 py-1 font-mono text-[12px] font-normal text-[#0A3D2E]">
                       {item.source}
                     </span>
                   </td>
