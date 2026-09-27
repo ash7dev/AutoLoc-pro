@@ -138,6 +138,11 @@ export const metadata: Metadata = {
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
+  verification: {
+    other: {
+      "facebook-domain-verification": "azd36hqgoqu745ssndm9871gcunmde",
+    },
+  },
 };
 
 import { Navbar } from "../src/core/components/Navbar";
@@ -159,6 +164,7 @@ export default function RootLayout({
       className={`${fraunces.variable} ${gloock.variable} ${jakarta.variable} ${playfair.variable} ${cormorant.variable} ${cinzel.variable} ${syne.variable}`}
     >
       <head>
+        <meta name="facebook-domain-verification" content="azd36hqgoqu745ssndm9871gcunmde" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
