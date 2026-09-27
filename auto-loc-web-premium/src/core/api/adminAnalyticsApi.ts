@@ -250,6 +250,13 @@ export interface AdminGrowthAttributionSummaryData {
   };
 }
 
+export interface LiveVisitorsData {
+  activeVisitorsCount: number;
+  activePages: Array<{ url: string; count: number }>;
+  activeCities: Array<{ city: string; count: number }>;
+  timestamp: string;
+}
+
 export interface AdminDashboardSummaryData {
   period: string;
   overview: AdminOverviewData;
@@ -360,6 +367,10 @@ export const adminAnalyticsApi = {
 
   getFinancialEscrow: (): Promise<AdminFinancialEscrowData> => {
     return apiClient.get<AdminFinancialEscrowData>('/admin/analytics/financial-escrow');
+  },
+
+  getLiveVisitors: (): Promise<LiveVisitorsData> => {
+    return apiClient.get<LiveVisitorsData>('/admin/analytics/live-visitors');
   },
 
   getGrowthAttributionSummary: (period: string = '30d'): Promise<AdminGrowthAttributionSummaryData> => {

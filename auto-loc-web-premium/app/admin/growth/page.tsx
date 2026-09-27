@@ -8,6 +8,7 @@ import { AttributionFunnelWidget } from '@/src/features/analytics/components/Att
 import { UnmetDemandHeatmap } from '@/src/features/analytics/components/UnmetDemandHeatmap';
 import { CampaignPerformanceTable } from '@/src/features/analytics/components/CampaignPerformanceTable';
 import { CapiTelemetryLog } from '@/src/features/analytics/components/CapiTelemetryLog';
+import { LiveVisitorsWidget } from '@/src/features/analytics/components/LiveVisitorsWidget';
 
 export default function GrowthPage() {
   const [period, setPeriod] = useState<string>('30d');
@@ -102,6 +103,8 @@ export default function GrowthPage() {
           </button>
         </div>
       </div>
+
+      <LiveVisitorsWidget />
 
       <MetaCapiHealthWidget
         pixelId={metaCapiStatus.pixelId}
