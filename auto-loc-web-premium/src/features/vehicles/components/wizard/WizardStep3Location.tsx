@@ -293,6 +293,24 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
                 );
               })}
             </div>
+
+            <div className="flex items-center rounded-xl border border-slate-200 px-3 py-2 bg-white">
+              <Coins className="h-4 w-4 text-emerald-600 mr-2" />
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={500}
+                value={data.fraisLivraisonDakar ?? data.fraisLivraison ?? ''}
+                onChange={(e) => {
+                  const v = Number(e.target.value) || 0;
+                  onChange({ fraisLivraisonDakar: v, fraisLivraison: v });
+                }}
+                placeholder="5000"
+                className="flex-1 bg-transparent text-sm font-bold text-slate-900 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
+              <span className="text-xs font-bold text-slate-500">FCFA</span>
+            </div>
           </div>
         )}
       </div>
@@ -349,6 +367,21 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
                   </button>
                 );
               })}
+            </div>
+
+            <div className="flex items-center rounded-xl border border-slate-200 px-3 py-2 bg-white">
+              <Coins className="h-4 w-4 text-emerald-600 mr-2" />
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={500}
+                value={data.fraisLivraisonAibd ?? ''}
+                onChange={(e) => onChange({ fraisLivraisonAibd: Number(e.target.value) || 0 })}
+                placeholder="20000"
+                className="flex-1 bg-transparent text-sm font-bold text-slate-900 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
+              <span className="text-xs font-bold text-slate-500">FCFA</span>
             </div>
           </div>
         )}
