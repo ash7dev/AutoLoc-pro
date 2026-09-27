@@ -18,6 +18,7 @@ import {
     IdempotencyResult,
 } from '../reservation-idempotency.service';
 import { RevalidateService } from '../../../infrastructure/revalidate/revalidate.service';
+import { MetaCapiService } from '../../../infrastructure/analytics/meta-capi.service';
 
 type TypeLivraison = 'AUCUNE' | 'DAKAR' | 'AIBD';
 
@@ -44,6 +45,11 @@ export interface CreateReservationInput {
     targetPayment?: string;
     /** Numéro de téléphone du payeur (requis pour InTouch API directe). */
     payerPhone?: string;
+    /** Growth Attribution (UTMs & Meta fbc/fbp) */
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    fbclid?: string;
 }
 
 export interface CreateReservationResult {
@@ -75,6 +81,7 @@ export class CreateReservationUseCase {
         private readonly availability: ReservationAvailabilityService,
         private readonly idempotency: ReservationIdempotencyService,
         private readonly revalidate: RevalidateService,
+        private readonly metaCapi: MetaCapiService,
     ) { }
 
     async execute(
@@ -226,6 +233,10 @@ export class CreateReservationUseCase {
                             fraisLivraison: fraisLivraison > 0 ? fraisLivraison : null,
                             horsDakar: !!input.horsDakar && vehicule.autoriseHorsDakar,
                             supplementHorsDakar: supplementHorsDakar > 0 ? supplementHorsDakar : null,
+                            utmSource: input.utmSource ?? null,
+                            utmMedium: input.utmMedium ?? null,
+                            utmCampaign: input.utmCampaign ?? null,
+                            fbclid: input.fbclid ?? null,
                         },
                         select: { id: true, paymentUrl: true },
                     });
@@ -301,6 +312,30 @@ export class CreateReservationUseCase {
         };
         await this.idempotency.commitResult(idempotencyKey, result);
         await this.queue.schedulePaymentExpiry(reservation.id);
+
+        // ── Meta CAPI Event (Server-to-Server InitiateCheckout Event) ──────
+        this.metaCapi
+            .sendEvent({
+                eventName: 'InitiateCheckout',
+                eventId: reservation.id,
+                eventSourceUrl: `https://autoloc.sn/vehicle/${input.vehiculeId}`,
+                userData: {
+                    email: locataire.email ?? undefined,
+                    phone: locataire.telephone ?? undefined,
+                    firstName: locataire.prenom ?? undefined,
+                    lastName: locataire.nom ?? undefined,
+                    fbc: input.fbclid ? `fb.1.${Date.now()}.${input.fbclid}` : undefined,
+                },
+                customData: {
+                    currency: 'XOF',
+                    value: Number(totalAvecLivraison),
+                    contentName: `${vehicule.marque} ${vehicule.modele}`,
+                    orderId: reservation.id,
+                },
+            })
+            .catch((err) => {
+                this.logger.warn(`Failed to send Meta CAPI InitiateCheckout event: ${err.message}`);
+            });
 
         // Email supprimé intentionnellement : l'utilisateur vient de créer la réservation
         // et est encore sur le flux de paiement. L'email pertinent est reservation.paid.
