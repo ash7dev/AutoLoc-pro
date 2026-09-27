@@ -1,3 +1,4 @@
+import { SkipThrottle } from '@nestjs/throttler';
 import { Controller, Get, HttpCode, HttpStatus, Query, UseGuards } from '@nestjs/common';
 import { RoleProfile } from '@prisma/client';
 import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
@@ -21,9 +22,10 @@ export class AdminAnalyticsController {
    * GET /admin/analytics/live-visitors
    * Visiteurs en temps réel (Spotify style)
    */
+  @SkipThrottle()
   @Get('live-visitors')
   @HttpCode(HttpStatus.OK)
-  getLiveVisitors() {
+  async getLiveVisitors() {
     return this.liveTracker.getLiveStats();
   }
 
