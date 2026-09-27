@@ -518,6 +518,24 @@ export class VehiclesService {
    */
   async trackClick(id: string, user: RequestUser | null, actionType: string = 'CLICK_DETAIL') {
     this.feedScoring.trackClick({ vehiculeId: id, userId: user?.sub, actionType }).catch(() => { });
+
+    this.metaCapi
+      .sendEvent({
+        eventName: 'ViewContent',
+        eventId: id,
+        eventSourceUrl: `https://autoloc.sn/vehicles/${id}`,
+        userData: {
+          email: user?.email,
+          phone: user?.phone,
+        },
+        customData: {
+          currency: 'XOF',
+          contentType: 'product',
+          orderId: id,
+        },
+      })
+      .catch(() => { });
+
     return { success: true };
   }
 
@@ -1096,7 +1114,7 @@ export class VehiclesService {
       total,
     };
 
-    // 🎯 Tracking de la recherche pour personnalisation future
+    // 🎯 Tracking de la recherche pour personnalisation future + CAPI Meta
     this.feedScoring.trackSearch({
       userId: undefined, // À passer depuis le controller si utilisateur authentifié
       sessionId: undefined, // À passer depuis le controller (cookie/header)
@@ -1112,6 +1130,17 @@ export class VehiclesService {
       equipements: dto.equipements,
       resultCount: total,
     }).catch(() => { }); // Fire-and-forget
+
+    this.metaCapi
+      .sendEvent({
+        eventName: 'Search',
+        eventSourceUrl: 'https://autoloc.sn/explorer',
+        customData: {
+          searchString: [dto.ville, dto.type].filter(Boolean).join(' '),
+          contentCategory: dto.type || 'ALL',
+        },
+      })
+      .catch(() => { });
 
     await this.redis.set(cacheKey, JSON.stringify(result), SEARCH_CACHE_TTL);
     return result;
