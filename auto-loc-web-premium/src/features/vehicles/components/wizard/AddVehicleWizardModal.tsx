@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ArrowRight, Check, Save } from 'lucide-react';
 import { useVehicleDraftStore, VehicleWizardDraft, Step1Data, Step2Data, Step3Data, Step4Data, Step5Data, Step6Data } from '../../stores/useVehicleDraftStore';
 import { vehicleService } from '../../services/vehicleService';
+import { useCacheInvalidator } from '@/src/core/hooks/useCacheInvalidator';
 import { PublishProgressModal } from './PublishProgressModal';
 import { ResumeDraftModal } from './ResumeDraftModal';
 import { AbandonWizardModal } from './AbandonWizardModal';
@@ -56,6 +58,8 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
   mode = 'CREATE',
   vehicleToEdit = null,
 }) => {
+  const router = useRouter();
+  const { invalidateVehicles } = useCacheInvalidator();
   const isEditMode = mode === 'EDIT' && Boolean(vehicleToEdit);
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -448,6 +452,8 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
 
       if (!isEditMode) clearDraft();
 
+      await invalidateVehicles();
+
       await new Promise((resolve) => setTimeout(resolve, 200));
       setPublishProgress(100);
       setPublishStatusText(
@@ -468,8 +474,10 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
     }
   };
 
-  const handleFinishModal = () => {
+  const handleFinishModal = async () => {
     setPublishModalVisible(false);
+    await invalidateVehicles();
+    router.refresh();
     onSuccess?.();
     if (isEditMode) {
       onVehicleUpdated?.();
@@ -483,12 +491,13 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[90] sm:static sm:z-auto sm:inset-auto sm:block sm:bg-transparent p-0 backdrop-blur-none h-[100dvh] sm:h-auto overflow-hidden sm:overflow-visible">
+      <div className="fixed inset-0 z-[90] flex items-center justify-center p-0 sm:p-4 md:p-6 bg-black/70 backdrop-blur-sm overflow-y-auto">
+        <div className="fixed inset-0 -z-10" onClick={handleCloseAttempt} />
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
-          className="relative flex flex-col w-full h-full sm:h-auto max-w-4xl mx-auto overflow-hidden rounded-none sm:rounded-3xl border-0 sm:border border-slate-200/80 bg-[#062017] sm:bg-white shadow-none sm:shadow-xl"
+          initial={{ opacity: 0, scale: 0.97, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.97, y: 12 }}
+          className="relative flex flex-col w-full h-full sm:h-[88vh] sm:max-h-[850px] max-w-4xl mx-auto overflow-hidden rounded-none sm:rounded-3xl border-0 sm:border border-slate-200/80 bg-[#062017] sm:bg-white shadow-none sm:shadow-2xl"
         >
           {/* Header Navigation Bar */}
           <div className="flex items-center justify-between px-4 sm:px-6 pt-[calc(0.875rem+env(safe-area-inset-top))] sm:pt-4 pb-3.5 sm:pb-4 border-b border-white/10 sm:border-slate-100 bg-white/5 sm:bg-white backdrop-blur-md shrink-0">

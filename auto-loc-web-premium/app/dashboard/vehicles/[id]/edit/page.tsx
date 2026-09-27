@@ -50,6 +50,12 @@ export default function EditVehiclePage() {
       onClose={() => router.push('/dashboard/vehicles')}
       onVehicleUpdated={async () => {
         await invalidateVehicles();
+        router.refresh();
+        router.push('/dashboard/vehicles');
+      }}
+      onSuccess={async () => {
+        await invalidateVehicles();
+        router.refresh();
         router.push('/dashboard/vehicles');
       }}
     />

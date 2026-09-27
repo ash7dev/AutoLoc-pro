@@ -218,6 +218,16 @@ export const OwnerVehiclesView: React.FC = () => {
           await invalidateVehicles();
           fetchVehicles();
         }}
+        onVehicleUpdated={async () => {
+          setIsAddWizardOpen(false);
+          await invalidateVehicles();
+          fetchVehicles();
+        }}
+        onVehicleCreated={async () => {
+          setIsAddWizardOpen(false);
+          await invalidateVehicles();
+          fetchVehicles();
+        }}
       />
     </div>
   );

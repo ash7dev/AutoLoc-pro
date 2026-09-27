@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Banknote, TrendingDown, Plus, Trash2, ChevronDown, ChevronUp, Coins } from 'lucide-react';
+import { Banknote, TrendingDown, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Step5Data, PriceTier } from '../../stores/useVehicleDraftStore';
 
 interface WizardStep5PricingProps {
@@ -9,7 +9,7 @@ interface WizardStep5PricingProps {
   onChange: (updated: Partial<Step5Data>) => void;
 }
 
-const PRESET_PRICES = [30000, 35000, 50000, 60000, 75000, 100000];
+const PRESET_PRICES = [20000, 25000, 35000, 50000, 65000, 85000, 100000];
 
 export const WizardStep5Pricing: React.FC<WizardStep5PricingProps> = ({ data, onChange }) => {
   const prixParJour = data.prixParJour || 0;
@@ -46,9 +46,6 @@ export const WizardStep5Pricing: React.FC<WizardStep5PricingProps> = ({ data, on
     if (!prixParJour || prixParJour <= 0 || tierPrice >= prixParJour) return 0;
     return Math.round(((prixParJour - tierPrice) / prixParJour) * 100);
   };
-
-  // Host Net Revenue Calculation (e.g. 90% net payout after 10% platform fee)
-  const netEarnings3Days = Math.round(prixParJour * 3 * 0.9);
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -106,21 +103,6 @@ export const WizardStep5Pricing: React.FC<WizardStep5PricingProps> = ({ data, on
             })}
           </div>
         </div>
-
-        {/* Host Net Earnings Simulator Box */}
-        {prixParJour > 0 && (
-          <div className="flex items-center gap-3 rounded-xl bg-brand-dark border border-[#4ADE80]/30 p-3.5 text-white">
-            <Coins className="h-5 w-5 text-emerald-400 shrink-0" />
-            <div className="text-xs space-y-0.5 min-w-0">
-              <p className="font-bold text-emerald-400 text-xs sm:text-sm">
-                Gain estimé : ~{netEarnings3Days.toLocaleString('fr-FR')} FCFA net sur 3 jours
-              </p>
-              <p className="text-[11px] text-emerald-200/70 leading-normal">
-                Vous recevez 90% du prix de la location directement vers votre Mobile Money.
-              </p>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Accordéon Réductions Longue Durée */}
@@ -221,3 +203,5 @@ export const WizardStep5Pricing: React.FC<WizardStep5PricingProps> = ({ data, on
     </div>
   );
 };
+
+

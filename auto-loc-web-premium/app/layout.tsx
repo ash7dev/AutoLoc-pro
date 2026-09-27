@@ -145,6 +145,7 @@ import { Footer } from "../src/core/components/Footer";
 import { AuthProvider } from "../src/core/providers/AuthProvider";
 import { SWRProvider } from "../src/core/providers/SWRProvider";
 import { PwaManager } from "../src/core/components/Pwa/PwaManager";
+import { MetaPixel } from "../src/core/components/analytics/MetaPixel";
 
 export default function RootLayout({
   children,
@@ -160,6 +161,7 @@ export default function RootLayout({
       <body suppressHydrationWarning className="font-body bg-background text-foreground antialiased selection:bg-emerald-500/30 selection:text-emerald-300 min-h-screen flex flex-col">
         <SWRProvider>
           <AuthProvider>
+            <MetaPixel />
             <PwaManager />
             <Navbar />
             <main className="flex-1 pb-28 lg:pb-0">{children}</main>

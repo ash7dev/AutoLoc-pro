@@ -62,8 +62,8 @@ export function useCacheInvalidator() {
     invalidateAnalytics();
     return mutate(
       (key) => {
-        if (typeof key === 'string') return key.startsWith('owner-vehicle') || key.includes('vehicle');
-        if (Array.isArray(key)) return typeof key[0] === 'string' && (key[0].startsWith('owner-vehicle') || key[0].includes('vehicle'));
+        if (typeof key === 'string') return key.toLowerCase().includes('vehicle');
+        if (Array.isArray(key)) return typeof key[0] === 'string' && key[0].toLowerCase().includes('vehicle');
         return false;
       },
       undefined,

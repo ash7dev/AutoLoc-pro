@@ -140,6 +140,7 @@ const jsonLd = {
 
 import { WhatsAppBubble } from '@/components/ui/WhatsAppBubble';
 import { TikTokPixel } from '@/components/analytics/TikTokPixel';
+import { MetaPixel } from '@/components/analytics/MetaPixel';
 
 import { GlobalRoleSync } from '@/features/auth/components/global-role-sync';
 import { SessionExpiryToast } from '@/features/auth/components/session-expiry-toast';
@@ -168,6 +169,7 @@ export default function RootLayout({
           <Toaster position="top-right" richColors closeButton />
           <WhatsAppBubble />
           <TikTokPixel />
+          <MetaPixel />
         </ThemeProvider>
       </body>
     </html>
