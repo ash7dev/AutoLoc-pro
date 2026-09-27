@@ -20,11 +20,11 @@ interface UseOwnerDashboardOptions {
   revenueTimeRange?: '7d' | '30d' | '6m' | '1y';
 }
 
-// Configuration TTL (Time-To-Live) par domaine métier selon la politique Big Tech
+// Configuration SWR réactive pour le Dashboard Owner avec révalidation à jour
 const ANALYTICS_SWR_OPTIONS = {
-  dedupingInterval: 5 * 60 * 1000, // 5 minutes de fraîcheur
-  revalidateOnFocus: false,
-  revalidateIfStale: false,
+  dedupingInterval: 5 * 1000, // 5 secondes de fenêtre de dédoublonnage
+  revalidateOnFocus: true,
+  revalidateIfStale: true,
   keepPreviousData: true,
 };
 
