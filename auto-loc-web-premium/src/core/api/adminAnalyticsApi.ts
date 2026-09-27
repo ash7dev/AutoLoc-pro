@@ -231,6 +231,25 @@ export interface AdminFinancialEscrowData {
   pendingHostPayoutInEscrow: number;
 }
 
+export interface AdminGrowthAttributionSummaryData {
+  period: string;
+  sources: Array<{
+    source: string;
+    bookingsCount: number;
+    gmv: number;
+    netCommission: number;
+  }>;
+  userAcquisition: Array<{
+    source: string;
+    userCount: number;
+  }>;
+  metaCapiStatus: {
+    active: boolean;
+    pixelId: string;
+    capiConfigured: boolean;
+  };
+}
+
 export interface AdminDashboardSummaryData {
   period: string;
   overview: AdminOverviewData;
@@ -341,6 +360,10 @@ export const adminAnalyticsApi = {
 
   getFinancialEscrow: (): Promise<AdminFinancialEscrowData> => {
     return apiClient.get<AdminFinancialEscrowData>('/admin/analytics/financial-escrow');
+  },
+
+  getGrowthAttributionSummary: (period: string = '30d'): Promise<AdminGrowthAttributionSummaryData> => {
+    return apiClient.get<AdminGrowthAttributionSummaryData>('/admin/analytics/growth-attribution', { params: { period } });
   },
 
   getKycQueue: (params?: { status?: string; search?: string; page?: number; limit?: number }): Promise<AdminKycQueueResponse> => {
