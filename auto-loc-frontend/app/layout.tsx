@@ -57,7 +57,7 @@ export const metadata: Metadata = {
       'Louez un véhicule vérifié au Sénégal en quelques clics. SUV, berlines, pick-ups disponibles à Dakar et partout au Sénégal.',
     images: [
       {
-        url: '/footerlogo.jpg',
+        url: '/logoAutoLoc.jpg',
         width: 1200,
         height: 630,
         alt: 'AutoLoc — Location de véhicules au Sénégal',
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     title: 'AutoLoc — Location de véhicules au Sénégal',
     description:
       'Louez un véhicule vérifié au Sénégal en quelques clics.',
-    images: ['/footerlogo.jpg'],
+    images: ['/logoAutoLoc.jpg'],
   },
   alternates: {
     canonical: BASE_URL,

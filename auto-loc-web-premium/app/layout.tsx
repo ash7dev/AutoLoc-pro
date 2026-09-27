@@ -103,10 +103,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/banner-premium.png",
+        url: "/logoAutoLoc.jpg",
         width: 1200,
         height: 630,
-        alt: "AutoLoc Banner",
+        alt: "AutoLoc Logo",
       },
     ],
   },
@@ -115,7 +115,7 @@ export const metadata: Metadata = {
     title: "AutoLoc — Location de Voitures & Véhicules au Sénégal",
     description:
       "Louez votre véhicule en toute sérénité à Dakar et dans tout le Sénégal.",
-    images: ["/banner-premium.png"],
+    images: ["/logoAutoLoc.jpg"],
   },
   robots: {
     index: true,
