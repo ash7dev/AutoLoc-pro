@@ -72,6 +72,7 @@ export function useOwnerDashboard(options?: UseOwnerDashboardOptions) {
   }, []);
 
   const effectiveUserId = user?.id || getUserIdFromToken();
+  const isOwner = Boolean(effectiveUserId && (user?.role === 'PROPRIETAIRE' || user?.role === 'ADMIN'));
 
   /**
    * 1. GET /analytics/owner/overview (Tier 1 - 5 min TTL)
@@ -83,7 +84,7 @@ export function useOwnerDashboard(options?: UseOwnerDashboardOptions) {
     isValidating: isValidatingOverview,
     mutate: mutateOverview,
   } = useSWR<OwnerOverviewAnalytics>(
-    'analytics-overview',
+    isOwner ? 'analytics-overview' : null,
     () => ownerDashboardApi.analytics.getOverview(),
     ANALYTICS_SWR_OPTIONS
   );
@@ -98,7 +99,7 @@ export function useOwnerDashboard(options?: UseOwnerDashboardOptions) {
     isValidating: isValidatingRevenue,
     mutate: mutateRevenue,
   } = useSWR<RevenueBreakdownResponse>(
-    ['analytics-revenue', revenueGroupBy, revenueTimeRange],
+    isOwner ? ['analytics-revenue', revenueGroupBy, revenueTimeRange] : null,
     () => {
       const now = new Date();
       let startDate: string | undefined;
@@ -134,7 +135,7 @@ export function useOwnerDashboard(options?: UseOwnerDashboardOptions) {
     isValidating: isValidatingOccupancy,
     mutate: mutateOccupancy,
   } = useSWR<OccupancyAnalyticsResponse>(
-    'analytics-occupancy',
+    isOwner ? 'analytics-occupancy' : null,
     () => ownerDashboardApi.analytics.getOccupancyStats(),
     ANALYTICS_SWR_OPTIONS
   );
@@ -149,7 +150,7 @@ export function useOwnerDashboard(options?: UseOwnerDashboardOptions) {
     isValidating: isValidatingFleet,
     mutate: mutateFleet,
   } = useSWR<FleetPerformanceResponse>(
-    'analytics-fleet',
+    isOwner ? 'analytics-fleet' : null,
     () => ownerDashboardApi.analytics.getFleetPerformance(),
     ANALYTICS_SWR_OPTIONS
   );
@@ -164,7 +165,7 @@ export function useOwnerDashboard(options?: UseOwnerDashboardOptions) {
     isValidating: isValidatingInsights,
     mutate: mutateInsights,
   } = useSWR<OwnerInsightsResponse>(
-    'analytics-insights',
+    isOwner ? 'analytics-insights' : null,
     () => ownerDashboardApi.analytics.getInsights(),
     ANALYTICS_SWR_OPTIONS
   );
@@ -179,7 +180,7 @@ export function useOwnerDashboard(options?: UseOwnerDashboardOptions) {
     isValidating: isValidatingNotifications,
     mutate: mutateNotifications,
   } = useSWR<OwnerNotificationsCount>(
-    'owner-notifications',
+    isOwner ? 'owner-notifications' : null,
     () => ownerDashboardApi.reservations.getOwnerNotifications(),
     NOTIFICATIONS_SWR_OPTIONS
   );
@@ -194,7 +195,7 @@ export function useOwnerDashboard(options?: UseOwnerDashboardOptions) {
     isValidating: isValidatingWallet,
     mutate: mutateWallet,
   } = useSWR<WalletData>(
-    'wallet-me',
+    isOwner ? 'wallet-me' : null,
     () => ownerDashboardApi.wallet.getWallet(),
     WALLET_SWR_OPTIONS
   );
@@ -209,7 +210,7 @@ export function useOwnerDashboard(options?: UseOwnerDashboardOptions) {
     isValidating: isValidatingReviews,
     mutate: mutateReviews,
   } = useSWR<OwnerReviewsResponse>(
-    effectiveUserId ? ['reviews-user', effectiveUserId] : null,
+    isOwner && effectiveUserId ? ['reviews-user', effectiveUserId] : null,
     () => ownerDashboardApi.reviews.getUserReviews(effectiveUserId!),
     WALLET_SWR_OPTIONS
   );

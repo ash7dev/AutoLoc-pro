@@ -37,22 +37,37 @@ export function useTenantProfileView() {
 
   // 2. Synchroniser les données API réelles avec le Zustand Store global
   useEffect(() => {
-    if (fetchedProfile && storeUser) {
-      const isStatusChanged = fetchedProfile.statutKyc !== storeUser.statutKyc;
-      const isAvatarChanged = fetchedProfile.avatarUrl !== storeUser.avatarUrl;
-      const isNameChanged = fetchedProfile.prenom !== storeUser.prenom || fetchedProfile.nom !== storeUser.nom;
+    if (!fetchedProfile) return;
 
-      if (isStatusChanged || isAvatarChanged || isNameChanged) {
-        setUser({
-          ...storeUser,
-          prenom: fetchedProfile.prenom || storeUser.prenom,
-          nom: fetchedProfile.nom || storeUser.nom,
-          avatarUrl: fetchedProfile.avatarUrl ?? undefined,
-          statutKyc: (fetchedProfile.statutKyc as any) || storeUser.statutKyc,
-        });
-      }
+    const currentStoreUser = useUserStore.getState().user;
+    if (!currentStoreUser) return;
+
+    const fetchedAvatar = fetchedProfile.avatarUrl || undefined;
+    const storeAvatar = currentStoreUser.avatarUrl || undefined;
+    const fetchedKyc = (fetchedProfile.statutKyc as any) || currentStoreUser.statutKyc;
+
+    const isStatusChanged = fetchedKyc !== currentStoreUser.statutKyc;
+    const isAvatarChanged = fetchedAvatar !== storeAvatar;
+    const isNameChanged =
+      (Boolean(fetchedProfile.prenom) && fetchedProfile.prenom !== currentStoreUser.prenom) ||
+      (Boolean(fetchedProfile.nom) && fetchedProfile.nom !== currentStoreUser.nom);
+
+    if (isStatusChanged || isAvatarChanged || isNameChanged) {
+      setUser({
+        ...currentStoreUser,
+        prenom: fetchedProfile.prenom || currentStoreUser.prenom,
+        nom: fetchedProfile.nom || currentStoreUser.nom,
+        avatarUrl: fetchedAvatar,
+        statutKyc: fetchedKyc,
+      });
     }
-  }, [fetchedProfile, storeUser, setUser]);
+  }, [
+    fetchedProfile?.statutKyc,
+    fetchedProfile?.avatarUrl,
+    fetchedProfile?.prenom,
+    fetchedProfile?.nom,
+    setUser,
+  ]);
 
   // Utiliser le store local Zustand comme état réactif initial pour éviter tout saut/scintillement d'affichage
   const profile: UserProfileData | undefined = fetchedProfile || (storeUser ? {
