@@ -42,14 +42,15 @@ export const OwnerProfileScreen: React.FC<OwnerProfileScreenProps> = ({
   const [gateVisible, setGateVisible] = useState(false);
   const [gateSteps, setGateSteps] = useState<GateStep[]>([]);
 
-  const openVerification = (steps = profile ? verificationSteps(profile) : []) => {
+  const openVerification = (steps?: GateStep[]) => {
     if (!profile) return;
-    if (profile.statutKyc === 'EN_ATTENTE' && steps.length === 0) {
-      Alert.alert('Dossier en cours', 'Votre identité est en cours de vérification. Nous vous notifierons dès validation.');
+    const targetSteps = steps && steps.length > 0 ? steps : verificationSteps(profile);
+    if (targetSteps.length === 0) {
+      setGateSteps(['PREGATE', 'KYC']);
+      setGateVisible(true);
       return;
     }
-    if (steps.length === 0) { Alert.alert('Compte prêt', 'Vos éléments de vérification sont à jour.'); return; }
-    setGateSteps(steps);
+    setGateSteps(targetSteps);
     setGateVisible(true);
   };
 

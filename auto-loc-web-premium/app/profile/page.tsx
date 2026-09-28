@@ -36,7 +36,7 @@ export default function ProfilePage() {
       {!isAuthenticated ? (
         <div className="max-w-xl mx-auto my-12 p-8 rounded-3xl border border-slate-200 bg-white text-center space-y-5 shadow-sm">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-50 text-[#059669]">
-            <ShieldAlert className="w-7 h-[#059669]" />
+            <ShieldAlert className="w-7 h-7 text-[#059669]" />
           </div>
           <h2 className="font-fraunces text-2xl font-normal text-[#041912]">
             Connexion Requise

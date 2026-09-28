@@ -38,15 +38,24 @@ export const TenantProfileHeroCard: React.FC<TenantProfileHeroCardProps> = ({
     }
   };
 
-  const getInitials = (prenom: string, nom: string) => {
+  const getInitials = (prenom?: string | null, nom?: string | null) => {
     const p = prenom?.charAt(0)?.toUpperCase() || '';
     const n = nom?.charAt(0)?.toUpperCase() || '';
     return p + n || 'U';
   };
 
-  const memberDate = (mounted && profile.creeLe)
-    ? new Date(profile.creeLe).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
-    : null;
+  const formatMemberDate = (dateStr?: string | null) => {
+    if (!mounted || !dateStr) return null;
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return null;
+      return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    } catch {
+      return null;
+    }
+  };
+
+  const memberDate = formatMemberDate(profile.creeLe);
 
   const rating = profile.noteLocataire ?? 5.0;
   const displayRating = rating > 0 ? rating.toFixed(1) : '5.0';
@@ -67,8 +76,9 @@ export const TenantProfileHeroCard: React.FC<TenantProfileHeroCardProps> = ({
                 {profile.avatarUrl ? (
                   <Image
                     src={profile.avatarUrl}
-                    alt={`${profile.prenom} ${profile.nom}`}
+                    alt={`${profile.prenom || ''} ${profile.nom || ''}`}
                     fill
+                    unoptimized
                     className="object-cover"
                     sizes="128px"
                   />

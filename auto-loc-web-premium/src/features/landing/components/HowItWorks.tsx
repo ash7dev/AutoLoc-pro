@@ -163,8 +163,8 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ className = "" }) => {
                 key={number}
                 onClick={() => scrollToStep(index)}
                 className={`group relative flex w-[85vw] max-w-[310px] shrink-0 snap-center flex-col rounded-3xl border border-brand-main/10 bg-white p-5 shadow-[0_1px_2px_rgba(10,61,46,0.04),0_8px_24px_-16px_rgba(10,61,46,0.18)] transition-all duration-300 hover:-translate-y-1 hover:border-brand-main/20 hover:shadow-[0_24px_48px_-24px_rgba(10,61,46,0.35)] motion-reduce:transition-none motion-reduce:hover:translate-y-0 md:w-auto md:max-w-none md:shrink md:p-6 ${!isLast
-                    ? "md:after:absolute md:after:-right-6 md:after:top-[46px] md:after:w-6 md:after:border-t-2 md:after:border-dashed md:after:border-brand-main/25"
-                    : ""
+                  ? "md:after:absolute md:after:-right-6 md:after:top-[46px] md:after:w-6 md:after:border-t-2 md:after:border-dashed md:after:border-brand-main/25"
+                  : ""
                   }`}
               >
                 {/* Décor clippé : lueur au survol + chiffre en filigrane */}
