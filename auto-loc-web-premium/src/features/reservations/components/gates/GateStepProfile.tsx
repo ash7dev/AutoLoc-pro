@@ -152,28 +152,28 @@ export const GateStepProfile: React.FC<GateStepProfileProps> = ({ onSuccess }) =
             <button
               type="submit"
               disabled={!isFormValid || submitting}
-              className={`w-full h-12 rounded-full font-semibold text-sm flex items-center justify-center transition-all mt-3 ${
+              className={`group w-full h-13 rounded-full font-semibold text-sm sm:text-base flex items-center justify-center transition-all mt-3 ${
                 !isFormValid || submitting
                   ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
-                  : 'bg-brand-dark hover:bg-[#06291e] text-white shadow-lg shadow-brand-dark/20 active:scale-[0.98]'
+                  : 'bg-brand-dark hover:bg-[#06291e] border border-emerald-500/25 text-white shadow-xl shadow-brand-dark/20 active:scale-[0.98]'
               }`}
             >
               {submitting ? (
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                  <Loader2 className="w-4.5 h-4.5 animate-spin text-emerald-400" />
                   <span>Sauvegarde...</span>
                 </div>
               ) : (
-                <>
-                  <span>Enregistrer et continuer</span>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ml-2 transition-all ${
+                <div className="flex items-center justify-center gap-2">
+                  <span className="tracking-tight">Enregistrer et continuer</span>
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center ml-1.5 transition-all ${
                     !isFormValid
                       ? 'bg-slate-200 text-slate-400'
-                      : 'bg-emerald-500/20 border border-emerald-400/35 text-emerald-400'
+                      : 'bg-emerald-400 text-brand-dark shadow-sm group-hover:scale-105 group-hover:bg-emerald-300'
                   }`}>
-                    <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.5} />
+                    <ArrowRight className="w-4 h-4" strokeWidth={2.8} />
                   </div>
-                </>
+                </div>
               )}
             </button>
           </form>

@@ -143,11 +143,11 @@ export const BookingPreGateOverview: React.FC<BookingPreGateOverviewProps> = ({
             <button
               type="button"
               onClick={onStart}
-              className="w-full h-[50px] rounded-[25px] bg-brand-dark border border-[rgba(4,25,18,0.90)] text-white font-medium text-[14.5px] flex items-center justify-center shadow-[0_4px_10px_rgba(4,25,18,0.25)] active:scale-[0.98] transition-all"
+              className="group w-full h-[52px] rounded-[26px] bg-brand-dark hover:bg-[#06291e] border border-emerald-500/25 text-white font-semibold text-[15px] flex items-center justify-center shadow-xl shadow-brand-dark/20 active:scale-[0.98] transition-all cursor-pointer"
             >
-              <span>Commencer la vérification</span>
-              <div className="w-[26px] h-[26px] rounded-[13px] bg-[rgba(16,185,129,0.22)] border border-[rgba(74,222,128,0.35)] flex items-center justify-center ml-2">
-                <ArrowRight className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2.5} />
+              <span className="tracking-tight">Commencer la vérification</span>
+              <div className="w-7 h-7 rounded-full bg-emerald-400 text-brand-dark flex items-center justify-center ml-2 shadow-sm group-hover:scale-105 group-hover:bg-emerald-300 transition-all">
+                <ArrowRight className="w-4 h-4 text-brand-dark" strokeWidth={2.8} />
               </div>
             </button>
 

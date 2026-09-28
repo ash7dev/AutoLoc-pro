@@ -35,6 +35,7 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
   customTitle,
   customSubtitle,
 }) => {
+  const [activeSteps, setActiveSteps] = useState<GateStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [upgradingRole, setUpgradingRole] = useState(false);
   const [draftProfile, setDraftProfile] = useState<{ prenom?: string; nom?: string; dateNaissance?: string }>({});
@@ -44,16 +45,21 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
 
   useEffect(() => {
     if (visible) {
+      setActiveSteps(missingSteps);
       setCurrentStepIndex(0);
+    } else {
+      setActiveSteps([]);
     }
   }, [visible]);
 
-  if (!visible || missingSteps.length === 0) {
+  const stepsToUse = activeSteps.length > 0 ? activeSteps : missingSteps;
+
+  if (!visible || stepsToUse.length === 0) {
     return null;
   }
 
-  const currentStep = missingSteps[currentStepIndex] || missingSteps[0];
-  const totalSteps = missingSteps.length;
+  const currentStep = stepsToUse[currentStepIndex] || stepsToUse[0];
+  const totalSteps = stepsToUse.length;
   const isPreGate = currentStep === 'PREGATE';
   const isAgeWarning = currentStep === 'AGE_INSUFFICIENT';
 
@@ -65,10 +71,10 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
       if (mode === 'OWNER' && user && user.role !== 'PROPRIETAIRE') {
         try {
           setUpgradingRole(true);
-          await fetchApi('/auth/become-host', { method: 'POST' });
-          updateProfilePartial({ role: 'PROPRIETAIRE' });
-        } catch {
-          // Fallback dev mode
+          const switchRole = useUserStore.getState().switchRole;
+          await switchRole('PROPRIETAIRE');
+        } catch (error) {
+          console.warn('[ReservationGateModal] Role switch failed:', error);
           updateProfilePartial({ role: 'PROPRIETAIRE' });
         } finally {
           setUpgradingRole(false);
@@ -122,7 +128,7 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
                 Étape {currentStepIndex} / {totalSteps - 1}
               </span>
               <div className="flex items-center gap-1.5">
-                {missingSteps
+                {stepsToUse
                   .filter((s) => s !== 'PREGATE')
                   .map((stepItem, idx) => {
                     const activeIdx = currentStepIndex - 1;
@@ -169,7 +175,7 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
           {currentStep === 'PREGATE' && (
             <BookingPreGateOverview
               vehicleTitle={vehicleTitle}
-              missingSteps={missingSteps}
+              missingSteps={stepsToUse}
               onStart={() => setCurrentStepIndex(1)}
               onCancel={onClose}
               customTitle={customTitle || defaultTitle}

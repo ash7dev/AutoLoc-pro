@@ -210,20 +210,20 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess, d
                 type="button"
                 onClick={() => handleSendOtp('auto')}
                 disabled={loading}
-                className={`w-full h-13 sm:h-13.5 rounded-full bg-brand-dark hover:bg-[#06291e] active:scale-[0.98] text-white font-semibold text-sm sm:text-base flex items-center justify-center shadow-xl shadow-brand-dark/25 transition-all mt-2.5 ${
+                className={`group w-full h-13 sm:h-13.5 rounded-full bg-brand-dark hover:bg-[#06291e] border border-emerald-500/25 active:scale-[0.98] text-white font-semibold text-sm sm:text-base flex items-center justify-center shadow-xl shadow-brand-dark/20 transition-all mt-2.5 ${
                   loading ? 'opacity-65 cursor-not-allowed' : ''
                 }`}
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                    <Loader2 className="w-4.5 h-4.5 animate-spin text-emerald-400" />
                     <span>Envoi du code...</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
-                    <span>Recevoir le code d'accès</span>
-                    <div className="w-6.5 h-6.5 rounded-full bg-emerald-500/25 border border-emerald-400/40 flex items-center justify-center ml-1">
-                      <ArrowRight className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2.5} />
+                    <span className="tracking-tight">Recevoir le code d'accès</span>
+                    <div className="w-7 h-7 rounded-full bg-emerald-400 text-brand-dark flex items-center justify-center ml-1.5 shadow-sm group-hover:scale-105 group-hover:bg-emerald-300 transition-all">
+                      <ArrowRight className="w-4 h-4 text-brand-dark" strokeWidth={2.8} />
                     </div>
                   </div>
                 )}
@@ -335,20 +335,26 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess, d
                 type="button"
                 onClick={() => handleVerifyOtp()}
                 disabled={loading || otpCode.length < OTP_LENGTH}
-                className={`w-full h-13 sm:h-13.5 rounded-full bg-brand-dark hover:bg-[#06291e] active:scale-[0.98] text-white font-semibold text-sm sm:text-base flex items-center justify-center shadow-xl shadow-brand-dark/25 transition-all ${
-                  loading || otpCode.length < OTP_LENGTH ? 'opacity-65 cursor-not-allowed' : ''
+                className={`group w-full h-13 sm:h-13.5 rounded-full font-semibold text-sm sm:text-base flex items-center justify-center transition-all ${
+                  loading || otpCode.length < OTP_LENGTH
+                    ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                    : 'bg-brand-dark hover:bg-[#06291e] border border-emerald-500/25 text-white shadow-xl shadow-brand-dark/20 active:scale-[0.98]'
                 }`}
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                    <Loader2 className="w-4.5 h-4.5 animate-spin text-emerald-400" />
                     <span>Vérification...</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
-                    <span>Valider et continuer</span>
-                    <div className="w-6.5 h-6.5 rounded-full bg-emerald-500/25 border border-emerald-400/40 flex items-center justify-center ml-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2.5} />
+                    <span className="tracking-tight">Valider et continuer</span>
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center ml-1.5 transition-all ${
+                      otpCode.length < OTP_LENGTH
+                        ? 'bg-slate-200 text-slate-400'
+                        : 'bg-emerald-400 text-brand-dark shadow-sm group-hover:scale-105 group-hover:bg-emerald-300'
+                    }`}>
+                      <CheckCircle2 className="w-4 h-4" strokeWidth={2.8} />
                     </div>
                   </div>
                 )}
