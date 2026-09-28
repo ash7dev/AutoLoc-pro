@@ -5,12 +5,19 @@ export const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
   const token = typeof window !== 'undefined' ? localStorage.getItem('autoloc_token') : null;
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+
+  const reqHeaders = (options.headers as Record<string, string>) || {};
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers as Record<string, string>),
+    ...reqHeaders,
   };
+
+  if (isFormData && headers["Content-Type"]) {
+    delete headers["Content-Type"];
+  }
 
   const response = await fetch(url, {
     ...options,
