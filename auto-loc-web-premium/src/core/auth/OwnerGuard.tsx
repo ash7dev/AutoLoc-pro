@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ShieldAlert, Sparkles, ArrowLeft } from 'lucide-react';
 import { useUserStore } from '../store/useUserStore';
+import { useHostGate } from '../../features/owner/hooks/useHostGate';
+import { ReservationGateModal } from '../../features/reservations/components/ReservationGateModal';
 
 interface OwnerGuardProps {
   children: React.ReactNode;
@@ -61,9 +63,11 @@ export const OwnerGuard: React.FC<OwnerGuardProps> = ({
   const user = useUserStore((s) => s.user);
   const capabilities = useUserStore((s) => s.capabilities);
   const switchRole = useUserStore((s) => s.switchRole);
+  const { canProceed, missingSteps, userAge } = useHostGate();
 
   const [isSwitching, setIsSwitching] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isGateOpen, setIsGateOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -86,14 +90,29 @@ export const OwnerGuard: React.FC<OwnerGuardProps> = ({
       user &&
       !capabilities.isOwner &&
       autoSwitchOnAccess &&
-      !isSwitching
+      !isSwitching &&
+      canProceed
     ) {
       setIsSwitching(true);
       switchRole('PROPRIETAIRE').finally(() => {
         setIsSwitching(false);
       });
     }
-  }, [isMounted, isInitialized, isAuthenticated, user, capabilities.isOwner, autoSwitchOnAccess, isSwitching, switchRole]);
+  }, [isMounted, isInitialized, isAuthenticated, user, capabilities.isOwner, autoSwitchOnAccess, isSwitching, switchRole, canProceed]);
+
+  const handleActivateHostSpace = async () => {
+    if (!canProceed && missingSteps.length > 0) {
+      setIsGateOpen(true);
+      return;
+    }
+
+    try {
+      setIsSwitching(true);
+      await switchRole('PROPRIETAIRE');
+    } finally {
+      setIsSwitching(false);
+    }
+  };
 
   // 1. Écran Skeleton pendant l'initialisation ou la bascule
   if (!isMounted || !isInitialized || isSwitching) {
@@ -130,12 +149,8 @@ export const OwnerGuard: React.FC<OwnerGuardProps> = ({
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <button
               type="button"
-              onClick={async () => {
-                setIsSwitching(true);
-                await switchRole('PROPRIETAIRE');
-                setIsSwitching(false);
-              }}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 text-sm font-bold text-slate-950 transition-all hover:bg-emerald-400 active:scale-98"
+              onClick={handleActivateHostSpace}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-6 text-sm font-bold text-slate-950 transition-all hover:bg-emerald-400 active:scale-98 cursor-pointer"
             >
               <Sparkles className="h-4 w-4" />
               Activer mon Espace Hôte
@@ -144,13 +159,25 @@ export const OwnerGuard: React.FC<OwnerGuardProps> = ({
             <button
               type="button"
               onClick={() => router.push('/vehicles')}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-5 text-sm font-semibold text-slate-200 transition-colors hover:bg-slate-800 hover:text-white"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-5 text-sm font-semibold text-slate-200 transition-colors hover:bg-slate-800 hover:text-white cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
               Retourner à l&apos;exploration
             </button>
           </div>
         </div>
+
+        <ReservationGateModal
+          visible={isGateOpen}
+          mode="OWNER"
+          missingSteps={missingSteps}
+          userAge={userAge}
+          onClose={() => setIsGateOpen(false)}
+          onAllCompleted={async () => {
+            setIsGateOpen(false);
+            await switchRole('PROPRIETAIRE');
+          }}
+        />
       </div>
     );
   }

@@ -25,6 +25,21 @@ export const OwnerVehiclesView: React.FC = () => {
   const [isAddWizardOpen, setIsAddWizardOpen] = useState(false);
   const [isGateOpen, setIsGateOpen] = useState(false);
 
+  const handleActivateHostSpace = async () => {
+    if (!canProceed && missingSteps.length > 0) {
+      setIsGateOpen(true);
+      return;
+    }
+
+    try {
+      setIsSwitching(true);
+      await switchRole('PROPRIETAIRE');
+      await fetchVehicles();
+    } finally {
+      setIsSwitching(false);
+    }
+  };
+
   const handleOpenAddVehicle = () => {
     if (!canProceed && missingSteps.length > 0) {
       setIsGateOpen(true);
@@ -126,13 +141,8 @@ export const OwnerVehiclesView: React.FC = () => {
           <button
             type="button"
             disabled={isSwitching}
-            onClick={async () => {
-              setIsSwitching(true);
-              await switchRole('PROPRIETAIRE');
-              await fetchVehicles();
-              setIsSwitching(false);
-            }}
-            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-dark px-6 py-3 text-[13px] font-semibold text-champagne transition-colors hover:bg-brand-main disabled:opacity-50"
+            onClick={handleActivateHostSpace}
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-dark px-6 py-3 text-[13px] font-semibold text-champagne transition-colors hover:bg-brand-main disabled:opacity-50 cursor-pointer"
           >
             <Sparkles className="h-4 w-4 text-emerald-400" />
             {isSwitching ? 'Bascule en cours…' : 'Activer mon espace hôte'}
