@@ -153,11 +153,11 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess, d
         <div className="absolute inset-0 -left-[3px] top-[3px] rounded-[28px] bg-brand-dark border border-brand-main/80 pointer-events-none shadow-md" />
 
         {/* Layer 2: Front Glass Card */}
-        <div className="relative bg-white border border-white/80 rounded-[28px] p-6 sm:p-7 pb-7 shadow-2xl">
+        <div className="relative bg-white border border-white/80 rounded-[28px] p-5 sm:p-7 pb-6 sm:pb-7 shadow-2xl">
           {/* Header Box */}
           <div className="flex flex-col items-center text-center mb-5">
-            <div className="w-15 h-15 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-3">
-              <PhoneCall className="w-8 h-8 text-emerald-600" />
+            <div className="w-14 h-14 sm:w-15 sm:h-15 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-3">
+              <PhoneCall className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600" />
             </div>
 
             <div className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-[9px] font-medium tracking-wider text-emerald-700 uppercase mb-2">
@@ -210,22 +210,22 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess, d
                 type="button"
                 onClick={() => handleSendOtp('auto')}
                 disabled={loading}
-                className={`w-full h-12.5 rounded-full bg-brand-dark hover:bg-[#06291e] text-white font-medium text-sm flex items-center justify-center shadow-lg shadow-brand-dark/20 active:scale-[0.98] transition-all ${
+                className={`w-full h-13 sm:h-13.5 rounded-full bg-brand-dark hover:bg-[#06291e] active:scale-[0.98] text-white font-semibold text-sm sm:text-base flex items-center justify-center shadow-xl shadow-brand-dark/25 transition-all mt-2.5 ${
                   loading ? 'opacity-65 cursor-not-allowed' : ''
                 }`}
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
                     <span>Envoi du code...</span>
                   </div>
                 ) : (
-                  <>
+                  <div className="flex items-center justify-center gap-2">
                     <span>Recevoir le code d'accès</span>
-                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/35 flex items-center justify-center ml-2">
+                    <div className="w-6.5 h-6.5 rounded-full bg-emerald-500/25 border border-emerald-400/40 flex items-center justify-center ml-1">
                       <ArrowRight className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2.5} />
                     </div>
-                  </>
+                  </div>
                 )}
               </button>
             </div>
@@ -335,22 +335,22 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess, d
                 type="button"
                 onClick={() => handleVerifyOtp()}
                 disabled={loading || otpCode.length < OTP_LENGTH}
-                className={`w-full h-12.5 rounded-full bg-brand-dark hover:bg-[#06291e] text-white font-medium text-sm flex items-center justify-center shadow-lg shadow-brand-dark/20 active:scale-[0.98] transition-all ${
+                className={`w-full h-13 sm:h-13.5 rounded-full bg-brand-dark hover:bg-[#06291e] active:scale-[0.98] text-white font-semibold text-sm sm:text-base flex items-center justify-center shadow-xl shadow-brand-dark/25 transition-all ${
                   loading || otpCode.length < OTP_LENGTH ? 'opacity-65 cursor-not-allowed' : ''
                 }`}
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
                     <span>Vérification...</span>
                   </div>
                 ) : (
-                  <>
+                  <div className="flex items-center justify-center gap-2">
                     <span>Valider et continuer</span>
-                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/35 flex items-center justify-center ml-2">
+                    <div className="w-6.5 h-6.5 rounded-full bg-emerald-500/25 border border-emerald-400/40 flex items-center justify-center ml-1">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2.5} />
                     </div>
-                  </>
+                  </div>
                 )}
               </button>
             </div>
