@@ -128,17 +128,20 @@ export const useUserStore = create<UserState>((set, get) => ({
   },
 
   setSessionFromAuthResponse: (res) => {
-    const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile);
+    const rawToken = res?.accessToken || (res as any)?.token || (res as any)?.access_token || (res as any)?.jwt;
+    const rawRefreshToken = res?.refreshToken || (res as any)?.refresh_token;
+    const userProfile = AuthService.mapProfileResponseToUserProfile(res.profile || res);
+
     if (typeof window !== 'undefined') {
-      if (res.accessToken) {
-        localStorage.setItem('autoloc_token', res.accessToken);
+      if (rawToken && rawToken !== 'undefined' && rawToken !== 'null') {
+        localStorage.setItem('autoloc_token', rawToken);
       }
-      if (res.refreshToken) {
-        localStorage.setItem('autoloc_refresh_token', res.refreshToken);
+      if (rawRefreshToken && rawRefreshToken !== 'undefined') {
+        localStorage.setItem('autoloc_refresh_token', rawRefreshToken);
       }
       localStorage.setItem('autoloc_user', JSON.stringify(userProfile));
-      if (res.accessToken) {
-        setAuthCookies(res.accessToken, userProfile.role);
+      if (rawToken && rawToken !== 'undefined' && rawToken !== 'null') {
+        setAuthCookies(rawToken, userProfile.role);
       }
     }
     set({

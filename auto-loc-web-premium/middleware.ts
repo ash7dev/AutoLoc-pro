@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('autoloc_token')?.value;
+  const rawToken = request.cookies.get('autoloc_token')?.value;
+  const token = rawToken && rawToken !== 'undefined' && rawToken !== 'null' ? rawToken : null;
   const rawRole = request.cookies.get('autoloc_role')?.value;
 
   const { pathname } = request.nextUrl;

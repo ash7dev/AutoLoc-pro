@@ -81,7 +81,7 @@ export function setAuthCookies(token: string, role: string) {
   const isSecure = window.location.protocol === 'https:' ? '; Secure' : '';
 
   // Cookie de Token JWT
-  if (token) {
+  if (token && token !== 'undefined' && token !== 'null') {
     document.cookie = `autoloc_token=${encodeURIComponent(
       token
     )}; Path=/; Max-Age=${maxAge}; SameSite=Lax${isSecure}`;
