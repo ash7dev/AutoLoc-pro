@@ -66,7 +66,7 @@ export function useBookingGate(vehicleMinimumAge?: number): GateEvaluation {
 
   // 4. Statut KYC
   const kyc = user.statutKyc || 'NON_VERIFIE';
-  const isKycVerified = kyc === 'VERIFIE';
+  const isKycVerified = (kyc as string) === 'VERIFIE' || (kyc as string) === 'VALIDE';
   const isKycPending = kyc === 'EN_ATTENTE';
   const isKycRejected = kyc === 'REJETE';
 
