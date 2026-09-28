@@ -2,10 +2,11 @@ import { HeroSection } from "@/src/features/landing/components/HeroSection";
 import { CategoryFilterSection } from "@/src/features/landing/components/CategoryFilterSection";
 import { HowItWorks } from "@/src/features/landing/components/HowItWorks";
 import { VehicleSectionCarousel } from "@/src/features/vehicles";
+import CtaBanner from "@/src/features/landing/components/CtaBanner";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#F8FAF4]">
+    <main className="min-h-screen bg-[#F8FAF4] pb-20 sm:pb-24">
       {/* 1. Hero Section */}
       <HeroSection />
 
@@ -38,8 +39,11 @@ export default function Home() {
         limit={8}
       />
 
-      {/* 6. Section How It Works (Placée après toutes les sections de véhicules) */}
+      {/* 6. Section How It Works */}
       <HowItWorks />
+
+      {/* 7. CTA Banner (Prêt à prendre la route ?) */}
+      <CtaBanner className="my-14 sm:my-20" />
     </main>
   );
 }
