@@ -589,7 +589,21 @@ export class AuthService {
 
     // 1. Vérification du code OTP stocké dans Redis
     const key = `${PHONE_LOGIN_OTP_PREFIX}${phone}`;
-    const stored = await this.redisService.get(key);
+    let stored = await this.redisService.get(key);
+    let keyToDelete = key;
+
+    if (!stored) {
+      // Fallback : si l'utilisateur était connecté et a utilisé /auth/phone/send-otp
+      const utilisateurByPhone = await this.prisma.utilisateur.findFirst({
+        where: { telephone: phone },
+        select: { userId: true },
+      });
+      if (utilisateurByPhone?.userId) {
+        const userOtpKey = this.getOtpKey(utilisateurByPhone.userId);
+        stored = await this.redisService.get(userOtpKey);
+        if (stored) keyToDelete = userOtpKey;
+      }
+    }
 
     if (!stored) {
       throw new BadRequestException('Le code OTP a expiré ou n’est plus valide. Veuillez en demander un nouveau.');
@@ -602,7 +616,7 @@ export class AuthService {
     }
 
     // Consommer le code OTP (Suppression de Redis)
-    await this.redisService.del(key);
+    await this.redisService.del(keyToDelete);
 
     // 2. Recherche de l'utilisateur métier par téléphone
     let utilisateur = await this.prisma.utilisateur.findFirst({

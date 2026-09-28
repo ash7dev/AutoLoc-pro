@@ -86,6 +86,7 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess, d
   };
 
   const handleVerifyOtp = async (codeToVerify?: string) => {
+    if (loading) return;
     const code = codeToVerify || otpCode;
     if (!code || code.trim().length < OTP_LENGTH) {
       setErrorMsg(`Veuillez saisir les ${OTP_LENGTH} chiffres du code.`);
@@ -132,12 +133,12 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess, d
 
       const msg = error?.message || 'Code OTP incorrect ou expiré. Veuillez réessayez.';
       setErrorMsg(msg);
-    } finally {
       setLoading(false);
     }
   };
 
   const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (loading) return;
     const cleaned = e.target.value.replace(/[^0-9]/g, '').slice(0, OTP_LENGTH);
     setOtpCode(cleaned);
 
