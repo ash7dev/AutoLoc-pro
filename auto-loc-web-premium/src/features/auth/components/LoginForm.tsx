@@ -115,6 +115,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   };
 
   const handleVerifyOtp = async (code: string) => {
+    if (isLoading) return;
     setError(null);
     setIsLoading(true);
     try {
@@ -126,11 +127,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       const nextParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
       const pending = IntentEngine.consumePendingIntent();
       const redirectUrl = getPostAuthRedirectUrl(userProfile, pending, nextParam);
-      router.push(redirectUrl);
+      
       if (onSuccess) onSuccess();
+      // Redirection synchrone avec envoi des cookies au middleware Next.js
+      if (typeof window !== 'undefined') {
+        window.location.href = redirectUrl;
+      } else {
+        router.push(redirectUrl);
+      }
     } catch (err: any) {
       setError(err.message || 'Le code d’accès est incorrect ou expiré.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -153,11 +159,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       const nextParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
       const pending = IntentEngine.consumePendingIntent();
       const redirectUrl = getPostAuthRedirectUrl(userProfile, pending, nextParam);
-      router.push(redirectUrl);
       if (onSuccess) onSuccess();
+      if (typeof window !== 'undefined') {
+        window.location.href = redirectUrl;
+      } else {
+        router.push(redirectUrl);
+      }
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la connexion. Vérifiez vos identifiants.');
-    } finally {
       setIsLoading(false);
     }
   };

@@ -66,12 +66,13 @@ export const OtpStep: React.FC<OtpStepProps> = ({
       onVerify(codeToSubmit);
       setTimeout(() => {
         isSubmittingRef.current = false;
-      }, 1000);
+      }, 2500);
     },
     [slots, isLoading, onVerify]
   );
 
   const handleInputChange = (index: number, value: string) => {
+    if (isLoading) return;
     if (value.length > 1) {
       const digits = value.replace(/\D/g, '').slice(0, slots);
       if (digits.length >= 1) {
@@ -108,12 +109,14 @@ export const OtpStep: React.FC<OtpStepProps> = ({
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (isLoading) return;
     if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
+    if (isLoading) return;
     e.preventDefault();
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, slots);
     if (!pasted) return;
@@ -134,6 +137,7 @@ export const OtpStep: React.FC<OtpStepProps> = ({
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     const fullCode = otpValues.join('');
     if (fullCode.length === slots) {
       submitCode(fullCode);
@@ -149,7 +153,8 @@ export const OtpStep: React.FC<OtpStepProps> = ({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+          disabled={isLoading}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors disabled:opacity-50"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Modifier le numéro</span>
@@ -206,6 +211,7 @@ export const OtpStep: React.FC<OtpStepProps> = ({
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 maxLength={1}
+                disabled={isLoading}
                 value={value}
                 onChange={(e) => handleInputChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
@@ -216,7 +222,7 @@ export const OtpStep: React.FC<OtpStepProps> = ({
                     : isFocused
                     ? 'border-[#059669] bg-white ring-2 ring-emerald-500/20'
                     : 'border-slate-200 bg-slate-50 text-slate-900 focus:border-[#059669]'
-                } ${error ? 'border-red-300 bg-red-50 text-red-600' : ''}`}
+                } ${error ? 'border-red-300 bg-red-50 text-red-600' : ''} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
             );
           })}

@@ -164,6 +164,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   };
 
   const handleVerifyOtp = async (code: string) => {
+    if (isLoading) return;
     setError(null);
     setIsLoading(true);
     try {
@@ -184,11 +185,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       const nextParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null;
       const pending = IntentEngine.consumePendingIntent();
       const redirectUrl = getPostAuthRedirectUrl(userProfile, pending, nextParam);
-      router.push(redirectUrl);
       if (onSuccess) onSuccess();
+      if (typeof window !== 'undefined') {
+        window.location.href = redirectUrl;
+      } else {
+        router.push(redirectUrl);
+      }
     } catch (err: any) {
       setError(err.message || 'Le code de vérification est incorrect ou expiré.');
-    } finally {
       setIsLoading(false);
     }
   };
