@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import useSWR from 'swr';
 import { walletApi } from '../../../core/api/walletApi';
+import { useUserStore } from '../../../core/store/useUserStore';
 import type {
   WalletData,
   OwnerPenaltiesResponse,
@@ -24,6 +25,8 @@ const WALLET_SWR_OPTIONS = {
 };
 
 export function useOwnerWalletView() {
+  const { user } = useUserStore();
+  const isOwner = Boolean(user?.role === 'PROPRIETAIRE' || user?.role === 'ADMIN');
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -43,7 +46,7 @@ export function useOwnerWalletView() {
     isLoading: isLoadingWallet,
     isValidating: isValidatingWallet,
     mutate: mutateWallet,
-  } = useSWR<WalletData>('wallet-me', () => walletApi.getWallet(), WALLET_SWR_OPTIONS);
+  } = useSWR<WalletData>(isOwner ? 'wallet-me' : null, () => walletApi.getWallet(), WALLET_SWR_OPTIONS);
 
   // 2. GET /wallet/penalites
   const {
@@ -52,7 +55,7 @@ export function useOwnerWalletView() {
     isLoading: isLoadingPenalties,
     isValidating: isValidatingPenalties,
     mutate: mutatePenalties,
-  } = useSWR<OwnerPenaltiesResponse>('wallet-penalties', () => walletApi.getPenalties(), WALLET_SWR_OPTIONS);
+  } = useSWR<OwnerPenaltiesResponse>(isOwner ? 'wallet-penalties' : null, () => walletApi.getPenalties(), WALLET_SWR_OPTIONS);
 
   // 3. GET /wallet/accounts
   const {
@@ -60,7 +63,7 @@ export function useOwnerWalletView() {
     isLoading: isLoadingAccounts,
     isValidating: isValidatingAccounts,
     mutate: mutateAccounts,
-  } = useSWR<SavedAccountsResponse>('wallet-accounts', () => walletApi.getSavedAccounts(), WALLET_SWR_OPTIONS);
+  } = useSWR<SavedAccountsResponse>(isOwner ? 'wallet-accounts' : null, () => walletApi.getSavedAccounts(), WALLET_SWR_OPTIONS);
 
   // Convert tab filter to type/sens params for API if applicable
   const apiType = filters.tab === 'GAINS' ? 'CREDIT_LOCATION' : filters.tab === 'PENALITES' ? 'PENALITE_DEBIT' : undefined;
@@ -74,7 +77,7 @@ export function useOwnerWalletView() {
     isValidating: isValidatingTransactions,
     mutate: mutateTransactions,
   } = useSWR<PaginatedTransactionsResponse>(
-    ['wallet-transactions', filters.page, apiType, apiSens],
+    isOwner ? ['wallet-transactions', filters.page, apiType, apiSens] : null,
     () =>
       walletApi.getTransactions({
         page: filters.page,
