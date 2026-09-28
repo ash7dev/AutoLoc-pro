@@ -93,7 +93,7 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
     : undefined;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-black/60 flex items-center justify-center p-3.5 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:p-6 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden bg-black/60 flex items-center justify-center p-3.5 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] sm:p-6 animate-in fade-in duration-200">
       {/* Background click overlay */}
       <div className="fixed inset-0" onClick={onClose} />
 
