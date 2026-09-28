@@ -23,6 +23,7 @@ export interface ProfileResponse {
   phone?: string | null;
   telephone?: string | null;
   phoneVerified?: boolean;
+  profileCompleted?: boolean;
   dateNaissance?: string;
   avatarUrl?: string;
   permisUrl?: string | null;

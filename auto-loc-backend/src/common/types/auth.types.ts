@@ -52,4 +52,6 @@ export interface ProfileResponse {
   avatarUrl?: string | null;
   dateNaissance?: string | null;
   bloqueJusqua?: string | null;
+  profileCompleted?: boolean;
+  kycRejectionReason?: string | null;
 }

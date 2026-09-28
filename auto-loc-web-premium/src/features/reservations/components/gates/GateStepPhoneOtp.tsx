@@ -6,12 +6,15 @@ import { PhoneField } from '../../../auth/components/PhoneField';
 
 interface GateStepPhoneOtpProps {
   onSuccess: () => void;
+  draftProfile?: { prenom?: string; nom?: string; dateNaissance?: string };
 }
 
 const OTP_LENGTH = 6;
 
-export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess }) => {
+export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess, draftProfile }) => {
   const user = useUserStore((state) => state.user);
+  const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+  const setSessionFromAuthResponse = useUserStore((state) => state.setSessionFromAuthResponse);
   const updateProfilePartial = useUserStore((state) => state.updateProfilePartial);
 
   const [phone, setPhone] = useState(user?.telephone || '+221');
@@ -41,17 +44,22 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
     setErrorMsg('');
 
     try {
-      if (phone !== user?.telephone) {
+      if (isAuthenticated && user && phone !== user.telephone) {
         await fetchApi('/auth/phone/update', {
           method: 'POST',
           body: JSON.stringify({ telephone: phone.trim() }),
         });
+        await fetchApi('/auth/phone/send-otp', {
+          method: 'POST',
+          body: JSON.stringify({ channel }),
+        });
+      } else {
+        // Envoi public OTP pour invité ou connexion téléphone
+        await fetchApi('/auth/phone-login/send-otp', {
+          method: 'POST',
+          body: JSON.stringify({ phone: phone.trim(), channel, isRegister: false }),
+        });
       }
-
-      await fetchApi('/auth/phone/send-otp', {
-        method: 'POST',
-        body: JSON.stringify({ channel }),
-      });
 
       setStep('OTP_INPUT');
       setOtpCode('');
@@ -88,15 +96,25 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
     setErrorMsg('');
 
     try {
-      await fetchApi('/auth/phone/verify-otp', {
+      // Endpoint Express Gate : valide l'OTP + crée/connecte le compte + émet les JWT
+      const res = await fetchApi<{
+        accessToken: string;
+        refreshToken: string;
+        activeRole: string;
+        profile: any;
+      }>('/auth/express-gate/verify-otp', {
         method: 'POST',
-        body: JSON.stringify({ code: code.trim() }),
+        body: JSON.stringify({
+          phone: phone.trim(),
+          code: code.trim(),
+          prenom: draftProfile?.prenom || user?.prenom,
+          nom: draftProfile?.nom || user?.nom,
+          dateNaissance: draftProfile?.dateNaissance || user?.dateNaissance,
+        }),
       });
 
-      updateProfilePartial({
-        telephone: phone.trim(),
-        phoneVerified: true,
-      });
+      // Met à jour la session Zustand, localStorage et cookies SSR en 0ms
+      setSessionFromAuthResponse(res);
 
       onSuccess();
     } catch (error: any) {
@@ -112,7 +130,8 @@ export const GateStepPhoneOtp: React.FC<GateStepPhoneOtpProps> = ({ onSuccess })
         return;
       }
 
-      setErrorMsg('Code OTP incorrect ou expiré. Veuillez réessayez.');
+      const msg = error?.message || 'Code OTP incorrect ou expiré. Veuillez réessayez.';
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }

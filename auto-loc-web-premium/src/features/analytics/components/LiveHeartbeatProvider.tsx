@@ -16,8 +16,6 @@ export function LiveHeartbeatProvider() {
     }
 
     const sendHeartbeat = () => {
-      if (document.visibilityState === 'hidden') return;
-
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.autoloc.sn';
       const payload = JSON.stringify({
         sessionId,
@@ -26,17 +24,15 @@ export function LiveHeartbeatProvider() {
       });
 
       try {
-        if (navigator.sendBeacon) {
-          const blob = new Blob([payload], { type: 'application/json' });
-          navigator.sendBeacon(`${apiUrl}/analytics/public/heartbeat`, blob);
-        } else {
-          fetch(`${apiUrl}/analytics/public/heartbeat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: payload,
-            keepalive: true,
-          }).catch(() => {});
-        }
+        fetch(`${apiUrl}/analytics/public/heartbeat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: payload,
+          keepalive: true,
+          mode: 'cors',
+        }).catch(() => {});
       } catch (err) {
         // silent fallback
       }
@@ -45,10 +41,20 @@ export function LiveHeartbeatProvider() {
     // Immediate ping on mount / path change
     sendHeartbeat();
 
-    // Periodic ping every 20 seconds
-    const interval = setInterval(sendHeartbeat, 20000);
+    // Periodic ping every 15 seconds
+    const interval = setInterval(sendHeartbeat, 15000);
 
-    return () => clearInterval(interval);
+    // Also ping on first user interaction (touch/scroll)
+    const handleTouch = () => {
+      sendHeartbeat();
+      window.removeEventListener('touchstart', handleTouch);
+    };
+    window.addEventListener('touchstart', handleTouch, { passive: true });
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('touchstart', handleTouch);
+    };
   }, [pathname]);
 
   return null;

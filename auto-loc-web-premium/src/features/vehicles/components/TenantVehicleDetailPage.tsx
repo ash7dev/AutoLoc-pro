@@ -148,24 +148,12 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
   }) => {
     setPendingBookingParams(bookingData);
 
-    // 1er VERROU : Invité -> Interception immédiate par le Auth Guard (Ouverture Modale & Redirection vers ce véhicule)
-    if (!isAuthenticated) {
-      IntentEngine.guardAction('BOOK_VEHICLE', {
-        vehicleId: vehicle?.id || vehicleId,
-        payload: bookingData,
-        redirectToUrl: `/vehicles/${vehicle?.id || vehicleId}`,
-        reasonMessage: 'Connectez-vous pour finaliser la réservation de ce véhicule.',
-      });
-      return;
-    }
-
-    // 2ème VERROU : Connecté -> Évaluation instantanée des verrous (Profil, Téléphone OTP, KYC Identité, Permis, Âge)
-    if (gateEval.canProceed) {
-      // Tous les verrous sont levés -> Ouverture directe du tunnel checkout 2 étapes
-      setIsCheckoutModalOpen(true);
-    } else {
-      // Au moins un verrou manque -> Ouverture instantanée de la modale de vérification KYC (ReservationGateModal)
+    // Invité ou Connecté -> Évaluation dynamique des verrous (ouvre la modale Gate sur place sans redirection)
+    if (!isAuthenticated || !gateEval.canProceed) {
       setIsGateModalOpen(true);
+    } else {
+      // Tous les verrous sont levés -> Ouverture directe du tunnel checkout
+      setIsCheckoutModalOpen(true);
     }
   };
 

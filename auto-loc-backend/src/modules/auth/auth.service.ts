@@ -8,6 +8,7 @@ import { ProfileResponse } from '../../common/types/auth.types';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
 import { SwitchRoleDto } from './dto/switch-role.dto';
 import { LoginDto } from './dto/login.dto';
+import { ExpressGateVerifyOtpDto } from './dto/express-gate-verify-otp.dto';
 import { RoleProfile, StatutKyc } from '@prisma/client';
 import { JwksService } from '../../infrastructure/jwt/jwks.service';
 import { JwtService } from '@nestjs/jwt';
@@ -572,6 +573,197 @@ export class AuthService {
     };
   }
 
+  /**
+   * Authentification et Création Express par OTP lors du Gate de Réservation.
+   * Gère la vérification OTP, la création / mise à jour du profil métier (profileCompleted = true, phoneVerified = true),
+   * l'attribution marketing (UTMs/Meta) et le renvoi des tokens JWT + profil complet pour réévaluation des gates.
+   */
+  async expressGateVerifyOtp(
+    dto: ExpressGateVerifyOtpDto,
+  ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile; profile: ProfileResponse }> {
+    const phone = this.normalizePhone(dto.phone);
+
+    if (!/^\d{6}$/.test(dto.code)) {
+      throw new BadRequestException('Le code doit contenir 6 chiffres.');
+    }
+
+    // 1. Vérification du code OTP stocké dans Redis
+    const key = `${PHONE_LOGIN_OTP_PREFIX}${phone}`;
+    const stored = await this.redisService.get(key);
+
+    if (!stored) {
+      throw new BadRequestException('Le code OTP a expiré ou n’est plus valide. Veuillez en demander un nouveau.');
+    }
+
+    const storedBuf = Buffer.from(stored);
+    const incomingBuf = Buffer.from(dto.code);
+    if (storedBuf.length !== incomingBuf.length || !timingSafeEqual(storedBuf, incomingBuf)) {
+      throw new BadRequestException('Le code OTP saisi est incorrect.');
+    }
+
+    // Consommer le code OTP (Suppression de Redis)
+    await this.redisService.del(key);
+
+    // 2. Recherche de l'utilisateur métier par téléphone
+    let utilisateur = await this.prisma.utilisateur.findFirst({
+      where: { telephone: phone },
+      select: {
+        userId: true,
+        email: true,
+        telephone: true,
+        prenom: true,
+        nom: true,
+        dateNaissance: true,
+        actif: true,
+        bloqueJusqua: true,
+        phoneVerified: true,
+        profileCompleted: true,
+        statutKyc: true,
+        permisUrl: true,
+      },
+    });
+
+    const isNewUser = !utilisateur;
+
+    if (!utilisateur) {
+      // ── NOUVEAU CLIENT : Création Express ────────────────────────────────
+      let newUserId: string = randomUUID();
+
+      // Validation défensive de la date de naissance
+      let parsedBirthDate: Date | null = null;
+      if (dto.dateNaissance) {
+        const d = new Date(dto.dateNaissance);
+        if (!isNaN(d.getTime())) {
+          parsedBirthDate = d;
+        }
+      }
+
+      // A. Recherche défensive de Profile existant (éviter tout conflit d'unicité P2002 sur Profile.phone)
+      const existingProfile = await this.prisma.profile.findFirst({
+        where: { OR: [{ phone: phone }, { userId: newUserId }] },
+      });
+
+      if (existingProfile) {
+        newUserId = existingProfile.userId;
+      } else {
+        await this.prisma.profile.create({
+          data: {
+            userId: newUserId,
+            phone: phone,
+            role: DEFAULT_ROLE,
+          },
+        });
+      }
+
+      const placeholderEmail = `${newUserId}@autoloc.local`;
+
+      // B. Création de l'Utilisateur métier avec profileCompleted = true et phoneVerified = true
+      const created = await this.prisma.utilisateur.create({
+        data: {
+          userId: newUserId,
+          prenom: dto.prenom?.trim() || '',
+          nom: dto.nom?.trim() || '',
+          telephone: phone,
+          email: placeholderEmail,
+          dateNaissance: parsedBirthDate,
+          phoneVerified: true,
+          profileCompleted: true,
+          utmSource: dto.utmSource,
+          utmMedium: dto.utmMedium,
+          utmCampaign: dto.utmCampaign,
+          fbclid: dto.fbclid,
+        },
+      });
+
+      utilisateur = {
+        userId: created.userId,
+        email: created.email,
+        telephone: created.telephone,
+        prenom: created.prenom,
+        nom: created.nom,
+        dateNaissance: created.dateNaissance,
+        actif: created.actif,
+        bloqueJusqua: created.bloqueJusqua,
+        phoneVerified: created.phoneVerified,
+        profileCompleted: created.profileCompleted,
+        statutKyc: created.statutKyc,
+        permisUrl: created.permisUrl,
+      };
+
+      // C. Meta CAPI Tracking (CompleteRegistration Event)
+      this.metaCapi
+        .sendEvent({
+          eventName: 'CompleteRegistration',
+          eventId: created.id,
+          eventSourceUrl: 'https://autoloc.sn/express-gate',
+          userData: {
+            phone: phone,
+            firstName: dto.prenom,
+            lastName: dto.nom,
+          },
+          customData: { status: 'REGISTERED_VIA_EXPRESS_GATE' },
+        })
+        .catch(() => {});
+
+    } else {
+      // ── CLIENT EXISTANT : Ré-authentification & Mise à jour si nécessaire ──
+      const existingUser = utilisateur;
+      this.assertAccountIsAllowed({
+        actif: existingUser.actif,
+        bloqueJusqua: existingUser.bloqueJusqua ? existingUser.bloqueJusqua.toISOString() : null,
+      });
+
+      const updateData: any = { phoneVerified: true, profileCompleted: true };
+      if (dto.prenom?.trim() && !existingUser.prenom) updateData.prenom = dto.prenom.trim();
+      if (dto.nom?.trim() && !existingUser.nom) updateData.nom = dto.nom.trim();
+      if (dto.dateNaissance && !existingUser.dateNaissance) {
+        const d = new Date(dto.dateNaissance);
+        if (!isNaN(d.getTime())) updateData.dateNaissance = d;
+      }
+
+      await this.prisma.utilisateur.update({
+        where: { userId: existingUser.userId },
+        data: updateData,
+      });
+    }
+
+    const activeUser = utilisateur!;
+
+    // 3. Émission des jetons JWT métier et construction de la réponse de profil
+    const user: RequestUser = {
+      sub: activeUser.userId,
+      email: activeUser.email,
+      phone: activeUser.telephone,
+    };
+
+    const profile = await this.getOrCreateProfile(user);
+    const flags = await this.getUtilisateurFlags(user.sub);
+    this.assertAccountIsAllowed(flags);
+
+    const accessToken = await this.signAccessToken({
+      sub: user.sub,
+      email: user.email,
+      phone: user.phone,
+      role: profile.role as RoleProfile,
+    });
+    const refreshToken = await this.signRefreshToken({
+      sub: user.sub,
+      email: user.email,
+      phone: user.phone,
+      role: profile.role as RoleProfile,
+    });
+    await this.storeRefreshSession(user.sub, refreshToken);
+
+    console.log(`[Auth] Express Gate OTP verify success for ${phone} (isNewUser: ${isNewUser}, userId: ${user.sub})`);
+
+    return {
+      accessToken,
+      refreshToken,
+      activeRole: profile.role as RoleProfile,
+      profile: this.toResponse(profile, flags),
+    };
+  }
+
   async updatePhone(user: RequestUser, telephone: string): Promise<ProfileResponse> {
     if (!user.sub) {
       throw new BadRequestException('Utilisateur invalide');
@@ -1036,7 +1228,9 @@ export class AuthService {
     id?: string;
     actif?: boolean;
     phoneVerified?: boolean;
+    profileCompleted?: boolean;
     kycStatus?: ProfileResponse['kycStatus'];
+    kycRejectionReason?: string | null;
     hasVehicles?: boolean;
     hasPermis?: boolean;
     permisUrl?: string | null;
@@ -1052,7 +1246,9 @@ export class AuthService {
         id: true,
         actif: true,
         phoneVerified: true,
+        profileCompleted: true,
         statutKyc: true,
+        kycRejectionReason: true,
         permisUrl: true,
         dateNaissance: true,
         prenom: true,
@@ -1067,7 +1263,9 @@ export class AuthService {
       id: found.id,
       actif: found.actif,
       phoneVerified: found.phoneVerified,
+      profileCompleted: found.profileCompleted,
       kycStatus: found.statutKyc as ProfileResponse['kycStatus'],
+      kycRejectionReason: found.kycRejectionReason,
       hasVehicles: found._count.vehicules > 0,
       hasPermis: !!found.permisUrl,
       permisUrl: found.permisUrl,
@@ -1143,7 +1341,9 @@ export class AuthService {
       id?: string;
       actif?: boolean;
       phoneVerified?: boolean;
+      profileCompleted?: boolean;
       kycStatus?: ProfileResponse['kycStatus'];
+      kycRejectionReason?: string | null;
       hasVehicles?: boolean;
       hasPermis?: boolean;
       permisUrl?: string | null;
@@ -1164,8 +1364,10 @@ export class AuthService {
       hasUtilisateur: Boolean(flags.id),
       utilisateurId: flags.id,
       phoneVerified: flags.phoneVerified,
+      profileCompleted: flags.profileCompleted,
       kycStatus: flags.kycStatus,
       statutKyc: flags.kycStatus,
+      kycRejectionReason: flags.kycRejectionReason,
       telephone: p.phone,
       hasVehicles: flags.hasVehicles,
       hasPermis: flags.hasPermis,

@@ -37,6 +37,7 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [upgradingRole, setUpgradingRole] = useState(false);
+  const [draftProfile, setDraftProfile] = useState<{ prenom?: string; nom?: string; dateNaissance?: string }>({});
 
   const user = useUserStore((state) => state.user);
   const updateProfilePartial = useUserStore((state) => state.updateProfilePartial);
@@ -177,11 +178,19 @@ export const ReservationGateModal: React.FC<ReservationGateModalProps> = ({
           )}
 
           {currentStep === 'PROFILE' && (
-            <GateStepProfile onSuccess={handleStepSuccess} />
+            <GateStepProfile
+              onSuccess={(data) => {
+                if (data) setDraftProfile(data);
+                handleStepSuccess();
+              }}
+            />
           )}
 
           {currentStep === 'PHONE' && (
-            <GateStepPhoneOtp onSuccess={handleStepSuccess} />
+            <GateStepPhoneOtp
+              draftProfile={draftProfile}
+              onSuccess={handleStepSuccess}
+            />
           )}
 
           {currentStep === 'KYC' && (

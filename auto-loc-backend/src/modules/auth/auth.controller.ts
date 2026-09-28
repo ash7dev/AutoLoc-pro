@@ -23,6 +23,7 @@ import { UpdatePhoneDto } from './dto/update-phone.dto';
 import { PhoneLoginSendOtpDto, PhoneLoginVerifyOtpDto, SendPhoneOtpDto } from './dto/phone-login.dto';
 import { SubmitKycLinksDto } from './dto/submit-kyc-links.dto';
 import { LinkPermisDto } from './dto/link-permis.dto';
+import { ExpressGateVerifyOtpDto } from './dto/express-gate-verify-otp.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -142,6 +143,19 @@ export class AuthController {
     @Body() dto: PhoneLoginVerifyOtpDto,
   ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile; profile: ProfileResponse }> {
     return this.authService.verifyPhoneLoginOtp(dto.phone, dto.code);
+  }
+
+  /**
+   * POST /auth/express-gate/verify-otp
+   * Authentification et Création Express par OTP lors du Gate de Réservation.
+   * Valide le code OTP, crée ou met à jour l'utilisateur (profileCompleted = true, phoneVerified = true),
+   * et émet les tokens JWT métier ainsi que le profil métier complet pour réévaluation des gates.
+   */
+  @Post('express-gate/verify-otp')
+  async expressGateVerifyOtp(
+    @Body() dto: ExpressGateVerifyOtpDto,
+  ): Promise<{ accessToken: string; refreshToken: string; activeRole: RoleProfile; profile: ProfileResponse }> {
+    return this.authService.expressGateVerifyOtp(dto);
   }
 
   /**

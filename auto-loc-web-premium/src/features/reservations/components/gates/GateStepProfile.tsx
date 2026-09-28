@@ -4,7 +4,7 @@ import { useUserStore } from '../../../../core/store/useUserStore';
 import { fetchApi } from '@/lib/config';
 
 interface GateStepProfileProps {
-  onSuccess: () => void;
+  onSuccess: (data?: { prenom: string; nom: string; dateNaissance: string }) => void;
 }
 
 export const GateStepProfile: React.FC<GateStepProfileProps> = ({ onSuccess }) => {
@@ -26,32 +26,29 @@ export const GateStepProfile: React.FC<GateStepProfileProps> = ({ onSuccess }) =
     setSubmitting(true);
     setErrorMsg('');
 
+    const profileData = {
+      prenom: prenom.trim(),
+      nom: nom.trim(),
+      dateNaissance: dateNaissance.trim(),
+    };
+
     try {
-      await fetchApi('/users/me/profile', {
-        method: 'PATCH',
-        body: JSON.stringify({
-          prenom: prenom.trim(),
-          nom: nom.trim(),
-          dateNaissance: dateNaissance.trim(),
-        }),
-      });
+      if (user) {
+        await fetchApi('/users/me/profile', {
+          method: 'PATCH',
+          body: JSON.stringify(profileData),
+        });
 
-      updateProfilePartial({
-        prenom: prenom.trim(),
-        nom: nom.trim(),
-        dateNaissance: dateNaissance.trim(),
-      });
+        updateProfilePartial(profileData);
+      }
 
-      onSuccess();
+      onSuccess(profileData);
     } catch (error: any) {
       console.warn('[GateStepProfile] Save error:', error);
-      // Fallback dev mode update
-      updateProfilePartial({
-        prenom: prenom.trim(),
-        nom: nom.trim(),
-        dateNaissance: dateNaissance.trim(),
-      });
-      onSuccess();
+      if (user) {
+        updateProfilePartial(profileData);
+      }
+      onSuccess(profileData);
     } finally {
       setSubmitting(false);
     }

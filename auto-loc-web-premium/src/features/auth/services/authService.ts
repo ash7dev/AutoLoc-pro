@@ -132,6 +132,7 @@ export class AuthService {
       role: normalizeRole(profile.role),
       statutKyc: profile.statutKyc || profile.kycStatus || 'NON_VERIFIE',
       kycRejectionReason: profile.kycRejectionReason,
+      profileCompleted: Boolean(profile.profileCompleted || (profile.prenom && profile.nom && profile.dateNaissance)),
       createdAt: profile.createdAt,
     };
   }
