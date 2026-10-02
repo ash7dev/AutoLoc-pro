@@ -332,7 +332,7 @@ export const ownerApi = {
     // Si c'est déjà une URL distante (https://...), pas besoin de ré-uploader
     if (!fileUri || fileUri.startsWith('http://') || fileUri.startsWith('https://')) {
       return {
-        url: fileUri || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
+        url: fileUri || '',
         publicId: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       };
     }
@@ -356,53 +356,52 @@ export const ownerApi = {
         formData.append('signature', sigData.signature);
         formData.append('folder', sigData.folder || 'autoloc/vehicles');
 
-        const result = await new Promise<{ url: string; publicId: string }>((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open('POST', url);
-          xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                const response = JSON.parse(xhr.responseText);
-                resolve({
-                  url: response.secure_url || response.url,
-                  publicId: response.public_id || `media_${Date.now()}`,
-                });
-              } catch (e) {
-                reject(e);
+        const executeXhrWithRetry = async (maxAttempts = 3): Promise<{ url: string; publicId: string }> => {
+          let lastErr: any = null;
+          for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+              const res = await new Promise<{ url: string; publicId: string }>((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', url);
+                xhr.onload = () => {
+                  if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                      const response = JSON.parse(xhr.responseText);
+                      resolve({
+                        url: response.secure_url || response.url,
+                        publicId: response.public_id || `media_${Date.now()}`,
+                      });
+                    } catch (e) {
+                      reject(e);
+                    }
+                  } else {
+                    reject(new Error(`Cloudinary HTTP ${xhr.status}: ${xhr.responseText}`));
+                  }
+                };
+                xhr.onerror = () => reject(new Error('Erreur réseau Cloudinary'));
+                xhr.ontimeout = () => reject(new Error('Délai réseau dépassé'));
+                xhr.timeout = 45000;
+                xhr.send(formData);
+              });
+              return res;
+            } catch (err) {
+              lastErr = err;
+              if (attempt < maxAttempts) {
+                await new Promise((r) => setTimeout(r, 1000 * attempt));
               }
-            } else {
-              reject(new Error(`Cloudinary HTTP ${xhr.status}: ${xhr.responseText}`));
             }
-          };
-          xhr.onerror = () => reject(new Error('Erreur réseau Cloudinary'));
-          xhr.ontimeout = () => reject(new Error('Délai réseau dépassé'));
-          xhr.timeout = 40000;
-          xhr.send(formData);
-        });
+          }
+          throw lastErr || new Error('Échec du téléversement après retentatives.');
+        };
 
-        return result;
+        return await executeXhrWithRetry(3);
+      } else {
+        throw new Error('Signature d\'upload non disponible.');
       }
-    } catch (err) {
-      console.warn('Upload Cloudinary direct échoué, bascule sur URL web publique:', err);
+    } catch (err: any) {
+      console.error('Upload Cloudinary direct échoué:', err);
+      throw new Error(err?.message || 'Erreur lors du téléversement de la photo ou du document.');
     }
-
-    // Fallback Web & Admin Compatible : ne JAMAIS renvoyer file:/// au backend !
-    if (isPdf) {
-      return {
-        url: 'https://autoloc.sn/docs/carte_grise_default.pdf',
-        publicId: `pdf_${Date.now()}`,
-      };
-    }
-
-    const fallbackCarPhotos = [
-      'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
-    ];
-    const randomFallback = fallbackCarPhotos[Math.floor(Math.random() * fallbackCarPhotos.length)];
-
-    return {
-      url: randomFallback,
-      publicId: `fallback_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-    };
   },
 
   // Créer un véhicule sur le backend NestJS

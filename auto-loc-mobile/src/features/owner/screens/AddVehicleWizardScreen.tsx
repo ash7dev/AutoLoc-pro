@@ -424,21 +424,31 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
 
       let photoPayload: Array<{ url: string; publicId: string }> = [];
 
+      // Concurrence contrôlée (max 2 envois simultanés) pour préserver le réseau mobile
+      const mapConcurrent = async <T, R>(items: T[], concurrency: number, fn: (item: T) => Promise<R>): Promise<R[]> => {
+        const results: R[] = new Array(items.length);
+        let index = 0;
+        const worker = async () => {
+          while (index < items.length) {
+            const i = index++;
+            results[i] = await fn(items[i]);
+          }
+        };
+        const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => worker());
+        await Promise.all(workers);
+        return results;
+      };
+
       if (step6.photos.length > 0) {
-        photoPayload = await Promise.all(
-          step6.photos.map(async (p) => {
-            const uploaded = await ownerApi.uploadVehicleMedia(p.uri, false);
-            return {
-              url: uploaded.url,
-              publicId: uploaded.publicId,
-            };
-          })
-        );
-      } else {
-        photoPayload.push({
-          url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
-          publicId: 'default_car_photo',
+        photoPayload = await mapConcurrent(step6.photos, 2, async (p) => {
+          const uploaded = await ownerApi.uploadVehicleMedia(p.uri, false);
+          return {
+            url: uploaded.url,
+            publicId: uploaded.publicId,
+          };
         });
+      } else if (!isEditMode) {
+        throw new Error("Veuillez ajouter au moins une photo réelle de votre véhicule avant de publier.");
       }
 
       // 2. Upload des documents (Carte Grise & Assurance)
@@ -446,8 +456,8 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
       setPublishStatusText('Téléversement de la Carte Grise et de l’Assurance...');
 
       let carteGriseRes = {
-        url: 'https://autoloc.sn/docs/carte_grise_default.pdf',
-        publicId: 'carte_grise_doc',
+        url: '',
+        publicId: '',
       };
       if (step6.carteGrise?.uri) {
         carteGriseRes = await ownerApi.uploadVehicleMedia(
@@ -457,8 +467,8 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
       }
 
       let assuranceRes = {
-        url: 'https://autoloc.sn/docs/assurance_default.pdf',
-        publicId: 'assurance_doc',
+        url: '',
+        publicId: '',
       };
       if (step6.assuranceDoc?.uri) {
         assuranceRes = await ownerApi.uploadVehicleMedia(
@@ -517,18 +527,10 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
         assuranceDocPublicId: assuranceRes.publicId,
       };
 
-      try {
-        if (isEditMode && vehicleToEdit) {
-          await ownerApi.updateVehicle(vehicleToEdit.id, payload);
-        } else {
-          await ownerApi.createVehicle(payload);
-          await clearDraft();
-        }
-      } catch (err) {
-        console.warn('API sync fallback triggered', err);
-      }
-
-      if (!isEditMode) {
+      if (isEditMode && vehicleToEdit) {
+        await ownerApi.updateVehicle(vehicleToEdit.id, payload);
+      } else {
+        await ownerApi.createVehicle(payload);
         await clearDraft();
       }
 
@@ -540,11 +542,12 @@ export const AddVehicleWizardScreen: React.FC<AddVehicleWizardScreenProps> = ({
           : '🎉 Félicitations ! Votre véhicule est officiellement publié.'
       );
       setPublishSuccess(true);
-    } catch {
-      if (!isEditMode) await clearDraft();
+    } catch (err: any) {
+      console.error('Erreur lors de la publication du véhicule:', err);
+      const message = err?.message || err?.response?.data?.message || 'Échec de la publication.';
       setPublishProgress(100);
-      setPublishStatusText('Votre annonce a été enregistrée avec succès.');
-      setPublishSuccess(true);
+      setPublishStatusText(`⚠️ ${message}`);
+      setPublishSuccess(false);
     } finally {
       setSubmitting(false);
     }

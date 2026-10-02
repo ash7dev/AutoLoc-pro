@@ -1,6 +1,102 @@
 import { apiClient } from "@/src/core/api/apiClient";
 import { Vehicle, SearchVehiclesParams, SearchVehiclesResponse } from "../types/vehicle.types";
 
+/**
+ * Compresse une image côté navigateur via HTMLCanvasElement (max 1920x1080, qualité 0.8)
+ * Réduit le poids des photos de 15 Mo à ~300-500 Ko pour un upload rapide et ultra-fiable.
+ */
+async function compressImageWeb(file: File | Blob | string, maxWidth = 1920, maxHeight = 1080, quality = 0.8): Promise<Blob> {
+  if (typeof window === 'undefined') {
+    if (typeof file !== 'string') return file as Blob;
+    const r = await fetch(file as string);
+    return r.blob();
+  }
+
+  let srcUrl = '';
+  let shouldRevoke = false;
+
+  if (typeof file !== 'string') {
+    srcUrl = URL.createObjectURL(file as Blob);
+    shouldRevoke = true;
+  } else {
+    srcUrl = file;
+  }
+
+  return new Promise<Blob>((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          if (width / height > maxWidth / maxHeight) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          if (shouldRevoke) URL.revokeObjectURL(srcUrl);
+          return resolve(typeof file !== 'string' ? (file as Blob) : fetch(srcUrl).then((r) => r.blob()));
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (shouldRevoke) URL.revokeObjectURL(srcUrl);
+            if (blob) resolve(blob);
+            else resolve(typeof file !== 'string' ? (file as Blob) : fetch(srcUrl).then((r) => r.blob()));
+          },
+          'image/jpeg',
+          quality
+        );
+      } catch (e) {
+        if (shouldRevoke) URL.revokeObjectURL(srcUrl);
+        reject(e);
+      }
+    };
+    img.onerror = (err) => {
+      if (shouldRevoke) URL.revokeObjectURL(srcUrl);
+      reject(err);
+    };
+    img.src = srcUrl;
+  });
+}
+
+/**
+ * Effectue un fetch avec re-tentatives automatiques (Retries avec backoff exponentiel)
+ */
+async function fetchWithRetry(url: string, options: RequestInit, retries = 3, delay = 1000): Promise<Response> {
+  let lastError: any = null;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (res.ok) return res;
+      if (res.status >= 400 && res.status < 500 && res.status !== 429) {
+        return res; // Ne pas réessayer en cas d'erreur client définitive (ex: 400 bad request)
+      }
+    } catch (err) {
+      lastError = err;
+    }
+    if (attempt < retries) {
+      await new Promise((r) => setTimeout(r, delay * attempt));
+    }
+  }
+  throw lastError || new Error('Échec du réseau après plusieurs tentatives.');
+}
+
 export const vehicleService = {
   /**
    * Effectue une recherche filtrée de véhicules disponibles dans le catalogue
@@ -65,7 +161,7 @@ export const vehicleService = {
   },
 
   /**
-   * Upload d'un fichier média (photo / carte grise / assurance) vers Cloudinary / Backend
+   * Upload d'un fichier média (photo / carte grise / assurance) vers Cloudinary avec compression & auto-retry
    */
   async uploadVehicleMedia(file: File | string, isPdf = false): Promise<{ url: string; publicId: string }> {
     if (typeof file === 'string' && (file.startsWith('http://') || file.startsWith('https://'))) {
@@ -83,13 +179,19 @@ export const vehicleService = {
         const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/${isPdf ? 'raw' : 'image'}/upload`;
         const formData = new FormData();
 
-        if (file instanceof File) {
-          formData.append('file', file);
-        } else if (typeof file === 'string' && (file.startsWith('blob:') || file.startsWith('data:'))) {
-          const blob = await fetch(file).then((r) => r.blob());
-          formData.append('file', blob, `vehicle_${Date.now()}.${isPdf ? 'pdf' : 'jpg'}`);
+        if (isPdf) {
+          if (file instanceof File) {
+            formData.append('file', file);
+          } else if (typeof file === 'string' && (file.startsWith('blob:') || file.startsWith('data:'))) {
+            const blob = await fetch(file).then((r) => r.blob());
+            formData.append('file', blob, `doc_${Date.now()}.pdf`);
+          } else {
+            formData.append('file', file as any);
+          }
         } else {
-          formData.append('file', file as any);
+          // Compression web ultra-rapide avant téléversement
+          const compressedBlob = await compressImageWeb(file as any);
+          formData.append('file', compressedBlob, `photo_${Date.now()}.jpg`);
         }
 
         formData.append('api_key', sigData.apiKey);
@@ -99,10 +201,11 @@ export const vehicleService = {
           formData.append('folder', sigData.folder);
         }
 
-        const res = await fetch(cloudinaryUrl, {
+        // Auto-retry jusqu'à 3 tentatives en cas de baisse de débit réseau
+        const res = await fetchWithRetry(cloudinaryUrl, {
           method: 'POST',
           body: formData,
-        });
+        }, 3, 1200);
 
         if (res.ok) {
           const data = await res.json();
@@ -110,25 +213,19 @@ export const vehicleService = {
             url: data.secure_url || data.url,
             publicId: data.public_id || `media_${Date.now()}`,
           };
+        } else {
+          const errorText = await res.text().catch(() => '');
+          throw new Error(`Cloudinary ${res.status}: ${errorText || 'Erreur lors du téléversement'}`);
         }
+      } else {
+        throw new Error('Impossible d’obtenir la signature d’upload du serveur.');
       }
-    } catch (err) {
-      console.warn('[vehicleService] Upload Cloudinary direct échoué, bascule fallback:', err);
+    } catch (err: any) {
+      console.error('[vehicleService] Upload média échoué après retentatives:', err);
+      throw new Error(
+        err?.message || "L'envoi de la photo ou du document a échoué. Veuillez vérifier votre connexion et ré-essayer."
+      );
     }
-
-    if (isPdf) {
-      return {
-        url: 'https://autoloc.sn/docs/carte_grise_default.pdf',
-        publicId: `pdf_${Date.now()}`,
-      };
-    }
-
-    return {
-      url: typeof file === 'string' && !file.startsWith('blob:')
-        ? file
-        : 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
-      publicId: `fallback_${Date.now()}`,
-    };
   },
 
   /**

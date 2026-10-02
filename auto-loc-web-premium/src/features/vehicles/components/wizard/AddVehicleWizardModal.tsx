@@ -330,28 +330,39 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
       setPublishProgress(50);
       setPublishStatusText('Préparation des visuels et documents...');
 
-      // 1. Traitement 100% PARALLÈLE de toutes les photos + documents (Carte Grise & Assurance)
+      // Helper d'exécution contrôlée pour ne pas engorger la bande passante (max 2 uploads en parallèle)
+      const mapConcurrent = async <T, R>(items: T[], concurrency: number, fn: (item: T) => Promise<R>): Promise<R[]> => {
+        const results: R[] = new Array(items.length);
+        let index = 0;
+        const worker = async () => {
+          while (index < items.length) {
+            const i = index++;
+            results[i] = await fn(items[i]);
+          }
+        };
+        const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => worker());
+        await Promise.all(workers);
+        return results;
+      };
+
+      // 1. Traitement optimisé des photos (concurrence max 2) + documents
       const [photoPayloadResolved, carteGriseRes, assuranceRes] = await Promise.all([
-        // Photos en parallèle
         step6.photos && step6.photos.length > 0
-          ? Promise.all(
-            step6.photos.map(async (p) => {
-              if (p.uri.startsWith('http://') || p.uri.startsWith('https://')) {
-                return {
-                  url: p.uri,
-                  publicId: p.publicId || `photo_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-                };
-              }
-              const uploaded = await vehicleService.uploadVehicleMedia(p.uri, false);
+          ? mapConcurrent(step6.photos, 2, async (p) => {
+            if (p.uri.startsWith('http://') || p.uri.startsWith('https://')) {
               return {
-                url: uploaded.url,
-                publicId: p.publicId || uploaded.publicId,
+                url: p.uri,
+                publicId: p.publicId || `photo_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
               };
-            })
-          )
+            }
+            const uploaded = await vehicleService.uploadVehicleMedia(p.uri, false);
+            return {
+              url: uploaded.url,
+              publicId: p.publicId || uploaded.publicId,
+            };
+          })
           : Promise.resolve(undefined),
 
-        // Carte Grise en parallèle
         step6.carteGrise?.uri
           ? step6.carteGrise.uri.startsWith('http://') || step6.carteGrise.uri.startsWith('https://')
             ? Promise.resolve({ url: step6.carteGrise.uri, publicId: undefined })
@@ -421,26 +432,17 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
       }
 
       if (!isEditMode && (!payload.photos || payload.photos.length === 0)) {
-        payload.photos = [{
-          url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80',
-          publicId: 'default_car_photo',
-        }];
+        throw new Error("Veuillez ajouter au moins une photo réelle de votre véhicule avant de publier.");
       }
 
       if (carteGriseUrl) {
         payload.carteGriseUrl = carteGriseUrl;
         if (carteGrisePublicId) payload.carteGrisePublicId = carteGrisePublicId;
-      } else if (!isEditMode) {
-        payload.carteGriseUrl = 'https://autoloc.sn/docs/carte_grise_default.pdf';
-        payload.carteGrisePublicId = 'carte_grise_doc';
       }
 
       if (assuranceDocUrl) {
         payload.assuranceDocUrl = assuranceDocUrl;
         if (assuranceDocPublicId) payload.assuranceDocPublicId = assuranceDocPublicId;
-      } else if (!isEditMode) {
-        payload.assuranceDocUrl = 'https://autoloc.sn/docs/assurance_default.pdf';
-        payload.assuranceDocPublicId = 'assurance_doc';
       }
 
       if (isEditMode && vehicleToEdit) {
