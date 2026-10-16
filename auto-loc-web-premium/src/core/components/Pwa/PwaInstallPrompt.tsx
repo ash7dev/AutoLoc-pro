@@ -9,6 +9,24 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+const DISMISS_KEY = 'autoloc_pwa_dismissed_at';
+const SNOOZE_MS = 7 * 86400000;
+
+const snooze = () => {
+  try {
+    localStorage.setItem(DISMISS_KEY, Date.now().toString());
+  } catch {}
+};
+
+const isSnoozed = () => {
+  try {
+    const v = localStorage.getItem(DISMISS_KEY);
+    return !!v && Date.now() - parseInt(v, 10) < SNOOZE_MS;
+  } catch {
+    return false;
+  }
+};
+
 export function PwaInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -27,14 +45,16 @@ export function PwaInstallPrompt() {
       return;
     }
 
-    // 2. Détecter si le prompt a été masqué récemment (7 jours)
-    const dismissedAt = localStorage.getItem('autoloc_pwa_dismissed_at');
-    if (dismissedAt) {
-      const elapsed = Date.now() - parseInt(dismissedAt, 10);
-      if (elapsed < 7 * 86400000) {
-        return; // Ne pas ré-afficher pendant 7 jours
-      }
-    }
+    // 2. Détecter si le prompt a été affiché/masqué récemment (7 jours)
+    if (isSnoozed()) return;
+
+    // Affiche le prompt et le met en veille immédiatement pour ne pas
+    // le ré-afficher à chaque rechargement
+    const reveal = () => {
+      if (isSnoozed()) return;
+      snooze();
+      setShowPrompt(true);
+    };
 
     // 3. Détecter iOS Safari
     const userAgent = window.navigator.userAgent.toLowerCase();
@@ -42,21 +62,30 @@ export function PwaInstallPrompt() {
     setIsIos(isIosDevice);
 
     if (isIosDevice) {
-      const timer = setTimeout(() => setShowPrompt(true), 3500);
+      const timer = setTimeout(reveal, 3500);
       return () => clearTimeout(timer);
     }
 
     // 4. Écouter l'événement standard Chrome / Android / Edge
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setTimeout(() => setShowPrompt(true), 2500);
+      clearTimeout(timer);
+      timer = setTimeout(reveal, 2500);
+    };
+    const handleInstalled = () => {
+      snooze();
+      setShowPrompt(false);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleInstalled);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleInstalled);
     };
   }, []);
 
@@ -74,8 +103,9 @@ export function PwaInstallPrompt() {
 
       if (choiceResult.outcome === 'accepted') {
         console.log('[PWA] Application AutoLoc installée');
-        setShowPrompt(false);
       }
+      snooze();
+      setShowPrompt(false);
       setDeferredPrompt(null);
     } catch (err) {
       console.error('[PWA] Erreur installation PWA:', err);
@@ -85,8 +115,7 @@ export function PwaInstallPrompt() {
   const handleDismiss = () => {
     setShowPrompt(false);
     setShowIosGuide(false);
-    localStorage.getItem('autoloc_pwa_dismissed_at');
-    localStorage.setItem('autoloc_pwa_dismissed_at', Date.now().toString());
+    snooze();
   };
 
   if (isStandalone || !showPrompt) return null;
