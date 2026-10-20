@@ -11,21 +11,23 @@ export function roundToNearest100(amount: number): number {
     return Math.round(amount / 100) * 100;
 }
 
+/** Taux de commission AutoLoc unique, appliqué à toutes les réservations. */
+export const COMMISSION_RATE = new Prisma.Decimal('0.10');
+
 /**
- * Calcule le taux de commission dégressif selon le barème officiel :
- * - ≤ 20 000 FCFA / jour        : 17,5% (0.1750)
- * - 20 001 à 35 000 FCFA / jour : 15,5% (0.1550)
- * - 35 001 à 60 000 FCFA / jour : 13,5% (0.1350)
- * - 60 001 à 100 000 FCFA / jour: 11,5% (0.1150)
- * - > 100 000 FCFA / jour       : 10,0% (0.1000)
+ * Taux de commission AutoLoc : 10% fixe, quel que soit le prix journalier.
  */
-export function calculateCommissionRate(prixParJour: Prisma.Decimal | number): Prisma.Decimal {
-    const val = typeof prixParJour === 'number' ? prixParJour : prixParJour.toNumber();
-    if (val <= 20000) return new Prisma.Decimal('0.1750');
-    if (val <= 35000) return new Prisma.Decimal('0.1550');
-    if (val <= 60000) return new Prisma.Decimal('0.1350');
-    if (val <= 100000) return new Prisma.Decimal('0.1150');
-    return new Prisma.Decimal('0.1000');
+export function calculateCommissionRate(_prixParJour?: Prisma.Decimal | number): Prisma.Decimal {
+    return COMMISSION_RATE;
+}
+
+/**
+ * Borne le nombre de jours hors Dakar à [1, nbJours].
+ * Non renseigné → toute la durée de la location.
+ */
+export function resolveNbJoursHorsDakar(nbJours: number, nbJoursHorsDakar?: number | null): number {
+    if (nbJoursHorsDakar == null || !Number.isFinite(nbJoursHorsDakar)) return nbJours;
+    return Math.min(nbJours, Math.max(1, Math.floor(nbJoursHorsDakar)));
 }
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -43,7 +45,12 @@ export interface TarifTierInput {
 }
 
 export interface PricingResult {
+    /** Prix journalier de location (tarif progressif appliqué), hors supplément. */
     prixParJour: Prisma.Decimal;
+    /** Nombre de jours facturés au supplément hors Dakar (0 si non applicable). */
+    nbJoursHorsDakar: number;
+    /** supplément/jour × nbJoursHorsDakar. */
+    montantHorsDakar: Prisma.Decimal;
     totalBase: Prisma.Decimal;
     tauxCommission: Prisma.Decimal;
     montantCommission: Prisma.Decimal;
@@ -108,29 +115,36 @@ export class ReservationPricingService {
     /**
      * Calcule tous les montants de la réservation.
      * Utilise les tarifs progressifs si fournis, sinon le prix par jour de base.
-     * Ajoute le supplément hors Dakar le cas échéant.
-     * Commission dégressive selon le barème officiel, arrondie aux 100 FCFA les plus proches.
+     * Le supplément hors Dakar n'est facturé que sur les jours déclarés hors Dakar.
+     * Commission fixe de 10% sur le total (location + supplément), arrondie aux 100 FCFA.
      */
     calculate(
         prixParJour: Prisma.Decimal,
         nbJours: number,
         tiers?: TarifTierInput[],
         supplementHorsDakar: number = 0,
+        nbJoursHorsDakar?: number | null,
     ): PricingResult {
         const effectivePrice = this.resolveTieredPrice(prixParJour, nbJours, tiers);
-        const finalPriceParJour = effectivePrice.add(new Prisma.Decimal(supplementHorsDakar));
 
-        const totalBase = finalPriceParJour.mul(nbJours);
-        const tauxCommission = calculateCommissionRate(finalPriceParJour);
+        const joursHorsDakar = supplementHorsDakar > 0
+            ? resolveNbJoursHorsDakar(nbJours, nbJoursHorsDakar)
+            : 0;
+        const montantHorsDakar = new Prisma.Decimal(supplementHorsDakar).mul(joursHorsDakar);
+
+        const totalBase = effectivePrice.mul(nbJours).add(montantHorsDakar);
+        const tauxCommission = calculateCommissionRate(effectivePrice);
         const rawCommission = totalBase.mul(tauxCommission).toNumber();
-        
+
         const montantCommissionNum = roundToNearest100(rawCommission);
         const montantCommission = new Prisma.Decimal(montantCommissionNum);
         const totalLocataire = totalBase.add(montantCommission);
         const netProprietaire = totalBase;
 
         return {
-            prixParJour: finalPriceParJour,
+            prixParJour: effectivePrice,
+            nbJoursHorsDakar: joursHorsDakar,
+            montantHorsDakar,
             totalBase,
             tauxCommission,
             montantCommission,

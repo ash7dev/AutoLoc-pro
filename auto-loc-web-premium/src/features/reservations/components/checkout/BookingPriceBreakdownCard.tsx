@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ShieldCheck, Sparkles } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, getTenantPricePerDay } from '@/lib/utils';
 
 interface BookingPriceBreakdownCardProps {
   tenantPricePerDay: number;
@@ -13,6 +13,8 @@ interface BookingPriceBreakdownCardProps {
   fraisLivraison?: number | null;
   isHorsDakarSelected: boolean;
   supplementHorsDakarParJour?: number | null;
+  /** Jours déclarés hors Dakar (défaut : toute la durée). */
+  nbJoursHorsDakar?: number;
 }
 
 export function BookingPriceBreakdownCard({
@@ -24,6 +26,7 @@ export function BookingPriceBreakdownCard({
   fraisLivraison = 0,
   isHorsDakarSelected,
   supplementHorsDakarParJour = 0,
+  nbJoursHorsDakar,
 }: BookingPriceBreakdownCardProps) {
   const baseTotal = tenantPricePerDay * nbJours;
 
@@ -34,8 +37,9 @@ export function BookingPriceBreakdownCard({
     deliveryTotal = Number(fraisLivraisonAibd ?? 0);
   }
 
-  const numHorsDakar = Number(supplementHorsDakarParJour ?? 0);
-  const horsDakarTotal = isHorsDakarSelected ? numHorsDakar * nbJours : 0;
+  const horsDakarPerDay = getTenantPricePerDay(Number(supplementHorsDakarParJour ?? 0));
+  const joursHorsDakar = nbJoursHorsDakar ?? nbJours;
+  const horsDakarTotal = isHorsDakarSelected ? horsDakarPerDay * joursHorsDakar : 0;
 
   const grandTotal = baseTotal + deliveryTotal + horsDakarTotal;
 
@@ -85,7 +89,9 @@ export function BookingPriceBreakdownCard({
 
         {horsDakarTotal > 0 && (
           <div className="flex items-center justify-between">
-            <span>Trajets hors Dakar ({nbJours} j)</span>
+            <span>
+              Trajets hors Dakar ({formatCurrency(horsDakarPerDay)} FCFA × {joursHorsDakar} j)
+            </span>
             <span className="font-semibold text-champagne tabular-nums">
               +{formatCurrency(horsDakarTotal)} FCFA
             </span>

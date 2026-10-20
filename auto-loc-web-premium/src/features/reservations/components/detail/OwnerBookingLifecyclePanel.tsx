@@ -561,8 +561,10 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
               <div className="min-w-0">
                 <span className="block font-bold text-slate-900">Zone de circulation</span>
                 <span className="text-slate-700 font-medium block">
-                  {(reservation.vehicule as any)?.horsDakar
-                    ? 'Trajet Hors Dakar autorisé'
+                  {reservation.horsDakar
+                    ? reservation.nbJoursHorsDakar
+                      ? `Hors Dakar autorisé · ${reservation.nbJoursHorsDakar} jour${reservation.nbJoursHorsDakar > 1 ? 's' : ''} déclaré${reservation.nbJoursHorsDakar > 1 ? 's' : ''}`
+                      : 'Trajet Hors Dakar autorisé'
                     : 'Périmètre Dakar Intramuros'}
                 </span>
               </div>

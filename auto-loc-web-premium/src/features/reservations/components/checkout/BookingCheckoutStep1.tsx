@@ -6,6 +6,8 @@ import {
   ArrowRight,
   Calendar,
   ChevronDown,
+  Minus,
+  Plus,
   Home,
   MapPin,
   Navigation,
@@ -15,7 +17,7 @@ import {
   Truck,
   type LucideIcon,
 } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { clampJoursHorsDakar, formatCurrency, getTenantPricePerDay } from '@/lib/utils';
 import { fetchApi } from '@/lib/config';
 import { AutoCalendar } from '@/src/shared/components/AutoCalendar';
 import { BookingPriceBreakdownCard } from './BookingPriceBreakdownCard';
@@ -57,6 +59,9 @@ interface BookingCheckoutStep1Props {
   onAdresseLivraisonChange: (val: string) => void;
   isHorsDakarSelected: boolean;
   onToggleHorsDakar: (val: boolean) => void;
+  /** Jours déclarés hors Dakar (null = toute la durée). */
+  joursHorsDakar: number | null;
+  onJoursHorsDakarChange: (val: number | null) => void;
   onNext: () => void;
 }
 
@@ -163,6 +168,67 @@ function OptionRow({
 }
 
 /* -------------------------------------------------------------------------- */
+/* Sous-composant : nombre de jours hors Dakar                                */
+/* -------------------------------------------------------------------------- */
+
+interface HorsDakarDaysStepperProps {
+  value: number;
+  max: number;
+  supplementPerDay: number;
+  onChange: (value: number) => void;
+}
+
+function HorsDakarDaysStepper({ value, max, supplementPerDay, onChange }: HorsDakarDaysStepperProps) {
+  const labelId = useId();
+  const btnClass =
+    'flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 text-slate-700 transition-colors hover:border-brand-main hover:text-brand-main disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-main';
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3.5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p id={labelId} className="text-sm font-semibold text-slate-900">
+            Combien de jours hors Dakar ?
+          </p>
+          <p className="text-xs leading-snug text-slate-500">
+            Le supplément n’est facturé que sur ces jours ({plural(value, 'jour')} sur {max}).
+          </p>
+        </div>
+        <div role="group" aria-labelledby={labelId} className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            className={btnClass}
+            onClick={() => onChange(Math.max(1, value - 1))}
+            disabled={value <= 1}
+            aria-label="Un jour de moins"
+          >
+            <Minus className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <span className="w-8 text-center text-base font-semibold tabular-nums text-slate-900" aria-live="polite">
+            {value}
+          </span>
+          <button
+            type="button"
+            className={btnClass}
+            onClick={() => onChange(Math.min(max, value + 1))}
+            disabled={value >= max}
+            aria-label="Un jour de plus"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+      <p className="mt-2 text-xs font-semibold tabular-nums text-slate-700">
+        Supplément : +{formatCurrency(supplementPerDay * value)} FCFA
+      </p>
+      <p className="mt-1 text-[11px] leading-snug text-slate-500">
+        Tout jour hors Dakar non déclaré pourra être facturé au propriétaire via AutoLoc à la restitution.
+      </p>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /* Composant principal                                                        */
 /* -------------------------------------------------------------------------- */
 
@@ -177,6 +243,8 @@ export function BookingCheckoutStep1({
   onAdresseLivraisonChange,
   isHorsDakarSelected,
   onToggleHorsDakar,
+  joursHorsDakar,
+  onJoursHorsDakarChange,
   onNext,
 }: BookingCheckoutStep1Props) {
   const deliveryGroupName = useId();
@@ -275,7 +343,7 @@ export function BookingCheckoutStep1({
 
   const dakarFee = toNumber(vehicle.fraisLivraisonDakar ?? vehicle.fraisLivraison);
   const aibdFee = toNumber(vehicle.fraisLivraisonAibd);
-  const horsDakarSupplement = toNumber(vehicle.supplementHorsDakarParJour);
+  const horsDakarSupplement = getTenantPricePerDay(toNumber(vehicle.supplementHorsDakarParJour));
 
   const canDeliverDakar =
     Boolean(vehicle.proposeLivraisonDakar) ||
@@ -665,6 +733,15 @@ export function BookingCheckoutStep1({
                   isFree={horsDakarSupplement <= 0}
                 />
               )}
+
+              {autoriseHorsDakar && isHorsDakarSelected && hasDates && horsDakarSupplement > 0 && (
+                <HorsDakarDaysStepper
+                  value={clampJoursHorsDakar(nbJours, joursHorsDakar)}
+                  max={nbJours}
+                  supplementPerDay={horsDakarSupplement}
+                  onChange={onJoursHorsDakarChange}
+                />
+              )}
             </section>
           )}
 
@@ -679,6 +756,7 @@ export function BookingCheckoutStep1({
               fraisLivraison={vehicle.fraisLivraison}
               isHorsDakarSelected={isHorsDakarSelected}
               supplementHorsDakarParJour={vehicle.supplementHorsDakarParJour}
+              nbJoursHorsDakar={clampJoursHorsDakar(nbJours, joursHorsDakar)}
             />
           ) : (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white/60 p-5 text-sm text-slate-500">

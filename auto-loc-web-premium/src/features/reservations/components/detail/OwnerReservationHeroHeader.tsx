@@ -47,6 +47,7 @@ export interface OwnerReservationHeroHeaderProps {
   adresseLivraison?: string;
   typeLivraison?: string;
   horsDakar?: boolean;
+  nbJoursHorsDakar?: number | null;
 }
 
 const PLACEHOLDER_CAR = 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1000&q=80';
@@ -200,6 +201,7 @@ export function OwnerReservationHeroHeader({
   adresseLivraison,
   typeLivraison,
   horsDakar,
+  nbJoursHorsDakar,
 }: OwnerReservationHeroHeaderProps) {
   const titleId = useId();
 
@@ -384,7 +386,9 @@ export function OwnerReservationHeroHeader({
             {horsDakar && (
               <li className={chipClass}>
                 <Navigation className="h-3.5 w-3.5 text-emerald-400" strokeWidth={1.75} aria-hidden="true" />
-                Trajet Hors Dakar inclus
+                {nbJoursHorsDakar
+                  ? `Hors Dakar · ${nbJoursHorsDakar} jour${nbJoursHorsDakar > 1 ? 's' : ''} déclaré${nbJoursHorsDakar > 1 ? 's' : ''}`
+                  : 'Trajet Hors Dakar inclus'}
               </li>
             )}
           </ul>

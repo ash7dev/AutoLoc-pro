@@ -70,6 +70,12 @@ export const OwnerFinancialDetailsCard: React.FC<OwnerFinancialDetailsCardProps>
   const fraisLivraison = Number(reservation.fraisLivraison || 0);
   const totalBaseRental = prixParJour * nbJours;
 
+  // Supplément hors Dakar, facturé uniquement sur les jours déclarés par le locataire
+  const nbJoursHorsDakar = Number(reservation.nbJoursHorsDakar || 0);
+  const supplementParJour = Number(reservation.supplementHorsDakarParJour || 0);
+  const totalHorsDakar = Number(reservation.montantHorsDakar || supplementParJour * nbJoursHorsDakar);
+  const tauxCommissionPct = Math.round(Number(reservation.tauxCommission ?? 0.1) * 100);
+
   return (
     <div className="space-y-6 rounded-3xl bg-white p-5 text-slate-900 shadow-sm border border-slate-200/90 sm:p-6">
       {/* ── En-tête de la carte ─────────────────────────────────────────── */}
@@ -99,6 +105,21 @@ export const OwnerFinancialDetailsCard: React.FC<OwnerFinancialDetailsCardProps>
           value={`${formatCurrency(totalBaseRental || totalLoc)} FCFA`}
         />
 
+        {reservation.horsDakar && totalHorsDakar > 0 && (
+          <LineItem
+            icon={<MapPin className="h-3.5 w-3.5" aria-hidden />}
+            label={
+              <>
+                Supplément hors Dakar{' '}
+                <span className="text-slate-400 font-medium">
+                  ({nbJoursHorsDakar} jour{nbJoursHorsDakar > 1 ? 's' : ''} × {formatCurrency(supplementParJour)} FCFA)
+                </span>
+              </>
+            }
+            value={`${formatCurrency(totalHorsDakar)} FCFA`}
+          />
+        )}
+
         {fraisLivraison > 0 && (
           <LineItem
             icon={<Truck className="h-3.5 w-3.5" aria-hidden />}
@@ -109,9 +130,13 @@ export const OwnerFinancialDetailsCard: React.FC<OwnerFinancialDetailsCardProps>
 
         <LineItem
           icon={<DollarSign className="h-3.5 w-3.5" aria-hidden />}
-          label="Commission de service AutoLoc"
-          value={`- ${formatCurrency(commission)} FCFA`}
-          isNegative
+          label={
+            <>
+              Commission AutoLoc ({tauxCommissionPct} %){' '}
+              <span className="text-slate-400 font-medium">payée par le locataire</span>
+            </>
+          }
+          value={`${formatCurrency(commission)} FCFA`}
         />
 
         {/* Ligne Total Net Propriétaire */}

@@ -64,7 +64,7 @@ export class AnalyticsAggregationTask {
         let net = 0;
 
         for (const r of reservations) {
-          caBrut += Number(r.totalBase || 0) + Number(r.fraisLivraison || 0) + Number(r.supplementHorsDakar || 0);
+          caBrut += Number(r.totalBase || 0) + Number(r.fraisLivraison || 0);
           comm += Number(r.montantCommission || 0);
           net += Number(r.netProprietaire || 0);
         }

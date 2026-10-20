@@ -62,6 +62,11 @@ export const TenantFinancialDetailsCard: React.FC<TenantFinancialDetailsCardProp
   // Prix de base de la location hors frais annexes pour le locataire
   const totalBaseRental = tenantPrixParJour * nbJours;
 
+  // Supplément hors Dakar, facturé uniquement sur les jours déclarés
+  const nbJoursHorsDakar = Number(booking.nbJoursHorsDakar || 0);
+  const tenantSupplementParJour = getTenantPricePerDay(Number(booking.supplementHorsDakarParJour || 0));
+  const totalHorsDakar = tenantSupplementParJour * nbJoursHorsDakar;
+
   // Information paiement (Wave, Orange Money, etc.)
   const paymentProvider = booking.paiement?.fournisseur?.toUpperCase();
   const providerLabel =
@@ -120,8 +125,23 @@ export const TenantFinancialDetailsCard: React.FC<TenantFinancialDetailsCardProp
         {booking.horsDakar && (
           <Line
             icon={<MapPin className="h-3.5 w-3.5" aria-hidden />}
-            label="Déplacement hors Dakar"
-            value={<span className="font-medium text-slate-500">Inclus</span>}
+            label={
+              totalHorsDakar > 0 ? (
+                <>
+                  Hors Dakar{' '}
+                  <span className="text-slate-400">
+                    {nbJoursHorsDakar} jour{nbJoursHorsDakar > 1 ? 's' : ''} × {formatCurrency(tenantSupplementParJour)}
+                  </span>
+                </>
+              ) : (
+                'Déplacement hors Dakar'
+              )
+            }
+            value={
+              totalHorsDakar > 0
+                ? formatCurrency(totalHorsDakar)
+                : <span className="font-medium text-slate-500">Inclus</span>
+            }
           />
         )}
 

@@ -74,7 +74,7 @@ export const VehicleDetailScreen: React.FC<VehicleDetailScreenProps> = ({
   const typeStr = detail?.type || initialVehicle?.type || 'STANDARD';
   const basePrice = Number(detail?.prixParJour || initialVehicle?.prixParJour || 30000);
 
-  // Prix Locataire calculé avec commission AutoLoc dégressive (17.5% à 10%)
+  // Prix Locataire calculé avec commission AutoLoc (10% fixe)
   const tenantPricePerDay = getTenantPricePerDay(basePrice);
 
   // Galerie photo

@@ -193,6 +193,8 @@ export default function OwnerReservationDetailPage() {
               nbJours={reservation.nbJours}
               netProprietaire={reservation.netProprietaire || reservation.montantProprietaire}
               adresseLivraison={reservation.adresseLivraison || undefined}
+              horsDakar={reservation.horsDakar}
+              nbJoursHorsDakar={reservation.nbJoursHorsDakar}
             />
 
             {/* ── Composant de Suivi du Lifecycle Propriétaire & Actions ────── */}
@@ -235,6 +237,7 @@ export default function OwnerReservationDetailPage() {
               <OwnerVehicleDetailsCard
                 vehicule={reservation.vehicule}
                 adresseLivraison={reservation.adresseLivraison}
+                horsDakar={reservation.horsDakar}
                 statut={reservation.statut}
               />
             )}

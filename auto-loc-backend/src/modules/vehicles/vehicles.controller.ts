@@ -208,7 +208,7 @@ export class VehiclesController {
   }
 
   /**
-   * GET /vehicles/:id/pricing?days=N
+   * GET /vehicles/:id/pricing?days=N&horsDakar=true&joursHorsDakar=M
    * Prévisualisation publique du tarif dynamique pour N jours.
    */
   @Get(':id/pricing')
@@ -216,10 +216,17 @@ export class VehiclesController {
     @Param('id', ParseUUIDPipe) id: string,
     @Query('days') daysStr?: string,
     @Query('horsDakar') horsDakarStr?: string,
+    @Query('joursHorsDakar') joursHorsDakarStr?: string,
   ) {
     const days = daysStr ? parseInt(daysStr, 10) : 1;
     const horsDakar = horsDakarStr === 'true' || horsDakarStr === '1';
-    return this.vehiclesService.getPricing(id, isNaN(days) || days < 1 ? 1 : days, horsDakar);
+    const joursHorsDakar = joursHorsDakarStr ? parseInt(joursHorsDakarStr, 10) : undefined;
+    return this.vehiclesService.getPricing(
+      id,
+      isNaN(days) || days < 1 ? 1 : days,
+      horsDakar,
+      joursHorsDakar !== undefined && !isNaN(joursHorsDakar) ? joursHorsDakar : undefined,
+    );
   }
 
   /**

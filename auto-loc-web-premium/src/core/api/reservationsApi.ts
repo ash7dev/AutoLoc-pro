@@ -70,6 +70,16 @@ export interface OwnerReservationItem {
   paymentUrl?: string;
   adresseLivraison?: string | null;
   fraisLivraison?: string | null;
+  typeLivraison?: 'AUCUNE' | 'DAKAR' | 'AIBD' | null;
+  /** Location seule + supplément hors Dakar (= net propriétaire). */
+  totalBase?: string;
+  tauxCommission?: string;
+  horsDakar?: boolean;
+  /** Supplément hors Dakar par jour, côté propriétaire (hors commission). */
+  supplementHorsDakarParJour?: string | null;
+  nbJoursHorsDakar?: number | null;
+  /** supplementHorsDakarParJour × nbJoursHorsDakar. */
+  montantHorsDakar?: string | null;
   vehicule: ReservationVehicle;
   locataire: ReservationUser;
   proprietaire?: { id: string; prenom: string; nom: string; telephone?: string };

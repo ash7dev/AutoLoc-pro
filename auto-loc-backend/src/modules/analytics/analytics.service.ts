@@ -185,8 +185,8 @@ export class AnalyticsService {
     for (const r of currentMonthRes) {
       const base = Number(r.totalBase || 0);
       const delivery = Number(r.fraisLivraison || 0);
-      const horsDakar = Number(r.supplementHorsDakar || 0);
-      const brut = base + delivery + horsDakar;
+      // totalBase inclut déjà le supplément hors Dakar
+      const brut = base + delivery;
 
       const comm = Number(r.montantCommission || 0);
       const net = Number(r.netProprietaire || 0);
@@ -324,7 +324,7 @@ export class AnalyticsService {
       const diffMs = Math.max(1, resEnd.getTime() - resStart.getTime());
       const totalDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 
-      const totalBrut = Number(r.totalBase || 0) + Number(r.fraisLivraison || 0) + Number(r.supplementHorsDakar || 0);
+      const totalBrut = Number(r.totalBase || 0) + Number(r.fraisLivraison || 0);
       const totalComm = Number(r.montantCommission || 0);
       const totalNet = Number(r.netProprietaire || 0);
       const totalEncaisse = Number(r.montantPayeEnLigne || 0);

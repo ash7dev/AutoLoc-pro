@@ -220,6 +220,7 @@ model Reservation {
   fraisLivraison         Decimal?                @db.Decimal(10, 2)
   horsDakar              Boolean                 @default(false)
   supplementHorsDakar    Decimal?                @db.Decimal(10, 2)
+  nbJoursHorsDakar       Int?
   tacitCheckinDeadlineLe DateTime?
   checkinLocataireSource CheckinLocataireSource?
   absenceSignalee        Boolean                 @default(false)

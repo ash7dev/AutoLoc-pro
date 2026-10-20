@@ -41,6 +41,8 @@ export interface CreateReservationInput {
     fraisLivraison?: number;
     modePaiement?: ModePaiementReservation;
     horsDakar?: boolean;
+    /** Nombre de jours hors Dakar déclarés par le locataire (défaut : toute la durée). */
+    nbJoursHorsDakar?: number;
     /** Méthode de paiement cible (ex: 'WAVE', 'ORANGE_MONEY', 'FREE_MONEY'). */
     targetPayment?: string;
     /** Numéro de téléphone du payeur (requis pour InTouch API directe). */
@@ -122,6 +124,7 @@ export class CreateReservationUseCase {
             dates.nbJours,
             vehicule.tarifsProgressifs,
             supplementHorsDakar,
+            input.nbJoursHorsDakar,
         );
 
         // Frais de livraison : source de vérité = véhicule en DB, jamais frontend
@@ -233,6 +236,7 @@ export class CreateReservationUseCase {
                             fraisLivraison: fraisLivraison > 0 ? fraisLivraison : null,
                             horsDakar: !!input.horsDakar && vehicule.autoriseHorsDakar,
                             supplementHorsDakar: supplementHorsDakar > 0 ? supplementHorsDakar : null,
+                            nbJoursHorsDakar: price.nbJoursHorsDakar > 0 ? price.nbJoursHorsDakar : null,
                             utmSource: input.utmSource ?? null,
                             utmMedium: input.utmMedium ?? null,
                             utmCampaign: input.utmCampaign ?? null,

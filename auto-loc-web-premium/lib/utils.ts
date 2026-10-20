@@ -12,21 +12,11 @@ export function roundToNearest100(amount: number): number {
   return Math.round(amount / 100) * 100;
 }
 
-/**
- * Taux de commission dégressif officiel AutoLoc :
- * - ≤ 20 000 FCFA / jour        : 17,5% (0.175)
- * - 20 001 à 35 000 FCFA / jour : 15,5% (0.155)
- * - 35 001 à 60 000 FCFA / jour : 13,5% (0.135)
- * - 60 001 à 100 000 FCFA / jour: 11,5% (0.115)
- * - > 100 000 FCFA / jour       : 10,0% (0.100)
- */
-export function getCommissionRate(prixParJour: number): number {
-  const base = Math.max(0, Number(prixParJour) || 0);
-  if (base <= 20000) return 0.175;
-  if (base <= 35000) return 0.155;
-  if (base <= 60000) return 0.135;
-  if (base <= 100000) return 0.115;
-  return 0.10;
+/** Taux de commission AutoLoc : 10% fixe, quel que soit le prix journalier. */
+export const COMMISSION_RATE = 0.10;
+
+export function getCommissionRate(_prixParJour?: number): number {
+  return COMMISSION_RATE;
 }
 
 /**
@@ -37,6 +27,16 @@ export function getTenantPricePerDay(prixProprietaire: number): number {
   const base = Math.max(0, Number(prixProprietaire) || 0);
   const rate = getCommissionRate(base);
   return roundToNearest100(base * (1 + rate));
+}
+
+/**
+ * Borne le nombre de jours hors Dakar à [1, nbJours] (non renseigné → toute la durée).
+ * Même règle que le serveur (resolveNbJoursHorsDakar).
+ */
+export function clampJoursHorsDakar(nbJours: number, joursHorsDakar?: number | null): number {
+  if (nbJours <= 0) return 0;
+  if (joursHorsDakar == null || !Number.isFinite(joursHorsDakar)) return nbJours;
+  return Math.min(nbJours, Math.max(1, Math.floor(joursHorsDakar)));
 }
 
 /**

@@ -8,20 +8,11 @@ export const EXCHANGE_RATES: Record<CurrencyCode, number> = {
   USD: 1 / 600,     // 1 USD ≈ 600 FCFA
 };
 
-/**
- * Taux de commission dégressif officiel AutoLoc (identique au Web Frontend 1:1) :
- * - ≤ 20 000 FCFA / jour        : 17,5% (0.175)
- * - 20 001 à 35 000 FCFA / jour : 15,5% (0.155)
- * - 35 001 à 60 000 FCFA / jour : 13,5% (0.135)
- * - 60 001 à 100 000 FCFA / jour: 11,5% (0.115)
- * - > 100 000 FCFA / jour       : 10,0% (0.100)
- */
-export function getCommissionRate(prixProprietaire: number): number {
-  if (prixProprietaire <= 20000) return 0.175;
-  if (prixProprietaire <= 35000) return 0.155;
-  if (prixProprietaire <= 60000) return 0.135;
-  if (prixProprietaire <= 100000) return 0.115;
-  return 0.10;
+/** Taux de commission AutoLoc : 10% fixe, quel que soit le prix journalier. */
+export const COMMISSION_RATE = 0.10;
+
+export function getCommissionRate(_prixProprietaire?: number): number {
+  return COMMISSION_RATE;
 }
 
 /**
@@ -45,8 +36,8 @@ export function getTenantPricePerDay(prixProprietaire: number): number {
  * Convertit et formate le prix locataire (Prix Propriétaire + Commission) vers la devise cible.
  * 
  * Exemples (pour un prix propriétaire de 35 000 FCFA) :
- * - Commission : 15.5% -> Prix Locataire = 40 400 FCFA
- * - formatConvertedPrice(35000, 'XOF') -> "40 400 FCFA"
+ * - Commission : 10% -> Prix Locataire = 38 500 FCFA
+ * - formatConvertedPrice(35000, 'XOF') -> "38 500 FCFA"
  * - formatConvertedPrice(35000, 'EUR') -> "62 €"
  * - formatConvertedPrice(35000, 'USD') -> "$67"
  */

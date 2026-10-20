@@ -36,20 +36,11 @@ export function roundToNearest100(amount: number): number {
   return Math.round(amount / 100) * 100;
 }
 
-/**
- * Taux de commission dégressif officiel AutoLoc :
- * - ≤ 20 000 FCFA / jour        : 17,5% (0.175)
- * - 20 001 à 35 000 FCFA / jour : 15,5% (0.155)
- * - 35 001 à 60 000 FCFA / jour : 13,5% (0.135)
- * - 60 001 à 100 000 FCFA / jour: 11,5% (0.115)
- * - > 100 000 FCFA / jour       : 10,0% (0.100)
- */
-export function getCommissionRate(prixParJour: number): number {
-  if (prixParJour <= 20000) return 0.175;
-  if (prixParJour <= 35000) return 0.155;
-  if (prixParJour <= 60000) return 0.135;
-  if (prixParJour <= 100000) return 0.115;
-  return 0.10;
+/** Taux de commission AutoLoc : 10% fixe, quel que soit le prix journalier. */
+export const COMMISSION_RATE = 0.10;
+
+export function getCommissionRate(_prixParJour?: number): number {
+  return COMMISSION_RATE;
 }
 
 /**

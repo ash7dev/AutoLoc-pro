@@ -9,48 +9,43 @@ describe('ReservationPricingService', () => {
     });
 
     describe('calculateCommissionRate', () => {
-        it('should return 17.5% for prices <= 20,000 FCFA', () => {
-            expect(calculateCommissionRate(15000).toString()).toBe('0.175');
-            expect(calculateCommissionRate(20000).toString()).toBe('0.175');
-        });
-
-        it('should return 15.5% for prices between 20,001 and 35,000 FCFA', () => {
-            expect(calculateCommissionRate(25000).toString()).toBe('0.155');
-            expect(calculateCommissionRate(35000).toString()).toBe('0.155');
-        });
-
-        it('should return 13.5% for prices between 35,001 and 60,000 FCFA', () => {
-            expect(calculateCommissionRate(40000).toString()).toBe('0.135');
-            expect(calculateCommissionRate(60000).toString()).toBe('0.135');
-        });
-
-        it('should return 11.5% for prices between 60,001 and 100,000 FCFA', () => {
-            expect(calculateCommissionRate(75000).toString()).toBe('0.115');
-            expect(calculateCommissionRate(100000).toString()).toBe('0.115');
-        });
-
-        it('should return 10.0% for prices > 100,000 FCFA', () => {
-            expect(calculateCommissionRate(120000).toString()).toBe('0.1');
+        it('should return a flat 10% whatever the daily price', () => {
+            for (const price of [15000, 20000, 35000, 60000, 100000, 120000]) {
+                expect(calculateCommissionRate(price).toString()).toBe('0.1');
+            }
         });
     });
 
     describe('calculate', () => {
-        it('should calculate correct totals for 15,000 FCFA/day (17.5% commission rounded to 100 FCFA)', () => {
+        it('should calculate correct totals for 15,000 FCFA/day (10% commission)', () => {
             const res = service.calculate(new Prisma.Decimal(15000), 2);
-            expect(res.totalBase.toString()).toBe('30000'); // 15000 * 2
-            expect(res.tauxCommission.toString()).toBe('0.175');
-            expect(res.montantCommission.toString()).toBe('5300'); // 5250 rounded to 5300
-            expect(res.totalLocataire.toString()).toBe('35300');
+            expect(res.totalBase.toString()).toBe('30000');
+            expect(res.tauxCommission.toString()).toBe('0.1');
+            expect(res.montantCommission.toString()).toBe('3000');
+            expect(res.totalLocataire.toString()).toBe('33000');
             expect(res.netProprietaire.toString()).toBe('30000');
         });
 
-        it('should calculate correct totals for 50,000 FCFA/day (13.5% commission rounded to 100 FCFA)', () => {
-            const res = service.calculate(new Prisma.Decimal(50000), 3);
-            expect(res.totalBase.toString()).toBe('150000'); // 50000 * 3
-            expect(res.tauxCommission.toString()).toBe('0.135');
-            expect(res.montantCommission.toString()).toBe('20300'); // 20250 rounded to 20300
-            expect(res.totalLocataire.toString()).toBe('170300');
-            expect(res.netProprietaire.toString()).toBe('150000');
+        it('should round the commission to the nearest 100 FCFA', () => {
+            const res = service.calculate(new Prisma.Decimal(17250), 3);
+            expect(res.totalBase.toString()).toBe('51750');
+            expect(res.montantCommission.toString()).toBe('5200'); // 5175 → 5200
+        });
+
+        it('should bill the hors Dakar supplement only on declared days', () => {
+            const res = service.calculate(new Prisma.Decimal(20000), 5, undefined, 5000, 1);
+            expect(res.prixParJour.toString()).toBe('20000');
+            expect(res.nbJoursHorsDakar).toBe(1);
+            expect(res.montantHorsDakar.toString()).toBe('5000');
+            expect(res.totalBase.toString()).toBe('105000'); // 20000*5 + 5000*1
+            expect(res.montantCommission.toString()).toBe('10500');
+            expect(res.totalLocataire.toString()).toBe('115500');
+        });
+
+        it('should default to the whole duration and clamp to nbJours', () => {
+            expect(service.calculate(new Prisma.Decimal(20000), 3, undefined, 5000).nbJoursHorsDakar).toBe(3);
+            expect(service.calculate(new Prisma.Decimal(20000), 3, undefined, 5000, 10).nbJoursHorsDakar).toBe(3);
+            expect(service.calculate(new Prisma.Decimal(20000), 3, undefined, 0, 2).nbJoursHorsDakar).toBe(0);
         });
     });
 });

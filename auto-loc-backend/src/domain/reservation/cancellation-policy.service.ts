@@ -43,7 +43,7 @@ export class CancellationPolicyService {
      * Le proprio n'a même pas encore confirmé, le locataire récupère tout.
      *
      * USE CASE 2 - APRÈS confirmation (statut CONFIRMEE) :
-     * - > 5 jours  → 100% du totalBase (commission 15% retenue)
+     * - > 5 jours  → 100% du totalBase (commission 10% retenue)
      * - 3-5 jours  → 75% du totalLocataire
      * - 1-3 jours  → 50% du totalLocataire
      * - < 24h      → 0%

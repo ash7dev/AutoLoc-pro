@@ -8,6 +8,7 @@ import { BookingCheckoutStep2 } from './BookingCheckoutStep2';
 import { PaymentMode } from './BookingPaymentModeSelector';
 import { PaymentGateway } from './BookingPaymentGatewaySelector';
 import { fetchApi } from '@/lib/config';
+import { clampJoursHorsDakar, getTenantPricePerDay } from '@/lib/utils';
 import { useUserStore } from '@/src/core/store/useUserStore';
 import { CheckCircle2, Sparkles, X, ExternalLink, ArrowRight } from 'lucide-react';
 
@@ -71,6 +72,8 @@ export function BookingCheckoutModal({
   );
   const [adresseLivraison, setAdresseLivraison] = useState(initialAdresseLivraison || '');
   const [isHorsDakarSelected, setIsHorsDakarSelected] = useState<boolean>(initialHorsDakar);
+  // null = toute la durée de la location
+  const [joursHorsDakar, setJoursHorsDakar] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [successData, setSuccessData] = useState<{ reservationId: string; paymentUrl?: string | null } | null>(null);
 
@@ -100,6 +103,7 @@ export function BookingCheckoutModal({
       setStartDate(startStr);
       setEndDate(endStr);
       setIsHorsDakarSelected(initialHorsDakar);
+      setJoursHorsDakar(null);
       setTypeLivraison(initialTypeLivraison || (initialIncludeDelivery ? 'DAKAR' : 'AUCUNE'));
       if (initialAdresseLivraison !== undefined) {
         setAdresseLivraison(initialAdresseLivraison);
@@ -135,7 +139,8 @@ export function BookingCheckoutModal({
   }
 
   const baseTotal = numTenantPrice * nbJours;
-  const horsDakarTotal = isHorsDakarSelected ? numSupplementHorsDakar * nbJours : 0;
+  const nbJoursHorsDakar = isHorsDakarSelected ? clampJoursHorsDakar(nbJours, joursHorsDakar) : 0;
+  const horsDakarTotal = getTenantPricePerDay(numSupplementHorsDakar) * nbJoursHorsDakar;
   const grandTotal = baseTotal + deliveryTotal + horsDakarTotal;
 
   if (!isOpen) return null;
@@ -187,7 +192,7 @@ export function BookingCheckoutModal({
         modePaiement: modePaiementStr,
         typeLivraison,
         ...(typeLivraison !== 'AUCUNE' ? { adresseLivraison: adresseLivraison.trim() || (typeLivraison === 'AIBD' ? 'Aéroport AIBD' : 'Livraison Dakar') } : {}),
-        ...(isHorsDakarSelected ? { horsDakar: true } : {}),
+        ...(isHorsDakarSelected ? { horsDakar: true, nbJoursHorsDakar } : {}),
       };
 
       const response = await fetchApi<{ reservationId: string; paymentUrl?: string | null }>('/reservations', {
@@ -292,6 +297,8 @@ export function BookingCheckoutModal({
                 onAdresseLivraisonChange={setAdresseLivraison}
                 isHorsDakarSelected={isHorsDakarSelected}
                 onToggleHorsDakar={setIsHorsDakarSelected}
+                joursHorsDakar={joursHorsDakar}
+                onJoursHorsDakarChange={setJoursHorsDakar}
                 onNext={() => setStep(2)}
               />
             )}

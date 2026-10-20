@@ -234,7 +234,8 @@ export function VehicleBookingSidebar({
 
   const dakarFee = toNumber(fraisLivraisonDakar ?? fraisLivraison);
   const aibdFee = toNumber(fraisLivraisonAibd);
-  const horsDakarSupplement = toNumber(supplementHorsDakarParJour);
+  // Supplément affiché au locataire (commission AutoLoc incluse)
+  const horsDakarSupplement = getTenantPricePerDay(toNumber(supplementHorsDakarParJour));
 
   const canDeliverDakar =
     proposeLivraisonDakar || (fraisLivraison !== undefined && fraisLivraison !== null);
@@ -245,10 +246,12 @@ export function VehicleBookingSidebar({
   /* ------------------------------ Totaux --------------------------------- */
 
   const baseTotal = tenantPricePerDay * daysCount;
-  const horsDakarTotal = horsDakar && autoriseHorsDakar ? horsDakarSupplement * daysCount : 0;
+  // Le nombre de jours hors Dakar est précisé à l'étape de réservation :
+  // le supplément est affiché par jour et n'entre pas dans le total estimé.
+  const showHorsDakar = horsDakar && autoriseHorsDakar && horsDakarSupplement > 0;
   const deliveryTotal =
     typeLivraison === 'DAKAR' ? dakarFee : typeLivraison === 'AIBD' ? aibdFee : 0;
-  const totalAmount = baseTotal + horsDakarTotal + deliveryTotal;
+  const totalAmount = baseTotal + deliveryTotal;
 
   /* ------------------------------ Actions -------------------------------- */
 
@@ -448,11 +451,11 @@ export function VehicleBookingSidebar({
               label={`${formatCurrency(tenantPricePerDay)} FCFA × ${plural(daysCount, 'jour')}`}
               value={`${formatCurrency(baseTotal)} FCFA`}
             />
-            {horsDakarTotal > 0 && (
+            {showHorsDakar && (
               <SummaryLine
                 small
-                label={`Trajets hors Dakar (${daysCount} j)`}
-                value={`+${formatCurrency(horsDakarTotal)} FCFA`}
+                label="Hors Dakar (jours à préciser ensuite)"
+                value={`+${formatCurrency(horsDakarSupplement)} F/j`}
               />
             )}
             {deliveryTotal > 0 && (

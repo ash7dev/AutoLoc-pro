@@ -21,7 +21,7 @@ import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { SearchVehiclesDto } from './dto/search-vehicles.dto';
 import { CreateIndisponibiliteDto } from './dto/create-indisponibilite.dto';
 import { GetVehicleModerationQueueDto } from './dto/get-admin-vehicles.dto';
-import { ReservationPricingService } from '../../domain/reservation/reservation-pricing.service';
+import { ReservationPricingService, resolveNbJoursHorsDakar } from '../../domain/reservation/reservation-pricing.service';
 import { RevalidateService } from '../../infrastructure/revalidate/revalidate.service';
 import { QueueService } from '../../infrastructure/queue/queue.service';
 import { FeedScoringService } from './feed-scoring.service';
@@ -547,12 +547,14 @@ export class VehiclesService {
   }
 
   /**
-   * GET /vehicles/:id/pricing?days=N&horsDakar=true|false — Tarification dynamique publique.
+   * GET /vehicles/:id/pricing?days=N&horsDakar=true|false&joursHorsDakar=M — Tarification dynamique publique.
    * Utilise les TarifTier du véhicule pour résoudre le prix effectif.
+   * Le supplément hors Dakar n'est facturé que sur M jours (défaut : N).
    */
-  async getPricing(vehicleId: string, nbJours: number, horsDakar: boolean = false) {
-    // Cache key unique par véhicule + nbJours + horsDakar
-    const cacheKey = `${PRICING_CACHE_PREFIX}${vehicleId}:${nbJours}:${horsDakar ? '1' : '0'}`;
+  async getPricing(vehicleId: string, nbJours: number, horsDakar: boolean = false, joursHorsDakar?: number) {
+    const joursHorsDakarResolved = horsDakar ? resolveNbJoursHorsDakar(nbJours, joursHorsDakar) : 0;
+    // Cache key unique par véhicule + nbJours + jours hors Dakar
+    const cacheKey = `${PRICING_CACHE_PREFIX}${vehicleId}:${nbJours}:${joursHorsDakarResolved}`;
 
     // Tentative de récupération depuis le cache
     try {
@@ -593,12 +595,15 @@ export class VehiclesService {
       nbJours,
       vehicle.tarifsProgressifs,
       supplement,
+      joursHorsDakarResolved,
     );
 
     const response = {
       nbJours,
       autoriseHorsDakar: vehicle.autoriseHorsDakar,
       supplementHorsDakar: supplement,
+      nbJoursHorsDakar: result.nbJoursHorsDakar,
+      montantHorsDakar: Number(result.montantHorsDakar),
       prixParJour: Number(result.prixParJour),
       totalBase: Number(result.totalBase),
       tauxCommission: Number(result.tauxCommission),

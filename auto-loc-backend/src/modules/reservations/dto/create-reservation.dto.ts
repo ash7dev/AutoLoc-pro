@@ -2,6 +2,7 @@ import {
   IsBoolean,
   IsDateString,
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -78,6 +79,13 @@ export class CreateReservationDto {
   @IsOptional()
   @IsBoolean()
   horsDakar?: boolean;
+
+  /** Nombre de jours passés hors Dakar (1..nbJours). Défaut : toute la durée. */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  nbJoursHorsDakar?: number;
 
   // ── Growth Attribution (optionnel) ─────────────────────────────────────────
 

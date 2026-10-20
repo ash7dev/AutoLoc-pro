@@ -37,6 +37,9 @@ export interface ContractPricing {
     modePaiement?: string;
     montantPayeEnLigne?: string;
     montantSoldeCheckin?: string;
+    /** Jours déclarés hors Dakar et montant du supplément correspondant. */
+    nbJoursHorsDakar?: number | null;
+    montantHorsDakar?: string | null;
 }
 
 export interface ContractData {
@@ -343,6 +346,13 @@ export class ContractPdfService {
                 bold: true,
             },
         ];
+
+        if (t.nbJoursHorsDakar && Number(t.montantHorsDakar ?? 0) > 0) {
+            rows.push({
+                label: `Dont supplément hors Dakar (${t.nbJoursHorsDakar}j déclaré${t.nbJoursHorsDakar > 1 ? 's' : ''})`,
+                value: `${Number(t.montantHorsDakar).toLocaleString('fr-FR')} FCFA`,
+            });
+        }
 
         if (isDeposit) {
             const payeEnLigne = Number(t.montantPayeEnLigne ?? Math.round(Number(t.totalLocataire) * 0.3));

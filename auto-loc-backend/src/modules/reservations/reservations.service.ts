@@ -52,6 +52,36 @@ import { ConfigService } from '@nestjs/config';
 
 export { CreateReservationResult };
 
+// ── Hors Dakar ────────────────────────────────────────────────────────────────
+
+/**
+ * Décompose le supplément hors Dakar d'une réservation.
+ * Réservations antérieures à `nbJoursHorsDakar` : le supplément était inclus dans
+ * `prixParJour` et facturé sur toute la durée — on le retire pour l'affichage.
+ */
+export function describeHorsDakar(r: Record<string, unknown>, nbJours: number) {
+  const prixParJour = Number(r.prixParJour ?? 0);
+  const supplement = Number(r.supplementHorsDakar ?? 0);
+  if (!r.horsDakar || supplement <= 0) {
+    return {
+      horsDakar: false,
+      supplementParJour: null,
+      nbJoursHorsDakar: null,
+      montantHorsDakar: null,
+      prixParJourLocation: String(r.prixParJour ?? '0'),
+    };
+  }
+  const isLegacy = r.nbJoursHorsDakar == null;
+  const jours = isLegacy ? nbJours : Number(r.nbJoursHorsDakar);
+  return {
+    horsDakar: true,
+    supplementParJour: String(supplement),
+    nbJoursHorsDakar: jours,
+    montantHorsDakar: String(supplement * jours),
+    prixParJourLocation: String(isLegacy ? prixParJour - supplement : prixParJour),
+  };
+}
+
 // ── Serializer ────────────────────────────────────────────────────────────────
 // Maps Prisma field names to the frontend-facing contract.
 
@@ -92,6 +122,7 @@ function serializeReservation(r: Record<string, unknown> & {
   const debut = new Date(r.dateDebut as string);
   const fin = new Date(r.dateFin as string);
   const nbJours = Math.max(1, Math.round((fin.getTime() - debut.getTime()) / 86_400_000));
+  const horsDakar = describeHorsDakar(r, nbJours);
 
   return {
     id: r.id,
@@ -99,7 +130,13 @@ function serializeReservation(r: Record<string, unknown> & {
     dateDebut: r.dateDebut,
     dateFin: r.dateFin,
     nbJours,
-    prixParJour: String(r.prixParJour ?? '0'),
+    prixParJour: horsDakar.prixParJourLocation,
+    totalBase: r.totalBase != null ? String(r.totalBase) : undefined,
+    tauxCommission: r.tauxCommission != null ? String(r.tauxCommission) : undefined,
+    horsDakar: horsDakar.horsDakar,
+    supplementHorsDakarParJour: horsDakar.supplementParJour,
+    nbJoursHorsDakar: horsDakar.nbJoursHorsDakar,
+    montantHorsDakar: horsDakar.montantHorsDakar,
     prixTotal: String(r.totalLocataire ?? '0'),
     commission: String(r.montantCommission ?? '0'),
     montantProprietaire: String(r.netProprietaire ?? '0'),
@@ -125,6 +162,7 @@ function serializeReservation(r: Record<string, unknown> & {
     paymentUrl: (r as Record<string, unknown>).paymentUrl as string | undefined ?? undefined,
     proprietaireId: r.proprietaireId,
     adresseLivraison: (r as Record<string, unknown>).adresseLivraison ?? null,
+    typeLivraison: (r as Record<string, unknown>).typeLivraison ?? null,
     fraisLivraison: (r as Record<string, unknown>).fraisLivraison != null
       ? String((r as Record<string, unknown>).fraisLivraison)
       : null,
@@ -275,6 +313,9 @@ export class ReservationsService {
         modePaiement: true,
         montantPayeEnLigne: true,
         montantSoldeCheckin: true,
+        horsDakar: true,
+        supplementHorsDakar: true,
+        nbJoursHorsDakar: true,
         annuleLe: true,
         raisonAnnulation: true,
         creeLe: true,
@@ -304,6 +345,7 @@ export class ReservationsService {
       ANNULEE: 'ANNULE',
     };
     const statutContrat: StatutContrat = statutMap[reservation.statut] ?? 'EN_COURS';
+    const horsDakar = describeHorsDakar(reservation, nbJours);
 
     const contractData: ContractData = {
       reservationId: reservation.id,
@@ -337,8 +379,10 @@ export class ReservationsService {
         dateDebut: debut.toLocaleDateString('fr-FR'),
         dateFin: fin.toLocaleDateString('fr-FR'),
         nbJours,
-        prixParJour: String(reservation.prixParJour),
+        prixParJour: horsDakar.prixParJourLocation,
         totalBase: String(reservation.totalBase),
+        nbJoursHorsDakar: horsDakar.nbJoursHorsDakar,
+        montantHorsDakar: horsDakar.montantHorsDakar,
         commission: String(reservation.montantCommission),
         totalLocataire: String(reservation.totalLocataire),
         netProprietaire: String(reservation.netProprietaire),

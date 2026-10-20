@@ -25,6 +25,8 @@ import { ReservationVehicle } from '@/src/core/api/reservationsApi';
 export interface OwnerVehicleDetailsCardProps {
   vehicule: ReservationVehicle;
   adresseLivraison?: string | null;
+  /** Option hors Dakar souscrite sur cette réservation. */
+  horsDakar?: boolean;
   statut?: string;
 }
 
@@ -58,6 +60,7 @@ const SpecItem: React.FC<{
 export const OwnerVehicleDetailsCard: React.FC<OwnerVehicleDetailsCardProps> = ({
   vehicule,
   adresseLivraison,
+  horsDakar,
 }) => {
   const v = vehicule as any;
 
@@ -200,7 +203,7 @@ export const OwnerVehicleDetailsCard: React.FC<OwnerVehicleDetailsCardProps> = (
           )}
 
           {/* Zone de Conduite */}
-          {v?.horsDakar ? (
+          {horsDakar ?? v?.horsDakar ? (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-main text-champagne text-xs font-bold shadow-2xs">
               <Navigation className="w-3.5 h-3.5 text-emerald-400" />
               <span>Autorisation Trajet Hors Dakar</span>

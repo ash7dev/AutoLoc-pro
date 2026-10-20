@@ -34,6 +34,9 @@ export interface TenantReservationDetailData {
   typeLivraison?: string;
   adresseLivraison?: string;
   horsDakar?: boolean;
+  supplementHorsDakarParJour?: string | number | null;
+  nbJoursHorsDakar?: number | null;
+  montantHorsDakar?: string | number | null;
   modePaiement?: string;
   paymentUrl?: string;
   checkinProprietaireLe?: string;

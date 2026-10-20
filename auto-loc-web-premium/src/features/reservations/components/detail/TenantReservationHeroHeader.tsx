@@ -34,6 +34,7 @@ export interface TenantReservationHeroHeaderProps {
   adresseLivraison?: string;
   typeLivraison?: string;
   horsDakar?: boolean;
+  nbJoursHorsDakar?: number | null;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -204,6 +205,7 @@ export function TenantReservationHeroHeader({
   adresseLivraison,
   typeLivraison,
   horsDakar,
+  nbJoursHorsDakar,
 }: TenantReservationHeroHeaderProps) {
   const titleId = useId();
 
@@ -347,7 +349,9 @@ export function TenantReservationHeroHeader({
             {horsDakar && (
               <li className={chipClass}>
                 <Navigation className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-                Hors Dakar autorisé
+                {nbJoursHorsDakar
+                  ? `Hors Dakar · ${nbJoursHorsDakar} jour${nbJoursHorsDakar > 1 ? 's' : ''}`
+                  : 'Hors Dakar autorisé'}
               </li>
             )}
           </ul>
