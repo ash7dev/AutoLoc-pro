@@ -116,7 +116,8 @@ export class ReservationPricingService {
      * Calcule tous les montants de la réservation.
      * Utilise les tarifs progressifs si fournis, sinon le prix par jour de base.
      * Le supplément hors Dakar n'est facturé que sur les jours déclarés hors Dakar.
-     * Commission fixe de 10% sur le total (location + supplément), arrondie aux 100 FCFA.
+     * Commission fixe de 10% sur la location seule (le supplément hors Dakar en est exempté
+     * et revient intégralement au propriétaire), arrondie aux 100 FCFA.
      */
     calculate(
         prixParJour: Prisma.Decimal,
@@ -132,9 +133,10 @@ export class ReservationPricingService {
             : 0;
         const montantHorsDakar = new Prisma.Decimal(supplementHorsDakar).mul(joursHorsDakar);
 
-        const totalBase = effectivePrice.mul(nbJours).add(montantHorsDakar);
+        const totalLocation = effectivePrice.mul(nbJours);
+        const totalBase = totalLocation.add(montantHorsDakar);
         const tauxCommission = calculateCommissionRate(effectivePrice);
-        const rawCommission = totalBase.mul(tauxCommission).toNumber();
+        const rawCommission = totalLocation.mul(tauxCommission).toNumber();
 
         const montantCommissionNum = roundToNearest100(rawCommission);
         const montantCommission = new Prisma.Decimal(montantCommissionNum);

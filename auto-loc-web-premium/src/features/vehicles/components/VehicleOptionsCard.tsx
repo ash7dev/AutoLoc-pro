@@ -3,7 +3,7 @@
 import React from 'react';
 import { Navigation, Truck, MapPin, Plane } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { formatCurrency, getTenantPricePerDay } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 
 interface VehicleOptionsCardProps {
   autoriseHorsDakar?: boolean;
@@ -100,7 +100,7 @@ export function VehicleOptionsCard({
 
   const supplementValue =
     supplementHorsDakarParJour && supplementHorsDakarParJour > 0
-      ? `+${formatCurrency(getTenantPricePerDay(supplementHorsDakarParJour))} FCFA`
+      ? `+${formatCurrency(supplementHorsDakarParJour)} FCFA`
       : 'Inclus';
 
   return (

@@ -17,7 +17,7 @@ import {
   Truck,
   type LucideIcon,
 } from 'lucide-react';
-import { clampJoursHorsDakar, formatCurrency, getTenantPricePerDay } from '@/lib/utils';
+import { clampJoursHorsDakar, formatCurrency } from '@/lib/utils';
 import { fetchApi } from '@/lib/config';
 import { AutoCalendar } from '@/src/shared/components/AutoCalendar';
 import { BookingPriceBreakdownCard } from './BookingPriceBreakdownCard';
@@ -343,7 +343,7 @@ export function BookingCheckoutStep1({
 
   const dakarFee = toNumber(vehicle.fraisLivraisonDakar ?? vehicle.fraisLivraison);
   const aibdFee = toNumber(vehicle.fraisLivraisonAibd);
-  const horsDakarSupplement = getTenantPricePerDay(toNumber(vehicle.supplementHorsDakarParJour));
+  const horsDakarSupplement = toNumber(vehicle.supplementHorsDakarParJour);
 
   const canDeliverDakar =
     Boolean(vehicle.proposeLivraisonDakar) ||

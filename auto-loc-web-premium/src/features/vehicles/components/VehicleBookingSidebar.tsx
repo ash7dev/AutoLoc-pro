@@ -234,8 +234,8 @@ export function VehicleBookingSidebar({
 
   const dakarFee = toNumber(fraisLivraisonDakar ?? fraisLivraison);
   const aibdFee = toNumber(fraisLivraisonAibd);
-  // Supplément affiché au locataire (commission AutoLoc incluse)
-  const horsDakarSupplement = getTenantPricePerDay(toNumber(supplementHorsDakarParJour));
+  // Supplément hors Dakar sans commission AutoLoc
+  const horsDakarSupplement = toNumber(supplementHorsDakarParJour);
 
   const canDeliverDakar =
     proposeLivraisonDakar || (fraisLivraison !== undefined && fraisLivraison !== null);

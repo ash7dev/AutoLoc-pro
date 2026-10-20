@@ -8,7 +8,7 @@ import { BookingCheckoutStep2 } from './BookingCheckoutStep2';
 import { PaymentMode } from './BookingPaymentModeSelector';
 import { PaymentGateway } from './BookingPaymentGatewaySelector';
 import { fetchApi } from '@/lib/config';
-import { clampJoursHorsDakar, getTenantPricePerDay } from '@/lib/utils';
+import { clampJoursHorsDakar } from '@/lib/utils';
 import { useUserStore } from '@/src/core/store/useUserStore';
 import { CheckCircle2, Sparkles, X, ExternalLink, ArrowRight } from 'lucide-react';
 
@@ -140,7 +140,8 @@ export function BookingCheckoutModal({
 
   const baseTotal = numTenantPrice * nbJours;
   const nbJoursHorsDakar = isHorsDakarSelected ? clampJoursHorsDakar(nbJours, joursHorsDakar) : 0;
-  const horsDakarTotal = getTenantPricePerDay(numSupplementHorsDakar) * nbJoursHorsDakar;
+  // Supplément hors Dakar sans commission AutoLoc
+  const horsDakarTotal = numSupplementHorsDakar * nbJoursHorsDakar;
   const grandTotal = baseTotal + deliveryTotal + horsDakarTotal;
 
   if (!isOpen) return null;

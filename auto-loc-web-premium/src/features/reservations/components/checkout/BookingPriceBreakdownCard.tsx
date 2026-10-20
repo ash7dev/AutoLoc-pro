@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ShieldCheck, Sparkles } from 'lucide-react';
-import { formatCurrency, getTenantPricePerDay } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 
 interface BookingPriceBreakdownCardProps {
   tenantPricePerDay: number;
@@ -37,7 +37,8 @@ export function BookingPriceBreakdownCard({
     deliveryTotal = Number(fraisLivraisonAibd ?? 0);
   }
 
-  const horsDakarPerDay = getTenantPricePerDay(Number(supplementHorsDakarParJour ?? 0));
+  // Supplément hors Dakar sans commission AutoLoc
+  const horsDakarPerDay = Number(supplementHorsDakarParJour ?? 0);
   const joursHorsDakar = nbJoursHorsDakar ?? nbJours;
   const horsDakarTotal = isHorsDakarSelected ? horsDakarPerDay * joursHorsDakar : 0;
 

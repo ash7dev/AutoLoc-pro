@@ -64,7 +64,8 @@ export const TenantFinancialDetailsCard: React.FC<TenantFinancialDetailsCardProp
 
   // Supplément hors Dakar, facturé uniquement sur les jours déclarés
   const nbJoursHorsDakar = Number(booking.nbJoursHorsDakar || 0);
-  const tenantSupplementParJour = getTenantPricePerDay(Number(booking.supplementHorsDakarParJour || 0));
+  // Supplément sans commission AutoLoc
+  const tenantSupplementParJour = Number(booking.supplementHorsDakarParJour || 0);
   const totalHorsDakar = tenantSupplementParJour * nbJoursHorsDakar;
 
   // Information paiement (Wave, Orange Money, etc.)

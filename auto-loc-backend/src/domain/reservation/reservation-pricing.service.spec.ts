@@ -32,14 +32,15 @@ describe('ReservationPricingService', () => {
             expect(res.montantCommission.toString()).toBe('5200'); // 5175 → 5200
         });
 
-        it('should bill the hors Dakar supplement only on declared days', () => {
+        it('should bill the hors Dakar supplement only on declared days, without commission', () => {
             const res = service.calculate(new Prisma.Decimal(20000), 5, undefined, 5000, 1);
             expect(res.prixParJour.toString()).toBe('20000');
             expect(res.nbJoursHorsDakar).toBe(1);
             expect(res.montantHorsDakar.toString()).toBe('5000');
             expect(res.totalBase.toString()).toBe('105000'); // 20000*5 + 5000*1
-            expect(res.montantCommission.toString()).toBe('10500');
-            expect(res.totalLocataire.toString()).toBe('115500');
+            expect(res.montantCommission.toString()).toBe('10000'); // 10% de 100000 seulement
+            expect(res.totalLocataire.toString()).toBe('115000');
+            expect(res.netProprietaire.toString()).toBe('105000');
         });
 
         it('should default to the whole duration and clamp to nbJours', () => {
