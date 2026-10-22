@@ -284,6 +284,7 @@ export function TenantBookingDetailView({ reservationId }: TenantBookingDetailVi
         typeLivraison={booking.typeLivraison}
         horsDakar={booking.horsDakar}
         nbJoursHorsDakar={booking.nbJoursHorsDakar}
+        avecChauffeur={booking.avecChauffeur}
       />
 
       {/* Main Grid Content */}

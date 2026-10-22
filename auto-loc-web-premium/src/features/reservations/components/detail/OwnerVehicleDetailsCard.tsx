@@ -27,6 +27,8 @@ export interface OwnerVehicleDetailsCardProps {
   adresseLivraison?: string | null;
   /** Option hors Dakar souscrite sur cette réservation. */
   horsDakar?: boolean;
+  /** Option chauffeur souscrite sur cette réservation. */
+  avecChauffeur?: boolean;
   statut?: string;
 }
 
@@ -61,6 +63,7 @@ export const OwnerVehicleDetailsCard: React.FC<OwnerVehicleDetailsCardProps> = (
   vehicule,
   adresseLivraison,
   horsDakar,
+  avecChauffeur,
 }) => {
   const v = vehicule as any;
 
@@ -195,10 +198,10 @@ export const OwnerVehicleDetailsCard: React.FC<OwnerVehicleDetailsCardProps> = (
           )}
 
           {/* Option Chauffeur */}
-          {(v?.avecChauffeur || v?.chauffeurInclus) && (
+          {avecChauffeur && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold shadow-2xs">
               <UserCheck className="w-3.5 h-3.5 text-amber-600" />
-              <span>Option Chauffeur Privé Inclus</span>
+              <span>Location avec chauffeur</span>
             </span>
           )}
 

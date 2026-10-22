@@ -195,6 +195,7 @@ export default function OwnerReservationDetailPage() {
               adresseLivraison={reservation.adresseLivraison || undefined}
               horsDakar={reservation.horsDakar}
               nbJoursHorsDakar={reservation.nbJoursHorsDakar}
+              avecChauffeur={reservation.avecChauffeur}
             />
 
             {/* ── Composant de Suivi du Lifecycle Propriétaire & Actions ────── */}
@@ -238,6 +239,7 @@ export default function OwnerReservationDetailPage() {
                 vehicule={reservation.vehicule}
                 adresseLivraison={reservation.adresseLivraison}
                 horsDakar={reservation.horsDakar}
+                avecChauffeur={reservation.avecChauffeur}
                 statut={reservation.statut}
               />
             )}

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Navigation, Truck, MapPin, Plane } from 'lucide-react';
+import { Navigation, Truck, MapPin, Plane, UserCheck } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -13,6 +13,8 @@ interface VehicleOptionsCardProps {
   proposeLivraisonAibd?: boolean | null;
   fraisLivraisonAibd?: number | null;
   fraisLivraison?: number | null;
+  chauffeurDisponible?: boolean;
+  prixChauffeurParJour?: number | null;
 }
 
 type StatusTone = 'positive' | 'restricted' | 'neutral';
@@ -88,6 +90,8 @@ export function VehicleOptionsCard({
   proposeLivraisonAibd,
   fraisLivraisonAibd,
   fraisLivraison,
+  chauffeurDisponible = false,
+  prixChauffeurParJour,
 }: VehicleOptionsCardProps) {
   const isDakarAvailable =
     proposeLivraisonDakar ?? (fraisLivraison !== null && fraisLivraison !== undefined);
@@ -195,6 +199,27 @@ export function VehicleOptionsCard({
           </div>
         </div>
       </div>
+
+      {/* Location avec chauffeur (seulement si le propriétaire la propose) */}
+      {chauffeurDisponible && (
+        <div className="flex items-center justify-between gap-4 border-t border-slate-200/80 px-5 py-5 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <IconBadge icon={UserCheck} />
+            <div className="min-w-0">
+              <h4 className="font-fraunces font-normal text-lg text-brand-dark tracking-tight">
+                Location avec chauffeur
+              </h4>
+              <p className="text-sm text-slate-500">En option, sur toute la durée de la location</p>
+            </div>
+          </div>
+          <div className="shrink-0 text-right">
+            <p className="font-display text-xl leading-tight text-brand-main">
+              {Number(prixChauffeurParJour) > 0 ? `+${formatCurrency(Number(prixChauffeurParJour))} FCFA` : 'Inclus'}
+            </p>
+            <p className="mt-0.5 text-xs text-slate-500">par jour</p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -20,6 +20,7 @@ import {
   Layers,
   AlertTriangle,
   MapPin,
+  UserCheck,
   Plane,
   Home,
 } from 'lucide-react';
@@ -441,6 +442,28 @@ export const OwnerVehicleDetailView: React.FC<OwnerVehicleDetailViewProps> = ({ 
                       {vehicle.supplementHorsDakarParJour || (vehicle as any).prixParJourHorsDakar
                         ? `+ ${formatCurrency(vehicle.supplementHorsDakarParJour || (vehicle as any).prixParJourHorsDakar || 0)} / jour`
                         : 'Inclus (0 FCFA)'}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3.5 py-4">
+                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500">
+                  <UserCheck className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[13.5px] font-semibold text-brand-dark">Location avec chauffeur</span>
+                    <span className={`text-[11.5px] font-semibold ${vehicle.chauffeurDisponible ? 'text-brand-main' : 'text-slate-400'}`}>
+                      {vehicle.chauffeurDisponible ? 'Proposée' : 'Non proposée'}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-[12px] text-slate-500">
+                    Chauffeur fourni par vous, facturé sans commission AutoLoc.
+                  </p>
+                  {vehicle.chauffeurDisponible && (
+                    <p className="mt-1 text-[13px] font-medium text-brand-dark">
+                      + {formatCurrency(Number(vehicle.prixChauffeurParJour || 0))} / jour
                     </p>
                   )}
                 </div>

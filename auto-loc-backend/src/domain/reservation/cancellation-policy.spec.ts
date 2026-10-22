@@ -44,6 +44,26 @@ describe('CancellationPolicyService', () => {
             expect(result.warnings).toHaveLength(0);
         });
 
+        it('> 5 days: delivery fee is refunded, only the commission is kept', () => {
+            const reservation = makeReservation(daysFromNow(10), {
+                totalLocataire: new Prisma.Decimal('96250'), // 75000 + 11250 commission + 10000 livraison
+                netProprietaire: new Prisma.Decimal('85000'),
+            });
+            const result = service.calculateForTenant(reservation, now, true);
+
+            expect(result.refundAmount.equals(new Prisma.Decimal('85000'))).toBe(true);
+            expect(result.commissionRetained.equals(new Prisma.Decimal('11250'))).toBe(true);
+        });
+
+        it('late cancellation: AutoLoc keeps only its commission out of the retained amount', () => {
+            const r3 = service.calculateForTenant(makeReservation(daysFromNow(3)), now, true);
+            // 25% de 86250 retenus = 21562.50, dont 11250 de commission
+            expect(r3.commissionRetained.equals(new Prisma.Decimal('11250'))).toBe(true);
+
+            const r0 = service.calculateForTenant(makeReservation(daysFromNow(0.5)), now, true);
+            expect(r0.commissionRetained.equals(new Prisma.Decimal('11250'))).toBe(true);
+        });
+
         it('2-5 days: 75% refund', () => {
             const reservation = makeReservation(daysFromNow(3));
             const result = service.calculateForTenant(reservation, now, true);

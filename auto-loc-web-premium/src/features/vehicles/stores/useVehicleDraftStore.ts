@@ -23,6 +23,8 @@ export interface Step3Data {
   adresse: string;
   autoriseHorsDakar: boolean;
   supplementHorsDakarParJour: number;
+  chauffeurDisponible?: boolean;
+  prixChauffeurParJour?: number;
   fraisLivraison: number;
   proposeLivraison?: boolean;
   proposeLivraisonDakar?: boolean;
@@ -100,6 +102,8 @@ const initialDraft: VehicleWizardDraft = {
     adresse: '',
     autoriseHorsDakar: false,
     supplementHorsDakarParJour: 0,
+    chauffeurDisponible: false,
+    prixChauffeurParJour: 0,
     fraisLivraison: 0,
     proposeLivraison: false,
     proposeLivraisonDakar: false,

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { fetchApi } from '@/lib/config';
+import type { ReservationDecompte } from '@/src/core/api/reservationsApi';
 import { useCacheInvalidator } from '@/src/core/hooks/useCacheInvalidator';
 
 export interface PhotoEtatLieu {
@@ -37,6 +38,12 @@ export interface TenantReservationDetailData {
   supplementHorsDakarParJour?: string | number | null;
   nbJoursHorsDakar?: number | null;
   montantHorsDakar?: string | number | null;
+  avecChauffeur?: boolean;
+  prixChauffeurParJour?: string | number | null;
+  montantChauffeur?: string | number | null;
+  tauxCommission?: string | number;
+  commission?: string | number;
+  decompte?: ReservationDecompte;
   modePaiement?: string;
   paymentUrl?: string;
   checkinProprietaireLe?: string;

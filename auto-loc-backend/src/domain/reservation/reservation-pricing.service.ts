@@ -44,6 +44,15 @@ export interface TarifTierInput {
     prix: Prisma.Decimal | number;
 }
 
+export interface PricingOptions {
+    /** Supplément hors Dakar par jour (0 si non souscrit). */
+    supplementHorsDakar?: number;
+    /** Jours déclarés hors Dakar (défaut : toute la durée). */
+    nbJoursHorsDakar?: number | null;
+    /** Prix du chauffeur par jour (0 si non souscrit), facturé sur toute la durée. */
+    prixChauffeurParJour?: number;
+}
+
 export interface PricingResult {
     /** Prix journalier de location (tarif progressif appliqué), hors supplément. */
     prixParJour: Prisma.Decimal;
@@ -51,6 +60,8 @@ export interface PricingResult {
     nbJoursHorsDakar: number;
     /** supplément/jour × nbJoursHorsDakar. */
     montantHorsDakar: Prisma.Decimal;
+    /** prixChauffeurParJour × nbJours. */
+    montantChauffeur: Prisma.Decimal;
     totalBase: Prisma.Decimal;
     tauxCommission: Prisma.Decimal;
     montantCommission: Prisma.Decimal;
@@ -116,16 +127,17 @@ export class ReservationPricingService {
      * Calcule tous les montants de la réservation.
      * Utilise les tarifs progressifs si fournis, sinon le prix par jour de base.
      * Le supplément hors Dakar n'est facturé que sur les jours déclarés hors Dakar.
-     * Commission fixe de 10% sur la location seule (le supplément hors Dakar en est exempté
-     * et revient intégralement au propriétaire), arrondie aux 100 FCFA.
+     * Le chauffeur est facturé sur toute la durée.
+     * Commission fixe de 10% sur la location seule : supplément hors Dakar et chauffeur
+     * en sont exemptés et reviennent intégralement au propriétaire. Arrondie aux 100 FCFA.
      */
     calculate(
         prixParJour: Prisma.Decimal,
         nbJours: number,
         tiers?: TarifTierInput[],
-        supplementHorsDakar: number = 0,
-        nbJoursHorsDakar?: number | null,
+        options: PricingOptions = {},
     ): PricingResult {
+        const { supplementHorsDakar = 0, nbJoursHorsDakar, prixChauffeurParJour = 0 } = options;
         const effectivePrice = this.resolveTieredPrice(prixParJour, nbJours, tiers);
 
         const joursHorsDakar = supplementHorsDakar > 0
@@ -133,8 +145,10 @@ export class ReservationPricingService {
             : 0;
         const montantHorsDakar = new Prisma.Decimal(supplementHorsDakar).mul(joursHorsDakar);
 
+        const montantChauffeur = new Prisma.Decimal(Math.max(0, prixChauffeurParJour)).mul(nbJours);
+
         const totalLocation = effectivePrice.mul(nbJours);
-        const totalBase = totalLocation.add(montantHorsDakar);
+        const totalBase = totalLocation.add(montantHorsDakar).add(montantChauffeur);
         const tauxCommission = calculateCommissionRate(effectivePrice);
         const rawCommission = totalLocation.mul(tauxCommission).toNumber();
 
@@ -147,6 +161,7 @@ export class ReservationPricingService {
             prixParJour: effectivePrice,
             nbJoursHorsDakar: joursHorsDakar,
             montantHorsDakar,
+            montantChauffeur,
             totalBase,
             tauxCommission,
             montantCommission,

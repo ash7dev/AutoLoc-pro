@@ -33,7 +33,7 @@ describe('ReservationPricingService', () => {
         });
 
         it('should bill the hors Dakar supplement only on declared days, without commission', () => {
-            const res = service.calculate(new Prisma.Decimal(20000), 5, undefined, 5000, 1);
+            const res = service.calculate(new Prisma.Decimal(20000), 5, undefined, { supplementHorsDakar: 5000, nbJoursHorsDakar: 1 });
             expect(res.prixParJour.toString()).toBe('20000');
             expect(res.nbJoursHorsDakar).toBe(1);
             expect(res.montantHorsDakar.toString()).toBe('5000');
@@ -44,9 +44,18 @@ describe('ReservationPricingService', () => {
         });
 
         it('should default to the whole duration and clamp to nbJours', () => {
-            expect(service.calculate(new Prisma.Decimal(20000), 3, undefined, 5000).nbJoursHorsDakar).toBe(3);
-            expect(service.calculate(new Prisma.Decimal(20000), 3, undefined, 5000, 10).nbJoursHorsDakar).toBe(3);
-            expect(service.calculate(new Prisma.Decimal(20000), 3, undefined, 0, 2).nbJoursHorsDakar).toBe(0);
+            expect(service.calculate(new Prisma.Decimal(20000), 3, undefined, { supplementHorsDakar: 5000 }).nbJoursHorsDakar).toBe(3);
+            expect(service.calculate(new Prisma.Decimal(20000), 3, undefined, { supplementHorsDakar: 5000, nbJoursHorsDakar: 10 }).nbJoursHorsDakar).toBe(3);
+            expect(service.calculate(new Prisma.Decimal(20000), 3, undefined, { supplementHorsDakar: 0, nbJoursHorsDakar: 2 }).nbJoursHorsDakar).toBe(0);
+        });
+
+        it('should bill the chauffeur on the whole duration, without commission', () => {
+            const res = service.calculate(new Prisma.Decimal(20000), 3, undefined, { prixChauffeurParJour: 15000 });
+            expect(res.montantChauffeur.toString()).toBe('45000');
+            expect(res.totalBase.toString()).toBe('105000'); // 60000 + 45000
+            expect(res.montantCommission.toString()).toBe('6000'); // 10% de 60000 seulement
+            expect(res.totalLocataire.toString()).toBe('111000');
+            expect(res.netProprietaire.toString()).toBe('105000');
         });
     });
 });

@@ -87,6 +87,12 @@ export class CreateReservationDto {
   @Type(() => Number)
   nbJoursHorsDakar?: number;
 
+  // ── Chauffeur (optionnel) ──────────────────────────────────────────────────
+
+  @IsOptional()
+  @IsBoolean()
+  avecChauffeur?: boolean;
+
   // ── Growth Attribution (optionnel) ─────────────────────────────────────────
 
   @IsOptional()

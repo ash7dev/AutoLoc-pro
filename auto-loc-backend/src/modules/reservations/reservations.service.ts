@@ -5,6 +5,11 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import {
+  buildReservationDecompte,
+  describeChauffeur,
+  describeHorsDakar,
+} from '../../domain/reservation/reservation-decompte';
 import { StatutReservation, StatutVehicule, StatutLitige, TypeEtatLieu, CategoriePhoto } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RequestUser } from '../../common/types/auth.types';
@@ -51,36 +56,6 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
 export { CreateReservationResult };
-
-// ── Hors Dakar ────────────────────────────────────────────────────────────────
-
-/**
- * Décompose le supplément hors Dakar d'une réservation.
- * Réservations antérieures à `nbJoursHorsDakar` : le supplément était inclus dans
- * `prixParJour` et facturé sur toute la durée — on le retire pour l'affichage.
- */
-export function describeHorsDakar(r: Record<string, unknown>, nbJours: number) {
-  const prixParJour = Number(r.prixParJour ?? 0);
-  const supplement = Number(r.supplementHorsDakar ?? 0);
-  if (!r.horsDakar || supplement <= 0) {
-    return {
-      horsDakar: false,
-      supplementParJour: null,
-      nbJoursHorsDakar: null,
-      montantHorsDakar: null,
-      prixParJourLocation: String(r.prixParJour ?? '0'),
-    };
-  }
-  const isLegacy = r.nbJoursHorsDakar == null;
-  const jours = isLegacy ? nbJours : Number(r.nbJoursHorsDakar);
-  return {
-    horsDakar: true,
-    supplementParJour: String(supplement),
-    nbJoursHorsDakar: jours,
-    montantHorsDakar: String(supplement * jours),
-    prixParJourLocation: String(isLegacy ? prixParJour - supplement : prixParJour),
-  };
-}
 
 // ── Serializer ────────────────────────────────────────────────────────────────
 // Maps Prisma field names to the frontend-facing contract.
@@ -137,6 +112,9 @@ function serializeReservation(r: Record<string, unknown> & {
     supplementHorsDakarParJour: horsDakar.supplementParJour,
     nbJoursHorsDakar: horsDakar.nbJoursHorsDakar,
     montantHorsDakar: horsDakar.montantHorsDakar,
+    ...describeChauffeur(r, nbJours),
+    /** Décompte financier complet (pages détail locataire & propriétaire). */
+    decompte: buildReservationDecompte(r),
     prixTotal: String(r.totalLocataire ?? '0'),
     commission: String(r.montantCommission ?? '0'),
     montantProprietaire: String(r.netProprietaire ?? '0'),
@@ -316,6 +294,11 @@ export class ReservationsService {
         horsDakar: true,
         supplementHorsDakar: true,
         nbJoursHorsDakar: true,
+        avecChauffeur: true,
+        prixChauffeurParJour: true,
+        tauxCommission: true,
+        fraisLivraison: true,
+        typeLivraison: true,
         annuleLe: true,
         raisonAnnulation: true,
         creeLe: true,
@@ -381,8 +364,7 @@ export class ReservationsService {
         nbJours,
         prixParJour: horsDakar.prixParJourLocation,
         totalBase: String(reservation.totalBase),
-        nbJoursHorsDakar: horsDakar.nbJoursHorsDakar,
-        montantHorsDakar: horsDakar.montantHorsDakar,
+        decompte: buildReservationDecompte(reservation),
         commission: String(reservation.montantCommission),
         totalLocataire: String(reservation.totalLocataire),
         netProprietaire: String(reservation.netProprietaire),

@@ -548,8 +548,8 @@ export const OwnerBookingLifecyclePanel: React.FC<OwnerBookingLifecyclePanelProp
               <div className="min-w-0">
                 <span className="block font-bold text-slate-900">Conducteur / Chauffeur</span>
                 <span className="text-slate-700 font-medium block">
-                  {(reservation.vehicule as any)?.avecChauffeur || (reservation.vehicule as any)?.chauffeurInclus
-                    ? 'Option Chauffeur Privé souscrite'
+                  {reservation.avecChauffeur
+                    ? 'Avec chauffeur : vous fournissez le chauffeur'
                     : 'Conduite par le locataire (Sans chauffeur)'}
                 </span>
               </div>

@@ -43,6 +43,89 @@ export interface PhotoEtatLieu {
   creeLe: string;
 }
 
+// ── Décompte financier (calculé par le serveur) ─────────────────────────────
+
+export interface DecompteLigne {
+  prixParJour: number;
+  nbJours: number;
+  montant: number;
+}
+
+export interface ReservationDecompte {
+  nbJours: number;
+  location: DecompteLigne;
+  horsDakar: DecompteLigne | null;
+  chauffeur: DecompteLigne | null;
+  livraison: { type: 'DAKAR' | 'AIBD' | 'AUTRE'; montant: number; pourProprietaire: boolean } | null;
+  commission: { taux: number; montant: number };
+  totalLocataire: number;
+  revenuProprietaire: number;
+  modePaiement: 'TOTAL_EN_LIGNE' | 'ACOMPTE_SOLDE_CHECKIN';
+  payeEnLigne: number;
+  soldeCheckin: number;
+}
+
+type DecompteSource = {
+  nbJours?: number | string;
+  prixParJour?: number | string;
+  prixTotal?: number | string;
+  commission?: number | string;
+  tauxCommission?: number | string;
+  netProprietaire?: number | string;
+  montantProprietaire?: number | string;
+  fraisLivraison?: number | string | null;
+  typeLivraison?: string | null;
+  horsDakar?: boolean;
+  supplementHorsDakarParJour?: number | string | null;
+  nbJoursHorsDakar?: number | null;
+  avecChauffeur?: boolean;
+  prixChauffeurParJour?: number | string | null;
+  modePaiement?: string;
+  montantPayeEnLigne?: number | string;
+  montantSoldeCheckin?: number | string;
+  decompte?: ReservationDecompte;
+};
+
+/**
+ * Décompte d'une réservation : celui du serveur, ou à défaut reconstitué
+ * à partir des champs plats (anciennes réponses en cache).
+ */
+export function getReservationDecompte(r: DecompteSource): ReservationDecompte {
+  if (r.decompte) return r.decompte;
+  const n = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  const nbJours = Math.max(1, n(r.nbJours) || 1);
+  const prixLocation = n(r.prixParJour);
+  const hdJours = n(r.nbJoursHorsDakar);
+  const hdPrix = n(r.supplementHorsDakarParJour);
+  const chPrix = n(r.prixChauffeurParJour);
+  const totalLocataire = n(r.prixTotal);
+  const isDeposit = r.modePaiement === 'ACOMPTE_SOLDE_CHECKIN';
+  const payeEnLigne = r.montantPayeEnLigne != null ? n(r.montantPayeEnLigne) : totalLocataire;
+  return {
+    nbJours,
+    location: { prixParJour: prixLocation, nbJours, montant: prixLocation * nbJours },
+    horsDakar: r.horsDakar && hdPrix > 0 ? { prixParJour: hdPrix, nbJours: hdJours, montant: hdPrix * hdJours } : null,
+    chauffeur: r.avecChauffeur && chPrix > 0 ? { prixParJour: chPrix, nbJours, montant: chPrix * nbJours } : null,
+    livraison: n(r.fraisLivraison) > 0
+      ? {
+          type: r.typeLivraison === 'AIBD' ? 'AIBD' : r.typeLivraison === 'DAKAR' ? 'DAKAR' : 'AUTRE',
+          montant: n(r.fraisLivraison),
+          pourProprietaire:
+            n(r.netProprietaire ?? r.montantProprietaire) >=
+            prixLocation * nbJours + hdPrix * hdJours + (r.avecChauffeur ? chPrix * nbJours : 0) + n(r.fraisLivraison) - 0.5,
+        }
+      : null,
+    commission: { taux: n(r.tauxCommission), montant: n(r.commission) },
+    totalLocataire,
+    revenuProprietaire: n(r.netProprietaire ?? r.montantProprietaire),
+    modePaiement: isDeposit ? 'ACOMPTE_SOLDE_CHECKIN' : 'TOTAL_EN_LIGNE',
+    payeEnLigne,
+    soldeCheckin: isDeposit
+      ? (r.montantSoldeCheckin != null ? n(r.montantSoldeCheckin) : Math.max(0, totalLocataire - payeEnLigne))
+      : 0,
+  };
+}
+
 export interface OwnerReservationItem {
   id: string;
   statut: ReservationStatut;
@@ -80,6 +163,11 @@ export interface OwnerReservationItem {
   nbJoursHorsDakar?: number | null;
   /** supplementHorsDakarParJour × nbJoursHorsDakar. */
   montantHorsDakar?: string | null;
+  /** Option chauffeur (prix figé à la réservation, sans commission, toute la durée). */
+  avecChauffeur?: boolean;
+  prixChauffeurParJour?: string | null;
+  montantChauffeur?: string | null;
+  decompte?: ReservationDecompte;
   vehicule: ReservationVehicle;
   locataire: ReservationUser;
   proprietaire?: { id: string; prenom: string; nom: string; telephone?: string };

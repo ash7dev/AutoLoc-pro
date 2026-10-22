@@ -2,8 +2,9 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { MapPin, Receipt, ShieldCheck, Truck } from 'lucide-react';
-import { formatCurrency, getTenantPricePerDay } from '@/lib/utils';
+import { CarFront, MapPin, Receipt, ShieldCheck, Truck, UserCheck } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import { getReservationDecompte } from '@/src/core/api/reservationsApi';
 import { TenantReservationDetailData } from '../../hooks/useTenantReservationDetail';
 
 interface TenantFinancialDetailsCardProps {
@@ -30,43 +31,22 @@ const Line: React.FC<{
 );
 
 export const TenantFinancialDetailsCard: React.FC<TenantFinancialDetailsCardProps> = ({ booking }) => {
-  const nbJours = Math.max(1, Number(booking.nbJours || 1));
-  const basePrixParJour = Number(booking.prixParJour || 0);
-  const tenantPrixParJour = getTenantPricePerDay(basePrixParJour);
-  const totalLoc = Number(booking.prixTotal || 0);
-
-  const isDepositMode = booking.modePaiement === 'ACOMPTE_SOLDE_CHECKIN';
-
-  // Calculs acompte et solde
-  const paidOnline = Number(
-    booking.montantPayeEnLigne ?? booking.paiement?.montant ?? (isDepositMode ? Math.round(totalLoc * 0.3) : totalLoc)
-  );
-  const soldeCheckin = isDepositMode
-    ? Number(booking.montantSoldeCheckin ?? Math.max(0, totalLoc - paidOnline))
-    : 0;
+  // Décompte calculé par le serveur : les lignes retombent exactement sur le total payé
+  const d = getReservationDecompte({ ...booking, prixTotal: booking.prixTotal });
+  const totalLoc = d.totalLocataire;
+  const isDepositMode = d.modePaiement === 'ACOMPTE_SOLDE_CHECKIN';
+  const paidOnline = d.payeEnLigne;
+  const soldeCheckin = d.soldeCheckin;
 
   // Parts réelles (au lieu de 30 / 70 codés en dur)
   const paidPercent =
     totalLoc > 0 ? Math.min(100, Math.max(0, Math.round((paidOnline / totalLoc) * 100))) : 100;
   const soldePercent = 100 - paidPercent;
 
-  const fraisLivraison = Number(booking.fraisLivraison || 0);
-  const typeLivraison = booking.typeLivraison;
-  const deliveryLabel =
-    typeLivraison === 'AIBD'
-      ? 'Livraison aéroport AIBD'
-      : typeLivraison === 'DAKAR' || booking.adresseLivraison
-        ? 'Livraison à Dakar'
-        : null;
-
-  // Prix de base de la location hors frais annexes pour le locataire
-  const totalBaseRental = tenantPrixParJour * nbJours;
-
-  // Supplément hors Dakar, facturé uniquement sur les jours déclarés
-  const nbJoursHorsDakar = Number(booking.nbJoursHorsDakar || 0);
-  // Supplément sans commission AutoLoc
-  const tenantSupplementParJour = Number(booking.supplementHorsDakarParJour || 0);
-  const totalHorsDakar = tenantSupplementParJour * nbJoursHorsDakar;
+  // Les frais de service AutoLoc ne sont pas détaillés au locataire : ils sont inclus
+  // dans la ligne Location (le détail figure dans le contrat)
+  const locationTTC = d.location.montant + d.commission.montant;
+  const jours = (n: number) => `${n} jour${n > 1 ? 's' : ''}`;
 
   // Information paiement (Wave, Orange Money, etc.)
   const paymentProvider = booking.paiement?.fournisseur?.toUpperCase();
@@ -104,45 +84,51 @@ export const TenantFinancialDetailsCard: React.FC<TenantFinancialDetailsCardProp
       {/* Récapitulatif */}
       <div className="space-y-3">
         <Line
+          icon={<CarFront className="h-3.5 w-3.5" aria-hidden />}
           label={
             <>
               Location{' '}
-              <span className="text-slate-400">
-                {nbJours} jour{nbJours > 1 ? 's' : ''} × {formatCurrency(tenantPrixParJour)}
-              </span>
+              <span className="text-slate-400">{jours(d.location.nbJours)}</span>
             </>
           }
-          value={formatCurrency(totalBaseRental || totalLoc)}
+          value={formatCurrency(locationTTC)}
         />
 
-        {deliveryLabel && (
-          <Line
-            icon={<Truck className="h-3.5 w-3.5" aria-hidden />}
-            label={deliveryLabel}
-            value={fraisLivraison > 0 ? formatCurrency(fraisLivraison) : 'Inclus'}
-          />
-        )}
-
-        {booking.horsDakar && (
+        {d.horsDakar && (
           <Line
             icon={<MapPin className="h-3.5 w-3.5" aria-hidden />}
             label={
-              totalHorsDakar > 0 ? (
-                <>
-                  Hors Dakar{' '}
-                  <span className="text-slate-400">
-                    {nbJoursHorsDakar} jour{nbJoursHorsDakar > 1 ? 's' : ''} × {formatCurrency(tenantSupplementParJour)}
-                  </span>
-                </>
-              ) : (
-                'Déplacement hors Dakar'
-              )
+              <>
+                Hors Dakar{' '}
+                <span className="text-slate-400">
+                  {jours(d.horsDakar.nbJours)} × {formatCurrency(d.horsDakar.prixParJour)}
+                </span>
+              </>
             }
-            value={
-              totalHorsDakar > 0
-                ? formatCurrency(totalHorsDakar)
-                : <span className="font-medium text-slate-500">Inclus</span>
+            value={formatCurrency(d.horsDakar.montant)}
+          />
+        )}
+
+        {d.chauffeur && (
+          <Line
+            icon={<UserCheck className="h-3.5 w-3.5" aria-hidden />}
+            label={
+              <>
+                Chauffeur{' '}
+                <span className="text-slate-400">
+                  {jours(d.chauffeur.nbJours)} × {formatCurrency(d.chauffeur.prixParJour)}
+                </span>
+              </>
             }
+            value={formatCurrency(d.chauffeur.montant)}
+          />
+        )}
+
+        {d.livraison && (
+          <Line
+            icon={<Truck className="h-3.5 w-3.5" aria-hidden />}
+            label={d.livraison.type === 'AIBD' ? 'Livraison aéroport AIBD' : 'Livraison à Dakar'}
+            value={formatCurrency(d.livraison.montant)}
           />
         )}
 

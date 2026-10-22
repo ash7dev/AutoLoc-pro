@@ -509,6 +509,7 @@ export class CancelReservationUseCase {
             modePaiement: ModePaiementReservation;
             totalLocataire: Prisma.Decimal;
             montantCommission: Prisma.Decimal;
+            netProprietaire: Prisma.Decimal;
             montantProprietaireEnLigne: Prisma.Decimal;
             paiement: { statut: StatutPaiement; montant: Prisma.Decimal } | null;
         },
@@ -530,9 +531,24 @@ export class CancelReservationUseCase {
         }
 
         if (reservation.modePaiement !== ModePaiementReservation.ACOMPTE_SOLDE_CHECKIN) {
+            // Paiement intégral en ligne : sur le montant retenu, AutoLoc garde sa commission,
+            // le reste revient au propriétaire.
+            const refundAmount = Prisma.Decimal.min(confirmedOnlineAmount, policy.refundAmount)
+                .toDecimalPlaces(2);
+            const retainedOnline = confirmedOnlineAmount.sub(refundAmount).toDecimalPlaces(2);
+            const commissionRetained = Prisma.Decimal.min(policy.commissionRetained, retainedOnline)
+                .toDecimalPlaces(2);
+            const ownerCompensationAmount = isLocataire
+                ? Prisma.Decimal.min(
+                    reservation.netProprietaire,
+                    retainedOnline.sub(commissionRetained),
+                ).toDecimalPlaces(2)
+                : zero;
             return {
                 ...policy,
-                ownerCompensationAmount: zero,
+                refundAmount,
+                commissionRetained,
+                ownerCompensationAmount,
             };
         }
 

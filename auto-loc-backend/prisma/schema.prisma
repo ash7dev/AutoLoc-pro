@@ -105,6 +105,8 @@ model Vehicule {
   fraisLivraisonAibd         Decimal?                  @db.Decimal(10, 2)
   autoriseHorsDakar          Boolean                   @default(false)
   supplementHorsDakarParJour Decimal?                  @db.Decimal(10, 2)
+  chauffeurDisponible        Boolean                   @default(false)
+  prixChauffeurParJour       Decimal?                  @db.Decimal(10, 2)
   carburantCondition         String?
   archiveLe                  DateTime?
   isFeatured                 Boolean                   @default(false)
@@ -221,6 +223,8 @@ model Reservation {
   horsDakar              Boolean                 @default(false)
   supplementHorsDakar    Decimal?                @db.Decimal(10, 2)
   nbJoursHorsDakar       Int?
+  avecChauffeur          Boolean                 @default(false)
+  prixChauffeurParJour   Decimal?                @db.Decimal(10, 2)
   tacitCheckinDeadlineLe DateTime?
   checkinLocataireSource CheckinLocataireSource?
   absenceSignalee        Boolean                 @default(false)

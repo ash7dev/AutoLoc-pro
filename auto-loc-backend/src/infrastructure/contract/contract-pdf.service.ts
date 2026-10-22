@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const PDFDocument = require('pdfkit');
+import type { ReservationDecompte } from '../../domain/reservation/reservation-decompte';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -37,9 +38,8 @@ export interface ContractPricing {
     modePaiement?: string;
     montantPayeEnLigne?: string;
     montantSoldeCheckin?: string;
-    /** Jours déclarés hors Dakar et montant du supplément correspondant. */
-    nbJoursHorsDakar?: number | null;
-    montantHorsDakar?: string | null;
+    /** Décompte détaillé (location, options, frais de service). */
+    decompte?: ReservationDecompte;
 }
 
 export interface ContractData {
@@ -330,29 +330,57 @@ export class ContractPdfService {
         doc.y = startY + 32 + 10;
 
         // Pricing table
-        const tableY = doc.y;
-        const prixJourTTC = Math.round(Number(t.totalLocataire) / t.nbJours);
         const isDeposit = t.modePaiement === 'ACOMPTE_SOLDE_CHECKIN' || Number(t.montantSoldeCheckin ?? 0) > 0;
+        // Helvetica (PDF) ne sait pas afficher les espaces insécables de fr-FR → espace simple
+        const fcfa = (n: number | string) =>
+            `${Number(n).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ')} FCFA`;
+        const jours = (n: number) => `${n} jour${n > 1 ? 's' : ''}`;
+        const d = t.decompte;
 
-        const rows: Array<{ label: string; value: string; bold?: boolean; accent?: boolean; bg?: string; large?: boolean; accentColor?: string }> = [
-            {
-                label: `Modalité de paiement`,
-                value: isDeposit ? 'Acompte 30% en ligne + Solde à la remise' : 'Paiement 100% en ligne',
-                bold: true,
-            },
-            {
-                label: `Prix total de la location (${t.nbJours}j à ~${prixJourTTC.toLocaleString('fr-FR')} FCFA/j)`,
-                value: `${Number(t.totalLocataire).toLocaleString('fr-FR')} FCFA`,
-                bold: true,
-            },
-        ];
+        type Row = { label: string; value: string; bold?: boolean; accent?: boolean; bg?: string; large?: boolean; accentColor?: string; muted?: boolean };
+        const rows: Row[] = [];
 
-        if (t.nbJoursHorsDakar && Number(t.montantHorsDakar ?? 0) > 0) {
+        if (d) {
             rows.push({
-                label: `Dont supplément hors Dakar (${t.nbJoursHorsDakar}j déclaré${t.nbJoursHorsDakar > 1 ? 's' : ''})`,
-                value: `${Number(t.montantHorsDakar).toLocaleString('fr-FR')} FCFA`,
+                label: `Location (${jours(d.location.nbJours)} × ${fcfa(d.location.prixParJour)})`,
+                value: fcfa(d.location.montant),
+            });
+            if (d.horsDakar) {
+                rows.push({
+                    label: `Supplément hors Dakar (${jours(d.horsDakar.nbJours)} déclaré${d.horsDakar.nbJours > 1 ? 's' : ''} × ${fcfa(d.horsDakar.prixParJour)})`,
+                    value: fcfa(d.horsDakar.montant),
+                });
+            }
+            if (d.chauffeur) {
+                rows.push({
+                    label: `Chauffeur (${jours(d.chauffeur.nbJours)} × ${fcfa(d.chauffeur.prixParJour)})`,
+                    value: fcfa(d.chauffeur.montant),
+                });
+            }
+            if (d.livraison) {
+                rows.push({
+                    label: `Livraison ${d.livraison.type === 'AIBD' ? 'aéroport AIBD' : 'à Dakar'}`,
+                    value: fcfa(d.livraison.montant),
+                });
+            }
+            rows.push({
+                label: `Frais de service AutoLoc${d.commission.taux > 0 ? ` (${Math.round(d.commission.taux * 1000) / 10} % de la location)` : ''}`,
+                value: fcfa(d.commission.montant),
             });
         }
+
+        rows.push({
+            label: 'Total payé par le locataire',
+            value: fcfa(t.totalLocataire),
+            bold: true,
+            large: true,
+        });
+
+        rows.push({
+            label: 'Modalité de paiement',
+            value: isDeposit ? 'Acompte 30% en ligne + Solde à la remise' : 'Paiement 100% en ligne',
+            bold: true,
+        });
 
         if (isDeposit) {
             const payeEnLigne = Number(t.montantPayeEnLigne ?? Math.round(Number(t.totalLocataire) * 0.3));
@@ -360,7 +388,7 @@ export class ContractPdfService {
             rows.push(
                 {
                     label: 'Acompte réglé en ligne (30%)',
-                    value: `${payeEnLigne.toLocaleString('fr-FR')} FCFA`,
+                    value: fcfa(payeEnLigne),
                     bold: true,
                     accent: true,
                     bg: C.emeraldBg,
@@ -369,7 +397,7 @@ export class ContractPdfService {
                 },
                 {
                     label: 'Solde dû à la remise des clés (70% en main propre)',
-                    value: `${soldeCheckin.toLocaleString('fr-FR')} FCFA`,
+                    value: fcfa(soldeCheckin),
                     bold: true,
                     accent: true,
                     bg: C.amberBg,
@@ -380,7 +408,7 @@ export class ContractPdfService {
         } else {
             rows.push({
                 label: 'Total réglé en ligne par le locataire',
-                value: `${Number(t.totalLocataire).toLocaleString('fr-FR')} FCFA`,
+                value: fcfa(t.totalLocataire),
                 bold: true,
                 accent: true,
                 bg: C.emeraldBg,
@@ -388,6 +416,23 @@ export class ContractPdfService {
                 accentColor: C.emerald,
             });
         }
+
+        if (d) {
+            rows.push({
+                label: d.livraison?.pourProprietaire
+                    ? 'Revenu du propriétaire (location, options et livraison)'
+                    : 'Revenu du propriétaire (location + options, hors frais de service)',
+                value: fcfa(d.revenuProprietaire),
+                muted: true,
+            });
+        }
+
+        // Saut de page si le tableau ne tient pas sur la page courante
+        const tableH = rows.reduce((acc, r) => acc + (r.large ? rowH + 6 : rowH), 0);
+        if (doc.y + tableH > doc.page.height - M - 24) {
+            doc.addPage();
+        }
+        const tableY = doc.y;
 
         rows.forEach((row, i) => {
             const rh = row.large ? rowH + 6 : rowH;
@@ -397,7 +442,7 @@ export class ContractPdfService {
             doc.rect(M, y, CW, rh).strokeColor(C.border).lineWidth(0.3).stroke();
 
             const labelFont = row.bold ? 'Helvetica-Bold' : 'Helvetica';
-            const textColor = row.accentColor ?? (row.accent ? C.emerald : C.body);
+            const textColor = row.accentColor ?? (row.accent ? C.emerald : row.muted ? C.muted : C.ink);
             const labelSize = row.large ? 9 : 8.5;
             const valueSize = row.large ? 11 : 8.5;
             const vPad = Math.floor((rh - labelSize) / 2) - 1;

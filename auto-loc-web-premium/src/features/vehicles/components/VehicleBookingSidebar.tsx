@@ -8,12 +8,13 @@ import {
   Home,
   MapPin,
   Navigation,
+  UserCheck,
   Plane,
   ShieldCheck,
   Truck,
   type LucideIcon,
 } from 'lucide-react';
-import { formatCurrency, getTenantPricePerDay } from '@/lib/utils';
+import { COMMISSION_RATE, computeTenantQuote, formatCurrency, getTenantPricePerDay } from '@/lib/utils';
 import { TarifProgressif } from '../types/vehicle.types';
 
 export type TypeLivraison = 'AUCUNE' | 'DAKAR' | 'AIBD';
@@ -22,6 +23,7 @@ export interface BookNowParams {
   startDate?: string;
   endDate?: string;
   horsDakar: boolean;
+  avecChauffeur: boolean;
   includeDelivery: boolean;
   typeLivraison?: TypeLivraison;
   adresseLivraison?: string;
@@ -34,6 +36,8 @@ interface VehicleBookingSidebarProps {
   baseOwnerPrice: number;
   autoriseHorsDakar?: boolean;
   supplementHorsDakarParJour?: number | null;
+  chauffeurDisponible?: boolean;
+  prixChauffeurParJour?: number | null;
   proposeLivraisonDakar?: boolean;
   fraisLivraisonDakar?: number | null;
   proposeLivraisonAibd?: boolean;
@@ -175,6 +179,8 @@ export function VehicleBookingSidebar({
   baseOwnerPrice,
   autoriseHorsDakar = false,
   supplementHorsDakarParJour = 0,
+  chauffeurDisponible = false,
+  prixChauffeurParJour = 0,
   proposeLivraisonDakar = false,
   fraisLivraisonDakar,
   proposeLivraisonAibd = false,
@@ -189,12 +195,14 @@ export function VehicleBookingSidebar({
 }: VehicleBookingSidebarProps) {
   const deliveryGroupName = useId();
   const [horsDakar, setHorsDakar] = useState(false);
+  const [avecChauffeur, setAvecChauffeur] = useState(false);
   const [typeLivraison, setTypeLivraison] = useState<TypeLivraison>('AUCUNE');
   const [adresseLivraison, setAdresseLivraison] = useState('');
 
   // Évite de garder des options d'un véhicule à l'autre (navigation client-side)
   useEffect(() => {
     setHorsDakar(false);
+    setAvecChauffeur(false);
     setTypeLivraison('AUCUNE');
     setAdresseLivraison('');
   }, [vehicleId]);
@@ -241,17 +249,27 @@ export function VehicleBookingSidebar({
     proposeLivraisonDakar || (fraisLivraison !== undefined && fraisLivraison !== null);
   const canDeliverAibd = proposeLivraisonAibd;
   const hasDeliveryOptions = canDeliverDakar || canDeliverAibd;
-  const hasOptions = autoriseHorsDakar || hasDeliveryOptions;
+  // Chauffeur : prix fixé par le propriétaire, sans commission, sur toute la durée
+  const chauffeurPrice = toNumber(prixChauffeurParJour);
+  const hasOptions = autoriseHorsDakar || hasDeliveryOptions || chauffeurDisponible;
 
   /* ------------------------------ Totaux --------------------------------- */
 
-  const baseTotal = tenantPricePerDay * daysCount;
   // Le nombre de jours hors Dakar est précisé à l'étape de réservation :
   // le supplément est affiché par jour et n'entre pas dans le total estimé.
   const showHorsDakar = horsDakar && autoriseHorsDakar && horsDakarSupplement > 0;
   const deliveryTotal =
     typeLivraison === 'DAKAR' ? dakarFee : typeLivraison === 'AIBD' ? aibdFee : 0;
-  const totalAmount = baseTotal + deliveryTotal;
+  // Devis identique au serveur ; hors Dakar exclu tant que le nombre de jours n'est pas choisi
+  const quote = computeTenantQuote({
+    prixParJour: baseOwnerPrice,
+    nbJours: daysCount,
+    tiers: tarifsProgressifs,
+    prixChauffeurParJour: avecChauffeur && chauffeurDisponible ? chauffeurPrice : 0,
+    fraisLivraison: deliveryTotal,
+  });
+  const chauffeurTotal = quote.chauffeur?.montant ?? 0;
+  const totalAmount = quote.total;
 
   /* ------------------------------ Actions -------------------------------- */
 
@@ -271,6 +289,7 @@ export function VehicleBookingSidebar({
       startDate,
       endDate,
       horsDakar: horsDakar && autoriseHorsDakar,
+      avecChauffeur: avecChauffeur && chauffeurDisponible,
       includeDelivery: typeLivraison !== 'AUCUNE',
       typeLivraison,
       adresseLivraison,
@@ -439,6 +458,19 @@ export function VehicleBookingSidebar({
                 isFree={horsDakarSupplement <= 0}
               />
             )}
+
+            {chauffeurDisponible && (
+              <OptionRow
+                type="checkbox"
+                checked={avecChauffeur}
+                onChange={setAvecChauffeur}
+                icon={UserCheck}
+                title="Avec chauffeur"
+                hint="Sur toute la durée de la location"
+                price={chauffeurPrice > 0 ? `+${formatCurrency(chauffeurPrice)} F/j` : 'Inclus'}
+                isFree={chauffeurPrice <= 0}
+              />
+            )}
           </div>
         )}
       </div>
@@ -448,14 +480,21 @@ export function VehicleBookingSidebar({
         {hasDates && (
           <dl className="space-y-2 text-sm text-champagne/75">
             <SummaryLine
-              label={`${formatCurrency(tenantPricePerDay)} FCFA × ${plural(daysCount, 'jour')}`}
-              value={`${formatCurrency(baseTotal)} FCFA`}
+              label={`Location ${formatCurrency(quote.prixParJour)} FCFA × ${plural(daysCount, 'jour')}`}
+              value={`${formatCurrency(quote.location)} FCFA`}
             />
             {showHorsDakar && (
               <SummaryLine
                 small
                 label="Hors Dakar (jours à préciser ensuite)"
                 value={`+${formatCurrency(horsDakarSupplement)} F/j`}
+              />
+            )}
+            {chauffeurTotal > 0 && (
+              <SummaryLine
+                small
+                label={`Chauffeur (${plural(daysCount, 'jour')})`}
+                value={`+${formatCurrency(chauffeurTotal)} FCFA`}
               />
             )}
             {deliveryTotal > 0 && (
@@ -465,6 +504,11 @@ export function VehicleBookingSidebar({
                 value={`+${formatCurrency(deliveryTotal)} FCFA`}
               />
             )}
+            <SummaryLine
+              small
+              label={`Frais de service AutoLoc (${Math.round(COMMISSION_RATE * 100)} %)`}
+              value={`+${formatCurrency(quote.fraisService)} FCFA`}
+            />
           </dl>
         )}
 

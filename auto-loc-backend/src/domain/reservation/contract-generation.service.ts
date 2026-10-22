@@ -6,6 +6,7 @@ import {
     ContractData,
     StatutContrat,
 } from '../../infrastructure/contract/contract-pdf.service';
+import { buildReservationDecompte } from './reservation-decompte';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -56,6 +57,14 @@ export class ContractGenerationService {
                 modePaiement: true,
                 montantPayeEnLigne: true,
                 montantSoldeCheckin: true,
+                tauxCommission: true,
+                fraisLivraison: true,
+                typeLivraison: true,
+                horsDakar: true,
+                supplementHorsDakar: true,
+                nbJoursHorsDakar: true,
+                avecChauffeur: true,
+                prixChauffeurParJour: true,
                 contratPublicId: true,
                 confirmeeLe: true,
                 locataire: {
@@ -109,6 +118,8 @@ export class ContractGenerationService {
         const diffHours = diffMs / (1000 * 60 * 60);
         const isWithin24Hours = diffHours <= 24 && diffHours > 0;
 
+        const decompte = buildReservationDecompte(reservation);
+
         const contractData: ContractData = {
             reservationId: reservation.id,
             dateContrat: new Date().toLocaleDateString('fr-FR', {
@@ -144,7 +155,7 @@ export class ContractGenerationService {
                 dateDebut: debut.toLocaleString('fr-FR', { day: '2-digit', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' à'),
                 dateFin: fin.toLocaleString('fr-FR', { day: '2-digit', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' à'),
                 nbJours,
-                prixParJour: reservation.prixParJour.toString(),
+                prixParJour: String(decompte.location.prixParJour),
                 totalBase: reservation.totalBase.toString(),
                 commission: reservation.montantCommission.toString(),
                 totalLocataire: reservation.totalLocataire.toString(),
@@ -152,6 +163,7 @@ export class ContractGenerationService {
                 modePaiement: reservation.modePaiement ?? 'TOTAL_EN_LIGNE',
                 montantPayeEnLigne: (reservation.montantPayeEnLigne ?? reservation.totalLocataire).toString(),
                 montantSoldeCheckin: (reservation.montantSoldeCheckin ?? 0).toString(),
+                decompte,
             },
             dateReservation: reservation.creeLe ? new Date(reservation.creeLe).toLocaleDateString('fr-FR', {
                 day: '2-digit',

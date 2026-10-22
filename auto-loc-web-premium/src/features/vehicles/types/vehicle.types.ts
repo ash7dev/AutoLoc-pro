@@ -83,6 +83,8 @@ export interface Vehicle {
   fraisLivraisonAibd?: number | null;
   autoriseHorsDakar?: boolean;
   supplementHorsDakarParJour?: number | null;
+  chauffeurDisponible?: boolean;
+  prixChauffeurParJour?: number | null;
   isFeatured?: boolean;
   scoreGlobal?: number;
   photoUrl?: string;

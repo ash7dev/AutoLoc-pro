@@ -43,6 +43,8 @@ export interface CreateReservationInput {
     horsDakar?: boolean;
     /** Nombre de jours hors Dakar déclarés par le locataire (défaut : toute la durée). */
     nbJoursHorsDakar?: number;
+    /** Location avec chauffeur (si proposée par le propriétaire). */
+    avecChauffeur?: boolean;
     /** Méthode de paiement cible (ex: 'WAVE', 'ORANGE_MONEY', 'FREE_MONEY'). */
     targetPayment?: string;
     /** Numéro de téléphone du payeur (requis pour InTouch API directe). */
@@ -119,12 +121,21 @@ export class CreateReservationUseCase {
             ? Number(vehicule.supplementHorsDakarParJour ?? 0)
             : 0;
 
+        // Chauffeur : source de vérité = véhicule en DB, jamais frontend
+        const avecChauffeur = !!input.avecChauffeur && vehicule.chauffeurDisponible;
+        const prixChauffeurParJour = avecChauffeur
+            ? Number(vehicule.prixChauffeurParJour ?? 0)
+            : 0;
+
         const price = this.pricing.calculate(
             vehicule.prixParJour,
             dates.nbJours,
             vehicule.tarifsProgressifs,
-            supplementHorsDakar,
-            input.nbJoursHorsDakar,
+            {
+                supplementHorsDakar,
+                nbJoursHorsDakar: input.nbJoursHorsDakar,
+                prixChauffeurParJour,
+            },
         );
 
         // Frais de livraison : source de vérité = véhicule en DB, jamais frontend
@@ -148,12 +159,15 @@ export class CreateReservationUseCase {
         }
 
         const totalAvecLivraison = price.totalLocataire.add(new Prisma.Decimal(fraisLivraison));
+        // La livraison est assurée par le propriétaire : elle lui revient intégralement.
+        // AutoLoc ne perçoit que sa commission (montantCommission).
+        const netProprietaire = price.netProprietaire.add(new Prisma.Decimal(fraisLivraison));
         const modePaiement = input.modePaiement ?? ModePaiementReservation.TOTAL_EN_LIGNE;
         const paymentBreakdown = this.calculatePaymentBreakdown(
             modePaiement,
             totalAvecLivraison,
             price.montantCommission,
-            price.netProprietaire,
+            netProprietaire,
         );
 
         // ── 6. Initiate payment ───────────────────────────────────────────────────
@@ -221,7 +235,7 @@ export class CreateReservationUseCase {
                             tauxCommission: price.tauxCommission,
                             montantCommission: price.montantCommission,
                             totalLocataire: totalAvecLivraison,
-                            netProprietaire: price.netProprietaire,
+                            netProprietaire,
                             modePaiement,
                             tauxAcompte: paymentBreakdown.tauxAcompte,
                             montantPayeEnLigne: paymentBreakdown.montantPayeEnLigne,
@@ -237,6 +251,8 @@ export class CreateReservationUseCase {
                             horsDakar: !!input.horsDakar && vehicule.autoriseHorsDakar,
                             supplementHorsDakar: supplementHorsDakar > 0 ? supplementHorsDakar : null,
                             nbJoursHorsDakar: price.nbJoursHorsDakar > 0 ? price.nbJoursHorsDakar : null,
+                            avecChauffeur,
+                            prixChauffeurParJour: avecChauffeur ? prixChauffeurParJour : null,
                             utmSource: input.utmSource ?? null,
                             utmMedium: input.utmMedium ?? null,
                             utmCampaign: input.utmCampaign ?? null,
@@ -470,6 +486,8 @@ export class CreateReservationUseCase {
                 fraisLivraisonAibd: true,
                 autoriseHorsDakar: true,
                 supplementHorsDakarParJour: true,
+                chauffeurDisponible: true,
+                prixChauffeurParJour: true,
                 tarifsProgressifs: {
                     orderBy: { joursMin: 'asc' },
                     select: { joursMin: true, joursMax: true, prix: true },

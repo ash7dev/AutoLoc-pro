@@ -43,10 +43,13 @@ export class CancellationPolicyService {
      * Le proprio n'a même pas encore confirmé, le locataire récupère tout.
      *
      * USE CASE 2 - APRÈS confirmation (statut CONFIRMEE) :
-     * - > 5 jours  → 100% du totalBase (commission 10% retenue)
+     * - > 5 jours  → tout sauf la commission AutoLoc (location, options, livraison)
      * - 3-5 jours  → 75% du totalLocataire
      * - 1-3 jours  → 50% du totalLocataire
      * - < 24h      → 0%
+     *
+     * Sur le montant retenu, AutoLoc ne garde que sa commission (`commissionRetained`) ;
+     * le reste dédommage le propriétaire (voir CancelReservationUseCase).
      */
     calculateForTenant(
         reservation: ReservationForCancellation,
@@ -72,10 +75,12 @@ export class CancellationPolicyService {
         // USE CASE 2 : Réservation CONFIRMÉE → politique stricte
 
         if (daysUntil > 5) {
-            // > 5 jours : remboursement du totalBase (commission retenue)
+            // > 5 jours : remboursement de tout sauf la commission AutoLoc
             return {
                 refundPercentage: 100,
-                refundAmount: reservation.totalBase,
+                refundAmount: reservation.totalLocataire
+                    .sub(reservation.montantCommission)
+                    .toDecimalPlaces(2),
                 commissionRetained: reservation.montantCommission,
                 ownerPenaltyPercentage: 0,
                 ownerPenaltyAmount: zero,
@@ -92,9 +97,7 @@ export class CancellationPolicyService {
             return {
                 refundPercentage: 75,
                 refundAmount,
-                commissionRetained: reservation.totalLocataire
-                    .sub(refundAmount)
-                    .toDecimalPlaces(2),
+                commissionRetained: this.commissionOnRetained(reservation, refundAmount),
                 ownerPenaltyPercentage: 0,
                 ownerPenaltyAmount: zero,
                 warnings: [
@@ -112,9 +115,7 @@ export class CancellationPolicyService {
             return {
                 refundPercentage: 50,
                 refundAmount,
-                commissionRetained: reservation.totalLocataire
-                    .sub(refundAmount)
-                    .toDecimalPlaces(2),
+                commissionRetained: this.commissionOnRetained(reservation, refundAmount),
                 ownerPenaltyPercentage: 0,
                 ownerPenaltyAmount: zero,
                 warnings: [
@@ -128,7 +129,7 @@ export class CancellationPolicyService {
         return {
             refundPercentage: 0,
             refundAmount: zero,
-            commissionRetained: reservation.totalLocataire,
+            commissionRetained: this.commissionOnRetained(reservation, zero),
             ownerPenaltyPercentage: 0,
             ownerPenaltyAmount: zero,
             warnings: ['Annulation moins de 24h avant la location : aucun remboursement'],
@@ -267,6 +268,18 @@ export class CancellationPolicyService {
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
+
+    /** Part AutoLoc du montant retenu : sa commission, jamais plus que ce qui est retenu. */
+    private commissionOnRetained(
+        reservation: ReservationForCancellation,
+        refundAmount: Prisma.Decimal,
+    ): Prisma.Decimal {
+        const retained = Prisma.Decimal.max(
+            new Prisma.Decimal(0),
+            reservation.totalLocataire.sub(refundAmount),
+        );
+        return Prisma.Decimal.min(reservation.montantCommission, retained).toDecimalPlaces(2);
+    }
 
     /**
      * Nombre de jours complets entre cancelDate et dateDebut.

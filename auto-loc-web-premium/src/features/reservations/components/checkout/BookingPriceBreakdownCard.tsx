@@ -2,47 +2,17 @@
 
 import React from 'react';
 import { ShieldCheck, Sparkles } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { COMMISSION_RATE, formatCurrency, type TenantQuote } from '@/lib/utils';
 
 interface BookingPriceBreakdownCardProps {
-  tenantPricePerDay: number;
-  nbJours: number;
+  quote: TenantQuote;
   typeLivraison: 'AUCUNE' | 'DAKAR' | 'AIBD';
-  fraisLivraisonDakar?: number | null;
-  fraisLivraisonAibd?: number | null;
-  fraisLivraison?: number | null;
-  isHorsDakarSelected: boolean;
-  supplementHorsDakarParJour?: number | null;
-  /** Jours déclarés hors Dakar (défaut : toute la durée). */
-  nbJoursHorsDakar?: number;
 }
 
-export function BookingPriceBreakdownCard({
-  tenantPricePerDay,
-  nbJours,
-  typeLivraison,
-  fraisLivraisonDakar = 0,
-  fraisLivraisonAibd = 0,
-  fraisLivraison = 0,
-  isHorsDakarSelected,
-  supplementHorsDakarParJour = 0,
-  nbJoursHorsDakar,
-}: BookingPriceBreakdownCardProps) {
-  const baseTotal = tenantPricePerDay * nbJours;
-
-  let deliveryTotal = 0;
-  if (typeLivraison === 'DAKAR') {
-    deliveryTotal = Number(fraisLivraisonDakar ?? fraisLivraison ?? 0);
-  } else if (typeLivraison === 'AIBD') {
-    deliveryTotal = Number(fraisLivraisonAibd ?? 0);
-  }
-
-  // Supplément hors Dakar sans commission AutoLoc
-  const horsDakarPerDay = Number(supplementHorsDakarParJour ?? 0);
-  const joursHorsDakar = nbJoursHorsDakar ?? nbJours;
-  const horsDakarTotal = isHorsDakarSelected ? horsDakarPerDay * joursHorsDakar : 0;
-
-  const grandTotal = baseTotal + deliveryTotal + horsDakarTotal;
+export function BookingPriceBreakdownCard({ quote, typeLivraison }: BookingPriceBreakdownCardProps) {
+  const { nbJours } = quote;
+  const grandTotal = quote.total;
+  const tauxPct = Math.round(COMMISSION_RATE * 100);
 
   return (
     <div className="bg-brand-main border border-brand-main/80 rounded-3xl p-6 text-champagne shadow-xl shadow-slate-950/10 space-y-5">
@@ -66,38 +36,42 @@ export function BookingPriceBreakdownCard({
       </div>
 
       <div className="space-y-3 text-sm text-champagne/85">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <span>
-            {formatCurrency(tenantPricePerDay)} FCFA × {nbJours} jour
-            {nbJours > 1 ? 's' : ''}
+            Location ({formatCurrency(quote.prixParJour)} FCFA × {nbJours} jour{nbJours > 1 ? 's' : ''})
           </span>
-          <span className="font-semibold text-champagne tabular-nums">
-            {formatCurrency(baseTotal)} FCFA
-          </span>
+          <span className="font-semibold text-champagne tabular-nums">{formatCurrency(quote.location)} FCFA</span>
         </div>
 
-        {deliveryTotal > 0 && (
-          <div className="flex items-center justify-between">
+        {quote.horsDakar && (
+          <div className="flex items-center justify-between gap-3">
             <span>
-              Frais de livraison (
-              {typeLivraison === 'AIBD' ? 'Aéroport AIBD' : 'Dakar Métropole'})
+              Hors Dakar ({formatCurrency(quote.horsDakar.prixParJour)} FCFA × {quote.horsDakar.nbJours} j)
             </span>
-            <span className="font-semibold text-champagne tabular-nums">
-              +{formatCurrency(deliveryTotal)} FCFA
-            </span>
+            <span className="font-semibold text-champagne tabular-nums">+{formatCurrency(quote.horsDakar.montant)} FCFA</span>
           </div>
         )}
 
-        {horsDakarTotal > 0 && (
-          <div className="flex items-center justify-between">
+        {quote.chauffeur && (
+          <div className="flex items-center justify-between gap-3">
             <span>
-              Trajets hors Dakar ({formatCurrency(horsDakarPerDay)} FCFA × {joursHorsDakar} j)
+              Chauffeur ({formatCurrency(quote.chauffeur.prixParJour)} FCFA × {quote.chauffeur.nbJours} j)
             </span>
-            <span className="font-semibold text-champagne tabular-nums">
-              +{formatCurrency(horsDakarTotal)} FCFA
-            </span>
+            <span className="font-semibold text-champagne tabular-nums">+{formatCurrency(quote.chauffeur.montant)} FCFA</span>
           </div>
         )}
+
+        {quote.livraison > 0 && (
+          <div className="flex items-center justify-between gap-3">
+            <span>Livraison ({typeLivraison === 'AIBD' ? 'Aéroport AIBD' : 'Dakar Métropole'})</span>
+            <span className="font-semibold text-champagne tabular-nums">+{formatCurrency(quote.livraison)} FCFA</span>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between gap-3">
+          <span>Frais de service AutoLoc ({tauxPct} % de la location)</span>
+          <span className="font-semibold text-champagne tabular-nums">+{formatCurrency(quote.fraisService)} FCFA</span>
+        </div>
       </div>
 
       <div className="pt-4 border-t border-champagne/20 flex items-baseline justify-between">

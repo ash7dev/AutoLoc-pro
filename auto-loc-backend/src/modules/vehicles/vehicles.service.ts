@@ -217,6 +217,8 @@ export class VehiclesService {
             fraisLivraisonAibd: dto.fraisLivraisonAibd ?? null,
             autoriseHorsDakar: dto.autoriseHorsDakar ?? false,
             supplementHorsDakarParJour: dto.supplementHorsDakarParJour ?? null,
+            chauffeurDisponible: dto.chauffeurDisponible ?? false,
+            prixChauffeurParJour: dto.chauffeurDisponible ? dto.prixChauffeurParJour ?? null : null,
             statut: statutInitial,
             carteGriseUrl: dto.carteGriseUrl ?? null,
             carteGrisePublicId: dto.carteGrisePublicId ?? null,
@@ -547,14 +549,20 @@ export class VehiclesService {
   }
 
   /**
-   * GET /vehicles/:id/pricing?days=N&horsDakar=true|false&joursHorsDakar=M — Tarification dynamique publique.
+   * GET /vehicles/:id/pricing?days=N&horsDakar=true|false&joursHorsDakar=M&chauffeur=true|false — Tarification dynamique publique.
    * Utilise les TarifTier du véhicule pour résoudre le prix effectif.
    * Le supplément hors Dakar n'est facturé que sur M jours (défaut : N).
    */
-  async getPricing(vehicleId: string, nbJours: number, horsDakar: boolean = false, joursHorsDakar?: number) {
+  async getPricing(
+    vehicleId: string,
+    nbJours: number,
+    horsDakar: boolean = false,
+    joursHorsDakar?: number,
+    chauffeur: boolean = false,
+  ) {
     const joursHorsDakarResolved = horsDakar ? resolveNbJoursHorsDakar(nbJours, joursHorsDakar) : 0;
-    // Cache key unique par véhicule + nbJours + jours hors Dakar
-    const cacheKey = `${PRICING_CACHE_PREFIX}${vehicleId}:${nbJours}:${joursHorsDakarResolved}`;
+    // Cache key unique par véhicule + nbJours + jours hors Dakar + chauffeur
+    const cacheKey = `${PRICING_CACHE_PREFIX}${vehicleId}:${nbJours}:${joursHorsDakarResolved}:${chauffeur ? 1 : 0}`;
 
     // Tentative de récupération depuis le cache
     try {
@@ -578,6 +586,8 @@ export class VehiclesService {
         prixParJour: true,
         autoriseHorsDakar: true,
         supplementHorsDakarParJour: true,
+        chauffeurDisponible: true,
+        prixChauffeurParJour: true,
         tarifsProgressifs: {
           orderBy: { joursMin: 'asc' },
           select: { joursMin: true, joursMax: true, prix: true },
@@ -594,8 +604,13 @@ export class VehiclesService {
       vehicle.prixParJour,
       nbJours,
       vehicle.tarifsProgressifs,
-      supplement,
-      joursHorsDakarResolved,
+      {
+        supplementHorsDakar: supplement,
+        nbJoursHorsDakar: joursHorsDakarResolved,
+        prixChauffeurParJour: chauffeur && vehicle.chauffeurDisponible
+          ? Number(vehicle.prixChauffeurParJour ?? 0)
+          : 0,
+      },
     );
 
     const response = {
@@ -604,6 +619,8 @@ export class VehiclesService {
       supplementHorsDakar: supplement,
       nbJoursHorsDakar: result.nbJoursHorsDakar,
       montantHorsDakar: Number(result.montantHorsDakar),
+      chauffeurDisponible: vehicle.chauffeurDisponible,
+      montantChauffeur: Number(result.montantChauffeur),
       prixParJour: Number(result.prixParJour),
       totalBase: Number(result.totalBase),
       tauxCommission: Number(result.tauxCommission),
@@ -726,6 +743,8 @@ export class VehiclesService {
             fraisLivraisonAibd: dto.fraisLivraisonAibd,
             autoriseHorsDakar: dto.autoriseHorsDakar,
             supplementHorsDakarParJour: dto.supplementHorsDakarParJour,
+            chauffeurDisponible: dto.chauffeurDisponible,
+            prixChauffeurParJour: dto.chauffeurDisponible === false ? null : dto.prixChauffeurParJour,
             carteGriseUrl: dto.carteGriseUrl,
             carteGrisePublicId: dto.carteGrisePublicId,
             assuranceDocUrl: dto.assuranceDocUrl,

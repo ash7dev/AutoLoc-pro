@@ -142,6 +142,36 @@ describe('CancelReservationUseCase', () => {
         expect(mockTx.reservationHistorique.create).toHaveBeenCalled();
     });
 
+    it('should compensate the owner on late cancellation paid fully online', async () => {
+        mockTx.reservation.findUnique.mockResolvedValue({
+            ...baseReservation,
+            statut: StatutReservation.CONFIRMEE,
+        });
+        mockCancellationPolicy.calculateForTenant.mockReturnValue({
+            ...tenantPolicy,
+            refundPercentage: 75,
+            refundAmount: new Prisma.Decimal('64687.50'),
+            commissionRetained: new Prisma.Decimal('11250'),
+        });
+        mockTx.wallet.upsert.mockResolvedValue({ id: 'wallet-1', soldeDisponible: new Prisma.Decimal('0') });
+
+        const result = await useCase.execute(
+            { sub: 'user-sub' } as any,
+            RESERVATION_ID,
+            { raison: 'Changement de plans' },
+        );
+
+        // 86250 payés − 64687.50 remboursés = 21562.50 retenus : 11250 AutoLoc, 10312.50 propriétaire
+        expect(result.refundAmount).toBe('64687.5');
+        expect(result.commissionRetained).toBe('11250');
+        expect(result.ownerCompensationAmount).toBe('10312.5');
+        expect(mockTx.transactionWallet.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({ montant: new Prisma.Decimal('10312.5') }),
+            }),
+        );
+    });
+
     it('should prorate refund on captured deposit amount', async () => {
         const depositReservation = {
             ...baseReservation,

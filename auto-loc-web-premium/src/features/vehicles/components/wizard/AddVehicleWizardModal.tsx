@@ -128,6 +128,8 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
             adresse: v.adresse || 'Dakar',
             autoriseHorsDakar: hasHorsDakar,
             supplementHorsDakarParJour: Number(v.supplementHorsDakarParJour || 5000),
+            chauffeurDisponible: Boolean(v.chauffeurDisponible),
+            prixChauffeurParJour: Number(v.prixChauffeurParJour || 0),
             fraisLivraison: Number(v.fraisLivraison || 0),
             proposeLivraison: Boolean(v.proposeLivraison ?? v.proposeLivraisonDakar ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
             proposeLivraisonDakar: Boolean(v.proposeLivraisonDakar ?? v.proposeLivraison ?? (v.fraisLivraison && Number(v.fraisLivraison) > 0)),
@@ -413,6 +415,10 @@ export const AddVehicleWizardModal: React.FC<AddVehicleWizardModalProps> = ({
         supplementHorsDakarParJour: step3.autoriseHorsDakar
           ? Number(step3.supplementHorsDakarParJour || 0)
           : 0,
+        chauffeurDisponible: Boolean(step3.chauffeurDisponible),
+        prixChauffeurParJour: step3.chauffeurDisponible
+          ? Number(step3.prixChauffeurParJour || 0)
+          : undefined,
         assurance: step4.assurance || 'Locataire responsable',
         carburantCondition: step4.carburantCondition || 'Plein à plein',
         reglesSpecifiques: step4.reglesSpecifiques?.trim() || '',

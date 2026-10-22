@@ -8,7 +8,7 @@ import { BookingCheckoutStep2 } from './BookingCheckoutStep2';
 import { PaymentMode } from './BookingPaymentModeSelector';
 import { PaymentGateway } from './BookingPaymentGatewaySelector';
 import { fetchApi } from '@/lib/config';
-import { clampJoursHorsDakar } from '@/lib/utils';
+import { computeTenantQuote, type PriceTierInput } from '@/lib/utils';
 import { useUserStore } from '@/src/core/store/useUserStore';
 import { CheckCircle2, Sparkles, X, ExternalLink, ArrowRight } from 'lucide-react';
 
@@ -26,6 +26,7 @@ export interface BookingCheckoutModalProps {
     photos?: Array<string | { url: string }>;
     prixParJour: number;
     tenantPricePerDay: number;
+    tarifsProgressifs?: PriceTierInput[];
     joursMinimum?: number;
     proposeLivraisonDakar?: boolean;
     fraisLivraisonDakar?: number | null;
@@ -34,6 +35,8 @@ export interface BookingCheckoutModalProps {
     fraisLivraison?: number | null;
     autoriseHorsDakar?: boolean;
     supplementHorsDakarParJour?: number | null;
+    chauffeurDisponible?: boolean;
+    prixChauffeurParJour?: number | null;
     transmission?: string;
     carburant?: string;
     nombrePlaces?: number;
@@ -42,6 +45,7 @@ export interface BookingCheckoutModalProps {
   initialStartDate?: string;
   initialEndDate?: string;
   initialHorsDakar?: boolean;
+  initialAvecChauffeur?: boolean;
   initialIncludeDelivery?: boolean;
   initialTypeLivraison?: 'AUCUNE' | 'DAKAR' | 'AIBD';
   initialAdresseLivraison?: string;
@@ -55,6 +59,7 @@ export function BookingCheckoutModal({
   initialStartDate,
   initialEndDate,
   initialHorsDakar = false,
+  initialAvecChauffeur = false,
   initialIncludeDelivery = false,
   initialTypeLivraison,
   initialAdresseLivraison,
@@ -74,6 +79,7 @@ export function BookingCheckoutModal({
   const [isHorsDakarSelected, setIsHorsDakarSelected] = useState<boolean>(initialHorsDakar);
   // null = toute la durée de la location
   const [joursHorsDakar, setJoursHorsDakar] = useState<number | null>(null);
+  const [avecChauffeur, setAvecChauffeur] = useState<boolean>(initialAvecChauffeur);
   const [isProcessing, setIsProcessing] = useState(false);
   const [successData, setSuccessData] = useState<{ reservationId: string; paymentUrl?: string | null } | null>(null);
 
@@ -104,12 +110,13 @@ export function BookingCheckoutModal({
       setEndDate(endStr);
       setIsHorsDakarSelected(initialHorsDakar);
       setJoursHorsDakar(null);
+      setAvecChauffeur(initialAvecChauffeur);
       setTypeLivraison(initialTypeLivraison || (initialIncludeDelivery ? 'DAKAR' : 'AUCUNE'));
       if (initialAdresseLivraison !== undefined) {
         setAdresseLivraison(initialAdresseLivraison);
       }
     }
-  }, [isOpen, initialStartDate, initialEndDate, initialHorsDakar, initialIncludeDelivery, initialTypeLivraison, initialAdresseLivraison, vehicle.joursMinimum]);
+  }, [isOpen, initialStartDate, initialEndDate, initialHorsDakar, initialAvecChauffeur, initialIncludeDelivery, initialTypeLivraison, initialAdresseLivraison, vehicle.joursMinimum]);
 
   // Remise à zéro du scroll au changement d'étape ou à l'ouverture
   useEffect(() => {
@@ -127,10 +134,8 @@ export function BookingCheckoutModal({
     return diff > 0 ? diff : vehicle.joursMinimum || 1;
   }, [startDate, endDate, vehicle.joursMinimum]);
 
-  // Calcul du grand total
-  const numTenantPrice = Number(vehicle.tenantPricePerDay) || 0;
-  const numSupplementHorsDakar = Number(vehicle.supplementHorsDakarParJour) || 0;
-
+  // Devis : même calcul que le serveur (paliers, frais de service 10% sur la location,
+  // options hors Dakar / chauffeur sans commission)
   let deliveryTotal = 0;
   if (typeLivraison === 'DAKAR') {
     deliveryTotal = Number(vehicle.fraisLivraisonDakar ?? vehicle.fraisLivraison ?? 0);
@@ -138,11 +143,19 @@ export function BookingCheckoutModal({
     deliveryTotal = Number(vehicle.fraisLivraisonAibd ?? 0);
   }
 
-  const baseTotal = numTenantPrice * nbJours;
-  const nbJoursHorsDakar = isHorsDakarSelected ? clampJoursHorsDakar(nbJours, joursHorsDakar) : 0;
-  // Supplément hors Dakar sans commission AutoLoc
-  const horsDakarTotal = numSupplementHorsDakar * nbJoursHorsDakar;
-  const grandTotal = baseTotal + deliveryTotal + horsDakarTotal;
+  const quote = computeTenantQuote({
+    prixParJour: vehicle.prixParJour,
+    nbJours,
+    tiers: vehicle.tarifsProgressifs,
+    supplementHorsDakarParJour:
+      isHorsDakarSelected && vehicle.autoriseHorsDakar ? vehicle.supplementHorsDakarParJour : 0,
+    nbJoursHorsDakar: joursHorsDakar,
+    prixChauffeurParJour:
+      avecChauffeur && vehicle.chauffeurDisponible ? vehicle.prixChauffeurParJour : 0,
+    fraisLivraison: deliveryTotal,
+  });
+  const nbJoursHorsDakar = quote.horsDakar?.nbJours ?? 0;
+  const grandTotal = quote.total;
 
   if (!isOpen) return null;
 
@@ -194,6 +207,7 @@ export function BookingCheckoutModal({
         typeLivraison,
         ...(typeLivraison !== 'AUCUNE' ? { adresseLivraison: adresseLivraison.trim() || (typeLivraison === 'AIBD' ? 'Aéroport AIBD' : 'Livraison Dakar') } : {}),
         ...(isHorsDakarSelected ? { horsDakar: true, nbJoursHorsDakar } : {}),
+        ...(avecChauffeur && vehicle.chauffeurDisponible ? { avecChauffeur: true } : {}),
       };
 
       const response = await fetchApi<{ reservationId: string; paymentUrl?: string | null }>('/reservations', {
@@ -300,6 +314,9 @@ export function BookingCheckoutModal({
                 onToggleHorsDakar={setIsHorsDakarSelected}
                 joursHorsDakar={joursHorsDakar}
                 onJoursHorsDakarChange={setJoursHorsDakar}
+                avecChauffeur={avecChauffeur}
+                onToggleChauffeur={setAvecChauffeur}
+                quote={quote}
                 onNext={() => setStep(2)}
               />
             )}

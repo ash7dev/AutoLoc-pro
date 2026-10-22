@@ -14,6 +14,7 @@ import {
   X,
   ShieldCheck,
   Coins,
+  UserCheck,
 } from 'lucide-react';
 import { Step3Data } from '../../stores/useVehicleDraftStore';
 import { SENEGAL_LOCATIONS } from '../../constants/vehicleCatalog';
@@ -24,6 +25,7 @@ interface WizardStep3LocationProps {
 }
 
 const SUPPLEMENT_PRESETS = [3000, 5000, 10000, 15000];
+const CHAUFFEUR_PRESETS = [10000, 15000, 20000, 25000];
 const LIVRAISON_DAKAR_PRESETS = [0, 5000, 10000, 15000];
 const LIVRAISON_AIBD_PRESETS = [15000, 20000, 25000, 30000];
 
@@ -66,6 +68,13 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
     onChange({
       autoriseHorsDakar: val,
       supplementHorsDakarParJour: val ? data.supplementHorsDakarParJour || 5000 : 0,
+    });
+  };
+
+  const handleToggleChauffeur = (val: boolean) => {
+    onChange({
+      chauffeurDisponible: val,
+      prixChauffeurParJour: val ? data.prixChauffeurParJour || 15000 : 0,
     });
   };
 
@@ -236,6 +245,84 @@ export const WizardStep3Location: React.FC<WizardStep3LocationProps> = ({ data, 
               />
               <span className="text-xs font-bold text-slate-500">FCFA / jour</span>
             </div>
+            <p className="text-[11px] text-slate-500">
+              Facturé uniquement sur les jours que le locataire déclare hors Dakar, sans commission AutoLoc : vous percevez 100 % du supplément.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Location avec chauffeur */}
+      <div className={`space-y-3 rounded-2xl border p-4 shadow-sm transition-all ${
+        data.chauffeurDisponible ? 'border-[#059669] bg-[#F0FDF4]/60' : 'border-slate-200 bg-white'
+      }`}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all ${
+              data.chauffeurDisponible ? 'bg-brand-dark text-emerald-400' : 'bg-amber-100 text-amber-700'
+            }`}>
+              <UserCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-fraunces text-sm font-semibold text-slate-900">Location avec chauffeur</h3>
+              <p className="text-xs text-slate-500">Proposer un chauffeur au locataire, à votre prix.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={!!data.chauffeurDisponible}
+            aria-label="Location avec chauffeur"
+            onClick={() => handleToggleChauffeur(!data.chauffeurDisponible)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              data.chauffeurDisponible ? 'bg-emerald-600' : 'bg-slate-300'
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
+                data.chauffeurDisponible ? 'translate-x-5' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
+
+        {data.chauffeurDisponible && (
+          <div className="border-t border-[#059669]/20 pt-3 space-y-3">
+            <h4 className="font-fraunces text-xs font-semibold text-slate-800">Prix du chauffeur (FCFA / jour)</h4>
+            <div className="flex flex-wrap gap-2">
+              {CHAUFFEUR_PRESETS.map((preset) => {
+                const isSelected = data.prixChauffeurParJour === preset;
+                return (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => onChange({ prixChauffeurParJour: preset })}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                      isSelected ? 'bg-brand-dark text-emerald-400 border-brand-dark' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    +{preset.toLocaleString('fr-FR')} F
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center rounded-xl border border-slate-200 px-3 py-2 bg-white">
+              <Coins className="h-4 w-4 text-emerald-600 mr-2" />
+              <input
+                type="number"
+                min={0}
+                value={data.prixChauffeurParJour || ''}
+                onChange={(e) => onChange({ prixChauffeurParJour: Number(e.target.value) || 0 })}
+                placeholder="15000"
+                aria-label="Prix du chauffeur par jour"
+                className="flex-1 bg-transparent text-sm font-bold text-slate-900 focus:outline-none"
+              />
+              <span className="text-xs font-bold text-slate-500">FCFA / jour</span>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              Facturé au locataire sur toute la durée, sans commission AutoLoc : vous percevez 100 % du prix.
+            </p>
           </div>
         )}
       </div>

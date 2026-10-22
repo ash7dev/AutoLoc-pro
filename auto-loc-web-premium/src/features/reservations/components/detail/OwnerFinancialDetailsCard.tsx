@@ -2,16 +2,17 @@
 
 import React from 'react';
 import {
-  CreditCard,
-  DollarSign,
+  CarFront,
   MapPin,
+  Percent,
   Receipt,
   ShieldCheck,
   Truck,
+  UserCheck,
   Wallet,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
-import { OwnerReservationItem } from '@/src/core/api/reservationsApi';
+import { OwnerReservationItem, getReservationDecompte } from '@/src/core/api/reservationsApi';
 
 export interface OwnerFinancialDetailsCardProps {
   reservation: OwnerReservationItem;
@@ -46,35 +47,20 @@ const LineItem: React.FC<{
 export const OwnerFinancialDetailsCard: React.FC<OwnerFinancialDetailsCardProps> = ({
   reservation,
 }) => {
-  const nbJours = Math.max(1, Number(reservation.nbJours || 1));
-  const prixParJour = Number(reservation.prixParJour || 0);
-  const totalLoc = Number(reservation.prixTotal || 0);
-  const commission = Number(reservation.commission || 0);
-  const netProprietaire = Number(
-    reservation.netProprietaire || reservation.montantProprietaire || Math.max(0, totalLoc - commission)
-  );
-
-  const isDepositMode = reservation.modePaiement === 'ACOMPTE_SOLDE_CHECKIN';
-
-  const paidOnline = Number(
-    reservation.montantPayeEnLigne ?? (isDepositMode ? Math.round(totalLoc * 0.3) : totalLoc)
-  );
-  const soldeCheckin = isDepositMode
-    ? Number(reservation.montantSoldeCheckin ?? Math.max(0, totalLoc - paidOnline))
-    : 0;
+  // Décompte calculé par le serveur (montants figés à la réservation)
+  const d = getReservationDecompte(reservation);
+  const totalLoc = d.totalLocataire;
+  const netProprietaire = d.revenuProprietaire;
+  const isDepositMode = d.modePaiement === 'ACOMPTE_SOLDE_CHECKIN';
+  const paidOnline = d.payeEnLigne;
+  const soldeCheckin = d.soldeCheckin;
 
   const paidPercent =
     totalLoc > 0 ? Math.min(100, Math.max(0, Math.round((paidOnline / totalLoc) * 100))) : 100;
   const soldePercent = 100 - paidPercent;
 
-  const fraisLivraison = Number(reservation.fraisLivraison || 0);
-  const totalBaseRental = prixParJour * nbJours;
-
-  // Supplément hors Dakar, facturé uniquement sur les jours déclarés par le locataire
-  const nbJoursHorsDakar = Number(reservation.nbJoursHorsDakar || 0);
-  const supplementParJour = Number(reservation.supplementHorsDakarParJour || 0);
-  const totalHorsDakar = Number(reservation.montantHorsDakar || supplementParJour * nbJoursHorsDakar);
-  const tauxCommissionPct = Math.round(Number(reservation.tauxCommission ?? 0.1) * 100);
+  const tauxPct = Math.round(d.commission.taux * 1000) / 10;
+  const jours = (n: number) => `${n} jour${n > 1 ? 's' : ''}`;
 
   return (
     <div className="space-y-6 rounded-3xl bg-white p-5 text-slate-900 shadow-sm border border-slate-200/90 sm:p-6">
@@ -91,63 +77,98 @@ export const OwnerFinancialDetailsCard: React.FC<OwnerFinancialDetailsCardProps>
         </div>
       </div>
 
-      {/* ── Récapitulatif Tarifaire Ticket ──────────────────────────────── */}
+      {/* ── Votre revenu : location + options (sans commission) ─────────── */}
       <div className="space-y-3">
         <LineItem
+          icon={<CarFront className="h-3.5 w-3.5" aria-hidden />}
           label={
             <>
               Location{' '}
               <span className="text-slate-400 font-medium">
-                ({nbJours} jour{nbJours > 1 ? 's' : ''} × {formatCurrency(prixParJour)} FCFA)
+                ({jours(d.location.nbJours)} × {formatCurrency(d.location.prixParJour)} FCFA)
               </span>
             </>
           }
-          value={`${formatCurrency(totalBaseRental || totalLoc)} FCFA`}
+          value={`${formatCurrency(d.location.montant)} FCFA`}
         />
 
-        {reservation.horsDakar && totalHorsDakar > 0 && (
+        {d.horsDakar && (
           <LineItem
             icon={<MapPin className="h-3.5 w-3.5" aria-hidden />}
             label={
               <>
                 Supplément hors Dakar{' '}
                 <span className="text-slate-400 font-medium">
-                  ({nbJoursHorsDakar} jour{nbJoursHorsDakar > 1 ? 's' : ''} × {formatCurrency(supplementParJour)} FCFA)
+                  ({jours(d.horsDakar.nbJours)} × {formatCurrency(d.horsDakar.prixParJour)} FCFA)
                 </span>
               </>
             }
-            value={`${formatCurrency(totalHorsDakar)} FCFA`}
+            value={`${formatCurrency(d.horsDakar.montant)} FCFA`}
           />
         )}
 
-        {fraisLivraison > 0 && (
+        {d.chauffeur && (
+          <LineItem
+            icon={<UserCheck className="h-3.5 w-3.5" aria-hidden />}
+            label={
+              <>
+                Chauffeur{' '}
+                <span className="text-slate-400 font-medium">
+                  ({jours(d.chauffeur.nbJours)} × {formatCurrency(d.chauffeur.prixParJour)} FCFA)
+                </span>
+              </>
+            }
+            value={`${formatCurrency(d.chauffeur.montant)} FCFA`}
+          />
+        )}
+
+        {d.livraison?.pourProprietaire && (
           <LineItem
             icon={<Truck className="h-3.5 w-3.5" aria-hidden />}
-            label="Frais de livraison convenus"
-            value={`${formatCurrency(fraisLivraison)} FCFA`}
+            label={d.livraison.type === 'AIBD' ? 'Livraison aéroport AIBD' : 'Livraison à Dakar'}
+            value={`${formatCurrency(d.livraison.montant)} FCFA`}
           />
         )}
 
-        <LineItem
-          icon={<DollarSign className="h-3.5 w-3.5" aria-hidden />}
-          label={
-            <>
-              Commission AutoLoc ({tauxCommissionPct} %){' '}
-              <span className="text-slate-400 font-medium">payée par le locataire</span>
-            </>
-          }
-          value={`${formatCurrency(commission)} FCFA`}
-        />
-
-        {/* Ligne Total Net Propriétaire */}
         <div className="flex items-baseline justify-between gap-4 border-t border-slate-200 pt-4">
           <div>
-            <span className="text-sm font-bold text-brand-dark">Revenu Net Propriétaire</span>
-            <span className="block text-[11px] text-slate-500 font-medium">Montant perçu après commission</span>
+            <span className="text-sm font-bold text-brand-dark">Votre revenu</span>
+            <span className="block text-[11px] text-slate-500 font-medium">
+              Location, options et livraison, sans commission déduite
+            </span>
           </div>
           <span className="font-fraunces text-2xl sm:text-3xl font-bold leading-none tabular-nums tracking-tight text-brand-main">
             {formatCurrency(netProprietaire)} FCFA
           </span>
+        </div>
+      </div>
+
+      {/* ── Ce que le locataire paie en plus ───────────────────────────── */}
+      <div className="space-y-2.5 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200/70">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+          Payé par le locataire
+        </p>
+        <LineItem label="Votre revenu" value={`${formatCurrency(netProprietaire)} FCFA`} />
+        {d.livraison && !d.livraison.pourProprietaire && (
+          <LineItem
+            icon={<Truck className="h-3.5 w-3.5" aria-hidden />}
+            label={d.livraison.type === 'AIBD' ? 'Livraison aéroport AIBD' : 'Livraison à Dakar'}
+            value={`+ ${formatCurrency(d.livraison.montant)} FCFA`}
+          />
+        )}
+        <LineItem
+          icon={<Percent className="h-3.5 w-3.5" aria-hidden />}
+          label={
+            <>
+              Frais de service AutoLoc{' '}
+              {tauxPct > 0 && <span className="text-slate-400 font-medium">({tauxPct} % de la location)</span>}
+            </>
+          }
+          value={`+ ${formatCurrency(d.commission.montant)} FCFA`}
+        />
+        <div className="flex items-baseline justify-between gap-4 border-t border-slate-200 pt-2.5 text-[13px]">
+          <span className="font-semibold text-slate-700">Total payé par le locataire</span>
+          <span className="font-bold tabular-nums text-slate-900">{formatCurrency(totalLoc)} FCFA</span>
         </div>
       </div>
 
@@ -170,7 +191,7 @@ export const OwnerFinancialDetailsCard: React.FC<OwnerFinancialDetailsCardProps>
 
           <div className="text-right">
             <span className="block text-[10px] font-bold uppercase tracking-wider text-white/60">
-              Net Hôte Réglé
+              Votre revenu
             </span>
             <span className="font-fraunces text-2xl font-bold tabular-nums text-champagne">
               {formatCurrency(netProprietaire)} FCFA

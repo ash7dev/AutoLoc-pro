@@ -142,6 +142,18 @@ export class UpdateVehicleDto {
   @Type(() => Number)
   supplementHorsDakarParJour?: number;
 
+  // ── Chauffeur ───────────────────────────────────────────────────────────────
+
+  @IsOptional()
+  @IsBoolean()
+  chauffeurDisponible?: boolean;
+
+  @ValidateIf((o) => o.chauffeurDisponible === true)
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  prixChauffeurParJour?: number;
+
   @IsOptional()
   @IsNumber()
   @Min(0)

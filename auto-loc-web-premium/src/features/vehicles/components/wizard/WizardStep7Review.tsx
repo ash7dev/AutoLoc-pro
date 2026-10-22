@@ -151,6 +151,12 @@ export const WizardStep7Review: React.FC<WizardStep7ReviewProps> = ({
             </strong>
           </div>
           <div>
+            <span className="text-slate-500">Chauffeur :</span>{' '}
+            <strong className="text-slate-900">
+              {step3.chauffeurDisponible ? `Disponible (+${(step3.prixChauffeurParJour || 0).toLocaleString('fr-FR')} F/j)` : 'Non'}
+            </strong>
+          </div>
+          <div>
             <span className="text-slate-500">Livraison AIBD :</span>{' '}
             <strong className="text-slate-900">
               {step3.proposeLivraisonAibd ? `${(step3.fraisLivraisonAibd || 0).toLocaleString('fr-FR')} FCFA` : 'Non'}

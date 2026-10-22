@@ -15,9 +15,10 @@ import {
   ShieldCheck,
   Star,
   Truck,
+  UserCheck,
   type LucideIcon,
 } from 'lucide-react';
-import { clampJoursHorsDakar, formatCurrency } from '@/lib/utils';
+import { clampJoursHorsDakar, formatCurrency, type TenantQuote } from '@/lib/utils';
 import { fetchApi } from '@/lib/config';
 import { AutoCalendar } from '@/src/shared/components/AutoCalendar';
 import { BookingPriceBreakdownCard } from './BookingPriceBreakdownCard';
@@ -45,6 +46,8 @@ interface BookingCheckoutStep1Props {
     fraisLivraison?: number | null;
     autoriseHorsDakar?: boolean;
     supplementHorsDakarParJour?: number | null;
+    chauffeurDisponible?: boolean;
+    prixChauffeurParJour?: number | null;
     transmission?: string;
     carburant?: string;
     nombrePlaces?: number;
@@ -62,6 +65,10 @@ interface BookingCheckoutStep1Props {
   /** Jours déclarés hors Dakar (null = toute la durée). */
   joursHorsDakar: number | null;
   onJoursHorsDakarChange: (val: number | null) => void;
+  avecChauffeur: boolean;
+  onToggleChauffeur: (val: boolean) => void;
+  /** Devis calculé par la modale (identique au serveur). */
+  quote: TenantQuote;
   onNext: () => void;
 }
 
@@ -245,6 +252,9 @@ export function BookingCheckoutStep1({
   onToggleHorsDakar,
   joursHorsDakar,
   onJoursHorsDakarChange,
+  avecChauffeur,
+  onToggleChauffeur,
+  quote,
   onNext,
 }: BookingCheckoutStep1Props) {
   const deliveryGroupName = useId();
@@ -351,7 +361,9 @@ export function BookingCheckoutStep1({
   const canDeliverAibd = Boolean(vehicle.proposeLivraisonAibd);
   const autoriseHorsDakar = Boolean(vehicle.autoriseHorsDakar);
   const hasDeliveryOptions = canDeliverDakar || canDeliverAibd;
-  const hasOptions = hasDeliveryOptions || autoriseHorsDakar;
+  const chauffeurDisponible = Boolean(vehicle.chauffeurDisponible);
+  const chauffeurPrice = toNumber(vehicle.prixChauffeurParJour);
+  const hasOptions = hasDeliveryOptions || autoriseHorsDakar || chauffeurDisponible;
 
   // Si une option sélectionnée n'existe pas pour ce véhicule, on la désélectionne
   useEffect(() => {
@@ -364,6 +376,9 @@ export function BookingCheckoutStep1({
     if (isHorsDakarSelected && !autoriseHorsDakar) {
       onToggleHorsDakar(false);
     }
+    if (avecChauffeur && !chauffeurDisponible) {
+      onToggleChauffeur(false);
+    }
   }, [
     typeLivraison,
     canDeliverDakar,
@@ -372,6 +387,9 @@ export function BookingCheckoutStep1({
     autoriseHorsDakar,
     onSelectTypeLivraison,
     onToggleHorsDakar,
+    avecChauffeur,
+    chauffeurDisponible,
+    onToggleChauffeur,
   ]);
 
   const needsAddress = typeLivraison !== 'AUCUNE';
@@ -742,22 +760,25 @@ export function BookingCheckoutStep1({
                   onChange={onJoursHorsDakarChange}
                 />
               )}
+
+              {chauffeurDisponible && (
+                <OptionRow
+                  type="checkbox"
+                  checked={avecChauffeur}
+                  onChange={onToggleChauffeur}
+                  icon={UserCheck}
+                  title="Avec chauffeur"
+                  hint="Un chauffeur fourni par le propriétaire, sur toute la durée"
+                  price={chauffeurPrice > 0 ? `+${formatCurrency(chauffeurPrice)} FCFA/j` : 'Inclus'}
+                  isFree={chauffeurPrice <= 0}
+                />
+              )}
             </section>
           )}
 
           {/* 5. Décomposition du prix */}
           {hasDates ? (
-            <BookingPriceBreakdownCard
-              tenantPricePerDay={vehicle.tenantPricePerDay}
-              nbJours={nbJours}
-              typeLivraison={typeLivraison}
-              fraisLivraisonDakar={vehicle.fraisLivraisonDakar}
-              fraisLivraisonAibd={vehicle.fraisLivraisonAibd}
-              fraisLivraison={vehicle.fraisLivraison}
-              isHorsDakarSelected={isHorsDakarSelected}
-              supplementHorsDakarParJour={vehicle.supplementHorsDakarParJour}
-              nbJoursHorsDakar={clampJoursHorsDakar(nbJours, joursHorsDakar)}
-            />
+            <BookingPriceBreakdownCard quote={quote} typeLivraison={typeLivraison} />
           ) : (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white/60 p-5 text-sm text-slate-500">
               Le détail du prix s’affiche dès que vous choisissez vos dates.

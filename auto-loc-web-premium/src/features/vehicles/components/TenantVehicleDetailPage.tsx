@@ -46,6 +46,7 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
     startDate?: string;
     endDate?: string;
     horsDakar?: boolean;
+    avecChauffeur?: boolean;
     includeDelivery?: boolean;
     totalAmount: number;
     daysCount: number;
@@ -142,6 +143,7 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
     startDate?: string;
     endDate?: string;
     horsDakar?: boolean;
+    avecChauffeur?: boolean;
     includeDelivery?: boolean;
     totalAmount: number;
     daysCount: number;
@@ -291,6 +293,8 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
                   proposeLivraisonAibd={vehicle.proposeLivraisonAibd}
                   fraisLivraisonAibd={vehicle.fraisLivraisonAibd}
                   fraisLivraison={vehicle.fraisLivraison}
+                  chauffeurDisponible={vehicle.chauffeurDisponible}
+                  prixChauffeurParJour={vehicle.prixChauffeurParJour}
                 />
 
                 {/* 2.3 Équipements & Confort */}
@@ -338,6 +342,8 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
                   baseOwnerPrice={vehicle.prixParJour}
                   autoriseHorsDakar={vehicle.autoriseHorsDakar}
                   supplementHorsDakarParJour={vehicle.supplementHorsDakarParJour}
+                  chauffeurDisponible={vehicle.chauffeurDisponible}
+                  prixChauffeurParJour={vehicle.prixChauffeurParJour}
                   proposeLivraisonDakar={vehicle.proposeLivraisonDakar}
                   fraisLivraisonDakar={vehicle.fraisLivraisonDakar}
                   proposeLivraisonAibd={vehicle.proposeLivraisonAibd}
@@ -414,6 +420,7 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
                   photos: vehicle.photos,
                   prixParJour: vehicle.prixParJour,
                   tenantPricePerDay: getTenantPricePerDay(vehicle.prixParJour),
+                  tarifsProgressifs: vehicle.tarifsProgressifs,
                   joursMinimum: vehicle.joursMinimum,
                   proposeLivraisonDakar: vehicle.proposeLivraisonDakar,
                   fraisLivraisonDakar: vehicle.fraisLivraisonDakar,
@@ -422,6 +429,8 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
                   fraisLivraison: vehicle.fraisLivraison,
                   autoriseHorsDakar: vehicle.autoriseHorsDakar,
                   supplementHorsDakarParJour: vehicle.supplementHorsDakarParJour,
+                  chauffeurDisponible: vehicle.chauffeurDisponible,
+                  prixChauffeurParJour: vehicle.prixChauffeurParJour,
                   transmission: vehicle.transmission,
                   carburant: vehicle.carburant,
                   nombrePlaces: vehicle.nombrePlaces,
@@ -430,6 +439,7 @@ export function TenantVehicleDetailPage({ vehicleId }: TenantVehicleDetailPagePr
                 initialStartDate={pendingBookingParams?.startDate || selectedStartDate}
                 initialEndDate={pendingBookingParams?.endDate || selectedEndDate}
                 initialHorsDakar={pendingBookingParams?.horsDakar}
+                initialAvecChauffeur={pendingBookingParams?.avecChauffeur}
                 initialIncludeDelivery={pendingBookingParams?.includeDelivery}
                 onBookingSuccess={(resId) => {
                   router.push(`/reservations/${resId}`);

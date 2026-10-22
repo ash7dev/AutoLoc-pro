@@ -9,6 +9,7 @@ import {
   Home,
   MapPin,
   Navigation,
+  UserCheck,
   Plane,
   Truck,
   XCircle,
@@ -35,6 +36,7 @@ export interface TenantReservationHeroHeaderProps {
   typeLivraison?: string;
   horsDakar?: boolean;
   nbJoursHorsDakar?: number | null;
+  avecChauffeur?: boolean;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -206,6 +208,7 @@ export function TenantReservationHeroHeader({
   typeLivraison,
   horsDakar,
   nbJoursHorsDakar,
+  avecChauffeur,
 }: TenantReservationHeroHeaderProps) {
   const titleId = useId();
 
@@ -352,6 +355,12 @@ export function TenantReservationHeroHeader({
                 {nbJoursHorsDakar
                   ? `Hors Dakar · ${nbJoursHorsDakar} jour${nbJoursHorsDakar > 1 ? 's' : ''}`
                   : 'Hors Dakar autorisé'}
+              </li>
+            )}
+            {avecChauffeur && (
+              <li className={chipClass}>
+                <UserCheck className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+                Avec chauffeur
               </li>
             )}
           </ul>
